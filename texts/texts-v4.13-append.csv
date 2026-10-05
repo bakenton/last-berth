@@ -1,0 +1,15 @@
+UI,giveOrders,Press + on a world's standing order and this hull goes first. Or scrap it.,Нажми + в постоянном приказе любого мира — этот корпус встанет первым. Или спиши.,"Земля → Ждут приказа (v4.13, изменено)",live,v4.13
+UI,pileNoHull,No hull on this line yet — press + below.,На этой линии ещё нет корпусов — нажми + ниже.,"Объект → ползунок кучи (v4.13, изменено)",live,v4.13
+UI,surveyWhat,"Charting opens sector {s}: new worlds appear on the map, farther from Earth. It costs the resources below and needs the reach shown.",Разведка открывает сектор {s}: на карте появляются новые миры дальше от Земли. Стоит ресурсов ниже и требует указанного охвата.,Земля → Нанести следующий сектор (v4.13),live,v4.13
+UI,surveyReachRow,Reach · needed,Охват · нужен,Земля → Нанести следующий сектор (v4.13),live,v4.13
+UI,surveyPrice,Price,Цена,Земля → Нанести следующий сектор (v4.13),live,v4.13
+UI,popEarth,On Earth,На Земле,Земля → Население (v4.13),live,v4.13
+UI,popHulls,On hulls,На судах,Земля → Население (v4.13),live,v4.13
+UI,popCol,On colonies,На колониях,Земля → Население (v4.13),live,v4.13
+UI,noFreeAny,No free hull at Earth. The yards build hulls for a standing order.,У Земли нет свободных корпусов. Верфи строят их под постоянный приказ.,"Объект → Основать, когда свободных корпусов нет (v4.13)",live,v4.13
+UI,hauledSoFar,Hauled out so far,Вывезено всего,Объект → под ползунком кучи (v4.13),live,v4.13
+UI,driveElsewhere,The drive programme is running at {p}.,Программа двигателя идёт на {p}.,Объект → Программа двигателя на промышленном мире (v4.13),live,v4.13
+UI,wHulls,on the line,на линии,Миры (v4.13),live,v4.13
+UI,wHauled,Hauled out,Вывезено,Миры (v4.13),live,v4.13
+UI,wStockSeam,Stockyard · seam,Склад · жила,Миры (v4.13),live,v4.13
+UI,wTravel,From Earth,От Земли,Миры (v4.13),live,v4.13

@@ -1,0 +1,2 @@
+# files are LF and builds are compared byte for byte: git must not touch line endings
+* -text

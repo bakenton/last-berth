@@ -1,0 +1,25 @@
+MSG,short_metal,Not enough metal at Earth — {n} short.,На Земле не хватает металла — недостаёт {n}.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,short_food,Not enough rations at Earth — {n} short.,На Земле не хватает провизии — недостаёт {n}.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,short_fuel,Not enough fuel at Earth — {n} short.,На Земле не хватает топлива — недостаёт {n}.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,short_parts,Not enough parts at Earth — {n} short. Parts come from industrial worlds.,На Земле не хватает деталей — недостаёт {n}. Детали делают промышленные миры.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,short_people,Not enough free hands at Earth — {n} short. Earth keeps {k} for itself.,На Земле не хватает свободных рук — недостаёт {n}. {k} Земля оставляет себе.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,needreach,Needs reach {n} — you have {r}. Reach grows with settled worlds.,Нужен охват {n} — у тебя {r}. Охват растёт с заселёнными мирами.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,nofree,No free hull at Earth.,У Земли нет свободного корпуса.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,fewhands,{n} more hands are needed for a founding party.,Для партии основания не хватает {n} рук.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,why_zero,Nothing on this order to take off.,В этом приказе нечего убавлять.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,why_max,Twelve hulls is the most one line takes.,Больше двенадцати корпусов линия не берёт.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,night,The ark is built only once the Night has a date.,Ковчег строят только когда у Ночи есть дата.,ответ кнопки: почему нельзя (v4.12),live,v4.12
+MSG,ok_build,"Hull no. {n} laid down — {h}, ready in {y} years.","Корпус № {n} заложен — {h}, готов через {y} лет.",ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_want,{p}: standing order — {n} × {c}. The yards do the rest.,{p}: постоянный приказ — {n} × {c}. Дальше верфи сами.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_kit,Kit {t} ordered for {p} — it leaves with the next hull.,Комплект {t} заказан для {p} — уйдёт со следующим корпусом.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_survey,Sector {s} charted. New worlds are on the map.,Сектор {s} нанесён. На карте новые миры.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_ark,Ark: {n} berths built.,Ковчег: мест построено — {n}.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_found,Founding party of {n} leaves for {p}.,Партия основания из {n} человек уходит на {p}.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_drive,Drive programme started at {p}.,Программа двигателя запущена на {p}.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_evac,A hull is on its way to lift {p}.,Корпус пошёл снимать {p}.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_scrap,Scrapped — the metal is back at the yards.,Списано — металл вернулся на верфи.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_release,Hull released from the line.,Корпус снят с линии.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_renew_on,This line will renew its hulls by generation.,Линия будет обновлять корпуса по поколениям.,ответ кнопки: сделано (v4.12),live,v4.12
+MSG,ok_renew_off,This line keeps its current hulls.,Линия оставляет нынешние корпуса.,ответ кнопки: сделано (v4.12),live,v4.12
+UI,sfxOn,Sound on — click to mute,"Звук включён — нажми, чтобы выключить","шапка, кнопка ♫ (v4.12)",live,v4.12
+UI,sfxOff,Sound off — click to unmute,"Звук выключен — нажми, чтобы включить","шапка, кнопка ♫ (v4.12)",live,v4.12

@@ -1,0 +1,45 @@
+<!doctype html><html><body style="margin:0;background:#000"><div id="w" style="display:flex;gap:18px;padding:18px;background:#000"></div><script>function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function drawPortrait(cv,seed){
+  var r=mulberry32(seed), W=64, H=64, ctx=cv.getContext('2d');
+  cv.width=W; cv.height=H;
+  var fw=20+Math.floor(r()*9), fh=27+Math.floor(r()*9), cx=32+Math.floor(r()*5)-2, cy=34+Math.floor(r()*4)-2;
+  var eyeY=cy-Math.floor(fh*0.12)-Math.floor(r()*3), gap=Math.floor(fw*0.36)+Math.floor(r()*3), eyeS=1+Math.floor(r()*2);
+  var browT=Math.floor(r()*5)-2, noseL=Math.floor(fh*0.28)+Math.floor(r()*4), mouthW=Math.floor(fw*0.45)+Math.floor(r()*5), mouthY=cy+Math.floor(fh*0.32)+Math.floor(r()*3);
+  var hair=Math.floor(r()*5), glasses=r()<0.22, beard=r()<0.25, light=r()<0.5?-1:1, sag=r()*0.35;
+  ctx.fillStyle='#000'; ctx.fillRect(0,0,W,H);
+  // head: a lit ellipse with a shadow on one side
+  var g=ctx.createLinearGradient(cx-fw,0,cx+fw,0);
+  if(light<0){ g.addColorStop(0,'#f0f0f0'); g.addColorStop(0.6,'#b0b0b0'); g.addColorStop(1,'#505050') }
+  else { g.addColorStop(0,'#505050'); g.addColorStop(0.4,'#b0b0b0'); g.addColorStop(1,'#f0f0f0') }
+  ctx.fillStyle='#202020'; ctx.fillRect(0,0,W,H);                       // a dim wall behind the head, so the hair reads
+  ctx.fillStyle=g; ctx.beginPath(); ctx.ellipse(cx,cy,fw,fh,0,0,Math.PI*2); ctx.fill();
+  // neck and shoulders
+  ctx.fillStyle='#6a6a6a'; ctx.fillRect(cx-Math.floor(fw*0.35),cy+fh-4,Math.floor(fw*0.7),12);
+  ctx.fillStyle='#4a4a4a'; ctx.beginPath(); ctx.ellipse(cx,H+6,fw+18,16,0,Math.PI,Math.PI*2); ctx.fill();
+  // hair
+  ctx.fillStyle='#606060';
+  if(hair===1){ ctx.beginPath(); ctx.ellipse(cx,cy-fh*0.55,fw+1,fh*0.55,0,Math.PI,Math.PI*2); ctx.fill() }
+  else if(hair===2){ ctx.beginPath(); ctx.ellipse(cx,cy-fh*0.5,fw+2,fh*0.62,0,Math.PI,Math.PI*2); ctx.fill(); ctx.fillRect(cx-fw-2,cy-fh*0.5,6,fh*0.9); ctx.fillRect(cx+fw-4,cy-fh*0.5,6,fh*0.9) }
+  else if(hair===3){ ctx.beginPath(); ctx.ellipse(cx+light*3,cy-fh*0.6,fw-2,fh*0.45,0,Math.PI,Math.PI*2); ctx.fill() }
+  else if(hair===4){ ctx.fillStyle='#707070'; ctx.beginPath(); ctx.ellipse(cx,cy-fh*0.62,fw+3,fh*0.42,0,Math.PI,Math.PI*2); ctx.fill(); ctx.fillRect(cx-fw-3,cy-fh*0.62,2*fw+6,3) }
+  // brows, eyes
+  ctx.fillStyle='#101010';
+  ctx.fillRect(cx-gap-3,eyeY-4-browT,7,2); ctx.fillRect(cx+gap-4,eyeY-4+browT,7,2);
+  ctx.fillStyle='#f0f0f0'; ctx.fillRect(cx-gap-2,eyeY-1,5,3); ctx.fillRect(cx+gap-3,eyeY-1,5,3);
+  ctx.fillStyle='#000'; ctx.fillRect(cx-gap-1+Math.floor(sag*2),eyeY,eyeS+1,2); ctx.fillRect(cx+gap-2+Math.floor(sag*2),eyeY,eyeS+1,2);
+  if(glasses){ ctx.strokeStyle='#e8e8e8'; ctx.lineWidth=1; ctx.strokeRect(cx-gap-4.5,eyeY-3.5,9,7); ctx.strokeRect(cx+gap-4.5,eyeY-3.5,9,7); ctx.beginPath(); ctx.moveTo(cx-gap+4.5,eyeY); ctx.lineTo(cx+gap-4.5,eyeY); ctx.stroke() }
+  // nose, mouth
+  ctx.fillStyle='#2a2a2a'; ctx.fillRect(cx+light,eyeY+3,1,noseL); ctx.fillRect(cx-1,eyeY+3+noseL,3,1);
+  ctx.fillStyle='#181818'; ctx.fillRect(cx-Math.floor(mouthW/2),mouthY,mouthW,2);
+  if(beard){ ctx.fillStyle='rgba(20,20,20,.75)'; ctx.beginPath(); ctx.ellipse(cx,cy+fh*0.6,fw*0.8,fh*0.38,0,0,Math.PI); ctx.fill() }
+  // ordered dither to two colours: black and bone
+  var img=ctx.getImageData(0,0,W,H), p=img.data, B=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+  for(var y=0;y<H;y++) for(var x=0;x<W;x++){ var i=(y*W+x)*4; var v=(p[i]*0.299+p[i+1]*0.587+p[i+2]*0.114)/255;
+    var on = v > (B[y&3][x&3]+0.5)/16;
+    p[i]=on?0xF2:0; p[i+1]=on?0xF1:0; p[i+2]=on?0xEC:0; p[i+3]=255 }
+  ctx.putImageData(img,0,0);
+}
+
+var seeds=[11,2024,77,9001,31337,4242];
+seeds.forEach(function(sd){ var c=document.createElement('canvas'); c.style.cssText='width:192px;height:192px;image-rendering:pixelated;border:1px solid #5E5D58'; document.getElementById('w').appendChild(c); drawPortrait(c,sd*2654435761|0) });
+</script></body></html>

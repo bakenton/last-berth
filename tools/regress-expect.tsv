@@ -1,0 +1,32 @@
+pw9	вступление закрыто после пропуска	^intro state: \{ hidden: true
+pw9	клик по миру открывает Объект	^click -> tab: target
+pw9	модалка Ночи	^night modal shown: true
+pw9	дата Ночи в шапке	^night cell: \d+
+pw9	блок ковчега, покупка доступна	^ark block: true \| buy enabled: true
+pw9	места на ковчеге куплены	^berths: [1-9]
+pw9	финал наступил	^over: (?!false|null|undefined)\S+
+pw9	заголовок финала	^end title: \S
+pw9	ошибок страницы нет	^errors: none
+pw15	док и советник не перекрываются	!"overlap":true
+pw15	док сворачивается (2 экрана)	dock folded: .*"resize":"none/both"	2
+pw15	советник сворачивается (2 экрана)	advisor folded: .*"advRows":0	2
+pw15	ошибок страницы нет (2 экрана)	errors: none	2
+pw16	мир открывается из пролога	^target opened: target
+pw16	стадия 2 пролога	^stage 2 reached: true
+pw16	карточка постоянного приказа	^standing order card: \S
+pw16	стадия 3 пролога	^stage 3 reached: true
+pw16	ошибок страницы нет	^errors: none
+pw17	стадия 4	^S3: 4 / 6
+pw17	стадия 5	^S4: 5 / 6
+pw17	стадия 6, мир на карте	^S5: 6 / 6 .*worlds on map: [1-9]
+pw17	советник после пролога	adv: true
+pw17	ошибок страницы нет	^errors: none
+pw18	окно личного дела с портретом	^pf at \d+ \| .* lit px [1-9]
+pw18	голоса в журнале	^voice lines in 300y: [1-9]
+pw18	голоса отрисованы	^journal vo rendered: [1-9]
+pw18	личное дело на дате Ночи	^night_dated pf: \{"text"
+pw18	личное дело при закрытии ковчега	^ark_closed pf: \{"text"
+pw18	ошибок страницы нет	^errors: none
+pw20	шапка 1280 не переносится	^1280 \{"hdrH":[4-8]\d,
+pw20	нет горизонтального скролла на 390	^390 \{"hdrH":\d+,"scrollW":390,"vw":390\}
+pw20	ошибок страницы нет (2 экрана)	no errors	2
