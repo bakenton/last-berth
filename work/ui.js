@@ -828,7 +828,7 @@ function logSeen(){ var m=0; for(var i=0;i<G.log.length;i++) if((G.log[i].seq||0
 function freeHulls(){return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
 var ROMAN=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
 function roman(n){ return ROMAN[n]||String(n+1) }
-function hullName(h){ return T(h.key)+' '+roman(h.gen||0) }
+function hullName(h){ return fill(T('hullFmt'),{t:T(h.key),n:T('hullNm_'+h.key),g:roman(h.gen||0)}) }   // v4.20: class + Greek name
 function nodeName(n){return n==='earth'?T('earthNode'):planet(n).name.toUpperCase()}
 function aliveHulls(){return G.ships.filter(function(s){return s.mode!=='dead'&&s.mode!=='missing'})}
 

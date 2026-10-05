@@ -297,7 +297,7 @@
   828  freeHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
   829  var ROMAN  ≈ ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
   830  roman(n) [1]  ≈ return ROMAN[n]||String(n+1) }
-  831  hullName(h) [1]  ≈ return T(h.key)+' '+roman(h.gen||0) }
+  831  hullName(h) [1]  v4.20: class + Greek name
   832  nodeName(n) [1]  ≈ return n==='earth'?T('earthNode'):planet(n).name.toUpperCase()}
   833  aliveHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode!=='dead'&&s.mode!=='missing'})}
   835  drawAdvice() [29]  ≈ var box=el('advisor'); if(!box) return;

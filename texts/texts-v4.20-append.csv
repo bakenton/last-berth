@@ -1,0 +1,4 @@
+UI,hullFmt,"{t} “{n}” {g}","{t} «{n}» {g}",v4.20 ship names,live,new
+UI,hullNm_courier,Hermes,Гермес,v4.20 ship names,live,new
+UI,hullNm_hauler,Sisyphus,Сизиф,v4.20 ship names,live,new
+UI,hullNm_freighter,Atlas,Атлант,v4.20 ship names,live,new

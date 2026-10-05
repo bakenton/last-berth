@@ -50,3 +50,7 @@ UI	evacW_orderC	Build a courier in the dock, or take one off a standing order.	�
 MSG	evacNoCourier	No free courier at Earth can reach {p}. {w}	У Земли нет свободного курьера, который долетит до {p}. {w}
 MSG	evacCourier	Only a courier can lift a settlement.	Снимать поселение может только курьер.
 MSG	ok_evac_short	Courier {n} is on its way to lift {p} — it holds {c}; {l} people will stay behind.	Курьер {n} пошёл снимать {p} — трюм {c}; {l} человек останутся.
+UI	hullFmt	{t} “{n}” {g}	{t} «{n}» {g}
+UI	hullNm_courier	Hermes	Гермес
+UI	hullNm_hauler	Sisyphus	Сизиф
+UI	hullNm_freighter	Atlas	Атлант
