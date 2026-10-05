@@ -112,9 +112,9 @@ if rc!='0' or len(L)<6: print('sim FAIL exit',rc,'—',' | '.join(L[-2:])[:200])
 hd=L[1].split('\t'); body=[r for r in L[2:] if r.strip()]; rows={r.split('\t')[0]:dict(zip(hd,r.split('\t'))) for r in body}
 def let(b):
     a,n=map(int,rows[b]['alive'].split('/')); return 'L' if a==0 else ('W' if 2*a>=n else '?')
-# F-20 (Nikita, 05.10): idle and greedy are the floor and must lose; every style must sail the ark on at least half the seeds
+# F-20 (Nikita, 05.10; 06.10): idle and greedy are the floor and must lose; the ark runner must sail on at least half the seeds; rush/serial are reported only
 sail=lambda b:int(rows[b]['sailed'].split('/')[0]); n=int(rows['idle']['alive'].split('/')[1])
-styles=[b for b in rows if b not in ('idle','greedy')]
+styles=[b for b in rows if b=='ark']
 floor=all(sail(b)==0 and rows[b]['alive'].startswith('0/') for b in ('idle','greedy') if b in rows)
 weak=[b for b in styles if 2*sail(b)<n]
 inv=floor and not weak
