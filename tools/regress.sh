@@ -3,7 +3,7 @@
 #   bash tools/regress.sh smoke            один сквозной сценарий (~1 мин)
 #   bash tools/regress.sh full             все живые сценарии + боты; дробится по бюджету вызова, см. --resume
 #   bash tools/regress.sh pw24 pw26 sim    только указанные
-# Флаги: --shots (скриншоты ложатся в work/.run/*.png), --resume (продолжить прерванный full), --fresh (work из live/index.html
+# Флаги: --quiet (зелёные — одно слово, красные — подробно), --shots (скриншоты ложатся в work/.run/*.png), --resume (продолжить прерванный full), --fresh (work из live/index.html
 #        заново — правки core/ui в work будут потеряны), --rebaseline (записать текущие цифры ботов как эталон)
 # Вывод: одна строка на сценарий; при падении — до 10 упавших проверок. Полные логи: work/logs/<имя>.log
 # Бутстрап идемпотентен: work/ (live.html, core.js, ui.js, page.html). Playwright и Chromium — из node_modules репозитория
@@ -20,9 +20,9 @@ np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; f
 # Живые сценарии (full). Правка списка — после решения по аудиту (last-berth/AUDIT.md).
 FULL="pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 sim"
 SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
-SHOTS=0 RESUME=0 FRESH=0 REBASE=0 NAMES=()
+SHOTS=0 RESUME=0 FRESH=0 REBASE=0 QUIET=0 NAMES=()
 for a in "$@"; do case "$a" in
-  --shots) SHOTS=1;; --resume) RESUME=1;; --fresh) FRESH=1;; --rebaseline) REBASE=1;;
+  --shots) SHOTS=1;; --resume) RESUME=1;; --fresh) FRESH=1;; --rebaseline) REBASE=1;; --quiet) QUIET=1;;
   smoke) NAMES+=(smoke);; full) MODE=full; NAMES+=($FULL);; -h|--help) sed -n 2,11p "$0"; exit 0;;
   *) NAMES+=("$a");; esac; done
 [ ${#NAMES[@]} -eq 0 ] && { sed -n 2,11p "$0"; exit 2; }
@@ -146,7 +146,7 @@ if [ "$MODE" = full ]; then
       echo "full: готово $(grep -c '^[^ ]' "$ST")/${#NAMES[@]} — бюджет вызова исчерпан, продолжить: bash tools/regress.sh full --resume"; exit 3; fi
     run_one "$n" >> "$ST"
   done
-  cat "$ST"; ! grep -q "FAIL" "$ST"
+  if [ $QUIET = 1 ]; then grep -v '^[^ ]* [0-9]*/[0-9]* PASS' "$ST"; echo "full: $(grep -c ' PASS' "$ST") PASS · $(grep -c ' FAIL' "$ST") FAIL"; else cat "$ST"; fi; ! grep -q "FAIL" "$ST"
 else
-  bad=0; for n in "${NAMES[@]}"; do out=$(run_one "$n"); echo "$out"; echo "$out" | head -1 | grep -q FAIL && bad=1; done; exit $bad
+  bad=0; for n in "${NAMES[@]}"; do out=$(run_one "$n"); if [ $QUIET = 1 ] && echo "$out" | head -1 | grep -q ' PASS'; then echo "$(echo "$out" | head -1 | cut -d' ' -f1) PASS"; else echo "$out"; fi; echo "$out" | head -1 | grep -q FAIL && bad=1; done; exit $bad
 fi

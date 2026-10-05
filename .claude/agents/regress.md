@@ -1,7 +1,7 @@
 ---
 name: regress
 description: Регресс LAST BERTH. Гоняет tools/regress.sh, разбирает упавшие сценарии, обновляет сценарии pw*.js под изменённые правила игры. Вызывать после правки core.js/ui.js и когда сценарии красные. Код игры не правит.
-model: sonnet
+model: haiku
 tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 

@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "deny": [
+      "Read(./work/*.html)",
+      "Read(./live/**)",
+      "Read(./node_modules/**)",
+      "Read(./*.zip)",
+      "Read(./work/logs/**)",
+      "Read(./work/.run/**)",
+      "Read(./tools/_old/**)",
+      "Read(./.rt-test/**)"
+    ]
+  }
+}
