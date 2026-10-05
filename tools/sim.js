@@ -4,7 +4,7 @@
 const fs=require('fs');
 function load(path){
   const src=fs.readFileSync(path,'utf8');
-  const names=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','reach','buildShip','colonize',
+  const names=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','reach','settledCount','buildShip','colonize',
     'setLine','survey','canSurvey','startDrive','scrap','scrapIdle','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
     'buildArk','canArk','arkSouls','nightLeft','abandon','clearLine','leftBehind',
@@ -24,12 +24,13 @@ function play(C,seed,days,bot){
     if(bot==='idle') continue;
     const E=G.earth;
     const maxSec = bot==='greedy' ? 1 : 99;
+    const pro = bot==='pro'||bot==='tidy'||bot==='late';   // v4.15: 'tidy' = pro that also evacuates spent worlds, as a player does
 
     // 1. every settled world wants a line — pro uses standing orders (v4.6), the others still push hulls by hand
     for(const k in G.colonies){
       if(G.colonies[k].dark||lined(G,k)) continue;
       const p=C.planet(k);
-      if(bot==='pro'){ if(!C.lineWant(G,k,'courier')&&!C.lineWant(G,k,'hauler')) C.setWant(G,k,'courier',1); continue }
+      if(pro){ if(!C.lineWant(G,k,'courier')&&!C.lineWant(G,k,'hauler')) C.setWant(G,k,'courier',1); continue }
       const s=freeHulls(G).find(s=>reachOK(s,p));
       if(s) C.setLine(G,s.id,k,'earth');
     }
@@ -43,7 +44,7 @@ function play(C,seed,days,bot){
         const s=freeHulls(G).find(s=>reachOK(s,p));
         if(!s) continue;
         let v = -p.dist;   // nearest first: the chart fills outward on its own
-        if(bot==='pro'){ const liveWell=Object.keys(G.colonies).some(k=>C.planet(k).kind==='well'&&G.reserves[k]>0);
+        if(pro){ const liveWell=Object.keys(G.colonies).some(k=>C.planet(k).kind==='well'&&G.reserves[k]>0);
           if(!liveWell&&p.kind==='well') v+=1000;
           if(p.kind==='farm'&&E.food>(G.need?G.need.food:5)*80) v-=500;
           if(p.kind==='farm'&&E.food<(G.need?G.need.food:5)*40) v+=800; }
@@ -52,7 +53,7 @@ function play(C,seed,days,bot){
       if(best) C.colonize(G,best.s.id,best.p.id,26,0);
     }
     // 1b. v4.4: a world whose stockyard is filling faster than the line carries gets a second hull (pro)
-    if(bot==='pro'&&d%15===0){
+    if(pro&&d%15===0){
       for(const k in G.colonies){ const c=G.colonies[k]; if(c.dark||!lined(G,k)) continue;
         const lr=C.lineRate(G,k); if(!lr||!lr.piling) continue;
         if((c.store[lr.dep]||0)<3000) continue;   // v4.5: the yard is bottomless; a pile this big means the line is thin
@@ -62,13 +63,13 @@ function play(C,seed,days,bot){
       }
     }
     // 3. yards — cheapest hull that can serve the deepest world wanting service
-    if(freeHulls(G).length<(bot==='pro'?2:1)){
+    if(freeHulls(G).length<(pro?2:1)){
       let want=0;
       for(const k in G.colonies){ if(!lined(G,k)) want=Math.max(want,C.planet(k).sec);
-        else if(bot==='pro'){ const lr=C.lineRate(G,k); if(lr&&lr.piling&&(G.colonies[k].store[lr.dep]||0)>3000) want=Math.max(want,C.planet(k).sec) } }
+        else if(pro){ const lr=C.lineRate(G,k); if(lr&&lr.piling&&(G.colonies[k].store[lr.dep]||0)>3000) want=Math.max(want,C.planet(k).sec) } }
       for(let i=0;i<PLANETS.length;i++){ const p=PLANETS[i];
         if(p.sec<C.SECTORS.length&&p.sec<=maxSec&&!G.colonies[p.id]&&!G.ghost[p.id]) want=Math.max(want,p.sec) }
-      const keep = bot==='pro' ? 260 : 60;
+      const keep = pro ? 260 : 60;
       const cands=HULLS.map((h,i)=>({h,i}))
         .filter(x=>x.h.gen===(G.gen||0))
         .filter(x=>bot==='greedy'?x.h.key==='courier':true)
@@ -80,7 +81,7 @@ function play(C,seed,days,bot){
         return C.canReachSector(probe,want);
       });
       // v4.5: a pile that a courier cannot clear wants a hauler — pro reaches for the class, not the cheapest hull
-      let bulk=0; if(bot==='pro') for(const k in G.colonies){ const lr=C.lineRate(G,k); if(lr&&lr.piling&&lined(G,k)) bulk=Math.max(bulk,G.colonies[k].store[lr.dep]||0) }
+      let bulk=0; if(pro) for(const k in G.colonies){ const lr=C.lineRate(G,k); if(lr&&lr.piling&&lined(G,k)) bulk=Math.max(bulk,G.colonies[k].store[lr.dep]||0) }
       const pool0=(fits.length?fits:cands);
       const pool=(bulk>3000&&pool0.some(x=>x.h.key==='hauler') ? pool0.filter(x=>x.h.key!=='courier') : pool0).sort((a,b)=>a.h.metal-b.h.metal);
       for(const x of pool){
@@ -91,12 +92,12 @@ function play(C,seed,days,bot){
     // 4. the drive programme
     if(bot!=='greedy'&&bot!=='expand'&&!G.drive){
       for(const k in G.colonies){ const p=C.planet(k);
-        if(p.kind==='works'&&!G.colonies[k].dark&&G.colonies[k].pop>=K.DRIVE_POP&&C.reach(G)>=C.driveReachFor(G)){
+        if(p.kind==='works'&&!G.colonies[k].dark&&G.colonies[k].pop>=K.DRIVE_POP&&(C.settledCount||C.reach)(G)>=C.driveReachFor(G)){
           if(C.startDrive(G,k)==='ok') break; } }
     }
     // 4b. v4.4 kits: pro invests in the richest lined world whose seam will outlast the kit; if no hull on
     //     that line can carry it, buy the cheapest current-generation hull that can and put it there
-    if(bot==='pro'&&C.kitOpen(G)&&d%10===0){
+    if(pro&&C.kitOpen(G)&&d%10===0){
       let best=null,bv=0;
       const liveWell2=Object.keys(G.colonies).some(k=>C.planet(k).kind==='well'&&G.reserves[k]>0);
       for(const k in G.colonies){ const c=G.colonies[k], p=C.planet(k); if(c.dark||!lined(G,k)) continue;
@@ -117,26 +118,33 @@ function play(C,seed,days,bot){
         }
       }
     }
+    // 4b. v4.15 'tidy': a spent world (seam dry, stockyard empty) is evacuated — people come home, the ghost stays on the chart
+    if((bot==='tidy'||bot==='late')&&d%25===0){
+      for(const k in G.colonies){ const c=G.colonies[k]; if(c.dark) continue; const p=C.planet(k);
+        if(p.kind==='works'||!(G.reserves[k]<=0)) continue;
+        const dep=p.dep; if(((c.store&&c.store[dep])||0)>=1) continue;
+        const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s){ C.abandon(G,s.id,k); break } }   // v4.18: only a courier lifts a settlement
+    }
     // 5. chart further out
-    if(bot!=='greedy'&&C.canSurvey(G)==='ok'){
+    if(bot!=='greedy'&&!(bot==='late'&&G.day<1600)&&C.canSurvey(G)==='ok'){   // 'late' = tidy that does not chart before year 1600: a player who misses the window
       const nd=G.need||{food:4,metal:3};
       if(E.food>nd.food*90&&E.metal>300) C.survey(G);
     }
     // 7. the Long Night: expand and pro buy berths; only pro takes the empire apart in time
     if(G.night&&C.buildArk&&bot!=='greedy'){
       const left=C.nightLeft(G);
-      const keepM = bot==='pro' ? (left>1000?1e9:(left>400?600:0)) : 300;
+      const keepM = pro ? (left>1000?1e9:(left>400?600:0)) : 300;
       while(C.canArk(G)==='ok'&&E.metal-keepM>0){ if(C.buildArk(G)!=='ok') break; if(bot!=='pro') break; }
-      if(bot==='pro'&&left<=400){
+      if(pro&&left<=400){
         // stop expanding: release lines, lift colonies with whatever is free, scrap what is home
         G.ships.forEach(s=>{ if(s.from&&s.to&&s.mode!=='dead') C.clearLine(G,s.id) });
         for(const k in G.colonies){ if(G.colonies[k].dark) continue;
-          const p=C.planet(k); const s=freeHulls(G).find(s=>reachOK(s,p)); if(s) C.abandon(G,s.id,k); }
+          const p=C.planet(k); const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s) C.abandon(G,s.id,k); }
         if(left<=150||d%25===0) freeHulls(G).forEach(s=>C.scrap(G,s.id));
       }
     }
     // 6. break up hulls the yards no longer build
-    if(bot==='pro'&&d%120===0) C.scrapIdle(G,(G.gen||0)-2);
+    if(pro&&d%120===0) C.scrapIdle(G,(G.gen||0)-2);
   }
   if(process.env.DUMP&&bot==='pro'&&seed==+process.env.DUMP){ require('fs').writeFileSync('/tmp/dump.json',C.exportLog(G)) }
   let worlds=0, depth=0, couriers=0, big=0, tiers=0;
@@ -154,7 +162,7 @@ function play(C,seed,days,bot){
 const corePath=process.argv[2]||'core.js';
 const days=+(process.argv[3]||2600);
 const seeds=(process.argv[4]||'11,22,33,44,55,66,77,88').split(',').map(Number);
-const bots=['idle','greedy','expand','pro'];
+const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','expand','pro','tidy','late']);
 const agg={};
 for(const bot of bots){
   const rows=seeds.map(sd=>play(load(corePath),sd,days,bot));

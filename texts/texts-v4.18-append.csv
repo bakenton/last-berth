@@ -1,0 +1,98 @@
+UI,needSettled,needs {n} worlds settled,нужно заселить миров: {n},v4.15-4.18,live,new
+UI,settledRow,Worlds settled,Заселено миров,v4.15-4.18,live,new
+MSG,settled,Not enough worlds settled yet.,Заселено слишком мало миров.,v4.15-4.18,live,new
+MSG,needsettled,"Needs {n} settled worlds — you have {r}. Every world you have ever settled counts, even a spent one.","Нужно заселённых миров: {n} — у тебя {r}. Считаются все миры, которые ты когда-либо заселял, даже выработанные.",v4.15-4.18,live,new
+UI,assignTo,Send to:,Отправить на:,v4.15-4.18,live,new
+UI,assignHere,Send here,Отправить сюда,v4.15-4.18,live,new
+UI,freeHulls,Free hulls at Earth,Свободные суда у Земли,v4.15-4.18,live,new
+UI,freeNone,No free hull at Earth can reach this world. The standing order below builds new ones.,Ни один свободный корпус у Земли сюда не долетает. Постоянный приказ ниже построит новые.,v4.15-4.18,live,new
+UI,ringSignTitle,NEW RING · {s},НОВОЕ КОЛЬЦО · {s},v4.15-4.18,live,new
+UI,ringSignGo,Ready to chart — click,Можно наносить — нажми,v4.15-4.18,live,new
+UI,ringSignSettled,Settled worlds: {r} of {n} needed,Заселено миров: {r} из {n} нужных,v4.15-4.18,live,new
+UI,noFreeTitle,NO FREE WORLDS LEFT,СВОБОДНЫХ МИРОВ БОЛЬШЕ НЕТ,v4.15-4.18,live,new
+UI,noFreeBody,Every world on the charted rings is settled or spent. Chart a new ring — it is the only way to find more worlds. Without them the colonies run dry and Earth starves.,"Все миры на нанесённых кольцах заселены или выработаны. Нанеси новое кольцо — другого способа найти новые миры нет. Без них колонии иссякнут, и Земля умрёт с голоду.",v4.15-4.18,live,new
+UI,noFreeGo,Go to survey,К разведке,v4.15-4.18,live,new
+UI,noFreeLater,Later,Позже,v4.15-4.18,live,new
+UI,rangeWarn,Generation {g} hulls reach ring {n}. Free worlds farther out: {k} — they need the drive programme.,Корпуса поколения {g} долетают до кольца {n}. Свободных миров дальше: {k} — нужна программа двигателя.,v4.15-4.18,live,new
+UI,newGenTitle,GENERATION {g} HULLS ARE READY,КОРПУСА ПОКОЛЕНИЯ {g} ГОТОВЫ,v4.15-4.18,live,new
+UI,newGenBody,Build them in the yards (dock below).,Строй их на верфях (док внизу).,v4.15-4.18,live,new
+UI,speedUnit,yr/s,лет/с,v4.15-4.18,live,new
+UI,speedTip,Years of route covered per second at 1× game speed.,Лет пути в секунду при скорости игры 1×.,v4.15-4.18,live,new
+MSG,ok_want_free,{p}: {n} × {c} wanted. A free hull at Earth goes first — no new build.,{p}: нужно {n} × {c}. Первым пойдёт свободный корпус у Земли — строить новый не придётся.,v4.15-4.18,live,new
+MSG,ok_want_build,"{p}: {n} × {c} wanted. No free hull of that class at Earth — the yards are building {k} new one(s) for {p}, ready in about {y} years.","{p}: нужно {n} × {c}. Свободного корпуса этого класса у Земли нет — верфи строят новых: {k} для {p}, готовы примерно через {y} лет.",v4.15-4.18,live,new
+MSG,want_wait,"{p}: {n} × {c} wanted. No free hull at Earth, and the yards cannot start a new one: {w}.","{p}: нужно {n} × {c}. Свободных корпусов у Земли нет, и верфи не могут начать новый: {w}.",v4.15-4.18,live,new
+MSG,ok_assign,Hull {n} sent to {p}.,Корпус {n} отправлен на {p}.,v4.15-4.18,live,new
+UI,flTab,Fleet,Флот,v4.15-4.18,live,new
+UI,flBuilding,{n} building,строится: {n},v4.15-4.18,live,new
+UI,flYards,{y} yrs left,ещё {y} лет,v4.15-4.18,live,new
+UI,flFree,free at Earth,свободен у Земли,v4.15-4.18,live,new
+UI,flEmpty,No hulls yet. Lay one down in the dock below.,Корпусов пока нет. Заложи первый в доке внизу.,v4.15-4.18,live,new
+UI,flGrpYards,In the yards,На верфях,v4.15-4.18,live,new
+UI,flGrpFree,Free at Earth,Свободны у Земли,v4.15-4.18,live,new
+UI,flGrpWork,On the lines and in flight,На линиях и в полёте,v4.15-4.18,live,new
+UI,flGrpOther,Lost or refusing orders,Потеряны или отказались,v4.15-4.18,live,new
+UI,depletedTitle,Spent world,Выработанный мир,v4.15-4.18,live,new
+UI,depletedLead,The seam is exhausted and the surface is empty.,"Залежь выработана, и на поверхности ничего не осталось.",v4.15-4.18,live,new
+UI,depletedLeft,{n} {r} still sits on the surface. The evacuation takes it home as far as the hold allows.,"На поверхности осталось: {n} ({r}). Эвакуация заберёт столько, сколько влезет в трюм.",v4.15-4.18,live,new
+UI,depletedNone,The stockyard is empty — nothing left to collect. Bring the people home.,Склад пуст — забирать нечего. Верни людей домой.,v4.15-4.18,live,new
+UI,lineGen,Hull generation,Поколение корпуса,v4.15-4.18,live,new
+UI,lineGenNewest,newest,новейшее,v4.15-4.18,live,new
+UI,lineGenRetired,The yards no longer lay this generation down. A free hull of it can still be sent.,Верфи это поколение больше не строят. Свободный корпус такого поколения всё ещё можно отправить.,v4.15-4.18,live,new
+UI,lineGens,on line: {g},на линии: {g},v4.15-4.18,live,new
+MSG,gen_retired,"The yards no longer build this generation, and none is free at Earth.","Верфи это поколение больше не строят, и свободных у Земли нет.",v4.15-4.18,live,new
+UI,dryTitle,Seam exhausted,Залежь выработана,v4.15-4.18,live,new
+UI,dryLead,"Nothing more to dig, but {n} {r} still lies on the surface. Hulls can still be sent to collect it; once the surface is empty, only evacuation remains.","Добывать больше нечего, но на поверхности ещё лежит {n} ({r}). Сюда ещё можно отправлять корпуса, чтобы дособрать; когда поверхность опустеет, останется только эвакуация.",v4.15-4.18,live,new
+UI,rateLine,World makes {m}/yr · line hauls {h}/yr,Мир даёт {m}/год · линия вывозит {h}/год,v4.15-4.18,live,new
+UI,evacWho,"Courier {n} ({h}) goes: hold {c}, people {k} — everyone fits; {y} years out.","Пойдёт курьер {n} ({h}): трюм {c}, людей {k} — помещаются все; лететь {y} лет.",v4.15-4.18,live,new
+UI,evacShort,Courier {n} ({h}) holds {c} of {k} people — {l} will stay behind. A bigger courier (newer generation) lifts everyone.,Курьер {n} ({h}) берёт {c} из {k} человек — {l} останутся. Курьер побольше (нового поколения) снимет всех.,v4.15-4.18,live,new
+UI,evacNoCourierHint,"Only a courier lifts a settlement, and none is free at Earth. {w}","Снимать поселение может только курьер, а свободных у Земли нет. {w}",v4.15-4.18,live,new
+UI,evacW_orderC,"Build a courier in the dock, or take one off a standing order.",Заложи курьер в доке или сними один с постоянного приказа.,v4.15-4.18,live,new
+MSG,evacNoCourier,No free courier at Earth can reach {p}. {w},"У Земли нет свободного курьера, который долетит до {p}. {w}",v4.15-4.18,live,new
+MSG,evacCourier,Only a courier can lift a settlement.,Снимать поселение может только курьер.,v4.15-4.18,live,new
+MSG,ok_evac_short,Courier {n} is on its way to lift {p} — it holds {c}; {l} people will stay behind.,Курьер {n} пошёл снимать {p} — трюм {c}; {l} человек останутся.,v4.15-4.18,live,new
+UI,reach,Live worlds,Живых миров,v4.15-4.18,live,changed
+UI,hSectors,Rings,Колец,v4.15-4.18,live,changed
+UI,a_survey,You can chart ring {n}.,Можно нанести на карту кольцо {n}.,v4.15-4.18,live,changed
+UI,surveyTitle,Chart the next ring,Нанести следующее кольцо,v4.15-4.18,live,changed
+UI,surveyNeed,needs {n} worlds settled,нужно заселить миров: {n},v4.15-4.18,live,changed
+UI,sectorsOpen,Rings charted,Колец на карте,v4.15-4.18,live,changed
+UI,ringCourier,COURIERS → RING {n},КУРЬЕРЫ → КОЛЬЦО {n},v4.15-4.18,live,changed
+UI,ringFleet,GENERATION {g} · FREIGHTERS → RING {n},ПОКОЛЕНИЕ {g} · ГРУЗОВОЗЫ → КОЛЬЦО {n},v4.15-4.18,live,changed
+UI,hullReach,reaches ring {n},долетает до кольца {n},v4.15-4.18,live,changed
+UI,nightB,"The outer survey brought back the readings. Past the last charted ring, space is falling in on itself, and it is falling on a schedule: it reaches the sun in <b>year {y}</b>, and every world on your chart goes with it. From that day nothing you built out there answers to anyone.<br><br>The yards can build an <b>ark</b>. It leaves on the day with whoever is standing at home — not the crews of hulls out in the dark, not the settlers on your worlds. Every berth costs metal, parts, rations and fuel, and every hand you want aboard has to be home in time.<br><br>You have <b>{n} years</b>. Everything you do from here is either more empire, or more people on the ark.","Дальняя разведка привезла показания. За последним нанесённым кольцом пространство падает само в себя, и падает по расписанию: в <b>год {y}</b> оно достигает солнца, и каждый мир на твоей карте уходит вместе с ним. С этого дня ничто из построенного там никому не ответит.<br><br>Верфи могут строить <b>ковчег</b>. Он уходит в назначенный день с теми, кто стоит дома — не с экипажами корпусов, ушедших во тьму, и не с поселенцами твоих миров. Каждое место стоит металла, деталей, провизии и топлива, и каждый, кого ты хочешь взять, должен быть дома вовремя.<br><br>У тебя <b>{n} лет</b>. Всё, что ты делаешь дальше, — это либо больше империи, либо больше людей на ковчеге.",v4.15-4.18,live,changed
+UI,genReach,freighters reach ring {n},грузовозы долетают до кольца {n},v4.15-4.18,live,changed
+UI,driveUnlocks,"When it completes: Generation {g} hulls, rings up to {s}, every crossing ×{x}.","По завершении: корпуса поколения {g}, кольца до {s}, все перелёты ×{x}.",v4.15-4.18,live,changed
+UI,outOfRange,cannot reach — rated to ring {n},не долетит — рассчитан до кольца {n},v4.15-4.18,live,changed
+UI,giveOrders,"Pick a world below to send this hull there, or scrap it.",Выбери мир ниже — корпус пойдёт туда. Или спиши.,v4.15-4.18,live,changed
+UI,statSec,Rings charted,Колец нанесено,v4.15-4.18,live,changed
+UI,needR,needs {n} live worlds,нужно живых миров: {n},v4.15-4.18,live,changed
+UI,awaiting,Free hulls — send them out,Свободные суда — отправь их,v4.15-4.18,live,changed
+UI,driveNeed,"An industrial world with population {p}, and {r} worlds settled",Промышленный мир с населением {p} и заселённых миров: {r},v4.15-4.18,live,changed
+UI,unsurveyed,"Beyond signal range. Chart this ring (Survey, Earth tab) to open it.","За пределами связи. Нанеси кольцо на карту (Разведка, вкладка Земля), чтобы открыть его.",v4.15-4.18,live,changed
+UI,sector,Ring,Кольцо,v4.15-4.18,live,changed
+LOG,drive_mark,GENERATION {n} DRIVE COMMISSIONED AT {p}. New hulls in the yards; rings up to {s} within reach.,ДВИГАТЕЛЬ ПОКОЛЕНИЯ {n} ВВЕДЁН НА {p}. Новые корпуса на верфях; кольца до {s} в досягаемости.,v4.15-4.18,live,changed
+LOG,old_night,The charts call the new ring OLD NIGHT. Nobody at the desk remembers who named it.,"На картах новое кольцо зовётся OLD NIGHT. На пульте никто не помнит, кто его так назвал.",v4.15-4.18,live,changed
+MSG,sector,That ring is beyond your hulls' range.,Это кольцо вне досягаемости твоих корпусов.,v4.15-4.18,live,changed
+MSG,reach,Not enough live worlds.,Живых миров слишком мало.,v4.15-4.18,live,changed
+MSG,range,"That hull is short-legged for a ring that far out. A bigger class, or a newer generation, can make it.",Этому корпусу не хватает дальности до этого кольца. Нужен класс побольше или новое поколение.,v4.15-4.18,live,changed
+GUIDE,p4.b2,"Range is <b>class plus generation</b>. At generation 0 a courier reaches ring 2, a hauler ring 3, a freighter ring 4. Every drive mark pushes all three out by one ring.","Дальность = <b>класс плюс поколение</b>. На поколении 0 курьер достаёт до кольца 2, тягач до 3, грузовоз до 4. Каждая отметка двигателя двигает все три на одно кольцо дальше.",v4.15-4.18,live,changed
+GUIDE,p4.b4,A hull rated too short simply refuses the order. The chart marks every ring with the class it needs.,"Корпус, которому не хватает дальности, просто не примет приказ. На карте у каждого кольца написано, какой класс нужен.",v4.15-4.18,live,changed
+GUIDE,p5.kicker,"Further out means richer, more dangerous and dearer. There is no last ring.","Дальше — значит богаче, опаснее и дороже. Последнего кольца не существует.",v4.15-4.18,live,changed
+GUIDE,p5.b2,"<b>Survey</b> (Earth tab) charts the next ring. It costs rations, fuel, metal and parts, and needs enough <b>settled worlds</b> — every world you have ever settled counts, even a spent one.","<b>Разведка</b> (вкладка Земля) наносит следующее кольцо. Стоит провизии, топлива, металла и деталей, и требует достаточно <b>заселённых миров</b> — считаются все, что ты когда-либо заселял, даже выработанные.",v4.15-4.18,live,changed
+GUIDE,p5.b3,You may chart a ring no hull of yours can reach yet. You will see it and not be able to touch it.,"Нанести на карту кольцо, куда твои корпуса ещё не долетают, теперь можно. Ты будешь его видеть и не сможешь тронуть.",v4.15-4.18,live,changed
+GUIDE,p5.b4,"The <b>drive programme</b>, hosted by an industrial world, is what closes that gap: it opens the next generation of hulls, pushes every range out by one ring and makes every crossing faster. With Generation III yards it also opens the <b>engineering programme</b>: kits of machines for your worlds.","<b>Программа двигателя</b> на промышленном мире — то, что закрывает этот разрыв: открывает следующее поколение корпусов, двигает все дальности на кольцо дальше и ускоряет все перелёты. С верфями поколения III она открывает и <b>инженерную программу</b>: комплекты техники для твоих миров.",v4.15-4.18,live,changed
+UI,cSurvey,"Charting the next ring needs enough settled worlds — every world you have ever settled counts, even a spent one. Settle more, then survey.","Нанести следующее кольцо можно, когда заселено достаточно миров — считаются все, что ты когда-либо заселял, даже выработанные. Засели больше, потом разведывай.",v4.15-4.18,live,changed
+VOICE,night_dated.1,"The outer survey came back with the readings, and I have checked them until there was nothing left to check. Past the last charted ring, space is falling in on itself. It reaches the sun in year {y}. Everything you have charted goes with it. No drive we own can outrun it; a Generation {g} drive can. {fy} I am told to say nothing else.","Дальняя разведка вернулась с показаниями, и я проверял их, пока проверять стало нечего. За последним нанесённым кольцом пространство падает само в себя. Солнца оно достигает в год {y}. Всё, что вы нанесли на карту, уйдёт вместе с ним. Ни один наш двигатель от этого не уйдёт; двигатель поколения {g} уйдёт. {fy} Больше мне говорить не велено.",v4.15-4.18,live,changed
+UI,arkdReach,"needs {n} worlds settled, you have {r}","нужно заселить миров: {n}, заселено: {r}",v4.15-4.18,live,changed
+UI,a_arkd_reach,"The ark drive (Generation {g}) needs the next drive mark, and that needs {n} worlds settled. You have settled {r}.","Двигателю ковчега (поколение {g}) нужна следующая отметка, а ей — {n} заселённых миров. Заселено: {r}.",v4.15-4.18,live,changed
+UI,arkdReachLater,{n} worlds settled on the way,по пути нужно заселить миров: {n},v4.15-4.18,live,changed
+UI,shSectorsN,{n} new ring(s),новых колец: {n},v4.15-4.18,live,changed
+UI,lineT,Hulls for this world — standing order,Суда для этого мира — постоянный приказ,v4.15-4.18,live,changed
+UI,bigSurvey,Open the {s} ring,Открыть кольцо {s},v4.15-4.18,live,changed
+UI,alertFoodBody,Earth has {n} years of rations and no farm on a line. Chart a ring and settle a farm.,У Земли провизии на {n} лет и ни одной фермы на линии. Нанеси новое кольцо и засели ферму.,v4.15-4.18,live,changed
+UI,pileAll,On the surface {s} · one hold {c}: a single trip takes it all. Grey — the pile; white frame — one hull's hold.,"На поверхности {s} · трюм одного корпуса {c}: одна ходка заберёт всё. Серое — куча, белая рамка — трюм одного корпуса.",v4.15-4.18,live,changed
+UI,pileShare,On the surface {s} · one hold {c} takes {n} per trip — {p}% of the pile. Grey — the pile; white frame — one hull's hold.,"На поверхности {s} · трюм одного корпуса {c} увозит за ходку {n} — {p}% кучи. Серое — куча, белая рамка — трюм одного корпуса.",v4.15-4.18,live,changed
+MSG,needreach,Needs {n} live worlds — you have {r}. A world is live while a colony still stands on it.,"Нужно живых миров: {n} — у тебя {r}. Мир живой, пока на нём стоит колония.",v4.15-4.18,live,changed
+MSG,ok_survey,Ring {s} charted. New worlds are on the map.,Кольцо {s} нанесено. На карте новые миры.,v4.15-4.18,live,changed
+UI,surveyWhat,"Worlds sit on rings around Earth. Charting opens ring {s}: new worlds appear on the map, farther out. It costs the resources below and needs the number of settled worlds shown — every world you have ever settled counts.","Миры стоят на кольцах вокруг Земли. Разведка открывает кольцо {s}: на карте появляются новые миры дальше от Земли. Стоит ресурсов ниже и требует показанного числа заселённых миров — считаются все миры, которые ты когда-либо заселял.",v4.15-4.18,live,changed
+UI,surveyReachRow,Worlds settled · needed,Заселено миров · нужно,v4.15-4.18,live,changed

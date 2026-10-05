@@ -10,7 +10,7 @@ for(const seed of (process.argv[2]||'11,22,33,44,55,66,77,88').split(',').map(Nu
   C.tick=function(G){ G0=G; t0(G);
     if(G.night&&G.arkMark!=null){
       if(!hit&&(G.driveLvl||0)>=G.arkMark) hit=G.day;
-      if(!hit&&(G.day-(G.night-2200))%150===0){ const f=extra.driveForecast.call(null,G,G.arkMark); samples.push(G.day+':'+(f.st==='ok'?f.y:f.st)+(f.st==='reach'?'('+f.r+'/'+f.n+')':'')) }
+      if(!hit&&(G.day-(G.night-2200))%150===0){ const f=extra.driveForecast.call(null,G,G.arkMark); samples.push(G.day+':'+(f.st==='ok'?f.y:f.st)+(f.st==='settled'?'('+f.r+'/'+f.n+')':'')) }
     }};
   const r=M.play(C,seed,3200,'pro');
   console.log(seed,'night',G0.night,'mark',G0.arkMark,'lvl',G0.driveLvl,'hit',hit,'end',r.day,r.over,'|',samples.join(' '));

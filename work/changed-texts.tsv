@@ -1,0 +1,46 @@
+UI	reach	Live worlds	Живых миров
+UI	hSectors	Rings	Колец
+UI	a_survey	You can chart ring {n}.	Можно нанести на карту кольцо {n}.
+UI	surveyTitle	Chart the next ring	Нанести следующее кольцо
+UI	surveyNeed	needs {n} worlds settled	нужно заселить миров: {n}
+UI	sectorsOpen	Rings charted	Колец на карте
+UI	ringCourier	COURIERS → RING {n}	КУРЬЕРЫ → КОЛЬЦО {n}
+UI	ringFleet	GENERATION {g} · FREIGHTERS → RING {n}	ПОКОЛЕНИЕ {g} · ГРУЗОВОЗЫ → КОЛЬЦО {n}
+UI	hullReach	reaches ring {n}	долетает до кольца {n}
+UI	nightB	The outer survey brought back the readings. Past the last charted ring, space is falling in on itself, and it is falling on a schedule: it reaches the sun in <b>year {y}</b>, and every world on your chart goes with it. From that day nothing you built out there answers to anyone.<br><br>The yards can build an <b>ark</b>. It leaves on the day with whoever is standing at home — not the crews of hulls out in the dark, not the settlers on your worlds. Every berth costs metal, parts, rations and fuel, and every hand you want aboard has to be home in time.<br><br>You have <b>{n} years</b>. Everything you do from here is either more empire, or more people on the ark.	Дальняя разведка привезла показания. За последним нанесённым кольцом пространство падает само в себя, и падает по расписанию: в <b>год {y}</b> оно достигает солнца, и каждый мир на твоей карте уходит вместе с ним. С этого дня ничто из построенного там никому не ответит.<br><br>Верфи могут строить <b>ковчег</b>. Он уходит в назначенный день с теми, кто стоит дома — не с экипажами корпусов, ушедших во тьму, и не с поселенцами твоих миров. Каждое место стоит металла, деталей, провизии и топлива, и каждый, кого ты хочешь взять, должен быть дома вовремя.<br><br>У тебя <b>{n} лет</b>. Всё, что ты делаешь дальше, — это либо больше империи, либо больше людей на ковчеге.
+UI	genReach	freighters reach ring {n}	грузовозы долетают до кольца {n}
+UI	driveUnlocks	When it completes: Generation {g} hulls, rings up to {s}, every crossing ×{x}.	По завершении: корпуса поколения {g}, кольца до {s}, все перелёты ×{x}.
+UI	outOfRange	cannot reach — rated to ring {n}	не долетит — рассчитан до кольца {n}
+UI	giveOrders	Pick a world below to send this hull there, or scrap it.	Выбери мир ниже — корпус пойдёт туда. Или спиши.
+UI	statSec	Rings charted	Колец нанесено
+UI	needR	needs {n} live worlds	нужно живых миров: {n}
+UI	awaiting	Free hulls — send them out	Свободные суда — отправь их
+UI	driveNeed	An industrial world with population {p}, and {r} worlds settled	Промышленный мир с населением {p} и заселённых миров: {r}
+UI	unsurveyed	Beyond signal range. Chart this ring (Survey, Earth tab) to open it.	За пределами связи. Нанеси кольцо на карту (Разведка, вкладка Земля), чтобы открыть его.
+UI	sector	Ring	Кольцо
+LOG	drive_mark	GENERATION {n} DRIVE COMMISSIONED AT {p}. New hulls in the yards; rings up to {s} within reach.	ДВИГАТЕЛЬ ПОКОЛЕНИЯ {n} ВВЕДЁН НА {p}. Новые корпуса на верфях; кольца до {s} в досягаемости.
+LOG	old_night	The charts call the new ring OLD NIGHT. Nobody at the desk remembers who named it.	На картах новое кольцо зовётся OLD NIGHT. На пульте никто не помнит, кто его так назвал.
+MSG	sector	That ring is beyond your hulls' range.	Это кольцо вне досягаемости твоих корпусов.
+MSG	reach	Not enough live worlds.	Живых миров слишком мало.
+MSG	range	That hull is short-legged for a ring that far out. A bigger class, or a newer generation, can make it.	Этому корпусу не хватает дальности до этого кольца. Нужен класс побольше или новое поколение.
+GUIDE	p4.b2	Range is <b>class plus generation</b>. At generation 0 a courier reaches ring 2, a hauler ring 3, a freighter ring 4. Every drive mark pushes all three out by one ring.	Дальность = <b>класс плюс поколение</b>. На поколении 0 курьер достаёт до кольца 2, тягач до 3, грузовоз до 4. Каждая отметка двигателя двигает все три на одно кольцо дальше.
+GUIDE	p4.b4	A hull rated too short simply refuses the order. The chart marks every ring with the class it needs.	Корпус, которому не хватает дальности, просто не примет приказ. На карте у каждого кольца написано, какой класс нужен.
+GUIDE	p5.kicker	Further out means richer, more dangerous and dearer. There is no last ring.	Дальше — значит богаче, опаснее и дороже. Последнего кольца не существует.
+GUIDE	p5.b2	<b>Survey</b> (Earth tab) charts the next ring. It costs rations, fuel, metal and parts, and needs enough <b>settled worlds</b> — every world you have ever settled counts, even a spent one.	<b>Разведка</b> (вкладка Земля) наносит следующее кольцо. Стоит провизии, топлива, металла и деталей, и требует достаточно <b>заселённых миров</b> — считаются все, что ты когда-либо заселял, даже выработанные.
+GUIDE	p5.b3	You may chart a ring no hull of yours can reach yet. You will see it and not be able to touch it.	Нанести на карту кольцо, куда твои корпуса ещё не долетают, теперь можно. Ты будешь его видеть и не сможешь тронуть.
+GUIDE	p5.b4	The <b>drive programme</b>, hosted by an industrial world, is what closes that gap: it opens the next generation of hulls, pushes every range out by one ring and makes every crossing faster. With Generation III yards it also opens the <b>engineering programme</b>: kits of machines for your worlds.	<b>Программа двигателя</b> на промышленном мире — то, что закрывает этот разрыв: открывает следующее поколение корпусов, двигает все дальности на кольцо дальше и ускоряет все перелёты. С верфями поколения III она открывает и <b>инженерную программу</b>: комплекты техники для твоих миров.
+UI	cSurvey	Charting the next ring needs enough settled worlds — every world you have ever settled counts, even a spent one. Settle more, then survey.	Нанести следующее кольцо можно, когда заселено достаточно миров — считаются все, что ты когда-либо заселял, даже выработанные. Засели больше, потом разведывай.
+VOICE	night_dated.1	The outer survey came back with the readings, and I have checked them until there was nothing left to check. Past the last charted ring, space is falling in on itself. It reaches the sun in year {y}. Everything you have charted goes with it. No drive we own can outrun it; a Generation {g} drive can. {fy} I am told to say nothing else.	Дальняя разведка вернулась с показаниями, и я проверял их, пока проверять стало нечего. За последним нанесённым кольцом пространство падает само в себя. Солнца оно достигает в год {y}. Всё, что вы нанесли на карту, уйдёт вместе с ним. Ни один наш двигатель от этого не уйдёт; двигатель поколения {g} уйдёт. {fy} Больше мне говорить не велено.
+UI	arkdReach	needs {n} worlds settled, you have {r}	нужно заселить миров: {n}, заселено: {r}
+UI	a_arkd_reach	The ark drive (Generation {g}) needs the next drive mark, and that needs {n} worlds settled. You have settled {r}.	Двигателю ковчега (поколение {g}) нужна следующая отметка, а ей — {n} заселённых миров. Заселено: {r}.
+UI	arkdReachLater	{n} worlds settled on the way	по пути нужно заселить миров: {n}
+UI	shSectorsN	{n} new ring(s)	новых колец: {n}
+UI	lineT	Hulls for this world — standing order	Суда для этого мира — постоянный приказ
+UI	bigSurvey	Open the {s} ring	Открыть кольцо {s}
+UI	alertFoodBody	Earth has {n} years of rations and no farm on a line. Chart a ring and settle a farm.	У Земли провизии на {n} лет и ни одной фермы на линии. Нанеси новое кольцо и засели ферму.
+UI	pileAll	On the surface {s} · one hold {c}: a single trip takes it all. Grey — the pile; white frame — one hull's hold.	На поверхности {s} · трюм одного корпуса {c}: одна ходка заберёт всё. Серое — куча, белая рамка — трюм одного корпуса.
+UI	pileShare	On the surface {s} · one hold {c} takes {n} per trip — {p}% of the pile. Grey — the pile; white frame — one hull's hold.	На поверхности {s} · трюм одного корпуса {c} увозит за ходку {n} — {p}% кучи. Серое — куча, белая рамка — трюм одного корпуса.
+MSG	needreach	Needs {n} live worlds — you have {r}. A world is live while a colony still stands on it.	Нужно живых миров: {n} — у тебя {r}. Мир живой, пока на нём стоит колония.
+MSG	ok_survey	Ring {s} charted. New worlds are on the map.	Кольцо {s} нанесено. На карте новые миры.
+UI	surveyWhat	Worlds sit on rings around Earth. Charting opens ring {s}: new worlds appear on the map, farther out. It costs the resources below and needs the number of settled worlds shown — every world you have ever settled counts.	Миры стоят на кольцах вокруг Земли. Разведка открывает кольцо {s}: на карте появляются новые миры дальше от Земли. Стоит ресурсов ниже и требует показанного числа заселённых миров — считаются все миры, которые ты когда-либо заселял.
+UI	surveyReachRow	Worlds settled · needed	Заселено миров · нужно

@@ -19,7 +19,7 @@ function botStep(G,d){
     const fits=cands.filter(x=>canReachSector({hull:x.i},want));
     for(const x of (fits.length?fits:cands).sort((a,b)=>a.h.metal-b.h.metal)){ if(E.metal-x.h.metal<260) continue; if(buildShip(G,x.i)==='ok') break; } }
   if(!G.drive){ for(const k in G.colonies){ const p=planet(k);
-    if(p.kind==='works'&&!G.colonies[k].dark&&G.colonies[k].pop>=K.DRIVE_POP&&reach(G)>=driveReachFor(G)){ if(startDrive(G,k)==='ok') break; } } }
+    if(p.kind==='works'&&!G.colonies[k].dark&&G.colonies[k].pop>=K.DRIVE_POP&&settledCount(G)>=driveReachFor(G)){ if(startDrive(G,k)==='ok') break; } } }
   if(canSurvey(G)==='ok'){ const nd=G.need||{food:4,metal:3}; if(E.food>nd.food*90&&E.metal>300) survey(G); }
   if(d%120===0) scrapIdle(G,(G.gen||0)-2);
 }

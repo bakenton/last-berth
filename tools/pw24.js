@@ -71,7 +71,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('kit_starved logged', await p.evaluate(()=>LN.log.some(l=>l.code==='kit_starved')));
   ok('multiplier off while starved', await p.evaluate(id=>rateMult(LN.colonies[id])===1,mine));
   ok('advisor a_kitfuel', await p.evaluate(()=>advice(LN).some(a=>a.code==='a_kitfuel')));
-  await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });
+  await p.evaluate(id=>{ LN.reserves[id]=1e6; LNU.tab='target'; LNdraw() },mine);   // v4.17: a spent seam shows only the evacuation button, so give the world a seam to read the kit panel
   ok('panel says the machines stand', await p.evaluate(()=>/The machines stand/.test(document.querySelector('#rail').textContent)));
   await p.evaluate(id=>{ LN.colonies[id].store.fuel=500 },mine); await run(2);
   ok('kit_running after fuel', await p.evaluate(()=>LN.log.some(l=>l.code==='kit_running')));

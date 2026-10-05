@@ -421,7 +421,7 @@ function voiceWatch(){
        hull; everything else is a journal line. */
     if(e.code==='night_dated'){ var f0=driveForecast(G,G.arkMark);
       /* v4.14: {fy} is a whole sentence — a year at this pace, or why there is no year yet */
-      var fy0= f0.st==='ok' ? fill(T('fyOk'),{y:f0.y}) : fill(T('fyNone'),{w: f0.st==='reach'?fill(T('arkdReach'),{n:f0.n,r:f0.r}):(f0.st==='host'?fill(T('arkdHost'),{n:K.DRIVE_POP}):T('arkdStall'))});
+      var fy0= f0.st==='ok' ? fill(T('fyOk'),{y:f0.y}) : fill(T('fyNone'),{w: f0.st==='settled'?fill(T('arkdReach'),{n:f0.n,r:f0.r}):(f0.st==='host'?fill(T('arkdHost'),{n:K.DRIVE_POP}):T('arkdStall'))});
       voice('night_dated','role_sci',{y:d.y,g:roman(G.arkMark),fy:fy0},{force:true,day:e.day,seq:e.seq}) }
     else if(e.code==='ark_drive') voice('ark_drive','role_sci',{g:roman(d.g),w:d.w,y:d.y},{force:true,day:e.day,seq:e.seq});
     else if(e.code==='doomsday') voice('doomsday','role_chief',{n:d.n,b:d.b,h:d.h},{force:true,day:e.day,seq:e.seq});
@@ -733,9 +733,9 @@ function arkHead(){
   if(f.st==='ok'){
     var late=f.y-G.night;
     return out('\u2248'+f.y, late>0?'bad':(late>-K.NIGHT_NEAR/2?'warn':'good'),
-      fill(T(late>0?'arkdLate':'arkdSpare'),{n:Math.abs(late)})+(reach(G)<f.rn?' \u00b7 '+fill(T('arkdReachLater'),{n:f.rn}):''));
+      fill(T(late>0?'arkdLate':'arkdSpare'),{n:Math.abs(late)})+(settledCount(G)<f.rn?' \u00b7 '+fill(T('arkdReachLater'),{n:f.rn}):''));
   }
-  if(f.st==='reach') return out('\u2014','bad',fill(T('arkdReach'),{n:f.n,r:f.r}));
+  if(f.st==='settled') return out('\u2014','bad',fill(T('arkdReach'),{n:f.n,r:f.r}));
   if(f.st==='host') return out('\u2014','bad',fill(T('arkdHost'),{n:K.DRIVE_POP}));
   return out('\u2014','bad',T('arkdStall'));
 }
@@ -838,13 +838,13 @@ function drawAdvice(){
   document.querySelectorAll('.rail').forEach(function(e){e.classList.remove('rail')});
   var a=advice(G);
   var worst=a.length?a[0].sev:'clear';
-  var head='<button type="button" id="advhead" class="advhead '+worst+'">'+
-    '<i class="dotm '+(a.length?a[0].sev:'good')+'"></i>'+
-    '<span>'+T('advisor')+'</span>'+
-    '<b>'+a.length+'</b>'+
-    '<em>'+(U.advOpen?'\u2013':'+')+'</em></button>';
+  var tab=U.leftTab||'fleet', nShips=G.ships.filter(function(s){return s.mode!=='dead'}).length, nBld=G.ships.filter(function(s){return s.mode==='building'}).length;
+  var head='<div class="advtabs"><button type="button" class="advtab'+(tab==='fleet'?' on':'')+'" data-act="lefttab" data-tab="fleet"><span>'+T('flTab')+'</span><b>'+nShips+'</b>'+(nBld?'<small>'+fill(T('flBuilding'),{n:nBld})+'</small>':'')+'</button>'+
+    '<button type="button" id="advhead" class="advtab '+worst+(tab==='advice'?' on':'')+'" data-act="lefttab" data-tab="advice"><i class="dotm '+(a.length?a[0].sev:'good')+'"></i><span>'+T('advisor')+'</span><b>'+a.length+'</b></button>'+
+    '<button type="button" id="advtog" class="advtog" aria-label="toggle"><em>'+(U.advOpen?'\u2013':'+')+'</em></button></div>';
   var body='';
-  if(U.advOpen){
+  if(U.advOpen&&tab==='fleet') body=fleetBody();
+  else if(U.advOpen){
     var any=false; for(var kk in G.dismissed){any=true;break}
     var foot = any?'<div class="arow"><span></span><button class="chip go" type="button" data-act="undismiss">'+T('restoreAll')+'</button></div>':'';
     if(!a.length) body='<div class="advbody"><div class="arow dim">'+T('allClear')+'</div>'+foot+'</div>';
@@ -879,7 +879,7 @@ function shipChips(list){
     var sub=far?fill(T('outOfRange'),{n:shipRange(s)+1}):((s.from&&s.to)?fill(T('lineTo'),{a:nodeName(s.from),b:nodeName(s.to)}):(here||(free?T('freeNow'):shipState(s))));
     out+='<button type="button" class="chip'+(U.pickShip===s.id?' on':'')+(free?' free':'')+(far?' far':'')+'" data-ship="'+s.id+'">'+
       '<b>'+sico(HULLS[s.hull].key)+esc(hullName(HULLS[s.hull]))+'<span class="no">'+esc(fill(T('hullNo'),{n:s.id}))+'</span></b>'+
-      '<i>'+esc(fill(T('capacity'),{n:s.cap})+' · ×'+HULLS[s.hull].speed.toFixed(2)+' · '+sub)+'</i></button>';
+      '<i>'+esc(fill(T('capacity'),{n:s.cap})+' · '+speedTxt(HULLS[s.hull])+' · '+sub)+'</i></button>';
   });
   return '<div class="chips">'+out+'</div>';
 }
@@ -913,9 +913,9 @@ function railEarthPro(){
     }).join(''),'<span class="tag a">'+wait.length+'</span>');
   if(st>=5){
     var sc=surveyCost(SECTORS.length), sok=canSurvey(G), nxt=secName(SECTORS.length);
-    h+=blk(T('surveyTitle'), row(T('sectorsOpen'),SECTORS.length,'dim')+row(T('reach'),reach(G),'dim')+
-      '<button class="btn '+(sok==='ok'?'prim':'')+'" type="button" data-act="survey"'+(sok==='reach'?off('needreach',{n:K.SURVEY_REACH*SECTORS.length,r:reach(G)}):offCost(sc,E))+'>'+fill(T('surveyBtn'),{s:nxt})+
-      '<br><span class="c" style="float:none;color:var(--faint)">'+(sok==='reach'?fill(T('surveyNeed'),{n:K.SURVEY_REACH*SECTORS.length}):costHtml(sc,E))+'</span></button>');
+    h+=blk(T('surveyTitle'), row(T('sectorsOpen'),SECTORS.length,'dim')+row(T('settledRow'),settledCount(G),'dim')+
+      '<button class="btn '+(sok==='ok'?'prim':'')+'" type="button" data-act="survey"'+(sok==='settled'?off('needsettled',{n:K.SURVEY_REACH*SECTORS.length,r:settledCount(G)}):offCost(sc,E))+'>'+fill(T('surveyBtn'),{s:nxt})+
+      '<br><span class="c" style="float:none;color:var(--faint)">'+(sok==='settled'?fill(T('surveyNeed'),{n:K.SURVEY_REACH*SECTORS.length}):costHtml(sc,E))+'</span></button>');
   }
   h+=blk(T('guideBtn'),'<button class="btn" type="button" data-act="guide">'+T('guideBtn')+'</button>');
   return h;
@@ -946,9 +946,9 @@ function railEarth(){
   h+=blk(T('surveyTitle'),
     '<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('surveyWhat'),{s:nxt})+'</div>'+
     row(T('sectorsOpen'),SECTORS.length,'dim')+
-    row(T('surveyReachRow'),reach(G)+' / '+rneed,reach(G)<rneed?'bad':'good')+
+    row(T('surveyReachRow'),settledCount(G)+' / '+rneed,settledCount(G)<rneed?'bad':'good')+
     row(T('surveyPrice'),costHtml(sc,E),'dim')+
-    '<button class="btn '+(sok==='ok'?'prim':'')+'" type="button" data-act="survey"'+(sok==='reach'?off('needreach',{n:rneed,r:reach(G)}):offCost(sc,E))+'>'+
+    '<button class="btn '+(sok==='ok'?'prim':'')+'" type="button" data-act="survey"'+(sok==='settled'?off('needsettled',{n:rneed,r:settledCount(G)}):offCost(sc,E))+'>'+
       fill(T('surveyBtn'),{s:nxt})+'</button>');
   // the ark, once the Night has a date
   if(G.night){
@@ -1000,7 +1000,7 @@ function railEarth(){
       ['metal','food','parts','people'].forEach(function(kk){ if(s.out&&s.out[kk]>0) manifest.push(n0(s.out[kk])+' '+T(kk==='people'?'sendPeople':kk).toLowerCase()) });
       return '<div class="wrow free"><div>'+
         '<b>'+T('ship')+' '+s.id+'</b> <span class="dim">'+hullName(HULLS[s.hull])+' · '+fill(T('capacity'),{n:s.cap})+'</span>'+
-        '<div class="dim" style="font-size:11px">'+T('giveOrders')+'</div></div>'+
+        '<div class="dim" style="font-size:11px">'+T('giveOrders')+'</div>'+assignChips(s)+'</div>'+
         '<span class="pill free">'+T('idleHull')+'</span></div>'+
         '<button class="btn" type="button" data-act="scrap" data-s="'+s.id+'">'+T('scrapOne')+' <span class="c" style="float:none">'+costHtml({metal:scrapValue(HULLS[s.hull]).metal,people:s.crew||0},null,'+')+'</span></button>';   // v4.13: no 'new orders' — a standing order takes it
     }).join('<div style="border-top:1px solid var(--line);margin:4px 0"></div>'),
@@ -1055,8 +1055,40 @@ function pileBar(p,c,dep){
   var pk=U.pickShip!==null?shipById(G,U.pickShip):null, hull=(pk&&pk.mode==='idle'&&!(pk.from&&pk.to))?pk:null;
   if(!hull){ var best=null; onLine(G,p.id).forEach(function(o){ if(!o.retire&&(!best||o.cap>best.cap)) best=o }); hull=best }
   var cap=hull?hull.cap:0, scale=Math.max(pile,cap,1), pw=Math.round(pile/scale*100), cw=Math.round(Math.min(cap,pile)/scale*100);
-  var lbl= cap ? (pile<1 ? T('pileEmpty') : (cap>=pile ? T('pileAll') : fill(T('pileShare'),{n:n0(cap),p:Math.round(cap/pile*100)}))) : T('pileNoHull');   // v4.13: pileNoHull no longer says 'pick one'
+  var lbl= cap ? (pile<1 ? T('pileEmpty') : (cap>=pile ? fill(T('pileAll'),{s:n0(pile),c:n0(cap)}) : fill(T('pileShare'),{s:n0(pile),c:n0(cap),n:n0(cap),p:Math.round(cap/pile*100)}))) : T('pileNoHull');   // v4.18 (Nikita: 'не понятно что означает этот слайдер красный'): numbers, no red   // v4.13: pileNoHull no longer says 'pick one'
   return '<div class="pile"><div class="pile-bar"><i class="pile-fill" style="width:'+pw+'%"></i>'+(cap?'<i class="pile-take" style="width:'+cw+'%"></i>':'')+'</div><div class="pile-lbl dim">'+lbl+'</div></div>';
+}
+/* v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
+   the free courier that can lift everyone and gets there first; else the biggest one */
+function pickCourier(pid){ var p=planet(pid), c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
+  var list=freeHulls().filter(function(s){ return !(s.from&&s.to)&&!s.pend&&!s.job&&!s.retire&&HULLS[s.hull].key==='courier'&&p&&canReachSector(s,p.sec) });
+  if(!list.length) return null;
+  var fit=list.filter(function(s){return s.cap>=pop}).sort(function(a,b){ return legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b) || a.cap-b.cap });
+  if(fit.length) return fit[0];
+  return list.sort(function(a,b){return b.cap-a.cap})[0] }
+function evacInfo(p,c){
+  var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}); if(evg) return '';
+  var s=pickCourier(p.id), pop=Math.floor(c.pop);
+  if(!s){ var nh=nextHome(G,p.id,'courier'); return '<div class="warn" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T('evacNoCourierHint'),{w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}))+'</div>' }
+  return '<div class="'+(s.cap<pop?'warn':'dim')+'" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T(s.cap<pop?'evacShort':'evacWho'),{n:s.id,h:hullName(HULLS[s.hull]),c:s.cap,k:pop,l:pop-s.cap,y:legDays(G,p.id,'earth',s)}))+'</div>';
+}
+/* v4.17 (Nikita, 04.10: 'когда планета истощается, то блокируется всё. Можно только нажать эвакуировать'): a spent world offers one thing
+   v4.18 (Nikita, 04.10): …but only when the surface is empty too. While the pile lasts, hulls can still be sent to collect it */
+function depletedBlock(p,c){
+  var dep=p.kind==='works'?'parts':p.dep, left=Math.floor((c.store&&c.store[dep])||0);
+  var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'});
+  return blk(T('depletedTitle'),
+    '<div class="bad" style="font-weight:600;margin-bottom:4px">'+T('depletedLead')+'</div>'+
+    '<div class="dim" style="font-size:12px;line-height:1.45;margin-bottom:10px">'+(left>0?fill(T('depletedLeft'),{n:n0(left),r:T(dep).toLowerCase()}):T('depletedNone'))+'</div>'+
+    '<button class="btn danger bigbtn" type="button" data-act="evac" data-p="'+p.id+'"'+off(evg?'evacuating':'ok')+'>'+(evg?T('evacGoing'):T('evac'))+'</button>'+evacInfo(p,c));
+}
+function lineGenBox(max){
+  if(!max) return '';
+  var sel=lineGenSel();
+  return '<div class="lg-box"><div class="lg-hd"><span>'+T('lineGen')+'</span><b>'+roman(sel)+(sel===max?' \u00b7 '+T('lineGenNewest'):'')+'</b></div>'+
+    '<div class="lg-row"><button type="button" class="btn sm" data-act="lgen" data-d="-1">\u25c0</button>'+genTrack(sel,max)+
+    '<button type="button" class="btn sm" data-act="lgen" data-d="1">\u25b6</button></div>'+
+    (sel<max-K.GEN_OVERLAP?'<div class="warn" style="font-size:11.5px;margin-top:3px">'+T('lineGenRetired')+'</div>':'')+'</div>';
 }
 function railTarget(){
   if(!U.sel) return blk(T('tabTarget'),'<div class="dim">'+T('selectPlanet')+'</div>');
@@ -1069,6 +1101,7 @@ function railTarget(){
     '<div style="color:'+KCOL[p.kind]+';font-weight:600;display:flex;align-items:center;gap:7px">'+kico(p.kind,'kico')+T(KIND[p.kind])+'</div>'+
     '<div class="dim" style="font-size:12px;line-height:1.45">'+T(KINDD[p.kind])+'</div>'+
     '<div class="rows" style="margin-top:4px">'+
+    row(T('sector'),p.sec+1)+
     row(T('travel'),fill(T('days'),{n:travelDays(G,p.dist)}))+
     (isFinite(res)? row(pico('pile',p.kind==='works'?'parts':p.dep)+T('seamLeft'), res>0? seamYears(p.id) : T('depleted'), res>0?'':'bad') : '')+
     '</div>',
@@ -1078,6 +1111,9 @@ function railTarget(){
   var hulls=assignable(p.id);
   var bf=busyFarLine(p.id);
 
+  if(c&&!c.dark&&isFinite(res)&&res<=0&&pileLeft(G,p.id)<1) return h+depletedBlock(p,c);   // v4.17/v4.18: seam spent AND surface empty — only evacuation
+  if(c&&!c.dark&&isFinite(res)&&res<=0){ var dl=pileLeft(G,p.id), dd=p.kind==='works'?'parts':p.dep;   // v4.18: seam spent, pile still there — collect it
+    h+=blk(T('dryTitle'),'<div class="warn" style="font-size:12.5px;line-height:1.45">'+fill(T('dryLead'),{n:n0(dl),r:T(dd).toLowerCase()})+'</div>') }
   if(!c){
     /* v4.4 (Nikita, 25.09): no settlers/rations fields — the party is as many as the world takes, the hold
        carries and Earth spares; the preview says the number. */
@@ -1104,7 +1140,7 @@ function railTarget(){
       '<div class="bs"><small>'+T('bsStock')+'</small><b>'+pico('house',depB)+n0(c.store[depB]||0)+'</b></div>'+
       '<div class="bs"><small>'+T('bsHands')+'</small><b>'+ico('people')+n0(c.pop)+'</b></div>'+
       '<div class="bs"><small>'+T('bsMakes')+'</small><b>'+pico('plant')+(lrB&&lrB.makes>0.001?lrB.makes.toFixed(1)+T('perYear'):'—')+'</b></div>'+
-    '</div>'+(bigVerdict?'<div class="bs-verdict '+bigCls+'">'+bigVerdict+'</div>':'')+pileBar(p,c,depB)+
+    '</div>'+(bigVerdict?'<div class="bs-verdict '+bigCls+'">'+bigVerdict+'</div>':'')+(lrB&&lrB.hulls?'<div class="bs-rates dim">'+fill(T('rateLine'),{m:lrB.makes.toFixed(1),h:lrB.carries.toFixed(1)})+'</div>':'')+pileBar(p,c,depB)+
     '<div class="pile-lbl dim">'+T('hauledSoFar')+' <b class="c-'+depB+'">'+qty(depB,n0((c.hauledOut||{})[depB]||0),true)+'</b></div></div>';   // v4.13: the haul record in one line
   h+=blk(T('lastReport'),
     row(T('reportAge'),''+fill(T('ago'),{n:rep.age}),'dim')+
@@ -1126,6 +1162,7 @@ function railTarget(){
   }
 
   /* v4.13 (Nikita, 30.09): 'Line health' is gone — the big status above already gives the verdict */
+  if(!c.dark) h+=freeHullsBlock(p);   // v4.16 (F-03): idle hulls that can reach this world, one tap to send
   if(!c.dark) h+=lineBlock(p,c);   // v4.6: the standing order; v4.13: it carries the evacuation button too
 
   // v4.4: the engineering block — what the machines do here, and the next kit
@@ -1158,11 +1195,11 @@ function railTarget(){
     var dh='';
     if(!G.drive){
       var dmiss=[];
-      if(reach(G)<driveReachFor(G)) dmiss.push(fill(T('needR'),{n:driveReachFor(G)}));
+      if(settledCount(G)<driveReachFor(G)) dmiss.push(fill(T('needSettled'),{n:driveReachFor(G)}));
       if(c.pop<K.DRIVE_POP) dmiss.push(T('population')+' '+K.DRIVE_POP);
       /* v4.10 (Nikita, 27.09: 'непонятно, как получать суда следующих поколений'): say what it is and what it costs */
       dh+='<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('driveExplain'),{n:driveWorkFor(G),g:roman((G.driveLvl||0)+1)})+'</div>';
-      dh+='<button class="btn '+(dmiss.length?'':'bigbtn')+'" type="button" data-act="drive" data-p="'+p.id+'"'+(dmiss.length?(reach(G)<driveReachFor(G)?off('needreach',{n:driveReachFor(G),r:reach(G)}):off('pop')):'')+'>'+T('driveHost')+
+      dh+='<button class="btn '+(dmiss.length?'':'bigbtn')+'" type="button" data-act="drive" data-p="'+p.id+'"'+(dmiss.length?(settledCount(G)<driveReachFor(G)?off('needsettled',{n:driveReachFor(G),r:settledCount(G)}):off('pop')):'')+'>'+T('driveHost')+
         (dmiss.length?'<br><span class="c" style="float:none;color:var(--rust)">'+dmiss.join(' · ')+'</span>':'')+'</button>';
     } else if(G.drive===p.id) dh+=row(T('driveTitle'),Math.round(G.driveWork)+' / '+driveWorkFor(G),'warn')+'<div class="meter"><i style="width:'+Math.min(100,Math.round(G.driveWork/driveWorkFor(G)*100))+'%"></i></div>';
     else dh+='<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('driveElsewhere'),{p:pname(G.drive)})+'</div>';
@@ -1175,7 +1212,7 @@ function lineBlock(p,c){
   var L=lineOf(G,p.id)||{want:{courier:0,hauler:0,freighter:0},renew:true,wait:{}};
   var all=onLine(G,p.id), rows='';
   for(var ci=0;ci<CLASSES.length;ci++){ var cls=CLASSES[ci];
-    var hi=currentHull(G,cls), hh=hi!==null?HULLS[hi]:null;
+    var selG=lineGenSel(), hi=hullAt(cls,selG); if(hi===null) hi=currentHull(G,cls); var hh=hi!==null?HULLS[hi]:null;   // v4.17: the generation on the track
     if(!hh||reach(G)<hh.reach) continue;                      // v4.10 (Nikita, 27.09): classes not yet open stay off the card
     var want=L.want[cls]||0;
     var flying=all.filter(function(o){return !o.retire&&shipClass(o)===cls&&o.mode!=='building'}).length;
@@ -1188,11 +1225,15 @@ function lineBlock(p,c){
     if(flying) st+=(st?' · ':'')+fill(T('lineFlying'),{n:flying});
     if(yard) st+=(st?' · ':'')+fill(T('lineYard'),{n:yard});
     if(retiring) st+=(st?' · ':'')+fill(T('lineRetiring'),{n:retiring});
+    var gmap={}; all.forEach(function(o){ if(!o.retire&&shipClass(o)===cls){ var gg=hullGen(o); gmap[gg]=(gmap[gg]||0)+1 } });
+    var gtxt=Object.keys(gmap).sort(function(a,b){return a-b}).map(function(g){ return roman(+g)+'\u00d7'+gmap[g] }).join(' \u00b7 ');
+    if(gtxt) st+=(st?' \u00b7 ':'')+fill(T('lineGens'),{g:gtxt});
+    var idleSel=freeFor(cls,p.id,selG), buildable=selG>=(G.gen||0)-K.GEN_OVERLAP;
     var wr=L.wait&&L.wait[cls];
     if(want>flying+yard&&wr) st+=(st?' · ':'')+'<span class="warn">'+T('lineWait_'+wr)+'</span>';
     rows+='<div class="so-row"><span class="so-name"><b>'+sico(cls)+(hh?hullName(hh):T(cls))+'</b><small>'+meta+'</small></span>'+   // v4.13: .so-row is big now (CSS)
       '<span class="so-cnt"><button class="btn sm" type="button" data-act="want" data-p="'+p.id+'" data-c="'+cls+'" data-n="'+(want-1)+'"'+off(want<=0?'why_zero':'ok')+'>&minus;</button>'+
-      '<b>'+want+'</b><button class="btn sm plus" type="button" data-act="want" data-p="'+p.id+'" data-c="'+cls+'" data-n="'+(want+1)+'"'+off(!reachOk?'range':(want>=12?'why_max':(G.reserves[p.id]<=0&&pileLeft(G,p.id)<1?'depleted':'ok')))+'>+</button></span>'+
+      '<b>'+want+'</b><button class="btn sm plus" type="button" data-act="want" data-p="'+p.id+'" data-c="'+cls+'" data-g="'+selG+'" data-n="'+(want+1)+'"'+off(!reachOk?'range':(want>=12?'why_max':(G.reserves[p.id]<=0&&pileLeft(G,p.id)<1?'depleted':((!buildable&&!idleSel)?'gen_retired':'ok'))))+'>+</button></span>'+
       '<span class="so-st dim">'+(st||T('lineNone'))+'</span></div>';
   }
   /* v4.8 (Nikita, 27.09: 'хочу знать, чего и сколько на планете и какие суда там работают') */
@@ -1206,8 +1247,8 @@ function lineBlock(p,c){
   /* v4.13 (Nikita, 30.09): the counters come first and big — silhouette, class, number; the hulls serving the line
      sit under them; evacuation is the last button */
   var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'});
-  var ev='<button class="btn danger" type="button" data-act="evac" data-p="'+p.id+'"'+off(evg?'evacuating':'ok')+'>'+(evg?T('evacGoing'):T('evac'))+'</button>';
-  return blk(T('lineT'),rows+(hl?'<div class="lhs" style="margin-top:8px"><div class="dim" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">'+T('lineHulls')+'</div>'+hl+'</div>':'<div class="lhs dim" style="margin-top:8px">'+T('lineNoHulls')+'</div>')+ren+ev, lineOf(G,p.id)?'<span class="tag t">'+T('lineOn')+'</span>':'');
+  var ev='<button class="btn danger" type="button" data-act="evac" data-p="'+p.id+'"'+off(evg?'evacuating':'ok')+'>'+(evg?T('evacGoing'):T('evac'))+'</button>'+evacInfo(p,c);   // v4.18: who goes, and whether everyone fits
+  return blk(T('lineT'),lineGenBox(G.gen||0)+rows+(hl?'<div class="lhs" style="margin-top:8px"><div class="dim" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">'+T('lineHulls')+'</div>'+hl+'</div>':'<div class="lhs dim" style="margin-top:8px">'+T('lineNoHulls')+'</div>')+ren+ev, lineOf(G,p.id)?'<span class="tag t">'+T('lineOn')+'</span>':'');
 }
 
 function supplyRow(label,have,rate,bad){
@@ -1259,10 +1300,7 @@ function drawDock(){
   var E=G.earth, gnow=G.gen||0, h='';
   h+='<div class="dockhd" id="dockhd"><span>'+fill(T('genNow'),{n:roman(gnow)})+'</span><span class="dim" style="flex:0 0 auto;letter-spacing:0;text-transform:none;font-weight:400">'+fill(T('genReach'),{n:sectorLimit(gnow)+1})+'</span><em>'+(U.dockOpen?'\u2013':'+')+'</em></div><div class="dockbody">';
   /* v4.9 (Nikita, 27.09: 'хочу видеть, какие суда строятся и сколько ещё'): the yard queue sits above the buttons */
-  var bq=G.ships.filter(function(o){return o.mode==='building'}).sort(function(a,b){return a.t-b.t});
-  if(bq.length){ h+='<div class="yardq"><span class="dim">'+T('yardQueue')+'</span>';
-    bq.forEach(function(o){ var line=o.pend&&o.pend.from?pname(o.pend.from):(o.lineFor?pname(o.lineFor):''); h+='<span class="yq">'+sico(shipClass(o))+fill(T('yqItem'),{n:o.id,h:hullName(HULLS[o.hull]),y:o.t})+(line?' <span class="dim">→ '+line+'</span>':'')+'</span>' });
-    h+='</div>' }
+  /* v4.17 (Nikita, 04.10: 'в меню покупок убрать то какое судно строится и сколько времени'): the yard queue lives in the fleet panel now */
   var gens=[gnow]; if(gnow-K.GEN_OVERLAP>=0) gens.push(gnow-K.GEN_OVERLAP);
   gens.forEach(function(gg){
     var rowh='';
@@ -1271,7 +1309,7 @@ function drawDock(){
       var ok = reach(G)>=hl.reach && E.metal>=c.metal && E.fuel>=c.fuel && E.parts>=c.parts && E.people-K.EARTH_KEEP>=c.people;
       var need = reach(G)<hl.reach ? '<span class="dsub bad">'+fill(T('needR'),{n:hl.reach})+'</span>' : '';
       rowh+='<button type="button" class="dbtn" data-act="build" data-h="'+i+'"'+(reach(G)<hl.reach?off('needreach',{n:hl.reach,r:reach(G)}):offCost(c,E))+'>'+
-        '<b>'+sico(hl.key)+esc(hullName(hl))+'<small>'+esc(fill(T('capacity'),{n:hl.cap})+' · ×'+hl.speed.toFixed(2))+'</small></b>'+
+        '<b>'+sico(hl.key)+esc(hullName(hl))+'<small title="'+esc(T('speedTip'))+'">'+esc(fill(T('capacity'),{n:hl.cap})+' · '+speedTxt(hl))+'</small></b>'+
         '<span class="dsub">'+esc(fill(T('hullReach'),{n:hullRange(hl)+1})+' · '+fill(T('buildTime'),{n:hl.days}))+'</span>'+need+
         costHtml(c,E)+'</button>';
     }
@@ -1295,6 +1333,9 @@ function layoutPanels(){
   var a=el('advisor'), d=el('dock'), m=el('mapwrap'); if(!a||!d||!m) return;
   var mh=m.clientHeight, dh=d.offsetHeight;
   var room=mh-12-dh-12-12;                         // map height minus dock, minus margins
+  var sg=el('ringsign');   // v4.16: on a phone the sign spans the map top; the advisor starts under whatever height it has
+  if(window.innerWidth<=640&&sg&&sg.offsetHeight) a.style.top=(sg.offsetTop+sg.offsetHeight+8)+'px'; else a.style.top='';
+  room-=(parseInt(a.style.top,10)||12)-12;
   a.style.maxHeight=Math.max(120,Math.min(mh*0.46,room))+'px';
   d.style.maxHeight=Math.max(120,mh-12-a.offsetHeight-12-12)+'px';
 }
@@ -1441,8 +1482,103 @@ function drawOverlay(){
     '<button class="btn prim" type="button" data-act="new">'+T('newGame')+'</button>';
 }
 
-function draw(){proUpdate();voiceWatch();drawHeader();drawMap();drawRes();drawLog();drawRail();drawDock();drawAdvice();layoutPanels();drawOverlay();drawLang();drawIntro();drawCallout();drawPF()}
+/* ---------- v4.17 (Nikita, 04.10, batch 2) ----------
+   F-12/F-13 the top-left panel is the FLEET (every hull, bars for hulls in the yards); the advisor is its second tab
+   F-16 a generation track in the standing order */
+function hullProgress(s){ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/tot)) }
+function cargoTxt(s){ var out=[]; ['metal','food','fuel','parts','people'].forEach(function(k){ var v=s.cargo&&s.cargo[k]; if(v>=1) out.push(qty(k,n0(v),true)) }); return out.join(' ') }
+function fleetRow(s){
+  var h=HULLS[s.hull], cls=h.key, free=s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to), st, sub=[];
+  var dest = s.pend&&s.pend.from?pname(s.pend.from):(s.lineFor?pname(s.lineFor):((s.from&&s.from!=='earth')?pname(s.from):''));
+  if(s.mode==='building') st=fill(T('flYards'),{y:s.t});
+  else if(free) st=T('flFree');
+  else st=shipState(s);
+  sub.push(esc(fill(T('capacity'),{n:s.cap})+' \u00b7 '+speedTxt(h)));
+  if(s.crew) sub.push(esc(n0(s.crew)+' '+T('people').toLowerCase()));
+  var cg=(s.mode!=='building')?cargoTxt(s):''; if(cg) sub.push(cg);
+  if(s.mutiny) sub.push('<span class="bad">'+esc(T('mutinied'))+'</span>');
+  if(s.retire) sub.push('<span class="warn">'+esc(T('lhRetire'))+'</span>');
+  var bar = s.mode==='building' ? '<div class="pbar" title="'+esc(fill(T('flYards'),{y:s.t}))+'"><i style="width:'+Math.round(hullProgress(s)*100)+'%"></i></div>' : '';
+  return '<div class="fl-row'+(free?' free':'')+(s.mode==='building'?' bld':'')+'"><div class="fl-top"><b>'+sico(cls)+esc(hullName(h))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+
+    (dest?'<span class="fl-to">\u2192 '+esc(dest)+'</span>':'')+'<span class="fl-st">'+esc(st)+'</span></div>'+bar+'<div class="fl-sub dim">'+sub.join(' \u00b7 ')+'</div></div>';
+}
+function fleetBody(){
+  var ships=G.ships.filter(function(s){return s.mode!=='dead'});
+  if(!ships.length) return '<div class="advbody"><div class="arow dim">'+T('flEmpty')+'</div></div>';
+  var bld=[],free=[],work=[],other=[];
+  ships.forEach(function(s){
+    if(s.mode==='building') bld.push(s);
+    else if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)) free.push(s);
+    else if(s.mode==='missing'||s.mutiny) other.push(s);
+    else work.push(s);
+  });
+  bld.sort(function(a,b){return a.t-b.t}); free.sort(function(a,b){return a.id-b.id}); work.sort(function(a,b){return a.id-b.id}); other.sort(function(a,b){return a.id-b.id});
+  function grp(title,list){ return list.length?'<div class="fl-grp">'+esc(title)+' <b>'+list.length+'</b></div>'+list.map(fleetRow).join(''):'' }
+  return '<div class="advbody fleet">'+grp(T('flGrpYards'),bld)+grp(T('flGrpFree'),free)+grp(T('flGrpWork'),work)+grp(T('flGrpOther'),other)+'</div>';
+}
+function genTrack(sel,max){
+  var out='<div class="gtrack" data-gtrack="1" data-max="'+max+'" role="slider" aria-valuemin="0" aria-valuemax="'+max+'" aria-valuenow="'+sel+'">';
+  for(var i=0;i<=max;i++) out+='<i class="gseg'+(i<=sel?' fill':'')+(i===sel?' on':'')+(i<(G.gen||0)-K.GEN_OVERLAP?' old':'')+'"><u>'+roman(i)+'</u></i>';
+  return out+'</div>';
+}
+function lineGenSel(){ var g=(U.lineGen===undefined||U.lineGen===null)?(G.gen||0):U.lineGen; return Math.max(0,Math.min(G.gen||0,g)) }
+function setLineGen(g,max){ g=Math.max(0,Math.min(max,g)); if(U.lineGen===g) return; U.lineGen=(g>=(G.gen||0))?null:g; draw() }
+function genFromX(x){ var t=document.querySelector('.gtrack'); if(!t) return; var max=+t.dataset.max, r=t.getBoundingClientRect(); if(r.width<=0) return;
+  setLineGen(Math.round((x-r.left)/r.width*max),max) }
+/* ---------- v4.16 (Nikita, 04.10: 'интерфейс — самая главная часть фидбека') ----------
+   F-04 the sign + the full-screen "no free worlds" stop, F-05 new-generation panel, F-06 range line,
+   F-08 speed unit, F-01/F-02 what a standing order does, F-03 idle-hull menus */
+function freeWorlds(){ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) continue; if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])) continue; out.push(p) } return out }
+function speedTxt(hl){ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
+function freeFor(cls,pid,gen){ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.mutiny&&!s.retire&&!s.job&&shipClass(s)===cls&&p&&canReachSector(s,p.sec)&&(gen===undefined||gen===null||hullGen(s)===gen)) n++ }); return n }
+function assignChips(s){
+  var out=''; for(var k in G.colonies){ var c=G.colonies[k]; if(c.dark) continue; var p=planet(k); if(!p||!canReachSector(s,p.sec)) continue;
+    if(G.reserves[k]<=0&&p.kind!=='works'&&pileLeft(G,k)<1) continue;
+    out+='<button class="chip" type="button" data-act="assign" data-s="'+s.id+'" data-p="'+k+'"><b>\u2192 '+esc(pname(k))+'</b></button>' }
+  return out?'<div class="dim" style="font-size:11px;margin-top:4px">'+T('assignTo')+'</div><div class="chips">'+out+'</div>':'';
+}
+function freeHullsBlock(p){
+  var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
+  var body= hs.length ? hs.map(function(s){
+    return '<div class="wrow free"><div><b>'+sico(HULLS[s.hull].key)+esc(hullName(HULLS[s.hull]))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b> <span class="dim">'+esc(fill(T('capacity'),{n:s.cap})+' \u00b7 '+speedTxt(HULLS[s.hull])+' \u00b7 '+fill(T('legDays'),{n:legDays(G,p.id,'earth',s)}))+'</span></div>'+
+      '<button class="btn sm" type="button" data-act="assign" data-s="'+s.id+'" data-p="'+p.id+'">'+T('assignHere')+'</button></div>' }).join('')
+    : '<div class="dim">'+T('freeNone')+'</div>';
+  return blk(T('freeHulls'),body,hs.length?'<span class="tag a">'+hs.length+'</span>':'');
+}
+function watchRings(){
+  if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null }
+  if((G.gen||0)>U.genSeen){ U.genSeen=G.gen||0; U.newGen=G.gen||0 }
+  if(U.pro.on||!proSee('survey')||G.over||!U.langPicked) return;
+  if(!freeWorlds().length&&U.noFreeAt!==SECTORS.length&&!el('nofree')){ U.noFreeAt=SECTORS.length; showNoFree() }
+}
+function showNoFree(){
+  var d=document.createElement('div'); d.id='nofree';
+  d.innerHTML='<div class="nf-box"><h2>'+T('noFreeTitle')+'</h2><p>'+T('noFreeBody')+'</p><div class="nf-row"><button class="btn bigbtn" type="button" data-act="nofreego">'+T('noFreeGo')+'</button><button class="btn" type="button" data-act="nofreeclose">'+T('noFreeLater')+'</button></div></div>';
+  document.body.appendChild(d); U.nfResume=!U.paused; U.paused=true; SFX.play('crit');
+}
+function closeNoFree(){ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.paused=false; U.nfResume=false } }
+function drawSign(){
+  var e=el('ringsign'); if(!e) return;
+  if(U.pro.on||!proSee('survey')||!U.langPicked){ e.innerHTML=''; return }
+  var nxt=secName(SECTORS.length), sok=canSurvey(G), need=K.SURVEY_REACH*SECTORS.length, free=freeWorlds(), lim=sectorLimit(G.gen||0);
+  var line, cls='rs';
+  if(sok==='ok'){ line=fill(T('ringSignGo'),{s:nxt}); cls+=' ok' }
+  else if(sok==='settled') line=fill(T('ringSignSettled'),{r:settledCount(G),n:need});
+  else { var w=shortWhy(surveyCost(SECTORS.length),G.earth); line=fill(MSG[U.lang][w[0]]||w[0],w[1]) }
+  if(!free.length) cls+=' urgent';
+  var beyond=free.filter(function(p){return p.sec>lim}).length, rng='';
+  if(beyond) rng=fill(T('rangeWarn'),{g:roman(G.gen||0),n:lim+1,k:beyond});
+  e.innerHTML='<button type="button" class="'+cls+'" data-act="gotosurvey"><b>'+esc(fill(T('ringSignTitle'),{s:nxt}))+'</b><span>'+esc(line)+'</span></button>'+
+    (rng?'<div class="rs-range">'+esc(rng)+'</div>':'')+
+    ((U.newGen!==null&&U.newGen!==undefined)?'<button type="button" class="ng blink" data-act="gotodock"><b>'+esc(fill(T('newGenTitle'),{g:roman(U.newGen)}))+'</b><span>'+esc(T('newGenBody'))+'</span></button>':'');
+}
+function draw(){proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawLog();drawRail();drawDock();drawSign();drawAdvice();layoutPanels();drawOverlay();drawLang();drawIntro();drawCallout();drawPF()}
 window.addEventListener('resize',function(){ layoutPanels() });
+/* v4.17: the generation track is dragged with a pointer and survives the redraws (the pointer is tracked on the document) */
+document.addEventListener('pointerdown',function(e){ var t=e.target.closest&&e.target.closest('.gtrack'); if(!t) return; U.gdrag=true; genFromX(e.clientX); e.preventDefault() });
+document.addEventListener('pointermove',function(e){ if(U.gdrag) genFromX(e.clientX) });
+document.addEventListener('pointerup',function(){ U.gdrag=false });
+document.addEventListener('pointercancel',function(){ U.gdrag=false });
 
 /* ---------- actions ---------- */
 /* v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured while it is
@@ -1485,7 +1621,14 @@ document.addEventListener('click',function(ev){
     else if(a==='scrapmut'){ var nm=0; G.ships.slice().forEach(function(s){ if(s.mutiny&&s.mode==='idle'&&s.at==='earth'&&scrap(G,s.id)==='ok') nm++ }); res=nm?'ok':'noship'; act(G,'scrapmut',{n:nm},res); okc='ok_scrap' }
     else if(a==='intro'){ U.intro=false; U.start=!!U.fromStart; U.fromStart=false; draw(); return }
     else if(a==='prologue'){ U.start=false; U.intro=false; proStart(); draw(); return }
-    else if(a==='want'){ var wn=parseInt(b.dataset.n,10); res=setWant(G,b.dataset.p,b.dataset.c,wn); act(G,'want',{p:b.dataset.p,c:b.dataset.c,n:wn},res); okc='ok_want'; okp={p:pname(b.dataset.p),n:wn,c:T(b.dataset.c)} }
+    else if(a==='want'){ var wn=parseInt(b.dataset.n,10), wpid=b.dataset.p, wcls=b.dataset.c, wbefore=lineCount(G,wpid,wcls), wg=(b.dataset.g!==undefined&&wn>wbefore)?parseInt(b.dataset.g,10):undefined;
+      res=setWant(G,wpid,wcls,wn,wg); act(G,'want',{p:wpid,c:wcls,n:wn,g:wg},res); okc='ok_want'; okp={p:pname(wpid),n:wn,c:T(wcls)};
+      /* v4.16 (F-01, F-02): say whether a free hull goes first or the yards build a new one — and for which world */
+      if(res==='ok'&&wn>wbefore){ var wpin=lineGenPin(G,wpid,wcls), wneed=wn-wbefore-freeFor(wcls,wpid,wpin===null?undefined:wpin);
+        if(wneed<=0) okc='ok_want_free';
+        else { var wyc=yardCheck(G,wpid,wcls), whi=lineHull(G,wpid,wcls);
+          if(wyc==='ok'){ okc='ok_want_build'; okp.k=wneed; okp.y=whi!==null?HULLS[whi].days:0 }
+          else { okc='want_wait'; okp.w=T('lineWait_'+wyc) } } } }
     else if(a==='renew'){ res=setRenew(G,b.dataset.p,b.dataset.on==='1'); act(G,'renew',{p:b.dataset.p,on:b.dataset.on==='1'},res); okc=b.dataset.on==='1'?'ok_renew_on':'ok_renew_off' }
     else if(a==='onext'){ openNext(); draw(); return }
     else if(a==='oskip'){ openDone(); draw(); return }
@@ -1507,11 +1650,19 @@ document.addEventListener('click',function(ev){
     else if(a==='go'){ U.sel=b.dataset.p; U.tab='target'; draw(); return }
     else if(a==='goearth'){ U.tab='earth'; draw(); return }
     else if(a==='unroute'){ res=clearLine(G,+b.dataset.s); act(G,'release',{hull:+b.dataset.s},res); okc='ok_release' }
+    else if(a==='assign'){ res=setLine(G,+b.dataset.s,b.dataset.p,'earth'); act(G,'line',{p:b.dataset.p,hull:+b.dataset.s},res); okc='ok_assign'; okp={n:+b.dataset.s,p:pname(b.dataset.p)} }
+    else if(a==='lefttab'){ U.leftTab=b.dataset.tab; U.advOpen=true; draw(); return }
+    else if(a==='lgen'){ setLineGen(lineGenSel()+(+b.dataset.d),G.gen||0); return }
+    else if(a==='gotosurvey'){ U.tab='earth'; draw(); return }
+    else if(a==='gotodock'){ U.dockOpen=true; U.newGen=null; draw(); return }
+    else if(a==='nofreego'){ closeNoFree(); U.tab='earth'; draw(); return }
+    else if(a==='nofreeclose'){ closeNoFree(); draw(); return }
     else if(a==='repeat') res=repeatRun(G,+b.dataset.s);
     else if(a==='pickship'){ U.pickShip=+b.dataset.s; U.tab='target'; draw(); return }
     else if(a==='relief') res=relief(G,b.dataset.p);
-    else if(a==='evac'){ var eh=pick(b.dataset.p); res=eh===undefined?'evacNoHull':abandon(G,eh,b.dataset.p);
-      if(res==='evacNoHull'){ var nh=nextHome(G,b.dataset.p); say('evacNoHull',{p:pname(b.dataset.p),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_order')}); act(G,'evacuate',{p:b.dataset.p},res); draw(); return } act(G,'evacuate',{p:b.dataset.p},res); okc='ok_evac'; okp={p:pname(b.dataset.p)} }
+    else if(a==='evac'){ var ec=pickCourier(b.dataset.p), epid=b.dataset.p, ecol=G.colonies[epid], eh=ec?ec.id:undefined; res=eh===undefined?'evacNoHull':abandon(G,eh,epid);
+      if(res==='evacNoHull'){ var nh=nextHome(G,epid,'courier'); say('evacNoCourier',{p:pname(epid),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}); act(G,'evacuate',{p:epid},res); draw(); return }
+      if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ act(G,'evacuate',{p:epid,hull:eh},res); say('ok_evac_short',{n:eh,p:pname(epid),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap}); draw(); return } act(G,'evacuate',{p:b.dataset.p},res); okc='ok_evac'; okp={p:pname(b.dataset.p)} }
     else if(a==='punit'){ var ph=pick(b.dataset.p); res=ph===undefined?'nofree':punitive(G,ph,b.dataset.p) }
     else if(a==='search') res=search(G,pick(),+b.dataset.m);
     else if(a==='new'){var sv=el('seedin');start(sv?(parseInt(sv.value,10)||0):0);return}
@@ -1524,7 +1675,7 @@ document.addEventListener('click',function(ev){
   if(zb){ var z=zb.dataset.zoom;
     if(z==='fit'){ VFIT=true; viewFit() } else viewZoom(z==='in'?0.75:1.35);
     drawMap(); return }
-  if(ev.target.closest&&ev.target.closest('#advhead')){ U.advOpen=!U.advOpen; if(!U.advOpen) el('advisor').style.height=''; drawAdvice(); layoutPanels(); return }
+  if(ev.target.closest&&ev.target.closest('#advtog')){ U.advOpen=!U.advOpen; if(!U.advOpen) el('advisor').style.height=''; drawAdvice(); layoutPanels(); return }
   if(ev.target.closest&&ev.target.closest('#dockhd')){ U.dockOpen=!U.dockOpen; drawDock(); layoutPanels(); return }
   var sc=ev.target.closest?ev.target.closest('[data-ship]'):null;
   if(sc){ U.pickShip=+sc.dataset.ship; draw(); return }
