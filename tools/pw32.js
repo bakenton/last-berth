@@ -53,9 +53,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await run(12); await closePf();
   const D=await p.evaluate(w=>{ const id=w.b; const c=LN.colonies[id]; if(!c) return null; LN.reserves[id]=0; c.store.metal=500; LN.earth.metal=3000; LN.earth.fuel=5000; LN.earth.people=400;
     const r1=setWant(LN,id,'courier',1); tick(LN); LN.pauseNow=false; const L=lineOf(LN,id); LNU.sel=id; LNU.tab='target'; LNdraw();
-    const plus=document.querySelector('[data-act="want"][data-c="courier"].plus'); return {r1, wait:L&&L.wait&&L.wait.courier, on:onLine(LN,id).length, plusOff:plus&&plus.getAttribute('aria-disabled')} },W);
+    const plus=document.querySelector('[data-act="want"][data-c="courier"].plus'); return {r1, wait:L&&L.wait&&L.wait.courier, on:onLine(LN,id).length, plus:!!plus, plusOff:plus&&plus.getAttribute('aria-disabled')} },W);
   ok('dead seam + pile: setWant ok, yards do not answer depleted, a hull is on the line', D&&D.r1==='ok'&&D.wait!=='depleted'&&D.on>0, JSON.stringify(D));
-  ok('dead seam + pile: + button enabled', D&&D.plusOff!=='true', JSON.stringify(D));
+  ok('dead seam + pile: + button is there and enabled', D&&D.plus&&D.plusOff!=='true', JSON.stringify(D));   // 05.10: a missing button used to pass
   // v4.17/v4.18: seam spent AND surface empty — the standing order is not drawn at all, the card is the 'Spent world' block with evacuation only
   const D2=await p.evaluate(w=>{ const id=w.b; LN.colonies[id].store.metal=0; LNdraw(); const plus=document.querySelector('[data-act="want"][data-c="courier"].plus');
     return {plus:!!plus, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), spent:/Spent world/.test(document.querySelector('#rail').textContent), r:setWant(LN,id,'courier',3)} },W);
