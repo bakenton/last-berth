@@ -3,14 +3,13 @@
    Bots (F-20, Nikita 05.10): idle and greedy are the floor — they must lose. The rest are STYLES of play, all on standing orders:
      rush    — Nikita: settle everything in reach at once, chart and run the drive as early as allowed, biggest hulls
      serial  — the tester: one live world per trade; when it runs dry, evacuate and settle the next
-     visitor — looks at the desk once in 60 years and gives every order it can, then leaves
-     hoarder — moves only with a cushion: deep stores before a settlement, a hull or a survey
+     ark     — builds as many berths as it can and sails: once the Night is dated it stops growing and spends everything on ark blocks
+   (visitor / hoarder dropped 06.10 by Nikita: two player styles + the ark runner.)
    Legacy bots (expand / pro / tidy / late) still run with BOTS=expand,pro,tidy,late. */
 const STYLES={
   rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true},
   serial: {hands:30, keep:260,  sFood:90,  sMetal:300,  serial:true, evac:true},
-  visitor:{hands:30, keep:260,  sFood:90,  sMetal:300,  every:60, reps:8, evac:true},
-  hoarder:{hands:80, keep:1500, sFood:220, sMetal:1500, foodYears:150, evac:true}
+  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200}
 };
 const fs=require('fs');
 function load(path){
@@ -51,7 +50,8 @@ function play(C,seed,days,bot){
       if(s) C.setLine(G,s.id,k,'earth');
     }
     // 2. settle the best free world we can reach (deeper is richer)
-    if(E.people>K.EARTH_KEEP+P.hands&&!(P.foodYears&&E.food<need.food*P.foodYears)){
+    const arkOnly=P.ark&&G.night&&C.nightLeft(G)<=P.arkLeft;                              // the ark runner stops growing once the Night is dated
+    if(!arkOnly&&E.people>K.EARTH_KEEP+P.hands&&!(P.foodYears&&E.food<need.food*P.foodYears)){
       let best=null,bv=-1e9;
       for(let i=0;i<PLANETS.length;i++){
         const p=PLANETS[i];
@@ -80,7 +80,7 @@ function play(C,seed,days,bot){
       }
     }
     // 3. yards — cheapest hull that can serve the deepest world wanting service
-    if(freeHulls(G).length<(pro?2:1)){
+    if(!arkOnly&&freeHulls(G).length<(pro?2:1)){
       let want=0;
       for(const k in G.colonies){ if(!lined(G,k)) want=Math.max(want,C.planet(k).sec);
         else if(pro){ const lr=C.lineRate(G,k); if(lr&&lr.piling&&(G.colonies[k].store[lr.dep]||0)>3000) want=Math.max(want,C.planet(k).sec) } }
@@ -143,14 +143,14 @@ function play(C,seed,days,bot){
         const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s){ C.abandon(G,s.id,k); break } }   // v4.18: only a courier lifts a settlement
     }
     // 5. chart further out
-    if(bot!=='greedy'&&!(bot==='late'&&G.day<1600)&&C.canSurvey(G)==='ok'){   // 'late' = tidy that does not chart before year 1600: a player who misses the window
+    if(bot!=='greedy'&&!(bot==='late'&&G.day<1600)&&!arkOnly&&C.canSurvey(G)==='ok'){   // 'late' = tidy that does not chart before year 1600: a player who misses the window
       const nd=G.need||{food:4,metal:3};
       if(E.food>nd.food*P.sFood&&E.metal>P.sMetal) C.survey(G);
     }
     // 7. the Long Night: expand and pro buy berths; only pro takes the empire apart in time
     if(G.night&&C.buildArk&&bot!=='greedy'){
       const left=C.nightLeft(G);
-      const keepM = pro ? (left>1000?1e9:(left>400?600:0)) : 300;
+      const keepM = P.ark ? (left>P.arkLeft?600:0) : pro ? (left>1000?1e9:(left>400?600:0)) : 300;
       while(C.canArk(G)==='ok'&&E.metal-keepM>0){ if(C.buildArk(G)!=='ok') break; if(bot!=='pro'&&P.legacy) break; }
       if(pro&&left<=400){
         // stop expanding: release lines, lift colonies with whatever is free, scrap what is home
@@ -180,7 +180,7 @@ function play(C,seed,days,bot){
 const corePath=process.argv[2]||'core.js';
 const days=+(process.argv[3]||2600);
 const seeds=(process.argv[4]||'11,22,33,44,55,66,77,88').split(',').map(Number);
-const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','rush','serial','visitor','hoarder']);
+const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','rush','serial','ark']);
 const agg={};
 for(const bot of bots){
   const rows=seeds.map(sd=>play(load(corePath),sd,days,bot));
