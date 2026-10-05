@@ -1,6 +1,7 @@
 ---
 name: balance
 description: Баланс LAST BERTH. Гоняет ботов (tools/sim.js), разбирает JSON-логи живых забегов Никиты, отвечает на вопросы «что будет с числами, если…» цифрами. Вызывать при любом вопросе о балансе и после правок правил в core.js. Ничего не правит в игре.
+model: sonnet
 tools: Read, Grep, Glob, Bash, Write
 ---
 
