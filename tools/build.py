@@ -1,5 +1,5 @@
 # LAST BERTH — assemble the page from live.html + edited core.js / ui.js + text rows.
-# python3 build.py            (run in /home/claude/ln)
+# python3 ../tools/build.py   (run in work/)
 #   live.html        = the published index.html (Artifact read), never edited by hand
 #   core.js, ui.js   = cut from live.html (see status doc), edited in place
 #   new-texts.tsv    = table \t key \t en \t ru   — rows to ADD (may be empty)
@@ -9,8 +9,10 @@
 # and a "new" row that is already baked with the same text is skipped (different text = error: use changed-texts).
 # Every row is checked: {placeholders} must match between EN and RU.
 import re,json,os
-live=open('live.html').read()
-core=open('core.js').read(); ui=open('ui.js').read()
+rd=lambda p:open(p,encoding='utf-8',newline='').read()
+wr=lambda p,t:open(p,'w',encoding='utf-8',newline='').write(t)   # utf-8 and LF on any platform: builds are compared byte for byte
+live=rd('live.html')
+core=rd('core.js'); ui=rd('ui.js')
 parts=re.split(r'(<script>\n.*?</script>)',live,flags=re.S)
 idx=[i for i,x in enumerate(parts) if x.startswith('<script>\n')]
 assert len(idx)==2,'expected two <script> blocks (core, ui)'
@@ -169,7 +171,7 @@ patch('.pile-take{position:absolute;left:0;top:0;bottom:0;background:var(--red);
 m=re.search(r'(<script type="application/json" id="lb-texts" data-url="[^"]*">)(.*?)(</script>)',s,re.S)
 rows=json.loads(m.group(2)); byid={r[0]+'.'+r[1]:r for r in rows}
 ph=lambda t:sorted(re.findall(r'\{\w+\}',t))
-def tsv(p): return [l.rstrip('\n').split('\t')[:4] for l in open(p,encoding='utf-8') if l.strip()] if os.path.exists(p) else []
+def tsv(p): return [l.rstrip('\n').split('\t')[:4] for l in open(p,encoding='utf-8',newline='') if l.strip()] if os.path.exists(p) else []
 added=skipped=changed=0
 for r in tsv('new-texts.tsv'):
     assert len(r)==4,r; assert ph(r[2])==ph(r[3]),'placeholders differ: '+r[1]
@@ -184,9 +186,10 @@ for c in tsv('changed-texts.tsv'):
     if byid[k][2:4]!=c[2:4]: byid[k][2]=c[2]; byid[k][3]=c[3]; changed+=1
 js=json.dumps(rows,ensure_ascii=False).replace('</','<\\/')
 s=s[:m.start()]+m.group(1)+js+m.group(3)+s[m.end():]
-open('page.html','w').write(s); open('long-night.html','w').write(s)
+wr('page.html',s); wr('long-night.html',s)
 # v4.11: the host stores what we publish — a body fragment (no <html>/<body>), ending with the lb-tools block.
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)
-open('artifact.html','w').write(s[b:e])
+wr('artifact.html',s[b:e])
+import sys; sys.stdout.reconfigure(encoding='utf-8')
 print('rows',len(rows),'· added',added,'· already baked',skipped,'· changed',changed)

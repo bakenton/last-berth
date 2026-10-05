@@ -1,15 +1,15 @@
 // v4.3 — the opening: six cards after the language, skip, keys, replay from the start screen, RU
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,260):''));
 (async()=>{ try{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
   const txt=async()=>await p.evaluate(()=>document.querySelector('#introbox .otext')?.textContent||'');
-  await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
   // 1. language → opening card 1, not the start screen
   await tap('[data-lang="en"]');
   ok('opening shown after language', await p.isVisible('#introbox.opening'));
@@ -45,7 +45,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // 5. RU
   const q=await b.newPage({viewport:{width:1600,height:1000}}); q.errs=[]; q.on('pageerror',e=>q.errs.push(String(e)));
   await q.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  await q.goto('file:///home/claude/ln/long-night.html'); await q.waitForTimeout(300);
+  await q.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await q.waitForTimeout(300);
   await q.click('[data-lang="ru"]'); await q.waitForTimeout(120);
   const ru=await q.evaluate(()=>document.querySelector('#introbox .otext').textContent);
   ok('RU card 1', /ЗЕМЛЯ, ГОД 0/.test(ru), ru);

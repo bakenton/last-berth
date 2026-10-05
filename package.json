@@ -1,0 +1,8 @@
+{
+  "name": "last-berth",
+  "private": true,
+  "description": "LAST BERTH prototype: local runtime for bots and Playwright scenarios (tools/)",
+  "devDependencies": {
+    "playwright": "^1"
+  }
+}

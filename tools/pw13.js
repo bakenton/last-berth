@@ -1,9 +1,9 @@
 // v3.6.2 → v4.14: «Подтянуть тексты» на вкладке Земля, с подменённым опубликованным CSV.
 // Фикстуры (страница со ссылкой и CSV листа) сценарий создаёт сам. 01.10.2026: переписан на PASS/FAIL, добавлен oskip, aria-disabled.
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,200):''));
-const DIR='/home/claude/ln/', URL='https://sheet.test/pub?output=csv';
+const DIR=(process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))+'/', URL='https://sheet.test/pub?output=csv';
 (async()=>{ let b; try{
   const page=fs.readFileSync(DIR+'long-night.html','utf8');
   if(!/id="lb-texts" data-url=""/.test(page)) throw new Error('lb-texts data-url not empty in the build');
@@ -12,7 +12,7 @@ const DIR='/home/claude/ln/', URL='https://sheet.test/pub?output=csv';
     'UI,day,Year-X,Год-X,header,live,changed in the sheet',
     'UI,a_idle,Hulls idle at Earth.,Корпуса без дела.,advisor,live,lost its {n}: the build must keep its own line',
     'UI,tabEarth,DRAFT,ЧЕРНОВИК,tab,draft,not live: must be ignored'].join('\n')+'\n';
-  b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const open=async(file,route)=>{
     const p=await b.newPage({viewport:{width:1600,height:1000}});
     p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));

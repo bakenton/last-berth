@@ -1,10 +1,10 @@
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1440,height:900}});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
-  await p.goto('file:///home/claude/ln/long-night.html');
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html');
   await p.waitForTimeout(400);
   await p.screenshot({path:'v1-lang.png'});
   await tap('[data-lang="ru"]'); await tap('[data-act="oskip"]'); await p.waitForTimeout(200);

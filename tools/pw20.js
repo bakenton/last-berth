@@ -1,8 +1,8 @@
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
-(async()=>{ const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
+(async()=>{ const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
  for(const vp of [{width:1280,height:720},{width:390,height:844}]){
   const p=await b.newPage({viewport:vp}); const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
-  await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
   await p.click('[data-lang="en"]'); await p.click('[data-act="oskip"]'); await p.click('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false});
   await p.evaluate(()=>{ const G=window.LN; for(let i=0;i<300;i++){tick(G);G.pauseNow=false} revealNight(G); G.nightSeen=true; });
   for(let i=0;i<5&&await p.isVisible('#pf');i++) await p.click('[data-act="pfok"]'); await p.click('.tab[data-tab="worlds"]'); for(let i=0;i<5&&await p.isVisible('#pf');i++) await p.click('[data-act="pfok"]'); await p.click('.tab[data-tab="earth"]'); await p.waitForTimeout(200);

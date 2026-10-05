@@ -1,10 +1,10 @@
 // v4.1 — the world lives by the date: collapse lore, the physicist, the square, era shifts, quiet voices
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,260):''));
 (async()=>{ try{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   async function open(lang){
     const p=await b.newPage({viewport:{width:1600,height:1000}});
     p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
@@ -12,7 +12,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     p.pf=async()=>{ if(!(await p.isVisible('#pf'))) return null; const t=(await p.textContent('#pfbox')).replace(/\s+/g,' '); return t };
     p.closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]') };
     p.redraw=async()=>{ await p.closePf(); await p.tap('.tab[data-tab="worlds"]'); await p.closePf(); await p.tap('.tab[data-tab="earth"]'); await p.waitForTimeout(120) };
-    await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(300);
+    await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
     await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
     await p.tap('[data-lang="'+lang+'"]'); await p.tap('[data-act="oskip"]'); await p.tap('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false}); await p.addScriptTag({content:BOT});
     return p;

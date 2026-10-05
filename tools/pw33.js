@@ -2,18 +2,18 @@
 // Reproduces the shape of the v4.14 log (seed 966268745): 6+ worlds settled, most of them spent and evacuated,
 // Earth rich — charting used to be shut for good ("needs reach 6", live colonies 3).
 // Usage: node pw33.js [page.html]   (default long-night.html). On v4.14 the same run is EXPECTED to FAIL the gate checks.
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const page=process.argv[2]||'long-night.html';
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,260):''));
 (async()=>{ try{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
   const closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]') };
-  await p.goto('file:///home/claude/ln/'+page); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='966268745'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]');
   const hasSettled=await p.evaluate(()=>typeof settledCount==='function');
@@ -72,4 +72,4 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('ERROR '+String(e).slice(0,300)) }
-fs.writeFileSync('/tmp/pw33.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();
+fs.writeFileSync(require('os').tmpdir()+'/pw33.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();

@@ -1,10 +1,10 @@
 // v4.18 — evacuation by courier only, collecting a spent world's pile, the pile bar (feedback batch 3). Real mouse. node pw36.js [page.html]
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const page=process.argv[2]||'long-night.html';
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,300):''));
 (async()=>{ try{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
@@ -16,7 +16,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const titles=async()=>await p.evaluate(()=>[].slice.call(document.querySelectorAll('#rail .blk h3')).map(e=>e.textContent.trim()));
   const show=async id=>{ await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },id) };
   const killFree=async cls=>{ await p.evaluate(cls=>{ LN.ships.forEach(s=>{ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&(!cls||HULLS[s.hull].key===cls)) s.mode='dead' }) },cls) };
-  await p.goto('file:///home/claude/ln/'+page); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]');
   await p.evaluate(()=>{ LNU.pro.on=false; LNU.pro.stage=99; LNU.paused=true; var E=LN.earth; E.metal=9000; E.food=20000; E.fuel=9000; E.parts=4000; E.people=3000; LNdraw() });
@@ -31,7 +31,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('the hold mark is not red any more (red is danger)', pb.bg==='rgba(0, 0, 0, 0)'&&!/255, 42, 26/.test(pb.border), JSON.stringify(pb));
   const rates=await p.evaluate(()=>{ var e=document.querySelector('.bs-rates'); return e?e.textContent:null });
   ok('the verdict carries "world makes X/yr · line hauls Y/yr"', rates&&/World makes [\d.]+\/yr · line hauls [\d.]+\/yr/.test(rates), rates);
-  await p.screenshot({path:'/tmp/v418-pile.png',clip:{x:1040,y:60,width:560,height:560}});
+  await p.screenshot({path:require('os').tmpdir()+'/v418-pile.png',clip:{x:1040,y:60,width:560,height:560}});
 
   // === seam spent, pile still there: hulls can still be sent
   await p.evaluate(id=>{ LN.reserves[id]=0; LN.colonies[id].store.metal=300 },mine); await show(mine);
@@ -48,7 +48,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const sendBtn=await p.evaluate(()=>!!document.querySelector('#rail [data-act="assign"]'));
   if(sendBtn){ await tap('#rail [data-act="assign"]'); ok('a free hull is sent to collect the pile', /sent to/.test(await toast()), await toast()); }
   else ok('a free hull is sent to collect the pile (no free hull at this moment — skipped)', true);
-  await p.screenshot({path:'/tmp/v418-dry.png',clip:{x:1040,y:60,width:560,height:900}});
+  await p.screenshot({path:require('os').tmpdir()+'/v418-dry.png',clip:{x:1040,y:60,width:560,height:900}});
 
   // === surface empty too: locked, only evacuation
   await p.evaluate(id=>{ LN.colonies[id].store.metal=0 },mine); await show(mine);
@@ -70,7 +70,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(12);
   await p.evaluate(id=>{ LN.colonies[id].pop=95 },mine); await show(mine);
   ok('before pressing: the block names the courier and who stays behind', /Courier \d+ \(Courier I\) holds 70 of 95 people — 25 will stay behind/.test(await rail()), (await rail()).match(/Courier \d+[^.]*\./));
-  await p.screenshot({path:'/tmp/v418-evac.png',clip:{x:1040,y:60,width:560,height:620}});
+  await p.screenshot({path:require('os').tmpdir()+'/v418-evac.png',clip:{x:1040,y:60,width:560,height:620}});
   await tap('[data-act="evac"]');
   const te=await toast();
   ok('pressing Evacuate: the free courier goes, and the message says 25 stay behind', /Courier \d+ is on its way to lift/.test(te)&&/25 people will stay behind/.test(te), te);
@@ -97,4 +97,4 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('ERROR '+String(e).slice(0,400)) }
-fs.writeFileSync('/tmp/pw36.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();
+fs.writeFileSync(require('os').tmpdir()+'/pw36.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();

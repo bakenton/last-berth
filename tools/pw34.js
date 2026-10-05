@@ -1,10 +1,10 @@
 // v4.16 — interface pass (feedback batch 1: F-01..F-08). Real mouse, real browser. node pw34.js [page.html]
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const page=process.argv[2]||'long-night.html';
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,300):''));
 (async()=>{ try{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
@@ -12,7 +12,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const closePf=async()=>{ for(let i=0;i<8;i++){ if(await p.isVisible('#pf')) await tap('[data-act="pfok"]'); else if(await p.evaluate(()=>!!LN.shiftOpen)) await tap('[data-act="shiftok"]'); else if(await p.isVisible('[data-act="nightok"]')) await tap('[data-act="nightok"]'); else break } };   // personal files and the 80-year shift report both block clicks
   const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ tick(LN); LN.pauseNow=false } LNdraw() },n); await closePf() };
   const toast=async()=>(await p.textContent('#toast'))||'';
-  await p.goto('file:///home/claude/ln/'+page); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]');
   await p.evaluate(()=>{ LNU.pro.on=false; LNU.pro.stage=99; LNU.paused=true; var E=LN.earth; E.metal=6000; E.food=20000; E.fuel=9000; E.parts=3000; E.people=3000; LNdraw() });
@@ -28,7 +28,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const sg=await p.evaluate(()=>{ var e=document.getElementById('ringsign'), m=document.getElementById('mapwrap').getBoundingClientRect(), r=e.getBoundingClientRect(); var bt=e.querySelector('.rs'); return {txt:e.textContent, top:Math.round(r.top-m.top), rightGap:Math.round(m.right-r.right), vis:r.width>0&&r.height>0, cls:bt?bt.className:null} });
   ok('sign is visible in the top-right corner of the map', sg.vis&&sg.top<=20&&sg.rightGap<=20, JSON.stringify(sg));
   ok('sign says NEW RING and what is missing', /NEW RING/.test(sg.txt)&&/Settled worlds: \d+ of \d+ needed/.test(sg.txt), sg.txt);
-  await p.screenshot({path:'/tmp/v416-sign.png',clip:{x:0,y:60,width:1250,height:480}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-sign.png',clip:{x:0,y:60,width:1250,height:480}});
 
   // sign turns "ready" when the gate opens, click goes to the Earth tab
   await p.evaluate(()=>{ var ids=PLANETS.filter(q=>q.sec<SECTORS.length).slice(0,6).map(q=>q.id); LN.settled=LN.settled||{}; ids.forEach(i=>LN.settled[i]=5); LNU.tab='target'; LNdraw() });
@@ -41,7 +41,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ for(var i=0;i<4;i++) openSector(LN); LNdraw() });
   const rng=await p.evaluate(()=>{ var e=document.querySelector('#ringsign .rs-range'); return e?e.textContent:null });
   ok('sign states which ring the hulls reach and how many free worlds lie beyond', rng&&/Generation I hulls reach ring \d/.test(rng)&&/Free worlds farther out: \d+/.test(rng), rng);
-  await p.screenshot({path:'/tmp/v416-range.png',clip:{x:0,y:60,width:1250,height:480}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-range.png',clip:{x:0,y:60,width:1250,height:480}});
 
   // === F-04: the full-screen stop when no free world is left (fires once per ring count)
   ok('no full-screen stop while free worlds exist', !(await p.isVisible('#nofree')));
@@ -52,7 +52,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('game is paused behind it', await p.evaluate(()=>LNU.paused===true));
   const urg=await p.evaluate(()=>document.querySelector('#ringsign .rs').className);
   ok('sign goes urgent too', /urgent/.test(urg), urg);
-  await p.screenshot({path:'/tmp/v416-nofree.png'});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-nofree.png'});
   await tap('[data-act="nofreeclose"]');
   ok('"Later" closes it and resumes the game', !(await p.isVisible('#nofree'))&&await p.evaluate(()=>LNU.paused===false));
   await run(3);
@@ -71,7 +71,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('build menu shows speed as "N.NN yr/s", no bare ×', spd.length>0&&spd.every(t=>/\d\.\d\d yr\/s/.test(t)&&!/×/.test(t)), JSON.stringify(spd));
   const tip=await p.evaluate(()=>document.querySelector('#dock .dbtn small').getAttribute('title'));
   ok('the unit has a tooltip', /Years of route/.test(tip||''), tip);
-  await p.screenshot({path:'/tmp/v416-dock.png',clip:{x:0,y:560,width:1250,height:440}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-dock.png',clip:{x:0,y:560,width:1250,height:440}});
 
   // === F-01 / F-02: what the standing order does
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
@@ -86,7 +86,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await tap('[data-act="want"][data-c="courier"].plus');
   let t2=await toast();
   ok('+ with no free hull: "No free hull of that class… building… for <world>"', /No free hull of that class/.test(t2)&&/yards are building \d+ new one\(s\) for [A-Z]{2}-\d+/.test(t2), t2);
-  await p.screenshot({path:'/tmp/v416-want.png',clip:{x:0,y:60,width:1600,height:300}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-want.png',clip:{x:0,y:60,width:1600,height:300}});
   await run(2);
   // F-02 (v4.17: the yard queue moved from the dock and the Earth tab into the fleet panel, top left)
   const fq=await p.evaluate(()=>{ var r=[].slice.call(document.querySelectorAll('#advisor .fl-row.bld')); return r.map(e=>e.textContent.replace(/\s+/g,' ')) });
@@ -99,7 +99,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   if(idleN===0){ await p.evaluate(()=>{ buildShip(LN,0); }); await run(12); await p.evaluate(()=>{ LNU.tab='earth'; LNdraw() }) }
   const chips=await p.evaluate(()=>document.querySelectorAll('#rail [data-act="assign"]').length);
   ok('Earth tab: each free hull offers the worlds it can be sent to', chips>0, chips);
-  await p.screenshot({path:'/tmp/v416-earth.png',clip:{x:1040,y:60,width:560,height:900}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-earth.png',clip:{x:1040,y:60,width:560,height:900}});
   const before=await p.evaluate(()=>LN.ships.filter(s=>s.from).length);
   await tap('#rail [data-act="assign"]');
   const tAs=await toast();
@@ -111,7 +111,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('World tab: "Free hulls at Earth" block with a Send here button', fb&&/Send here/.test(fb), fb);
   const order=await p.evaluate(()=>{ var h=[].slice.call(document.querySelectorAll('#rail .blk')).map(e=>e.querySelector('h3')?e.querySelector('h3').textContent:''); return h });
   ok('…and the order block is its own block: "Hulls for this world — standing order"', order.some(t=>/Hulls for this world/.test(t)), JSON.stringify(order));
-  await p.screenshot({path:'/tmp/v416-target.png',clip:{x:1040,y:60,width:560,height:900}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-target.png',clip:{x:1040,y:60,width:560,height:900}});
 
   // === F-05: new generation panel
   await p.evaluate(()=>{ LN.gen=1; ensureGen(1); LNdraw() });
@@ -137,17 +137,17 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('RU sign: НОВОЕ КОЛЬЦО', /НОВОЕ КОЛЬЦО/.test(ru.sign), ru.sign);
   ok('RU: no "сектор", no "охват" on sign/rail/header', !/сектор|охват/i.test(ru.sign+ru.rail+ru.hdr), (ru.sign+ru.rail+ru.hdr).match(/.{20}(сектор|охват).{20}/i));
   ok('RU header: Живых миров', /Живых миров/.test(ru.hdr), ru.hdr.slice(0,200));
-  await p.screenshot({path:'/tmp/v416-ru.png',clip:{x:0,y:60,width:1600,height:420}});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-ru.png',clip:{x:0,y:60,width:1600,height:420}});
 
   // === phone width: sign must not hide the whole map
   await p.setViewportSize({width:390,height:844}); await p.evaluate(()=>{ LNU.lang='en'; LNdraw() }); await p.waitForTimeout(200);
   const ph=await p.evaluate(()=>{ var r=document.getElementById('ringsign').getBoundingClientRect(), m=document.getElementById('mapwrap').getBoundingClientRect(); return {w:Math.round(r.width), mw:Math.round(m.width), h:Math.round(r.height), mh:Math.round(m.height)} });
   const cov=await p.evaluate(()=>{ var r=document.getElementById('ringsign').getBoundingClientRect(), a=document.getElementById('advisor').getBoundingClientRect(); var cx=r.left+r.width/2, cy=r.top+12; var top=document.elementFromPoint(cx,cy); return {onTop: !!(top&&top.closest('#ringsign')), signBottom:Math.round(r.bottom), advTop:Math.round(a.top)} });
   ok('390px: the sign sits on top and the advisor starts below it', cov.onTop&&cov.advTop>=cov.signBottom-4, JSON.stringify(cov));
-  await p.screenshot({path:'/tmp/v416-phone.png'});
+  await p.screenshot({path:require('os').tmpdir()+'/v416-phone.png'});
 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('ERROR '+String(e).slice(0,400)) }
-fs.writeFileSync('/tmp/pw34.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();
+fs.writeFileSync(require('os').tmpdir()+'/pw34.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();
 function document_text_dummy(){ return '' }

@@ -1,16 +1,16 @@
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:2});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
-  const CSS=fs.readFileSync('/home/claude/ln/fonts-local.css','utf8');
+  const CSS=fs.readFileSync(require('path').join(__dirname,'fonts-local.css'),'utf8');
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:CSS}));
   await p.route('**/fonts.gstatic.com/**',r=>r.fulfill({status:204,body:''}));
   const tap=async sel=>{const L=p.locator(sel).first(); const bb=await L.boundingBox(); if(!bb){console.log('skip',sel);return} await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
   const redraw=async()=>{ await tap('.tab[data-tab="worlds"]'); await tap('.tab[data-tab="earth"]'); await p.waitForTimeout(300); };
-  await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(700);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(700);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false}); await p.addScriptTag({content:BOT});
   await p.evaluate(()=>document.fonts.ready); console.log('seed',await p.evaluate(()=>window.LN.seed),'font ok',await p.evaluate(()=>document.fonts.check('800 20px "Inter Tight"')));

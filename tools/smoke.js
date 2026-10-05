@@ -1,10 +1,10 @@
 // smoke — один сквозной прогон: язык → пропуск вступления → пролог (стадия 1→2) → 200 лет на ×10 → вкладки Миры/Земля → Ночь → финал.
 // Без скриншотов. Запуск через tools/regress.sh smoke (пути переписывает regress.sh).
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,200):''));
 (async()=>{ let b; try{
-  b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
@@ -15,7 +15,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const stage=async()=>p.evaluate(()=>parseInt((document.querySelector('#task .tk span:last-child')||{textContent:'0'}).textContent));
   const day=async()=>p.evaluate(()=>LN.day);
   const play=async()=>{ if(await p.evaluate(()=>LNU.paused)) await tap('#b-pause') };   // #b-pause toggles the clock; #b-auto is fast-forward — not used
-  await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
   // 1. язык и вступление
   await tap('[data-lang="en"]');

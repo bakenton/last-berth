@@ -1,16 +1,16 @@
 // v4.0 — two dates: header, night modal, ark block, advisor, ark-drive log, sailed ending (wake %), grounded ending
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name+(extra!==undefined?' — '+extra:'')) };
 (async()=>{ try{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   async function open(lang){
     const p=await b.newPage({viewport:{width:1600,height:1000}});
     p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
     p.tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
     p.redraw=async()=>{ for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]'); await p.tap('.tab[data-tab="worlds"]'); for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]'); await p.tap('.tab[data-tab="earth"]'); await p.waitForTimeout(120) };
-    await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(300);
+    await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
     await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
     await p.tap('[data-lang="'+lang+'"]'); await p.tap('[data-act="oskip"]'); await p.tap('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false}); await p.addScriptTag({content:BOT});
     return p;

@@ -1,6 +1,6 @@
 // v3.6.2 check: texts moved to the sheet — the player must see exactly what v3.6.1 showed (EN + RU),
 // except the map labels that used to be hard-coded English. Real mouse for every click.
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 async function capture(b,file,lang){
@@ -8,7 +8,7 @@ async function capture(b,file,lang){
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(90)};
   const txt=async sel=>(await p.evaluate(s=>{const e=document.querySelector(s);return e?e.textContent:''},sel)).replace(/\s+/g,' ').trim();
-  await p.goto('file:///home/claude/ln/'+file); await p.waitForTimeout(300);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+file); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
   const S={};
   await tap('[data-lang="'+lang+'"]');
@@ -37,7 +37,7 @@ async function capture(b,file,lang){
   return {S,errs};
 }
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   for(const lang of ['en','ru']){
     const A=await capture(b,'long-night-old.html',lang), B=await capture(b,'long-night.html',lang);
     let same=0, diff=[];

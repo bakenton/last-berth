@@ -1,14 +1,14 @@
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 const CSS=fs.readFileSync('fonts-local.css','utf8');
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   for(const [seed,years] of [[309573272,300],[309573272,420],[475030788,380],[90593335,420]]){
     const p=await b.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:2});
     await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:CSS}));
     await p.route('**/fonts.gstatic.com/**',r=>r.fulfill({status:204,body:''}));
-    await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(500);
+    await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(500);
     await p.evaluate(s=>{ document.getElementById('seedin').value=String(s); document.querySelector('[data-act="new"]').click(); },seed);
     await p.evaluate(()=>{ document.querySelector('[data-lang="en"]').click(); document.querySelector('[data-act="gskip"]').click(); });
     await p.addScriptTag({content:BOT});

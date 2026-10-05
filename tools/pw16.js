@@ -1,9 +1,9 @@
 // v3.8 prologue walkthrough as a first-time player, real mouse, RU. Time advances through the real clock at 8x.
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const CSS=fs.readFileSync('fonts-local.css','utf8');
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:CSS}));
@@ -15,7 +15,7 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
      hdr:[...document.querySelectorAll('#hdr .hcell')].filter(c=>!c.hidden).length, dock:!document.getElementById('dock').hidden, tabs:[...document.querySelectorAll('.tab')].filter(t=>!t.hidden).length,
      callout:(document.getElementById('callout')||{}).textContent, rails:[...document.querySelectorAll('.rail')].map(e=>e.id||e.dataset.act||e.className).join(','), ring:!!document.querySelector('.railring')}));
   const waitStage=async(n,limit)=>{ const t0=Date.now(); while(Date.now()-t0<limit){ const s=await p.evaluate(()=>document.querySelector('#task .tk span:last-child').textContent); if(s.startsWith(n+' ')) return true; await p.waitForTimeout(300) } return false };
-  await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(400);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(400);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="ru"]'); await tap('[data-act="oskip"]'); await p.waitForTimeout(200);
   console.log('start screen:', (await p.textContent('#introbox')).replace(/\s+/g,' ').slice(0,120));

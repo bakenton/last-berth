@@ -1,17 +1,17 @@
 // deck v2 screenshots (EN UI, 1600x1000 @2x, real fonts)
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 const CSS=fs.readFileSync('fonts-local.css','utf8');
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const mk=async()=>{ const p=await b.newPage({viewport:{width:1600,height:1000},deviceScaleFactor:2}); p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
     await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:CSS}));
     await p.route('**/fonts.gstatic.com/**',r=>r.fulfill({status:204,body:''}));
     p.tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(140)};
     p.redraw=async()=>{ await p.tap('.tab[data-tab="worlds"]'); await p.tap('.tab[data-tab="earth"]'); await p.waitForTimeout(200) };
     p.clearPF=async()=>{ for(let i=0;i<5;i++){ if(await p.isVisible('#intro')&&await p.locator('[data-act="nightok"]').count()) await p.tap('[data-act="nightok"]'); if(await p.isVisible('#pf')) await p.tap('[data-act="pfok"]'); else break } };
-    await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(600); await p.evaluate(()=>document.fonts.ready); return p };
+    await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(600); await p.evaluate(()=>document.fonts.ready); return p };
   // 1. start screen + prologue
   let p=await mk();
   await p.tap('[data-lang="en"]'); await p.tap('[data-act="oskip"]'); await p.mouse.move(5,5); await p.waitForTimeout(200);

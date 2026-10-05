@@ -1,10 +1,10 @@
 // v3.9 personal files: voices in the journal, the window at the moments that matter, the portrait
-const {chromium}=require('/opt/node-tools/node_modules/playwright');
+const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[0];
 const CSS=fs.readFileSync('fonts-local.css','utf8');
 (async()=>{
-  const b=await chromium.launch({executablePath:'/opt/pw-browsers/chromium'});
+  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:CSS}));
@@ -12,7 +12,7 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
   const pf=async()=>p.evaluate(()=>{const e=document.getElementById('pf'); if(!e) return null; const c=e.querySelector('canvas'); const ctx=c.getContext('2d'); const d=ctx.getImageData(0,0,64,64).data; let lit=0; for(let i=0;i<d.length;i+=4) if(d[i]>100) lit++; return {text:e.textContent.replace(/\s+/g,' ').trim().slice(0,160), lit}});
   const redraw=async()=>{ await tap('.tab[data-tab="worlds"]'); await tap('.tab[data-tab="earth"]'); await p.waitForTimeout(150) };
-  await p.goto('file:///home/claude/ln/long-night.html'); await p.waitForTimeout(400);
+  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(400);
   await p.evaluate(()=>{ document.getElementById('seedin').value='519788167'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="ru"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false}); await p.addScriptTag({content:BOT});
   // play 300 years through the real clock in chunks so voiceWatch sees the log grow

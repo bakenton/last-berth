@@ -146,7 +146,7 @@ function play(C,seed,days,bot){
     // 6. break up hulls the yards no longer build
     if(pro&&d%120===0) C.scrapIdle(G,(G.gen||0)-2);
   }
-  if(process.env.DUMP&&bot==='pro'&&seed==+process.env.DUMP){ require('fs').writeFileSync('/tmp/dump.json',C.exportLog(G)) }
+  if(process.env.DUMP&&bot==='pro'&&seed==+process.env.DUMP){ require('fs').writeFileSync(require('os').tmpdir()+'/dump.json',C.exportLog(G)) }
   let worlds=0, depth=0, couriers=0, big=0, tiers=0;
   for(const k in G.colonies){ if(G.colonies[k].dark) continue; worlds++; depth+=1+C.planet(k).sec*0.5; tiers+=(G.colonies[k].tier||0) }
   G.ships.forEach(s=>{ if(s.mode==='dead')return; const h=C.HULLS[s.hull]; if(h.key==='courier')couriers++; else big++ });
