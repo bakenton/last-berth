@@ -15,7 +15,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='398763448'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]'); await p.evaluate(()=>{ LNU.shiftStop=false });
-  ok('version string 4.14 in the run log', await p.evaluate(()=>JSON.parse(exportLog(LN)).v==='4.14'));
+  const ver=await p.evaluate(()=>JSON.parse(exportLog(LN)).v);
+  ok('version string 4.1x in the run log', /^4\.1\d$/.test(ver), ver);   // by format, as in pw31: the number moves every iteration
 
   // 1. evacuation with a stale pick: the player opened an unsettled world (pick = hull A), hull A left to found a colony,
   //    then "Evacuate" on a settled world must take the other free hull, not answer 'busy'
@@ -44,7 +45,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(w=>{ LNU.sel=w.b; LNU.tab='target'; LNdraw() },W);
   await tap('[data-act="evac"]');
   const ev2=await p.evaluate(()=>({toast:document.getElementById('toast').textContent, cls:document.getElementById('toast').className, last:LN.actions[LN.actions.length-1]}));
-  ok('no free hull: red toast names a hull coming home or tells to order one', /bad/.test(ev2.cls)&&/No free hull at Earth can lift/.test(ev2.toast)&&/(is home in \d+ years?|Order one in the dock)/.test(ev2.toast), ev2.toast);
+  // v4.18 (F-17): only a courier lifts a settlement — the toast is MSG.evacNoCourier + evacW_wait / evacW_orderC
+  ok('no free hull: red toast names a courier coming home or tells to build one', /bad/.test(ev2.cls)&&/No free courier at Earth can reach/.test(ev2.toast)&&/(Hull \d+ is home in \d+ years?|Build a courier in the dock)/.test(ev2.toast), ev2.toast);
   ok('no free hull: action logged with reason evacNoHull', ev2.last&&ev2.last.r==='evacNoHull', JSON.stringify(ev2.last));
 
   // 3. dead seam with a pile: + allowed, yards put a hull on it; empty pile: + blocked
@@ -54,8 +56,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     const plus=document.querySelector('[data-act="want"][data-c="courier"].plus'); return {r1, wait:L&&L.wait&&L.wait.courier, on:onLine(LN,id).length, plusOff:plus&&plus.getAttribute('aria-disabled')} },W);
   ok('dead seam + pile: setWant ok, yards do not answer depleted, a hull is on the line', D&&D.r1==='ok'&&D.wait!=='depleted'&&D.on>0, JSON.stringify(D));
   ok('dead seam + pile: + button enabled', D&&D.plusOff!=='true', JSON.stringify(D));
-  const D2=await p.evaluate(w=>{ const id=w.b; LN.colonies[id].store.metal=0; LNdraw(); const plus=document.querySelector('[data-act="want"][data-c="courier"].plus'); return {plusWhy:plus&&plus.getAttribute('data-why'), r:setWant(LN,id,'courier',3)} },W);
-  ok('dead seam, empty pile: + blocked with depleted, setWant depleted', D2.plusWhy==='depleted'&&D2.r==='depleted', JSON.stringify(D2));
+  // v4.17/v4.18: seam spent AND surface empty — the standing order is not drawn at all, the card is the 'Spent world' block with evacuation only
+  const D2=await p.evaluate(w=>{ const id=w.b; LN.colonies[id].store.metal=0; LNdraw(); const plus=document.querySelector('[data-act="want"][data-c="courier"].plus');
+    return {plus:!!plus, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), spent:/Spent world/.test(document.querySelector('#rail').textContent), r:setWant(LN,id,'courier',3)} },W);
+  ok('dead seam, empty pile: no +, only evacuation under "Spent world", setWant depleted', !D2.plus&&D2.acts==='evac'&&D2.spent&&D2.r==='depleted', JSON.stringify(D2));
 
   // 4. yards: build time counts against the mutiny check
   const Y=await p.evaluate(w=>{ const id=w.b; LN.reserves[id]=5000; LN.night=LN.day+30; LN.arkMark=3; LN.earth.metal=99999; LN.earth.fuel=99999; LN.earth.parts=99999; LN.earth.people=999;

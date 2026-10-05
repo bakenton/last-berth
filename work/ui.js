@@ -676,13 +676,13 @@ function drawMap(){
     var f = sh.total? (1-sh.t/sh.total) : 0;
     if(sh.mode==='missing') f = sh.lastT!==undefined?sh.lastT:0.55; else sh.lastT=f;
     var x=A.x+(B.x-A.x)*f, y=A.y+(B.y-A.y)*f;
-    s+='<line x1="'+A.x+'" y1="'+A.y+'" x2="'+B.x+'" y2="'+B.y+'" stroke="'+INK2+'" stroke-width="'+F(0.6)+'" stroke-dasharray="'+F(2)+' '+F(5)+'" opacity="0.35"/>';
+    s+='<line x1="'+A.x+'" y1="'+A.y+'" x2="'+B.x+'" y2="'+B.y+'" stroke="'+INK2+'" stroke-width="'+F(0.6)+'" stroke-dasharray="'+F(2)+' '+F(5)+'" opacity="0.35" pointer-events="none"/>';
     if(sh.mode==='missing'){
       s+='<circle cx="'+x+'" cy="'+y+'" r="'+F(8)+'" fill="none" stroke="'+RED+'" stroke-width="'+F(1)+'" stroke-dasharray="'+F(2)+' '+F(3)+'"/>';
       s+='<text x="'+x+'" y="'+y+'" fill="'+RED+'" font-size="'+F(10)+'" text-anchor="middle" class="nm">?</text>';
     } else {
       var scls=shipClass(sh), sw=(scls==='freighter'?28:(scls==='hauler'?20:14)), swz=sw*Z, shz=swz*0.625, flip=(B.x<A.x)?-1:1;
-      s+='<use href="#i-'+scls+'" x="'+(-swz/2)+'" y="'+(-shz/2)+'" width="'+swz+'" height="'+shz+'" fill="'+INK+'" transform="translate('+x+' '+y+') scale('+flip+' 1)"/>';
+      s+='<use href="#i-'+scls+'" x="'+(-swz/2)+'" y="'+(-shz/2)+'" width="'+swz+'" height="'+shz+'" fill="'+INK+'" pointer-events="none" transform="translate('+x+' '+y+') scale('+flip+' 1)"/>';   // v4.19: a hull parked on a world sat over its centre and ate the click (prologue stage 2)
     }
   }
   el('map').innerHTML=s;
@@ -929,11 +929,10 @@ function railEarth(){
   if(G.night&&canArk(G)==='ok') bb+='<button class="btn bigbtn" type="button" data-act="ark">'+fill(T('bigArk'),{n:K.ARK_BLOCK})+'<small>'+costHtml(arkCost(G),E)+'</small></button>';
   if(bb) h+='<div class="bigrow">'+bb+'</div>';
   /* v4.13 (Nikita, 30.09): the burn block, the stores, the metal ledger and the colony-by-colony census are gone —
-     the rail says only what a decision needs */
+     the rail says only what a decision needs.
+     v4.19 (Nikita, 05.10): 'Terrestrial output' and 'Hands at home' are gone too — two bare numbers nobody could act on */
   h+=blk(T('earthPop'),
     row(T('people'),n0(E.people),G.hungry?'bad':'good')+
-    row(T('earthOut'),E.pMetal.toFixed(2)+' / '+E.pFood.toFixed(2)+' / '+E.pFuel.toFixed(2),'dim')+
-    row(T('crewTitle'),'×'+(E.crewF||1).toFixed(2),(E.crewF||1)<0.95?'bad':'good')+
     row(T('reach'),reach(G))+
     row(T('crossings'),'×'+driveSpeed(G).toFixed(2)+(G.driveLvl?' · '+fill(T('driveMark'),{n:G.driveLvl}):''),G.driveLvl?'warn':'dim')
   );

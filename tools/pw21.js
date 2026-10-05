@@ -8,7 +8,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   async function open(lang){
     const p=await b.newPage({viewport:{width:1600,height:1000}});
     p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
-    p.tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
+    // v4.16 (F-04): once the bot has taken every charted world, the next redraw raises the full-screen 'no free worlds' stop; it covers the page
+    // (the Night modal too) and no click below lands — press 'Later' first. The stop itself is checked in pw34.
+    p.tap=async sel=>{ if(await p.isVisible('#nofree')){ const nb=await p.locator('[data-act="nofreeclose"]').boundingBox(); await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
+      const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
     p.pf=async()=>{ if(!(await p.isVisible('#pf'))) return null; const t=(await p.textContent('#pfbox')).replace(/\s+/g,' '); return t };
     p.closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]') };
     p.redraw=async()=>{ await p.closePf(); await p.tap('.tab[data-tab="worlds"]'); await p.closePf(); await p.tap('.tab[data-tab="earth"]'); await p.waitForTimeout(120) };

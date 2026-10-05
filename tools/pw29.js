@@ -41,7 +41,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('setWant refused on a dead seam with an empty surface', await p.evaluate(id=>setWant(LN,id,'courier',1)==='depleted',mine));
   ok('hull came home and stood down (nothing_left)', await p.evaluate(()=>{ const s=shipById(LN,window.T1); return LN.log.some(l=>l.code==='nothing_left'&&l.d.n===s.id)&&(s.mode==='idle'||s.mode==='dead')&&!s.from }));
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
-  ok('+ disabled on the dead world', await p.evaluate(()=>{ const b=document.querySelector('[data-act="want"][data-c="courier"].plus'); return b&&b.getAttribute('aria-disabled')==='true' }));
+  // v4.17/v4.18: a spent world with an empty surface shows the 'Spent world' block and one action — evacuation; the standing order (and its +) is not drawn
+  const dead=await p.evaluate(()=>({want:document.querySelectorAll('#rail [data-act="want"]').length, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), txt:document.querySelector('#rail').textContent}));
+  ok('dead world, empty surface: no + at all, only evacuation under "Spent world"', dead.want===0&&dead.acts==='evac'&&/Spent world/.test(dead.txt)&&/The seam is exhausted and the surface is empty/.test(dead.txt), JSON.stringify({want:dead.want,acts:dead.acts}));
   // 5. evacuate button greys once pressed
   await p.evaluate(id=>{ LN.earth.metal=5000; buildShip(LN,HULLS.findIndex(h=>h.gen===LN.gen&&h.key==='courier')); const s=LN.ships[LN.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.crew=HULLS[s.hull].crew; LNU.pickShip=s.id; LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   const evr=await p.evaluate(id=>abandon(LN,LNU.pickShip,id),mine);
@@ -52,9 +54,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const bigs=await p.evaluate(()=>[...document.querySelectorAll('.btn.bigbtn')].map(b=>b.dataset.act).join(','));
   ok('big survey button when a sector can be opened', /survey/.test(bigs), bigs);
   ok('big ark button when berths can be bought', /ark/.test(bigs), bigs);
-  // 7. yard queue above the dock
-  await p.evaluate(()=>{ buildShip(LN,HULLS.findIndex(h=>h.gen===LN.gen&&h.key==='courier')); LNdraw() });
-  ok('yard queue lists the building hull', await p.evaluate(()=>/In the yards:.*Hull \d+ Courier/.test(document.getElementById('dock').textContent)));
+  // 7. v4.17 (F-12/F-13): the yard queue above the dock is gone; the building hull sits in the Fleet panel (top left) with a progress bar
+  await p.evaluate(()=>{ buildShip(LN,HULLS.findIndex(h=>h.gen===LN.gen&&h.key==='courier')); LNU.leftTab='fleet'; LNU.advOpen=true; LNdraw() });
+  const yq=await p.evaluate(()=>{ const s=LN.ships[LN.ships.length-1]; const rows=[...document.querySelectorAll('#advisor .fl-row.bld')].filter(r=>r.querySelector('.pbar')).map(r=>r.querySelector('.fl-top b').textContent.trim());
+    return {mode:s.mode, id:s.id, dock:/In the yards/.test(document.getElementById('dock').textContent), rows} });
+  ok('building hull: no yard queue in the dock, Fleet panel lists it with a progress bar', yq.mode==='building'&&!yq.dock&&yq.rows.some(t=>new RegExp('^Courier .*no\\. '+yq.id+'$').test(t)), JSON.stringify(yq).slice(0,260));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close(); await b.close();
 }catch(e){ out.push('ERR '+e.stack) }

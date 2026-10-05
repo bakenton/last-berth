@@ -14,14 +14,17 @@ const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[
     await p.evaluate(()=>botRun(520));
     // a tall dock: night on (ark row), old idle hulls (scrap row); a tall advisor: many worlds piling
     await p.evaluate(()=>{ const G=window.LN; G.nightSeen=true; if(!G.night) revealNight(G); G.earth.metal=9000; G.earth.parts=3000; G.earth.fuel=9000; G.earth.food=9000; });
+    // v4.16 (F-04): after 520 bot years every charted world is taken — the full-screen 'no free worlds' stop covers the page and ate every click below
+    await p.evaluate(()=>LNdraw()); if(await p.isVisible('#nofree')) await tap('[data-act="nofreeclose"]');
     await tap('.tab[data-tab="worlds"]'); await tap('.tab[data-tab="earth"]'); await p.waitForTimeout(150);
     for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]');   // v4.14 audit: an open personal file (v3.9+) ate the fold clicks — folding went untested
-    const geo=async()=>p.evaluate(()=>{const a=document.getElementById('advisor').getBoundingClientRect(), d=document.getElementById('dock').getBoundingClientRect(); return {advBottom:Math.round(a.bottom),dockTop:Math.round(d.top),advH:Math.round(a.height),dockH:Math.round(d.height),overlap:a.bottom>d.top+1,advRows:document.querySelectorAll('#advisor .arow').length,dockRows:document.querySelectorAll('#dock .dockrow').length,resize:getComputedStyle(document.getElementById('dock')).resize+'/'+getComputedStyle(document.getElementById('advisor')).resize}});
+    const geo=async()=>p.evaluate(()=>{const a=document.getElementById('advisor').getBoundingClientRect(), d=document.getElementById('dock').getBoundingClientRect(); return {advBottom:Math.round(a.bottom),dockTop:Math.round(d.top),advH:Math.round(a.height),dockH:Math.round(d.height),overlap:a.bottom>d.top+1,advRows:document.querySelectorAll('#advisor .arow, #advisor .fl-row').length,dockRows:document.querySelectorAll('#dock .dockrow').length,resize:getComputedStyle(document.getElementById('dock')).resize+'/'+getComputedStyle(document.getElementById('advisor')).resize}});
     console.log(vp.width+'x'+vp.height, 'open:', JSON.stringify(await geo()));
     await p.screenshot({path:'p1-'+vp.width+'.png'});
     await tap('#dockhd'); console.log('  dock folded:', JSON.stringify(await geo()));
-    await tap('#dockhd'); await tap('#advhead'); console.log('  advisor folded:', JSON.stringify(await geo()));
-    await tap('#advhead');
+    // v4.17 (F-12): the top-left panel is Fleet / Needs a decision; #advhead is now a tab, the fold button is #advtog; advRows counts fleet rows too
+    await tap('#dockhd'); await tap('#advtog'); console.log('  advisor folded:', JSON.stringify(await geo()));
+    await tap('#advtog');
     // hand-resize the dock taller (simulate the native handle by setting height, as the browser would)
     await p.evaluate(()=>{ document.getElementById('dock').style.height='500px'; }); await tap('.tab[data-tab="worlds"]'); await tap('.tab[data-tab="earth"]');
     console.log('  dock dragged to 500px:', JSON.stringify(await geo()));

@@ -1116,7 +1116,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.18', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.19', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:G.ark.berths,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -2753,13 +2753,13 @@ function drawMap(){
     var f = sh.total? (1-sh.t/sh.total) : 0;
     if(sh.mode==='missing') f = sh.lastT!==undefined?sh.lastT:0.55; else sh.lastT=f;
     var x=A.x+(B.x-A.x)*f, y=A.y+(B.y-A.y)*f;
-    s+='<line x1="'+A.x+'" y1="'+A.y+'" x2="'+B.x+'" y2="'+B.y+'" stroke="'+INK2+'" stroke-width="'+F(0.6)+'" stroke-dasharray="'+F(2)+' '+F(5)+'" opacity="0.35"/>';
+    s+='<line x1="'+A.x+'" y1="'+A.y+'" x2="'+B.x+'" y2="'+B.y+'" stroke="'+INK2+'" stroke-width="'+F(0.6)+'" stroke-dasharray="'+F(2)+' '+F(5)+'" opacity="0.35" pointer-events="none"/>';
     if(sh.mode==='missing'){
       s+='<circle cx="'+x+'" cy="'+y+'" r="'+F(8)+'" fill="none" stroke="'+RED+'" stroke-width="'+F(1)+'" stroke-dasharray="'+F(2)+' '+F(3)+'"/>';
       s+='<text x="'+x+'" y="'+y+'" fill="'+RED+'" font-size="'+F(10)+'" text-anchor="middle" class="nm">?</text>';
     } else {
       var scls=shipClass(sh), sw=(scls==='freighter'?28:(scls==='hauler'?20:14)), swz=sw*Z, shz=swz*0.625, flip=(B.x<A.x)?-1:1;
-      s+='<use href="#i-'+scls+'" x="'+(-swz/2)+'" y="'+(-shz/2)+'" width="'+swz+'" height="'+shz+'" fill="'+INK+'" transform="translate('+x+' '+y+') scale('+flip+' 1)"/>';
+      s+='<use href="#i-'+scls+'" x="'+(-swz/2)+'" y="'+(-shz/2)+'" width="'+swz+'" height="'+shz+'" fill="'+INK+'" pointer-events="none" transform="translate('+x+' '+y+') scale('+flip+' 1)"/>';   // v4.19: a hull parked on a world sat over its centre and ate the click (prologue stage 2)
     }
   }
   el('map').innerHTML=s;
@@ -3006,11 +3006,10 @@ function railEarth(){
   if(G.night&&canArk(G)==='ok') bb+='<button class="btn bigbtn" type="button" data-act="ark">'+fill(T('bigArk'),{n:K.ARK_BLOCK})+'<small>'+costHtml(arkCost(G),E)+'</small></button>';
   if(bb) h+='<div class="bigrow">'+bb+'</div>';
   /* v4.13 (Nikita, 30.09): the burn block, the stores, the metal ledger and the colony-by-colony census are gone —
-     the rail says only what a decision needs */
+     the rail says only what a decision needs.
+     v4.19 (Nikita, 05.10): 'Terrestrial output' and 'Hands at home' are gone too — two bare numbers nobody could act on */
   h+=blk(T('earthPop'),
     row(T('people'),n0(E.people),G.hungry?'bad':'good')+
-    row(T('earthOut'),E.pMetal.toFixed(2)+' / '+E.pFood.toFixed(2)+' / '+E.pFuel.toFixed(2),'dim')+
-    row(T('crewTitle'),'×'+(E.crewF||1).toFixed(2),(E.crewF||1)<0.95?'bad':'good')+
     row(T('reach'),reach(G))+
     row(T('crossings'),'×'+driveSpeed(G).toFixed(2)+(G.driveLvl?' · '+fill(T('driveMark'),{n:G.driveLvl}):''),G.driveLvl?'warn':'dim')
   );

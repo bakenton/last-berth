@@ -8,7 +8,10 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   async function open(lang){
     const p=await b.newPage({viewport:{width:1600,height:1000}});
     p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
-    p.tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
+    // v4.16 (F-04): once the bot has taken every charted world, the next redraw raises the full-screen 'no free worlds' stop; it covers the page
+    // (the Night modal too) and no click below lands — press 'Later' first. The stop itself is checked in pw34.
+    p.tap=async sel=>{ if(await p.isVisible('#nofree')){ const nb=await p.locator('[data-act="nofreeclose"]').boundingBox(); await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
+      const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
     p.redraw=async()=>{ for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]'); await p.tap('.tab[data-tab="worlds"]'); for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]'); await p.tap('.tab[data-tab="earth"]'); await p.waitForTimeout(120) };
     await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
     await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
@@ -31,6 +34,7 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   const rail=(await p.textContent('#railbody')).replace(/\s+/g,' ');
   ok('A ark block: drive row + wake row + hint', /Ark drive/.test(rail)&&/Would wake at the other end/.test(rail)&&/sleepers wake/.test(rail), rail.match(/The ark[^]*?Would wake at the other end[^0-9a-z]*[^ ]+ [^ ]+ [^ ]+/i)?.[0].slice(0,260));
   await p.locator('#railbody .blk:has-text("Ark drive")').first().screenshot({path:'w3-arkblock.png'});
+  await p.tap('#advisor [data-tab="advice"]');   // v4.17 (F-12): the top-left panel opens on Fleet; the advice list is its second tab
   const adv=await p.evaluate(()=>[...document.querySelectorAll('#advisor .arow span')].map(e=>e.textContent).filter(t=>/ark drive/i.test(t)));
   ok('A advisor speaks about the ark drive (or nothing to say when on time)', true, JSON.stringify(adv));
   // forecast vs a real run: keep playing until the mark lands or 900 years pass
@@ -71,6 +75,7 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   const hr=await p.evaluate(()=>({night:document.getElementById('h-night').textContent,nsub:document.getElementById('h-nightsub').textContent,ark:document.getElementById('h-arkd').textContent,sub:document.getElementById('h-arkdsub').textContent,k:document.querySelector('#h-arkcell .k').textContent}));
   ok('B RU header', /Двигатель ковчега/i.test(hr.k)&&/IV/.test(hr.k), JSON.stringify(hr));
   await p.screenshot({path:'w6-ru-header.png',clip:{x:0,y:0,width:1600,height:70}});
+  await p.tap('#advisor [data-tab="advice"]');   // v4.17 (F-12): the top-left panel opens on Fleet; the advice list is its second tab
   const advRu=await p.evaluate(()=>[...document.querySelectorAll('#advisor .arow span')].map(e=>e.textContent).filter(t=>/ковчег/i.test(t)));
   ok('B RU advisor line for the ark drive', advRu.length>0, JSON.stringify(advRu));
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; });

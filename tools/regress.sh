@@ -19,7 +19,7 @@ command -v node >/dev/null || PATH="/c/Program Files/nodejs:$PATH"
 np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; fi; }   # путь в виде, который понимает node
 # Живые сценарии (full). Правка списка — после решения по аудиту (last-berth/AUDIT.md).
 FULL="pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 sim"
-SIM_ARGS="3000 11,22,33,44,55,66,77,88"
+SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
 SHOTS=0 RESUME=0 FRESH=0 REBASE=0 NAMES=()
 for a in "$@"; do case "$a" in
   --shots) SHOTS=1;; --resume) RESUME=1;; --fresh) FRESH=1;; --rebaseline) REBASE=1;;
@@ -112,16 +112,19 @@ if rc!='0' or len(L)<6: print('sim FAIL exit',rc,'—',' | '.join(L[-2:])[:200])
 hd=L[1].split('\t'); body=[r for r in L[2:] if r.strip()]; rows={r.split('\t')[0]:dict(zip(hd,r.split('\t'))) for r in body}
 def let(b):
     a,n=map(int,rows[b]['alive'].split('/')); return 'L' if a==0 else ('W' if 2*a>=n else '?')
-Lt={b:let(b) for b in rows}; sc={b:float(rows[b]['score']) for b in rows}
-inv=Lt['idle']=='L' and Lt['greedy']=='L' and Lt['pro']=='W' and sc['pro']==max(sc.values())
+# F-20 (Nikita, 05.10): idle and greedy are the floor and must lose; every style must sail the ark on at least half the seeds
+sail=lambda b:int(rows[b]['sailed'].split('/')[0]); n=int(rows['idle']['alive'].split('/')[1])
+styles=[b for b in rows if b not in ('idle','greedy')]
+floor=all(sail(b)==0 and rows[b]['alive'].startswith('0/') for b in ('idle','greedy') if b in rows)
+weak=[b for b in styles if 2*sail(b)<n]
+inv=floor and not weak
 cur='\n'.join([L[1]]+body)+'\n'
 if reb=='1' or not os.path.exists(base): open(base,'w',newline='\n').write(cur); note='эталон записан'
 else:
     B=open(base).read(); note='= эталон' if B==cur else 'ОТЛИЧАЕТСЯ от эталона (diff: work/logs/sim.log vs tools/sim-baseline.tsv)'
 st='FAIL' if 'ОТЛИЧ' in note else 'PASS'
-alive=rows['pro']['alive']
-print('sim %s  idle:%s greedy:%s expand:%s pro:%s(жив %s) · счёт %s · %s · инвариант %s'%(st,Lt['idle'],Lt['greedy'],Lt['expand'],Lt['pro'],alive,
-      '/'.join(rows[b]['score'] for b in rows),note,'OK' if inv else 'НЕ выполнен (pro не W)'))
+print('sim %s  ушли на ковчеге: %s · %s · инвариант %s'%(st,' '.join('%s %s'%(b,rows[b]['sailed']) for b in rows),note,
+      'OK' if inv else 'НЕ выполнен ('+('пол не держится' if not floor else 'не доходят: '+', '.join(weak))+')'))
 PY
 }
 run_one() {  # $1 name → строка итога в stdout
