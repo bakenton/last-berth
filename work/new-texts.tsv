@@ -61,8 +61,20 @@ UI	lobe2	Hemera	Гемера
 UI	lobe3	Hesperos	Гесперос
 UI	lobe4	Selene	Селена
 UI	lobe5	Nyx	Никта
-LOG	pulse_warn	Earth announces a crisis: from year {y} it will burn twice as much “{dep}” for {n} years. Stock up.	Земля объявляет кризис: с {y} года потребление ресурса «{dep}» вырастет вдвое на {n} лет. Подготовь запас.
-LOG	pulse_start	The crisis has begun: Earth burns twice as much “{dep}” for the next {n} years.	Кризис начался: потребление ресурса «{dep}» вдвое выше ещё {n} лет.
-LOG	pulse_end	The crisis is over: Earth’s “{dep}” burn is back to normal.	Кризис прошёл: расход Земли на «{dep}» вернулся к норме.
 LOG	pulse_short	Earth cannot cover the extra “{dep}” demand — people are dying.	Земля не покрывает повышенный спрос на «{dep}» — гибнут люди.
 UI	alertPulseT	Earth’s demand is rising	Спрос Земли растёт
+LOG	fold_warn	Space over {lobe} is starting to fold. In {l} years hulls there will fly twice as fast.	Пространство над «{lobe}» начинает сворачиваться. Через {l} лет суда там полетят вдвое быстрее.
+LOG	fold_start	Space over {lobe} has folded: hulls there fly twice as fast for {n} years.	Пространство над «{lobe}» свернулось: суда там летают вдвое быстрее ещё {n} лет.
+LOG	fold_end	The fold over {lobe} has closed. Flight times are back to normal.	Складка над «{lobe}» разошлась. Рейсы идут как прежде.
+LOG	drag_warn	Space over {lobe} is thickening. In {l} years hulls there will crawl.	Пространство над «{lobe}» густеет. Через {l} лет суда там поползут.
+LOG	drag_start	Space over {lobe} has gone thick: hulls fly at three-fifths speed for {n} years.	Пространство над «{lobe}» стало вязким: суда летают на 0,6 скорости ещё {n} лет.
+LOG	drag_end	Space over {lobe} has thinned out. Flight times are back to normal.	Пространство над «{lobe}» снова жидкое. Рейсы идут как прежде.
+LOG	storm_warn	A space storm is gathering over {lobe}. In {l} years nothing will be able to land there.	Над «{lobe}» собирается космическая буря. Через {l} лет там нельзя будет сесть.
+LOG	storm_start	The storm over {lobe} has broken: no landings for {n} years. Hulls hold in orbit, the stockyards fill.	Над «{lobe}» разразилась буря: посадка невозможна ещё {n} лет. Суда держатся на орбите, склады копят груз.
+LOG	storm_end	The storm over {lobe} has passed. Hulls are landing.	Буря над «{lobe}» стихла. Суда садятся.
+LOG	crisis_warn	Earth reports failing infrastructure: in {l} years its “{dep}” demand doubles for {n} years for repairs. Stock up.	На Земле выходит из строя инфраструктура: через {l} лет потребление «{dep}» вдвое вырастет на {n} лет — ремонт. Подготовь запас.
+LOG	crisis_start	Breakdowns on Earth: repairs eat twice as much “{dep}” for {n} years.	Поломки на Земле: ремонт съедает вдвое больше «{dep}» ещё {n} лет.
+LOG	crisis_end	The repairs are done: Earth’s “{dep}” demand is back to normal.	Ремонт закончен: расход «{dep}» вернулся к норме.
+LOG	spoil_warn	Earth warns of spoilage: in {l} years the food stores begin to rot — demand doubles for {n} years. Stock up.	Земля предупреждает о порче припасов: через {l} лет провизия начнёт гнить — потребление вдвое выше на {n} лет. Подготовь запас.
+LOG	spoil_start	Earth’s stores are rotting and burning: food demand is doubled for {n} years.	Припасы на Земле гниют и горят: потребление провизии вдвое выше ещё {n} лет.
+LOG	spoil_end	The losses are made good: Earth’s food demand is back to normal.	Потери восполнены: потребление провизии вернулось к норме.

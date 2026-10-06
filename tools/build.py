@@ -196,6 +196,7 @@ patch('.blk.hl{border-color:var(--ink)}',
  '.sb-free{--acc:var(--yellow)}.sb-line{--acc:#5BC0EB}.sb-kit{--acc:var(--orange)}\n'
  '.sb-kit>h3{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--orange) 24%,#000) 0 8px,color-mix(in srgb,var(--orange) 8%,#000) 8px 16px)}\n'
  '.line-hint{font-size:12px;line-height:1.45}\n'
+ '.evring{animation:lbblink 1.1s ease-in-out infinite}.evearth{animation:lbblink .9s ease-in-out infinite}.evwarn{animation:lbblink 1.6s ease-in-out infinite}\n'
  '.blk.hl{border-color:var(--ink)}','.blk.sb{border-left')
 wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.

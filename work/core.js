@@ -242,7 +242,8 @@ var K={
   /* v4.20 (Nikita, 06.10, F-21 'Pulse of the empire'): the middle of the game gets crises. Earth announces that for PULSE_LEN
      years it will burn PULSE_MULT times its usual of one resource, PULSE_WARN years ahead. Food and metal are the burns Earth
      already has; fuel and parts get a drain of the same size (half / a quarter of the metal burn). An unpaid drain kills hands. */
-  PULSE_FIRST:700, PULSE_GAP_MIN:240, PULSE_GAP_MAX:360, PULSE_WARN:30, PULSE_LEN:40, PULSE_MULT:2, PULSE_SHARE:0.6,
+  DIR_FIRST:600, DIR_GAP_MIN:200, DIR_GAP_MAX:300, DIR_MAX:2, EV_WARN:20, CRISIS_WARN:30, CRISIS_LEN:40, FOLD_SPEED:2, DRAG_SPEED:0.6,
+  PULSE_MULT:2, PULSE_SHARE:0.6,
   EARTH_METAL_KEEP:25, // v3.8.1: years of Earth's own burn a works line may not take away
   /* v4.0 — two dates (Nikita, 23.09: "why not just leave at once?" — the technology is not there).
      The ark sails only on a drive of generation ARK_DRIVE_MIN or better, and never on the drive you
@@ -366,23 +367,67 @@ function pulseDrain(G,res){
   var nd=earthNeed(G), base= res==='food'?nd.food : res==='metal'?nd.metal : nd.metal*(res==='fuel'?0.5:0.25);
   return Math.max(base*(K.PULSE_MULT-1), K.PULSE_SHARE*((G.inRate&&G.inRate[res])||0));
 }
-/* v4.20: the schedule of Earth's crises — warn, then run, then a gap */
-function pulseStep(G){
-  var P=G.pulse; if(!P) P=G.pulse={next:K.PULSE_FIRST,warn:null,active:null,n:0};
-  var R=G.rnd;
-  if(!P.warn&&!P.active&&G.day>=P.next-K.PULSE_WARN&&!(G.night&&G.night-G.day<K.NIGHT_NEAR+K.PULSE_LEN+K.PULSE_WARN)){
-    var opts=['food','metal'];
-    if(Object.keys(G.colonies).some(function(k){ return planet(k).kind==='well'&&G.reserves[k]>0 })) opts.push('fuel');
-    if((G.partsRate||0)>0.05) opts.push('parts');
-    var res=opts[Math.floor(R()*opts.length)];
-    P.warn={res:res,start:Math.max(G.day+1,P.next),end:Math.max(G.day+1,P.next)+K.PULSE_LEN};
-    G.pauseNow=true; log(G,'pulse_warn',{dep:res,y:P.warn.start,n:K.PULSE_LEN,l:P.warn.start-G.day});
+/* v4.21 (Nikita, 06.10, F-21): the director. Events come in three families, each told before it happens:
+     fold  (good)  space in a lobe folds — hulls fly FOLD_SPEED times faster there
+     drag  (bad)   space in a lobe thickens — hulls fly DRAG_SPEED times as fast
+     storm (bad)   space weather in a lobe — nothing can land there, hulls hold in orbit and the stockyards fill
+     crisis (bad)  Earth: a breakdown or lost stores — it burns more of one resource (pulseDrain)
+   The chance is random, but leans on how rich the player is: many worlds -> more bad, few -> more good; the good pays more than the bad costs. */
+function lobeCount(G,lobe){ var n=0; for(var k in G.colonies){ var p=planet(k); if(p&&lobeOf(p.ang)===lobe) n++ } return n }
+function lobeEvents(G,lobe){ var out=[]; var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if(E[i].lobe===lobe) out.push(E[i]); return out }
+function activeCrisis(G){ var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if((E[i].type==='crisis'||E[i].type==='spoil')&&E[i].state==='active') return E[i]; return null }
+/* how fast a hull moves right now: set by the lobe of the world at the other end of its trip */
+function shipSpeed(G,s){
+  var node=s.dest==='earth'?s.origin:s.dest; if(!node||node==='earth') return 1;
+  var p=planet(node); if(!p) return 1;
+  var E=lobeEvents(G,lobeOf(p.ang)), f=1;
+  for(var i=0;i<E.length;i++){ if(E[i].state!=='active') continue; if(E[i].type==='fold') f*=K.FOLD_SPEED; else if(E[i].type==='drag') f*=K.DRAG_SPEED }
+  return f;
+}
+function stormAt(G,node){
+  if(!node||node==='earth') return false; var p=planet(node); if(!p) return false;
+  var E=lobeEvents(G,lobeOf(p.ang)); for(var i=0;i<E.length;i++) if(E[i].type==='storm'&&E[i].state==='active') return true;
+  return false;
+}
+function directorStep(G){
+  var D=G.dir; if(!D) D=G.dir={next:K.DIR_FIRST,ev:[],n:0,seq:1};
+  var R=G.rnd, i, e;
+  for(i=D.ev.length-1;i>=0;i--){ e=D.ev[i];
+    if(e.state==='warn'&&G.day>=e.start){ e.state='active'; log(G,e.type+'_start',{lobe:e.lobe,dep:e.res,n:e.end-G.day,id:e.id}) }
+    else if(e.state==='active'&&G.day>=e.end){ log(G,e.type+'_end',{lobe:e.lobe,dep:e.res,id:e.id}); D.ev.splice(i,1); D.n++; if(e.type==='crisis'||e.type==='spoil') G.pulseShort=false }
   }
-  if(P.warn&&G.day>=P.warn.start){ P.active=P.warn; P.warn=null; G.pauseNow=true; log(G,'pulse_start',{dep:P.active.res,n:P.active.end-G.day}) }
-  if(P.active&&G.day>=P.active.end){
-    log(G,'pulse_end',{dep:P.active.res}); P.active=null; P.n++; G.pulseShort=false;
-    P.next=G.day+K.PULSE_GAP_MIN+Math.floor(R()*(K.PULSE_GAP_MAX-K.PULSE_GAP_MIN+1));
+  if(G.day<D.next||D.ev.length>=K.DIR_MAX) return;
+  if(G.night&&nightLeft(G)<K.NIGHT_NEAR+K.CRISIS_LEN+K.CRISIS_WARN) return;
+  var live=reach(G), w=Math.min(1,live/10), badP=0.35+0.3*w;
+  var bad=R()<badP && !G.hungry;                            // no new misfortune while Earth is already starving
+  var free=[], k, l;
+  for(l=0;l<LOBES;l++) if(!lobeEvents(G,l).length) free.push(l);
+  var withCol=free.filter(function(x){return lobeCount(G,x)>0});
+  var ev=null, id=D.seq++;
+  if(!bad){
+    var pool=withCol.length?withCol:[];                       // a fold over empty space helps nobody
+    if(pool.length){ var lg=pool[Math.floor(R()*pool.length)]; ev={type:'fold',lobe:lg,warn:K.EV_WARN,len:60+Math.floor(R()*61)} }
+  } else {
+    var kinds=['crisis'];
+    if(withCol.length){ kinds.push('drag'); kinds.push('storm') }
+    var kd=kinds[Math.floor(R()*kinds.length)];
+    if(kd==='crisis'){
+      var opts=['food','metal'];
+      if(Object.keys(G.colonies).some(function(k2){ return planet(k2).kind==='well'&&G.reserves[k2]>0 })) opts.push('fuel');
+      if((G.partsRate||0)>0.05) opts.push('parts');
+      var rs=opts[Math.floor(R()*opts.length)];
+      ev={type:rs==='food'?'spoil':'crisis',res:rs,warn:K.CRISIS_WARN,len:K.CRISIS_LEN};   // food: lost stores; the rest: broken infrastructure
+    } else {
+      // punish where the player is rich: the lobe with the most worlds, ties by chance
+      var best=-1, cand=[]; withCol.forEach(function(x){ var c=lobeCount(G,x); if(c>best){best=c;cand=[x]} else if(c===best) cand.push(x) });
+      ev={type:kd,lobe:cand[Math.floor(R()*cand.length)],warn:K.EV_WARN,len:kd==='storm'?30+Math.floor(R()*31):60+Math.floor(R()*61)};
+    }
   }
+  if(!ev){ D.next=G.day+40; return }                         // nothing fit; look again soon
+  ev.id=id; ev.state='warn'; ev.start=G.day+ev.warn; ev.end=ev.start+ev.len;
+  D.ev.push(ev);
+  log(G,ev.type+'_warn',{lobe:ev.lobe,dep:ev.res,y:ev.start,n:ev.len,l:ev.warn,id:id});
+  D.next=G.day+K.DIR_GAP_MIN+Math.floor(R()*(K.DIR_GAP_MAX-K.DIR_GAP_MIN+1));
 }
 /* crossings and signal lag both shrink with every drive mark earned */
 function driveSpeed(G){ return 1+ (G.driveLvl||0)*(K.DRIVE_STEP-1) }
@@ -1131,8 +1176,11 @@ function tick(G){
       var hz = (pd ? pd.haz : 0.02) * Math.pow(0.7, hullGen(s));
       if(!G.safe&&R()<hz*0.085){ s.mode='missing'; s.missDays=0; G.pauseNow=true; log(G,'ship_missing',{n:s.id,p:s.dest==='earth'?s.origin:s.dest}); continue; }
     }
-    s.t--;
+    var sp=shipSpeed(G,s);                                    // v4.21: folded or thickened space
+    if(sp===1&&!s.acc) s.t--;
+    else { s.acc=(s.acc||0)+sp; var stp=Math.floor(s.acc); s.acc-=stp; if(stp<1) continue; s.t-=stp }
     if(s.t>0) continue;
+    if(s.dest!=='earth'&&stormAt(G,s.dest)){ s.t=1; s.held=(s.held||0)+1; continue }   // v4.21: a storm — no landing, hold in orbit
 
     // arrived
     var node=s.dest;
@@ -1236,10 +1284,10 @@ function tick(G){
   G.partsRate=(G.partsRate||0)+(partsMade-(G.partsRate||0))/K.PARTS_EMA;
 
   // ---- Earth burns to stay alive ----
-  pulseStep(G);
+  directorStep(G);
   var nd=earthNeed(G);
   G.need=nd;
-  var pa=G.pulse&&G.pulse.active;
+  var pa=activeCrisis(G);
   if(pa){                                                      // v4.20: the crisis drain, any of the four
     var dr=pulseDrain(G,pa.res);
     if(E[pa.res]>=dr){ E[pa.res]-=dr; G.pulseShort=false }

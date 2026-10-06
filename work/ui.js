@@ -112,7 +112,7 @@ function toast(html,cls,ms){ var box=el('toasts'); if(!box){ box=document.create
 function bigAlert(html,cls,ms){ var a=el('alert'); if(!a){ a=document.createElement('div'); a.id='alert'; document.body.appendChild(a) }
   a.className='show'+(cls?' '+cls:''); a.innerHTML=html; SFX.play(/red/.test(cls||'')?'crit':'bad'); clearTimeout(bigAlert._t); bigAlert._t=setTimeout(function(){ a.className='' }, ms||9000); }
 function toastLast(){ var e=G.log[G.log.length-1]; if(!e) return; var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return;
-  var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
+  var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
   if(e.code==='depleted'){ bigAlert('<b>'+T('alertDepleted')+'</b><span>'+esc(fill(tpl,d))+'</span>','red'); return }
   toast(esc(fill(tpl,d)), TONE[e.code]==='bd'?'bad':'', 6000); }
 /* v4.10 (Nikita, 27.09): rations low and no farm feeding Earth → yellow blinking block, once a shift */
@@ -404,8 +404,8 @@ function voice(trigger,role,d,o){
     U.paused=true; SFX.play('voice');
   }
 }
-TONE.pulse_warn='bd'; TONE.pulse_start='bd'; TONE.pulse_end='gd'; TONE.pulse_short='bd';   // v4.20: Earth's crises
-function voiceLine(e){ var v=VOICE[U.lang]||{}; var d={}; for(var q in e.d.d) d[q]=e.d.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; return {who:v[e.d.role]||e.d.role,name:e.d.name,line:fill(v[e.d.k]||e.d.k,d)} }
+['fold','drag','storm','crisis','spoil'].forEach(function(t){ var g=t==='fold'; TONE[t+'_warn']=g?'gd':'bd'; TONE[t+'_start']=g?'gd':'bd'; TONE[t+'_end']='gd' }); TONE.pulse_short='bd';   // v4.21: the director's events
+function voiceLine(e){ var v=VOICE[U.lang]||{}; var d={}; for(var q in e.d.d) d[q]=e.d.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); return {who:v[e.d.role]||e.d.role,name:e.d.name,line:fill(v[e.d.k]||e.d.k,d)} }
 /* what the log said since last time, and who answers it */
 function voiceWatch(){
   if(!G||U.pro.on) return;
@@ -435,7 +435,8 @@ function voiceWatch(){
     else if(e.code==='ev_rich') voice('seam_rich','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x59,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_wreck') voice('wreck','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x5a,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_disaster') voice('disaster','role_head',{p:d.p,q:d.q},{quiet:true,seed:hash32(0x5b,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
-    else if(e.code==='pulse_warn'||e.code==='pulse_start'){ var rn=DEP[U.lang][d.dep]||d.dep; toast('<b>'+esc(T('alertPulseT'))+'</b> '+esc(fill(LOG[U.lang][e.code],{dep:rn,y:d.y,n:d.n})),'bad',9000) }   // a small window — the screen has enough alarms
+    else if(/^(fold|drag|storm|crisis|spoil)_(warn|start)$/.test(e.code)){ var dd={}; for(var qq in d) dd[qq]=d[qq]; if(dd.dep) dd.dep=DEP[U.lang][dd.dep]||dd.dep; if(dd.lobe!==undefined) dd.lobe=T('lobe'+dd.lobe);
+      toast(esc(fill(LOG[U.lang][e.code],dd)), e.code.indexOf('fold')===0?'':'bad', 9000) }   // a small window — the screen has enough alarms
     else if(e.code==='colony_founded'&&planet(e.d.p)&&planet(e.d.p).kind==='works'&&!U.worksSeen){ U.worksSeen=true; bigAlert('<b>'+T('alertWorks')+'</b><span>'+esc(fill(T('alertWorksBody'),{p:pname(e.d.p),n:driveWorkFor(G)}))+'</span>','warn',14000) }
     else if(e.code==='kit_built') voice('kit_built','role_head',{p:d.p,t:roman(d.t-1),x:d.x},{quiet:true,seed:hash32(0x5d,(+String(d.p).slice(1)||0)+d.t*7),day:e.day,seq:e.seq});
     else if(e.code==='kit_starved') voice('kit_starved','role_head',{p:d.p,t:roman(d.t-1)},{quiet:true,seed:hash32(0x5e,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
@@ -598,6 +599,16 @@ function drawMap(){
       s+='<text x="'+(CX+ca*rO*1.32+ca*30*Z)+'" y="'+(CY+sa*rO*0.90+sa*30*Z+(sa>0.9?6*Z:0))+'" fill="'+INK3+'" font-size="'+F(11)+'" letter-spacing="'+F(3)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
     }
   }
+  // v4.21 (F-21): an event lights its lobe — a dashed outline while it is announced, a translucent wedge while it runs;
+  // Earth blinks for a crisis
+  (G.dir&&G.dir.ev||[]).forEach(function(ev){
+    var ec=ev.type==='fold'?'91,192,235':(ev.type==='storm'?'255,138,31':'255,42,26');
+    if(ev.lobe!==undefined){
+      var rE=secRadius(SECTORS.length-1)+44, a0=lobeEdge(ev.lobe), a1=a0+LOBE_ARC, pts=CX+','+CY, jj;
+      for(jj=0;jj<=14;jj++){ var aa=a0+(a1-a0)*jj/14; pts+=' '+(CX+Math.cos(aa)*rE*1.32)+','+(CY+Math.sin(aa)*rE*0.90) }
+      s+='<polygon points="'+pts+'" fill="'+(ev.state==='active'?'rgba('+ec+',.13)':'none')+'" stroke="rgba('+ec+',.75)" stroke-width="'+F(1.5)+'" stroke-dasharray="'+(ev.state==='warn'?F(6)+' '+F(5):'none')+'" class="evwedge'+(ev.state==='warn'?' evwarn':'')+'" pointer-events="none"/>';
+    } else s+='<circle class="evearth" cx="'+CX+'" cy="'+CY+'" r="'+(32*Z)+'" fill="none" stroke="rgba(255,42,26,.9)" stroke-width="'+F(2)+'" pointer-events="none"/>';
+  });
   // two rings: where the couriers stop, and where the whole fleet stops
   function ring(lim,col,op,label,up){
     var rr = lim>=SECTORS.length-1 ? secRadius(SECTORS.length-1)+44 : (secRadius(lim)+secRadius(lim+1))/2;
@@ -631,6 +642,8 @@ function drawMap(){
     var r = (col?6.5:5)*Z;
     var dead=col&&G.reserves[p.id]<=0, waitHulls=col&&!dead&&!onLine(G,p.id).length;
     s+='<g class="pnode'+(dead?' dead':(waitHulls?' waithulls':''))+'" data-p="'+p.id+'" tabindex="0" role="button" aria-label="'+esc(p.desig+' '+p.name)+'">';
+    var evs=lobeEvents(G,lobeOf(p.ang));
+    if(evs.length&&open) s+='<circle class="evring" cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+6*Z)+'" fill="none" stroke="'+(evs[0].type==='fold'?'#5BC0EB':(evs[0].type==='storm'?'#FF8A1F':'#FF2A1A'))+'" stroke-width="'+F(2)+'"/>';
     if(dead||waitHulls) s+='<circle class="blinkring" cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+11*Z)+'" fill="none" stroke="'+(dead?RED:'#4aa3ff')+'" stroke-width="'+F(2)+'"/>';
     if(selq) s+='<circle cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+8*Z)+'" fill="none" stroke="'+RED+'" stroke-width="'+F(1.5)+'"/>';
     if(railed) s+='<circle class="railring" cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+14*Z)+'" fill="none" stroke="'+RED+'" stroke-width="'+F(2)+'"/>';
@@ -802,7 +815,7 @@ function drawLog(){
     if(hide){ if((e.seq||0)>U.logSeen){ unread++; if(TONE[e.code]==='bd') unreadBad=true } continue }
     var d={}; for(var k in e.d) d[k]=e.d[k];
     if(d.p&&planet(d.p)) d.p=pname(d.p);
-    if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep;
+    if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe);
     if(d.g!==undefined) d.g=roman(d.g);   // v4.0: generations read as roman numerals, like the header
     if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);   // v4.4: kit tiers too
     if(e.code==='voice') d=voiceLine(e);
@@ -828,7 +841,7 @@ function chronLines(k){
   var out='', n=0;
   for(var i=G.log.length-1;i>=0&&n<k;i--){ var e=G.log[i]; if(TONE[e.code]!=='ch') continue;
     var tpl=LOG[U.lang][logKey(e)]; if(!tpl) continue;
-    var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
+    var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
     out=logLine(e,tpl,d,false)+out; n++ }
   return out?'<div class="mhead" style="margin-bottom:6px">'+T('endChron')+'</div><div class="chron">'+out+'</div>':'';
 }
