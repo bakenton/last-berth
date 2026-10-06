@@ -35,7 +35,6 @@ UI	arkdReach	needs {n} worlds settled, you have {r}	нужно заселить 
 UI	a_arkd_reach	The ark drive (Generation {g}) needs the next drive mark, and that needs {n} worlds settled. You have settled {r}.	Двигателю ковчега (поколение {g}) нужна следующая отметка, а ей — {n} заселённых миров. Заселено: {r}.
 UI	arkdReachLater	{n} worlds settled on the way	по пути нужно заселить миров: {n}
 UI	shSectorsN	{n} new ring(s)	новых колец: {n}
-UI	lineT	Line upkeep	Автоподдержание линии
 UI	bigSurvey	Open the {s} ring	Открыть кольцо {s}
 UI	alertFoodBody	Earth has {n} years of rations and no farm on a line. Chart a ring and settle a farm.	У Земли провизии на {n} лет и ни одной фермы на линии. Нанеси новое кольцо и засели ферму.
 UI	pileAll	On the surface {s} · one hold {c}: a single trip takes it all. Grey — the pile; white frame — one hull's hold.	На поверхности {s} · трюм одного корпуса {c}: одна ходка заберёт всё. Серое — куча, белая рамка — трюм одного корпуса.
@@ -45,3 +44,9 @@ MSG	ok_survey	Ring {s} charted. New worlds are on the map.	Кольцо {s} на
 UI	surveyWhat	Worlds sit on rings around Earth. Charting opens ring {s}: new worlds appear on the map, farther out. It costs the resources below and needs the number of settled worlds shown — every world you have ever settled counts.	Миры стоят на кольцах вокруг Земли. Разведка открывает кольцо {s}: на карте появляются новые миры дальше от Земли. Стоит ресурсов ниже и требует показанного числа заселённых миров — считаются все миры, которые ты когда-либо заселял.
 UI	surveyReachRow	Worlds settled · needed	Заселено миров · нужно
 UI	travel	Courier, one way	Курьер, в один конец
+UI	lineT	Planet work fleet	Рабочий флот планеты
+UI	lineTrip	{n} per trip	{n} за ходку
+UI	lineRenewOn	Auto-replace with new generation: ON	Автозамена на новое поколение: ВКЛ
+UI	lineRenewOff	Auto-replace with new generation: OFF	Автозамена на новое поколение: ВЫКЛ
+MSG	ok_renew_on	Auto-replacement on: the yards will spend metal on newer hulls.	Автозамена включена: верфи будут тратить металл на новые корпуса.
+MSG	ok_renew_off	Auto-replacement off: old hulls stay as they are.	Автозамена выключена: старые корпуса остаются как есть.

@@ -632,7 +632,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.21', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.22', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:G.ark.berths,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -779,7 +779,7 @@ function setLine(G,shipId,from,to){
   if(from!=='earth'&&G.reserves[from]<=0&&planet(from)&&planet(from).kind!=='works'&&pileLeft(G,from)<1) return 'depleted';   // v4.9/v4.11
   s.pend=null; s.from=from; s.to=to; s.auto=true; s.policy=null; s.retire=null; s.homeOnly=null;
   if(s.mode==='idle'){ if(!s.at) s.at='earth'; var r=sail(G,s); if(r!=='ok') return r }
-  if(!s.lineFor){ G.lines=G.lines||{}; var L=G.lines[from]||(G.lines[from]={want:{courier:0,hauler:0,freighter:0},renew:true}); var cls=shipClass(s); if(lineCount(G,from,cls)>(L.want[cls]||0)) L.want[cls]=lineCount(G,from,cls) }   // v4.6: the counters follow the hand
+  if(!s.lineFor){ G.lines=G.lines||{}; var L=G.lines[from]||(G.lines[from]={want:{courier:0,hauler:0,freighter:0},renew:false}); var cls=shipClass(s); if(lineCount(G,from,cls)>(L.want[cls]||0)) L.want[cls]=lineCount(G,from,cls) }   // v4.6: the counters follow the hand
   return 'ok';
 }
 /* v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
@@ -826,7 +826,7 @@ function setWant(G,pid,cls,n,gen){
   if(CLASSES.indexOf(cls)<0) return 'noclass';
   n=Math.max(0,Math.min(12,Math.round(n)));
   G.lines=G.lines||{};
-  var L=G.lines[pid]||(G.lines[pid]={want:{courier:0,hauler:0,freighter:0},renew:true});
+  var L=G.lines[pid]||(G.lines[pid]={want:{courier:0,hauler:0,freighter:0},renew:false});
   var had=lineCount(G,pid,cls);
   if(gen!==undefined&&gen!==null){                       // v4.17: the player picked a generation for what the yards add next
     gen=Math.max(0,Math.min(G.gen||0,Math.round(gen))); if(hullAt(cls,gen)===null) return 'noclass';

@@ -1071,16 +1071,6 @@ function railEarth(){
 /* v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace, not units */
 function seamYears(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid); if(!c) return n0(res)+' '+(DEP[U.lang][p.dep]||p.dep);
   var rate=c.pop*p.rich*K.PROD*rateMult(c); if(rate<=0.001) return n0(res)+' '+(DEP[U.lang][p.dep]||p.dep); return fill(T('seamYears'),{n:n0(Math.round(res/rate))}) }
-/* v4.11 (Nikita, 28.09): a bar for the pile, and the slice one hull takes per trip — the picked hull if one is
-   picked, else the biggest hull on the line */
-function pileBar(p,c,dep){
-  var pile=Math.max(0,c.store[dep]||0);
-  var pk=U.pickShip!==null?shipById(G,U.pickShip):null, hull=(pk&&pk.mode==='idle'&&!(pk.from&&pk.to))?pk:null;
-  if(!hull){ var best=null; onLine(G,p.id).forEach(function(o){ if(!o.retire&&(!best||o.cap>best.cap)) best=o }); hull=best }
-  var cap=hull?hull.cap:0, scale=Math.max(pile,cap,1), pw=Math.round(pile/scale*100), cw=Math.round(Math.min(cap,pile)/scale*100);
-  var lbl= cap ? (pile<1 ? T('pileEmpty') : (cap>=pile ? fill(T('pileAll'),{s:n0(pile),c:n0(cap)}) : fill(T('pileShare'),{s:n0(pile),c:n0(cap),n:n0(cap),p:Math.round(cap/pile*100)}))) : T('pileNoHull');   // v4.18 (Nikita: 'не понятно что означает этот слайдер красный'): numbers, no red   // v4.13: pileNoHull no longer says 'pick one'
-  return '<div class="pile"><div class="pile-bar"><i class="pile-fill" style="width:'+pw+'%"></i>'+(cap?'<i class="pile-take" style="width:'+cw+'%"></i>':'')+'</div><div class="pile-lbl dim">'+lbl+'</div></div>';
-}
 /* v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
    the free courier that can lift everyone and gets there first; else the biggest one */
 function pickCourier(pid){ var p=planet(pid), c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
@@ -1159,7 +1149,7 @@ function railTarget(){
       '<div class="bs"><small>'+T('bsStock')+'</small><b>'+pico('house',depB)+n0(c.store[depB]||0)+'</b></div>'+
       '<div class="bs"><small>'+T('bsHands')+'</small><b>'+ico('people')+n0(c.pop)+'</b></div>'+
       '<div class="bs"><small>'+T('bsMakes')+'</small><b>'+pico('plant')+(lrB&&lrB.makes>0.001?lrB.makes.toFixed(1)+T('perYear'):'—')+'</b></div>'+
-    '</div>'+(bigVerdict?'<div class="bs-verdict '+bigCls+'">'+bigVerdict+'</div>':'')+(lrB&&lrB.hulls?'<div class="bs-rates dim">'+fill(T('rateLine'),{m:lrB.makes.toFixed(1),h:lrB.carries.toFixed(1)})+'</div>':'')+pileBar(p,c,depB)+
+    '</div>'+(bigVerdict?'<div class="bs-verdict '+bigCls+'">'+bigVerdict+'</div>':'')+(lrB&&lrB.hulls?'<div class="bs-rates dim">'+fill(T('rateLine'),{m:lrB.makes.toFixed(1),h:lrB.carries.toFixed(1)})+'</div>':'')+
     '<div class="pile-lbl dim">'+T('hauledSoFar')+' <b class="c-'+depB+'">'+qty(depB,n0((c.hauledOut||{})[depB]||0),true)+'</b></div></div>';   // v4.13: the haul record in one line
   // v4.20 (Nikita, 06.10): the 'Last report' block is gone - the world card above says it all
 
@@ -1207,7 +1197,7 @@ function railTarget(){
 }
 /* v4.6: the line as a standing order — 'two haulers here'; the yards do the rest */
 function lineBlock(p,c){
-  var L=lineOf(G,p.id)||{want:{courier:0,hauler:0,freighter:0},renew:true,wait:{}};
+  var L=lineOf(G,p.id)||{want:{courier:0,hauler:0,freighter:0},renew:false,wait:{}};
   var all=onLine(G,p.id), rows='';
   for(var ci=0;ci<CLASSES.length;ci++){ var cls=CLASSES[ci];
     var selG=lineGenSel(), hi=hullAt(cls,selG); if(hi===null) hi=currentHull(G,cls); var hh=hi!==null?HULLS[hi]:null;   // v4.17: the generation on the track
@@ -1219,7 +1209,7 @@ function lineBlock(p,c){
     var reachOk=!!(hh&&canReachSector({hull:hi},p.sec)&&reach(G)>=hh.reach);
     var meta= hh ? (reachOk ? fill(T('lineMeta'),{c:n0(hh.cap),y:legDays(G,p.id,'earth',{hull:hi})*2,m:n0(hh.metal)}) : T('lineRange')) : T('lineLocked');
     var st='';
-    if(hh){ var pl=pileLeft(G,p.id); st+=fill(T('lineTrip'),{n:n0(Math.min(hh.cap,pl||hh.cap)),p:pl>0?Math.min(100,Math.round(hh.cap/pl*100)):100}) }
+    if(hh){ var pl=pileLeft(G,p.id); st+=fill(T('lineTrip'),{n:n0(Math.min(hh.cap,pl||hh.cap))}) }
     if(flying) st+=(st?' · ':'')+fill(T('lineFlying'),{n:flying});
     if(yard) st+=(st?' · ':'')+fill(T('lineYard'),{n:yard});
     if(retiring) st+=(st?' · ':'')+fill(T('lineRetiring'),{n:retiring});
@@ -1241,7 +1231,7 @@ function lineBlock(p,c){
     var note= o.retire ? ' · <span class="warn">'+T('lhRetire')+'</span>' : (o.replaces?' · '+T('lhSuccessor'):'');
     hl+='<div class="lh"><b>'+sico(shipClass(o))+fill(T('lhName'),{n:o.id})+' · '+hullName(HULLS[o.hull])+'</b><span class="dim">'+where+note+(o.mode==='building'?'':' <button class="chip x" type="button" data-act="unroute" data-s="'+o.id+'" title="'+T('clear')+'">×</button>')+'</span></div>';   // v4.13: release lives here, the separate block is gone
   });
-  var ren=(lineOf(G,p.id)&&(G.gen||0)>=2)?'<button class="btn" type="button" data-act="renew" data-p="'+p.id+'" data-on="'+(L.renew?0:1)+'">'+T(L.renew?'lineRenewOn':'lineRenewOff')+'</button>':'';
+  var ren=lineOf(G,p.id)?'<div class="lhs" style="margin-top:8px"><button class="btn" type="button" data-act="renew" data-p="'+p.id+'" data-on="'+(L.renew?0:1)+'" aria-pressed="'+(!!L.renew)+'">'+T(L.renew?'lineRenewOn':'lineRenewOff')+'</button><div class="dim" style="font-size:11.5px;margin-top:4px">'+T('lineRenewHint')+'</div></div>':'';   // v4.22 (Nikita, 07.10): auto-replacement is a switch, off by default - no metal leaves Earth unasked
   /* v4.13 (Nikita, 30.09): the counters come first and big — silhouette, class, number; the hulls serving the line
      sit under them; evacuation is the last button */
   var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'});

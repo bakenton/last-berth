@@ -31,11 +31,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:700,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; LN.earth.metal=2000; buildShip(LN,0); const s=LN.ships[LN.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.crew=8; LNU.pickShip=s.id; LNU.sel=id; LNU.tab='target'; LNdraw() },mine2);
   let r=await rail();
   // v4.18 (F-19): the bar label carries the numbers — 'On the surface 700 · one hold 70 takes 70 per trip — 10% of the pile. Grey — the pile; white frame — one hull's hold.'
-  ok('pile bar with the picked hull share', /On the surface 700 · one hold 70 takes 70 per trip — 10% of the pile/.test(r), r.match(/On the surface[^\n]{0,90}/)?.[0]);
-  ok('bar elements present', await p.evaluate(()=>!!document.querySelector('.pile-fill')&&!!document.querySelector('.pile-take')));
-  ok('class row says per trip share', /70 per trip \(10% of the pile\)/.test(r), r.match(/per trip[^\n]{0,40}/)?.[0]);
+  ok('no pile bar or share label (v4.22)', !/one hold|of the pile/.test(r)&&!(await p.evaluate(()=>document.querySelector('.pile-bar'))));
+  ok('no bar elements (v4.22)', await p.evaluate(()=>!document.querySelector('.pile-fill')&&!document.querySelector('.pile-take')));
+  ok('class row says per trip, no share', /70 per trip/.test(r)&&!/per trip \(/.test(r), r.match(/per trip[^\n]{0,40}/)?.[0]);
   await p.evaluate(id=>{ setLine(LN,LNU.pickShip,id,'earth'); LNU.pickShip=null; LNU.tab='target'; LNdraw() },mine2);
-  ok('bar uses the line hull when none is picked', /one hold 70 takes 70 per trip/.test(await rail()));   // v4.18: new label
+  ok('still no bar when no hull is picked', !/one hold/.test(await rail()));
   // 4. save as file (local page → blob download)
   await p.evaluate(()=>{ LNU.tab='earth'; LNdraw() });
   await tap('[data-act="export"]');

@@ -79,3 +79,4 @@ LOG	spoil_warn	Earth warns of spoilage: in {l} years the food stores begin to ro
 LOG	spoil_start	Earth’s stores are rotting and burning: food demand is doubled for {n} years.	Припасы на Земле гниют и горят: потребление провизии вдвое выше ещё {n} лет.
 LOG	spoil_end	The losses are made good: Earth’s food demand is back to normal.	Потери восполнены: потребление провизии вернулось к норме.
 UI	hullRing	ring {n}	кольцо {n}
+UI	lineRenewHint	When on, old hulls are replaced by the newest generation one at a time, paid from Earth's metal. Off — nothing is spent without your order.	Когда включено, старые корпуса по одному заменяются новым поколением за металл Земли. Выключено — ничего не тратится без твоего приказа.

@@ -26,7 +26,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('seam in years', /Seam lasts\d+ yrs at this pace/.test(r), r.match(/Seam lasts[^\n]{0,40}/)?.[0]);
   ok('hull row on top of the order block', await p.evaluate(()=>!!document.querySelector('#rail .lhs .lh')));
   ok('only the courier row before hauler opens', await p.evaluate(()=>document.querySelectorAll('#rail .so-row').length===1));
-  ok('no renewal toggle before Gen III', !(await p.isVisible('[data-act="renew"]')));
+  ok('renewal switch shown on a line, default OFF (v4.22)', await p.isVisible('[data-act="renew"]') && /OFF/.test(await p.innerText('[data-act="renew"]')));
   await p.evaluate(()=>{ LN.gen=2; ensureGen(2); LN.driveLvl=2; PLANETS.filter(q=>q.sec<=1).forEach(q=>{ if(!LN.colonies[q.id]) LN.colonies[q.id]={pid:q.id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0} }); LNU.tab='target'; LNdraw() });
   ok('renewal toggle at Gen III', await p.isVisible('[data-act="renew"]'));
   ok('hauler row once it reaches', await p.evaluate(()=>document.querySelectorAll('#rail .so-row').length>=2));

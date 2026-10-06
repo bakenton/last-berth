@@ -27,8 +27,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // === the pile bar (screenshot question): numbers, no red, the verdict carries both rates
   await p.evaluate(id=>{ LN.colonies[id].store.metal=42; setWant(LN,id,'courier',1) },mine); await run(12); await show(mine);
   const pb=await p.evaluate(()=>{ var t=document.querySelector('.pile-take'), l=document.querySelector('.pile-lbl'); var cs=t?getComputedStyle(t):null; return {lbl:l?l.textContent:'', bg:cs?cs.backgroundColor:null, border:cs?cs.borderTopColor:null} });
-  ok('pile label names both numbers and what grey/white mean', /On the surface \d+ · one hold \d+/.test(pb.lbl)&&/Grey — the pile; white frame — one hull's hold/.test(pb.lbl), pb.lbl);
-  ok('the hold mark is not red any more (red is danger)', pb.bg==='rgba(0, 0, 0, 0)'&&!/255, 42, 26/.test(pb.border), JSON.stringify(pb));
+  ok('no pile bar or label (v4.22: removed, unclear)', !pb.lbl.includes('one hold')&&pb.bg===null, JSON.stringify(pb));
+  ok('no red hold mark remains (v4.22)', await p.evaluate(()=>!document.querySelector('.pile-take')));
   const rates=await p.evaluate(()=>{ var e=document.querySelector('.bs-rates'); return e?e.textContent:null });
   ok('the verdict carries "world makes X/yr · line hauls Y/yr"', rates&&/World makes [\d.]+\/yr · line hauls [\d.]+\/yr/.test(rates), rates);
   await p.screenshot({path:require('os').tmpdir()+'/v418-pile.png',clip:{x:1040,y:60,width:560,height:560}});
@@ -37,7 +37,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.reserves[id]=0; LN.colonies[id].store.metal=300 },mine); await show(mine);
   const t1=await titles();
   ok('seam spent + pile: a "Seam exhausted" notice on top', t1.some(t=>/Seam exhausted/.test(t)), JSON.stringify(t1));
-  ok('…and the order blocks are still there', t1.some(t=>/Line upkeep/.test(t))&&t1.some(t=>/Free hulls at Earth/.test(t)), JSON.stringify(t1));
+  ok('…and the order blocks are still there', t1.some(t=>/Planet work fleet/.test(t))&&t1.some(t=>/Free hulls at Earth/.test(t)), JSON.stringify(t1));
   ok('…the notice says how much is left and that hulls can collect it', /300 metal\) still lies on the surface|300 \(metal\)|300 metal/.test(await rail())||/still lies on the surface/.test(await rail()), (await rail()).match(/Nothing more to dig[^.]*\./));
   const plus=await p.evaluate(()=>{ var bt=document.querySelector('[data-act="want"][data-c="courier"].plus'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
   ok('+ in the standing order is open', plus&&plus.d!=='true', JSON.stringify(plus));

@@ -18,7 +18,7 @@ function load(path){
     'setLine','survey','canSurvey','startDrive','scrap','scrapIdle','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
     'buildArk','canArk','arkSouls','nightLeft','abandon','clearLine','leftBehind',
-    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','lineOf','lineCount','lineWant','yardCheck'];
+    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','setRenew','lineOf','lineCount','lineWant','yardCheck'];
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }
@@ -45,7 +45,7 @@ function play(C,seed,days,bot){
     for(const k in G.colonies){
       if(lined(G,k)) continue;
       const p=C.planet(k);
-      if(pro){ if(!C.lineWant(G,k,'courier')&&!C.lineWant(G,k,'hauler')) C.setWant(G,k,'courier',1); continue }
+      if(pro){ if(!C.lineWant(G,k,'courier')&&!C.lineWant(G,k,'hauler')) { C.setWant(G,k,'courier',1); C.setRenew(G,k,true) } continue }
       const s=freeHulls(G).find(s=>reachOK(s,p));
       if(s) C.setLine(G,s.id,k,'earth');
     }
@@ -76,7 +76,7 @@ function play(C,seed,days,bot){
         if((c.store[lr.dep]||0)<3000) continue;   // v4.5: the yard is bottomless; a pile this big means the line is thin
         // v4.6: one more hull on the standing order — a hauler if the class reaches, else a courier
         const cls=(C.yardCheck(G,k,'hauler')!=='range'&&C.yardCheck(G,k,'hauler')!=='locked')?'hauler':'courier';
-        if(C.lineWant(G,k,cls)<4){ C.setWant(G,k,cls,C.lineWant(G,k,cls)+1); break }
+        if(C.lineWant(G,k,cls)<4){ C.setWant(G,k,cls,C.lineWant(G,k,cls)+1); C.setRenew(G,k,true); break }
       }
     }
     // 3. yards — cheapest hull that can serve the deepest world wanting service
