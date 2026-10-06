@@ -55,3 +55,9 @@ UI	hullNm_courier	Hermes	Гермес
 UI	hullNm_hauler	Sisyphus	Сизиф
 UI	hullNm_freighter	Atlas	Атлант
 UI	lineUpkeepHint	Set how many hulls of each class stay on this line. The yards send an idle hull from Earth first, then build a new one.	Задай, сколько судов каждого класса держать на линии. Верфи сначала шлют свободное с Земли, потом строят новое.
+UI	lobe0	Margherita	Маргарита
+UI	lobe1	Antonio	Антонио
+UI	lobe2	Lucia	Лючия
+UI	lobe3	Dario	Дарио
+UI	lobe4	Beatrice	Беатриче
+UI	lobe5	Enzo	Энцо

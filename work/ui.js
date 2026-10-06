@@ -541,7 +541,7 @@ function viewFit(){
   var w=Math.max(1000, R*1.32*2, R*0.90*2*(1000/700));
   for(var it=0;it<4;it++){            // the pad is screen-sized, so it scales with the fit: iterate
     var Z=w/1000;
-    var w2=Math.max(1000, (R*1.32+128*Z)*2, (R*0.90+34*Z)*2*(1000/700));
+    var w2=Math.max(1000, (R*1.32+128*Z)*2, (R*0.90+44*Z)*2*(1000/700));
     if(Math.abs(w2-w)<1){ w=w2; break } w=w2;
   }
   VIEW={x:CX-w/2, y:CY-w*0.35, w:w, h:w*0.7};
@@ -586,6 +586,16 @@ function drawMap(){
   }
   s=s.replace(/#1B2husk/g,'rgba(242,241,236,.16)').replace(/#141C25/g,'rgba(242,241,236,.08)');
 
+  // v4.21 (F-21): the six lobes, the sides of the world — a dotted edge each, a name at the rim
+  if(proSee('sectors')){
+    var rO=secRadius(SECTORS.length-1)+44, e, me, ca, sa;
+    for(i=0;i<LOBES;i++){
+      e=lobeEdge(i); ca=Math.cos(e); sa=Math.sin(e);
+      s+='<line x1="'+(CX+ca*34*Z)+'" y1="'+(CY+sa*34*Z)+'" x2="'+(CX+ca*rO*1.32)+'" y2="'+(CY+sa*rO*0.90)+'" stroke="rgba(242,241,236,.26)" stroke-width="'+F(1)+'" stroke-dasharray="'+F(2)+' '+F(6)+'" pointer-events="none"/>';
+      me=lobeMid(i); ca=Math.cos(me); sa=Math.sin(me);
+      s+='<text x="'+(CX+ca*rO*1.32+ca*30*Z)+'" y="'+(CY+sa*rO*0.90+sa*30*Z+(sa>0.9?6*Z:0))+'" fill="'+INK3+'" font-size="'+F(11)+'" letter-spacing="'+F(3)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
+    }
+  }
   // two rings: where the couriers stop, and where the whole fleet stops
   function ring(lim,col,op,label,up){
     var rr = lim>=SECTORS.length-1 ? secRadius(SECTORS.length-1)+44 : (secRadius(lim)+secRadius(lim+1))/2;

@@ -8,6 +8,11 @@ function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a
    on purpose: it is where the player learns the loop. */
 var SECTORS=[];
 var PLANETS=[];
+/* v4.21 (F-21): the chart is cut into six lobes of 60 degrees, the sides of the world. Lobe 0 is centred on twelve o'clock; ang grows clockwise on screen. */
+var LOBES=6, LOBE_ARC=Math.PI*2/6;
+function lobeOf(ang){ var a=((ang+LOBE_ARC*2)%(Math.PI*2)+Math.PI*2)%(Math.PI*2); return Math.floor(a/LOBE_ARC)%LOBES }
+function lobeEdge(i){ return -LOBE_ARC*2+i*LOBE_ARC }
+function lobeMid(i){ return -Math.PI/2+i*LOBE_ARC }
 
 var SEC_NAMES=['NEAR DRIFT','THE SHOAL','OUTER DARK','THE WASTE','LONG SILENCE','OLD NIGHT','THE THRESHING','FAR REACH','THE UNDERTOW','LAST LIGHT'];
 var W_NAMES=['Tallow','Brine','Cinder','Marrow','Solace','Vesper','Gallows','Ferrous','Hollow','Threnody','Kiln','Lantern',
