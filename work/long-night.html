@@ -2164,9 +2164,9 @@ function mark(kind,x,y,r,fillc,strokec,sw){
 
 
 /* v4.9: ship messages stack bottom-right; a dead seam shouts bottom-left. Neither stops the clock. */
-function toast(html,cls,ms){ var box=el('toasts'); if(!box){ box=document.createElement('div'); box.id='toasts'; document.body.appendChild(box) }
+function toast(html,cls,ms,snd){ var box=el('toasts'); if(!box){ box=document.createElement('div'); box.id='toasts'; document.body.appendChild(box) }
   var t=document.createElement('div'); t.className='tst'+(cls?' '+cls:''); t.innerHTML=html; box.appendChild(t);
-  SFX.play(cls==='bad'?'warn':'info');
+  SFX.play(snd||(cls==='bad'?'warn':'info'));
   while(box.children.length>4) box.removeChild(box.firstChild);
   setTimeout(function(){ t.classList.add('gone'); setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t) },400) }, ms||6000); }
 function bigAlert(html,cls,ms){ var a=el('alert'); if(!a){ a=document.createElement('div'); a.id='alert'; document.body.appendChild(a) }
@@ -2217,7 +2217,9 @@ var SFX=(function(){
     warn: function(t){ tone(560,t,0.09,'square',0.13); tone(440,t+0.12,0.16,'square',0.13) },
     bad:  function(t){ for(var i=0;i<3;i++) tone(220,t+i*0.17,0.11,'sawtooth',0.17) },
     crit: function(t){ for(var i=0;i<4;i++) tone(360,t+i*0.24,0.16,'sawtooth',0.2,200) },
-    voice:function(t){ tone(1320,t,0.05,'sine',0.1); tone(1760,t+0.06,0.14,'sine',0.1) }
+    voice:function(t){ tone(1320,t,0.05,'sine',0.1); tone(1760,t+0.06,0.14,'sine',0.1) },
+    evgood:function(t){ tone(523,t,0.12,'triangle',0.15); tone(659,t+0.11,0.12,'triangle',0.15); tone(784,t+0.22,0.2,'triangle',0.15) },   // v4.21: an event for the better — three rising notes
+    evbad: function(t){ tone(330,t,0.2,'triangle',0.17); tone(247,t+0.22,0.28,'triangle',0.17,196) }   // …and for the worse — two falling ones
   };
   function play(k){ if(!on) return; var c=ac(); if(!c||c.state!=='running') return;
     var now=performance.now(); if(lastAt[k]&&now-lastAt[k]<45) return; lastAt[k]=now; var f=P[k]; if(f) f(c.currentTime) }
@@ -2496,7 +2498,7 @@ function voiceWatch(){
     else if(e.code==='ev_wreck') voice('wreck','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x5a,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_disaster') voice('disaster','role_head',{p:d.p,q:d.q},{quiet:true,seed:hash32(0x5b,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(/^(fold|drag|storm|crisis|spoil)_(warn|start)$/.test(e.code)){ var dd={}; for(var qq in d) dd[qq]=d[qq]; if(dd.dep) dd.dep=DEP[U.lang][dd.dep]||dd.dep; if(dd.lobe!==undefined) dd.lobe=T('lobe'+dd.lobe);
-      toast(esc(fill(LOG[U.lang][e.code],dd)), e.code.indexOf('fold')===0?'':'bad', 9000) }   // a small window — the screen has enough alarms
+      toast(esc(fill(LOG[U.lang][e.code],dd)), e.code.indexOf('fold')===0?'':'bad', 9000, e.code.indexOf('fold')===0?'evgood':'evbad') }   // a small window — the screen has enough alarms
     else if(e.code==='colony_founded'&&planet(e.d.p)&&planet(e.d.p).kind==='works'&&!U.worksSeen){ U.worksSeen=true; bigAlert('<b>'+T('alertWorks')+'</b><span>'+esc(fill(T('alertWorksBody'),{p:pname(e.d.p),n:driveWorkFor(G)}))+'</span>','warn',14000) }
     else if(e.code==='kit_built') voice('kit_built','role_head',{p:d.p,t:roman(d.t-1),x:d.x},{quiet:true,seed:hash32(0x5d,(+String(d.p).slice(1)||0)+d.t*7),day:e.day,seq:e.seq});
     else if(e.code==='kit_starved') voice('kit_starved','role_head',{p:d.p,t:roman(d.t-1)},{quiet:true,seed:hash32(0x5e,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
