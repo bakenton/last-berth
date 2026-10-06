@@ -404,6 +404,7 @@ function voice(trigger,role,d,o){
     U.paused=true; SFX.play('voice');
   }
 }
+TONE.pulse_warn='bd'; TONE.pulse_start='bd'; TONE.pulse_end='gd'; TONE.pulse_short='bd';   // v4.20: Earth's crises
 function voiceLine(e){ var v=VOICE[U.lang]||{}; var d={}; for(var q in e.d.d) d[q]=e.d.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; return {who:v[e.d.role]||e.d.role,name:e.d.name,line:fill(v[e.d.k]||e.d.k,d)} }
 /* what the log said since last time, and who answers it */
 function voiceWatch(){
@@ -434,6 +435,7 @@ function voiceWatch(){
     else if(e.code==='ev_rich') voice('seam_rich','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x59,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_wreck') voice('wreck','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x5a,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_disaster') voice('disaster','role_head',{p:d.p,q:d.q},{quiet:true,seed:hash32(0x5b,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
+    else if(e.code==='pulse_warn'||e.code==='pulse_start'){ var rn=DEP[U.lang][d.dep]||d.dep; bigAlert('<b>'+esc(T('alertPulseT'))+'</b><span>'+esc(fill(LOG[U.lang][e.code],{dep:rn,y:d.y,n:d.n}))+'</span>','warn',14000) }
     else if(e.code==='colony_founded'&&planet(e.d.p)&&planet(e.d.p).kind==='works'&&!U.worksSeen){ U.worksSeen=true; bigAlert('<b>'+T('alertWorks')+'</b><span>'+esc(fill(T('alertWorksBody'),{p:pname(e.d.p),n:driveWorkFor(G)}))+'</span>','warn',14000) }
     else if(e.code==='kit_built') voice('kit_built','role_head',{p:d.p,t:roman(d.t-1),x:d.x},{quiet:true,seed:hash32(0x5d,(+String(d.p).slice(1)||0)+d.t*7),day:e.day,seq:e.seq});
     else if(e.code==='kit_starved') voice('kit_starved','role_head',{p:d.p,t:roman(d.t-1)},{quiet:true,seed:hash32(0x5e,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});

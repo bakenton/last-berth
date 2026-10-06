@@ -253,6 +253,10 @@ var K={
   REVOLT:100,
   PUNITIVE_POP:20, PUNITIVE_P:0.55,
   DISMISS_YEARS:150,   // v3.8.1: how long a dismissed warning stays quiet
+  /* v4.20 (Nikita, 06.10, F-21 'Pulse of the empire'): the middle of the game gets crises. Earth announces that for PULSE_LEN
+     years it will burn PULSE_MULT times its usual of one resource, PULSE_WARN years ahead. Food and metal are the burns Earth
+     already has; fuel and parts get a drain of the same size (half / a quarter of the metal burn). An unpaid drain kills hands. */
+  PULSE_FIRST:700, PULSE_GAP_MIN:240, PULSE_GAP_MAX:360, PULSE_WARN:30, PULSE_LEN:40, PULSE_MULT:2, PULSE_SHARE:0.6,
   EARTH_METAL_KEEP:25, // v3.8.1: years of Earth's own burn a works line may not take away
   /* v4.0 — two dates (Nikita, 23.09: "why not just leave at once?" — the technology is not there).
      The ark sails only on a drive of generation ARK_DRIVE_MIN or better, and never on the drive you
@@ -370,6 +374,30 @@ function earthNeed(G){
   var d=G.day;
   var age=1 + d/K.APPETITE + (d/K.DECAY_KNEE)*(d/K.DECAY_KNEE);
   return { food:K.EARTH_EAT*age, metal:K.EARTH_BURN*age };
+}
+/* v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the empire
+   has been bringing home of that resource, so the crisis grows with the empire (a fixed number is nothing to a big one) */
+function pulseDrain(G,res){
+  var nd=earthNeed(G), base= res==='food'?nd.food : res==='metal'?nd.metal : nd.metal*(res==='fuel'?0.5:0.25);
+  return Math.max(base*(K.PULSE_MULT-1), K.PULSE_SHARE*((G.inRate&&G.inRate[res])||0));
+}
+/* v4.20: the schedule of Earth's crises — warn, then run, then a gap */
+function pulseStep(G){
+  var P=G.pulse; if(!P) P=G.pulse={next:K.PULSE_FIRST,warn:null,active:null,n:0};
+  var R=G.rnd;
+  if(!P.warn&&!P.active&&G.day>=P.next-K.PULSE_WARN&&!(G.night&&G.night-G.day<K.NIGHT_NEAR+K.PULSE_LEN+K.PULSE_WARN)){
+    var opts=['food','metal'];
+    if(Object.keys(G.colonies).some(function(k){ return !G.colonies[k].dark&&planet(k).kind==='well'&&G.reserves[k]>0 })) opts.push('fuel');
+    if((G.partsRate||0)>0.05) opts.push('parts');
+    var res=opts[Math.floor(R()*opts.length)];
+    P.warn={res:res,start:Math.max(G.day+1,P.next),end:Math.max(G.day+1,P.next)+K.PULSE_LEN};
+    G.pauseNow=true; log(G,'pulse_warn',{dep:res,y:P.warn.start,n:K.PULSE_LEN,l:P.warn.start-G.day});
+  }
+  if(P.warn&&G.day>=P.warn.start){ P.active=P.warn; P.warn=null; G.pauseNow=true; log(G,'pulse_start',{dep:P.active.res,n:P.active.end-G.day}) }
+  if(P.active&&G.day>=P.active.end){
+    log(G,'pulse_end',{dep:P.active.res}); P.active=null; P.n++; G.pulseShort=false;
+    P.next=G.day+K.PULSE_GAP_MIN+Math.floor(R()*(K.PULSE_GAP_MAX-K.PULSE_GAP_MIN+1));
+  }
 }
 /* crossings and signal lag both shrink with every drive mark earned */
 function driveSpeed(G){ return 1+ (G.driveLvl||0)*(K.DRIVE_STEP-1) }
@@ -579,7 +607,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.20', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.21', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:G.ark.berths,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -1139,6 +1167,8 @@ function tick(G){
   if(G.over) return;
   G.day++;
   if(G.day%50===0){ G.snaps=G.snaps||[]; G.snaps.push(snap(G)); }
+  G.inRate=G.inRate||{}; G._dl=G._dl||{};                 // v4.20: EMA of what arrives home per year, per resource
+  ['metal','food','fuel','parts'].forEach(function(k){ var cur=(G.delivered&&G.delivered[k])||0, dd=cur-(G._dl[k]||0); G._dl[k]=cur; G.inRate[k]=(G.inRate[k]||0)*0.98+dd*0.02 });
   G.fuelRate=(G.fuelRate||0)*0.95+(G.fuelSpent||0)*0.05; G.fuelSpent=0;   // v4.4: EMA of fuel the fleet burns per year
   var E=G.earth, R=G.rnd;
 
@@ -1320,8 +1350,16 @@ function tick(G){
   G.partsRate=(G.partsRate||0)+(partsMade-(G.partsRate||0))/K.PARTS_EMA;
 
   // ---- Earth burns to stay alive ----
+  pulseStep(G);
   var nd=earthNeed(G);
   G.need=nd;
+  var pa=G.pulse&&G.pulse.active;
+  if(pa){                                                      // v4.20: the crisis drain, any of the four
+    var dr=pulseDrain(G,pa.res);
+    if(E[pa.res]>=dr){ E[pa.res]-=dr; G.pulseShort=false }
+    else { E[pa.res]=0; var d2=Math.max(0.2,E.people*K.STARVE_KILL*0.5); E.people=Math.max(0,E.people-d2); E.lost=(E.lost||0)+d2;
+      if(!G.pulseShort){ G.pulseShort=true; G.pauseNow=true; log(G,'pulse_short',{dep:pa.res}) } }
+  }
   var hungry=false, cold=false;
   if(E.food>=nd.food) E.food-=nd.food; else { E.food=0; hungry=true }
   if(E.metal>=nd.metal) E.metal-=nd.metal; else { E.metal=0; cold=true }

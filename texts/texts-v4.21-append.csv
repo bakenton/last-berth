@@ -1,0 +1,5 @@
+LOG,pulse_warn,Earth announces a crisis: from year {y} it will burn twice as much “{dep}” for {n} years. Stock up.,Земля объявляет кризис: с {y} года потребление ресурса «{dep}» вырастет вдвое на {n} лет. Подготовь запас.,v4.21 pulse,live,new
+LOG,pulse_start,The crisis has begun: Earth burns twice as much “{dep}” for the next {n} years.,Кризис начался: потребление ресурса «{dep}» вдвое выше ещё {n} лет.,v4.21 pulse,live,new
+LOG,pulse_end,The crisis is over: Earth’s “{dep}” burn is back to normal.,Кризис прошёл: расход Земли на «{dep}» вернулся к норме.,v4.21 pulse,live,new
+LOG,pulse_short,Earth cannot cover the extra “{dep}” demand — people are dying.,Земля не покрывает повышенный спрос на «{dep}» — гибнут люди.,v4.21 pulse,live,new
+UI,alertPulseT,Earth’s demand is rising,Спрос Земли растёт,v4.21 pulse,live,new
