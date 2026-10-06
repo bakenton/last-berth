@@ -196,8 +196,15 @@ patch('.blk.hl{border-color:var(--ink)}',
  '.sb-free{--acc:var(--yellow)}.sb-line{--acc:#5BC0EB}.sb-kit{--acc:var(--orange)}\n'
  '.sb-kit>h3{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--orange) 24%,#000) 0 8px,color-mix(in srgb,var(--orange) 8%,#000) 8px 16px)}\n'
  '.line-hint{font-size:12px;line-height:1.45}\n'
+ '.hps{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin:2px 0 4px}.hp{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:11px;color:var(--ink)}.hpi{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:1.3;flex:0 0 auto}.hp.rng{background:var(--ink);color:var(--bg);padding:1px 7px 1px 5px;font-weight:700}.dbtn:disabled .hp.rng{background:var(--ink3)}\n'
  '.evring{animation:lbblink 1.1s ease-in-out infinite}.evearth{animation:lbblink .9s ease-in-out infinite}.evwarn{animation:lbblink 1.6s ease-in-out infinite}\n'
  '.blk.hl{border-color:var(--ink)}','.blk.sb{border-left')
+patch('  <symbol id="i-people" viewBox="0 0 16 16">',
+      '  <symbol id="i-hold" viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8"/><path d="M4 4v8M6.7 4v8M9.3 4v8M12 4v8"/></symbol>\n'
+      '  <symbol id="i-speed" viewBox="0 0 16 16"><path d="M2 12.5A6.5 6.5 0 1 1 14 12.5"/><path d="M8 11.5L11.5 6.5" stroke-linecap="round"/><circle cx="8" cy="11.5" r="1.2" fill="currentColor"/></symbol>\n'
+      '  <symbol id="i-range" viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="3.8"/><circle cx="8" cy="8" r="6.6" stroke-dasharray="2 1.6"/></symbol>\n'
+      '  <symbol id="i-people" viewBox="0 0 16 16">',
+      'id="i-hold"')
 wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)

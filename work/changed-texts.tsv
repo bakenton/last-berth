@@ -4,8 +4,8 @@ UI	a_survey	You can chart ring {n}.	Можно нанести на карту к
 UI	surveyTitle	Chart the next ring	Нанести следующее кольцо
 UI	surveyNeed	needs {n} worlds settled	нужно заселить миров: {n}
 UI	sectorsOpen	Rings charted	Колец на карте
-UI	ringCourier	COURIERS → RING {n}	КУРЬЕРЫ → КОЛЬЦО {n}
-UI	ringFleet	GENERATION {g} · FREIGHTERS → RING {n}	ПОКОЛЕНИЕ {g} · ГРУЗОВОЗЫ → КОЛЬЦО {n}
+UI	ringCourier	HERMES REACHES RING {n}	ГЕРМЕС ДОЛЕТАЕТ ДО КОЛЬЦА {n}
+UI	ringFleet	ATLAS GEN. {g} REACHES RING {n}	АТЛАНТ ПОК. {g} ДОЛЕТАЕТ ДО КОЛЬЦА {n}
 UI	hullReach	reaches ring {n}	долетает до кольца {n}
 UI	nightB	The outer survey brought back the readings. Past the last charted ring, space is falling in on itself, and it is falling on a schedule: it reaches the sun in <b>year {y}</b>, and every world on your chart goes with it. From that day nothing you built out there answers to anyone.<br><br>The yards can build an <b>ark</b>. It leaves on the day with whoever is standing at home — not the crews of hulls out in the dark, not the settlers on your worlds. Every berth costs metal, parts, rations and fuel, and every hand you want aboard has to be home in time.<br><br>You have <b>{n} years</b>. Everything you do from here is either more empire, or more people on the ark.	Дальняя разведка привезла показания. За последним нанесённым кольцом пространство падает само в себя, и падает по расписанию: в <b>год {y}</b> оно достигает солнца, и каждый мир на твоей карте уходит вместе с ним. С этого дня ничто из построенного там никому не ответит.<br><br>Верфи могут строить <b>ковчег</b>. Он уходит в назначенный день с теми, кто стоит дома — не с экипажами корпусов, ушедших во тьму, и не с поселенцами твоих миров. Каждое место стоит металла, деталей, провизии и топлива, и каждый, кого ты хочешь взять, должен быть дома вовремя.<br><br>У тебя <b>{n} лет</b>. Всё, что ты делаешь дальше, — это либо больше империи, либо больше людей на ковчеге.
 UI	genReach	freighters reach ring {n}	грузовозы долетают до кольца {n}
@@ -44,3 +44,4 @@ MSG	needreach	Needs {n} live worlds — you have {r}. A world is live while a co
 MSG	ok_survey	Ring {s} charted. New worlds are on the map.	Кольцо {s} нанесено. На карте новые миры.
 UI	surveyWhat	Worlds sit on rings around Earth. Charting opens ring {s}: new worlds appear on the map, farther out. It costs the resources below and needs the number of settled worlds shown — every world you have ever settled counts.	Миры стоят на кольцах вокруг Земли. Разведка открывает кольцо {s}: на карте появляются новые миры дальше от Земли. Стоит ресурсов ниже и требует показанного числа заселённых миров — считаются все миры, которые ты когда-либо заселял.
 UI	surveyReachRow	Worlds settled · needed	Заселено миров · нужно
+UI	travel	Courier, one way	Курьер, в один конец

@@ -15,7 +15,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]'); await p.evaluate(()=>{ LNU.shiftStop=false });
   const mine=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
   // 1. unsettled label: people cap only
-  ok('unsettled label: no × or %', await p.evaluate(id=>{ const g=document.querySelector('.pnode[data-p="'+id+'"]'); return g&&!/×|%/.test(g.textContent)&&!!g.querySelector('use[href="#i-people"]') },mine));
+  ok('unsettled label: no × or %, and (v4.21, Nikita) no people count before anyone lands', await p.evaluate(id=>{ const g=document.querySelector('.pnode[data-p="'+id+'"]'); return g&&!/×|%/.test(g.textContent)&&!g.querySelector('use[href="#i-people"]') },mine));
   // 2. dead seam with a pile: line keeps running, + allowed, hulls stand down only when the surface is empty
   await p.evaluate(id=>{ LN.earth.people=300; LN.earth.fuel=5000; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:200,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); setLine(LN,s.id,id,'earth'); setRenew(LN,id,false); window.T1=s.id; LN.reserves[id]=0; LN.colonies[id].dry=true; },mine);
   await run(3);

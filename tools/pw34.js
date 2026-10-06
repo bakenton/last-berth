@@ -67,9 +67,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // === F-08: speed in years of route per second
   await p.evaluate(()=>{ LNU.dockOpen=true; LNdraw() });
-  const spd=await p.evaluate(()=>[].slice.call(document.querySelectorAll('#dock .dbtn[data-act="build"] small')).map(e=>e.textContent));
+  const spd=await p.evaluate(()=>[].slice.call(document.querySelectorAll('#dock .dbtn[data-act="build"] .hp:nth-child(2)')).map(e=>e.textContent));
   ok('build menu shows speed as "N.NN yr/s", no bare ×', spd.length>0&&spd.every(t=>/\d\.\d\d yr\/s/.test(t)&&!/×/.test(t)), JSON.stringify(spd));
-  const tip=await p.evaluate(()=>document.querySelector('#dock .dbtn small').getAttribute('title'));
+  const tip=await p.evaluate(()=>document.querySelector('#dock .dbtn .hp:nth-child(2)').getAttribute('title'));
   ok('the unit has a tooltip', /Years of route/.test(tip||''), tip);
   await p.screenshot({path:require('os').tmpdir()+'/v416-dock.png',clip:{x:0,y:560,width:1250,height:440}});
 

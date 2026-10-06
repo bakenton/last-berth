@@ -21,3 +21,7 @@ LOG,crisis_end,The repairs are done: Earth’s “{dep}” demand is back to nor
 LOG,spoil_warn,Earth warns of spoilage: in {l} years the food stores begin to rot — demand doubles for {n} years. Stock up.,Земля предупреждает о порче припасов: через {l} лет провизия начнёт гнить — потребление вдвое выше на {n} лет. Подготовь запас.,v4.21 events,live,new
 LOG,spoil_start,Earth’s stores are rotting and burning: food demand is doubled for {n} years.,Припасы на Земле гниют и горят: потребление провизии вдвое выше ещё {n} лет.,v4.21 events,live,new
 LOG,spoil_end,The losses are made good: Earth’s food demand is back to normal.,Потери восполнены: потребление провизии вернулось к норме.,v4.21 events,live,new
+UI,hullRing,ring {n},кольцо {n},v4.21 rings,live,new
+UI,ringCourier,HERMES REACHES RING {n},ГЕРМЕС ДОЛЕТАЕТ ДО КОЛЬЦА {n},v4.21 rings,live,changed
+UI,ringFleet,ATLAS GEN. {g} REACHES RING {n},АТЛАНТ ПОК. {g} ДОЛЕТАЕТ ДО КОЛЬЦА {n},v4.21 rings,live,changed
+UI,travel,"Courier, one way","Курьер, в один конец",v4.21 rings,live,changed

@@ -14,14 +14,16 @@ function lobeOf(ang){ var a=((ang+LOBE_ARC*2)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)
 function lobeEdge(i){ return -LOBE_ARC*2+i*LOBE_ARC }
 function lobeMid(i){ return -Math.PI/2+i*LOBE_ARC }
 
-var SEC_NAMES=['NEAR DRIFT','THE SHOAL','OUTER DARK','THE WASTE','LONG SILENCE','OLD NIGHT','THE THRESHING','FAR REACH','THE UNDERTOW','LAST LIGHT'];
+/* v4.21 (Nikita, 06.10): rings carry a number and the name of an Italian figure — generals, artists, politicians, Romans. The pool is long;
+   past its end the names come round again with a numeral, so the chart never runs out. */
+var RING_NAMES=['Caesar', 'Augustus', 'Scipio', 'Cicero', 'Cato', 'Brutus', 'Sulla', 'Marius', 'Pompey', 'Agrippa', 'Trajan', 'Hadrian', 'Vespasian', 'Constantine', 'Seneca', 'Virgil', 'Ovid', 'Horace', 'Livy', 'Tacitus', 'Pliny', 'Aurelius', 'Gracchus', 'Cincinnatus', 'Fabius', 'Camillus', 'Crassus', 'Lepidus', 'Tiberius', 'Claudius', 'Dante', 'Petrarch', 'Boccaccio', 'Giotto', 'Leonardo', 'Michelangelo', 'Raphael', 'Botticelli', 'Titian', 'Donatello', 'Brunelleschi', 'Caravaggio', 'Bernini', 'Tintoretto', 'Veronese', 'Canaletto', 'Machiavelli', 'Medici', 'Borgia', 'Sforza', 'Galileo', 'Columbus', 'Vespucci', 'Polo', 'Garibaldi', 'Cavour', 'Mazzini', 'Crispi', 'Giolitti', 'Gasperi', 'Verdi', 'Vivaldi', 'Puccini', 'Rossini', 'Paganini', 'Monteverdi', 'Fermi', 'Marconi', 'Volta', 'Galvani', 'Colleoni', 'Gattamelata', 'Montefeltro', 'Malatesta', 'Doria', 'Cadorna', 'Savoy', 'Mantegna', 'Bellini', 'Giorgione', 'Masaccio', 'Cimabue', 'Correggio', 'Parmigianino', 'Tiepolo', 'Modigliani', 'Canova', 'Cellini', 'Gramsci', 'Moro', 'Berlinguer', 'Alberti', 'Palladio', 'Bramante', 'Vasari', 'Cabot', 'Torricelli', 'Cassini', 'Cesalpino', 'Ariosto', 'Tasso', 'Goldoni', 'Manzoni', 'Leopardi', 'Carducci', 'Pirandello', 'Fellini'];
 var W_NAMES=['Tallow','Brine','Cinder','Marrow','Solace','Vesper','Gallows','Ferrous','Hollow','Threnody','Kiln','Lantern',
  'Tinder','Ossuary','Harrow','Wick','Pale','Grist','Anvil','Vigil','Loam','Sallow','Cairn','Ember',
  'Mire','Tallowfen','Rook','Quarrel','Dross','Scupper','Bracken','Gannet','Sump','Fallow','Reave','Clinker',
  'Winnow','Barrow','Skein','Tarn','Flense','Culvert','Nettle','Scrim','Lees','Chaff','Coom','Slake'];
 var DESIGS=['LV','HD','NR','KX','QT','ZD','BC','GR','TS','WN','PX','MV','AR','EL','SH','UM'];
 
-function secName(i){ return i<SEC_NAMES.length ? SEC_NAMES[i] : 'SECTOR '+(i+1) }
+function secName(i){ var n=RING_NAMES.length, cyc=Math.floor(i/n), nm=RING_NAMES[i%n].toUpperCase(); return (i+1)+' · '+nm+(cyc?' '+(['','II','III','IV','V','VI','VII','VIII','IX','X'][cyc]||(cyc+1)):'') }
 function secRadius(i){ return 170+i*88 }
 
 /* every sector gets one of each trade, so the player is never starved of fuel
@@ -97,7 +99,7 @@ function survey(G){
   var i=openSector(G);
   G.pauseNow=true;
   log(G,'surveyed',{s:secName(i)});
-  if(secName(i)==='OLD NIGHT') log(G,'old_night',{});
+  if(i===5) log(G,'old_night',{});
   return 'ok';
 }
 

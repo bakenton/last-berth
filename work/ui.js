@@ -585,9 +585,12 @@ function drawMap(){
     var note='', ncol=(open?INK2:INK3);
     if(!cls){ note=T('needsGen').replace('{g}',roman(genForSector(i))); ncol=RED2 }
     else if(cls!=='courier'){ note=T(cls).toUpperCase()+'+'; ncol=INK2 }
-    var lx0=CX+SECTORS[i].r*1.32+8*Z, ly0=CY+((i%3)-1)*20*Z;   // stagger: six names on one line is a smear
-    s+='<text x="'+lx0+'" y="'+ly0+'" fill="'+ncol+'" font-size="'+F(10)+'" letter-spacing="'+F(2)+'" class="nm">'+esc(SECTORS[i].name)+'</text>';
-    if(note) s+='<text x="'+lx0+'" y="'+(ly0+10*Z)+'" fill="'+ncol+'" font-size="'+F(8.5)+'" letter-spacing="'+F(1)+'">'+esc(note)+'</text>';
+    var lx0=CX+SECTORS[i].r*1.32+8*Z, ly0=CY+((i%3)-1)*20*Z;
+    // v4.21 (Nikita, 06.10): the number and the name run along the ring itself (top arc, right of centre)
+    var rxN=SECTORS[i].r*1.32, ryN=SECTORS[i].r*0.90;
+    s+='<path id="rn'+i+'" d="M'+(CX-rxN)+' '+CY+' A'+rxN+' '+ryN+' 0 0 1 '+(CX+rxN)+' '+CY+'" fill="none" stroke="none"/>';
+    s+='<text fill="'+ncol+'" font-size="'+F(10)+'" letter-spacing="'+F(2)+'" class="nm" dy="'+F(-4)+'" pointer-events="none"><textPath href="#rn'+i+'" startOffset="60%">'+esc(SECTORS[i].name)+'</textPath></text>';
+    if(note) s+='<text x="'+lx0+'" y="'+ly0+'" fill="'+ncol+'" font-size="'+F(8.5)+'" letter-spacing="'+F(1)+'">'+esc(note)+'</text>';
   }
   s=s.replace(/#1B2husk/g,'rgba(242,241,236,.16)').replace(/#141C25/g,'rgba(242,241,236,.08)');
 
@@ -659,7 +662,7 @@ function drawMap(){
       s+='<text x="'+lx+'" y="'+ly+'" fill="'+(col?INK:INK2)+'" font-size="'+F(11)+'" letter-spacing="'+F(1)+'" class="nm">'+esc(p.name.toUpperCase())+'</text>';
       if(detail){
         var kw=T({mine:'mapMine',farm:'mapFarm',well:'mapFuel',works:'mapWorks'}[p.kind]);
-        s+='<text x="'+lx+'" y="'+(ly+12*Z)+'" fill="'+(col?INK2:INK3)+'" font-size="'+F(9)+'" letter-spacing="'+F(1)+'">'+kw+' · '+p.dist+'</text>';
+        s+='<text x="'+lx+'" y="'+(ly+12*Z)+'" fill="'+(col?INK2:INK3)+'" font-size="'+F(9)+'" letter-spacing="'+F(1)+'">'+kw+'</text>';
         if(col){
           // live metrics, always on screen: hands, what it makes, what is sitting there
           var cap=popCap(p), hands=Math.round(col.pop);
@@ -677,10 +680,6 @@ function drawMap(){
              '<text x="'+(lx+11*Z)+'" y="'+(ly+25*Z)+'" font-size="'+F(9)+'" fill="'+hcol+'" letter-spacing="'+F(0.5)+'">'+hands+'</text>'+
              '<use href="#i-'+dep+'" x="'+lx+'" y="'+(ly+29*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+pc+'"/>'+
              '<text x="'+(lx+11*Z)+'" y="'+(ly+37*Z)+'" font-size="'+F(9)+'" fill="'+pc+'" letter-spacing="'+F(0.5)+'">'+pile+'</text>';
-        } else {
-          /* v4.11 (Nikita, 28.09: '×0.7 и проценты — бесполезно'): an unsettled world says only how many it can hold */
-          s+='<use href="#i-people" x="'+lx+'" y="'+(ly+17*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+INK3+'"/>'+
-             '<text x="'+(lx+11*Z)+'" y="'+(ly+25*Z)+'" font-size="'+F(9)+'" fill="'+INK3+'" letter-spacing="'+F(0.5)+'">'+popCap(p)+'</text>';
         }
       }
     }
@@ -1127,7 +1126,7 @@ function railTarget(){
     '<div class="dim" style="font-size:12px;line-height:1.45">'+T(KINDD[p.kind])+'</div>'+
     '<div class="rows" style="margin-top:4px">'+
     row(T('sector'),p.sec+1)+
-    row(T('travel'),fill(T('days'),{n:travelDays(G,p.dist)}))+
+    row(T('travel'),fill(T('days'),{n:travelDays(G,p.dist,{hull:currentHull(G,'courier')})}))+
     (isFinite(res)? row(pico('pile',p.kind==='works'?'parts':p.dep)+T('seamLeft'), res>0? seamYears(p.id) : T('depleted'), res>0?'':'bad') : '')+
     '</div>',
     '<span class="tag">'+SECTORS[p.sec].name+'</span>');
@@ -1298,7 +1297,7 @@ function drawDock(){
   var d=el('dock'); if(!d) return;
   d.hidden=!proSee('dock'); if(d.hidden){ setHTML('dock',''); return }
   var E=G.earth, gnow=G.gen||0, h='';
-  h+='<div class="dockhd" id="dockhd"><span>'+fill(T('genNow'),{n:roman(gnow)})+'</span><span class="dim" style="flex:0 0 auto;letter-spacing:0;text-transform:none;font-weight:400">'+fill(T('genReach'),{n:sectorLimit(gnow)+1})+'</span><em>'+(U.dockOpen?'\u2013':'+')+'</em></div><div class="dockbody">';
+  h+='<div class="dockhd" id="dockhd"><span>'+fill(T('genNow'),{n:roman(gnow)})+'</span><span></span><em>'+(U.dockOpen?'\u2013':'+')+'</em></div><div class="dockbody">';
   /* v4.9 (Nikita, 27.09: 'хочу видеть, какие суда строятся и сколько ещё'): the yard queue sits above the buttons */
   /* v4.17 (Nikita, 04.10: 'в меню покупок убрать то какое судно строится и сколько времени'): the yard queue lives in the fleet panel now */
   var gens=[gnow]; if(gnow-K.GEN_OVERLAP>=0) gens.push(gnow-K.GEN_OVERLAP);
@@ -1309,8 +1308,8 @@ function drawDock(){
       var ok = reach(G)>=hl.reach && E.metal>=c.metal && E.fuel>=c.fuel && E.parts>=c.parts && E.people-K.EARTH_KEEP>=c.people;
       var need = reach(G)<hl.reach ? '<span class="dsub bad">'+fill(T('needR'),{n:hl.reach})+'</span>' : '';
       rowh+='<button type="button" class="dbtn" data-act="build" data-h="'+i+'"'+(reach(G)<hl.reach?off('needreach',{n:hl.reach,r:reach(G)}):offCost(c,E))+'>'+
-        '<b><span class="hn">'+sico(hl.key)+esc(hullName(hl))+'</span><small title="'+esc(T('speedTip'))+'">'+esc(fill(T('capacity'),{n:hl.cap})+' · '+speedTxt(hl))+'</small></b>'+
-        '<span class="dsub">'+esc(fill(T('hullReach'),{n:hullRange(hl)+1})+' · '+fill(T('buildTime'),{n:hl.days}))+'</span>'+need+
+        '<b><span class="hn">'+sico(hl.key)+esc(hullName(hl))+'</span></b>'+
+        '<span class="hps">'+hpar('hold',n0(hl.cap),fill(T('capacity'),{n:hl.cap}))+hpar('speed',speedTxt(hl),T('speedTip'))+hpar('range',fill(T('hullRing'),{n:hullRange(hl)+1}),fill(T('hullReach'),{n:hullRange(hl)+1}),'rng')+'</span>'+need+
         costHtml(c,E)+'</button>';
     }
     if(rowh) h+='<div class="dockrow">'+rowh+'</div>';
@@ -1529,6 +1528,8 @@ function genFromX(x){ var t=document.querySelector('.gtrack'); if(!t) return; va
    F-04 the sign + the full-screen "no free worlds" stop, F-05 new-generation panel, F-06 range line,
    F-08 speed unit, F-01/F-02 what a standing order does, F-03 idle-hull menus */
 function freeWorlds(){ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) continue; if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])) continue; out.push(p) } return out }
+/* v4.21 (Nikita, 06.10): every ship parameter wears its icon — hold: a container, speed: a speedometer, range: rings */
+function hpar(ic,txt,title,cls){ return '<span class="hp'+(cls?' '+cls:'')+'" title="'+esc(title)+'"><svg class="hpi" aria-hidden="true"><use href="#i-'+ic+'"/></svg>'+esc(txt)+'</span>' }
 function speedTxt(hl){ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
 function freeFor(cls,pid,gen){ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.mutiny&&!s.retire&&!s.job&&shipClass(s)===cls&&p&&canReachSector(s,p.sec)&&(gen===undefined||gen===null||hullGen(s)===gen)) n++ }); return n }
 function assignChips(s){
