@@ -43,7 +43,7 @@ function play(C,seed,days,bot){
 
     // 1. every settled world wants a line — pro uses standing orders (v4.6), the others still push hulls by hand
     for(const k in G.colonies){
-      if(G.colonies[k].dark||lined(G,k)) continue;
+      if(lined(G,k)) continue;
       const p=C.planet(k);
       if(pro){ if(!C.lineWant(G,k,'courier')&&!C.lineWant(G,k,'hauler')) C.setWant(G,k,'courier',1); continue }
       const s=freeHulls(G).find(s=>reachOK(s,p));
@@ -57,7 +57,7 @@ function play(C,seed,days,bot){
         const p=PLANETS[i];
         if(p.sec>=C.SECTORS.length||p.sec>maxSec) continue;
         if(G.colonies[p.id]||G.ghost[p.id]) continue;
-        if(P.serial&&Object.keys(G.colonies).some(k=>!G.colonies[k].dark&&C.planet(k).kind===p.kind&&(p.kind==='works'||G.reserves[k]>0))) continue;   // one live world per trade
+        if(P.serial&&Object.keys(G.colonies).some(k=>C.planet(k).kind===p.kind&&(p.kind==='works'||G.reserves[k]>0))) continue;   // one live world per trade
         const s=freeHulls(G).find(s=>reachOK(s,p));
         if(!s) continue;
         let v = -p.dist;   // nearest first: the chart fills outward on its own
@@ -71,7 +71,7 @@ function play(C,seed,days,bot){
     }
     // 1b. v4.4: a world whose stockyard is filling faster than the line carries gets a second hull (pro)
     if(pro&&per(15)){
-      for(const k in G.colonies){ const c=G.colonies[k]; if(c.dark||!lined(G,k)) continue;
+      for(const k in G.colonies){ const c=G.colonies[k]; if(!lined(G,k)) continue;
         const lr=C.lineRate(G,k); if(!lr||!lr.piling) continue;
         if((c.store[lr.dep]||0)<3000) continue;   // v4.5: the yard is bottomless; a pile this big means the line is thin
         // v4.6: one more hull on the standing order — a hauler if the class reaches, else a courier
@@ -109,7 +109,7 @@ function play(C,seed,days,bot){
     // 4. the drive programme
     if(bot!=='greedy'&&bot!=='expand'&&!G.drive){
       for(const k in G.colonies){ const p=C.planet(k);
-        if(p.kind==='works'&&!G.colonies[k].dark&&G.colonies[k].pop>=K.DRIVE_POP&&(C.settledCount||C.reach)(G)>=C.driveReachFor(G)){
+        if(p.kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP&&(C.settledCount||C.reach)(G)>=C.driveReachFor(G)){
           if(C.startDrive(G,k)==='ok') break; } }
     }
     // 4b. v4.4 kits: pro invests in the richest lined world whose seam will outlast the kit; if no hull on
@@ -117,7 +117,7 @@ function play(C,seed,days,bot){
     if(pro&&C.kitOpen(G)&&per(10)){
       let best=null,bv=0;
       const liveWell2=Object.keys(G.colonies).some(k=>C.planet(k).kind==='well'&&G.reserves[k]>0);
-      for(const k in G.colonies){ const c=G.colonies[k], p=C.planet(k); if(c.dark||!lined(G,k)) continue;
+      for(const k in G.colonies){ const c=G.colonies[k], p=C.planet(k); if(!lined(G,k)) continue;
         if(E.fuel<800||!liveWell2) break;                       // the machines drink fuel: no well, no kit
         if(p.kind==='farm'&&E.food>(G.need?G.need.food:5)*60) continue;
         if(C.canKit(G,k)!=='ok') continue;
@@ -137,7 +137,7 @@ function play(C,seed,days,bot){
     }
     // 4b. v4.15 'tidy': a spent world (seam dry, stockyard empty) is evacuated — people come home, the ghost stays on the chart
     if(P.evac&&per(25)){
-      for(const k in G.colonies){ const c=G.colonies[k]; if(c.dark) continue; const p=C.planet(k);
+      for(const k in G.colonies){ const c=G.colonies[k]; const p=C.planet(k);
         if(p.kind==='works'||!(G.reserves[k]<=0)) continue;
         const dep=p.dep; if(((c.store&&c.store[dep])||0)>=1) continue;
         const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s){ C.abandon(G,s.id,k); break } }   // v4.18: only a courier lifts a settlement
@@ -155,7 +155,7 @@ function play(C,seed,days,bot){
       if(pro&&left<=400){
         // stop expanding: release lines, lift colonies with whatever is free, scrap what is home
         G.ships.forEach(s=>{ if(s.from&&s.to&&s.mode!=='dead') C.clearLine(G,s.id) });
-        for(const k in G.colonies){ if(G.colonies[k].dark) continue;
+        for(const k in G.colonies){
           const p=C.planet(k); const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s) C.abandon(G,s.id,k); }
         if(left<=150||per(25)) freeHulls(G).forEach(s=>C.scrap(G,s.id));
       }
@@ -166,7 +166,7 @@ function play(C,seed,days,bot){
   }
   if(process.env.DUMP&&bot==='pro'&&seed==+process.env.DUMP){ require('fs').writeFileSync(require('os').tmpdir()+'/dump.json',C.exportLog(G)) }
   let worlds=0, depth=0, couriers=0, big=0, tiers=0;
-  for(const k in G.colonies){ if(G.colonies[k].dark) continue; worlds++; depth+=1+C.planet(k).sec*0.5; tiers+=(G.colonies[k].tier||0) }
+  for(const k in G.colonies){ worlds++; depth+=1+C.planet(k).sec*0.5; tiers+=(G.colonies[k].tier||0) }
   G.ships.forEach(s=>{ if(s.mode==='dead')return; const h=C.HULLS[s.hull]; if(h.key==='courier')couriers++; else big++ });
   let crew=0; G.ships.forEach(s=>{ if(s.mode!=='dead') crew+=(s.crew||0) });
   const souls = G.over==='night' ? (G.souls||0) : 0;

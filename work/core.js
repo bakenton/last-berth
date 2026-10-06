@@ -158,7 +158,6 @@ function classFor(sec,gen){
 function genForSector(sec){ return Math.max(0, sec-CLASS_RANGE.freighter) }
 
 var K={
-  UNREST_ON:0,         // 0 = colonies never resent anything (Nikita, 21.09: too fast, parked)
   APPETITE:520,        // Earth's daily burn grows with the calendar
   DECAY_KNEE:2400,     // ...and then faster than linear, so no plateau is ever safe
   EVENT_CHANCE:0.006,  // roughly one event every 170 days per run
@@ -217,18 +216,10 @@ var K={
   EARTH_KEEP:25,       // hands Earth will never ship out
   UPKEEP:0,        // metal every colony burns per pop per day just to function
   STARVED_OUT:0.60,    // output multiplier when a colony has no metal on site
-  STARVED_UNREST:0.22,
   STARVED_GRACE:15,    // days a colony coasts on scrap before output drops
   WORKS_LOCAL:0.006,   // token local scrap only; a factory lives on what you haul in
   EAT:0.025,           // notional ration size, used for display only
   GROW:0.0055,         // pop growth per day when calm
-  NEGLECT_DAYS:70,     // days without a visit before resentment starts
-  NEGLECT_RATE:0.45,
-  CALM:0.10,           // baseline cooling
-  DEMAND_AT:42,        // unrest that makes a colony ask for relief
-  DEMAND_MISS:12,      // unrest added when the deadline passes unanswered
-  HAUL_RESENT:3.2,     // unrest per full hold taken away
-  PEOPLE_GOODWILL:0.22,// unrest removed per settler delivered
   STORE_CAP:400,
   FUEL_PER_DIST:0.135, // charged on every departure (a long line drinks fuel)
   MIN_FOUND:10,
@@ -247,8 +238,6 @@ var K={
   DRIVE_WORK:110, DRIVE_WORK_GROW:2.4,    // parts-worth of work per mark, and how fast that grows
   DRIVE_REACH:4, DRIVE_REACH_GROW:4,      // reach needed for mark 1, and per mark after
   DRIVE_POP:25,        // an industrial world needs this much labour to host the programme
-  REVOLT:100,
-  PUNITIVE_POP:20, PUNITIVE_P:0.55,
   DISMISS_YEARS:150,   // v3.8.1: how long a dismissed warning stays quiet
   /* v4.20 (Nikita, 06.10, F-21 'Pulse of the empire'): the middle of the game gets crises. Earth announces that for PULSE_LEN
      years it will burn PULSE_MULT times its usual of one resource, PULSE_WARN years ahead. Food and metal are the burns Earth
@@ -323,7 +312,6 @@ function lineHold(G,pid){ var best=0; for(var i=0;i<G.ships.length;i++){ var s=G
   if((s.from===pid&&s.to==='earth')||(s.to===pid&&s.from==='earth')) best=Math.max(best,s.cap) } return best }
 function canKit(G,pid){
   var c=G.colonies[pid]; if(!c) return 'nocolony';
-  if(c.dark) return 'dark';
   if(!kitOpen(G)) return 'kitgate';
   if(kitTier(c)>=K.KIT_MAX) return 'tiermax';
   if(c.kit||c.kitShip) return 'kitpending';
@@ -384,7 +372,7 @@ function pulseStep(G){
   var R=G.rnd;
   if(!P.warn&&!P.active&&G.day>=P.next-K.PULSE_WARN&&!(G.night&&G.night-G.day<K.NIGHT_NEAR+K.PULSE_LEN+K.PULSE_WARN)){
     var opts=['food','metal'];
-    if(Object.keys(G.colonies).some(function(k){ return !G.colonies[k].dark&&planet(k).kind==='well'&&G.reserves[k]>0 })) opts.push('fuel');
+    if(Object.keys(G.colonies).some(function(k){ return planet(k).kind==='well'&&G.reserves[k]>0 })) opts.push('fuel');
     if((G.partsRate||0)>0.05) opts.push('parts');
     var res=opts[Math.floor(R()*opts.length)];
     P.warn={res:res,start:Math.max(G.day+1,P.next),end:Math.max(G.day+1,P.next)+K.PULSE_LEN};
@@ -411,7 +399,7 @@ function newGame(seed){
     driveLvl:0, gen:0, drive:null, driveWork:0, sectors:0, dismissed:{}, actions:[], ghost:{}, settled:{},
     night:null, nightSeen:false, ark:{blocks:0,berths:0}, souls:0, arkMark:null, partsRate:0, boarded:0, grounded:false,
     pauseNow:false, ledger:{metalOut:0,metalYards:0,metalIn:0,metalSurvey:0}, reserves:{}, delivered:{metal:0,food:0,fuel:0,parts:0,people:0},
-    stats:{founded:0,lost:0,revolts:0,recovered:0,peak:0,mutinies:0}
+    stats:{founded:0,lost:0,recovered:0,peak:0,mutinies:0}
   };
   SECTORS.length=0; PLANETS.length=0; HULLS.length=0; ensureGen(0);
   openSector(G); openSector(G);              // two sectors to start; the rest are surveyed
@@ -422,7 +410,7 @@ function newGame(seed){
 }
 
 /* reach = live settlements. The relay used to add +2; it is gone (Nikita, 23.09: orders no longer carry anything, so halving lag bought nothing). */
-function reach(G){var r=0;for(var k in G.colonies){var c=G.colonies[k];if(c.dark)continue;r+=1}return r}
+function reach(G){var r=0;for(var k in G.colonies){r+=1}return r}
 /* v4.15 (Nikita, 04.10): the gates on PROGRESS — charting a sector, each drive mark — count worlds EVER settled, not worlds held.
    reach() only falls (seams run dry, the colony is evacuated, a ghost cannot be resettled), so a gate on it closes for good:
    in the v4.14 log (seed 966268745) charting needed 6 live colonies, the run peaked at 6 and never stood there again.
@@ -463,7 +451,7 @@ function loadAt(G,s,node){
   if(node==='earth'){
     var cc0=other!=='earth'&&G.colonies[other];
     /* v4.4: the kit rides out first, and only if the whole thing fits */
-    if(cc0&&cc0.kit&&!cc0.dark&&room>=cc0.kit.w){ s.cargo.kit=cc0.kit; room-=cc0.kit.w; cc0.kitShip=s.id; cc0.kit=null; log(G,'kit_loaded',{p:other,n:s.id,t:s.cargo.kit.tier}) }
+    if(cc0&&cc0.kit&&room>=cc0.kit.w){ s.cargo.kit=cc0.kit; room-=cc0.kit.w; cc0.kitShip=s.id; cc0.kit=null; log(G,'kit_loaded',{p:other,n:s.id,t:s.cargo.kit.tier}) }
     if(wants&&cc0){
       /* v4.4 (Nikita, run 381774366: works stockyards full of metal that nobody burns): the hold carries what
          the far end will burn until the next hull calls, times FEED_BUFFER, minus what is already there.
@@ -481,7 +469,7 @@ function loadAt(G,s,node){
     }
     // spare hold goes to hands: a world short of people digs slower than it could
     var cc=other!=='earth'&&G.colonies[other];
-    if(cc&&!cc.dark&&room>0){
+    if(cc&&room>0){
       var short=Math.floor(popWant(planet(other))-cc.pop);
       var send=Math.min(short,room,Math.floor(G.earth.people-K.EARTH_KEEP));
       if(send>0){ G.earth.people-=send; s.cargo.people=send; G.ledger.peopleOut=(G.ledger.peopleOut||0)+send }
@@ -489,7 +477,6 @@ function loadAt(G,s,node){
     return;
   }
   var c=G.colonies[node]; if(!c) return;
-  c.neglect=0;
   // only load if the far end can actually use it; otherwise fly back empty
   var list;
   if(wants) list=wants.slice();                       // the far end is a works world
@@ -531,7 +518,7 @@ function unload(G,s,node){
     var c=G.colonies[node];
     if(c){ c.store.metal=(c.store.metal||0)+s.cargo.metal; c.store.food=(c.store.food||0)+s.cargo.food;
            c.store.fuel=(c.store.fuel||0)+s.cargo.fuel;
-           c.store.parts=(c.store.parts||0)+s.cargo.parts; c.pop+=s.cargo.people; c.neglect=0;
+           c.store.parts=(c.store.parts||0)+s.cargo.parts; c.pop+=s.cargo.people;
            if(any>0) log(G,'dropped',{n:s.id,p:node,m:Math.round(s.cargo.metal),f:Math.round(s.cargo.food),u:Math.round(s.cargo.fuel)});
            if(s.cargo.kit){ c.tier=s.cargo.kit.tier; c.kitShip=null; c.fuelOut=0; G.stats.kits=(G.stats.kits||0)+1; G.pauseNow=true;
              log(G,'kit_built',{p:node,t:c.tier,n:s.id,x:Math.pow(K.KIT_OUT,c.tier).toFixed(1)}) } }
@@ -545,7 +532,7 @@ function mutinyDue(G,s,round){ if(!G.night||s.mutiny) return false; var left=nig
 function sail(G,s){
   var here=s.at, dest = here===s.from ? s.to : s.from;
   if(s.mutiny) return 'mutiny';
-  if(dest!=='earth'&&(!G.colonies[dest]||G.colonies[dest].dark)){ s.from=null;s.to=null; return 'dark' }
+  if(dest!=='earth'&&!G.colonies[dest]){ s.from=null;s.to=null; return 'nocolony' }
   if(G.night&&here==='earth'&&mutinyDue(G,s,legDays(G,here,dest,s)*2)){
     // the crew will not go out again: the line is dropped on the pier
     s.mutiny=true; s.from=null; s.to=null; s.pend=null; s.waiting=true; G.stats.mutinies=(G.stats.mutinies||0)+1;
@@ -578,7 +565,7 @@ function log(G,code,d){G.logSeq=(G.logSeq||0)+1;G.log.push({day:G.day,code:code,
 function act(G,kind,d,res){ G.actions.push({day:G.day,k:kind,d:d||{},r:res||'ok'}) }
 function snap(G){
   var E=G.earth, cols=0, pop=0, dry=0;
-  for(var k in G.colonies){ var c=G.colonies[k]; if(c.dark) continue; cols++; pop+=c.pop; if(G.reserves[k]<=0) dry++ }
+  for(var k in G.colonies){ var c=G.colonies[k]; cols++; pop+=c.pop; if(G.reserves[k]<=0) dry++ }
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'});
   var idle=fleet.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)}).length;
   return {day:G.day, people:Math.round(E.people), metal:Math.round(E.metal), food:Math.round(E.food),
@@ -823,7 +810,7 @@ function yardsTick(G){
   }
   if(!G.lines) return;
   for(var pid in G.lines){ var L=G.lines[pid], c=G.colonies[pid];
-    if(!c||c.dark){ closeLine(G,pid); continue }
+    if(!c){ closeLine(G,pid); continue }
     for(var ci=0;ci<CLASSES.length;ci++){ var cls=CLASSES[ci], want=L.want[cls]||0;
       var have=lineCount(G,pid,cls);
       L.wait=L.wait||{};
@@ -905,7 +892,6 @@ function clearRoute(G,shipId){var s=shipById(G,shipId);if(s)s.route=null;return 
 
 function runRoute(G,s){
   var pid=s.route; if(!pid) return 'noroute';
-  if(!G.colonies[pid]||G.colonies[pid].dark){s.route=null;return 'dark'}
   var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
   launch(G,s,pid,'haul',{});
   return 'ok';
@@ -917,7 +903,6 @@ function abandon(G,shipId,pid){
   var s=shipById(G,shipId); if(!s) return 'noship';
   if(!HULLS[s.hull]||HULLS[s.hull].key!=='courier') return 'evacCourier';   // v4.18 (Nikita, 04.10): only a courier lifts a settlement
   var c=G.colonies[pid]; if(!c) return 'nocolony';
-  if(c.dark) return 'dark';
   for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.job==='evac'&&o.dest===pid&&o.mode==='transit') return 'evacuating' }
   var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
   if(c.kit){ G.earth.metal+=c.kit.metal; G.earth.parts+=c.kit.parts; c.kit=null }   // v4.4: a kit not yet shipped goes back to the yards
@@ -927,15 +912,6 @@ function abandon(G,shipId,pid){
   return 'ok';
 }
 
-function punitive(G,shipId,pid){
-  var s=shipById(G,shipId); if(!s) return 'noship';
-  var c=G.colonies[pid]; if(!c||!c.dark) return 'nodark';
-  var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
-  if(G.earth.people<K.PUNITIVE_POP) return 'people';
-  launch(G,s,pid,'punitive',{people:K.PUNITIVE_POP});
-  log(G,'launch_punitive',{n:s.id,p:pid});
-  return 'ok';
-}
 
 function search(G,shipId,missId){
   var s=shipById(G,shipId); if(!s) return 'noship';
@@ -957,7 +933,7 @@ function startDrive(G,pid){
   if(G.drive) return 'running';
   if(settledCount(G)<driveReachFor(G)) return 'settled';
   var c=G.colonies[pid], p=planet(pid);
-  if(!c||c.dark) return 'nocolony';
+  if(!c) return 'nocolony';
   if(!p||p.kind!=='works') return 'notworks';
   if(c.pop<K.DRIVE_POP) return 'pop';
   G.drive=pid; G.driveWork=0;
@@ -1001,11 +977,11 @@ function driveForecast(G,target){
   var r=settledCount(G), rn=reachAt(target-1);
   if(!G.drive){
     if(r<reachAt(lvl)) return {st:'settled',n:reachAt(lvl),r:r,rn:rn};
-    var host=false; for(var k in G.colonies){ var c=G.colonies[k]; if(!c.dark&&planet(k).kind==='works'&&c.pop>=K.DRIVE_POP) host=true }
+    var host=false; for(var k in G.colonies){ var c=G.colonies[k]; if(planet(k).kind==='works'&&c.pop>=K.DRIVE_POP) host=true }
     if(!host) return {st:'host',rn:rn};
   }
   var have=G.drive? G.driveWork : G.earth.parts;
-  if(!G.drive) for(var k2 in G.colonies){ if(planet(k2).kind==='works'&&!G.colonies[k2].dark) have+=(G.colonies[k2].store.parts||0) }
+  if(!G.drive) for(var k2 in G.colonies){ if(planet(k2).kind==='works') have+=(G.colonies[k2].store.parts||0) }
   var left=Math.max(0,workAt(lvl)-have);
   for(var l=lvl+1;l<target;l++) left+=workAt(l);
   var rate=G.partsRate||0;
@@ -1040,7 +1016,7 @@ function buildArk(G){
 /* who would sail if the ark left today: berths, or hands at home, whichever is fewer */
 function arkSouls(G){ return Math.min(G.ark.berths, Math.max(0,Math.floor(G.earth.people)+crewDocked(G))) }
 function leftBehind(G){
-  var col=0; for(var k in G.colonies) if(!G.colonies[k].dark) col+=G.colonies[k].pop;
+  var col=0; for(var k in G.colonies) col+=G.colonies[k].pop;
   var tr=0; for(var i=0;i<G.ships.length;i++) tr+=(G.ships[i].cargo.people||0);
   return { home:Math.max(0,Math.floor(G.earth.people)+crewDocked(G)-arkSouls(G)), hulls:crewAway(G), colonies:Math.round(col), transit:Math.round(tr) };
 }
@@ -1165,8 +1141,8 @@ function tick(G){
       var p=planet(node);
       if(!G.safe&&R()<p.haz*0.5){ var cf=s.crew||0; s.mode='dead'; s.crew=0; G.stats.lost++;
         G.earth.lostCrew=(G.earth.lostCrew||0)+cf; log(G,'colony_failed',{n:s.id,p:node}); continue }
-      G.colonies[node]={pid:node,pop:s.cargo.people,unrest:0,relay:false,dark:false,pending:null,
-        store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:G.day};
+      G.colonies[node]={pid:node,pop:s.cargo.people,
+        store:{metal:0,food:0,fuel:0,parts:0},founded:G.day};
       G.stats.founded++; (G.settled=G.settled||{})[node]=G.day;
       log(G,'colony_founded',{p:node,pop:Math.round(s.cargo.people)});
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
@@ -1224,7 +1200,6 @@ function tick(G){
   var partsMade=0;   // v4.0: the pace the ark-drive forecast reads
   for(var k in G.colonies){
     var c=G.colonies[k], p=planet(k);
-    if(c.dark){ c.unrest=100; continue; }
 
     // works worlds convert; everyone else digs or grows from a finite seam
     // v4.10: hazard takes its share; the line brings the replacements
@@ -1256,25 +1231,6 @@ function tick(G){
          pile is carried out to the last ton; a hull stands down only when it lands and finds nothing (loadAt) */
     }
     // colonies do not breed. Hands arrive on ships or they do not arrive at all.
-    c.neglect=(c.neglect||0)+1;
-
-    if(K.UNREST_ON){
-      if(c.neglect>K.NEGLECT_DAYS) c.unrest += K.NEGLECT_RATE; // nobody has come
-      c.unrest = Math.max(0, c.unrest - K.CALM - (G.drive===k?0.25:0));
-
-      if(!c.demand && c.unrest>K.DEMAND_AT){
-        c.demand={by:G.day+Math.round(travelDays(G,p.dist)*1.6)+20, raised:G.day};
-        log(G,'demand',{p:k,by:c.demand.by});
-      }
-      if(c.demand && G.day>c.demand.by){ c.unrest+=K.DEMAND_MISS; c.demand=null; log(G,'demand_unmet',{p:k}) }
-    } else { c.unrest=0; c.demand=null }
-
-    if(K.UNREST_ON && c.unrest>=K.REVOLT){
-      c.dark=true; c.unrest=100; G.stats.revolts++;
-      if(G.drive===k){ var alt=null; for(var kk in G.colonies){ if(kk!==k&&!G.colonies[kk].dark&&planet(kk).kind==='works') alt=kk }
-        G.drive=alt; if(!alt) log(G,'drive_lost',{p:k}); }
-      log(G,'revolt',{p:k});
-    }
   }
 
   G.partsRate=(G.partsRate||0)+(partsMade-(G.partsRate||0))/K.PARTS_EMA;
@@ -1305,7 +1261,7 @@ function tick(G){
 
   // ---- something happens out there ----
   if(R()<K.EVENT_CHANCE){
-    var keys=Object.keys(G.colonies).filter(function(k){return !G.colonies[k].dark&&G.reserves[k]>0});   // v4.11: a dead seam has no pockets and no surprises
+    var keys=Object.keys(G.colonies).filter(function(k){return G.reserves[k]>0});   // v4.11: a dead seam has no pockets and no surprises
     if(keys.length){
       var k=keys[Math.floor(R()*keys.length)], c=G.colonies[k], p=planet(k), roll=R();
       if(roll<0.42){
@@ -1332,7 +1288,7 @@ function tick(G){
     }
   }
 
-  var settled=0; for(var k in G.colonies) if(!G.colonies[k].dark) settled++;
+  var settled=0; for(var k in G.colonies) settled++;
   if(settled>G.stats.peak) G.stats.peak=settled;
   if(G.day%K.SHIFT_YEARS===0) chronShift(G,settled);
 
@@ -1378,7 +1334,7 @@ function advice(G){
   else if(fd<25) out.push({code:'a_food',sev:fd<10?'bad':'warn',n:fd});
   if(G.cold) out.push({code:'a_cold',sev:'bad'});
   else if(md<25) out.push({code:'a_metal',sev:md<10?'bad':'warn',n:md});
-  var hasWell=false; for(k in G.colonies){ var pw=planet(k); if(pw&&pw.kind==='well'&&!G.colonies[k].dark&&G.reserves[k]>0) hasWell=true }
+  var hasWell=false; for(k in G.colonies){ var pw=planet(k); if(pw&&pw.kind==='well'&&G.reserves[k]>0) hasWell=true }
   if(!hasWell&&E.fuel<260&&Object.keys(G.colonies).length>=2) out.push({code:'a_nowell',sev:E.fuel<60?'bad':'warn',n:Math.round(E.fuel)});
   else if(E.fuel<30) out.push({code:'a_fuel',sev:E.fuel<12?'bad':'warn',n:Math.round(E.fuel)});
   // hulls of a retired generation sitting idle are metal on the slipway
@@ -1388,7 +1344,6 @@ function advice(G){
   for(k in G.colonies){
     var c=G.colonies[k], p=planet(k);
     if(!p) continue;
-    if(c.dark){ out.push({code:'a_dark',sev:'bad',pid:k}); continue }
     var lines=G.ships.filter(function(s){return s.mode!=='dead'&&s.from&&s.to&&(s.from===k||s.to===k)});
     var lr=lineRate(G,k);
     var dep = p.kind==='works'?'parts':p.dep;
@@ -1432,7 +1387,7 @@ function advice(G){
     if(reach(G)>=h.reach&&E.metal>=h.metal&&E.fuel>=h.fuel&&E.parts>=(h.parts||0)&&E.people-K.EARTH_KEEP>=(h.crew||0)){ out.push({code:'a_build',sev:'ok',hull:i}); break } }
   // v4.4: one kit suggestion at a time — the richest world with a line that can carry it and a seam worth it
   if(kitOpen(G)){ var bk=null, bv=0;
-    for(k in G.colonies){ var ck=G.colonies[k], pk=planet(k); if(!pk||ck.dark) continue; if(canKit(G,k)!=='ok') continue;
+    for(k in G.colonies){ var ck=G.colonies[k], pk=planet(k); if(!pk) continue; if(canKit(G,k)!=='ok') continue;
       var kk2=kitCost(ck); if(lineHold(G,k)<kk2.w) continue;
       if(G.reserves[k]!==Infinity&&G.reserves[k]<ck.pop*pk.rich*K.PROD*Math.pow(K.KIT_OUT,kk2.tier)*150) continue;   // seam would be gone inside 150 years
       var v=ck.pop*pk.rich; if(v>bv){ bv=v; bk={pid:k,t:kk2.tier} } }
@@ -1466,7 +1421,7 @@ function advice(G){
     }
     /* v4.5 (run 768210301: nine Generation V couriers bought in the last 300 years never sailed once — every
        crew refused). Say it before the metal is spent: the shortest line still open already refuses. */
-    var minRt=null; for(k in G.colonies){ if(G.colonies[k].dark) continue; var probe={hull:HULLS.length-3};
+    var minRt=null; for(k in G.colonies){ var probe={hull:HULLS.length-3};
       var rt=legDays(G,k,'earth',probe)*2; if(minRt===null||rt<minRt) minRt=rt }
     if(minRt!==null&&nl<K.MUTINY_MIN*minRt) out.push({code:'a_lastbuild',sev:'warn',n:Math.round(minRt),l:nl});
     var mut=0; for(i=0;i<G.ships.length;i++){ if(G.ships[i].mutiny&&G.ships[i].mode==='idle') mut++ }
@@ -1476,7 +1431,7 @@ function advice(G){
   }
 
   if(!G.drive&&settledCount(G)>=driveReachFor(G)){
-    for(k in G.colonies){ if(planet(k)&&planet(k).kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP&&!G.colonies[k].dark){
+    for(k in G.colonies){ if(planet(k)&&planet(k).kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP){
       out.push({code:'a_drive',sev:'ok',pid:k,n:(G.driveLvl||0)+1}); break } }
   }
   var sv=canSurvey(G);

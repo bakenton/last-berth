@@ -81,7 +81,7 @@ function textsVisible(){ return !!TXT_URL || /[?&]dev\b/.test(location.search) }
 
 
 var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
- quota_miss:'bd',revolt:'bd',ship_missing:'bd',colony_failed:'bd',punitive_fail:'bd',demand_unmet:'bd',ship_written_off:'bd',depleted:'hi',demand:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',fragment:'hi',order_sent:'hi'};
+ quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',fragment:'hi',order_sent:'hi'};
 
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
 var KINDD={mine:'kMineD',farm:'kFarmD',well:'kWellD',works:'kWorksD'};
@@ -117,7 +117,7 @@ function toastLast(){ var e=G.log[G.log.length-1]; if(!e) return; var tpl=LOG[U.
   toast(esc(fill(tpl,d)), TONE[e.code]==='bd'?'bad':'', 6000); }
 /* v4.10 (Nikita, 27.09): rations low and no farm feeding Earth → yellow blinking block, once a shift */
 function foodWatch(){ if(U.pro.on||!G.need) return; var yrs=G.earth.food/Math.max(0.1,G.need.food);
-  var farms=0; for(var k in G.colonies){ var c=G.colonies[k]; if(!c.dark&&planet(k).kind==='farm'&&G.reserves[k]>0&&onLine(G,k).length) farms++ }
+  var farms=0; for(var k in G.colonies){ var c=G.colonies[k]; if(planet(k).kind==='farm'&&G.reserves[k]>0&&onLine(G,k).length) farms++ }
   if(yrs<K.FOOD_WARN_YEARS&&!farms&&(!U.foodWarnAt||G.day-U.foodWarnAt>=K.SHIFT_YEARS)){ U.foodWarnAt=G.day; bigAlert('<b>'+T('alertFood')+'</b><span>'+esc(fill(T('alertFoodBody'),{n:Math.round(yrs)}))+'</span>','warn blink',12000) } }
 /* v4.12 (Nikita, 30.09: "когда я нажал кнопку, я хочу видеть подтверждение нажатия и что действие произошло
    и будет результат или не будет, потому что"): say() is the one voice for every order — green with what
@@ -442,7 +442,7 @@ function voiceWatch(){
     else if(e.code==='colony_founded'){ U.founded++; voice('colony_founded','role_head',{pop:d.pop,p:d.p},{seed:hash32(0x51,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq}) }
     else if(e.code==='ship_missing'){ var sm=shipById(G,d.n); voice('ship_missing','role_duty',{hull:d.n,crew:sm?sm.crew:0},{day:e.day,seq:e.seq}) }
     else if(e.code==='evacuated'||e.code==='evac_partial') voice('evacuated','role_head',{pop:d.pop,p:d.p},{seed:hash32(0x52,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
-    else if(e.code==='night_near'&&d.n===100){ var big=null; for(var kk in G.colonies){ if(!G.colonies[kk].dark&&(!big||G.colonies[kk].pop>G.colonies[big].pop)) big=kk } if(big) voice('left_behind','role_head',{p:big},{force:true,seed:hash32(0x53,(+big.slice(1)||0)),day:e.day,seq:e.seq}) }
+    else if(e.code==='night_near'&&d.n===100){ var big=null; for(var kk in G.colonies){ if((!big||G.colonies[kk].pop>G.colonies[big].pop)) big=kk } if(big) voice('left_behind','role_head',{p:big},{force:true,seed:hash32(0x53,(+big.slice(1)||0)),day:e.day,seq:e.seq}) }
     else if(e.code==='night_near'&&d.n===25){ var lb=leftBehind(G); voice('ark_closed','role_chief',{left:lb.home+lb.hulls+lb.colonies+lb.transit},{force:true,day:e.day,seq:e.seq}) }
     else if((e.code==='launch_colony'||e.code==='launch_evac')&&G.night){ var sh=shipById(G,d.n); if(sh&&sh.total*2>nightLeft(G)) voice('last_flight','role_captain',{hull:d.n},{force:true,seed:hash32(0x54,d.n),day:e.day,seq:e.seq,sub:fill(T('pfHull'),{n:d.n,k:U.capt[d.n]||1})}) }
   }
@@ -610,7 +610,7 @@ function drawMap(){
   // links
   for(var k in G.colonies){
     p=planet(k); xy=pos(p); var c=G.colonies[k];
-    s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+(c.dark?RED:KCOL[p.kind])+'" stroke-width="'+F(1)+'" opacity="'+(c.dark?0.85:0.5)+'" '+(c.dark?'stroke-dasharray="'+F(5)+' '+F(4)+'"':'')+'/>';
+    s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-width="'+F(1)+'" opacity="0.5"/>';
   }
 
   // planets
@@ -626,15 +626,15 @@ function drawMap(){
       continue;
     }
     var kc=KCOL[p.kind];
-    var fillc = col ? (col.dark?RED:kc) : 'none';
-    var strokec = col ? (col.dark?RED:kc) : (open?kc:INK3);
+    var fillc = col ? kc : 'none';
+    var strokec = col ? kc : (open?kc:INK3);
     var r = (col?6.5:5)*Z;
-    var dead=col&&!col.dark&&G.reserves[p.id]<=0, waitHulls=col&&!col.dark&&!dead&&!onLine(G,p.id).length;
+    var dead=col&&G.reserves[p.id]<=0, waitHulls=col&&!dead&&!onLine(G,p.id).length;
     s+='<g class="pnode'+(dead?' dead':(waitHulls?' waithulls':''))+'" data-p="'+p.id+'" tabindex="0" role="button" aria-label="'+esc(p.desig+' '+p.name)+'">';
     if(dead||waitHulls) s+='<circle class="blinkring" cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+11*Z)+'" fill="none" stroke="'+(dead?RED:'#4aa3ff')+'" stroke-width="'+F(2)+'"/>';
     if(selq) s+='<circle cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+8*Z)+'" fill="none" stroke="'+RED+'" stroke-width="'+F(1.5)+'"/>';
     if(railed) s+='<circle class="railring" cx="'+xy.x+'" cy="'+xy.y+'" r="'+(r+14*Z)+'" fill="none" stroke="'+RED+'" stroke-width="'+F(2)+'"/>';
-    if(col&&!col.dark){ var lrm=lineRate(G,p.id);
+    if(col){ var lrm=lineRate(G,p.id);
       if(lrm&&(lrm.piling||lrm.makes<=0.001)) s+='<text x="'+(xy.x-1*Z)+'" y="'+(xy.y-r-9*Z)+'" fill="'+(lrm.makes<=0.001?RED:RED2)+'" font-size="'+F(12)+'" text-anchor="middle" class="nm">!</text>';
     }
     s+=(col||!open)?mark(p.kind,xy.x,xy.y,r,fillc,strokec,F(1.2)):'<g opacity="0.6">'+mark(p.kind,xy.x,xy.y,r,fillc,strokec,F(1.2))+'</g>';
@@ -645,7 +645,7 @@ function drawMap(){
       if(detail){
         var kw=T({mine:'mapMine',farm:'mapFarm',well:'mapFuel',works:'mapWorks'}[p.kind]);
         s+='<text x="'+lx+'" y="'+(ly+12*Z)+'" fill="'+(col?INK2:INK3)+'" font-size="'+F(9)+'" letter-spacing="'+F(1)+'">'+kw+' · '+p.dist+'</text>';
-        if(col&&!col.dark){
+        if(col){
           // live metrics, always on screen: hands, what it makes, what is sitting there
           var cap=popCap(p), hands=Math.round(col.pop);
           var lr2=lineRate(G,p.id);
@@ -662,8 +662,6 @@ function drawMap(){
              '<text x="'+(lx+11*Z)+'" y="'+(ly+25*Z)+'" font-size="'+F(9)+'" fill="'+hcol+'" letter-spacing="'+F(0.5)+'">'+hands+'</text>'+
              '<use href="#i-'+dep+'" x="'+lx+'" y="'+(ly+29*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+pc+'"/>'+
              '<text x="'+(lx+11*Z)+'" y="'+(ly+37*Z)+'" font-size="'+F(9)+'" fill="'+pc+'" letter-spacing="'+F(0.5)+'">'+pile+'</text>';
-        } else if(col&&col.dark){
-          s+='<text x="'+lx+'" y="'+(ly+24*Z)+'" font-size="'+F(9)+'" fill="'+RED+'" letter-spacing="'+F(1)+'">'+T('mapDark')+'</text>';
         } else {
           /* v4.11 (Nikita, 28.09: '×0.7 и проценты — бесполезно'): an unsettled world says only how many it can hold */
           s+='<use href="#i-people" x="'+lx+'" y="'+(ly+17*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+INK3+'"/>'+
@@ -790,7 +788,7 @@ function drawRes(){
     cell('people',n0(E.people),trendHtml('people',T('onEarth').toLowerCase()),'');
 }
 
-var TRAFFIC={kit_loaded:1,pickup:1,delivered:1,launch_colony:1,launch_evac:1,launch_search:1,launch_punitive:1,order_sent:1,reassigned:1,ship_ordered:1,ship_ready:1,scrapped:1,scrapped_many:1,dropped:1,relay_up:1,relief_done:1};
+var TRAFFIC={kit_loaded:1,pickup:1,delivered:1,launch_colony:1,launch_evac:1,launch_search:1,order_sent:1,reassigned:1,ship_ordered:1,ship_ready:1,scrapped:1,scrapped_many:1,dropped:1,relay_up:1,relief_done:1};
 function drawLog(){
   var out='', n=0, unread=0, unreadBad=false;
   // G.log is capped at 400 and shifts; track "seen" by a running count of entries ever logged
@@ -1124,8 +1122,8 @@ function railTarget(){
   var hulls=assignable(p.id);
   var bf=busyFarLine(p.id);
 
-  if(c&&!c.dark&&isFinite(res)&&res<=0&&pileLeft(G,p.id)<1) return h+depletedBlock(p,c);   // v4.17/v4.18: seam spent AND surface empty — only evacuation
-  if(c&&!c.dark&&isFinite(res)&&res<=0){ var dl=pileLeft(G,p.id), dd=p.kind==='works'?'parts':p.dep;   // v4.18: seam spent, pile still there — collect it
+  if(c&&isFinite(res)&&res<=0&&pileLeft(G,p.id)<1) return h+depletedBlock(p,c);   // v4.17/v4.18: seam spent AND surface empty — only evacuation
+  if(c&&isFinite(res)&&res<=0){ var dl=pileLeft(G,p.id), dd=p.kind==='works'?'parts':p.dep;   // v4.18: seam spent, pile still there — collect it
     h+=blk(T('dryTitle'),'<div class="warn" style="font-size:12.5px;line-height:1.45">'+fill(T('dryLead'),{n:n0(dl),r:T(dd).toLowerCase()})+'</div>') }
   if(!c){
     /* v4.4 (Nikita, 25.09): no settlers/rations fields — the party is as many as the world takes, the hold
@@ -1141,7 +1139,7 @@ function railTarget(){
     return h;
   }
 
-  var lrB=c.dark?null:lineRate(G,p.id), depB=p.kind==='works'?'parts':p.dep;
+  var lrB=lineRate(G,p.id), depB=p.kind==='works'?'parts':p.dep;
   var bigVerdict='', bigCls='dim';
   if(lrB){ if(lrB.makes<=0.001) { bigVerdict=T('verdictDead'); bigCls='bad' } else if(!lrB.hulls){ bigVerdict=T('verdictNoLine'); bigCls='bad' } else if(lrB.piling){ bigVerdict=T('verdictPileShort'); bigCls='bad' } else { bigVerdict=T('verdictOkShort'); bigCls='good' } }
   h+='<div class="blk bigstat wc wc-body" style="--acc:'+KCOL[p.kind]+'"><div class="bs-row">'+
@@ -1152,22 +1150,12 @@ function railTarget(){
     '<div class="pile-lbl dim">'+T('hauledSoFar')+' <b class="c-'+depB+'">'+qty(depB,n0((c.hauledOut||{})[depB]||0),true)+'</b></div></div>';   // v4.13: the haul record in one line
   // v4.20 (Nikita, 06.10): the 'Last report' block is gone - the world card above says it all
 
-  // why they are angry — the actual per-day arithmetic
-  if(!c.dark && K.UNREST_ON){
-    var wr='';
-    if(c.neglect>K.NEGLECT_DAYS) wr+=row(T('wNeglect'),'+'+K.NEGLECT_RATE.toFixed(2)+T('perYear'),'bad');
-    wr+=row(T('wHaul'),'+'+K.HAUL_RESENT.toFixed(1)+' '+(U.lang==='ru'?'за полный трюм':'per full hold'),'dim');
-    wr+=row(T('wCalm'),'−'+K.CALM.toFixed(2)+T('perYear'),'good');
-    wr+=row(T('selfFed'),'✓','good');
-    h+=blk(T('why'),'<div class="rows">'+wr+'</div>');
-  }
-
   /* v4.13 (Nikita, 30.09): 'Line health' is gone — the big status above already gives the verdict */
-  if(!c.dark) h+=freeHullsBlock(p);   // v4.16 (F-03): idle hulls that can reach this world, one tap to send
-  if(!c.dark) h+=lineBlock(p,c);   // v4.6: the standing order; v4.13: it carries the evacuation button too
+  h+=freeHullsBlock(p);   // v4.16 (F-03): idle hulls that can reach this world, one tap to send
+  h+=lineBlock(p,c);   // v4.6: the standing order; v4.13: it carries the evacuation button too
 
   // v4.4: the engineering block — what the machines do here, and the next kit
-  if(!c.dark){
+  {
     var kt=kitTier(c), kc=kitCost(c), kr=canKit(G,p.id), hold=lineHold(G,p.id), kb='';
     var kname=T({mine:'kitMine',farm:'kitFarm',well:'kitWell',works:'kitWorks'}[p.kind]);
     kb+=row(T('kitTier'), kt? roman(kt-1)+' · ×'+Math.pow(K.KIT_OUT,kt).toFixed(1) : T('kitNone.'+p.kind), kt?(kitLive(c)?'good':'bad'):'dim');
@@ -1188,11 +1176,7 @@ function railTarget(){
   /* v4.13 (Nikita, 30.09): the Orders block is gone — the standing order counters are the only way to put hulls on
      a line (the yards take an idle hull at Earth first, then build). What was left in Orders: the drive programme
      (its own marked block) and evacuation (a button under the standing order). Enforcement on a silent world stays. */
-  if(c.dark){
-    h+=blk(T('orders'), hulls.length?(shipChips(hulls)+bf+
-      '<button class="btn danger" type="button" data-act="punit" data-p="'+p.id+'">'+T('punit')+'<br><span class="c" style="float:none;color:var(--faint)">'+fill(T('punitCost'),{n:K.PUNITIVE_POP,p:Math.round(K.PUNITIVE_P*100)})+'</span></button>')
-      :'<div class="dim">'+T('noShips')+'</div>');
-  } else if(p.kind==='works'){
+  if(p.kind==='works'){
     var dh='';
     if(!G.drive){
       var dmiss=[];
@@ -1222,7 +1206,7 @@ function lineBlock(p,c){
     var reachOk=!!(hh&&canReachSector({hull:hi},p.sec)&&reach(G)>=hh.reach);
     var meta= hh ? (reachOk ? fill(T('lineMeta'),{c:n0(hh.cap),y:legDays(G,p.id,'earth',{hull:hi})*2,m:n0(hh.metal)}) : T('lineRange')) : T('lineLocked');
     var st='';
-    if(hh&&!c.dark){ var pl=pileLeft(G,p.id); st+=fill(T('lineTrip'),{n:n0(Math.min(hh.cap,pl||hh.cap)),p:pl>0?Math.min(100,Math.round(hh.cap/pl*100)):100}) }
+    if(hh){ var pl=pileLeft(G,p.id); st+=fill(T('lineTrip'),{n:n0(Math.min(hh.cap,pl||hh.cap)),p:pl>0?Math.min(100,Math.round(hh.cap/pl*100)):100}) }
     if(flying) st+=(st?' · ':'')+fill(T('lineFlying'),{n:flying});
     if(yard) st+=(st?' · ':'')+fill(T('lineYard'),{n:yard});
     if(retiring) st+=(st?' · ':'')+fill(T('lineRetiring'),{n:retiring});
@@ -1533,7 +1517,7 @@ function freeWorlds(){ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLAN
 function speedTxt(hl){ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
 function freeFor(cls,pid,gen){ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.mutiny&&!s.retire&&!s.job&&shipClass(s)===cls&&p&&canReachSector(s,p.sec)&&(gen===undefined||gen===null||hullGen(s)===gen)) n++ }); return n }
 function assignChips(s){
-  var out=''; for(var k in G.colonies){ var c=G.colonies[k]; if(c.dark) continue; var p=planet(k); if(!p||!canReachSector(s,p.sec)) continue;
+  var out=''; for(var k in G.colonies){ var c=G.colonies[k]; var p=planet(k); if(!p||!canReachSector(s,p.sec)) continue;
     if(G.reserves[k]<=0&&p.kind!=='works'&&pileLeft(G,k)<1) continue;
     out+='<button class="chip" type="button" data-act="assign" data-s="'+s.id+'" data-p="'+k+'"><b>\u2192 '+esc(pname(k))+'</b></button>' }
   return out?'<div class="dim" style="font-size:11px;margin-top:4px">'+T('assignTo')+'</div><div class="chips">'+out+'</div>':'';
@@ -1663,7 +1647,6 @@ document.addEventListener('click',function(ev){
     else if(a==='evac'){ var ec=pickCourier(b.dataset.p), epid=b.dataset.p, ecol=G.colonies[epid], eh=ec?ec.id:undefined; res=eh===undefined?'evacNoHull':abandon(G,eh,epid);
       if(res==='evacNoHull'){ var nh=nextHome(G,epid,'courier'); say('evacNoCourier',{p:pname(epid),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}); act(G,'evacuate',{p:epid},res); draw(); return }
       if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ act(G,'evacuate',{p:epid,hull:eh},res); say('ok_evac_short',{n:eh,p:pname(epid),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap}); draw(); return } act(G,'evacuate',{p:b.dataset.p},res); okc='ok_evac'; okp={p:pname(b.dataset.p)} }
-    else if(a==='punit'){ var ph=pick(b.dataset.p); res=ph===undefined?'nofree':punitive(G,ph,b.dataset.p) }
     else if(a==='search') res=search(G,pick(),+b.dataset.m);
     else if(a==='new'){var sv=el('seedin');start(sv?(parseInt(sv.value,10)||0):0);return}
     if(res) say(res==='ok'?(a==='route'?'policySet':(okc||'ok')):res, res==='ok'?okp:null);
