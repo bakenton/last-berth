@@ -55,12 +55,12 @@ UI	hullNm_courier	Hermes	Гермес
 UI	hullNm_hauler	Sisyphus	Сизиф
 UI	hullNm_freighter	Atlas	Атлант
 UI	lineUpkeepHint	Set how many hulls of each class stay on this line. The yards send an idle hull from Earth first, then build a new one.	Задай, сколько судов каждого класса держать на линии. Верфи сначала шлют свободное с Земли, потом строят новое.
-UI	lobe0	Margherita	Маргарита
-UI	lobe1	Antonio	Антонио
-UI	lobe2	Lucia	Лючия
-UI	lobe3	Dario	Дарио
-UI	lobe4	Beatrice	Беатриче
-UI	lobe5	Enzo	Энцо
+UI	lobe0	Eos	Эос
+UI	lobe1	Helios	Гелиос
+UI	lobe2	Hemera	Гемера
+UI	lobe3	Hesperos	Гесперос
+UI	lobe4	Selene	Селена
+UI	lobe5	Nyx	Никта
 LOG	pulse_warn	Earth announces a crisis: from year {y} it will burn twice as much “{dep}” for {n} years. Stock up.	Земля объявляет кризис: с {y} года потребление ресурса «{dep}» вырастет вдвое на {n} лет. Подготовь запас.
 LOG	pulse_start	The crisis has begun: Earth burns twice as much “{dep}” for the next {n} years.	Кризис начался: потребление ресурса «{dep}» вдвое выше ещё {n} лет.
 LOG	pulse_end	The crisis is over: Earth’s “{dep}” burn is back to normal.	Кризис прошёл: расход Земли на «{dep}» вернулся к норме.

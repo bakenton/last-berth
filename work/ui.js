@@ -435,7 +435,7 @@ function voiceWatch(){
     else if(e.code==='ev_rich') voice('seam_rich','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x59,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_wreck') voice('wreck','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x5a,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_disaster') voice('disaster','role_head',{p:d.p,q:d.q},{quiet:true,seed:hash32(0x5b,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
-    else if(e.code==='pulse_warn'||e.code==='pulse_start'){ var rn=DEP[U.lang][d.dep]||d.dep; bigAlert('<b>'+esc(T('alertPulseT'))+'</b><span>'+esc(fill(LOG[U.lang][e.code],{dep:rn,y:d.y,n:d.n}))+'</span>','warn',14000) }
+    else if(e.code==='pulse_warn'||e.code==='pulse_start'){ var rn=DEP[U.lang][d.dep]||d.dep; toast('<b>'+esc(T('alertPulseT'))+'</b> '+esc(fill(LOG[U.lang][e.code],{dep:rn,y:d.y,n:d.n})),'bad',9000) }   // a small window — the screen has enough alarms
     else if(e.code==='colony_founded'&&planet(e.d.p)&&planet(e.d.p).kind==='works'&&!U.worksSeen){ U.worksSeen=true; bigAlert('<b>'+T('alertWorks')+'</b><span>'+esc(fill(T('alertWorksBody'),{p:pname(e.d.p),n:driveWorkFor(G)}))+'</span>','warn',14000) }
     else if(e.code==='kit_built') voice('kit_built','role_head',{p:d.p,t:roman(d.t-1),x:d.x},{quiet:true,seed:hash32(0x5d,(+String(d.p).slice(1)||0)+d.t*7),day:e.day,seq:e.seq});
     else if(e.code==='kit_starved') voice('kit_starved','role_head',{p:d.p,t:roman(d.t-1)},{quiet:true,seed:hash32(0x5e,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
@@ -1141,11 +1141,6 @@ function railTarget(){
     return h;
   }
 
-  var rep=reported(G,p.id), r=rep.r, l=rep.lag;
-  var tag = c.dark?'<span class="tag r">'+T('dark')+'</span>':'<span class="tag t">'+fill(T('ago'),{n:rep.age})+'</span>';
-  var ub=Math.min(100,r.unrest);
-  var stores=[];
-  ['metal','food','fuel','parts'].forEach(function(kk){ if(r.store[kk]>0) stores.push(qty(kk,n0(r.store[kk]),true)) });
   var lrB=c.dark?null:lineRate(G,p.id), depB=p.kind==='works'?'parts':p.dep;
   var bigVerdict='', bigCls='dim';
   if(lrB){ if(lrB.makes<=0.001) { bigVerdict=T('verdictDead'); bigCls='bad' } else if(!lrB.hulls){ bigVerdict=T('verdictNoLine'); bigCls='bad' } else if(lrB.piling){ bigVerdict=T('verdictPileShort'); bigCls='bad' } else { bigVerdict=T('verdictOkShort'); bigCls='good' } }
@@ -1160,8 +1155,7 @@ function railTarget(){
   // why they are angry — the actual per-day arithmetic
   if(!c.dark && K.UNREST_ON){
     var wr='';
-    wr+=row(T('wSilence'),'+'+(l/K.SILENCE).toFixed(2)+T('perYear'),'warn');
-    if(r.neglect>K.NEGLECT_DAYS) wr+=row(T('wNeglect'),'+'+K.NEGLECT_RATE.toFixed(2)+T('perYear'),'bad');
+    if(c.neglect>K.NEGLECT_DAYS) wr+=row(T('wNeglect'),'+'+K.NEGLECT_RATE.toFixed(2)+T('perYear'),'bad');
     wr+=row(T('wHaul'),'+'+K.HAUL_RESENT.toFixed(1)+' '+(U.lang==='ru'?'за полный трюм':'per full hold'),'dim');
     wr+=row(T('wCalm'),'−'+K.CALM.toFixed(2)+T('perYear'),'good');
     wr+=row(T('selfFed'),'✓','good');
@@ -1666,7 +1660,6 @@ document.addEventListener('click',function(ev){
     else if(a==='nofreeclose'){ closeNoFree(); draw(); return }
     else if(a==='repeat') res=repeatRun(G,+b.dataset.s);
     else if(a==='pickship'){ U.pickShip=+b.dataset.s; U.tab='target'; draw(); return }
-    else if(a==='relief') res=relief(G,b.dataset.p);
     else if(a==='evac'){ var ec=pickCourier(b.dataset.p), epid=b.dataset.p, ecol=G.colonies[epid], eh=ec?ec.id:undefined; res=eh===undefined?'evacNoHull':abandon(G,eh,epid);
       if(res==='evacNoHull'){ var nh=nextHome(G,epid,'courier'); say('evacNoCourier',{p:pname(epid),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}); act(G,'evacuate',{p:epid},res); draw(); return }
       if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ act(G,'evacuate',{p:epid,hull:eh},res); say('ok_evac_short',{n:eh,p:pname(epid),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap}); draw(); return } act(G,'evacuate',{p:b.dataset.p},res); okc='ok_evac'; okp={p:pname(b.dataset.p)} }

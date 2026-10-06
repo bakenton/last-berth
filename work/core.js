@@ -222,7 +222,6 @@ var K={
   WORKS_LOCAL:0.006,   // token local scrap only; a factory lives on what you haul in
   EAT:0.025,           // notional ration size, used for display only
   GROW:0.0055,         // pop growth per day when calm
-  SILENCE:220,         // unrest per day from signal delay: lag / SILENCE
   NEGLECT_DAYS:70,     // days without a visit before resentment starts
   NEGLECT_RATE:0.45,
   CALM:0.10,           // baseline cooling
@@ -231,7 +230,6 @@ var K={
   HAUL_RESENT:3.2,     // unrest per full hold taken away
   PEOPLE_GOODWILL:0.22,// unrest removed per settler delivered
   STORE_CAP:400,
-  LAG_K:0.35,
   FUEL_PER_DIST:0.135, // charged on every departure (a long line drinks fuel)
   MIN_FOUND:10,
   RESERVE_BASE:2100, RESERVE_GROW:2.15,   // a seam in sector n holds BASE * GROW^n * richness
@@ -249,7 +247,6 @@ var K={
   DRIVE_WORK:110, DRIVE_WORK_GROW:2.4,    // parts-worth of work per mark, and how fast that grows
   DRIVE_REACH:4, DRIVE_REACH_GROW:4,      // reach needed for mark 1, and per mark after
   DRIVE_POP:25,        // an industrial world needs this much labour to host the programme
-  RELAY_METAL:80, RELAY_PARTS:18, RELAY_POP:20,
   REVOLT:100,
   PUNITIVE_POP:20, PUNITIVE_P:0.55,
   DISMISS_YEARS:150,   // v3.8.1: how long a dismissed warning stays quiet
@@ -445,12 +442,6 @@ function legDist(a,b){
   var ax=Math.cos(pa.ang)*pa.dist, ay=Math.sin(pa.ang)*pa.dist;
   var bx=Math.cos(pb.ang)*pb.dist, by=Math.sin(pb.ang)*pb.dist;
   return Math.max(6, Math.round(Math.sqrt((ax-bx)*(ax-bx)+(ay-by)*(ay-by))));
-}
-function lagDays(G,pid){
-  var p=planet(pid), base=p.dist*K.LAG_K;
-  var c=G.colonies[pid];
-  base/=driveSpeed(G);
-  return Math.max(1,Math.round(base));
 }
 
 function needsOf(G,node){
@@ -920,32 +911,7 @@ function runRoute(G,s){
   return 'ok';
 }
 
-function buildRelay(G,pid){ return 'off' }
-function buildRelayOld(G,pid){
-  var c=G.colonies[pid]; if(!c) return 'nocolony';
-  if(c.relay) return 'have';
-  if(c.dark) return 'dark';
-  if(c.pop<K.RELAY_POP) return 'pop';
-  if(c.store.metal<K.RELAY_METAL) return 'metal';
 
-  var l=lagDays(G,pid);
-  G.orders.push({at:G.day+l, kind:'relay', pid:pid});
-  c.pending='relay';
-  log(G,'order_sent',{p:pid,l:l,what:'relay'});
-  return 'ok';
-}
-
-function relief(G,pid){
-  if(!K.UNREST_ON) return 'off';
-  var c=G.colonies[pid]; if(!c) return 'nocolony';
-  if(c.dark) return 'dark';
-  if(c.pending==='relief') return 'pending';
-  var l=lagDays(G,pid);
-  G.orders.push({at:G.day+l, kind:'relief', pid:pid});
-  c.pending='relief';
-  log(G,'order_sent',{p:pid,l:l,what:'relief'});
-  return 'ok';
-}
 
 function abandon(G,shipId,pid){
   var s=shipById(G,shipId); if(!s) return 'noship';
@@ -1122,14 +1088,6 @@ function chronShift(G,cols){
 
 /* ---------- tick ---------- */
 
-function snapshot(G,c){
-  c.hist.push({day:G.day,pop:Math.round(c.pop),unrest:Math.round(c.unrest),
-    store:{metal:Math.round(c.store.metal||0),food:Math.round(c.store.food||0),fuel:Math.round(c.store.fuel||0),parts:Math.round(c.store.parts||0)},
-    neglect:c.neglect||0, idleWorks:c.idleWorks||0, starved:c.starved||0, upkeep:c.pop*K.UPKEEP,
-    eatRate:c.pop*K.EAT*(1-planet(c.pid).hab*0.5), hungry:c.hungry||0, lastHaul:c.lastHaul||null, lastHaulDay:c.lastHaulDay||0, hauledOut:c.hauledOut||null,
-    demand:c.demand?{by:c.demand.by}:null, relay:c.relay, dark:c.dark});
-  if(c.hist.length>600)c.hist.shift();
-}
 function lineRate(G,pid){
   var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
   var makes = (p.kind==='works' ? c.pop*p.rich*K.REFINE
@@ -1153,15 +1111,6 @@ function lineRate(G,pid){
           sitting:sitting, dry:(G.reserves[pid]!==Infinity&&G.reserves[pid]<=0),
           short: makes-carries, piling: makes>carries+0.01};
 }
-function reported(G,pid){
-  var c=G.colonies[pid]; if(!c) return null;
-  if(!c.hist||!c.hist.length) snapshot(G,c);          // never hand the panel an empty report
-  var l=lagDays(G,pid);
-  var want=G.day-l;
-  var best=c.hist[0];
-  for(var i=c.hist.length-1;i>=0;i--){if(c.hist[i].day<=want){best=c.hist[i];break}}
-  return {r:best, lag:l, age:best?G.day-best.day:0};
-}
 
 function tick(G){
   if(G.over) return;
@@ -1177,23 +1126,6 @@ function tick(G){
   E.pMetal=K.EARTH_METAL*ef; E.pFood=K.EARTH_FOOD*ef; E.pFuel=K.EARTH_FUEL*ef;
   E.metal+=E.pMetal; E.food+=E.pFood; E.fuel+=E.pFuel;
   if(!G.hungry) E.people+=handsRate(G);        // v4.7: a fed home world keeps turning out colonists, fewer every century
-
-  // ---- orders arriving ----
-  for(var i=G.orders.length-1;i>=0;i--){
-    var o=G.orders[i];
-    if(o.at<=G.day){
-      G.orders.splice(i,1);
-      if(o.kind==='relay'){
-        var c=G.colonies[o.pid];
-        if(c&&!c.dark&&c.store.metal>=K.RELAY_METAL){c.store.metal-=K.RELAY_METAL;c.relay=true;c.pending=null;c.unrest=Math.max(0,c.unrest-10);log(G,'relay_up',{p:o.pid})}
-        else if(c){c.pending=null;log(G,'relay_fail',{p:o.pid})}
-      } else if(o.kind==='relief'){
-        var c2=G.colonies[o.pid];
-        if(c2&&!c2.dark){c2.unrest=Math.max(0,c2.unrest-28);c2.demand=null;c2.pending=null;log(G,'relief_done',{p:o.pid})}
-        else if(c2){c2.pending=null}
-      }
-    }
-  }
 
   // ---- the yards (v4.6) ----
   yardsTick(G);
@@ -1235,7 +1167,7 @@ function tick(G){
         G.earth.lostCrew=(G.earth.lostCrew||0)+cf; log(G,'colony_failed',{n:s.id,p:node}); continue }
       G.colonies[node]={pid:node,pop:s.cargo.people,unrest:0,relay:false,dark:false,pending:null,
         store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:G.day};
-      G.stats.founded++; (G.settled=G.settled||{})[node]=G.day; snapshot(G,G.colonies[node]);
+      G.stats.founded++; (G.settled=G.settled||{})[node]=G.day;
       log(G,'colony_founded',{p:node,pop:Math.round(s.cargo.people)});
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
       s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
@@ -1292,7 +1224,7 @@ function tick(G){
   var partsMade=0;   // v4.0: the pace the ark-drive forecast reads
   for(var k in G.colonies){
     var c=G.colonies[k], p=planet(k);
-    if(c.dark){ c.unrest=100; snapshot(G,c); continue; }
+    if(c.dark){ c.unrest=100; continue; }
 
     // works worlds convert; everyone else digs or grows from a finite seam
     // v4.10: hazard takes its share; the line brings the replacements
@@ -1327,12 +1259,11 @@ function tick(G){
     c.neglect=(c.neglect||0)+1;
 
     if(K.UNREST_ON){
-      c.unrest += l/K.SILENCE;                                 // being out of contact
       if(c.neglect>K.NEGLECT_DAYS) c.unrest += K.NEGLECT_RATE; // nobody has come
       c.unrest = Math.max(0, c.unrest - K.CALM - (G.drive===k?0.25:0));
 
       if(!c.demand && c.unrest>K.DEMAND_AT){
-        c.demand={by:G.day+l*2+Math.round(travelDays(G,p.dist)*1.6)+20, raised:G.day};
+        c.demand={by:G.day+Math.round(travelDays(G,p.dist)*1.6)+20, raised:G.day};
         log(G,'demand',{p:k,by:c.demand.by});
       }
       if(c.demand && G.day>c.demand.by){ c.unrest+=K.DEMAND_MISS; c.demand=null; log(G,'demand_unmet',{p:k}) }
@@ -1344,7 +1275,6 @@ function tick(G){
         G.drive=alt; if(!alt) log(G,'drive_lost',{p:k}); }
       log(G,'revolt',{p:k});
     }
-    snapshot(G,c);
   }
 
   G.partsRate=(G.partsRate||0)+(partsMade-(G.partsRate||0))/K.PARTS_EMA;
