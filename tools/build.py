@@ -188,6 +188,8 @@ js=json.dumps(rows,ensure_ascii=False).replace('</','<\\/')
 s=s[:m.start()]+m.group(1)+js+m.group(3)+s[m.end():]
 wr('page.html',s); wr('long-night.html',s)
 # v4.11: the host stores what we publish — a body fragment (no <html>/<body>), ending with the lb-tools block.
+# v4.20: the yard title keeps icon and name together (b is a wrapping flex row)
+patch('.dbtn:disabled{cursor:not-allowed}','.dbtn:disabled{cursor:not-allowed}\n.dbtn b .hn{display:inline-flex;align-items:center;min-width:0}','.dbtn b .hn')
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)
 wr('artifact.html',s[b:e])

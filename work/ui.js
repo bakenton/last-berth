@@ -1308,7 +1308,7 @@ function drawDock(){
       var ok = reach(G)>=hl.reach && E.metal>=c.metal && E.fuel>=c.fuel && E.parts>=c.parts && E.people-K.EARTH_KEEP>=c.people;
       var need = reach(G)<hl.reach ? '<span class="dsub bad">'+fill(T('needR'),{n:hl.reach})+'</span>' : '';
       rowh+='<button type="button" class="dbtn" data-act="build" data-h="'+i+'"'+(reach(G)<hl.reach?off('needreach',{n:hl.reach,r:reach(G)}):offCost(c,E))+'>'+
-        '<b>'+sico(hl.key)+esc(hullName(hl))+'<small title="'+esc(T('speedTip'))+'">'+esc(fill(T('capacity'),{n:hl.cap})+' · '+speedTxt(hl))+'</small></b>'+
+        '<b><span class="hn">'+sico(hl.key)+esc(hullName(hl))+'</span><small title="'+esc(T('speedTip'))+'">'+esc(fill(T('capacity'),{n:hl.cap})+' · '+speedTxt(hl))+'</small></b>'+
         '<span class="dsub">'+esc(fill(T('hullReach'),{n:hullRange(hl)+1})+' · '+fill(T('buildTime'),{n:hl.days}))+'</span>'+need+
         costHtml(c,E)+'</button>';
     }
