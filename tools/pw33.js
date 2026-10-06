@@ -67,7 +67,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // JSON log carries both numbers
   const log=await p.evaluate(()=>{ var J=JSON.parse(exportLog(LN)); return {v:J.v, reach:J.earth.reach, settled:J.earth.settled} });
-  ok('JSON log: version 4.15+ with reach and settled', /^4\.1[5-9]$/.test(log.v)&&log.reach===3&&log.settled>=6, JSON.stringify(log));
+  ok('JSON log: version 4.15+ with reach and settled', /^4\.(1[5-9]|2\d)$/.test(log.v)&&log.reach===3&&log.settled>=6, JSON.stringify(log));
 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();

@@ -129,7 +129,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('evacuation launches (or says why not)', await p.evaluate(id=>LN.ships.some(s=>s.job==='evac'&&s.dest===id),sel0)||te.length>0, te);
   // a living world keeps all its blocks
   await p.evaluate(id=>{ LN.reserves[id]=5000; LNU.tab='target'; LNdraw() },sel0);
-  ok('a world with a seam keeps its blocks', /Hulls for this world/.test(await rail()));
+  ok('a world with a seam keeps its blocks', /Line upkeep/.test(await rail()));
 
   // === RU
   await p.evaluate(()=>{ LNU.lang='ru'; LNU.sel=Object.keys(LN.colonies)[0]; LNU.tab='target'; LNdraw() });

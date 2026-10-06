@@ -16,7 +16,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ document.getElementById('seedin').value='398763448'; document.querySelector('[data-act="new"]').click(); });
   await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]'); await p.evaluate(()=>{ LNU.shiftStop=false });
   const ver=await p.evaluate(()=>JSON.parse(exportLog(LN)).v);
-  ok('version string 4.1x in the run log', /^4\.1\d$/.test(ver), ver);   // by format, as in pw31: the number moves every iteration
+  ok('version string 4.1x–4.2x in the run log', /^4\.[12]\d$/.test(ver), ver);   // by format, as in pw31: the number moves every iteration; v4.20+ accepts 4.2x
 
   // 1. evacuation with a stale pick: the player opened an unsettled world (pick = hull A), hull A left to found a colony,
   //    then "Evacuate" on a settled world must take the other free hull, not answer 'busy'

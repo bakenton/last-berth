@@ -898,6 +898,7 @@ function busyFarLine(pid){
 }
 
 
+function themed(html,cls,acc){ return html.replace('<div class="blk">','<div class="blk '+cls+'"'+(acc?' style="--acc:'+acc+'"':'')+'>') }   // v4.20: a block with its own colour
 function blk(title,body,tag){return '<div class="blk"><h3><span>'+title+'</span>'+(tag||'')+'</h3><div class="bd">'+body+'</div></div>'}
 function row(k,v,cls){return '<div class="row"><span>'+k+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></div>'}
 
@@ -1105,6 +1106,7 @@ function railTarget(){
     (isFinite(res)? row(pico('pile',p.kind==='works'?'parts':p.dep)+T('seamLeft'), res>0? seamYears(p.id) : T('depleted'), res>0?'':'bad') : '')+
     '</div>',
     '<span class="tag">'+SECTORS[p.sec].name+'</span>');
+  h=themed(h,'wc wc-head',KCOL[p.kind]);
 
   var c=G.colonies[p.id];
   var hulls=assignable(p.id);
@@ -1135,19 +1137,13 @@ function railTarget(){
   var lrB=c.dark?null:lineRate(G,p.id), depB=p.kind==='works'?'parts':p.dep;
   var bigVerdict='', bigCls='dim';
   if(lrB){ if(lrB.makes<=0.001) { bigVerdict=T('verdictDead'); bigCls='bad' } else if(!lrB.hulls){ bigVerdict=T('verdictNoLine'); bigCls='bad' } else if(lrB.piling){ bigVerdict=T('verdictPileShort'); bigCls='bad' } else { bigVerdict=T('verdictOkShort'); bigCls='good' } }
-  h+='<div class="blk bigstat"><div class="bs-row">'+
+  h+='<div class="blk bigstat wc wc-body" style="--acc:'+KCOL[p.kind]+'"><div class="bs-row">'+
       '<div class="bs"><small>'+T('bsStock')+'</small><b>'+pico('house',depB)+n0(c.store[depB]||0)+'</b></div>'+
       '<div class="bs"><small>'+T('bsHands')+'</small><b>'+ico('people')+n0(c.pop)+'</b></div>'+
       '<div class="bs"><small>'+T('bsMakes')+'</small><b>'+pico('plant')+(lrB&&lrB.makes>0.001?lrB.makes.toFixed(1)+T('perYear'):'—')+'</b></div>'+
     '</div>'+(bigVerdict?'<div class="bs-verdict '+bigCls+'">'+bigVerdict+'</div>':'')+(lrB&&lrB.hulls?'<div class="bs-rates dim">'+fill(T('rateLine'),{m:lrB.makes.toFixed(1),h:lrB.carries.toFixed(1)})+'</div>':'')+pileBar(p,c,depB)+
     '<div class="pile-lbl dim">'+T('hauledSoFar')+' <b class="c-'+depB+'">'+qty(depB,n0((c.hauledOut||{})[depB]||0),true)+'</b></div></div>';   // v4.13: the haul record in one line
-  h+=blk(T('lastReport'),
-    row(T('reportAge'),''+fill(T('ago'),{n:rep.age}),'dim')+
-    row(T('stores'),stores.length?stores.join(' · '):'—','dim')+
-    (K.UNREST_ON? row(T('unrest'),n0(r.unrest)+'%',r.unrest>60?'bad':(r.unrest>30?'warn':'good'))+
-      '<div class="meter"><i style="width:'+ub+'%;background:'+(ub>60?'var(--rust)':(ub>30?'var(--amber)':'var(--teal)'))+'"></i></div>'+
-      (r.demand?row(T('demandOpen'),fill(T('yearN'),{n:r.demand.by}),'bad'):'') : ''),
-    tag);
+  // v4.20 (Nikita, 06.10): the 'Last report' block is gone - the world card above says it all
 
   // why they are angry — the actual per-day arithmetic
   if(!c.dark && K.UNREST_ON){
@@ -1181,7 +1177,7 @@ function railTarget(){
           '<span class="c">'+costHtml({metal:kc.metal,parts:kc.parts},G.earth)+'</span></button>'+
           '<div class="'+(hold>=kc.w?'dim':'warn')+'" style="font-size:12px">'+fill(T('kitWeight'),{w:kc.w,h:hold})+'</div>';
     }
-    h+=blk(kname,kb+kico(p.kind,'wm'),kt?'<span class="tag t">'+roman(kt-1)+'</span>':'').replace('<div class="blk">','<div class="blk kb">');
+    h+=blk(kname,kb+kico(p.kind,'wm'),kt?'<span class="tag t">'+roman(kt-1)+'</span>':'').replace('<div class="blk">','<div class="blk kb sb sb-kit">');
   }
   /* v4.13 (Nikita, 30.09): the Orders block is gone — the standing order counters are the only way to put hulls on
      a line (the yards take an idle hull at Earth first, then build). What was left in Orders: the drive programme
@@ -1247,7 +1243,7 @@ function lineBlock(p,c){
      sit under them; evacuation is the last button */
   var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'});
   var ev='<button class="btn danger" type="button" data-act="evac" data-p="'+p.id+'"'+off(evg?'evacuating':'ok')+'>'+(evg?T('evacGoing'):T('evac'))+'</button>'+evacInfo(p,c);   // v4.18: who goes, and whether everyone fits
-  return blk(T('lineT'),lineGenBox(G.gen||0)+rows+(hl?'<div class="lhs" style="margin-top:8px"><div class="dim" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">'+T('lineHulls')+'</div>'+hl+'</div>':'<div class="lhs dim" style="margin-top:8px">'+T('lineNoHulls')+'</div>')+ren+ev, lineOf(G,p.id)?'<span class="tag t">'+T('lineOn')+'</span>':'');
+  return themed(blk(T('lineT'),'<div class="dim line-hint">'+T('lineUpkeepHint')+'</div>'+lineGenBox(G.gen||0)+rows+(hl?'<div class="lhs" style="margin-top:8px"><div class="dim" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">'+T('lineHulls')+'</div>'+hl+'</div>':'<div class="lhs dim" style="margin-top:8px">'+T('lineNoHulls')+'</div>')+ren+ev, lineOf(G,p.id)?'<span class="tag t">'+T('lineOn')+'</span>':''),'sb sb-line');
 }
 
 function supplyRow(label,have,rate,bad){
@@ -1542,7 +1538,7 @@ function freeHullsBlock(p){
     return '<div class="wrow free"><div><b>'+sico(HULLS[s.hull].key)+esc(hullName(HULLS[s.hull]))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b> <span class="dim">'+esc(fill(T('capacity'),{n:s.cap})+' \u00b7 '+speedTxt(HULLS[s.hull])+' \u00b7 '+fill(T('legDays'),{n:legDays(G,p.id,'earth',s)}))+'</span></div>'+
       '<button class="btn sm" type="button" data-act="assign" data-s="'+s.id+'" data-p="'+p.id+'">'+T('assignHere')+'</button></div>' }).join('')
     : '<div class="dim">'+T('freeNone')+'</div>';
-  return blk(T('freeHulls'),body,hs.length?'<span class="tag a">'+hs.length+'</span>':'');
+  return themed(blk(T('freeHulls'),body,hs.length?'<span class="tag a">'+hs.length+'</span>':''),'sb sb-free');
 }
 function watchRings(){
   if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null }

@@ -19,7 +19,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   await tap('[data-act="colonize"]'); await run(30); await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });
   ok('colony founded', await p.evaluate(id=>!!LN.colonies[id],mine));
-  ok('block present', /Hulls for this world — standing order/.test(await rail()));   // v4.16 (F-03): the block is titled 'Hulls for this world — standing order'
+  ok('block present', /Line upkeep/.test(await rail()));   // v4.20: the block is titled 'Line upkeep'
   ok('one class row at Generation I (only opened classes)', await p.evaluate(()=>document.querySelectorAll('#rail .so-row').length===1));
   ok('+ enabled for courier', await p.evaluate(()=>{ const bt=document.querySelector('[data-act="want"][data-c="courier"].plus'); return bt&&!bt.disabled }));
   // 2. + courier: the idle hull on the pier takes the line (no new build)
@@ -88,7 +88,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await q.evaluate(()=>{ const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); colonize(LN,s.id,LNU.pro.w.mine,26,0); for(let i=0;i<40;i++){ tick(LN); LN.pauseNow=false } LNdraw(); LNU.sel=LNU.pro.w.mine; LNU.tab='target'; LNdraw() });
   for(let i=0;i<6&&await q.isVisible('#pf');i++) await q.click('[data-act="pfok"]');
   const ru=await q.evaluate(()=>document.querySelector('#rail').textContent);
-  ok('RU block', /Суда для этого мира — постоянный приказ/.test(ru)&&/Курьер I/.test(ru), ru.match(/постоянный приказ[^\n]{0,120}/)?.[0]);   // v4.16 (F-03): new block title
+  ok('RU block', /Автоподдержание линии/.test(ru), ru.match(/Автоподдержание[^\n]{0,120}/)?.[0]);   // v4.20: RU block title is 'Автоподдержание линии'
   ok('prologue task says press +', await q.evaluate(()=>/нажми \+ у курьера/.test(document.body.textContent)));
   for(let i=0;i<6&&await q.$('[data-act="callok"]');i++){ await q.click('[data-act="callok"]'); await q.waitForTimeout(80) }
   await q.click('[data-act="want"][data-c="courier"].plus'); await q.evaluate(()=>{ for(let i=0;i<2;i++){ tick(LN); LN.pauseNow=false } LNdraw() });

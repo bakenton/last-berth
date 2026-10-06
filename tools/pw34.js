@@ -110,7 +110,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const fb=await p.evaluate(()=>{ var h=[].slice.call(document.querySelectorAll('#rail .blk')).find(e=>/Free hulls at Earth/.test(e.textContent)); return h?h.textContent:null });
   ok('World tab: "Free hulls at Earth" block with a Send here button', fb&&/Send here/.test(fb), fb);
   const order=await p.evaluate(()=>{ var h=[].slice.call(document.querySelectorAll('#rail .blk')).map(e=>e.querySelector('h3')?e.querySelector('h3').textContent:''); return h });
-  ok('…and the order block is its own block: "Hulls for this world — standing order"', order.some(t=>/Hulls for this world/.test(t)), JSON.stringify(order));
+  ok('…and the order block is its own block: "Line upkeep"', order.some(t=>/Line upkeep/.test(t)), JSON.stringify(order));
   await p.screenshot({path:require('os').tmpdir()+'/v416-target.png',clip:{x:1040,y:60,width:560,height:900}});
 
   // === F-05: new generation panel

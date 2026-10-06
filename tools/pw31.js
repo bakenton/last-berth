@@ -43,7 +43,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await tap('[data-act="savelog"]');
   const dl=await dlP;
   ok('download offered with a .json name', !!dl&&/last-berth-\d+-\d+\.json/.test(dl.suggestedFilename()), dl?dl.suggestedFilename():'none');
-  if(dl){ const path=await dl.path(); const J=JSON.parse(fs.readFileSync(path,'utf8')); ok('saved JSON has constants and a version string', /^4\.1\d$/.test(J.v)&&J.constants&&J.constants.KIT_METAL===100) }
+  if(dl){ const path=await dl.path(); const J=JSON.parse(fs.readFileSync(path,'utf8')); ok('saved JSON has constants and a version string', /^4\.[12]\d$/.test(J.v)&&J.constants&&J.constants.KIT_METAL===100) }
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('ERR '+e.stack) }

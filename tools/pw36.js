@@ -37,7 +37,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.reserves[id]=0; LN.colonies[id].store.metal=300 },mine); await show(mine);
   const t1=await titles();
   ok('seam spent + pile: a "Seam exhausted" notice on top', t1.some(t=>/Seam exhausted/.test(t)), JSON.stringify(t1));
-  ok('…and the order blocks are still there', t1.some(t=>/Hulls for this world/.test(t))&&t1.some(t=>/Free hulls at Earth/.test(t)), JSON.stringify(t1));
+  ok('…and the order blocks are still there', t1.some(t=>/Line upkeep/.test(t))&&t1.some(t=>/Free hulls at Earth/.test(t)), JSON.stringify(t1));
   ok('…the notice says how much is left and that hulls can collect it', /300 metal\) still lies on the surface|300 \(metal\)|300 metal/.test(await rail())||/still lies on the surface/.test(await rail()), (await rail()).match(/Nothing more to dig[^.]*\./));
   const plus=await p.evaluate(()=>{ var bt=document.querySelector('[data-act="want"][data-c="courier"].plus'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
   ok('+ in the standing order is open', plus&&plus.d!=='true', JSON.stringify(plus));
@@ -69,7 +69,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // a courier that cannot hold everyone: warned before and after
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(12);
   await p.evaluate(id=>{ LN.colonies[id].pop=95 },mine); await show(mine);
-  ok('before pressing: the block names the courier and who stays behind', /Courier \d+ \(Courier I\) holds 70 of 95 people — 25 will stay behind/.test(await rail()), (await rail()).match(/Courier \d+[^.]*\./));
+  ok('before pressing: the block names the courier and who stays behind', /Courier \d+ \(Courier [^)]*I\) holds 70 of 95 people — 25 will stay behind/.test(await rail()), (await rail()).match(/Courier \d+[^.]*\./));   // v4.20: hull name includes Greek name, e.g. "Hermes"
   await p.screenshot({path:require('os').tmpdir()+'/v418-evac.png',clip:{x:1040,y:60,width:560,height:620}});
   await tap('[data-act="evac"]');
   const te=await toast();

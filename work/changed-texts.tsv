@@ -35,7 +35,7 @@ UI	arkdReach	needs {n} worlds settled, you have {r}	нужно заселить 
 UI	a_arkd_reach	The ark drive (Generation {g}) needs the next drive mark, and that needs {n} worlds settled. You have settled {r}.	Двигателю ковчега (поколение {g}) нужна следующая отметка, а ей — {n} заселённых миров. Заселено: {r}.
 UI	arkdReachLater	{n} worlds settled on the way	по пути нужно заселить миров: {n}
 UI	shSectorsN	{n} new ring(s)	новых колец: {n}
-UI	lineT	Hulls for this world — standing order	Суда для этого мира — постоянный приказ
+UI	lineT	Line upkeep	Автоподдержание линии
 UI	bigSurvey	Open the {s} ring	Открыть кольцо {s}
 UI	alertFoodBody	Earth has {n} years of rations and no farm on a line. Chart a ring and settle a farm.	У Земли провизии на {n} лет и ни одной фермы на линии. Нанеси новое кольцо и засели ферму.
 UI	pileAll	On the surface {s} · one hold {c}: a single trip takes it all. Grey — the pile; white frame — one hull's hold.	На поверхности {s} · трюм одного корпуса {c}: одна ходка заберёт всё. Серое — куча, белая рамка — трюм одного корпуса.

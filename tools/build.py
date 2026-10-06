@@ -186,10 +186,18 @@ for c in tsv('changed-texts.tsv'):
     if byid[k][2:4]!=c[2:4]: byid[k][2]=c[2]; byid[k][3]=c[3]; changed+=1
 js=json.dumps(rows,ensure_ascii=False).replace('</','<\\/')
 s=s[:m.start()]+m.group(1)+js+m.group(3)+s[m.end():]
-wr('page.html',s); wr('long-night.html',s)
 # v4.11: the host stores what we publish — a body fragment (no <html>/<body>), ending with the lb-tools block.
 # v4.20: the yard title keeps icon and name together (b is a wrapping flex row)
 patch('.dbtn:disabled{cursor:not-allowed}','.dbtn:disabled{cursor:not-allowed}\n.dbtn b .hn{display:inline-flex;align-items:center;min-width:0}','.dbtn b .hn')
+# v4.20 (Nikita, 06.10): every block of the Object tab has its own colour; the world card is one piece in the world's colour
+patch('.blk.hl{border-color:var(--ink)}',
+ '.blk.wc{border-left:3px solid var(--acc)}.blk.wc-head>h3{background:color-mix(in srgb,var(--acc) 16%,#000)}.blk.wc-body{background:color-mix(in srgb,var(--acc) 6%,#000)}\n'
+ '.blk.sb{border-left:3px solid var(--acc)}.blk.sb>h3{color:var(--acc);background:color-mix(in srgb,var(--acc) 12%,#000);border-bottom-color:color-mix(in srgb,var(--acc) 45%,#000)}\n'
+ '.sb-free{--acc:var(--yellow)}.sb-line{--acc:#5BC0EB}.sb-kit{--acc:var(--orange)}\n'
+ '.sb-kit>h3{background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--orange) 24%,#000) 0 8px,color-mix(in srgb,var(--orange) 8%,#000) 8px 16px)}\n'
+ '.line-hint{font-size:12px;line-height:1.45}\n'
+ '.blk.hl{border-color:var(--ink)}','.blk.sb{border-left')
+wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)
 wr('artifact.html',s[b:e])
