@@ -2687,8 +2687,7 @@ function drawMap(){
     var ty=CY+(up?-(rr*0.90+9*Z):(rr*0.90+15*Z));
     s+='<text x="'+CX+'" y="'+ty+'" fill="'+col+'" font-size="'+F(10)+'" letter-spacing="'+F(2)+'" text-anchor="middle">'+esc(label)+'</text>';
   }
-  if(proSee('rings')) ring(classRange('courier',gnow),INK3,0.9,fill(T('ringCourier'),{n:classRange('courier',gnow)+1}),false);
-  if(proSee('rings')) ring(classRange('freighter',gnow),RED,0.8,fill(T('ringFleet'),{g:roman(gnow),n:classRange('freighter',gnow)+1}),true);
+  // v4.21 (Nikita, 06.10): the two dashed range rings and their captions are gone — the range is on the ship cards (icon + ring number)
   // links
   for(var k in G.colonies){
     p=planet(k); xy=pos(p); var c=G.colonies[k];

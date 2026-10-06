@@ -576,7 +576,7 @@ var W_NAMES=['Tallow','Brine','Cinder','Marrow','Solace','Vesper','Gallows','Fer
  'Winnow','Barrow','Skein','Tarn','Flense','Culvert','Nettle','Scrim','Lees','Chaff','Coom','Slake'];
 var DESIGS=['LV','HD','NR','KX','QT','ZD','BC','GR','TS','WN','PX','MV','AR','EL','SH','UM'];
 
-function secName(i){ var n=RING_NAMES.length, cyc=Math.floor(i/n), nm=RING_NAMES[i%n].toUpperCase(); return (i+1)+' · '+nm+(cyc?' '+['','II','III','IV','V','VI','VII','VIII','IX','X'][cyc]||(' '+(cyc+1)):'') }
+function secName(i){ var n=RING_NAMES.length, cyc=Math.floor(i/n), nm=RING_NAMES[i%n].toUpperCase(); return (i+1)+' · '+nm+(cyc?' '+(['','II','III','IV','V','VI','VII','VIII','IX','X'][cyc]||(cyc+1)):'') }
 function secRadius(i){ return 170+i*88 }
 
 /* every sector gets one of each trade, so the player is never starved of fuel
@@ -2687,8 +2687,7 @@ function drawMap(){
     var ty=CY+(up?-(rr*0.90+9*Z):(rr*0.90+15*Z));
     s+='<text x="'+CX+'" y="'+ty+'" fill="'+col+'" font-size="'+F(10)+'" letter-spacing="'+F(2)+'" text-anchor="middle">'+esc(label)+'</text>';
   }
-  if(proSee('rings')) ring(classRange('courier',gnow),INK3,0.9,fill(T('ringCourier'),{n:classRange('courier',gnow)+1}),false);
-  if(proSee('rings')) ring(classRange('freighter',gnow),RED,0.8,fill(T('ringFleet'),{g:roman(gnow),n:classRange('freighter',gnow)+1}),true);
+  // v4.21 (Nikita, 06.10): the two dashed range rings and their captions are gone — the range is on the ship cards (icon + ring number)
   // links
   for(var k in G.colonies){
     p=planet(k); xy=pos(p); var c=G.colonies[k];

@@ -175,7 +175,7 @@
  1511  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
-## ui.js (1791 строк)
+## ui.js (1790 строк)
 
 ```
 
@@ -280,95 +280,95 @@
   544  viewFit() [11]  ≈ var R=secRadius(Math.max(0,SECTORS.length-1))+58;
   555  viewZoom(f,ax,ay) [7]  ≈ var w=Math.max(280,Math.min(9000,VIEW.w*f));
   562  viewPt(ev) [7]  the viewBox is letterboxed by preserveAspectRatio=meet: find the real scale
-  570  drawMap() [144]  ≈ var s='', i, p, xy;
+  570  drawMap() [143]  ≈ var s='', i, p, xy;
 
-  715  ## HEADER / RESOURCES / LOG
-  716  drawHeader() [28]  ≈ var E=G.earth;
-  746  arkHead() [20]  v4.0: what the second date says. null before the Night has a date.
-  770  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so.
-  771  trendTick() [7]  ≈ var E=G.earth, h=U.hist;
-  778  trend(k) [6]  ≈ var h=U.hist; if(h.length<6) return null;
-  784  trendHtml(k,extra) [7]  ≈ var t=trend(k);
-  791  drawRes() [13]  ≈ var E=G.earth;
-  805  var TRAFFIC  ≈ {kit_loaded:1,pickup:1,delivered:1,launch_colony:1,launch_evac:1,launch_search:1,order_sen
-  806  drawLog() [27]  G.log is capped at 400 and shifts; track "seen" by a running count of entries ever logged
-  834  logKey(e) [1]  shift lines rotate between variants so a long calm run does not read as one sentence pasted ten times
-  835  logLine(e,tpl,d,isNew) [5]  ≈ var ch=TONE[e.code]==='ch';
-  841  chronLines(k) [8]  the last k chronicle lines, for the epilogue
-  849  logSeen() [1]  ≈ var m=0; for(var i=0;i<G.log.length;i++) if((G.log[i].seq||0)>m) m=G.log[i].seq; U.logSeen
+  714  ## HEADER / RESOURCES / LOG
+  715  drawHeader() [28]  ≈ var E=G.earth;
+  745  arkHead() [20]  v4.0: what the second date says. null before the Night has a date.
+  769  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so.
+  770  trendTick() [7]  ≈ var E=G.earth, h=U.hist;
+  777  trend(k) [6]  ≈ var h=U.hist; if(h.length<6) return null;
+  783  trendHtml(k,extra) [7]  ≈ var t=trend(k);
+  790  drawRes() [13]  ≈ var E=G.earth;
+  804  var TRAFFIC  ≈ {kit_loaded:1,pickup:1,delivered:1,launch_colony:1,launch_evac:1,launch_search:1,order_sen
+  805  drawLog() [27]  G.log is capped at 400 and shifts; track "seen" by a running count of entries ever logged
+  833  logKey(e) [1]  shift lines rotate between variants so a long calm run does not read as one sentence pasted ten times
+  834  logLine(e,tpl,d,isNew) [5]  ≈ var ch=TONE[e.code]==='ch';
+  840  chronLines(k) [8]  the last k chronicle lines, for the epilogue
+  848  logSeen() [1]  ≈ var m=0; for(var i=0;i<G.log.length;i++) if((G.log[i].seq||0)>m) m=G.log[i].seq; U.logSeen
 
-  851  ## RAIL
-  852  freeHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
-  853  var ROMAN  ≈ ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
-  854  roman(n) [1]  ≈ return ROMAN[n]||String(n+1) }
-  855  hullName(h) [1]  v4.20: class + Greek name
-  856  nodeName(n) [1]  ≈ return n==='earth'?T('earthNode'):planet(n).name.toUpperCase()}
-  857  aliveHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode!=='dead'&&s.mode!=='missing'})}
-  859  drawAdvice() [29]  ≈ var box=el('advisor'); if(!box) return;
-  890  shipChips(list) [20]  clickable pickers that survive a redraw, unlike a native <select>
-  911  assignable(pid) [4]  the hulls a world can actually be given: free at Earth and rated for its sector
-  915  busyFarLine(pid) [8]  ≈ var p=planet(pid); if(!p) return '';
-  925  themed(html,cls,acc) [1]  v4.20: a block with its own colour
-  926  blk(title,body,tag) [1]  ≈ return '<div class="blk"><h3><span>'+title+'</span>'+(tag||'')+'</h3><div class="bd">'+bod
-  927  row(k,v,cls) [1]  ≈ return '<div class="row"><span>'+k+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></di
-  929  railEarthPro() [19]  ≈ var E=G.earth, h='', st=U.pro.stage;
-  948  railEarth() [123]  ≈ if(U.pro.on) return railEarthPro();
- 1073  seamYears(pid) [2]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace, not uni
- 1077  pileBar(p,c,dep) [8]  v4.11 (Nikita, 28.09): a bar for the pile, and the slice one hull takes per trip — the picked hull if one is
- 1087  pickCourier(pid) [6]  v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
- 1093  evacInfo(p,c) [6]  ≈ var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}
- 1101  depletedBlock(p,c) [8]  v4.17 (Nikita, 04.10: 'когда планета истощается, то блокируется всё. Можно только нажать эвакуировать'): a spe
- 1109  lineGenBox(max) [8]  ≈ if(!max) return '';
- 1117  railTarget() [92]  ≈ if(!U.sel) return blk(T('tabTarget'),'<div class="dim">'+T('selectPlanet')+'</div>');
- 1210  lineBlock(p,c) [42]  v4.6: the line as a standing order — 'two haulers here'; the yards do the rest
- 1253  supplyRow(label,have,rate,bad) [6]  ≈ var d=Math.floor(have/Math.max(0.001,rate));
- 1259  fldNum(id,label,val) [3]  ≈ return '<label class="fld2"><span>'+label+'</span><input id="'+id+'" value="'+val+'"></lab
- 1262  tog(id,label,on) [3]  ≈ return '<button type="button" class="tg'+(on?' on':'')+'" id="'+id+'" data-tog="1" aria-pr
- 1265  shipState(s) [7]  ≈ if(s.mode==='building') return fill(T('mBuild'),{n:s.t});
- 1272  railWorlds() [23]  ≈ var keys=Object.keys(G.colonies).filter(proWorldVisible);
- 1296  drawDock() [34]  the yard dock, bottom-left of the chart: build, scrap, and the ark, without scrolling the rail
- 1331  layoutPanels() [10]  the advisor may grow down, the dock may grow up; neither may cover the other
- 1341  drawRail() [7]  ≈ if(U.tab==='fleet') U.tab='worlds';
- 1349  showLog() [7]  ≈ var box=el('logbox'); if(!box) return;
- 1358  saveLog() [8]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
- 1366  copyLog() [6]  ≈ var ta=el('logtxt'); ta.focus(); ta.select();
- 1372  drawLang() [4]  ≈ var b=el('lang'); if(!b) return;
- 1376  drawIntro() [78]  ≈ var b=el('intro'); if(!b) return;
- 1454  drawOverlay() [29]  ≈ var o=el('ov');
+  850  ## RAIL
+  851  freeHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
+  852  var ROMAN  ≈ ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+  853  roman(n) [1]  ≈ return ROMAN[n]||String(n+1) }
+  854  hullName(h) [1]  v4.20: class + Greek name
+  855  nodeName(n) [1]  ≈ return n==='earth'?T('earthNode'):planet(n).name.toUpperCase()}
+  856  aliveHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode!=='dead'&&s.mode!=='missing'})}
+  858  drawAdvice() [29]  ≈ var box=el('advisor'); if(!box) return;
+  889  shipChips(list) [20]  clickable pickers that survive a redraw, unlike a native <select>
+  910  assignable(pid) [4]  the hulls a world can actually be given: free at Earth and rated for its sector
+  914  busyFarLine(pid) [8]  ≈ var p=planet(pid); if(!p) return '';
+  924  themed(html,cls,acc) [1]  v4.20: a block with its own colour
+  925  blk(title,body,tag) [1]  ≈ return '<div class="blk"><h3><span>'+title+'</span>'+(tag||'')+'</h3><div class="bd">'+bod
+  926  row(k,v,cls) [1]  ≈ return '<div class="row"><span>'+k+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></di
+  928  railEarthPro() [19]  ≈ var E=G.earth, h='', st=U.pro.stage;
+  947  railEarth() [123]  ≈ if(U.pro.on) return railEarthPro();
+ 1072  seamYears(pid) [2]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace, not uni
+ 1076  pileBar(p,c,dep) [8]  v4.11 (Nikita, 28.09): a bar for the pile, and the slice one hull takes per trip — the picked hull if one is
+ 1086  pickCourier(pid) [6]  v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
+ 1092  evacInfo(p,c) [6]  ≈ var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}
+ 1100  depletedBlock(p,c) [8]  v4.17 (Nikita, 04.10: 'когда планета истощается, то блокируется всё. Можно только нажать эвакуировать'): a spe
+ 1108  lineGenBox(max) [8]  ≈ if(!max) return '';
+ 1116  railTarget() [92]  ≈ if(!U.sel) return blk(T('tabTarget'),'<div class="dim">'+T('selectPlanet')+'</div>');
+ 1209  lineBlock(p,c) [42]  v4.6: the line as a standing order — 'two haulers here'; the yards do the rest
+ 1252  supplyRow(label,have,rate,bad) [6]  ≈ var d=Math.floor(have/Math.max(0.001,rate));
+ 1258  fldNum(id,label,val) [3]  ≈ return '<label class="fld2"><span>'+label+'</span><input id="'+id+'" value="'+val+'"></lab
+ 1261  tog(id,label,on) [3]  ≈ return '<button type="button" class="tg'+(on?' on':'')+'" id="'+id+'" data-tog="1" aria-pr
+ 1264  shipState(s) [7]  ≈ if(s.mode==='building') return fill(T('mBuild'),{n:s.t});
+ 1271  railWorlds() [23]  ≈ var keys=Object.keys(G.colonies).filter(proWorldVisible);
+ 1295  drawDock() [34]  the yard dock, bottom-left of the chart: build, scrap, and the ark, without scrolling the rail
+ 1330  layoutPanels() [10]  the advisor may grow down, the dock may grow up; neither may cover the other
+ 1340  drawRail() [7]  ≈ if(U.tab==='fleet') U.tab='worlds';
+ 1348  showLog() [7]  ≈ var box=el('logbox'); if(!box) return;
+ 1357  saveLog() [8]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
+ 1365  copyLog() [6]  ≈ var ta=el('logtxt'); ta.focus(); ta.select();
+ 1371  drawLang() [4]  ≈ var b=el('lang'); if(!b) return;
+ 1375  drawIntro() [78]  ≈ var b=el('intro'); if(!b) return;
+ 1453  drawOverlay() [29]  ≈ var o=el('ov');
 
- 1484  ## V4.17 (NIKITA, 04.10, BATCH 2)
- 1487  hullProgress(s) [1]  ≈ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/t
- 1488  cargoTxt(s) [1]  ≈ var out=[]; ['metal','food','fuel','parts','people'].forEach(function(k){ var v=s.cargo&&s
- 1489  fleetRow(s) [15]  ≈ var h=HULLS[s.hull], cls=h.key, free=s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to), st,
- 1504  fleetBody() [14]  ≈ var ships=G.ships.filter(function(s){return s.mode!=='dead'});
- 1518  genTrack(sel,max) [5]  ≈ var out='<div class="gtrack" data-gtrack="1" data-max="'+max+'" role="slider" aria-valuemi
- 1523  lineGenSel() [1]  ≈ var g=(U.lineGen===undefined||U.lineGen===null)?(G.gen||0):U.lineGen; return Math.max(0,Ma
- 1524  setLineGen(g,max) [1]  ≈ g=Math.max(0,Math.min(max,g)); if(U.lineGen===g) return; U.lineGen=(g>=(G.gen||0))?null:g;
- 1525  genFromX(x) [2]  ≈ var t=document.querySelector('.gtrack'); if(!t) return; var max=+t.dataset.max, r=t.getBou
+ 1483  ## V4.17 (NIKITA, 04.10, BATCH 2)
+ 1486  hullProgress(s) [1]  ≈ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/t
+ 1487  cargoTxt(s) [1]  ≈ var out=[]; ['metal','food','fuel','parts','people'].forEach(function(k){ var v=s.cargo&&s
+ 1488  fleetRow(s) [15]  ≈ var h=HULLS[s.hull], cls=h.key, free=s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to), st,
+ 1503  fleetBody() [14]  ≈ var ships=G.ships.filter(function(s){return s.mode!=='dead'});
+ 1517  genTrack(sel,max) [5]  ≈ var out='<div class="gtrack" data-gtrack="1" data-max="'+max+'" role="slider" aria-valuemi
+ 1522  lineGenSel() [1]  ≈ var g=(U.lineGen===undefined||U.lineGen===null)?(G.gen||0):U.lineGen; return Math.max(0,Ma
+ 1523  setLineGen(g,max) [1]  ≈ g=Math.max(0,Math.min(max,g)); if(U.lineGen===g) return; U.lineGen=(g>=(G.gen||0))?null:g;
+ 1524  genFromX(x) [2]  ≈ var t=document.querySelector('.gtrack'); if(!t) return; var max=+t.dataset.max, r=t.getBou
 
- 1527  ## V4.16 (NIKITA, 04.10: 'ИНТЕРФЕЙС — САМАЯ ГЛАВНАЯ ЧАСТЬ ФИДБЕКА')
- 1530  freeWorlds() [1]  ≈ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) 
- 1532  hpar(ic,txt,title,cls) [1]  v4.21 (Nikita, 06.10): every ship parameter wears its icon — hold: a container, speed: a speedometer, range: r
- 1533  speedTxt(hl) [1]  ≈ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
- 1534  freeFor(cls,pid,gen) [1]  ≈ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!
- 1535  assignChips(s) [6]  ≈ var out=''; for(var k in G.colonies){ var c=G.colonies[k]; var p=planet(k); if(!p||!canRea
- 1541  freeHullsBlock(p) [8]  ≈ var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
- 1549  watchRings() [6]  ≈ if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null }
- 1555  showNoFree() [5]  ≈ var d=document.createElement('div'); d.id='nofree';
- 1560  closeNoFree() [1]  ≈ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.pau
- 1561  drawSign() [15]  ≈ var e=el('ringsign'); if(!e) return;
- 1576  draw() [1]  ≈ proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawLog();drawRail(
+ 1526  ## V4.16 (NIKITA, 04.10: 'ИНТЕРФЕЙС — САМАЯ ГЛАВНАЯ ЧАСТЬ ФИДБЕКА')
+ 1529  freeWorlds() [1]  ≈ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) 
+ 1531  hpar(ic,txt,title,cls) [1]  v4.21 (Nikita, 06.10): every ship parameter wears its icon — hold: a container, speed: a speedometer, range: r
+ 1532  speedTxt(hl) [1]  ≈ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
+ 1533  freeFor(cls,pid,gen) [1]  ≈ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!
+ 1534  assignChips(s) [6]  ≈ var out=''; for(var k in G.colonies){ var c=G.colonies[k]; var p=planet(k); if(!p||!canRea
+ 1540  freeHullsBlock(p) [8]  ≈ var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
+ 1548  watchRings() [6]  ≈ if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null }
+ 1554  showNoFree() [5]  ≈ var d=document.createElement('div'); d.id='nofree';
+ 1559  closeNoFree() [1]  ≈ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.pau
+ 1560  drawSign() [15]  ≈ var e=el('ringsign'); if(!e) return;
+ 1575  draw() [1]  ≈ proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawLog();drawRail(
 
- 1584  ## ACTIONS
- 1587  pick(pid) [4]  v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured 
- 1591  tgOn(id) [1]  ≈ var e=el(id);return e&&e.classList.contains('on')?1:0}
- 1592  num(id,d) [1]  ≈ var e=el(id);if(!e)return d;var v=parseInt(e.value,10);return isNaN(v)?d:Math.max(0,v)}
+ 1583  ## ACTIONS
+ 1586  pick(pid) [4]  v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured 
+ 1590  tgOn(id) [1]  ≈ var e=el(id);return e&&e.classList.contains('on')?1:0}
+ 1591  num(id,d) [1]  ≈ var e=el(id);if(!e)return d;var v=parseInt(e.value,10);return isNaN(v)?d:Math.max(0,v)}
 
- 1717  ## THE MAP IS PANNABLE AND ZOOMABLE
+ 1716  ## THE MAP IS PANNABLE AND ZOOMABLE
 
- 1750  ## LOOP
- 1754  var MS  v4.2 (Nikita, 24.09: "игра слишком быстрая — сообщения не читаются"): the old clock ran a whole
- 1755  frame(ts) [25]  ≈ if(!U.last) U.last=ts;
- 1781  start(seed) [7]  ≈ G=newGame(seed||undefined);
+ 1749  ## LOOP
+ 1753  var MS  v4.2 (Nikita, 24.09: "игра слишком быстрая — сообщения не читаются"): the old clock ran a whole
+ 1754  frame(ts) [25]  ≈ if(!U.last) U.last=ts;
+ 1780  start(seed) [7]  ≈ G=newGame(seed||undefined);
 ```
 
