@@ -32,13 +32,18 @@ const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
   await tap('.tab[data-tab="worlds"]'); await tap('.tab[data-tab="earth"]');
   console.log('night cell:', await p.textContent('#h-night'));
   const rail=await p.textContent('#railbody');
-  console.log('ark block:', /Ковчег/.test(rail), '| buy enabled:', await p.evaluate(()=>!document.querySelector('[data-act="ark"]').disabled));
-  for(let i=0;i<3;i++){ await tap('[data-act="ark"]'); await p.waitForTimeout(80) }
-  console.log('berths:', await p.evaluate(()=>window.LN.ark.berths), '| cost now:', await p.evaluate(()=>JSON.stringify(arkCost(window.LN))));
+  console.log('ark block:', /Ковчег|Ark/.test(rail), '| buy available:', await p.evaluate(()=>!!document.querySelector('[data-act="arkbuy"]:not([aria-disabled])')));
+  // v4.24: the ark has levels now, not berths; select level and buy it
+  await tap('[data-act="arksel"][data-l="1"]'); await p.waitForTimeout(80);
+  await tap('[data-act="arkbuy"]'); await p.waitForTimeout(80);
+  console.log('ark level:', await p.evaluate(()=>window.LN.ark.lv), '| level paid:', await p.evaluate(()=>arkLevel(window.LN)));
   await p.screenshot({path:'v5-ark.png'});
   // jump to the end
   await p.evaluate(()=>{ const G=window.LN; G.driveLvl=G.arkMark; G.gen=G.driveLvl; ensureGen(G.gen); G.night=G.day+2; });   // v4.0: the ark needs its drive
-  await tap('#b-pause'); await p.waitForTimeout(1500);
+  // play fast until night arrives and finishes
+  await tap('[data-spd="10"]');
+  for(let i=0;i<20&&!(await p.evaluate(()=>window.LN.over));i++){ await p.waitForTimeout(400) }
+  await tap('#b-pause'); await p.waitForTimeout(200);
   console.log('over:', await p.evaluate(()=>window.LN.over), '| souls:', await p.evaluate(()=>window.LN.souls));
   console.log('end title:', await p.textContent('#ovbox h2'));
   await p.screenshot({path:'v6-end.png'});

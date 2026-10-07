@@ -30,7 +30,8 @@ async function capture(b,file,lang){
   await p.evaluate(()=>{ window.LN.earth.people=0 }); await tap('.tab[data-tab="earth"]');
   await p.evaluate(()=>{ const s=[...document.querySelectorAll('[data-act="survey"]')][0]; }); 
   // ending
-  await p.evaluate(()=>{ const G=window.LN; G.earth.people=900; if(!G.night) revealNight(G); G.nightSeen=true; for(let i=0;i<4;i++) buildArk(G); G.night=G.day+2; for(let i=0;i<3;i++){ tick(G); G.pauseNow=false } });
+  // v4.24: build ark by buying level 1 (was buildArk which added berths incrementally)
+  await p.evaluate(()=>{ const G=window.LN; G.earth.people=900; G.earth.metal=1e4; G.earth.parts=1e4; G.earth.fuel=1e4; G.earth.food=1e4; if(!G.night) revealNight(G); G.nightSeen=true; arkBuy(G,1); G.night=G.day+2; for(let i=0;i<3;i++){ tick(G); G.pauseNow=false } });
   await tap('.tab[data-tab="worlds"]'); await p.waitForTimeout(150);
   S.end=await txt('#ovbox');
   await p.close();

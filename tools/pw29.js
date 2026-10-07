@@ -51,9 +51,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('evac button disabled and says under way', await p.evaluate(()=>{ const b=document.querySelector('[data-act="evac"]'); return b&&b.getAttribute('aria-disabled')==='true'&&/under way/.test(b.textContent) }), evr+' '+await p.evaluate(()=>{ const b=document.querySelector('[data-act="evac"]'); return b?b.outerHTML.slice(0,120):'nobtn' }));
   // 6. big buttons on the Earth panel
   await p.evaluate(()=>{ LN.earth.metal=1e5; LN.earth.parts=1e4; LN.earth.fuel=1e5; LN.earth.food=1e5; LN.driveLvl=5; ensureGen(5); LN.gen=5; LN.nightSeen=true; PLANETS.filter(q=>q.sec<=1).forEach(q=>{ if(!LN.colonies[q.id]) LN.colonies[q.id]={pid:q.id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0} }); LNU.tab='earth'; LNdraw() });
-  const bigs=await p.evaluate(()=>[...document.querySelectorAll('.btn.bigbtn')].map(b=>b.dataset.act).join(','));
+  const bigs=await p.evaluate(()=>[...document.querySelectorAll('.btn.bigbtn')].map(b=>b.dataset.act||'noact').join(','));
   ok('big survey button when a sector can be opened', /survey/.test(bigs), bigs);
-  ok('big ark button when berths can be bought', /ark/.test(bigs), bigs);
+  // v4.24: the ark is now in the arkBlock, not a separate big button; check that the ark block exists when night is reached
+  const arkBlockPresent=await p.evaluate(()=>!!document.querySelector('[data-act="arkbuy"]'));
+  ok('ark block visible when can buy', arkBlockPresent, 'arkblock');
   // 7. v4.17 (F-12/F-13): the yard queue above the dock is gone; the building hull sits in the Fleet panel (top left) with a progress bar
   await p.evaluate(()=>{ buildShip(LN,HULLS.findIndex(h=>h.gen===LN.gen&&h.key==='courier')); LNU.leftTab='fleet'; LNU.advOpen=true; LNdraw() });
   const yq=await p.evaluate(()=>{ const s=LN.ships[LN.ships.length-1]; const rows=[...document.querySelectorAll('#advisor .fl-row.bld')].filter(r=>r.querySelector('.pbar')).map(r=>r.querySelector('.fl-top b').textContent.trim());

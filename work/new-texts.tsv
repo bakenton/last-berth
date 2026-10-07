@@ -80,3 +80,25 @@ LOG	spoil_start	Earth’s stores are rotting and burning: food demand is doubled
 LOG	spoil_end	The losses are made good: Earth’s food demand is back to normal.	Потери восполнены: потребление провизии вернулось к норме.
 UI	hullRing	ring {n}	кольцо {n}
 UI	lineRenewHint	When on, old hulls are replaced by the newest generation one at a time, paid from Earth's metal. Off — nothing is spent without your order.	Когда включено, старые корпуса по одному заменяются новым поколением за металл Земли. Выключено — ничего не тратится без твоего приказа.
+UI	arkLevelRow	Ark level	Уровень ковчега
+UI	arkNone	not paid yet	ещё не оплачен
+UI	arkWayRow	Way	Способ
+UI	arkWay_deposit	Deposits	Вклады
+UI	arkWay_buy	Bought outright	Куплен сразу
+UI	arkPaidRow	Paid toward level {l}	Оплачено до уровня {l}
+UI	arkLvBtn	Level {n}	Уровень {n}
+UI	arkPriceRow	Price	Цена
+UI	arkCargoRow	Takes along up to	Увезёт остатков до
+UI	arkDepBtn	Deposits for level {n}	Вклады на уровень {n}
+UI	arkDepSub	per 100 years	за 100 лет
+UI	arkBuyBtn	Buy level {n} outright, {d}% off	Купить уровень {n} сразу, скидка {d}%
+UI	arkHintNew	Pick a level and a way. Deposits: Earth sets aside an even share of the price every year until the Night, never below {y} years of its own burn. Outright: pay once, {d}% cheaper. Everyone at home sails; the level only sets how much of what is left on Earth rides along. The way cannot be changed; the level can be raised.	Выбери уровень и способ. Вклады: Земля каждый год откладывает ровную долю цены до Ночи и не опускается ниже {y} лет собственного расхода. Сразу: платишь один раз, на {d}% дешевле. Летят все, кто дома; уровень задаёт лишь то, сколько оставшегося на Земле поедет с ковчегом. Способ не сменить, уровень можно поднять.
+UI	statCargo	Carried along	Увезено с собой
+MSG	arkmode	You chose the other way — it cannot be changed.	Ты выбрал другой способ, его не сменить.
+MSG	arkhave	This level is already yours or planned. Pick a higher one.	Этот уровень уже твой или запланирован. Выбери выше.
+MSG	arklevel	There is no such level.	Такого уровня нет.
+MSG	ok_arkplan	Deposits started: ark level {n}.	Вклады начаты: уровень ковчега {n}.
+MSG	ok_arkbuy	Ark level {n} bought.	Уровень ковчега {n} куплен.
+LOG	ark_bought	Ark level {l} bought outright.	Уровень ковчега {l} куплен сразу.
+LOG	ark_plan	Deposits for ark level {l} begin. Earth sets a share aside every year.	Начаты вклады на уровень ковчега {l}. Земля откладывает долю каждый год.
+LOG	ark_level	Ark level {l} is paid in full.	Уровень ковчега {l} оплачен полностью.

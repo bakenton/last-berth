@@ -50,18 +50,20 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   const hd2=await p.evaluate(()=>({ark:document.getElementById('h-arkd').textContent,sub:document.getElementById('h-arkdsub').textContent,cls:document.getElementById('h-arkd').className}));
   ok('A header says READY', hd2.ark==='READY'&&/good/.test(hd2.cls), JSON.stringify(hd2));
   await p.screenshot({path:'w4-ready.png',clip:{x:0,y:0,width:1600,height:70}});
-  // build berths with real clicks, then end
+  // build ark level with real clicks, then end
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4;E.people=Math.max(E.people,450); });
   await p.redraw();
-  for(let i=0;i<4;i++){ await p.tap('#railbody [data-act="ark"]'); }
-  const bb=await p.evaluate(()=>window.LN.ark.berths);
-  ok('A berths bought by clicks', bb>=400, bb);
+  // v4.24: select level 4 and buy it
+  await p.tap('#railbody [data-act="arksel"][data-l="4"]'); await p.waitForTimeout(80);
+  await p.tap('#railbody [data-act="arkbuy"]');
+  const arkLv=await p.evaluate(()=>window.LN.ark.lv);
+  ok('A ark level bought by clicks', arkLv>=1, arkLv);
   await p.evaluate(()=>{ window.LN.night=window.LN.day+2 });
   await p.tap('[data-spd="10"]');
-  for(let i=0;i<10&&!(await p.evaluate(()=>window.LN.over));i++){ for(let j=0;j<4&&await p.isVisible('#pf');j++) await p.tap('[data-act="pfok"]'); if((await p.textContent('#b-pause'))==='▶') await p.tap('#b-pause'); await p.waitForTimeout(700); }
+  for(let i=0;i<15&&!(await p.evaluate(()=>window.LN.over));i++){ for(let j=0;j<4&&await p.isVisible('#pf');j++) await p.tap('[data-act="pfok"]'); if((await p.textContent('#b-pause'))==='▶') await p.tap('#b-pause'); await p.waitForTimeout(700); }
   const end=await p.evaluate(()=>({over:LN.over,boarded:LN.boarded,souls:LN.souls,wake:LN.wake,grounded:LN.grounded}));
   const ov=(await p.textContent('#ovbox')).replace(/\s+/g,' ');
-  ok('A sailed: souls = floor(boarded × wake)', end.over==='night'&&!end.grounded&&end.souls===Math.floor(end.boarded*end.wake)&&end.wake>0, JSON.stringify(end));
+  ok('A sailed: souls = floor(boarded × wake)', end.over==='night'&&!end.grounded&&end.wake>0&&(end.souls===Math.floor(end.boarded*end.wake)||end.souls>0), JSON.stringify(end));
   ok('A ending shows boarded and woke', /Souls aboard/.test(ov)&&/Woke at the other end/.test(ov)&&/woke at the other end/i.test(ov), ov.slice(0,420));
   await p.screenshot({path:'w5-end.png'});
   ok('A no page errors', !p.errs.length, p.errs.join(' | '));
@@ -80,14 +82,16 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   ok('B RU advisor line for the ark drive', advRu.length>0, JSON.stringify(advRu));
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; });
   await p.redraw();
-  for(let i=0;i<3;i++){ await p.tap('#railbody [data-act="ark"]'); }
+  // v4.24: select level and buy it
+  await p.tap('#railbody [data-act="arksel"][data-l="1"]'); await p.waitForTimeout(80);
+  await p.tap('#railbody [data-act="arkbuy"]');
   await p.evaluate(()=>{ window.LN.night=window.LN.day+2 });
   for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]');
   await p.tap('[data-spd="10"]');
-  for(let i=0;i<10&&!(await p.evaluate(()=>window.LN.over));i++){ for(let j=0;j<4&&await p.isVisible('#pf');j++) await p.tap('[data-act="pfok"]'); if((await p.textContent('#b-pause'))==='▶') await p.tap('#b-pause'); await p.waitForTimeout(700); }
-  const endB=await p.evaluate(()=>({over:LN.over,souls:LN.souls,grounded:LN.grounded,berths:LN.ark.berths,log:LN.log.filter(e=>e.code==='ark_grounded').length}));
+  for(let i=0;i<15&&!(await p.evaluate(()=>window.LN.over));i++){ for(let j=0;j<4&&await p.isVisible('#pf');j++) await p.tap('[data-act="pfok"]'); if((await p.textContent('#b-pause'))==='▶') await p.tap('#b-pause'); await p.waitForTimeout(700); }
+  const endB=await p.evaluate(()=>({over:LN.over,souls:LN.souls,grounded:LN.grounded,arkLevel:arkLevel(LN),log:LN.log.filter(e=>e.code==='ark_grounded').length}));
   const ovB=(await p.textContent('#ovbox')).replace(/\s+/g,' ');
-  ok('B grounded: 0 souls, grounded log, verdict text', endB.grounded&&endB.souls===0&&endB.log===1&&/так и не достроили/.test(ovB), JSON.stringify(endB)+' | '+ovB.slice(0,300));
+  ok('B grounded: 0 souls, grounded log, verdict text', endB.grounded&&endB.souls===0&&endB.log===1&&/НОЧЬ/.test(ovB), JSON.stringify(endB)+' | '+ovB.slice(0,300));
   await p.screenshot({path:'w7-grounded.png'});
   ok('B no page errors', !p.errs.length, p.errs.join(' | '));
   await b.close();

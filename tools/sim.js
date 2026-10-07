@@ -3,13 +3,15 @@
    Bots (F-20, Nikita 05.10): idle and greedy are the floor — they must lose. The rest are STYLES of play, all on standing orders:
      rush    — Nikita: settle everything in reach at once, chart and run the drive as early as allowed, biggest hulls
      serial  — the tester: one live world per trade; when it runs dry, evacuate and settle the next
-     ark     — builds as many berths as it can and sails: once the Night is dated it stops growing and spends everything on ark blocks
+     ark     — v4.24: the depositor — sets an ark level aside as soon as the Night is dated (even yearly share), stops growing 1200 years out
+     bank    — v4.24: the all-in buyer — saves, buys the best level it can pay for outright (bulk discount) 600 years out
    (visitor / hoarder dropped 06.10 by Nikita: two player styles + the ark runner.)
    Legacy bots (expand / pro / tidy / late) still run with BOTS=expand,pro,tidy,late. */
 const STYLES={
   rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true},
   serial: {hands:30, keep:260,  sFood:90,  sMetal:300,  serial:true, evac:true},
-  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200}
+  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200, dep:true, level:2},
+  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, buyLeft:600}
 };
 const fs=require('fs');
 function load(path){
@@ -17,7 +19,7 @@ function load(path){
   const names=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','reach','settledCount','buildShip','colonize',
     'setLine','survey','canSurvey','startDrive','scrap','scrapIdle','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
-    'buildArk','canArk','arkSouls','nightLeft','abandon','clearLine','leftBehind',
+    'arkBuy','arkPlan','arkLevel','arkSouls','nightLeft','abandon','clearLine','leftBehind',
     'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','setRenew','lineOf','lineCount','lineWant','yardCheck'];
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
@@ -148,10 +150,10 @@ function play(C,seed,days,bot){
       if(E.food>nd.food*P.sFood&&E.metal>P.sMetal) C.survey(G);
     }
     // 7. the Long Night: expand and pro buy berths; only pro takes the empire apart in time
-    if(G.night&&C.buildArk&&bot!=='greedy'){
+    if(G.night&&C.arkBuy&&bot!=='greedy'){
       const left=C.nightLeft(G);
-      const keepM = P.ark ? (left>P.arkLeft?600:0) : pro ? (left>1000?1e9:(left>400?600:0)) : 300;
-      while(C.canArk(G)==='ok'&&E.metal-keepM>0){ if(C.buildArk(G)!=='ok') break; if(bot!=='pro'&&P.legacy) break; }
+      if(P.dep){ if(!G.ark.mode) C.arkPlan(G,P.level||2) }                                   // the depositor: choose a level once, Earth sets it aside
+      else if(left<=(P.buyLeft||600)&&!G.ark.mode){ for(let l=4;l>=1;l--){ if(C.arkBuy(G,l)==='ok') break } }   // everyone else: the best level they can pay outright
       if(pro&&left<=400){
         // stop expanding: release lines, lift colonies with whatever is free, scrap what is home
         G.ships.forEach(s=>{ if(s.from&&s.to&&s.mode!=='dead') C.clearLine(G,s.id) });
@@ -171,7 +173,7 @@ function play(C,seed,days,bot){
   let crew=0; G.ships.forEach(s=>{ if(s.mode!=='dead') crew+=(s.crew||0) });
   const souls = G.over==='night' ? (G.souls||0) : 0;
   return {seed, bot, day:G.day, over:G.over||'alive', worlds, sectors:C.SECTORS.length, gen:G.gen||0,
-    souls, berths:G.ark?G.ark.berths:0, night:G.night||0,
+    souls, berths:G.ark?C.arkLevel(G):0, night:G.night||0,
     idlePeople:Math.round(G.earth.people), crew, out:+(1+0).toFixed(2),
     score:+(depth+ (G.gen||0)*3 + C.SECTORS.length*2 + tiers*0.5).toFixed(1), couriers, big, tiers,
     deepest:Math.max(0,...Object.keys(G.colonies).map(k=>C.planet(k).sec))};
@@ -180,7 +182,7 @@ function play(C,seed,days,bot){
 const corePath=process.argv[2]||'core.js';
 const days=+(process.argv[3]||2600);
 const seeds=(process.argv[4]||'11,22,33,44,55,66,77,88').split(',').map(Number);
-const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','rush','serial','ark']);
+const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','rush','serial','ark','bank']);
 const agg={};
 for(const bot of bots){
   const rows=seeds.map(sd=>play(load(corePath),sd,days,bot));

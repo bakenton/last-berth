@@ -944,13 +944,50 @@ function railEarthPro(){
   h+=blk(T('guideBtn'),'<button class="btn" type="button" data-act="guide">'+T('guideBtn')+'</button>');
   return h;
 }
+/* v4.24 (Nikita, 07.10, F-22 trial): the ark is four levels at a fixed price. Pick a level, then a way: deposits or outright. */
+function arkSel(){ var lv=arkLevel(G), top=K.ARK_LEVELS.length, d=Math.min(top,Math.max(lv,G.ark.target)+1); var v=U.arkSel; if(!v||v<1||v>top) v=d; return v }
+function arkBlock(E){
+  var lv=arkLevel(G), top=K.ARK_LEVELS.length, sel=arkSel(), mode=G.ark.mode, left=Math.max(1,nightLeft(G));
+  var souls=arkSouls(G), lb=leftBehind(G), ah=arkHead(), wk=arkWake(G), price=arkPrice(sel), owed=arkOwed(G,sel);
+  var bulk={}, per={}; ['metal','parts','food','fuel'].forEach(function(r){ bulk[r]=Math.ceil(owed[r]*K.ARK_BULK); per[r]=owed[r]/left*100 });
+  var tabs=''; for(var l=1;l<=top;l++) tabs+='<button type="button" class="btn sm'+(l===sel?' prim':'')+'" data-act="arksel" data-l="'+l+'">'+fill(T('arkLvBtn'),{n:l})+'</button>';
+  var depWhy=arkCheck(G,sel,'deposit'), buyWhy=arkCheck(G,sel,'buy'); if(buyWhy==='ok'){ var sw=shortWhy(bulk,E); if(sw[0]!=='ok') buyWhy=sw }
+  var buyAttr=(typeof buyWhy==='string')?off(buyWhy):off(buyWhy[0],buyWhy[1]);
+  var paidPct=0; if(mode==='deposit'&&G.ark.target){ var pt=arkPrice(G.ark.target), sum=0; ['metal','parts','food','fuel'].forEach(function(r){ sum+=Math.min(1,G.ark.paid[r]/pt[r]) }); paidPct=Math.round(sum/4*100) }
+  return blk(T('arkTitle'),
+    row(T('hNight'),G.night+' <span class="dim">· '+fill(T('nightIn'),{n:nightLeft(G)})+'</span>','bad')+
+    row(T('hArkDrive'),fill(T('genSep'),{g:roman(G.arkMark)})+' <span class="'+ah.c+'">· '+esc(ah.v)+'</span>',ah.c)+
+    '<div class="dim" style="font-size:12px;line-height:1.45;text-align:right">'+esc(ah.rest)+'</div>'+
+    row(T('arkLevelRow'),lv?lv+' / '+top:'<span class="dim">'+T('arkNone')+'</span>',lv?'good':'bad')+
+    (mode?row(T('arkWayRow'),T('arkWay_'+mode),'dim'):'')+
+    (mode==='deposit'?row(fill(T('arkPaidRow'),{l:G.ark.target}),paidPct+'%',paidPct>=100?'good':'warn'):'')+
+    row(T('crewHome'),n0(E.people),'dim')+
+    row(T('arkSouls'),souls,souls>0?'good':'bad')+
+    row(T('arkWakeRow'),wk?Math.floor(souls*wk)+' <span class="dim">· '+Math.round(wk*100)+'%</span>':T('arkNoDrive'),wk?'good':'bad')+
+    '<div class="rows" style="margin-top:2px">'+
+      row(T('arkLeft'),'','dim')+
+      row(' '+T('lbHome'),lb.home,lb.home>0?'warn':'dim')+
+      row(' '+T('lbHulls'),lb.hulls,lb.hulls>0?'warn':'dim')+
+      row(' '+T('lbCol'),lb.colonies,lb.colonies>0?'warn':'dim')+
+      (lb.transit?row(' '+T('lbTransit'),lb.transit,'warn'):'')+
+    '</div>'+
+    '<div class="gtabs" style="display:flex;gap:6px;margin:8px 0 4px">'+tabs+'</div>'+
+    row(T('arkPriceRow'),costHtml(price,E),'dim')+
+    row(T('arkCargoRow'),costHtml(arkCap(sel),null),'dim')+
+    '<button class="btn '+(depWhy==='ok'?'prim':'')+'" type="button" data-act="arkplan" data-l="'+sel+'"'+off(depWhy)+'>'+
+      fill(T('arkDepBtn'),{n:sel})+'<br><span class="c" style="float:none;color:var(--faint)">'+costHtml(per,null)+' '+T('arkDepSub')+'</span></button>'+
+    '<button class="btn '+(buyWhy==='ok'?'prim':'')+'" type="button" data-act="arkbuy" data-l="'+sel+'"'+buyAttr+'>'+
+      fill(T('arkBuyBtn'),{n:sel,d:Math.round((1-K.ARK_BULK)*100)})+'<br><span class="c" style="float:none;color:var(--faint)">'+costHtml(bulk,E)+'</span></button>'+
+    '<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('arkHintNew'),{y:K.ARK_FLOOR_YEARS,d:Math.round((1-K.ARK_BULK)*100)})+'</div>'+
+    '<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('arkDriveHint'),{g:roman(G.arkMark),a:Math.round(K.ARK_WAKE[0]*100),b:Math.round(K.ARK_WAKE[1]*100),c:Math.round(K.ARK_WAKE[2]*100)})+'</div>',
+    '<span class="tag r">'+T('hNight')+'</span>');
+}
 function railEarth(){
   if(U.pro.on) return railEarthPro();
   var E=G.earth, h='';
   /* v4.9 (Nikita, 27.09): the two big decisions get big buttons when they are open */
   var bb='';
   if(canSurvey(G)==='ok') bb+='<button class="btn bigbtn" type="button" data-act="survey">'+fill(T('bigSurvey'),{s:secName(SECTORS.length)})+'<small>'+costHtml(surveyCost(SECTORS.length),E)+'</small></button>';
-  if(G.night&&canArk(G)==='ok') bb+='<button class="btn bigbtn" type="button" data-act="ark">'+fill(T('bigArk'),{n:K.ARK_BLOCK})+'<small>'+costHtml(arkCost(G),E)+'</small></button>';
   if(bb) h+='<div class="bigrow">'+bb+'</div>';
   /* v4.13 (Nikita, 30.09): the burn block, the stores, the metal ledger and the colony-by-colony census are gone —
      the rail says only what a decision needs.
@@ -974,36 +1011,7 @@ function railEarth(){
     '<button class="btn '+(sok==='ok'?'prim':'')+'" type="button" data-act="survey"'+(sok==='settled'?off('needsettled',{n:rneed,r:settledCount(G)}):offCost(sc,E))+'>'+
       fill(T('surveyBtn'),{s:nxt})+'</button>');
   // the ark, once the Night has a date
-  if(G.night){
-    var ac=arkCost(G), aok=canArk(G), lb=leftBehind(G), souls=arkSouls(G);
-    var amiss=[];
-    if(E.metal<ac.metal) amiss.push(fill(T('needM'),{n:Math.ceil(ac.metal-E.metal)}));
-    if(E.parts<ac.parts) amiss.push(fill(T('needP'),{n:Math.ceil(ac.parts-E.parts)}));
-    if(E.fuel<ac.fuel) amiss.push(fill(T('needF'),{n:Math.ceil(ac.fuel-E.fuel)}));
-    if(E.food<ac.food) amiss.push(Math.ceil(ac.food-E.food)+' '+T('food').toLowerCase());
-    var ah=arkHead(), wk=arkWake(G);
-    h+=blk(T('arkTitle'),
-      row(T('hNight'),G.night+' <span class="dim">· '+fill(T('nightIn'),{n:nightLeft(G)})+'</span>','bad')+
-      row(T('hArkDrive'),fill(T('genSep'),{g:roman(G.arkMark)})+' <span class="'+ah.c+'">· '+esc(ah.v)+'</span>',ah.c)+
-      '<div class="dim" style="font-size:12px;line-height:1.45;text-align:right">'+esc(ah.rest)+'</div>'+
-      row(T('arkBerths'),G.ark.berths+' <span class="dim">· '+fill(T('arkBlocks'),{n:G.ark.blocks})+'</span>')+
-      row(T('crewHome'),n0(E.people),'dim')+
-      row(T('arkSouls'),souls,souls>0?'good':'bad')+
-      row(T('arkWakeRow'),wk?Math.floor(souls*wk)+' <span class="dim">· '+Math.round(wk*100)+'%</span>':T('arkNoDrive'),wk?'good':'bad')+
-      '<div class="rows" style="margin-top:2px">'+
-        row(T('arkLeft'),'','dim')+
-        row(' '+T('lbHome'),lb.home,lb.home>0?'warn':'dim')+
-        row(' '+T('lbHulls'),lb.hulls,lb.hulls>0?'warn':'dim')+
-        row(' '+T('lbCol'),lb.colonies,lb.colonies>0?'warn':'dim')+
-        (lb.transit?row(' '+T('lbTransit'),lb.transit,'warn'):'')+
-      '</div>'+
-      '<button class="btn '+(aok==='ok'?'prim':'')+'" type="button" data-act="ark"'+(aok==='night'?off('night'):offCost(ac,E))+'>'+
-        fill(T('arkBuy'),{n:K.ARK_BLOCK})+'<br><span class="c" style="float:none;color:'+(amiss.length?'var(--rust)':'var(--faint)')+'">'+
-        (amiss.length?amiss.join(' · '):costHtml(ac,E))+'</span></button>'+
-      '<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('arkHint'),{y:G.night})+'</div>'+
-      '<div class="dim" style="font-size:12px;line-height:1.45">'+fill(T('arkDriveHint'),{g:roman(G.arkMark),a:Math.round(K.ARK_WAKE[0]*100),b:Math.round(K.ARK_WAKE[1]*100),c:Math.round(K.ARK_WAKE[2]*100)})+'</div>',
-      '<span class="tag r">'+T('hNight')+'</span>');
-  }
+  if(G.night) h+=arkBlock(E);
   // hulls sitting at Earth with nothing to do
   var wait=G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny});
   // v4.2: hulls whose crews refused the Night — only the breakers will have them
@@ -1308,10 +1316,6 @@ function drawDock(){
   Object.keys(idleOld).forEach(function(g){ var list=idleOld[g], m=0, pp=0; list.forEach(function(s){ m+=scrapValue(HULLS[s.hull]).metal; pp+=s.crew||0 });
     h+='<div class="dockrow"><button type="button" class="dbtn wide" data-act="scrapgen" data-g="'+g+'"><b>'+esc(fill(T('scrapIdleGen'),{g:roman(+g),n:list.length}))+'</b>'+costHtml({metal:m,people:pp},null,'+')+'</button></div>';
   });
-  if(G.night){
-    var ac=arkCost(G), aok=canArk(G)==='ok';
-    h+='<div class="dockrow"><button type="button" class="dbtn wide ark" data-act="ark"'+offCost(ac,E)+'><b>'+esc(fill(T('dockArk'),{n:K.ARK_BLOCK}))+'<small>'+G.ark.berths+' · '+fill(T('nightIn'),{n:nightLeft(G)})+'</small></b>'+costHtml(ac,E)+'</button></div>';
-  }
   setHTML('dock',h+'</div>');
   d.classList.toggle('shut',!U.dockOpen);
   if(!U.dockOpen) d.style.height='';
@@ -1449,10 +1453,10 @@ function drawOverlay(){
     var behind=lb.home+lb.hulls+lb.colonies+lb.transit;
     /* v4.0: the score is the ones who wake; a grounded ark gets its own verdict */
     el('ovbox').innerHTML='<h2 class="'+(tier?'good':'bad')+'">'+T(tier?'endNightT':'endNight0')+'</h2>'+
-      '<p>'+(G.grounded? fill(T('endNightDrive'),{b:G.ark.berths,g:roman(G.arkMark)}) : fill(T('endNightB'+tier),{s:sl}))+'</p>'+
+      '<p>'+(G.grounded? fill(T('endNightDrive'),{b:arkSouls(G),g:roman(G.arkMark)}) : fill(T('endNightB'+tier),{s:sl}))+'</p>'+
       '<div class="rows">'+row(T('statSouls'),G.boarded||0,(G.boarded||0)?'good':'bad')+
         row(T('statWoke'),G.grounded?T('arkNoDrive'):sl+' <span class="dim">· '+Math.round((G.wake||0)*100)+'%</span>',tier?'good':'bad')+
-        row(T('statBerths'),G.ark.berths)+
+        row(T('statBerths'),arkLevel(G)+' / '+K.ARK_LEVELS.length)+(G.cargo?row(T('statCargo'),costHtml(G.cargo,null),'good'):'')+
         row(T('statLeft'),behind+' <span class="dim">· '+lb.hulls+' '+T('lbHulls')+' · '+lb.colonies+' '+T('lbCol')+'</span>','warn')+
         row(T('statDay'),G.day)+row(T('statSec'),SECTORS.length)+row(T('statPeak'),G.stats.peak)+row(T('statDrive'),G.driveLvl||0)+(G.stats.mutinies?row(T('statMutiny'),G.stats.mutinies,'warn'):'')+'</div>'+
       chronLines(3)+
@@ -1603,7 +1607,9 @@ document.addEventListener('click',function(ev){
     else if(a==='route'){ if(U.pickShip===null) res='noPick'; else res=setLine(G,pick(),b.dataset.p,'earth'); act(G,'line',{p:b.dataset.p,hull:pick()},res);
       if(res==='ok'&&G.night){ var lsh=shipById(G,pick()); if(lsh&&legDays(G,b.dataset.p,'earth',lsh)*2>nightLeft(G)) voice('last_flight','role_captain',{hull:lsh.id},{force:true,seed:hash32(0x54,lsh.id),sub:fill(T('pfHull'),{n:lsh.id,k:(U.capt||{})[lsh.id]||1})}) } }
     else if(a==='survey'){ var nsec=secName(SECTORS.length); res=survey(G); act(G,'survey',{sector:SECTORS.length},res); okc='ok_survey'; okp={s:nsec} }
-    else if(a==='ark'){ res=buildArk(G); act(G,'ark',{berths:G.ark.berths},res); okc='ok_ark'; okp={n:G.ark.berths} }
+    else if(a==='arksel'){ U.arkSel=+b.dataset.l; draw(); return }
+    else if(a==='arkplan'){ res=arkPlan(G,+b.dataset.l); act(G,'arkplan',{l:+b.dataset.l},res); okc='ok_arkplan'; okp={n:+b.dataset.l} }
+    else if(a==='arkbuy'){ res=arkBuy(G,+b.dataset.l); act(G,'arkbuy',{l:+b.dataset.l},res); okc='ok_arkbuy'; okp={n:+b.dataset.l} }
     else if(a==='nightok'){ G.nightSeen=true; el('intro').hidden=true; draw(); return }
     else if(a==='shiftok'){ var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; el('intro').hidden=true; U.paused=false; act(G,'shift_go',{stop:U.shiftStop}); draw(); return }
     else if(a==='scrap'){ res=scrap(G,+b.dataset.s); act(G,'scrap',{hull:+b.dataset.s},res); okc='ok_scrap' }

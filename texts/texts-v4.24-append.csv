@@ -1,0 +1,29 @@
+table,key,en,ru,where,status,note
+UI,arkLevelRow,Ark level,Уровень ковчега,v4.24 ark levels,live,new
+UI,arkNone,not paid yet,ещё не оплачен,v4.24 ark levels,live,new
+UI,arkWayRow,Way,Способ,v4.24 ark levels,live,new
+UI,arkWay_deposit,Deposits,Вклады,v4.24 ark levels,live,new
+UI,arkWay_buy,Bought outright,Куплен сразу,v4.24 ark levels,live,new
+UI,arkPaidRow,Paid toward level {l},Оплачено до уровня {l},v4.24 ark levels,live,new
+UI,arkLvBtn,Level {n},Уровень {n},v4.24 ark levels,live,new
+UI,arkPriceRow,Price,Цена,v4.24 ark levels,live,new
+UI,arkCargoRow,Takes along up to,Увезёт остатков до,v4.24 ark levels,live,new
+UI,arkDepBtn,Deposits for level {n},Вклады на уровень {n},v4.24 ark levels,live,new
+UI,arkDepSub,per 100 years,за 100 лет,v4.24 ark levels,live,new
+UI,arkBuyBtn,"Buy level {n} outright, {d}% off","Купить уровень {n} сразу, скидка {d}%",v4.24 ark levels,live,new
+UI,arkHintNew,"Pick a level and a way. Deposits: Earth sets aside an even share of the price every year until the Night, never below {y} years of its own burn. Outright: pay once, {d}% cheaper. Everyone at home sails; the level only sets how much of what is left on Earth rides along. The way cannot be changed; the level can be raised.","Выбери уровень и способ. Вклады: Земля каждый год откладывает ровную долю цены до Ночи и не опускается ниже {y} лет собственного расхода. Сразу: платишь один раз, на {d}% дешевле. Летят все, кто дома; уровень задаёт лишь то, сколько оставшегося на Земле поедет с ковчегом. Способ не сменить, уровень можно поднять.",v4.24 ark levels,live,new
+UI,statCargo,Carried along,Увезено с собой,v4.24 ark levels,live,new
+MSG,arkmode,You chose the other way — it cannot be changed.,"Ты выбрал другой способ, его не сменить.",v4.24 ark levels,live,new
+MSG,arkhave,This level is already yours or planned. Pick a higher one.,Этот уровень уже твой или запланирован. Выбери выше.,v4.24 ark levels,live,new
+MSG,arklevel,There is no such level.,Такого уровня нет.,v4.24 ark levels,live,new
+MSG,ok_arkplan,Deposits started: ark level {n}.,Вклады начаты: уровень ковчега {n}.,v4.24 ark levels,live,new
+MSG,ok_arkbuy,Ark level {n} bought.,Уровень ковчега {n} куплен.,v4.24 ark levels,live,new
+LOG,ark_bought,Ark level {l} bought outright.,Уровень ковчега {l} куплен сразу.,v4.24 ark levels,live,new
+LOG,ark_plan,Deposits for ark level {l} begin. Earth sets a share aside every year.,Начаты вклады на уровень ковчега {l}. Земля откладывает долю каждый год.,v4.24 ark levels,live,new
+LOG,ark_level,Ark level {l} is paid in full.,Уровень ковчега {l} оплачен полностью.,v4.24 ark levels,live,new
+UI,a_ark,The ark has no plan yet. Pick a level and a way: deposits or outright.,У ковчега нет плана. Выбери уровень и способ: вклады или сразу.,v4.24 ark levels,live,changed
+UI,statBerths,Ark level,Уровень ковчега,v4.24 ark levels,live,changed
+UI,lbHome,"at home, no ark","дома, без ковчега",v4.24 ark levels,live,changed
+UI,endNightDrive,The ark stood on the pier. The Generation {g} drive to push it past the collapse was never finished. The dark closed over a full ark that could not leave.,"Ковчег стоял у причала. Двигатель поколения {g}, чтобы вытолкнуть его за обрушение, так и не закончили. Тьма сомкнулась над полным ковчегом, который не смог уйти.",v4.24 ark levels,live,changed
+UI,shLeftN,{n} years · room for {b},{n} лет · мест {b},v4.24 ark levels,live,changed
+UI,nightB,"The outer survey brought back the readings. Past the last charted ring, space is falling in on itself, and it is falling on a schedule: it reaches the sun in <b>year {y}</b>, and every world on your chart goes with it. From that day nothing you built out there answers to anyone.<br><br>The yards can build an <b>ark</b>. It leaves on the day with whoever is standing at home — not the crews of hulls out in the dark, not the settlers on your worlds. It comes in four levels at a fixed price in metal, parts, rations and fuel: set a little aside every year, or pay for it at once and cheaper. Whatever is left on Earth that day rides along, as much as the level's hold takes.<br><br>You have <b>{n} years</b>. Everything you do from here is either more empire, or more people on the ark.","Дальняя разведка привезла показания. За последним нанесённым кольцом пространство падает само в себя, и падает по расписанию: в <b>год {y}</b> оно достигает солнца, и каждый мир на твоей карте уходит вместе с ним. С этого дня ничто из построенного там никому не ответит.<br><br>Верфи могут строить <b>ковчег</b>. Он уходит в назначенный день с теми, кто стоит дома — не с экипажами корпусов, ушедших во тьму, и не с поселенцами твоих миров. Он бывает четырёх уровней, цена фиксирована в металле, деталях, провизии и топливе: откладывай понемногу каждый год или заплати сразу и дешевле. Всё, что останется на Земле в тот день, поедет с ним, сколько вместит трюм уровня.<br><br>У тебя <b>{n} лет</b>. Всё, что ты делаешь дальше, — это либо больше империи, либо больше людей на ковчеге.",v4.24 ark levels,live,changed

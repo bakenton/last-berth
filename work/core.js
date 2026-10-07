@@ -201,12 +201,17 @@ var K={
      inherited. Lifted worlds get an epitaph, the ark and the famine get a last entry.
      No characters, no dialogue — the log is the story. */
   SHIFT_YEARS:80,
-  ARK_BLOCK:100,                                      // berths per block
-  /* v3.5.1 (log 309573272, year 2917): the ark leaned on metal alone, so the run ended with 2852 metal,
-     7712 parts and 18598 rations in the holds and 952 people standing on the pier with no berth.
-     The ark now eats what actually piles up in the late game: parts for the hull, rations for the
-     voyage. Metal stays but grows slower. Claude — awaiting review. */
-  ARK_METAL:350, ARK_PARTS:200, ARK_FUEL:500, ARK_FOOD:700, ARK_GROW:1.22, ARK_FUEL_GROW:1.2,
+  /* v4.24 (Nikita, 07.10, F-22 trial): the ark is four levels at a fixed price in four resources, seen before it is chosen.
+     Two ways to pay: deposits (Earth sets aside an even share every year until the Night) or one purchase with a bulk
+     discount. Everyone at home sails; the level only sets how much of what is left on Earth rides along (cap).
+     Prices and caps are PROVISIONAL (balance run 07.10: metal at the Night 8-73k for survivors after v4.23). */
+  ARK_LEVELS:[
+    {metal:1500, parts:300,  food:1000, fuel:800,  cap:{metal:500,  parts:500,  food:1500, fuel:1500}},
+    {metal:4000, parts:600,  food:2500, fuel:1800, cap:{metal:1500, parts:1200, food:3000, fuel:3500}},
+    {metal:9000, parts:1200, food:5000, fuel:3500, cap:{metal:3000, parts:2500, food:6000, fuel:6000}},
+    {metal:18000,parts:2500, food:9000, fuel:6500, cap:{metal:6000, parts:5000, food:9000, fuel:10000}}],
+  ARK_BULK:0.85,                                      // buying a level outright costs this share of the price
+  ARK_FLOOR_YEARS:15,                                 // deposits never take Earth's metal or rations below this many years of its own burn
   PROD:0.105,
   REFINE:0.075,        // parts per pop per rich per day on a works world
   REFINE_COST:1.2,     // metal burned per part
@@ -445,7 +450,7 @@ function newGame(seed){
            pMetal:K.EARTH_METAL, pFood:K.EARTH_FOOD, pFuel:K.EARTH_FUEL},
     colonies:{}, ships:[], orders:[], log:[], nextShip:1, nextMissing:1, lines:{},   // v4.6: standing orders per world
     driveLvl:0, gen:0, drive:null, driveWork:0, sectors:0, dismissed:{}, actions:[], ghost:{}, settled:{},
-    night:null, nightSeen:false, ark:{blocks:0,berths:0}, souls:0, arkMark:null, partsRate:0, boarded:0, grounded:false,
+    night:null, nightSeen:false, ark:{mode:null,target:0,paid:{metal:0,parts:0,food:0,fuel:0},lv:0}, souls:0, arkMark:null, partsRate:0, boarded:0, grounded:false,
     pauseNow:false, ledger:{metalOut:0,metalYards:0,metalIn:0,metalSurvey:0}, reserves:{}, delivered:{metal:0,food:0,fuel:0,parts:0,people:0},
     stats:{founded:0,lost:0,recovered:0,peak:0,mutinies:0}
   };
@@ -620,7 +625,7 @@ function snap(G){
     fuel:Math.round(E.fuel), parts:Math.round(E.parts), needF:+(G.need?G.need.food:0).toFixed(1),
     needM:+(G.need?G.need.metal:0).toFixed(1), cols:cols, pop:Math.round(pop), dry:dry,
     ships:fleet.length, idle:idle, crew:crewOut(G), out:+earthOutput(G).toFixed(2), hands:+handsRate(G).toFixed(2), attrition:G.stats.attrition||0,
-    night:G.night||0, berths:G.ark.berths, arkMark:G.arkMark, pace:+(G.partsRate||0).toFixed(2),
+    night:G.night||0, berths:arkSouls(G), arkLv:arkLevel(G), arkMark:G.arkMark, pace:+(G.partsRate||0).toFixed(2),
     arkY:(G.night&&!arkReady(G))?(function(f){return f.st==='ok'?f.y:f.st})(driveForecast(G,G.arkMark)):null,
     sectors:SECTORS.length, drive:G.driveLvl||0, reach:reach(G), settled:settledCount(G),
     hungry:!!G.hungry, famine:G.famine||0};
@@ -633,14 +638,14 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.23', constants:K, seed:G.seed, year:G.day, over:G.over||null,
-    night:G.night?{year:G.night,berths:G.ark.berths,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
+  var J={game:'LAST BERTH', v:'4.24', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+    night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),arkMode:G.ark.mode,arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
 }
 function exportLogText(G){
   var L=[]; L.push('LAST BERTH run log · seed '+G.seed+' · year '+G.day+(G.over?' · '+G.over:'')+
-    (G.night?' · night '+G.night+' · berths '+G.ark.berths+' · souls '+(G.over==='night'?G.souls:arkSouls(G))+
+    (G.night?' · night '+G.night+' · ark level '+arkLevel(G)+' ('+(G.ark.mode||'none')+') · berths '+arkSouls(G)+' · souls '+(G.over==='night'?G.souls:arkSouls(G))+
       ' · ark drive gen '+(G.arkMark+1)+(arkReady(G)?' ready, wake '+Math.round(arkWake(G)*100)+'%':' not ready')+(G.grounded?' · GROUNDED':'')+
       (G.over==='night'&&!G.grounded?' · boarded '+G.boarded:''):''));
   L.push('');
@@ -1037,32 +1042,47 @@ function driveForecast(G,target){
   return {st:'ok',y:G.day+Math.ceil(left/rate),left:Math.round(left),rate:rate,rn:rn};
 }
 function nightLeft(G){ return G.night? Math.max(0,G.night-G.day) : null }
-function arkCost(G){
-  var k=G.ark.blocks;
-  return { metal:Math.round(K.ARK_METAL*Math.pow(K.ARK_GROW,k)),
-           parts:Math.round(K.ARK_PARTS*Math.pow(K.ARK_GROW,k)),
-           food:Math.round(K.ARK_FOOD*Math.pow(K.ARK_FUEL_GROW,k)),
-           fuel:Math.round(K.ARK_FUEL*Math.pow(K.ARK_FUEL_GROW,k)) };
-}
-function canArk(G){
+var ARK_RES=['metal','parts','food','fuel'];
+function arkPrice(l){ var L=K.ARK_LEVELS[l-1]; return L?{metal:L.metal,parts:L.parts,food:L.food,fuel:L.fuel}:null }
+/* the highest level whose whole price has been paid in (credit, at full price) */
+function arkLevel(G){ var lv=0;
+  for(var l=1;l<=K.ARK_LEVELS.length;l++){ var c=arkPrice(l), ok=true;
+    for(var i=0;i<4;i++){ if(G.ark.paid[ARK_RES[i]]+1e-6<c[ARK_RES[i]]) ok=false }
+    if(!ok) break; lv=l }
+  return lv }
+/* what is still owed on the way to level l, at full price */
+function arkOwed(G,l){ var c=arkPrice(l), o={}; for(var i=0;i<4;i++){ var r=ARK_RES[i]; o[r]=Math.max(0,c[r]-G.ark.paid[r]) } return o }
+function arkCap(l){ var L=K.ARK_LEVELS[l-1]; return L?L.cap:{metal:0,parts:0,food:0,fuel:0} }
+function arkFloor(G,r){ var nd=G.need||earthNeed(G); return r==='metal'?nd.metal*K.ARK_FLOOR_YEARS : r==='food'?nd.food*K.ARK_FLOOR_YEARS : r==='fuel'?K.FEED_FUEL_FLOOR : 0 }
+/* the way is chosen once: 'deposit' or 'buy'. A level can only be raised. 'ok' or why */
+function arkCheck(G,l,mode){
   if(!G.night) return 'night';
-  var c=arkCost(G), E=G.earth;
-  if(E.metal<c.metal) return 'metal';
-  if(E.parts<c.parts) return 'parts';
-  if(E.food<c.food) return 'food';
-  if(E.fuel<c.fuel) return 'fuel';
-  return 'ok';
-}
-function buildArk(G){
-  var chk=canArk(G); if(chk!=='ok') return chk;
-  var c=arkCost(G);
-  G.earth.metal-=c.metal; G.earth.parts-=c.parts; G.earth.fuel-=c.fuel; G.earth.food-=c.food;
-  G.ark.blocks++; G.ark.berths+=K.ARK_BLOCK;
-  log(G,'ark_block',{n:G.ark.berths});
-  return 'ok';
-}
-/* who would sail if the ark left today: berths, or hands at home, whichever is fewer */
-function arkSouls(G){ return Math.min(G.ark.berths, Math.max(0,Math.floor(G.earth.people)+crewDocked(G))) }
+  if(!arkPrice(l)) return 'arklevel';
+  if(G.ark.mode&&G.ark.mode!==mode) return 'arkmode';
+  if(l<=(mode==='deposit'?G.ark.target:arkLevel(G))) return 'arkhave';
+  return 'ok' }
+function arkBuy(G,l){
+  var w=arkCheck(G,l,'buy'); if(w!=='ok') return w;
+  var o=arkOwed(G,l), E=G.earth, cost={}, i, r;
+  for(i=0;i<4;i++){ r=ARK_RES[i]; cost[r]=Math.ceil(o[r]*K.ARK_BULK); if(E[r]<cost[r]) return r }
+  var c=arkPrice(l); for(i=0;i<4;i++){ r=ARK_RES[i]; E[r]-=cost[r]; G.ark.paid[r]=Math.max(G.ark.paid[r],c[r]) }
+  G.ark.mode='buy'; G.ark.target=l; G.ark.lv=l;
+  log(G,'ark_bought',{l:l}); return 'ok' }
+function arkPlan(G,l){
+  var w=arkCheck(G,l,'deposit'); if(w!=='ok') return w;
+  G.ark.mode='deposit'; G.ark.target=l; log(G,'ark_plan',{l:l}); return 'ok' }
+/* what the deposits take this year: the owed share spread evenly over the years left, never below the floor */
+function arkYearly(G){ if(G.ark.mode!=='deposit'||!G.night) return null;
+  var left=Math.max(1,G.night-G.day), o=arkOwed(G,G.ark.target), E=G.earth, out={};
+  for(var i=0;i<4;i++){ var r=ARK_RES[i]; out[r]=Math.min(o[r]/left,Math.max(0,E[r]-arkFloor(G,r))) } return out }
+function arkDepositTick(G){
+  var y=arkYearly(G); if(!y) return;
+  for(var i=0;i<4;i++){ var r=ARK_RES[i], c=arkPrice(G.ark.target)[r]; if(y[r]>0){ G.earth[r]-=y[r]; G.ark.paid[r]+=y[r]; if(c-G.ark.paid[r]<1e-6) G.ark.paid[r]=c } }
+  var lv=arkLevel(G); if(lv>G.ark.lv){ G.ark.lv=lv; log(G,'ark_level',{l:lv}) } }
+/* who would sail if the ark left today: everyone at home and at the pier, if a level has been paid in */
+function arkSouls(G){ return arkLevel(G)>=1 ? Math.max(0,Math.floor(G.earth.people)+crewDocked(G)) : 0 }
+/* what rides along: what is left on Earth, up to the cap of the level */
+function arkCargo(G){ var cap=arkCap(arkLevel(G)), out={}; for(var i=0;i<4;i++){ var r=ARK_RES[i]; out[r]=Math.max(0,Math.min(Math.floor(G.earth[r]),cap[r])) } return out }
 function leftBehind(G){
   var col=0; for(var k in G.colonies) col+=G.colonies[k].pop;
   var tr=0; for(var i=0;i<G.ships.length;i++) tr+=(G.ships[i].cargo.people||0);
@@ -1092,21 +1112,21 @@ function chronShift(G,cols){
   else if(cols<(G.lastShiftCols||0)) k='shrink';
   else k='calm';
   G.lastShiftCols=cols;
-  log(G,'shift',{n:no,k:k,c:cols,h:Math.round(E.people),i:idle,n2:left||0,b:G.ark.berths});
+  log(G,'shift',{n:no,k:k,c:cols,h:Math.round(E.people),i:idle,n2:left||0,b:arkSouls(G)});
   /* v4.5 (Nikita, 26.09: 'менеджмент, но не такой быстрый'): the shift is the unit of the game. Every
      SHIFT_YEARS the desk stops and hands the new shift a report of the eighty years just gone; the UI
      decides whether to actually pause (never inside the prologue, never for bots). */
-  var m=G.shiftMark||{delivered:{metal:0,food:0,fuel:0,parts:0,people:0},founded:0,lost:0,mutinies:0,kits:0,sectors:2,drive:0,cols:0,evac:0,berths:0,day:0};
+  var m=G.shiftMark||{delivered:{metal:0,food:0,fuel:0,parts:0,people:0},founded:0,lost:0,mutinies:0,kits:0,sectors:2,drive:0,cols:0,evac:0,berths:0,arkLv:0,day:0};
   var ev=0; for(var q in G.ghost) ev++; for(var q2 in G.reserves){ } 
   G.shiftReport={no:no,k:k,day:G.day,years:G.day-(m.day||0),
     d:{metal:Math.round(G.delivered.metal-m.delivered.metal),food:Math.round(G.delivered.food-m.delivered.food),fuel:Math.round(G.delivered.fuel-m.delivered.fuel),parts:Math.round(G.delivered.parts-m.delivered.parts),people:Math.round(G.delivered.people-m.delivered.people)},
     founded:G.stats.founded-m.founded, lost:G.stats.lost-m.lost, mutinies:(G.stats.mutinies||0)-m.mutinies, kits:(G.stats.kits||0)-m.kits,
     sectors:SECTORS.length-m.sectors, drive:(G.driveLvl||0)-m.drive, cols:cols, colsWas:m.cols, idle:idle, hands:Math.round(E.people),
-    berths:G.ark.berths, berthsWas:m.berths, left:left, hungry:!!G.hungry,
+    berths:arkSouls(G), berthsWas:m.berths, arkLv:arkLevel(G), left:left, hungry:!!G.hungry,
     built:(G.stats.yardBuilt||0)-(m.built||0), renewed:(G.stats.renewed||0)-(m.renewed||0), renewMetal:(G.stats.renewMetal||0)-(m.renewMetal||0),
     attrition:(G.stats.attrition||0)-(m.attrition||0), handsRate:+handsRate(G).toFixed(2)};
   G.shiftMark={delivered:{metal:G.delivered.metal,food:G.delivered.food,fuel:G.delivered.fuel,parts:G.delivered.parts,people:G.delivered.people},
-    founded:G.stats.founded,lost:G.stats.lost,mutinies:G.stats.mutinies||0,kits:G.stats.kits||0,sectors:SECTORS.length,drive:G.driveLvl||0,cols:cols,berths:G.ark.berths,day:G.day,built:G.stats.yardBuilt||0,renewed:G.stats.renewed||0,renewMetal:G.stats.renewMetal||0,attrition:G.stats.attrition||0};
+    founded:G.stats.founded,lost:G.stats.lost,mutinies:G.stats.mutinies||0,kits:G.stats.kits||0,sectors:SECTORS.length,drive:G.driveLvl||0,cols:cols,berths:arkSouls(G),arkLv:arkLevel(G),day:G.day,built:G.stats.yardBuilt||0,renewed:G.stats.renewed||0,renewMetal:G.stats.renewMetal||0,attrition:G.stats.attrition||0};
   G.shiftOpen=true;
 }
 
@@ -1346,20 +1366,22 @@ function tick(G){
   // ---- the Long Night ----
   if(!G.night&&(SECTORS.length>=K.NIGHT_TRIGGER_SECTORS||G.day>=K.NIGHT_TRIGGER_YEAR)) revealNight(G);
   if(G.night){
+    arkDepositTick(G);
     var left=G.night-G.day;
     if(left===K.NIGHT_NEAR||left===100||left===25){ G.pauseNow=true; log(G,'night_near',{n:left,s:arkSouls(G)}) }
-    if(left===K.DOOMSDAY_AT) log(G,'doomsday',{n:left,b:G.ark.berths,h:Math.round(E.people)});
+    if(left===K.DOOMSDAY_AT) log(G,'doomsday',{n:left,b:arkSouls(G),h:Math.round(E.people)});
     if(left<=0){
       G.left=leftBehind(G); G.over='night';
       if(!arkReady(G)){
-        // v4.0: berths without a drive are a monument, not a boat
-        G.boarded=0; G.souls=0; G.grounded=true;
+        // v4.0: an ark without a drive is a monument, not a boat; v4.24: no level paid and no drive is just 'no ark'
+        G.boarded=0; G.souls=0; G.grounded=arkLevel(G)>=1; G.cargo=null;
         log(G,'night',{s:0});
-        log(G,'ark_grounded',{b:G.ark.berths,g:G.arkMark}); return;
+        if(G.grounded) log(G,'ark_grounded',{b:arkSouls(G),g:G.arkMark});
+        return;
       }
-      G.boarded=arkSouls(G); G.wake=arkWake(G); G.souls=Math.floor(G.boarded*G.wake);
+      G.boarded=arkSouls(G); G.wake=arkWake(G); G.souls=Math.floor(G.boarded*G.wake); G.cargo=G.boarded>0?arkCargo(G):null;
       log(G,'night',{s:G.boarded});
-      /* v4.14 (run 398763448 review): with no berths or nobody at home there is no departure to chronicle */
+      /* v4.14 (run 398763448 review): with no ark or nobody at home there is no departure to chronicle */
       if(G.boarded>0){ log(G,'ark_sailed',{s:G.boarded,b:G.left.home+G.left.hulls+G.left.colonies+G.left.transit});
         log(G,'ark_woke',{w:G.souls,s:G.boarded,g:G.driveLvl||0}) }
       return;
@@ -1459,7 +1481,6 @@ function advice(G){
     var nl=nightLeft(G), souls=arkSouls(G), lb=leftBehind(G);
     if(nl<=K.NIGHT_NEAR){
       if(lb.hulls+lb.colonies>souls*0.25) out.push({code:'a_nightrecall',sev:'bad',n:nl,h:lb.hulls,c:lb.colonies});
-      if(G.ark.berths>E.people+crewDocked(G)) out.push({code:'a_nighthands',sev:'warn',n:Math.round(G.ark.berths-E.people-crewDocked(G))});
     }
     if(!arkReady(G)){
       /* two thousand years of a red line nobody can act on yet is noise: it turns bad inside 2×NIGHT_NEAR */
@@ -1477,8 +1498,7 @@ function advice(G){
     if(minRt!==null&&nl<K.MUTINY_MIN*minRt) out.push({code:'a_lastbuild',sev:'warn',n:Math.round(minRt),l:nl});
     var mut=0; for(i=0;i<G.ships.length;i++){ if(G.ships[i].mutiny&&G.ships[i].mode==='idle') mut++ }
     if(mut) out.push({code:'a_mutiny',sev:'warn',n:mut});
-    if(canArk(G)==='ok') out.push({code:'a_ark',sev:nl<=K.NIGHT_NEAR?'warn':'ok',n:G.ark.berths});
-    else if(G.ark.berths<E.people+crewDocked(G)&&nl>K.NIGHT_NEAR) out.push({code:'a_arkshort',sev:'ok',n:Math.round(E.people+crewDocked(G)-G.ark.berths)});
+    if(!G.ark.mode) out.push({code:'a_ark',sev:nl<=K.NIGHT_NEAR?'warn':'ok'});   // v4.24: nothing chosen yet
   }
 
   if(!G.drive&&settledCount(G)>=driveReachFor(G)){
