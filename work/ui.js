@@ -80,7 +80,7 @@ function reloadTexts(){
 function textsVisible(){ return !!TXT_URL || /[?&]dev\b/.test(location.search) }
 
 
-var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
+var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',food_horizon:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
  quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',fragment:'hi',order_sent:'hi'};
 
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
@@ -817,7 +817,7 @@ function drawRes(){
   var fd=Math.floor(E.food/Math.max(0.1,nd.food)), md=Math.floor(E.metal/Math.max(0.1,nd.metal));
   el('res').innerHTML=
     (proSee('metal')?cell('metal',n0(E.metal),trendHtml('metal','+'+E.pMetal.toFixed(1)+' −'+nd.metal.toFixed(1)), md<25?'bad':''):'')+
-    (proSee('food')?cell('food',n0(E.food),trendHtml('food','+'+E.pFood.toFixed(1)+' −'+nd.food.toFixed(1)), fd<25?'bad':''):'')+
+    (proSee('food')?cell('food',n0(E.food),trendHtml('food','+'+E.pFood.toFixed(1)+' −'+nd.food.toFixed(1)+(G.foodFc?' · '+fill(T('foodHorizon'),{y:G.foodFc.y}):'')), fd<25?'bad':(foodShort(G)?'warn':'')):'')+   // v4.28 F-11: the horizon year rides on the rations cell
     (proSee('fuel')?cell('fuel',n0(E.fuel),trendHtml('fuel','+'+E.pFuel.toFixed(1)), E.fuel<25?'warn':''):'')+
     (proSee('parts')?cell('parts',n0(E.parts),trendHtml('parts',T('kWorks').toLowerCase()),''):'')+
     cell('people',n0(E.people),trendHtml('people',T('onEarth').toLowerCase()),'');
@@ -952,7 +952,7 @@ function railEarthPro(){
   var nd=G.need||{food:K.EARTH_EAT,metal:K.EARTH_BURN};
   if(st>=1) h+=blk(T('burnTitle'),
     row(T('metal'), fill(T('burns'),{n:nd.metal.toFixed(1)})+' · '+fill(T('supplyDays'),{n:Math.floor(E.metal/Math.max(0.1,nd.metal))}), E.metal/Math.max(0.1,nd.metal)<30?'bad':'dim')+
-    (st>=2?row(T('food'), fill(T('burns'),{n:nd.food.toFixed(1)})+' · '+fill(T('supplyDays'),{n:Math.floor(E.food/Math.max(0.1,nd.food))}), E.food/Math.max(0.1,nd.food)<30?'bad':'dim'):''));
+    (st>=2?row(T('food'), fill(T('burns'),{n:nd.food.toFixed(1)})+' · '+fill(T('supplyDays'),{n:Math.floor(E.food/Math.max(0.1,nd.food))})+' · '+(G.foodFc?fill(T('foodHorizon'),{y:G.foodFc.y}):fill(T('foodHorizonOk'),{n:G.night?Math.max(1,G.night-G.day):K.FOOD_HORIZON_SPAN})), E.food/Math.max(0.1,nd.food)<30||foodShort(G)?'bad':'dim'):''));
   var wait=G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)});
   if(wait.length&&st>=2) h+=blk(T('awaiting'), wait.map(function(s){
       return '<div class="wrow free"><div><b>'+sico(HULLS[s.hull].key)+esc(hullName(HULLS[s.hull]))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b> <span class="dim">'+fill(T('capacity'),{n:s.cap})+'</span></div><span class="pill free">'+T('idleHull')+'</span></div>';

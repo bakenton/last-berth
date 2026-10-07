@@ -4,7 +4,7 @@
 Навигация: `grep -n <имя> MAP.md` → `sed -n "<строка-40>,<строка+40>p" work/<файл>`. Код целиком не открывать.
 Формат: `строка  имя(аргументы) [длина]  назначение`. «≈ …» = комментария нет, показано начало кода.
 
-## core.js (1545 строк)
+## core.js (1578 строк)
 
 ```
     3  mulberry32(a) [1]  LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators.
@@ -44,145 +44,147 @@
   154  classFor(sec,gen) [5]  cheapest class that can serve a sector at this generation; null = nothing can
   160  genForSector(sec) [1]  generation needed before any hull can reach this sector
   162  var K  ≈ {
-  303  planet(id) [1]  ≈ for(var i=0;i<PLANETS.length;i++)if(PLANETS[i].id===id)return PLANETS[i];return null}
-  306  popCap(p) [1]  how many people a world can hold, and how many it wants before it digs at full rate
-  307  popWant(p) [1]  ≈ return popCap(p) }
+  306  planet(id) [1]  ≈ for(var i=0;i<PLANETS.length;i++)if(PLANETS[i].id===id)return PLANETS[i];return null}
+  309  popCap(p) [1]  how many people a world can hold, and how many it wants before it digs at full rate
+  310  popWant(p) [1]  ≈ return popCap(p) }
 
-  308  ## V4.4: EXTRACTION KITS
-  309  kitTier(c) [1]  ≈ return (c&&c.tier)||0 }
-  310  kitLive(c) [1]  machines standing = no multiplier
-  311  rateMult(c) [1]  ≈ return kitLive(c)? Math.pow(K.KIT_OUT,kitTier(c)) : 1 }
-  314  storeCap(c) [1]  v4.5 (Nikita, 26.09: 'не хочу, чтобы ресурсы сгорали'): a world's stockyard has no ceiling. What the
-  315  kitBurn(c) [1]  ≈ return K.KIT_FUEL*kitTier(c) }
-  316  kitCost(c) [2]  ≈ var t=kitTier(c)+1, m=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)), p=Math.round(K.KIT
-  318  kitOpen(G) [1]  ≈ return (G.driveLvl||0)>=K.KIT_GATE_DRIVE }
-  320  lineHold(G,pid) [2]  the biggest hold on this world's line; 0 if nothing runs there
-  322  canKit(G,pid) [10]  ≈ var c=G.colonies[pid]; if(!c) return 'nocolony';
-  332  orderKit(G,pid) [8]  ≈ var r=canKit(G,pid); if(r!=='ok') return r;
-  341  feedRates(G,node) [6]  what a world burns per year that Earth has to send it: works eat metal and rations, kits eat fuel
-  350  fedMult(G) [1]  Earth's own output rides on the people left at home — but only so far.
-  351  handsRate(G) [1]  v4.7: Earth empties
-  352  earthOutput(G) [4]  ≈ var h=Math.max(0,G.earth.people-K.EARTH_CREW);
-  357  crewOut(G) [1]  hands currently riding hulls rather than working at home
-  360  crewAway(G) [1]  v3.9.1 (log 519788167: 1562 hands sat on hulls idle at Earth and were counted as left behind): a crew
-  361  crewDocked(G) [1]  ≈ return crewOut(G)-crewAway(G) }
-  367  earthNeed(G) [6]  G.earth.people is the pool of hands Earth can still put on a ship, not the
-  375  pulseDrain(G,res) [4]  v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the em
-  385  lobeCount(G,lobe) [1]  v4.21 (Nikita, 06.10, F-21): the director. Events come in three families, each told before it happens:
-  386  lobeEvents(G,lobe) [1]  ≈ var out=[]; var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if(E[i].lobe===lobe) 
-  387  activeCrisis(G) [1]  ≈ var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if((E[i].type==='crisis'||E[i].ty
-  389  shipSpeed(G,s) [7]  how fast a hull moves right now: set by the lobe of the world at the other end of its trip
-  396  stormAt(G,node) [5]  ≈ if(!node||node==='earth') return false; var p=planet(node); if(!p) return false;
-  401  directorStep(G) [40]  ≈ var D=G.dir; if(!D) D=G.dir={next:K.DIR_FIRST,ev:[],n:0,seq:1};
-  442  driveSpeed(G) [1]  crossings and signal lag both shrink with every drive mark earned
-  443  driveWorkFor(G) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,G.driveLvl||0)) }
-  444  driveReachFor(G) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*(G.driveLvl||0) }
-  446  newGame(seed) [19]  ≈ seed = seed||((Math.random()*1e9)|0);
-  467  reach(G) [1]  reach = live settlements. The relay used to add +2; it is gone (Nikita, 23.09: orders no longer carry anything
-  472  settledCount(G) [1]  v4.15 (Nikita, 04.10): the gates on PROGRESS — charting a sector, each drive mark — count worlds EVER settled,
-  473  sectorOpen(G,s) [1]  ≈ return s<SECTORS.length}
-  474  travelDays(G,dist,ship) [4]  ≈ var sp=(ship&&HULLS[ship.hull]&&HULLS[ship.hull].speed)||1;
-  478  legDays(G,a,b,ship) [1]  ≈ return travelDays(G,legDist(a,b),ship) }
-  479  legDist(a,b) [9]  ≈ if(a===b) return 0;
-  489  needsOf(G,node) [7]  ≈ if(node==='earth') return null;
-  496  exportsOf(G,node) [4]  ≈ if(node==='earth') return ['metal','food'];
-  500  loadAt(G,s,node) [60]  v4.4: cargo.kit rides alongside
-  560  unload(G,s,node) [23]  ≈ var any=s.cargo.metal+s.cargo.food+s.cargo.fuel+s.cargo.parts+s.cargo.people;
-  583  temper(G,s) [1]  ≈ var h=((s.id*2654435761)^(G.seed|0))>>>0; return K.MUTINY_SPREAD*((h%1000)/1000) }
-  585  mutinyDue(G,s,round) [1]  would this crew refuse the run that starts here? (the desk can ask the same question)
-  588  mutinyForecast(G) [7]  v4.27: the first crew that will refuse, by the same count the crews make — year, line, and the rations Earth
-  595  sail(G,s) [27]  ≈ var here=s.at, dest = here===s.from ? s.to : s.from;
-  624  var CHRON  chronicle lines never roll off the cap: the log forgets traffic, not history
-  625  log(G,code,d) [2]  ≈ G.logSeq=(G.logSeq||0)+1;G.log.push({day:G.day,code:code,d:d||{},seq:G.logSeq});
-  628  act(G,kind,d,res) [1]  player actions, kept whole for post-run analysis (exported from the UI)
-  629  snap(G) [14]  ≈ var E=G.earth, cols=0, pop=0, dry=0;
-  644  exportLog(G) [12]  v4.4 (Nikita, 25.09): the run log is JSON — the designer reads it with a script, not with his eyes
-  656  exportLogText(G) [27]  ≈ var L=[]; L.push('LAST BERTH run log · seed '+G.seed+' · year '+G.day+(G.over?' · '+G.over
+  311  ## V4.4: EXTRACTION KITS
+  312  kitTier(c) [1]  ≈ return (c&&c.tier)||0 }
+  313  kitLive(c) [1]  machines standing = no multiplier
+  314  rateMult(c) [1]  ≈ return kitLive(c)? Math.pow(K.KIT_OUT,kitTier(c)) : 1 }
+  317  storeCap(c) [1]  v4.5 (Nikita, 26.09: 'не хочу, чтобы ресурсы сгорали'): a world's stockyard has no ceiling. What the
+  318  kitBurn(c) [1]  ≈ return K.KIT_FUEL*kitTier(c) }
+  319  kitCost(c) [2]  ≈ var t=kitTier(c)+1, m=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)), p=Math.round(K.KIT
+  321  kitOpen(G) [1]  ≈ return (G.driveLvl||0)>=K.KIT_GATE_DRIVE }
+  323  lineHold(G,pid) [2]  the biggest hold on this world's line; 0 if nothing runs there
+  325  canKit(G,pid) [10]  ≈ var c=G.colonies[pid]; if(!c) return 'nocolony';
+  335  orderKit(G,pid) [8]  ≈ var r=canKit(G,pid); if(r!=='ok') return r;
+  344  feedRates(G,node) [6]  what a world burns per year that Earth has to send it: works eat metal and rations, kits eat fuel
+  353  fedMult(G) [1]  Earth's own output rides on the people left at home — but only so far.
+  354  handsRate(G) [1]  v4.7: Earth empties
+  355  earthOutput(G) [4]  ≈ var h=Math.max(0,G.earth.people-K.EARTH_CREW);
+  360  crewOut(G) [1]  hands currently riding hulls rather than working at home
+  363  crewAway(G) [1]  v3.9.1 (log 519788167: 1562 hands sat on hulls idle at Earth and were counted as left behind): a crew
+  364  crewDocked(G) [1]  ≈ return crewOut(G)-crewAway(G) }
+  370  earthNeed(G) [6]  G.earth.people is the pool of hands Earth can still put on a ship, not the
+  378  pulseDrain(G,res) [4]  v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the em
+  388  lobeCount(G,lobe) [1]  v4.21 (Nikita, 06.10, F-21): the director. Events come in three families, each told before it happens:
+  389  lobeEvents(G,lobe) [1]  ≈ var out=[]; var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if(E[i].lobe===lobe) 
+  390  activeCrisis(G) [1]  ≈ var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if((E[i].type==='crisis'||E[i].ty
+  392  shipSpeed(G,s) [7]  how fast a hull moves right now: set by the lobe of the world at the other end of its trip
+  399  stormAt(G,node) [5]  ≈ if(!node||node==='earth') return false; var p=planet(node); if(!p) return false;
+  404  directorStep(G) [40]  ≈ var D=G.dir; if(!D) D=G.dir={next:K.DIR_FIRST,ev:[],n:0,seq:1};
+  445  driveSpeed(G) [1]  crossings and signal lag both shrink with every drive mark earned
+  446  driveWorkFor(G) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,G.driveLvl||0)) }
+  447  driveReachFor(G) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*(G.driveLvl||0) }
+  449  newGame(seed) [19]  ≈ seed = seed||((Math.random()*1e9)|0);
+  470  reach(G) [1]  reach = live settlements. The relay used to add +2; it is gone (Nikita, 23.09: orders no longer carry anything
+  475  settledCount(G) [1]  v4.15 (Nikita, 04.10): the gates on PROGRESS — charting a sector, each drive mark — count worlds EVER settled,
+  476  sectorOpen(G,s) [1]  ≈ return s<SECTORS.length}
+  477  travelDays(G,dist,ship) [4]  ≈ var sp=(ship&&HULLS[ship.hull]&&HULLS[ship.hull].speed)||1;
+  481  legDays(G,a,b,ship) [1]  ≈ return travelDays(G,legDist(a,b),ship) }
+  482  legDist(a,b) [9]  ≈ if(a===b) return 0;
+  492  needsOf(G,node) [7]  ≈ if(node==='earth') return null;
+  499  exportsOf(G,node) [4]  ≈ if(node==='earth') return ['metal','food'];
+  503  loadAt(G,s,node) [60]  v4.4: cargo.kit rides alongside
+  563  unload(G,s,node) [23]  ≈ var any=s.cargo.metal+s.cargo.food+s.cargo.fuel+s.cargo.parts+s.cargo.people;
+  586  temper(G,s) [1]  ≈ var h=((s.id*2654435761)^(G.seed|0))>>>0; return K.MUTINY_SPREAD*((h%1000)/1000) }
+  588  mutinyDue(G,s,round) [1]  would this crew refuse the run that starts here? (the desk can ask the same question)
+  591  mutinyForecast(G) [7]  v4.27: the first crew that will refuse, by the same count the crews make — year, line, and the rations Earth
+  603  foodForecast(G) [17]  v4.28 (F-11, Nikita 08.10: the quiet famine — farms ran dry 440 years before the end and the larder warning ca
+  622  foodShort(G) [1]  short = the rations run out inside FOOD_HORIZON years. ('Not reaching the Night' was tried and dropped: once t
+  623  sail(G,s) [27]  ≈ var here=s.at, dest = here===s.from ? s.to : s.from;
+  652  var CHRON  chronicle lines never roll off the cap: the log forgets traffic, not history
+  653  log(G,code,d) [2]  ≈ G.logSeq=(G.logSeq||0)+1;G.log.push({day:G.day,code:code,d:d||{},seq:G.logSeq});
+  656  act(G,kind,d,res) [1]  player actions, kept whole for post-run analysis (exported from the UI)
+  657  snap(G) [14]  ≈ var E=G.earth, cols=0, pop=0, dry=0;
+  672  exportLog(G) [12]  v4.4 (Nikita, 25.09): the run log is JSON — the designer reads it with a script, not with his eyes
+  684  exportLogText(G) [27]  ≈ var L=[]; L.push('LAST BERTH run log · seed '+G.seed+' · year '+G.day+(G.over?' · '+G.over
 
-  684  ## ACTIONS
-  686  buildShip(G,hullId) [15]  ≈ var h=HULLS[hullId]; if(!h) return 'locked';
-  705  scrapValue(h) [1]  scrapping: an idle hull at Earth comes apart for part of what it cost.
-  706  scrap(G,shipId) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  719  scrapIdle(G,gen) [8]  ≈ var n=0, m=0, p=0;
-  727  shipById(G,id) [1]  ≈ for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
-  729  canDepart(G,s,pid) [12]  ≈ var p=planet(pid);
-  742  launch(G,s,pid,job,cargo) [11]  ≈ var p=planet(pid);
-  755  nextHome(G,pid,cls) [5]  v4.14: when no free hull at Earth can lift a world — the nearest rated hull on its way home, or null
-  760  enRoute(G,pid) [1]  ≈ for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='transit'&&o.job==='colon
-  761  foundParty(G,s,pid) [1]  ≈ return Math.max(0,Math.floor(Math.min(popCap(planet(pid)), s.cap, G.earth.people-K.EARTH_K
-  762  colonize(G,shipId,pid,people,food) [17]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  783  setLine(G,shipId,from,to) [18]  A line is always world <-> Earth. Only Earth consumes, so a leg between two
-  803  clearLine(G,shipId) [2]  v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
+  712  ## ACTIONS
+  714  buildShip(G,hullId) [15]  ≈ var h=HULLS[hullId]; if(!h) return 'locked';
+  733  scrapValue(h) [1]  scrapping: an idle hull at Earth comes apart for part of what it cost.
+  734  scrap(G,shipId) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  747  scrapIdle(G,gen) [8]  ≈ var n=0, m=0, p=0;
+  755  shipById(G,id) [1]  ≈ for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
+  757  canDepart(G,s,pid) [12]  ≈ var p=planet(pid);
+  770  launch(G,s,pid,job,cargo) [11]  ≈ var p=planet(pid);
+  783  nextHome(G,pid,cls) [5]  v4.14: when no free hull at Earth can lift a world — the nearest rated hull on its way home, or null
+  788  enRoute(G,pid) [1]  ≈ for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='transit'&&o.job==='colon
+  789  foundParty(G,s,pid) [1]  ≈ return Math.max(0,Math.floor(Math.min(popCap(planet(pid)), s.cap, G.earth.people-K.EARTH_K
+  790  colonize(G,shipId,pid,people,food) [17]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  811  setLine(G,shipId,from,to) [18]  A line is always world <-> Earth. Only Earth consumes, so a leg between two
+  831  clearLine(G,shipId) [2]  v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
 
-  805  ## V4.6: A LINE IS A STANDING ORDER
-  810  var CLASSES  ≈ ['courier','hauler','freighter'];
-  811  lineOf(G,pid) [1]  ≈ return G.lines&&G.lines[pid]||null }
-  812  pileLeft(G,pid) [1]  v4.11: what is still on the surface
-  813  shipClass(s) [1]  ≈ return HULLS[s.hull]?HULLS[s.hull].key:'courier' }
-  814  onLine(G,pid) [2]  ≈ var out=[]; for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='dead') conti
-  816  lineCount(G,pid,cls) [1]  ≈ var n=0, ships=onLine(G,pid); for(var i=0;i<ships.length;i++){ var o=ships[i]; if(o.retire
-  817  lineWant(G,pid,cls) [1]  ≈ var L=lineOf(G,pid); return L?(L.want[cls]||0):0 }
-  820  hullAt(cls,gen) [1]  v4.17 (Nikita, 04.10: 'в постоянном приказе все ещё суда высшего поколения и не видно судов других'): the hull
-  821  lineHull(G,pid,cls) [1]  ≈ var L=lineOf(G,pid), g=(L&&L.gen)?L.gen[cls]:undefined; if(g!==undefined&&g!==null){ var i
-  822  lineGenPin(G,pid,cls) [1]  ≈ var L=lineOf(G,pid), g=(L&&L.gen)?L.gen[cls]:undefined; return (g===undefined||g===null)?n
-  823  currentHull(G,cls) [1]  ≈ var best=null; for(var i=0;i<HULLS.length;i++){ var h=HULLS[i]; if(h.key!==cls) continue; 
-  825  yardCheck(G,pid,cls) [14]  why the yards cannot order this class for this line right now; 'ok' when they can
-  839  setWant(G,pid,cls,n,gen) [18]  v4.9/v4.11: nothing to carry — the seam is dead and the pile is gone
-  857  setRenew(G,pid,on) [1]  ≈ var L=lineOf(G,pid); if(!L) return 'noline'; L.renew=!!on; return 'ok' }
-  858  retireHull(G,o,why) [6]  it will come out idle and be scrapped
-  865  yardsTick(G) [44]  the yards, once a year
-  909  closeLine(G,pid) [1]  ≈ var ships=onLine(G,pid); for(var i=0;i<ships.length;i++) retireHull(G,ships[i],'closed'); 
-  910  setAuto(G,shipId,pid) [1]  ≈ return setLine(G,shipId,'earth',pid) }
-  911  setAutoOld(G,shipId,pid) [7]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  918  setPolicy(G,shipId,pid,deliver,collect) [11]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  929  setRoute(G,shipId,pid,out,take) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  942  dispatch(G,shipId,pid,out,take) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  948  repeatRun(G,shipId) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  954  clearRoute(G,shipId) [1]  ≈ var s=shipById(G,shipId);if(s)s.route=null;return 'ok'}
-  956  runRoute(G,s) [6]  ≈ var pid=s.route; if(!pid) return 'noroute';
-  965  abandon(G,shipId,pid) [12]  v4.18 (Nikita, 04.10): only a courier lifts a settlement
-  979  search(G,shipId,missId) [12]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  995  startDrive(G,pid) [16]  the drive programme is repeatable: every mark cuts crossings and signal lag
- 1011  driveDone(G,pid) [7]  ≈ G.driveWork=0; G.drive=null; G.driveLvl=(G.driveLvl||0)+1;
- 1018  researchHyper(G) [1]  ≈ return 'notworks' }
+  833  ## V4.6: A LINE IS A STANDING ORDER
+  838  var CLASSES  ≈ ['courier','hauler','freighter'];
+  839  lineOf(G,pid) [1]  ≈ return G.lines&&G.lines[pid]||null }
+  840  pileLeft(G,pid) [1]  v4.11: what is still on the surface
+  841  shipClass(s) [1]  ≈ return HULLS[s.hull]?HULLS[s.hull].key:'courier' }
+  842  onLine(G,pid) [2]  ≈ var out=[]; for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='dead') conti
+  844  lineCount(G,pid,cls) [1]  ≈ var n=0, ships=onLine(G,pid); for(var i=0;i<ships.length;i++){ var o=ships[i]; if(o.retire
+  845  lineWant(G,pid,cls) [1]  ≈ var L=lineOf(G,pid); return L?(L.want[cls]||0):0 }
+  848  hullAt(cls,gen) [1]  v4.17 (Nikita, 04.10: 'в постоянном приказе все ещё суда высшего поколения и не видно судов других'): the hull
+  849  lineHull(G,pid,cls) [1]  ≈ var L=lineOf(G,pid), g=(L&&L.gen)?L.gen[cls]:undefined; if(g!==undefined&&g!==null){ var i
+  850  lineGenPin(G,pid,cls) [1]  ≈ var L=lineOf(G,pid), g=(L&&L.gen)?L.gen[cls]:undefined; return (g===undefined||g===null)?n
+  851  currentHull(G,cls) [1]  ≈ var best=null; for(var i=0;i<HULLS.length;i++){ var h=HULLS[i]; if(h.key!==cls) continue; 
+  853  yardCheck(G,pid,cls) [14]  why the yards cannot order this class for this line right now; 'ok' when they can
+  867  setWant(G,pid,cls,n,gen) [18]  v4.9/v4.11: nothing to carry — the seam is dead and the pile is gone
+  885  setRenew(G,pid,on) [1]  ≈ var L=lineOf(G,pid); if(!L) return 'noline'; L.renew=!!on; return 'ok' }
+  886  retireHull(G,o,why) [6]  it will come out idle and be scrapped
+  893  yardsTick(G) [44]  the yards, once a year
+  937  closeLine(G,pid) [1]  ≈ var ships=onLine(G,pid); for(var i=0;i<ships.length;i++) retireHull(G,ships[i],'closed'); 
+  938  setAuto(G,shipId,pid) [1]  ≈ return setLine(G,shipId,'earth',pid) }
+  939  setAutoOld(G,shipId,pid) [7]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  946  setPolicy(G,shipId,pid,deliver,collect) [11]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  957  setRoute(G,shipId,pid,out,take) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  970  dispatch(G,shipId,pid,out,take) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  976  repeatRun(G,shipId) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  982  clearRoute(G,shipId) [1]  ≈ var s=shipById(G,shipId);if(s)s.route=null;return 'ok'}
+  984  runRoute(G,s) [6]  ≈ var pid=s.route; if(!pid) return 'noroute';
+  993  abandon(G,shipId,pid) [12]  v4.18 (Nikita, 04.10): only a courier lifts a settlement
+ 1007  search(G,shipId,missId) [12]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+ 1023  startDrive(G,pid) [16]  the drive programme is repeatable: every mark cuts crossings and signal lag
+ 1039  driveDone(G,pid) [7]  ≈ G.driveWork=0; G.drive=null; G.driveLvl=(G.driveLvl||0)+1;
+ 1046  researchHyper(G) [1]  ≈ return 'notworks' }
 
- 1020  ## THE LONG NIGHT AND THE ARK
- 1021  revealNight(G) [6]  ≈ if(G.night) return;
+ 1048  ## THE LONG NIGHT AND THE ARK
+ 1049  revealNight(G) [6]  ≈ if(G.night) return;
 
- 1027  ## V4.0: THE SECOND DATE
- 1028  workAt(l) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,l)) }
- 1029  reachAt(l) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*l }
- 1030  arkReady(G) [1]  ≈ return G.arkMark!==null&&G.arkMark!==undefined&&(G.driveLvl||0)>=G.arkMark }
- 1032  arkWake(G) [1]  share of the sleepers who wake at the other end, on the drive you have now (0 = the ark cannot sail)
- 1033  wakeAt(G,l) [1]  ≈ if(G.arkMark===null||l<G.arkMark) return 0; return K.ARK_WAKE[Math.min(K.ARK_WAKE.length-1
- 1037  driveForecast(G,target) [17]  when the drive reaches generation index `target` at the pace the works keep now.
- 1054  nightLeft(G) [1]  ≈ return G.night? Math.max(0,G.night-G.day) : null }
- 1055  var ARK_RES  ≈ ['metal','parts','food','fuel'];
- 1056  arkPrice(l) [1]  ≈ var L=K.ARK_LEVELS[l-1]; return L?{metal:L.metal,parts:L.parts,food:L.food,fuel:L.fuel}:nu
- 1058  arkLevel(G) [5]  the highest level whose whole price has been paid in (credit, at full price)
- 1064  arkOwed(G,l) [1]  what is still owed on the way to level l, at full price
- 1065  arkCap(l) [1]  ≈ var L=K.ARK_LEVELS[l-1]; return L?L.cap:{metal:0,parts:0,food:0,fuel:0} }
- 1066  arkFloor(G,r) [1]  ≈ var nd=G.need||earthNeed(G); return r==='metal'?nd.metal*K.ARK_FLOOR_YEARS : r==='food'?nd
- 1068  arkCheck(G,l,mode) [6]  the way is chosen once: 'deposit' or 'buy'. A level can only be raised. 'ok' or why
- 1074  arkBuy(G,l) [7]  ≈ var w=arkCheck(G,l,'buy'); if(w!=='ok') return w;
- 1081  arkPlan(G,l) [3]  ≈ var w=arkCheck(G,l,'deposit'); if(w!=='ok') return w;
- 1085  arkYearly(G) [3]  what the deposits take this year: the owed share spread evenly over the years left, never below the floor
- 1088  arkDepositTick(G) [4]  ≈ var y=arkYearly(G); if(!y) return;
- 1093  arkSouls(G) [1]  who would sail if the ark left today: everyone at home and at the pier, if a level has been paid in
- 1095  arkCargo(G) [1]  what rides along: what is left on Earth, up to the cap of the level
- 1096  leftBehind(G) [5]  ≈ var col=0; for(var k in G.colonies) col+=G.colonies[k].pop;
+ 1055  ## V4.0: THE SECOND DATE
+ 1056  workAt(l) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,l)) }
+ 1057  reachAt(l) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*l }
+ 1058  arkReady(G) [1]  ≈ return G.arkMark!==null&&G.arkMark!==undefined&&(G.driveLvl||0)>=G.arkMark }
+ 1060  arkWake(G) [1]  share of the sleepers who wake at the other end, on the drive you have now (0 = the ark cannot sail)
+ 1061  wakeAt(G,l) [1]  ≈ if(G.arkMark===null||l<G.arkMark) return 0; return K.ARK_WAKE[Math.min(K.ARK_WAKE.length-1
+ 1065  driveForecast(G,target) [17]  when the drive reaches generation index `target` at the pace the works keep now.
+ 1082  nightLeft(G) [1]  ≈ return G.night? Math.max(0,G.night-G.day) : null }
+ 1083  var ARK_RES  ≈ ['metal','parts','food','fuel'];
+ 1084  arkPrice(l) [1]  ≈ var L=K.ARK_LEVELS[l-1]; return L?{metal:L.metal,parts:L.parts,food:L.food,fuel:L.fuel}:nu
+ 1086  arkLevel(G) [5]  the highest level whose whole price has been paid in (credit, at full price)
+ 1092  arkOwed(G,l) [1]  what is still owed on the way to level l, at full price
+ 1093  arkCap(l) [1]  ≈ var L=K.ARK_LEVELS[l-1]; return L?L.cap:{metal:0,parts:0,food:0,fuel:0} }
+ 1094  arkFloor(G,r) [1]  ≈ var nd=G.need||earthNeed(G); return r==='metal'?nd.metal*K.ARK_FLOOR_YEARS : r==='food'?nd
+ 1096  arkCheck(G,l,mode) [6]  the way is chosen once: 'deposit' or 'buy'. A level can only be raised. 'ok' or why
+ 1102  arkBuy(G,l) [7]  ≈ var w=arkCheck(G,l,'buy'); if(w!=='ok') return w;
+ 1109  arkPlan(G,l) [3]  ≈ var w=arkCheck(G,l,'deposit'); if(w!=='ok') return w;
+ 1113  arkYearly(G) [3]  what the deposits take this year: the owed share spread evenly over the years left, never below the floor
+ 1116  arkDepositTick(G) [4]  ≈ var y=arkYearly(G); if(!y) return;
+ 1121  arkSouls(G) [1]  who would sail if the ark left today: everyone at home and at the pier, if a level has been paid in
+ 1123  arkCargo(G) [1]  what rides along: what is left on Earth, up to the cap of the level
+ 1124  leftBehind(G) [5]  ≈ var col=0; for(var k in G.colonies) col+=G.colonies[k].pop;
 
- 1102  ## THE CHRONICLE
- 1104  chronShift(G,cols) [38]  ≈ var E=G.earth, idle=0;
+ 1130  ## THE CHRONICLE
+ 1132  chronShift(G,cols) [38]  ≈ var E=G.earth, idle=0;
 
- 1143  ## TICK
- 1145  lineRate(G,pid) [23]  ≈ var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
- 1169  tick(G) [240]  ≈ if(G.over) return;
+ 1171  ## TICK
+ 1173  lineRate(G,pid) [23]  ≈ var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
+ 1197  tick(G) [244]  ≈ if(G.over) return;
 
- 1410  ## THE ADVISOR: THE GAME DOES THE ARITHMETIC AND SAYS WHAT WANTS A DECISION
- 1412  advice(G) [130]  ≈ var out=[], E=G.earth, i, k;
- 1543  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
- 1544  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
+ 1442  ## THE ADVISOR: THE GAME DOES THE ARITHMETIC AND SAYS WHAT WANTS A DECISION
+ 1444  advice(G) [131]  ≈ var out=[], E=G.earth, i, k;
+ 1576  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
+ 1577  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
 ## ui.js (1808 строк)

@@ -18,7 +18,7 @@ export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 command -v node >/dev/null || PATH="/c/Program Files/nodejs:$PATH"
 np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; fi; }   # путь в виде, который понимает node
 # Живые сценарии (full). Правка списка — после решения по аудиту (last-berth/AUDIT.md).
-FULL="fuzz pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 sim"
+FULL="fuzz pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 pw37 sim"
 SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
 SHOTS=0 RESUME=0 FRESH=0 REBASE=0 QUIET=0 NAMES=()
 for a in "$@"; do case "$a" in

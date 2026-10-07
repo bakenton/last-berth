@@ -20,7 +20,7 @@ function load(path){
     'setLine','survey','canSurvey','startDrive','scrap','scrapIdle','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
     'arkBuy','arkPlan','arkLevel','arkSouls','nightLeft','abandon','clearLine','leftBehind',
-    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','setRenew','lineOf','lineCount','lineWant','yardCheck','legDays','mutinyForecast'];
+    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','setRenew','lineOf','lineCount','lineWant','yardCheck','legDays','mutinyForecast','foodForecast','foodShort'];
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }

@@ -297,6 +297,9 @@ var K={
      the line brings replacements. */
   FED_MIN:0.5, FED_MAX:1.5, FED_YEARS:80,
   COLONY_LOSS:0.006,    // share of a colony lost per year per unit of hazard (haz 0.15 → 0.09%/yr; 0.02 starved the bots of settlers)
+  FOOD_HORIZON:400,     // v4.28 (F-11, Nikita 08.10): the larder forecast warns when Earth's rations run out within this many years (a far farm — survey, landing, line — is ~300; events eat ~100 of the lead)
+  FOOD_HORIZON_SPAN:1200, // ...and looks this far ahead before the Night is dated (after it: to the Night)
+  FOOD_PAUSE_FROM:600,    // the journal pause waits for the first farm lines to settle; before that the advisor alone carries it (bots: 7/8 false early calls at ~200-290)
   FOOD_WARN_YEARS:60    // v4.10: rations below this many years with no farm on a line → the yellow block
 };
 
@@ -592,6 +595,31 @@ function mutinyForecast(G){ if(!G.night) return null; var best=null;
     if(!best||y<best.y) best={y:y,pid:pid} }
   if(!best) return null; var nd=G.need||earthNeed(G);
   best.n=Math.max(0,best.y-G.day); best.f=Math.round(nd.food*Math.max(0,G.night-best.y)); return best }
+/* v4.28 (F-11, Nikita 08.10: the quiet famine — farms ran dry 440 years before the end and the larder warning came 60
+   years before zero). The desk now runs the larder forward: Earth's own output held at today's rate, every farm line
+   at what it delivers (makes or carries, the smaller) until its seam and its pile are gone, works worlds fed off Earth,
+   against an appetite that keeps growing with the calendar. No events, no surveys, no ark deposits — a floor, not a
+   promise. Returns the year the rations run out inside the span, or null. Cached once a year as G.foodFc. */
+function foodForecast(G){
+  var E=G.earth, d0=G.day, span=G.night?Math.max(1,G.night-d0):K.FOOD_HORIZON_SPAN;
+  var own=E.pFood||K.EARTH_FOOD, sinks=0, farms=[], k, i;
+  for(k in G.colonies){ var p=planet(k); if(!p) continue;
+    var lr=lineRate(G,k); if(!lr||!lr.hulls||lr.carries<=0) continue;
+    if(p.kind==='farm'){
+      var left=(G.reserves[k]===Infinity?Infinity:Math.max(0,G.reserves[k]))+lr.sitting;
+      var r=lr.makes>0?Math.min(lr.makes,lr.carries):lr.carries;
+      if(r>0&&left>0) farms.push({r:r,until:left/r});
+    } else if(p.kind==='works') sinks+=(feedRates(G,k).food||0);
+  }
+  var f=E.food;
+  for(var t=1;t<=span;t++){ var d=d0+t, need=K.EARTH_EAT*(1+d/K.APPETITE+(d/K.DECAY_KNEE)*(d/K.DECAY_KNEE));
+    var inc=own; for(i=0;i<farms.length;i++) if(t<=farms[i].until) inc+=farms[i].r;
+    f+=inc-need-sinks; if(f<0) return {y:d,n:t,farms:farms.length} }
+  return null;
+}
+/* short = the rations run out inside FOOD_HORIZON years. ('Not reaching the Night' was tried and dropped: once the date is
+   known the span is ~2800 years and today's lines never cover it — the advisor was on 40-70% of a winning run.) */
+function foodShort(G){ var ff=G.foodFc; return !!ff&&ff.n<=K.FOOD_HORIZON }
 function sail(G,s){
   var here=s.at, dest = here===s.from ? s.to : s.from;
   if(s.mutiny) return 'mutiny';
@@ -648,7 +676,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.27', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.28', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),arkMode:G.ark.mode,arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -1373,6 +1401,10 @@ function tick(G){
   if(settled>G.stats.peak) G.stats.peak=settled;
   if(G.day%K.SHIFT_YEARS===0) chronShift(G,settled);
 
+  // ---- the larder forecast (v4.28, F-11) ----
+  if(G.day>=200){ var ff=foodForecast(G); G.foodFc=ff;
+    if(foodShort(G)){ if(!G.foodWarned&&G.day>=K.FOOD_PAUSE_FROM){ G.foodWarned=true; G.pauseNow=true; log(G,'food_horizon',{y:ff.y,n:ff.n,h:Math.round(E.food),k:ff.farms}) } }
+    else if(G.foodWarned&&(!ff||ff.n>K.FOOD_HORIZON*1.5)) G.foodWarned=false; }   // re-armed once the horizon clears, so a second slide is told again
   // ---- the Long Night ----
   if(!G.night&&(SECTORS.length>=K.NIGHT_TRIGGER_SECTORS||G.day>=K.NIGHT_TRIGGER_YEAR)) revealNight(G);
   if(G.night){
@@ -1416,6 +1448,7 @@ function advice(G){
   var fd=Math.floor(E.food/Math.max(0.1,nd.food)), md=Math.floor(E.metal/Math.max(0.1,nd.metal));
   if(G.hungry) out.push({code:'a_starving',sev:'bad',n:Math.round(E.people)});
   else if(fd<25) out.push({code:'a_food',sev:fd<10?'bad':'warn',n:fd});
+  else if(foodShort(G)) out.push({code:'a_foodhor',sev:G.foodFc.n<=120?'bad':'warn',n:G.foodFc.n,y:G.foodFc.y,h:G.foodFc.farms});   // v4.28 F-11
   if(G.cold) out.push({code:'a_cold',sev:'bad'});
   else if(md<25) out.push({code:'a_metal',sev:md<10?'bad':'warn',n:md});
   var hasWell=false; for(k in G.colonies){ var pw=planet(k); if(pw&&pw.kind==='well'&&G.reserves[k]>0) hasWell=true }
