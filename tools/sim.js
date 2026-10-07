@@ -27,7 +27,7 @@ function load(path){
 function freeHulls(G){return G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to))}
 function lined(G,pid){return G.ships.some(s=>s.mode!=='dead'&&s.from===pid)}
 
-function play(C,seed,days,bot){
+function play(C,seed,days,bot,hook){
   const G=C.newGame(seed);
   const {PLANETS,HULLS,K}=C;
   const reachOK=(s,p)=>C.canReachSector(s,p.sec);
@@ -167,6 +167,7 @@ function play(C,seed,days,bot){
     }
   }
   if(process.env.DUMP&&bot==='pro'&&seed==+process.env.DUMP){ require('fs').writeFileSync(require('os').tmpdir()+'/dump.json',C.exportLog(G)) }
+  if(hook) hook(G);
   let worlds=0, depth=0, couriers=0, big=0, tiers=0;
   for(const k in G.colonies){ worlds++; depth+=1+C.planet(k).sec*0.5; tiers+=(G.colonies[k].tier||0) }
   G.ships.forEach(s=>{ if(s.mode==='dead')return; const h=C.HULLS[s.hull]; if(h.key==='courier')couriers++; else big++ });
@@ -179,20 +180,23 @@ function play(C,seed,days,bot){
     deepest:Math.max(0,...Object.keys(G.colonies).map(k=>C.planet(k).sec))};
 }
 
-const corePath=process.argv[2]||'core.js';
-const days=+(process.argv[3]||2600);
-const seeds=(process.argv[4]||'11,22,33,44,55,66,77,88').split(',').map(Number);
-const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','rush','serial','ark','bank']);
-const agg={};
-for(const bot of bots){
-  const rows=seeds.map(sd=>play(load(corePath),sd,days,bot));
-  const avg=f=>+(rows.reduce((a,r)=>a+f(r),0)/rows.length).toFixed(1);
-  agg[bot]={score:avg(r=>r.score), worlds:avg(r=>r.worlds), sectors:avg(r=>r.sectors), gen:avg(r=>r.gen),
-    deepest:avg(r=>r.deepest), day:avg(r=>r.day), alive:rows.filter(r=>r.over==='alive').length,
-    courier:avg(r=>r.couriers), big:avg(r=>r.big), home:avg(r=>r.idlePeople), crew:avg(r=>r.crew),
-    souls:avg(r=>r.souls), berths:avg(r=>r.berths), sailed:rows.filter(r=>r.over==='night').length, night:avg(r=>r.night), tiers:avg(r=>r.tiers||0)};
+module.exports={STYLES,load,play};
+if(require.main===module){
+  const corePath=process.argv[2]||'core.js';
+  const days=+(process.argv[3]||2600);
+  const seeds=(process.argv[4]||'11,22,33,44,55,66,77,88').split(',').map(Number);
+  const bots=(process.env.BOTS?process.env.BOTS.split(','):['idle','greedy','rush','serial','ark','bank']);
+  const agg={};
+  for(const bot of bots){
+    const rows=seeds.map(sd=>play(load(corePath),sd,days,bot));
+    const avg=f=>+(rows.reduce((a,r)=>a+f(r),0)/rows.length).toFixed(1);
+    agg[bot]={score:avg(r=>r.score), worlds:avg(r=>r.worlds), sectors:avg(r=>r.sectors), gen:avg(r=>r.gen),
+      deepest:avg(r=>r.deepest), day:avg(r=>r.day), alive:rows.filter(r=>r.over==='alive').length,
+      courier:avg(r=>r.couriers), big:avg(r=>r.big), home:avg(r=>r.idlePeople), crew:avg(r=>r.crew),
+      souls:avg(r=>r.souls), berths:avg(r=>r.berths), sailed:rows.filter(r=>r.over==='night').length, night:avg(r=>r.night), tiers:avg(r=>r.tiers||0)};
+  }
+  console.log(corePath, days+'d', seeds.length+' seeds');
+  console.log(['bot','score','worlds','sect','gen','deep','end yr','alive','courier','big','home','crew','night@','berths','souls','sailed','tiers'].join('\t'));
+  for(const b of bots){const a=agg[b];
+    console.log([b,a.score,a.worlds,a.sectors,a.gen,a.deepest,a.day,a.alive+'/'+seeds.length,a.courier,a.big,a.home,a.crew,a.night,a.berths,a.souls,a.sailed+'/'+seeds.length,a.tiers].join('\t'));}
 }
-console.log(corePath, days+'d', seeds.length+' seeds');
-console.log(['bot','score','worlds','sect','gen','deep','end yr','alive','courier','big','home','crew','night@','berths','souls','sailed','tiers'].join('\t'));
-for(const b of bots){const a=agg[b];
-  console.log([b,a.score,a.worlds,a.sectors,a.gen,a.deepest,a.day,a.alive+'/'+seeds.length,a.courier,a.big,a.home,a.crew,a.night,a.berths,a.souls,a.sailed+'/'+seeds.length,a.tiers].join('\t'));}

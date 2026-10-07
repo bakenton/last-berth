@@ -2,7 +2,7 @@
 # LAST BERTH — регресс одной командой.
 #   bash tools/regress.sh smoke            один сквозной сценарий (~1 мин)
 #   bash tools/regress.sh full             все живые сценарии + боты; дробится по бюджету вызова, см. --resume
-#   bash tools/regress.sh pw24 pw26 sim    только указанные
+#   bash tools/regress.sh pw24 pw26 sim    только указанные (fuzz — бот-хаос по ядру, входит в full)
 # Флаги: --quiet (зелёные — одно слово, красные — подробно), --shots (скриншоты ложатся в work/.run/*.png), --resume (продолжить прерванный full), --fresh (work из live/index.html
 #        заново — правки core/ui в work будут потеряны), --rebaseline (записать текущие цифры ботов как эталон)
 # Вывод: одна строка на сценарий; при падении — до 10 упавших проверок. Полные логи: work/logs/<имя>.log
@@ -18,7 +18,7 @@ export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 command -v node >/dev/null || PATH="/c/Program Files/nodejs:$PATH"
 np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; fi; }   # путь в виде, который понимает node
 # Живые сценарии (full). Правка списка — после решения по аудиту (last-berth/AUDIT.md).
-FULL="pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 sim"
+FULL="fuzz pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 sim"
 SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
 SHOTS=0 RESUME=0 FRESH=0 REBASE=0 QUIET=0 NAMES=()
 for a in "$@"; do case "$a" in
@@ -60,7 +60,7 @@ if [ -d "$LB/node_modules/eslint" ]; then
   echo "static OK — $(echo "$sl" | head -1 | cut -c1-70) · $(echo "$st" | head -1 | cut -c1-70)"
 else echo "static: пропущено — нет eslint (npm i)"; fi
 
-need_browser=0; for n in "${NAMES[@]}"; do [ "$n" != sim ] && need_browser=1; done
+need_browser=0; for n in "${NAMES[@]}"; do [ "$n" != sim ] && [ "$n" != fuzz ] && need_browser=1; done
 if [ $need_browser = 1 ]; then
   ( cd "$LB" && node -e "require('playwright')" ) 2>/dev/null || { echo "RUNTIME FAIL — нет playwright: в корне репозитория npm i && npx playwright install chromium"; exit 1; }
   cat > "$R/pw-shim.js" <<JS
@@ -111,6 +111,10 @@ for x in fails[:10]: print('  '+x[:200])
 PY
   fi
 }
+run_fuzz() {  # бот-хаос по ядру: случайные действия + инварианты (NaN, отрицательные запасы, исключения)
+  ( cd "$W" && timeout 120 node "$T/fuzz.js" core.js 2000 ) > "$LOG/fuzz.log" 2>&1; local rc=$?
+  if [ $rc = 0 ]; then echo "fuzz PASS — $(tail -1 "$LOG/fuzz.log")"; else echo "fuzz FAIL — $(grep -m1 FAIL "$LOG/fuzz.log" | cut -c1-120)"; grep -A3 -m2 '^FAIL' "$LOG/fuzz.log" | cut -c1-200; fi
+}
 run_sim() {
   ( cd "$W" && timeout 170 node "$T/sim.js" core.js $SIM_ARGS ) > "$LOG/sim.log" 2>&1; local rc=$?
   $PY - "$LOG/sim.log" "$rc" "$T/sim-baseline.tsv" "$REBASE" <<'PY'
@@ -138,6 +142,7 @@ PY
 run_one() {  # $1 name → строка итога в stdout
   local n=$1
   if [ "$n" = sim ]; then run_sim; return; fi
+  if [ "$n" = fuzz ]; then run_fuzz; return; fi
   [ -f "$R/$n.js" ] || { echo "$n ? нет tools/$n.js"; return; }
   local t1=$(date +%s)
   ( cd "$R" && LB_WORK="$(np "$W")" LB_PLAYWRIGHT="$(np "$R/pw-shim.js")" LB_SHOTS=$([ $SHOTS = 1 ] && echo 1) timeout 165 node "$n.js" ) > "$LOG/$n.log" 2>&1; local rc=$?

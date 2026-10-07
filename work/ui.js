@@ -113,6 +113,7 @@ function bigAlert(html,cls,ms){ var a=el('alert'); if(!a){ a=document.createElem
   a.className='show'+(cls?' '+cls:''); a.innerHTML=html; SFX.play(/red/.test(cls||'')?'crit':'bad'); clearTimeout(bigAlert._t); bigAlert._t=setTimeout(function(){ a.className='' }, ms||9000); }
 function toastLast(){ var e=G.log[G.log.length-1]; if(!e) return; var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return;
   var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
+  if(e.code==='voice') d=voiceLine(e);   // v4.26 (playtest bot, 07.10): the toast showed '{who} DLAMINI: {line}' — only the journal filled the voice line
   if(e.code==='depleted'){ bigAlert('<b>'+T('alertDepleted')+'</b><span>'+esc(fill(tpl,d))+'</span>','red'); return }
   toast(esc(fill(tpl,d)), TONE[e.code]==='bd'?'bad':'', 6000); }
 /* v4.10 (Nikita, 27.09): rations low and no farm feeding Earth → yellow blinking block, once a shift */
@@ -1062,7 +1063,7 @@ function railEarth(){
   var missing=G.ships.filter(function(s){return s.mode==='missing'});
   if(missing.length){
     var fh=freeHulls().filter(function(s){return !(s.from&&s.to)});
-    var mo=missing.map(function(m){return '<button class="btn" type="button" data-act="search" data-m="'+m.id+'"'+off(fh.length?'ok':'nofree')+'>'+fill(T('searchFor'),{n:m.id})+'<span class="c">'+pname(m.target)+'</span></button>'}).join('');
+    var mo=missing.map(function(m){return '<button class="btn" type="button" data-act="search" data-m="'+m.id+'"'+off(fh.length?'ok':'nofree')+'>'+fill(T('searchFor'),{n:m.id})+'<span class="c">'+pname(m.target||(m.dest==='earth'?m.origin:m.dest)||'')+'</span></button>'}).join('');
     h+=blk(T('searchHdr'),(fh.length?shipChips(fh):'<div class="dim">'+T('noShips')+'</div>')+mo,'<span class="tag r">'+missing.length+'</span>');
   }
 

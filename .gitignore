@@ -3,3 +3,5 @@ work/logs/
 .rt-test/
 *.zip
 node_modules/
+work/playtest/
+work/LAST-BERTH-god.html
