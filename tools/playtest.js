@@ -1,6 +1,8 @@
 /* PLAYTEST — бот-игрок через настоящий браузер. Играет мышью по видимому интерфейсу (клики по картам/кнопкам, закрывает модалки),
    смотрит на экран глазами аудита и пишет отчёт + лог. Запускать после правок интерфейса или по команде Никиты.
-     node tools/playtest.js [--minutes 4] [--seed 309573272] [--viewport 1500x950] [--god] [--out dir] [--shots]
+     node tools/playtest.js [--minutes 4] [--seed 309573272] [--viewport 1500x950] [--god] [--out dir] [--shots] [--style default|serial|rush]
+   --style serial — «постепенный»: один мир за раз, следующий — когда у всех есть линия; разведка — когда заселять нечего; ковчег вкладами, уровень 2.
+   --style rush   — «рашер»: заселяет всё, что достижимо, верфи без пауз, по два курьера на мир, разведка и привод сразу; ковчег — вабанк на лучший уровень.
    --god   использовать work/LAST-BERTH-god.html и промотку GOD.skip в «пустых» местах: доходит дальше за те же минуты
            (тогда это уже не чистое время игрока — в отчёте помечено).
    Результат: work/playtest/<метка>/report.md · events.json (всё, что бот делал и видел) · game-log.json (экспорт лога игры) · shots/*.png
@@ -10,9 +12,10 @@ const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs'),path=require('path'),url=require('url');
 const argv=process.argv.slice(2); const arg=(n,d)=>{ const i=argv.indexOf('--'+n); return i<0?d:(argv[i+1]&&!argv[i+1].startsWith('--')?argv[i+1]:true) };
 const MIN=+arg('minutes',4), SEED=String(arg('seed','309573272')), VP=String(arg('viewport','1500x950')).split('x').map(Number);
-const GOD=!!arg('god',false), SHOTS_ALL=!!arg('shots',false);
+const GOD=!!arg('god',false), SHOTS_ALL=!!arg('shots',false), STYLE=String(arg('style','default'));
+if(!/^(default|serial|rush)$/.test(STYLE)){ console.error('--style: default | serial | rush'); process.exit(2) }
 const ROOT=path.resolve(__dirname,'..');
-const stamp=new Date().toISOString().replace(/[:T]/g,'-').slice(0,16)+(VP[0]<700?'-mobile':'');
+const stamp=new Date().toISOString().replace(/[:T]/g,'-').slice(0,16)+(VP[0]<700?'-mobile':'')+(STYLE!=='default'?'-'+STYLE:'')+(GOD?'-god':'');
 const OUT=path.resolve(String(arg('out',path.join(ROOT,'work','playtest',stamp)))); fs.mkdirSync(path.join(OUT,'shots'),{recursive:true});
 const ev=[]; const issues=new Map(); const marks=[]; const t0=Date.now();
 const wall=()=>+((Date.now()-t0)/1000).toFixed(1);
@@ -111,7 +114,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
     const f=fresh.length?await shot(tag+'-'+fresh[0][1]):null; for(const [sev,kind,detail] of r) addIssue(sev,kind,detail,f) }
 
   /* ---------- вступление и пролог ---------- */
-  rec('start',{page:path.basename(page),viewport:VP.join('x'),seed:SEED});
+  rec('start',{page:path.basename(page),viewport:VP.join('x'),seed:SEED,style:STYLE});
   await p.evaluate(s=>{ document.getElementById('seedin').value=s; document.querySelector('[data-act="new"]').click() },SEED);
   await tap('[data-lang="en"]'); await audit('lang');
   if(!(await tap('[data-act="oskip"]'))) addIssue('warn','no-skip','кнопка пропуска вступления не нашлась');
@@ -124,33 +127,55 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
     if(ok){ const s1=await S(); rec('act',{act:name,year:s1&&s1.day}); did.push(name); lastActYear=s1?s1.day:lastActYear; lastDid[name]=lastActYear } else rec('act-fail',{act:name,year:s0&&s0.day}); return ok }
   const every=(name,years,y)=>(lastDid[name]===undefined)||(y-lastDid[name]>=years);
 
+  const SER=STYLE==='serial', RUSH=STYLE==='rush';
+  const lineFail={};   // a world whose + was refused (spent seam, out of range): leave it alone for 60 years, try the next one
+  // serial: «закрывать по очереди» — следующий мир только когда у всех живых есть линия и прошлый обжился
+  const allLined=()=>p.evaluate(skip=>{ for(const k in LN.colonies){ if(skip.includes(k)) continue; if(!lineWant(LN,k,'courier')&&!lineWant(LN,k,'hauler')&&!lineWant(LN,k,'freighter')) return false } return true },Object.keys(lineFail));   // a spent world has no + — it does not hold the queue
+  const freeWorldLeft=()=>p.evaluate(()=>{ for(const q of PLANETS){ if(q.sec<SECTORS.length&&!LN.colonies[q.id]&&!LN.ghost[q.id]) return true } return false });
   async function policy(s){
     // 0. последний шаг пролога — кнопка «взять стол»
     if(await p.locator('[data-act="prodone"]').first().isVisible().catch(()=>false)){ if(await act('prodone',()=>tap('[data-act="prodone"]'))) return }
     // 1. заселить: ближайший свободный мир, в который есть кому лететь
-    if(s.free>0&&s.people>110&&!s.arkMode&&every('colonize',6,s.day)){
+    const colGap=RUSH?1:SER?40:6;
+    if(s.free>0&&s.people>110&&!s.arkMode&&every('colonize',colGap,s.day)&&(!SER||s.cols===0||await allLined())){
       const pid=await p.evaluate(()=>{ const G=LN,E=G.earth; let best=null,bv=-1e9;
+        const noFarm=!Object.keys(G.colonies).some(k=>planet(k).kind==='farm'&&G.reserves[k]>0);
         for(const q of PLANETS){ if(q.sec>=SECTORS.length||G.colonies[q.id]||G.ghost[q.id]) continue; if(!document.querySelector('[data-p="'+q.id+'"] circle.hit')) continue;
           const sh=G.ships.find(x=>x.mode==='idle'&&x.at==='earth'&&!(x.from&&x.to)&&canReachSector(x,q.sec)); if(!sh) continue;
-          let v=-q.dist; if(q.kind==='farm'&&E.food<(G.need?G.need.food:5)*40) v+=800; if(v>bv){bv=v;best=q.id} } return best });
+          let v=-q.dist; if(q.kind==='farm'&&(E.food<(G.need?G.need.food:5)*40||noFarm)) v+=800; if(v>bv){bv=v;best=q.id} } return best });
       if(pid&&await act('colonize',async()=>{ if(!(await tapPlanet(pid))) return false; await p.waitForTimeout(120); return tap('[data-act="colonize"]') })) return }
     // 2. суда: когда свободных нет — заказать на верфи (кнопка «build» в панели Земли)
-    if(s.free<2&&s.metal>260&&!s.arkMode&&every('build',5,s.day)){
+    const needBuild=RUSH?(s.free<3&&s.metal>200):SER?(s.free<1&&s.metal>400):(s.free<2&&s.metal>260);
+    if(needBuild&&!s.arkMode&&every('build',RUSH?2:SER?12:5,s.day)){
       if(await act('build',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); await dismiss(); return tap('[data-act="build"]:not([aria-disabled="true"])',{soft:true}) })) return }
-    // 3. линии: у каждого мира должен быть курьер на постоянном заказе
-    if(every('line',8,s.day)){
-      const pid=await p.evaluate(()=>{ for(const k in LN.colonies){ if(!lineWant(LN,k,'courier')&&!lineWant(LN,k,'hauler')) return k } return null });
-      if(pid&&await act('line',async()=>{ if(!(await tapPlanet(pid))) return false; await p.waitForTimeout(100); return tap('[data-act="want"].plus[data-c="courier"]:not([aria-disabled="true"])',{soft:true}) })) return }
-    // 4. разведка колец
-    if(s.canSurvey==='ok'&&s.food>300&&s.metal>300&&!s.arkMode&&every('survey',30,s.day)){
+    // 3. линии: у каждого мира должен быть курьер на постоянном заказе (рашер — два)
+    if(every('line',RUSH?3:8,s.day)){
+      const skip=Object.keys(lineFail).filter(k=>s.day-lineFail[k]<60);
+      const pid=await p.evaluate(({lim,skip})=>{ let best=null,bw=1e9; for(const k in LN.colonies){ if(skip.includes(k)) continue; const w=(lineWant(LN,k,'courier')||0)+(lineWant(LN,k,'hauler')||0)+(lineWant(LN,k,'freighter')||0); if(w<lim&&w<bw){ bw=w; best=k } } return best },{lim:RUSH?2:1,skip});
+      if(pid&&!(await act('line',async()=>{ if(!(await tapPlanet(pid))) return false; await p.waitForTimeout(100);
+        for(const cls of (RUSH&&!s.pro?['freighter','hauler','courier']:['courier'])){ if(await tap('[data-act="want"].plus[data-c="'+cls+'"]:not([aria-disabled="true"])',{soft:true})) return true }   // the rusher takes the biggest hull the card allows
+        const why=await p.evaluate(()=>{ const b=document.querySelector('[data-act="want"].plus[data-c="courier"]'); return b?(b.dataset.why||'disabled'):'no-button' }); rec('line-refused',{pid,why,year:s.day}); return false }))) lineFail[pid]=s.day;
+      else if(pid) return }
+    // 4. разведка колец (serial — только когда заселять больше нечего; rush — как только можно)
+    const svOk=RUSH?(s.canSurvey==='ok'):SER?(s.canSurvey==='ok'&&s.food>300&&s.metal>300&&(!(await freeWorldLeft())||s.day-(lastDid.colonize||0)>150)):(s.canSurvey==='ok'&&s.food>300&&s.metal>300);
+    if(svOk&&!s.arkMode&&every('survey',RUSH?5:30,s.day)){
       if(await act('survey',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); return tap('[data-act="survey"]:not([aria-disabled="true"])',{soft:true}) })) return }
     // 5. привод
-    if(every('drive',40,s.day)){
+    if(every('drive',RUSH?10:40,s.day)){
       const pid=await p.evaluate(()=>{ if(LN.drive) return null; for(const k in LN.colonies){ const q=planet(k); if(q.kind==='works'&&LN.colonies[k].pop>=K.DRIVE_POP&&settledCount(LN)>=driveReachFor(LN)) return k } return null });
       if(pid&&await act('drive',async()=>{ if(!(await tapPlanet(pid))) return false; await p.waitForTimeout(100); return tap('[data-act="drive"]:not([aria-disabled="true"])',{soft:true}) })) return }
-    // 6. Ночь: отложить место на ковчеге уровня 2
-    if(s.night&&s.nightLeft!==null&&s.nightLeft<=1200&&!s.arkMode&&every('ark',60,s.day)){
-      await act('ark',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); await tap('[data-act="arksel"][data-l="2"]',{soft:true}); return tap('[data-act="arkplan"]:not([aria-disabled="true"])',{soft:true}) }) }
+    // 6. Ночь: ковчег
+    const planArk=l=>act('ark',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); await tap('[data-act="arksel"][data-l="'+l+'"]',{soft:true}); return tap('[data-act="arkplan"]:not([aria-disabled="true"])',{soft:true}) });
+    if(RUSH){
+      // рашер: вабанк на лучший доступный уровень за 600 лет; за 250 лет, если так и не купил, — вклады на уровень 2
+      if(s.night&&s.nightLeft!==null&&!s.arkMode&&s.nightLeft<=600&&every('arkbuy',15,s.day)){
+        await act('arkbuy',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true});
+          for(const l of [4,3,2,1]){ await tap('[data-act="arksel"][data-l="'+l+'"]',{soft:true}); await p.waitForTimeout(60); if(await tap('[data-act="arkbuy"][data-l="'+l+'"]:not([aria-disabled="true"])',{soft:true})) return true } return false }) }
+      if(s.night&&s.nightLeft!==null&&!s.arkMode&&s.nightLeft<=250&&every('ark',30,s.day)) await planArk(2);
+    } else if(SER){
+      // постепенный: вклады на уровень 2, как только Ночь датирована
+      if(s.night&&!s.arkMode&&every('ark',60,s.day)) await planArk(2);
+    } else if(s.night&&s.nightLeft!==null&&s.nightLeft<=1200&&!s.arkMode&&every('ark',60,s.day)) await planArk(2);
   }
 
   /* ---------- главный цикл ---------- */
@@ -200,7 +225,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
   const totalInt=Object.values(interrupts).reduce((a,c)=>a+c,0);
   const L=[];
   L.push('# Плейтест LAST BERTH — '+stamp, '',
-    '**Страница:** '+path.basename(page)+(GOD?' (режим бога — часть лет промотана, это не чистое время игрока)':'')+' · **окно:** '+VP.join('×')+' · **seed:** '+SEED,
+    '**Страница:** '+path.basename(page)+(GOD?' (режим бога — часть лет промотана, это не чистое время игрока)':'')+' · **окно:** '+VP.join('×')+' · **seed:** '+SEED+' · **стиль:** '+STYLE,
     '**Итог:** '+(fin?(fin.over?'конец игры: '+fin.over:'жива'):'?')+' · год '+yrs+' за '+secs+' с реального времени ('+(yrs/Math.max(1,secs)).toFixed(1)+' лет/с) · колоний '+(fin&&fin.cols)+' · людей на Земле '+(fin&&fin.people)+' · колец '+(fin&&fin.sectors)+' · привод '+(fin&&fin.drive),'');
   L.push('## Найденное ('+iss.length+')','');
   if(!iss.length) L.push('Механических проблем не поймано.','');
