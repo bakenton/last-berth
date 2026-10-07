@@ -717,7 +717,7 @@ var K={
   DECAY_KNEE:2400,     // ...and then faster than linear, so no plateau is ever safe
   EVENT_CHANCE:0.006,  // roughly one event every 170 days per run
   EARTH_EAT:3.4,       // rations Earth burns every day per baseline crew
-  EARTH_BURN:2.6,      // metal Earth burns every day per baseline crew
+  EARTH_BURN:1.0,      // metal Earth burns every day per baseline crew (v4.23: 2.6 -> 1.0, linear age; Nikita 07.10)
   STARVE_KILL:0.045,   // share of Earth's people lost per day with empty larders
   MEND:0.004,          // share of the dead made good per day once fed again
   QUOTA_PERIOD:40,
@@ -914,7 +914,8 @@ function crewDocked(G){ return crewOut(G)-crewAway(G) }
 function earthNeed(G){
   var d=G.day;
   var age=1 + d/K.APPETITE + (d/K.DECAY_KNEE)*(d/K.DECAY_KNEE);
-  return { food:K.EARTH_EAT*age, metal:K.EARTH_BURN*age };
+  var ageM=1 + d/K.APPETITE;     // v4.23 (Nikita, 07.10): metal is the working currency — its burn grows with the calendar only, not squared (food keeps the squared knee)
+  return { food:K.EARTH_EAT*age, metal:K.EARTH_BURN*ageM };
 }
 /* v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the empire
    has been bringing home of that resource, so the crisis grows with the empire (a fixed number is nothing to a big one) */
@@ -1185,7 +1186,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.22', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.23', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:G.ark.berths,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
