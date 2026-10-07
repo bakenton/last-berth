@@ -268,6 +268,7 @@ var K={
      docks at Earth, its crew stands on the pier (it boards if there is a berth), and it takes no more
      orders. Only the breakers will have it. Far lines break first. Claude — awaiting review. */
   MUTINY_MIN:1.5, MUTINY_SPREAD:1.5,
+  MUTINY_WARN:100,     // v4.27 (Nikita, 07.10: 'за 100 лет до начала бунтов сказать игроку, что дата идёт и суда начнут саботировать'): years before the first refusal the desk is told
   /* v4.4 — extraction kits (Nikita, 25.09, run 381774366: a mine gives 15/yr, Earth burns 20/yr, the ark
      wants 15.7k; the hauler IV at 3318 never fills because a stockyard holds 1200; sector-5 seams last
      15,000 years). A kit is cargo: ordered at Earth, it rides out in the hold of a hull on that world's
@@ -582,6 +583,15 @@ function unload(G,s,node){
 function temper(G,s){ var h=((s.id*2654435761)^(G.seed|0))>>>0; return K.MUTINY_SPREAD*((h%1000)/1000) }
 /* would this crew refuse the run that starts here? (the desk can ask the same question) */
 function mutinyDue(G,s,round){ if(!G.night||s.mutiny) return false; var left=nightLeft(G); return left<(K.MUTINY_MIN+temper(G,s))*round }
+/* v4.27: the first crew that will refuse, by the same count the crews make — year, line, and the rations Earth
+   needs from that day to the Night (the lines stop one by one after it; a larder is the only answer) */
+function mutinyForecast(G){ if(!G.night) return null; var best=null;
+  for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead'||s.mutiny||!s.from||!s.to) continue;
+    var pid=s.from==='earth'?s.to:s.from; if(!G.colonies[pid]) continue;
+    var y=Math.floor(G.night-(K.MUTINY_MIN+temper(G,s))*legDays(G,pid,'earth',s)*2);
+    if(!best||y<best.y) best={y:y,pid:pid} }
+  if(!best) return null; var nd=G.need||earthNeed(G);
+  best.n=Math.max(0,best.y-G.day); best.f=Math.round(nd.food*Math.max(0,G.night-best.y)); return best }
 function sail(G,s){
   var here=s.at, dest = here===s.from ? s.to : s.from;
   if(s.mutiny) return 'mutiny';
@@ -638,7 +648,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.26', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.27', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),arkMode:G.ark.mode,arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -1369,6 +1379,7 @@ function tick(G){
     arkDepositTick(G);
     var left=G.night-G.day;
     if(left===K.NIGHT_NEAR||left===100||left===25){ G.pauseNow=true; log(G,'night_near',{n:left,s:arkSouls(G)}) }
+    if(!G.mutinyWarned){ var mf=mutinyForecast(G); if(mf&&mf.n<=K.MUTINY_WARN){ G.mutinyWarned=true; G.pauseNow=true; log(G,'mutiny_warn',{n:mf.n,p:mf.pid,f:mf.f,h:Math.round(E.food)}) } }
     if(left===K.DOOMSDAY_AT) log(G,'doomsday',{n:left,b:arkSouls(G),h:Math.round(E.people)});
     if(left<=0){
       G.left=leftBehind(G); G.over='night';
@@ -1496,6 +1507,7 @@ function advice(G){
     var minRt=null; for(k in G.colonies){ var probe={hull:HULLS.length-3};
       var rt=legDays(G,k,'earth',probe)*2; if(minRt===null||rt<minRt) minRt=rt }
     if(minRt!==null&&nl<K.MUTINY_MIN*minRt) out.push({code:'a_lastbuild',sev:'warn',n:Math.round(minRt),l:nl});
+    var mfc=mutinyForecast(G); if(mfc&&mfc.n>0&&mfc.n<=K.MUTINY_WARN) out.push({code:'a_mutinysoon',sev:mfc.n<=30?'bad':'warn',n:mfc.n,pid:mfc.pid,l:mfc.f,h:Math.round(G.earth.food)});
     var mut=0; for(i=0;i<G.ships.length;i++){ if(G.ships[i].mutiny&&G.ships[i].mode==='idle') mut++ }
     if(mut) out.push({code:'a_mutiny',sev:'warn',n:mut});
     if(!G.ark.mode) out.push({code:'a_ark',sev:nl<=K.NIGHT_NEAR?'warn':'ok'});   // v4.24: nothing chosen yet

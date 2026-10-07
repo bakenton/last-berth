@@ -3,6 +3,8 @@
      node tools/playtest.js [--minutes 4] [--seed 309573272] [--viewport 1500x950] [--god] [--out dir] [--shots] [--style default|serial|rush]
    --style serial — «постепенный»: один мир за раз, следующий — когда у всех есть линия; разведка — когда заселять нечего; ковчег вкладами, уровень 2.
    --style rush   — «рашер»: заселяет всё, что достижимо, верфи без пауз, по два курьера на мир, разведка и привод сразу; ковчег — вабанк на лучший уровень.
+   --brain sim    — решения принимает голова бота ядра (tools/sim.js step(), стили rush/serial/ark/bank) через API ядра в странице,
+                    а не кликами; интерфейс при этом рисуется, модалки закрываются, аудит экрана идёт. Так бот доходит до Ночи и ковчега.
    --god   использовать work/LAST-BERTH-god.html и промотку GOD.skip в «пустых» местах: доходит дальше за те же минуты
            (тогда это уже не чистое время игрока — в отчёте помечено).
    Результат: work/playtest/<метка>/report.md · events.json (всё, что бот делал и видел) · game-log.json (экспорт лога игры) · shots/*.png
@@ -12,10 +14,11 @@ const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs'),path=require('path'),url=require('url');
 const argv=process.argv.slice(2); const arg=(n,d)=>{ const i=argv.indexOf('--'+n); return i<0?d:(argv[i+1]&&!argv[i+1].startsWith('--')?argv[i+1]:true) };
 const MIN=+arg('minutes',4), SEED=String(arg('seed','309573272')), VP=String(arg('viewport','1500x950')).split('x').map(Number);
-const GOD=!!arg('god',false), SHOTS_ALL=!!arg('shots',false), STYLE=String(arg('style','default'));
-if(!/^(default|serial|rush)$/.test(STYLE)){ console.error('--style: default | serial | rush'); process.exit(2) }
+const GOD=!!arg('god',false), SHOTS_ALL=!!arg('shots',false), STYLE=String(arg('style','default')), BRAIN=String(arg('brain','ui'));
+if(!/^(default|serial|rush|ark|bank)$/.test(STYLE)){ console.error('--style: default | serial | rush | ark | bank'); process.exit(2) }
+if(BRAIN==='sim'&&STYLE==='default'){ console.error('--brain sim needs --style rush|serial|ark|bank'); process.exit(2) }
 const ROOT=path.resolve(__dirname,'..');
-const stamp=new Date().toISOString().replace(/[:T]/g,'-').slice(0,16)+(VP[0]<700?'-mobile':'')+(STYLE!=='default'?'-'+STYLE:'')+(GOD?'-god':'');
+const stamp=new Date().toISOString().replace(/[:T]/g,'-').slice(0,16)+(VP[0]<700?'-mobile':'')+(STYLE!=='default'?'-'+STYLE:'')+(BRAIN==='sim'?'-sim':'')+(GOD?'-god':'');
 const OUT=path.resolve(String(arg('out',path.join(ROOT,'work','playtest',stamp)))); fs.mkdirSync(path.join(OUT,'shots'),{recursive:true});
 const ev=[]; const issues=new Map(); const marks=[]; const t0=Date.now();
 const wall=()=>+((Date.now()-t0)/1000).toFixed(1);
@@ -31,6 +34,14 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
   const page=path.join(ROOT,'work',GOD?'LAST-BERTH-god.html':'page.html');
   if(!fs.existsSync(page)){ console.error('нет '+page+(GOD?' — сначала node tools/make-god.js':' — сначала сборка')); process.exit(2) }
   await p.goto(url.pathToFileURL(page).href); await p.waitForTimeout(400);
+  if(BRAIN==='sim'){
+    const simSrc=fs.readFileSync(path.join(ROOT,'tools','sim.js'),'utf8');
+    const names=(simSrc.match(/const names=\[([\s\S]*?)\];/)||[])[1];
+    const inPage=simSrc.replace("const fs=require('fs');","const fs=null;").replace(/module\.exports=[^\n]*\n/,'window.SIM={STYLES,step};\n').replace('if(require.main===module){','if(false){');
+    await p.addScriptTag({content:inPage});
+    await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C=Object.fromEntries(list.map(n=>[n,window[n]])); window.__st={idleY:{},fuelHist:[]}; window.__lastDay=-1 },names);
+    rec('brain',{brain:'sim',style:STYLE});
+  }
 
   /* ---------- проблемы ---------- */
   let shotN=0;
@@ -67,7 +78,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
     return {day:G.day,over:G.over||null,people:Math.round(E.people),food:Math.round(E.food),metal:Math.round(E.metal),fuel:Math.round(E.fuel),parts:Math.round(E.parts),
       need:G.need||null,cols:Object.keys(G.colonies).length,settled:settledCount(G),reach:reach(G),night:G.night||0,nightLeft:G.night?nightLeft(G):null,
       paused:!!U.paused,speed:U.speed,tab:U.tab,sel:U.sel,pro:U.pro&&U.pro.on?U.pro.stage:0,gen:G.gen||0,drive:G.driveLvl||0,sectors:SECTORS.length,
-      free:G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)).length,ships:G.ships.filter(s=>s.mode!=='dead').length,
+      free:G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)).length,ships:G.ships.filter(s=>s.mode!=='dead').length,souls:G.souls||0,arkLv:G.ark?arkLevel(G):0,
       canSurvey:canSurvey(G),arkMode:G.ark&&G.ark.mode||null,hungry:!!G.hungry,logLen:G.log.length} }).catch(()=>null);
 
   /* ---------- модалки: сколько раз и каких перебили игроку ---------- */
@@ -200,7 +211,12 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
     first('dr',s.drive>=1,'метка привода I'); first('nt',!!s.night,'Ночь датирована'); first('ark',!!s.arkMode,'ковчег заложен'); first('h',s.hungry,'Земля голодает');
     if(await p.evaluate(()=>!!LNU.logBig)){ rec('accidental-expand',{year:s.day}); await tap('#b-logx',{soft:true}) }
     await ensureRunning();
-    await policy(s);
+    if(BRAIN==='sim'){
+      const did=await p.evaluate(style=>{ const G=LN; if(G.over||G.day===window.__lastDay) return 0; let n=0;
+        for(let dd=window.__lastDay<0?G.day:window.__lastDay+1; dd<=G.day; dd++){ SIM.step(window.__C,G,style,dd,window.__st); n++ }
+        window.__lastDay=G.day; LNdraw(); return n },STYLE).catch(e=>{ rec('brain-error',{err:String(e).slice(0,200)}); return 0 });
+      if(did) lastActYear=s.day;
+    } else await policy(s);
     // «нечего делать»: пока бот ничего не мог — копим растяжку
     if(s.day-lastActYear>=150&&!s.over){ if(!idleStretches.length||idleStretches[idleStretches.length-1].to!==undefined) idleStretches.push({from:lastActYear,to:undefined}); }
     else if(idleStretches.length&&idleStretches[idleStretches.length-1].to===undefined){ idleStretches[idleStretches.length-1].to=s.day }
@@ -226,7 +242,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
   const L=[];
   L.push('# Плейтест LAST BERTH — '+stamp, '',
     '**Страница:** '+path.basename(page)+(GOD?' (режим бога — часть лет промотана, это не чистое время игрока)':'')+' · **окно:** '+VP.join('×')+' · **seed:** '+SEED+' · **стиль:** '+STYLE,
-    '**Итог:** '+(fin?(fin.over?'конец игры: '+fin.over:'жива'):'?')+' · год '+yrs+' за '+secs+' с реального времени ('+(yrs/Math.max(1,secs)).toFixed(1)+' лет/с) · колоний '+(fin&&fin.cols)+' · людей на Земле '+(fin&&fin.people)+' · колец '+(fin&&fin.sectors)+' · привод '+(fin&&fin.drive),'');
+    '**Итог:** '+(fin?(fin.over?'конец игры: '+fin.over+(fin.over==='night'?' · душ на ковчеге '+fin.souls+' · уровень '+fin.arkLv:''):'жива'):'?')+(BRAIN==='sim'?' · **голова: sim ('+STYLE+')** — действия через API ядра, не кликами':'')+' · год '+yrs+' за '+secs+' с реального времени ('+(yrs/Math.max(1,secs)).toFixed(1)+' лет/с) · колоний '+(fin&&fin.cols)+' · людей на Земле '+(fin&&fin.people)+' · колец '+(fin&&fin.sectors)+' · привод '+(fin&&fin.drive),'');
   L.push('## Найденное ('+iss.length+')','');
   if(!iss.length) L.push('Механических проблем не поймано.','');
   for(const i of iss) L.push('- **['+i.sev+'] '+i.kind+'** ×'+i.n+' · год '+i.year+' — '+i.detail+(i.shot?' · ![]('+i.shot+')':''));
@@ -243,6 +259,6 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
   L.push('> Бот ловит механику, а не ощущение. Ощущение — по скриншотам из `shots/` и журналу выше.');
   fs.writeFileSync(path.join(OUT,'report.md'),L.join('\n'));
   await b.close();
-  console.log('playtest → '+path.join(OUT,'report.md')); console.log('год '+yrs+' · '+(fin&&fin.over||'жива')+' · проблем: crit '+iss.filter(i=>i.sev==='crit').length+' · warn '+iss.filter(i=>i.sev==='warn').length+' · info '+iss.filter(i=>i.sev==='info').length+' · модалок '+totalInt);
+  console.log('playtest → '+path.join(OUT,'report.md')); console.log('год '+yrs+' · '+(fin&&fin.over||'жива')+(fin&&fin.over==='night'?' · souls '+fin.souls+' · ark lv '+fin.arkLv:'')+' · проблем: crit '+iss.filter(i=>i.sev==='crit').length+' · warn '+iss.filter(i=>i.sev==='warn').length+' · info '+iss.filter(i=>i.sev==='info').length+' · модалок '+totalInt);
   process.exit(iss.some(i=>i.sev==='crit')?1:0);
 })().catch(e=>{ console.error('PLAYTEST CRASH',e); process.exit(3) });

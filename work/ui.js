@@ -80,7 +80,7 @@ function reloadTexts(){
 function textsVisible(){ return !!TXT_URL || /[?&]dev\b/.test(location.search) }
 
 
-var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
+var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
  quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',fragment:'hi',order_sent:'hi'};
 
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
