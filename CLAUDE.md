@@ -63,6 +63,8 @@ bash tools/regress.sh sim --rebaseline      # записать новый эта
 node tools/lint.js --all                    # ESLint по core+ui: no-undef (ошибка), неиспользуемое (список); regress.sh гоняет сам
 node tools/texts-check.js                   # тексты: паритет {x}, дубли, круговой тест, ключи в коде, сверка с texts/; regress.sh гоняет сам
 node tools/close-iter.js check|bump X.YY|ship   # механика закрытия итерации; полный порядок — skill /close-iteration
+node tools/texts-csv.js "<где>"             # CSV для Никиты из tsv (skill /texts-add)
+node tools/sim-diff.js                      # эталон ботов против последнего sim (skill /balance-change)
 # хук PostToolUse (.claude/settings.json): после правки work/core.js|ui.js — node --check (tools/hook-check.js)
 cd work && py -3 ../tools/build.py          # только сборка; печатает rows · added · changed
 cd work && node ../tools/sim.js core.js 4500   # боты напрямую; BOTS=rush — один бот; BOTS=expand,pro,tidy,late — старые

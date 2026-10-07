@@ -175,3 +175,5 @@ pw11 бот селит ферму, когда еды < 40 лет (рождаем
 | close-iter.js | `check` / `bump` / `ship` — версия, play/, CHANGELOG, HANDOFF, тексты, git. |
 
 lint и texts-check запускаются из regress.sh перед браузером; ошибка = `STATIC FAIL`, сценарии не стартуют.
+| texts-csv.js | `<where> [version] [--since=]` — CSV для Никиты из new/changed-texts.tsv (только строки новее коммита). |
+| sim-diff.js | Эталон ботов против последнего `regress.sh sim`: что сменилось по ботам и колонкам. |
