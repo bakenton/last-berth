@@ -3,6 +3,7 @@
   "private": true,
   "description": "LAST BERTH prototype: local runtime for bots and Playwright scenarios (tools/)",
   "devDependencies": {
+    "eslint": "^10.12.0",
     "playwright": "^1"
   }
 }

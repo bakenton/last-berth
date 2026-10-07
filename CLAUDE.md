@@ -60,6 +60,10 @@ bash tools/regress.sh smoke                 # сборка + сквозной с
 bash tools/regress.sh pw34 pw36 sim         # выбранные сценарии и боты
 bash tools/regress.sh full --quiet          # всё; перед сдачей итерации (--quiet: зелёные одним словом)
 bash tools/regress.sh sim --rebaseline      # записать новый эталон ботов (только по решению Никиты)
+node tools/lint.js --all                    # ESLint по core+ui: no-undef (ошибка), неиспользуемое (список); regress.sh гоняет сам
+node tools/texts-check.js                   # тексты: паритет {x}, дубли, круговой тест, ключи в коде, сверка с texts/; regress.sh гоняет сам
+node tools/close-iter.js check|bump X.YY|ship   # механика закрытия итерации; полный порядок — skill /close-iteration
+# хук PostToolUse (.claude/settings.json): после правки work/core.js|ui.js — node --check (tools/hook-check.js)
 cd work && py -3 ../tools/build.py          # только сборка; печатает rows · added · changed
 cd work && node ../tools/sim.js core.js 4500   # боты напрямую; BOTS=rush — один бот; BOTS=expand,pro,tidy,late — старые
 ```

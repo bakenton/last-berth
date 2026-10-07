@@ -10,5 +10,13 @@
       "Read(./tools/_old/**)",
       "Read(./.rt-test/**)"
     ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [{ "type": "command", "command": "node tools/hook-check.js" }]
+      }
+    ]
   }
 }

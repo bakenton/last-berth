@@ -52,6 +52,14 @@ grep -q "added 0 · already baked 0 · changed 0" "$LOG/build.log" || echo "buil
 # MAP.md — оглавление кода; пересобирается, только если core.js/ui.js новее
 [ "$W" = "$LB/work" ] && { [ "$W/core.js" -nt "$LB/MAP.md" ] || [ "$W/ui.js" -nt "$LB/MAP.md" ]; } && $PY "$T/map.py" "$W" | tr -d '\r' > "$LB/MAP.md"
 
+# статика: ESLint (no-undef и др.) и тексты (паритет, круговой тест); ошибка = стоп до браузера. Подробности: node tools/lint.js --all · node tools/texts-check.js
+if [ -d "$LB/node_modules/eslint" ]; then
+  sl=$(node "$(np "$T")/lint.js" "$(np "$W")" 2>&1); sr=$?
+  st=$(node "$(np "$T")/texts-check.js" "$(np "$W")/page.html" 2>&1); sx=$?
+  if [ $sr -ne 0 ] || [ $sx -ne 0 ]; then echo "STATIC FAIL"; [ $sr -ne 0 ] && echo "$sl" | head -15; [ $sx -ne 0 ] && echo "$st" | grep -v '^  warn' | head -15; exit 1; fi
+  echo "static OK — $(echo "$sl" | head -1 | cut -c1-70) · $(echo "$st" | head -1 | cut -c1-70)"
+else echo "static: пропущено — нет eslint (npm i)"; fi
+
 need_browser=0; for n in "${NAMES[@]}"; do [ "$n" != sim ] && need_browser=1; done
 if [ $need_browser = 1 ]; then
   ( cd "$LB" && node -e "require('playwright')" ) 2>/dev/null || { echo "RUNTIME FAIL — нет playwright: в корне репозитория npm i && npx playwright install chromium"; exit 1; }
