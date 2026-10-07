@@ -43,24 +43,24 @@ MSG	gen_retired	The yards no longer build this generation, and none is free at E
 UI	dryTitle	Seam exhausted	Залежь выработана
 UI	dryLead	Nothing more to dig, but {n} {r} still lies on the surface. Hulls can still be sent to collect it; once the surface is empty, only evacuation remains.	Добывать больше нечего, но на поверхности ещё лежит {n} ({r}). Сюда ещё можно отправлять корпуса, чтобы дособрать; когда поверхность опустеет, останется только эвакуация.
 UI	rateLine	World makes {m}/yr · line hauls {h}/yr	Мир даёт {m}/год · линия вывозит {h}/год
-UI	evacWho	Courier {n} ({h}) goes: hold {c}, people {k} — everyone fits; {y} years out.	Пойдёт курьер {n} ({h}): трюм {c}, людей {k} — помещаются все; лететь {y} лет.
-UI	evacShort	Courier {n} ({h}) holds {c} of {k} people — {l} will stay behind. A bigger courier (newer generation) lifts everyone.	Курьер {n} ({h}) берёт {c} из {k} человек — {l} останутся. Курьер побольше (нового поколения) снимет всех.
+UI	evacWho	{h} goes: hold {c}, people {k} — everyone fits; {y} years out.	Пойдёт {h}: трюм {c}, людей {k} — помещаются все; лететь {y} лет.
+UI	evacShort	{h} holds {c} of {k} people — {l} will stay behind. A bigger courier (newer generation) lifts everyone.	{h} берёт {c} из {k} человек — {l} останутся. Курьер побольше (нового поколения) снимет всех.
 UI	evacNoCourierHint	Only a courier lifts a settlement, and none is free at Earth. {w}	Снимать поселение может только курьер, а свободных у Земли нет. {w}
 UI	evacW_orderC	Build a courier in the dock, or take one off a standing order.	Заложи курьер в доке или сними один с постоянного приказа.
 MSG	evacNoCourier	No free courier at Earth can reach {p}. {w}	У Земли нет свободного курьера, который долетит до {p}. {w}
 MSG	evacCourier	Only a courier can lift a settlement.	Снимать поселение может только курьер.
-MSG	ok_evac_short	Courier {n} is on its way to lift {p} — it holds {c}; {l} people will stay behind.	Курьер {n} пошёл снимать {p} — трюм {c}; {l} человек останутся.
+MSG	ok_evac_short	{n} is on its way to lift {p} — it holds {c}; {l} people will stay behind.	{n} пошёл снимать {p} — трюм {c}; {l} человек останутся.
 UI	hullFmt	{t} “{n}” {g}	{t} «{n}» {g}
 UI	hullNm_courier	Hermes	Гермес
 UI	hullNm_hauler	Sisyphus	Сизиф
 UI	hullNm_freighter	Atlas	Атлант
 UI	lineUpkeepHint	Set how many hulls of each class stay on this line. The yards send an idle hull from Earth first, then build a new one.	Задай, сколько судов каждого класса держать на линии. Верфи сначала шлют свободное с Земли, потом строят новое.
-UI	lobe0	Eos	Эос
-UI	lobe1	Helios	Гелиос
-UI	lobe2	Hemera	Гемера
-UI	lobe3	Hesperos	Гесперос
-UI	lobe4	Selene	Селена
-UI	lobe5	Nyx	Никта
+UI	lobe0	Eos	Eos
+UI	lobe1	Helios	Helios
+UI	lobe2	Hemera	Hemera
+UI	lobe3	Hesperos	Hesperos
+UI	lobe4	Selene	Selene
+UI	lobe5	Nyx	Nyx
 LOG	pulse_short	Earth cannot cover the extra “{dep}” demand — people are dying.	Земля не покрывает повышенный спрос на «{dep}» — гибнут люди.
 UI	alertPulseT	Earth’s demand is rising	Спрос Земли растёт
 LOG	fold_warn	Space over {lobe} is starting to fold. In {l} years hulls there will fly twice as fast.	Пространство над «{lobe}» начинает сворачиваться. Через {l} лет суда там полетят вдвое быстрее.

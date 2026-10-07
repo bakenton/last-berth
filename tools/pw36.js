@@ -69,11 +69,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // a courier that cannot hold everyone: warned before and after
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(12);
   await p.evaluate(id=>{ LN.colonies[id].pop=95 },mine); await show(mine);
-  ok('before pressing: the block names the courier and who stays behind', /Courier \d+ \(Courier [^)]*I\) holds 70 of 95 people — 25 will stay behind/.test(await rail()), (await rail()).match(/Courier \d+[^.]*\./));   // v4.20: hull name includes Greek name, e.g. "Hermes"
+  ok('before pressing: the block names the courier and who stays behind', /Courier “[^”]*” I+ holds 70 of 95 people — 25 will stay behind/.test(await rail()), (await rail()).match(/Courier [^.]*\./));   // v4.20: hull name includes Greek name, e.g. "Hermes"
   await p.screenshot({path:require('os').tmpdir()+'/v418-evac.png',clip:{x:1040,y:60,width:560,height:620}});
   await tap('[data-act="evac"]');
   const te=await toast();
-  ok('pressing Evacuate: the free courier goes, and the message says 25 stay behind', /Courier \d+ is on its way to lift/.test(te)&&/25 people will stay behind/.test(te), te);
+  ok('pressing Evacuate: the free courier goes, and the message says 25 stay behind', /Courier “[^”]*” I+ is on its way to lift/.test(te)&&/25 people will stay behind/.test(te), te);
   const ev=await p.evaluate(id=>LN.ships.filter(s=>s.job==='evac'&&s.dest===id).map(s=>HULLS[s.hull].key),mine);
   ok('the hull on the evacuation is a courier', ev.length===1&&ev[0]==='courier', JSON.stringify(ev));
   await run(60);

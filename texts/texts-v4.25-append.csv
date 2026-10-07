@@ -1,0 +1,9 @@
+UI,evacWho,"{h} goes: hold {c}, people {k} — everyone fits; {y} years out.","Пойдёт {h}: трюм {c}, людей {k} — помещаются все; лететь {y} лет.",v4.25 map labels,live,new
+UI,evacShort,{h} holds {c} of {k} people — {l} will stay behind. A bigger courier (newer generation) lifts everyone.,{h} берёт {c} из {k} человек — {l} останутся. Курьер побольше (нового поколения) снимет всех.,v4.25 map labels,live,new
+MSG,ok_evac_short,{n} is on its way to lift {p} — it holds {c}; {l} people will stay behind.,{n} пошёл снимать {p} — трюм {c}; {l} человек останутся.,v4.25 map labels,live,new
+UI,lobe0,Eos,Eos,v4.25 map labels,live,new
+UI,lobe1,Helios,Helios,v4.25 map labels,live,new
+UI,lobe2,Hemera,Hemera,v4.25 map labels,live,new
+UI,lobe3,Hesperos,Hesperos,v4.25 map labels,live,new
+UI,lobe4,Selene,Selene,v4.25 map labels,live,new
+UI,lobe5,Nyx,Nyx,v4.25 map labels,live,new

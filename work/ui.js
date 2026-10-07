@@ -577,6 +577,19 @@ function drawMap(){
   s+=starfield();
   
   var gnow=G.gen||0;
+  // v4.25 (Nikita, 07.10): labels must not sit on each other — world names pick a free corner, ring names slide along the arc
+  var LBL={}, boxes=[], hit=function(a,b){ return a.x0<b.x1&&b.x0<a.x1&&a.y0<b.y1&&b.y0<a.y1 }, nHit=function(b){ var n=0; boxes.forEach(function(o){ if(hit(b,o)) n++ }); return n };
+  boxes.push({x0:CX-44*Z,x1:CX+44*Z,y0:CY+26*Z,y1:CY+46*Z});
+  PLANETS.filter(function(q){ return proWorldVisible(q.id)&&sectorOpen(G,q.sec)&&!(G.ghost&&G.ghost[q.id]) })
+    .sort(function(a,b){ return (G.colonies[b.id]?1:0)-(G.colonies[a.id]?1:0) })
+    .forEach(function(q){
+      var c=pos(q), isc=!!G.colonies[q.id], rr=(isc?6.5:5)*Z, w=Math.max(q.name.length*8.5,isc?44:30)*Z, bot=(isc?42:15)*Z, best=null, bn=1e9;
+      [[1,-12],[-1,-12],[1,22],[-1,22]].forEach(function(v){
+        var lx=c.x+v[0]*(rr+7*Z), ly=c.y+v[1]*Z, bx=v[0]>0?lx:lx-Math.max(w,isc?38*Z:0);
+        var b={x0:bx-2*Z,x1:bx+w+2*Z,y0:ly-11*Z,y1:ly+bot,L:{x:lx,y:ly,a:v[0]<0?1:0}}, n=nHit(b);
+        if(n<bn){ bn=n; best=b } });
+      LBL[q.id]=best.L; boxes.push(best);
+    });
   for(i=0;i<SECTORS.length;i++){
     if(i>0&&!proSee('sectors')) continue;
     var open=sectorOpen(G,i);
@@ -589,7 +602,15 @@ function drawMap(){
     // v4.21 (Nikita, 06.10): the number and the name run along the ring itself (top arc, right of centre)
     var rxN=SECTORS[i].r*1.32, ryN=SECTORS[i].r*0.90;
     s+='<path id="rn'+i+'" d="M'+(CX-rxN)+' '+CY+' A'+rxN+' '+ryN+' 0 0 1 '+(CX+rxN)+' '+CY+'" fill="none" stroke="none"/>';
-    s+='<text fill="'+ncol+'" font-size="'+F(10)+'" letter-spacing="'+F(2)+'" class="nm" dy="'+F(-4)+'" pointer-events="none"><textPath href="#rn'+i+'" startOffset="60%">'+esc(SECTORS[i].name)+'</textPath></text>';
+    var tw=SECTORS[i].name.length*7.5*Z, tab=[0], tk, tu, tl=0, ptx=function(u){ return {x:CX-rxN*Math.cos(u),y:CY-ryN*Math.sin(u)} };
+    for(tk=1;tk<=120;tk++){ var pa=ptx(Math.PI*(tk-1)/120), pb=ptx(Math.PI*tk/120); tl+=Math.hypot(pb.x-pa.x,pb.y-pa.y); tab.push(tl) }
+    var atLen=function(l){ var k=1; while(k<120&&tab[k]<l) k++; var u=Math.PI*((k-1)+(l-tab[k-1])/Math.max(1e-6,tab[k]-tab[k-1]))/120; return ptx(u) };
+    var bestF=0.6, bestN=1e9, fc;
+    for(fc=0;fc<=40;fc++){ var f=0.6+((fc%2)?1:-1)*Math.ceil(fc/2)*0.02; if(f<0.05||f+tw/tl>0.97) continue;
+      var rb=[], nn=0, kk; for(kk=0;kk<=5;kk++){ var q2=atLen(f*tl+tw*kk/5); var bb={x0:q2.x-tw/10-1*Z,x1:q2.x+tw/10+1*Z,y0:q2.y-14*Z,y1:q2.y+2*Z}; rb.push(bb); nn+=nHit(bb) }
+      if(nn<bestN){ bestN=nn; bestF=f; if(!nn) break } }
+    for(tk=0;tk<=5;tk++){ var q3=atLen(bestF*tl+tw*tk/5); boxes.push({x0:q3.x-tw/10,x1:q3.x+tw/10,y0:q3.y-14*Z,y1:q3.y+2*Z}) }
+    s+='<text fill="'+ncol+'" font-size="'+F(10)+'" letter-spacing="'+F(2)+'" class="nm" dy="'+F(-4)+'" pointer-events="none"><textPath href="#rn'+i+'" startOffset="'+(bestF*100).toFixed(1)+'%">'+esc(SECTORS[i].name)+'</textPath></text>';
     if(note) s+='<text x="'+lx0+'" y="'+ly0+'" fill="'+ncol+'" font-size="'+F(8.5)+'" letter-spacing="'+F(1)+'">'+esc(note)+'</text>';
   }
   s=s.replace(/#1B2husk/g,'rgba(242,241,236,.16)').replace(/#141C25/g,'rgba(242,241,236,.08)');
@@ -656,12 +677,12 @@ function drawMap(){
     }
     s+=(col||!open)?mark(p.kind,xy.x,xy.y,r,fillc,strokec,F(1.2)):'<g opacity="0.6">'+mark(p.kind,xy.x,xy.y,r,fillc,strokec,F(1.2))+'</g>';
     if(open){
-      var lx=xy.x+r+7*Z, ly=xy.y-12*Z;
+      var LB=LBL[p.id]||{x:xy.x+r+7*Z,y:xy.y-12*Z,a:0}, lx=LB.x, ly=LB.y, ta=LB.a?' text-anchor="end"':'', bx=LB.a?lx-38*Z:lx;
       var detail = !terse || !!col || selq;
-      s+='<text x="'+lx+'" y="'+ly+'" fill="'+(col?INK:INK2)+'" font-size="'+F(11)+'" letter-spacing="'+F(1)+'" class="nm">'+esc(p.name.toUpperCase())+'</text>';
+      s+='<text x="'+lx+'" y="'+ly+'" fill="'+(col?INK:INK2)+'" font-size="'+F(11)+'" letter-spacing="'+F(1)+'" class="nm"'+ta+'>'+esc(p.name.toUpperCase())+'</text>';
       if(detail){
         var kw=T({mine:'mapMine',farm:'mapFarm',well:'mapFuel',works:'mapWorks'}[p.kind]);
-        s+='<text x="'+lx+'" y="'+(ly+12*Z)+'" fill="'+(col?INK2:INK3)+'" font-size="'+F(9)+'" letter-spacing="'+F(1)+'">'+kw+'</text>';
+        s+='<text x="'+lx+'" y="'+(ly+12*Z)+'" fill="'+(col?INK2:INK3)+'" font-size="'+F(9)+'" letter-spacing="'+F(1)+'"'+ta+'>'+kw+'</text>';
         if(col){
           // live metrics, always on screen: hands, what it makes, what is sitting there
           var cap=popCap(p), hands=Math.round(col.pop);
@@ -675,10 +696,10 @@ function drawMap(){
           var rcol = rate>0.001?INK2:RED;
           /* v4.10 (Nikita, 27.09): only people and the pile, each with its icon */
           var pc=pile>300?RED2:RCOL[dep];
-          s+='<use href="#i-people" x="'+lx+'" y="'+(ly+17*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+hcol+'"/>'+
-             '<text x="'+(lx+11*Z)+'" y="'+(ly+25*Z)+'" font-size="'+F(9)+'" fill="'+hcol+'" letter-spacing="'+F(0.5)+'">'+hands+'</text>'+
-             '<use href="#i-'+dep+'" x="'+lx+'" y="'+(ly+29*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+pc+'"/>'+
-             '<text x="'+(lx+11*Z)+'" y="'+(ly+37*Z)+'" font-size="'+F(9)+'" fill="'+pc+'" letter-spacing="'+F(0.5)+'">'+pile+'</text>';
+          s+='<use href="#i-people" x="'+bx+'" y="'+(ly+17*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+hcol+'"/>'+
+             '<text x="'+(bx+11*Z)+'" y="'+(ly+25*Z)+'" font-size="'+F(9)+'" fill="'+hcol+'" letter-spacing="'+F(0.5)+'">'+hands+'</text>'+
+             '<use href="#i-'+dep+'" x="'+bx+'" y="'+(ly+29*Z)+'" width="'+F(9)+'" height="'+F(9)+'" style="color:'+pc+'"/>'+
+             '<text x="'+(bx+11*Z)+'" y="'+(ly+37*Z)+'" font-size="'+F(9)+'" fill="'+pc+'" letter-spacing="'+F(0.5)+'">'+pile+'</text>';
         }
       }
     }
@@ -1657,7 +1678,7 @@ document.addEventListener('click',function(ev){
     else if(a==='pickship'){ U.pickShip=+b.dataset.s; U.tab='target'; draw(); return }
     else if(a==='evac'){ var ec=pickCourier(b.dataset.p), epid=b.dataset.p, ecol=G.colonies[epid], eh=ec?ec.id:undefined; res=eh===undefined?'evacNoHull':abandon(G,eh,epid);
       if(res==='evacNoHull'){ var nh=nextHome(G,epid,'courier'); say('evacNoCourier',{p:pname(epid),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}); act(G,'evacuate',{p:epid},res); draw(); return }
-      if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ act(G,'evacuate',{p:epid,hull:eh},res); say('ok_evac_short',{n:eh,p:pname(epid),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap}); draw(); return } act(G,'evacuate',{p:b.dataset.p},res); okc='ok_evac'; okp={p:pname(b.dataset.p)} }
+      if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ act(G,'evacuate',{p:epid,hull:eh},res); say('ok_evac_short',{n:hullName(HULLS[ec.hull]),p:pname(epid),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap}); draw(); return } act(G,'evacuate',{p:b.dataset.p},res); okc='ok_evac'; okp={p:pname(b.dataset.p)} }
     else if(a==='search') res=search(G,pick(),+b.dataset.m);
     else if(a==='new'){var sv=el('seedin');start(sv?(parseInt(sv.value,10)||0):0);return}
     if(res) say(res==='ok'?(a==='route'?'policySet':(okc||'ok')):res, res==='ok'?okp:null);
