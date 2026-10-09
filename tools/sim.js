@@ -3,15 +3,17 @@
    Bots (F-20, Nikita 05.10): idle and greedy are the floor — they must lose. The rest are STYLES of play, all on standing orders:
      rush    — Nikita: settle everything in reach at once, chart and run the drive as early as allowed, biggest hulls
      serial  — the tester: one live world per trade; when it runs dry, evacuate and settle the next
-     ark     — v4.24: the depositor — sets an ark level aside as soon as the Night is dated (even yearly share), stops growing 1200 years out
-     bank    — v4.24: the all-in buyer — saves, buys the best level it can pay for outright (bulk discount) 600 years out
+     ark     — v4.29: the ark runner — buys the next level as soon as the larder keeps a reserve after it (up to 4), stops growing 1200 years out
+     bank    — v4.29: the saver — level 1 as insurance, then saves and buys the best level it can pay for in the last 100 years, stops growing 600 years out
+     (v4.29, Nikita 09.10: the yearly deposits are gone from the game — every style pays for a level in one go; rush and serial
+      buy like `ark` does, without the early stop. All four gather the convoy (K.ARK_CONVOY) once the ark drive is ready.)
    (visitor / hoarder dropped 06.10 by Nikita: two player styles + the ark runner.)
    Legacy bots (expand / pro / tidy / late) still run with BOTS=expand,pro,tidy,late. */
 const STYLES={
-  rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true},
+  rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, deep:true},
   serial: {hands:30, keep:260,  sFood:90,  sMetal:300,  serial:true, evac:true},
-  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200, dep:true, level:2},
-  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, buyLeft:600}
+  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200, deep:true},
+  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, saver:true}
 };
 const fs=require('fs');
 function load(path){
@@ -19,12 +21,12 @@ function load(path){
   const names=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','reach','settledCount','buildShip','colonize',
     'setLine','survey','canSurvey','startDrive','scrap','scrapIdle','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
-    'arkBuy','arkPlan','arkLevel','arkSouls','nightLeft','abandon','clearLine','leftBehind',
+    'arkBuy','arkLevel','arkSouls','arkOwed','arkReady','arkConvoy','setReserve','nightLeft','abandon','clearLine','leftBehind',
     'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','setRenew','lineOf','lineCount','lineWant','yardCheck','legDays','mutinyForecast','foodForecast','foodShort'];
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }
-function freeHulls(G){return G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny)}
+function freeHulls(G){return G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny&&!s.reserve)}   // v4.29: the ark reserve is not free
 const CLS=['courier','hauler','freighter'];
 let noFreeWellNow=G=>true;
 function lined(G,pid){return G.ships.some(s=>s.mode!=='dead'&&s.from===pid)}
@@ -53,7 +55,7 @@ function step(C,G,bot,d,st){
     if(pro){
       // hands are the scarce currency: a hull idle on the pier for 15 years gives its crew back (scrap), the yards
       // never take Earth below EARTH_KEEP+hands, and a class is only ordered if two crews of it fit the pool
-      for(const sh of G.ships){ if(sh.mode==='idle'&&sh.at==='earth'){ idleY[sh.id]=(idleY[sh.id]||0)+1; if(idleY[sh.id]>=15){ C.clearLine(G,sh.id); C.scrap(G,sh.id); delete idleY[sh.id] } } else delete idleY[sh.id] }
+      for(const sh of G.ships){ if(sh.mode==='idle'&&sh.at==='earth'&&!sh.reserve){ idleY[sh.id]=(idleY[sh.id]||0)+1; if(idleY[sh.id]>=15){ C.clearLine(G,sh.id); C.scrap(G,sh.id); delete idleY[sh.id] } } else delete idleY[sh.id] }
       // what Earth lives on: for each trade, the income of lined worlds whose seam will last, against the burn.
       // a trade with no lasting world behind it is 'needed' — settled first, its line served first, and it may
       // break the fleet gate and the survey gate (fuel comes only from wells; no fuel, no survey, no wells)
@@ -75,15 +77,6 @@ function step(C,G,bot,d,st){
       const sc=C.surveyCost(C.SECTORS.length);
       resv={metal:Math.max(500,sc.metal+200), fuel:sc.fuel+300, food:sc.food+need.food*(late?nl+30:30)};
       const fuelShort=E.fuel<Math.max(1500,resv.fuel)||wellNeed, foodShort=E.food<Math.max(need.food*60,resv.food)||farmNeed, metalShort=E.metal<1500||mineNeed;
-      if(G.night&&G.ark&&G.ark.mode==='deposit'&&nl<=400){ const L4=C.K.ARK_LEVELS[G.ark.target-1]||{};
-        const owed=r=>Math.max(0,(L4[r]||0)-(G.ark.paid[r]||0));
-        resv.fuel=Math.max(resv.fuel,C.K.FEED_FUEL_FLOOR+owed('fuel')+400); resv.metal=Math.max(resv.metal,owed('metal')+need.metal*20+200);
-        // the larder is full and the fuel is not: the lines stop (every flight burns fuel); only wells keep flying
-        const larderFull=E.food>=need.food*(nl+20)+owed('food')&&E.metal>=owed('metal')+need.metal*nl&&E.parts>=owed('parts');
-        const fuelOwed=C.K.FEED_FUEL_FLOOR+owed('fuel');
-        if(E.fuel<resv.fuel||(larderFull&&E.fuel<fuelOwed+600)){ for(const k in G.colonies){ const p=C.planet(k); if(p.kind==='well'||(p.kind==='farm'&&!larderFull&&E.fuel>=fuelOwed+100)) continue;
-          for(const sh of G.ships){ if(sh.mode!=='dead'&&sh.from&&sh.to&&(sh.from===k||sh.to===k)) C.clearLine(G,sh.id) } } }
-        if(E.parts<owed('parts')+50){ for(const k in G.colonies){ if(C.planet(k).kind!=='works') continue; const L=C.lineOf(G,k); if(L&&!(L.want.courier||L.want.hauler||L.want.freighter)) C.setWant(G,k,'courier',1) } } }
       // freeze: when a reserve is broken, standing orders that do not haul the short trade stop growing (the yards spend it)
       if(E.metal<resv.metal||E.fuel<resv.fuel){ for(const k in G.colonies){ const L=C.lineOf(G,k); if(!L) continue; const p=C.planet(k);
         const helps=(E.metal<resv.metal&&p.kind==='mine')||(E.fuel<resv.fuel&&p.kind==='well'); if(helps) continue;
@@ -105,7 +98,7 @@ function step(C,G,bot,d,st){
         for(const sh of G.ships){ if(sh.mode!=='dead'&&sh.from&&sh.to&&(sh.from===k||sh.to===k)) C.clearLine(G,sh.id) } } }
       if(fuelFalling){ for(let i=order.length-1;i>=0;i--){ if(C.planet(order[i].k).kind!=='well') order.splice(i,1) } }
       if(prelude){ for(let i=order.length-1;i>=0;i--){ const kind=C.planet(order[i].k).kind; if(kind==='mine'&&E.metal>sc.metal+300) order.splice(i,1) } }
-      if(order.length&&per(5)&&unfilled<=2&&!(fuelTight&&noFreeWellNow(G))&&!(prelude&&E.fuel<sc.fuel+200)){ const k=order[0].k, L=C.lineOf(G,k);
+      if(order.length&&per(5)&&unfilled<=2&&!(fuelTight&&noFreeWellNow(G))&&!(prelude&&E.fuel<sc.fuel+200)&&C.lineOf(G,order[0].k)){ const k=order[0].k, L=C.lineOf(G,k);   // v4.29: a world whose order was just released has no line (null) — three sweeps crashed here
         const classes=P.big?['freighter','hauler','courier']:['hauler','courier'];
         const crewOf=c=>{ let b=null; for(const h of HULLS){ if(h.key===c&&h.gen<=(G.gen||0)&&(!b||h.gen>b.gen)) b=h } return b?b.crew:999 };
         const fits=c=>E.people-K.EARTH_KEEP-P.hands>2*crewOf(c)&&crewOut+crewOf(c)<=crewBudget;
@@ -195,7 +188,11 @@ function step(C,G,bot,d,st){
     // v4.27: the ark mark is set from the drive held on the day the Night is dated (arkMark = driveLvl + ARK_ABOVE):
     //         a mark run before that day only raises the bar and the price of every hull after it. So: none before the
     //         Night; after it, up to the mark, and only while the yards owe nothing
-    const driveWanted=!pro || (G.night&&(G.driveLvl||0)<G.arkMark&&unfilled<=1);
+    //         v4.29: the wake ladder (0.3/0.6/0.85/1.0) pays for every mark past the ark mark — `deep` styles (rush, ark) keep
+    //         running the programme after it while the yards owe nothing; serial and bank stop at the mark (the 'lazy' path)
+    //         ...and never while the convoy is short: the programme swallows every part, and a freighter costs a thousand
+    const convoyShort=!!(G.night&&C.arkReady(G)&&!C.arkConvoy(G).ok);
+    const driveWanted=!pro || (G.night&&unfilled<=1&&((G.driveLvl||0)<G.arkMark||(P.deep&&!convoyShort)));
     if(bot!=='greedy'&&bot!=='expand'&&!G.drive&&driveWanted&&!partsStarved){
       for(const k in G.colonies){ const p=C.planet(k);
         if(p.kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP&&(C.settledCount||C.reach)(G)>=C.driveReachFor(G)){
@@ -246,9 +243,33 @@ function step(C,G,bot,d,st){
     // 7. the Long Night: expand and pro buy berths; only pro takes the empire apart in time
     if(G.night&&C.arkBuy&&bot!=='greedy'){
       const left=C.nightLeft(G);
-      if(P.dep||(pro&&!P.buyLeft)){ if(!G.ark.mode) C.arkPlan(G,P.level||1);                   // v4.27: deposits from the day of the date (a player who waits pays with the larder)
-        else if(G.ark.mode==='deposit'&&per(20)&&C.arkLevel(G)>=G.ark.target&&G.ark.target<4){ const nx=C.K.ARK_LEVELS[G.ark.target]; if(nx&&E.metal>nx.metal*1.3&&E.food>nx.food*1.3&&E.fuel>nx.fuel*1.3&&E.parts>nx.parts*1.3) C.arkPlan(G,G.ark.target+1) } }
-      else if(left<=(P.buyLeft||600)&&!G.ark.mode){ for(let l=4;l>=1;l--){ if(C.arkBuy(G,l)==='ok') break } }   // the bank: the best level it can pay outright
+      if(pro){
+        // v4.29: a level is paid for in one go. The buyer takes the next level as soon as the larder keeps a reserve after it
+        // (the survey reserve plus 300 years of Earth's own burn); the saver (bank) insures level 1 the same way, then
+        // holds out and buys the best level it can pay for in the last 100 years
+        const lv=C.arkLevel(G), top=C.K.ARK_LEVELS.length;
+        const keepAfter={metal:resv.metal+need.metal*300, food:resv.food+need.food*300, fuel:resv.fuel, parts:0};
+        const afford=(l,strict)=>{ const o=C.arkOwed(G,l); return ['metal','parts','food','fuel'].every(r=>E[r]-Math.ceil(o[r])>=(strict?keepAfter[r]:0)) };
+        if(lv<top&&(per(10)||left<=100)){
+          // the last 100 years: whatever is affordable is pure gain, Earth needs no reserve past the Night
+          if(left<=100){ for(let l=top;l>lv;l--){ if(afford(l,false)&&C.arkBuy(G,l)==='ok') break } }
+          else if(P.saver){ if(lv<1&&afford(1,true)) C.arkBuy(G,1) }
+          else if(afford(lv+1,true)) C.arkBuy(G,lv+1);
+        }
+        // the convoy (K.ARK_CONVOY): once the ark drive is ready, or 600 years out — set aside what is docked and qualifies,
+        // then build what is still missing (cheapest hull of the class in the window), and set it aside too
+        const cv=C.arkConvoy(G);
+        if(!cv.ok&&(C.arkReady(G)||left<=600)){
+          // convoy first in the last 400 years: no new hulls for the lines while it is short (the yards would eat the parts
+          // and the fuel a freighter needs). Earlier a freeze starves the empire of the very parts the convoy is built from.
+          if(left<=400) for(const k in G.colonies){ const L=C.lineOf(G,k); if(!L) continue; for(const c of CLS){ const have=C.lineCount(G,k,c); if((L.want[c]||0)>have) C.setWant(G,k,c,have) } }
+          for(const s of G.ships){ const cls=HULLS[s.hull].key; if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny&&!s.reserve&&C.hullGen(s)>=cv.gen&&(cv.have[cls]||0)<cv.need[cls]){ if(C.setReserve(G,s.id,true)==='ok') cv.have[cls]=(cv.have[cls]||0)+1 } }
+          const building=cls=>G.ships.filter(s=>s.mode==='building'&&s.reserve&&HULLS[s.hull].key===cls).length;
+          if(per(5)) for(const cls of ['freighter','hauler','courier']){ if((cv.have[cls]||0)+building(cls)>=cv.need[cls]) continue;
+            const cands=HULLS.map((h,i)=>({h,i})).filter(x=>x.h.key===cls&&x.h.gen>=cv.gen&&x.h.gen<=(G.gen||0)).sort((a,b)=>(a.h.parts||0)-(b.h.parts||0)||a.h.metal-b.h.metal);
+            if(cands.length&&E.metal-cands[0].h.metal>=Math.min(resv.metal,500)&&C.buildShip(G,cands[0].i)==='ok'){ G.ships[G.ships.length-1].reserve=true; break } }
+        }
+      }
       if(pro&&left<=1500){
         // v4.27: the lines run until their crews refuse (the larder carries Earth after that); a world is lifted in the
         // window where a courier still signs for the round trip; hulls idle on the pier give their crews back
@@ -301,7 +322,7 @@ if(require.main===module){
     agg[bot]={score:avg(r=>r.score), worlds:avg(r=>r.worlds), sectors:avg(r=>r.sectors), gen:avg(r=>r.gen),
       deepest:avg(r=>r.deepest), day:avg(r=>r.day), alive:rows.filter(r=>r.over==='alive').length,
       courier:avg(r=>r.couriers), big:avg(r=>r.big), home:avg(r=>r.idlePeople), crew:avg(r=>r.crew),
-      souls:avg(r=>r.souls), berths:avg(r=>r.berths), sailed:rows.filter(r=>r.over==='night').length, night:avg(r=>r.night), tiers:avg(r=>r.tiers||0)};
+      souls:avg(r=>r.souls), berths:avg(r=>r.berths), sailed:rows.filter(r=>r.over==='night'&&r.souls>0).length, /* v4.29: a grounded ark (no drive, no convoy, no level) did not sail */ night:avg(r=>r.night), tiers:avg(r=>r.tiers||0)};
   }
   console.log(corePath, days+'d', seeds.length+' seeds');
   console.log(['bot','score','worlds','sect','gen','deep','end yr','alive','courier','big','home','crew','night@','berths','souls','sailed','tiers'].join('\t'));

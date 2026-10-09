@@ -44,7 +44,7 @@ function run(seed){
       ['scrapIdle',()=>C.scrapIdle(G,Math.floor(R()*3))],
       ['orderKit',()=>{ if(!keys.length) return; return C.orderKit(G,pick(keys)) }],
       ['arkBuy',()=>C.arkBuy&&C.arkBuy(G,1+Math.floor(R()*4))],
-      ['arkPlan',()=>C.arkPlan&&C.arkPlan(G,1+Math.floor(R()*4))],
+      ['setReserve',()=>{ if(!live.length||!C.setReserve) return; return C.setReserve(G,pick(live).id,R()<.5) }],   // v4.29: the ark reserve instead of the deposits
       ['gift',()=>{ const k=pick(['metal','food','fuel','parts']); G.earth[k]+=Math.floor(R()*2000) }]   // богатый хаос: иначе почти все действия отказывают
     ];
     const [name,fn]=pick(acts); tail.push(G.day+':'+name); if(tail.length>12) tail.shift();

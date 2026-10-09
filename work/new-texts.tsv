@@ -108,3 +108,18 @@ UI	a_foodhor	Rations run out around year {y} — in {n} years. Earth eats more e
 LOG	food_horizon	THE LARDERS HAVE A DATE. On today's lines Earth's rations run out around year {y}, {n} years from now; {h} in store, {k} farms feeding home. Earth eats more every century and farm seams end. A new farm takes a survey, a landing and a line — start it now, not when this turns red.	У КЛАДОВЫХ ПОЯВИЛАСЬ ДАТА. При нынешних линиях провизия Земли кончится около {y} года, через {n} лет; в запасе {h}, ферм кормят дом {k}. Земля ест всё больше, а залежи ферм конечны. Новая ферма — это разведка, посадка и линия: начинай сейчас, а не когда это станет красным.
 UI	foodHorizon	run out ~{y}	кончится ~{y}
 UI	foodHorizonOk	last {n}+ years	хватит на {n}+ лет
+UI	arkConvoyRow	Convoy at the pier, Generation {g}+	Конвой у причала, поколение {g}+
+UI	arkConvoyOk	gathered	собран
+UI	arkConvoyShort	short	не собран
+UI	arkConvoyHint	The ark does not sail without a convoy: hulls of the ark drive’s generation, or one below it, docked at Earth on the day. Set them aside in the dock, or the yards will break them up for idling or send them out on a line.	Без конвоя ковчег не уйдёт: суда поколения двигателя ковчега или на одно ниже, стоящие у причала в день Ночи. Отложи их в доке в резерв, иначе верфи разберут их за простой или отправят на линию.
+UI	arkOwedRow	Still to pay	Доплатить
+UI	reservedHull	ark reserve	резерв ковчега
+UI	flReserve	Set aside for the ark	В резерв ковчега
+UI	flRelease	Release from the reserve	Снять с резерва
+UI	a_convoy	The convoy is short: {n}/{k} couriers, {h}/{f} haulers, {c}/{m} freighters of Generation {g} or newer at the pier.	Конвой не собран: курьеров {n}/{k}, тягачей {h}/{f}, грузовозов {c}/{m} поколения {g} или новее у причала.
+UI	endNightConvoy	The ark stood on the pier with its drive lit. The convoy of Generation {g} hulls that was to go with it never gathered. The dark closed over a full ark that would not leave alone.	Ковчег стоял у причала с зажжённым двигателем. Конвой судов поколения {g}, что должен был идти с ним, так и не собрался. Тьма сомкнулась над полным ковчегом, который не ушёл один.
+MSG	ok_reserve	Hull {n} set aside for the ark.	Судно {n} отложено в резерв ковчега.
+MSG	ok_unreserve	Hull {n} released from the reserve.	Судно {n} снято с резерва.
+LOG	ark_noconvoy	The ark stayed: no convoy at the pier — {n} couriers, {h} haulers, {c} freighters of Generation {g} or newer.	Ковчег остался: у причала нет конвоя — курьеров {n}, тягачей {h}, грузовозов {c} поколения {g} или новее.
+UI	arkNoConvoy	no convoy — the ark stayed	нет конвоя — ковчег остался
+UI	arkFull	Every level is paid for. Whatever is left on Earth on the day rides along, up to the hold.	Все уровни оплачены. Что останется на Земле в тот день, поедет с ковчегом, сколько вместит трюм.

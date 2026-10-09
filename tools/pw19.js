@@ -58,6 +58,9 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   await p.tap('#railbody [data-act="arkbuy"]');
   const arkLv=await p.evaluate(()=>window.LN.ark.lv);
   ok('A ark level bought by clicks', arkLv>=1, arkLv);
+  // v4.29: the ark needs a convoy at the pier (K.ARK_CONVOY, generation ≥ arkMark−1) — dock one and set it aside
+  const cvA=await p.evaluate(()=>{ const G=window.LN, g=convoyGen(G); ['courier','courier','courier','hauler','hauler','freighter'].forEach(function(c){ const hi=hullAt(c,g); if(hi!==null&&buildShip(G,hi)==='ok'){ const s=G.ships[G.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.pend=null; s.reserve=true } }); return arkConvoy(G) });
+  ok('A convoy gathered at the pier', cvA.ok, JSON.stringify(cvA));
   await p.evaluate(()=>{ window.LN.night=window.LN.day+2 });
   await p.tap('[data-spd="10"]');
   for(let i=0;i<15&&!(await p.evaluate(()=>window.LN.over));i++){ for(let j=0;j<4&&await p.isVisible('#pf');j++) await p.tap('[data-act="pfok"]'); if((await p.textContent('#b-pause'))==='▶') await p.tap('#b-pause'); await p.waitForTimeout(700); }

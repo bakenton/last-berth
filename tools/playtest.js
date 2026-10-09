@@ -79,7 +79,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
       need:G.need||null,cols:Object.keys(G.colonies).length,settled:settledCount(G),reach:reach(G),night:G.night||0,nightLeft:G.night?nightLeft(G):null,
       paused:!!U.paused,speed:U.speed,tab:U.tab,sel:U.sel,pro:U.pro&&U.pro.on?U.pro.stage:0,gen:G.gen||0,drive:G.driveLvl||0,sectors:SECTORS.length,
       free:G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)).length,ships:G.ships.filter(s=>s.mode!=='dead').length,souls:G.souls||0,arkLv:G.ark?arkLevel(G):0,
-      canSurvey:canSurvey(G),arkMode:G.ark&&G.ark.mode||null,hungry:!!G.hungry,logLen:G.log.length} }).catch(()=>null);
+      canSurvey:canSurvey(G),arkMode:(G.ark&&arkLevel(G)>0)?'buy':null,hungry:!!G.hungry,logLen:G.log.length} }).catch(()=>null);
 
   /* ---------- модалки: сколько раз и каких перебили игроку ---------- */
   const MODALS=[['callok','подсказка'],['pfok','личные дела'],['shiftok','отчёт смены'],['nightok','модалка Ночи'],['nofreeclose','«нет свободных миров»'],['gskip','гид'],['nofreego','«нет свободных» → перейти']];
@@ -176,7 +176,8 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
       const pid=await p.evaluate(()=>{ if(LN.drive) return null; for(const k in LN.colonies){ const q=planet(k); if(q.kind==='works'&&LN.colonies[k].pop>=K.DRIVE_POP&&settledCount(LN)>=driveReachFor(LN)) return k } return null });
       if(pid&&await act('drive',async()=>{ if(!(await tapPlanet(pid))) return false; await p.waitForTimeout(100); return tap('[data-act="drive"]:not([aria-disabled="true"])',{soft:true}) })) return }
     // 6. Ночь: ковчег
-    const planArk=l=>act('ark',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); await tap('[data-act="arksel"][data-l="'+l+'"]',{soft:true}); return tap('[data-act="arkplan"]:not([aria-disabled="true"])',{soft:true}) });
+    // v4.29: the deposits are gone — 'planArk' buys the level outright (same button as the bank path)
+    const planArk=l=>act('ark',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); await tap('[data-act="arksel"][data-l="'+l+'"]',{soft:true}); return tap('[data-act="arkbuy"][data-l="'+l+'"]:not([aria-disabled="true"])',{soft:true}) });
     if(RUSH){
       // рашер: вабанк на лучший доступный уровень за 600 лет; за 250 лет, если так и не купил, — вклады на уровень 2
       if(s.night&&s.nightLeft!==null&&!s.arkMode&&s.nightLeft<=600&&every('arkbuy',15,s.day)){
