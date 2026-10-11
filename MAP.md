@@ -187,7 +187,7 @@
  1589  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
-## ui.js (1814 строк)
+## ui.js (1853 строк)
 
 ```
 
@@ -212,177 +212,181 @@
    95  mark(kind,x,y,r,fillc,strokec,sw) [7]  one mark per trade: circle mine, square farm, diamond well, triangle works
   107  toast(html,cls,ms,snd) [5]  v4.9: ship messages stack bottom-right; a dead seam shouts bottom-left. Neither stops the clock.
   112  bigAlert(html,cls,ms) [2]  ≈ var a=el('alert'); if(!a){ a=document.createElement('div'); a.id='alert'; document.body.ap
-  114  toastLast() [5]  v4.26 (playtest bot, 07.10): the toast showed '{who} DLAMINI: {line}' — only the journal filled the voice line
-  120  foodWatch() [3]  v4.10 (Nikita, 27.09): rations low and no farm feeding Earth → yellow blinking block, once a shift
-  126  var GOOD_CODES  v4.12 (Nikita, 30.09: "когда я нажал кнопку, я хочу видеть подтверждение нажатия и что действие произошло
-  127  say(code,p) [9]  ≈ var t=el('toast'); if(!t) return;
-  138  var SFX  v4.12: every sound is synthesised — no files. Browsers keep audio shut until the first gesture,
-  173  pressFx(x,y,kind) [2]  v4.12: the press mark — a square that blooms where the pointer hit, so a click is seen even when the
-  176  attr(v) [1]  v4.12: a blocked button is never mute — off(code,p) marks it, and a click on it says why (see the click handle
-  177  off(code,p) [1]  ≈ return (code&&code!=='ok') ? ' aria-disabled="true" data-why="'+attr(code)+'"'+(p?' data-w
-  179  shortWhy(c,E) [4]  the first thing Earth is short of, as a why-code with the shortfall
-  183  offCost(c,E) [1]  ≈ var w=shortWhy(c,E); return off(w[0],w[1]) }
-  185  dico() [1]  v4.12 (Nikita, 30.09: "чтобы буквы стали картинками"): ship classes by silhouette — boat, trawler, container s
-  186  sico(cls) [1]  ≈ return '<svg class="sico sico-'+cls+'" aria-hidden="true"><use href="#i-'+cls+'"/></svg>' 
-  187  kico(kind,cls) [1]  ≈ return '<svg class="'+(cls||'kico')+'" aria-hidden="true"><use href="#i-k-'+kind+'"/></svg
-  188  pico(sym,k) [1]  ≈ return '<span class="pico"><svg class="pi" aria-hidden="true"><use href="#i-'+sym+'"/></sv
-  190  var U  ≈ {hist:[], dockOpen:true, pro:{on:false,stage:0,w:null,calls:[],seen:{}}, start:false, lang
-  191  var G  ≈ null;
-  192  T(k,p) [1]  ≈ var s=(L[U.lang][k]!==undefined?L[U.lang][k]:k);return fill(s,p)}
-  193  var YRS  ≈ {en:['year','years','years'],ru:['год','года','лет']};
-  194  yrs(n) [3]  ≈ n=Math.abs(Math.round(+n||0)); var a=YRS[U.lang]||YRS.en;
-  197  fill(s,p) [3]  ≈ if(!p)return s;return s.replace(/\{(\w+)\}/g,function(_,k){
-  201  ico(k) [1]  resource icon + coloured number; the short part of a price goes red
-  202  costHtml(c,E,prefix) [7]  ≈ var out=[], keys=['metal','food','fuel','parts','people'];
-  209  pname(id) [1]  ≈ var p=planet(id);return p?p.desig+' '+p.name.toUpperCase():id}
-  210  n0(x) [1]  ≈ return Math.round(x)}
-  211  el(id) [1]  ≈ return document.getElementById(id)}
-  213  var HTMLCACHE  v4.8 (Nikita, 27.09: 'игра подтормаживает'): a panel is only rewritten when its markup changed
-  214  setHTML(id,html) [1]  ≈ if(HTMLCACHE[id]===html) return false; HTMLCACHE[id]=html; el(id).innerHTML=html; return t
-  215  esc(s) [1]  ≈ return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c
+  114  toastLast() [6]  v4.26 (playtest bot, 07.10): the toast showed '{who} DLAMINI: {line}' — only the journal filled the voice line
+  121  foodWatch() [3]  v4.10 (Nikita, 27.09): rations low and no farm feeding Earth → yellow blinking block, once a shift
+  127  var GOOD_CODES  v4.12 (Nikita, 30.09: "когда я нажал кнопку, я хочу видеть подтверждение нажатия и что действие произошло
+  128  say(code,p) [9]  ≈ var t=el('toast'); if(!t) return;
+  139  var SFX  v4.12: every sound is synthesised — no files. Browsers keep audio shut until the first gesture,
+  174  pressFx(x,y,kind) [2]  v4.12: the press mark — a square that blooms where the pointer hit, so a click is seen even when the
+  177  attr(v) [1]  v4.12: a blocked button is never mute — off(code,p) marks it, and a click on it says why (see the click handle
+  178  off(code,p) [1]  ≈ return (code&&code!=='ok') ? ' aria-disabled="true" data-why="'+attr(code)+'"'+(p?' data-w
+  180  shortWhy(c,E) [4]  the first thing Earth is short of, as a why-code with the shortfall
+  184  offCost(c,E) [1]  ≈ var w=shortWhy(c,E); return off(w[0],w[1]) }
+  186  dico() [1]  v4.12 (Nikita, 30.09: "чтобы буквы стали картинками"): ship classes by silhouette — boat, trawler, container s
+  187  sico(cls) [1]  ≈ return '<svg class="sico sico-'+cls+'" aria-hidden="true"><use href="#i-'+cls+'"/></svg>' 
+  188  kico(kind,cls) [1]  ≈ return '<svg class="'+(cls||'kico')+'" aria-hidden="true"><use href="#i-k-'+kind+'"/></svg
+  189  pico(sym,k) [1]  ≈ return '<span class="pico"><svg class="pi" aria-hidden="true"><use href="#i-'+sym+'"/></sv
+  191  var U  ≈ {hist:[], dockOpen:true, pro:{on:false,stage:0,w:null,calls:[],seen:{}}, start:false, lang
+  192  var G  ≈ null;
+  193  T(k,p) [1]  ≈ var s=(L[U.lang][k]!==undefined?L[U.lang][k]:k);return fill(s,p)}
+  194  var YRS  ≈ {en:['year','years','years'],ru:['год','года','лет']};
+  195  yrs(n) [3]  ≈ n=Math.abs(Math.round(+n||0)); var a=YRS[U.lang]||YRS.en;
+  198  fill(s,p) [3]  ≈ if(!p)return s;return s.replace(/\{(\w+)\}/g,function(_,k){
+  202  ico(k) [1]  resource icon + coloured number; the short part of a price goes red
+  203  costHtml(c,E,prefix) [7]  ≈ var out=[], keys=['metal','food','fuel','parts','people'];
+  210  pname(id) [1]  ≈ var p=planet(id);return p?p.desig+' '+p.name.toUpperCase():id}
+  211  n0(x) [1]  ≈ return Math.round(x)}
+  212  el(id) [1]  ≈ return document.getElementById(id)}
+  214  var HTMLCACHE  v4.8 (Nikita, 27.09: 'игра подтормаживает'): a panel is only rewritten when its markup changed
+  215  setHTML(id,html) [1]  ≈ if(HTMLCACHE[id]===html) return false; HTMLCACHE[id]=html; el(id).innerHTML=html; return t
+  216  esc(s) [1]  ≈ return String(s).replace(/[&<>]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c
 
-  217  ## THE OPENING: SIX CARDS, WHY THE DESK EXISTS
-  222  var OPEN_N  ≈ 6;
-  223  openStart() [1]  ≈ U.opening=true; U.openStep=0; U.start=false; U.intro=false; }
-  224  openDone() [1]  ≈ U.opening=false; U.openStep=0; U.start=true; }
-  225  openNext() [1]  ≈ if(U.openStep<OPEN_N-1) U.openStep++; else openDone(); }
-  226  openArt(i) [32]  www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-hidden="true">';
+  218  ## THE OPENING: SIX CARDS, WHY THE DESK EXISTS
+  223  var OPEN_N  ≈ 6;
+  224  openStart() [1]  ≈ U.opening=true; U.openStep=0; U.start=false; U.intro=false; }
+  225  openDone() [1]  ≈ U.opening=false; U.openStep=0; U.start=true; }
+  226  openNext() [1]  ≈ if(U.openStep<OPEN_N-1) U.openStep++; else openDone(); }
+  227  openArt(i) [32]  www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" aria-hidden="true">';
 
-  258  ## THE PROLOGUE: "FIRST LINE"
-  264  var PRO_STEPS  ≈ 6;
-  265  proPick() [4]  ≈ var w={}; PLANETS.forEach(function(p){ if(p.sec!==0) return; if(!w[p.kind]||p.dist<w[p.kin
-  269  proStart() [4]  ≈ U.pro={on:true,stage:0,w:proPick(),calls:['cPeople'],seen:{}};
-  273  proEnd() [1]  ≈ U.pro.on=false; U.pro.stage=PRO_STEPS; G.safe=false; U.pro.calls=['cAdvisor']; var m=0; fo
-  274  proOn() [1]  ≈ return U.pro.on }
-  275  proStage() [1]  ≈ return U.pro.on?U.pro.stage:PRO_STEPS }
-  277  proSee(what) [9]  what the player may see at this stage
-  286  proWorldVisible(pid) [5]  ≈ if(!U.pro.on||U.pro.stage>=5) return true;
-  291  proLined(pid) [1]  ≈ return G.ships.some(function(s){return s.mode!=='dead'&&s.from===pid}) }
-  292  proFree() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)}
-  293  proUpdate() [13]  ≈ var P=U.pro; if(!P.on) return;
-  307  proTask() [22]  the task card: what to do now, and how long the wait is
-  329  drawTask(box) [11]  ≈ var t=proTask(), s=U.pro.stage;
-  341  railsAllow(ev) [10]  stages 0–1 are on rails: only these clicks go through
-  352  var CALL_ANCHOR  callouts: one at a time, anchored to the thing they explain
-  353  drawCallout() [20]  ≈ var old=el('callout'); if(old) old.remove();
-  374  foundPreview(p,n) [6]  previews: what the order will do, before the button is pressed
-  380  linePreview(p,s) [4]  ≈ var dep=p.kind==='works'?'parts':p.dep;
+  259  ## THE PROLOGUE: "FIRST LINE"
+  265  var PRO_STEPS  ≈ 6;
+  266  proPick() [4]  ≈ var w={}; PLANETS.forEach(function(p){ if(p.sec!==0) return; if(!w[p.kind]||p.dist<w[p.kin
+  270  proStart() [4]  ≈ U.pro={on:true,stage:0,w:proPick(),calls:['cPeople'],seen:{}};
+  274  proEnd() [1]  ≈ U.pro.on=false; U.pro.stage=PRO_STEPS; G.safe=false; U.pro.calls=['cAdvisor']; var m=0; fo
+  275  proOn() [1]  ≈ return U.pro.on }
+  276  proStage() [1]  ≈ return U.pro.on?U.pro.stage:PRO_STEPS }
+  278  proSee(what) [9]  what the player may see at this stage
+  287  proWorldVisible(pid) [5]  ≈ if(!U.pro.on||U.pro.stage>=5) return true;
+  292  proLined(pid) [1]  ≈ return G.ships.some(function(s){return s.mode!=='dead'&&s.from===pid}) }
+  293  proFree() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)}
+  294  proUpdate() [13]  ≈ var P=U.pro; if(!P.on) return;
+  308  proTask() [22]  the task card: what to do now, and how long the wait is
+  330  drawTask(box) [11]  ≈ var t=proTask(), s=U.pro.stage;
+  342  railsAllow(ev) [10]  stages 0–1 are on rails: only these clicks go through
+  353  var CALL_ANCHOR  callouts: one at a time, anchored to the thing they explain
+  354  drawCallout() [20]  ≈ var old=el('callout'); if(old) old.remove();
+  375  foundPreview(p,n) [6]  previews: what the order will do, before the button is pressed
+  381  linePreview(p,s) [4]  ≈ var dep=p.kind==='works'?'parts':p.dep;
 
-  386  ## PERSONAL FILES
-  392  var VOICE_GAP  ≈ 50, CAPT_TENURE=30;
-  393  hash32(a,b) [1]  ≈ var h=(a|0)^0x9E3779B9; h=Math.imul(h^(b|0),0x85EBCA6B); h^=h>>>13; h=Math.imul(h,0xC2B2AE
-  394  personName(seed) [1]  ≈ var pool=(T('names')||'').split(/\s+/).filter(Boolean); if(!pool.length) return '—'; retur
-  395  serviceNo(seed) [1]  ≈ return 1000+(Math.abs(hash32(seed,77))%9000) }
-  396  voiceKeys(trigger) [1]  ≈ return Object.keys(VOICE.en||{}).filter(function(k){ return k.indexOf(trigger+'.')===0 }) 
-  397  voice(trigger,role,d,o) [13]  ≈ o=o||{}; var keys=voiceKeys(trigger); if(!keys.length) return;
-  411  voiceLine(e) [1]  ≈ var v=VOICE[U.lang]||{}; var d={}; for(var q in e.d.d) d[q]=e.d.d[q]; if(d.p&&planet(d.p))
-  413  voiceWatch() [49]  what the log said since last time, and who answers it
-  463  drawPortrait(cv,seed) [40]  the face: 64×64, bone on black, ordered dither — nobody drew it, and it is different every time
-  503  drawPF() [15]  ≈ var old=el('pf'); if(old) old.remove();
+  387  ## PERSONAL FILES
+  393  var VOICE_GAP  ≈ 50, CAPT_TENURE=30;
+  394  hash32(a,b) [1]  ≈ var h=(a|0)^0x9E3779B9; h=Math.imul(h^(b|0),0x85EBCA6B); h^=h>>>13; h=Math.imul(h,0xC2B2AE
+  395  personName(seed) [1]  ≈ var pool=(T('names')||'').split(/\s+/).filter(Boolean); if(!pool.length) return '—'; retur
+  396  serviceNo(seed) [1]  ≈ return 1000+(Math.abs(hash32(seed,77))%9000) }
+  397  voiceKeys(trigger) [1]  ≈ return Object.keys(VOICE.en||{}).filter(function(k){ return k.indexOf(trigger+'.')===0 }) 
+  398  voice(trigger,role,d,o) [18]  ≈ o=o||{}; var keys=voiceKeys(trigger); if(!keys.length) return;
+  417  voiceLine(e) [1]  ≈ var v=VOICE[U.lang]||{}; var d={}; for(var q in e.d.d) d[q]=e.d.d[q]; if(d.p&&planet(d.p))
+  419  voiceWatch() [55]  what the log said since last time, and who answers it
+  475  drawPortrait(cv,seed) [40]  the face: 64×64, bone on black, ordered dither — nobody drew it, and it is different every time
+  515  drawPF() [17]  one window at a time: the desk speaks after the modal
 
-  519  ## MAP GEOMETRY
-  520  var STARS  ≈ null;
-  521  starfield() [9]  ≈ if(STARS) return STARS;
-  530  var CX  ≈ 500, CY=350;
-  531  nodeXY(n) [1]  ≈ if(!n) return null; if(n==='earth') return {x:CX,y:CY}; var pp=planet(n); return pp?pos(pp
-  532  pos(p) [4]  ≈ var R=SECTORS[p.sec].r;
+  533  ## MAP GEOMETRY
+  534  var STARS  ≈ null;
+  535  starfield() [9]  ≈ if(STARS) return STARS;
+  544  var CX  ≈ 500, CY=350;
+  545  nodeXY(n) [1]  ≈ if(!n) return null; if(n==='earth') return {x:CX,y:CY}; var pp=planet(n); return pp?pos(pp
+  546  pos(p) [4]  ≈ var R=SECTORS[p.sec].r;
 
-  537  ## THE VIEWPORT
-  544  var VIEW  ≈ {x:0,y:0,w:1000,h:700}, VFIT=true, VSECS=-1, MAPDRAGGED=false;
-  545  viewFit() [11]  ≈ var R=secRadius(Math.max(0,SECTORS.length-1))+58;
-  556  viewZoom(f,ax,ay) [7]  ≈ var w=Math.max(280,Math.min(9000,VIEW.w*f));
-  563  viewPt(ev) [7]  the viewBox is letterboxed by preserveAspectRatio=meet: find the real scale
-  571  drawMap() [164]  ≈ var s='', i, p, xy;
+  551  ## THE VIEWPORT
+  558  var VIEW  ≈ {x:0,y:0,w:1000,h:700}, VFIT=true, VSECS=-1, MAPDRAGGED=false;
+  559  viewFit() [11]  ≈ var R=secRadius(Math.max(0,SECTORS.length-1))+58;
+  570  viewZoom(f,ax,ay) [7]  ≈ var w=Math.max(280,Math.min(9000,VIEW.w*f));
+  577  viewPt(ev) [7]  the viewBox is letterboxed by preserveAspectRatio=meet: find the real scale
+  585  drawMap() [164]  ≈ var s='', i, p, xy;
 
-  736  ## HEADER / RESOURCES / LOG
-  737  drawHeader() [28]  ≈ var E=G.earth;
-  767  arkHead() [20]  v4.0: what the second date says. null before the Night has a date.
-  791  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so.
-  792  trendTick() [7]  ≈ var E=G.earth, h=U.hist;
-  799  trend(k) [6]  ≈ var h=U.hist; if(h.length<6) return null;
-  805  trendHtml(k,extra) [7]  ≈ var t=trend(k);
-  812  drawRes() [13]  ≈ var E=G.earth;
-  826  var TRAFFIC  ≈ {kit_loaded:1,pickup:1,delivered:1,launch_colony:1,launch_evac:1,launch_search:1,order_sen
-  827  drawLog() [27]  G.log is capped at 400 and shifts; track "seen" by a running count of entries ever logged
-  855  logKey(e) [1]  shift lines rotate between variants so a long calm run does not read as one sentence pasted ten times
-  856  logLine(e,tpl,d,isNew) [5]  ≈ var ch=TONE[e.code]==='ch';
-  862  chronLines(k) [8]  the last k chronicle lines, for the epilogue
-  870  logSeen() [1]  ≈ var m=0; for(var i=0;i<G.log.length;i++) if((G.log[i].seq||0)>m) m=G.log[i].seq; U.logSeen
+  750  ## HEADER / RESOURCES / LOG
+  751  drawHeader() [24]  ≈ var E=G.earth;
+  777  arkHead() [20]  v4.0: what the second date says. null before the Night has a date.
+  801  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so.
+  802  trendTick() [7]  ≈ var E=G.earth, h=U.hist;
+  809  trend(k) [6]  ≈ var h=U.hist; if(h.length<6) return null;
+  815  trendHtml(k,extra) [7]  ≈ var t=trend(k);
+  822  drawRes() [13]  ≈ var E=G.earth;
+  837  logKey(e) [1]  shift lines rotate between variants so a long calm run does not read as one sentence pasted ten times
+  838  logLine(e,tpl,d,isNew) [5]  ≈ var ch=TONE[e.code]==='ch';
+  844  chronLines(k) [8]  the last k chronicle lines, for the epilogue
 
-  872  ## RAIL
-  873  freeHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
-  874  var ROMAN  ≈ ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
-  875  roman(n) [1]  ≈ return ROMAN[n]||String(n+1) }
-  876  hullName(h) [1]  v4.20: class + Greek name
-  877  nodeName(n) [1]  ≈ return n==='earth'?T('earthNode'):planet(n).name.toUpperCase()}
-  878  aliveHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode!=='dead'&&s.mode!=='missing'})}
-  880  drawAdvice() [29]  ≈ var box=el('advisor'); if(!box) return;
-  911  shipChips(list) [20]  clickable pickers that survive a redraw, unlike a native <select>
-  932  assignable(pid) [4]  the hulls a world can actually be given: free at Earth and rated for its sector
-  936  busyFarLine(pid) [8]  ≈ var p=planet(pid); if(!p) return '';
-  946  themed(html,cls,acc) [1]  v4.20: a block with its own colour
-  947  blk(title,body,tag) [1]  ≈ return '<div class="blk"><h3><span>'+title+'</span>'+(tag||'')+'</h3><div class="bd">'+bod
-  948  row(k,v,cls) [1]  ≈ return '<div class="row"><span>'+k+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></di
-  950  railEarthPro() [19]  ≈ var E=G.earth, h='', st=U.pro.stage;
-  971  arkSel() [1]  v4.24 (Nikita, 07.10, F-22 trial): the ark is four levels at a fixed price. v4.29 (Nikita, 09.10): the deposit
-  972  convoyRow(cv,cls) [1]  ≈ var h=cv.have[cls]||0, n=cv.need[cls]||0; return row(' '+T(cls),h+' / '+n,h>=n?'good':(nig
-  973  arkBlock(E) [38]  ≈ var lv=arkLevel(G), top=K.ARK_LEVELS.length, sel=arkSel();
- 1011  railEarth() [94]  ≈ if(U.pro.on) return railEarthPro();
- 1107  seamYears(pid) [2]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace, not uni
- 1111  pickCourier(pid) [6]  v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
- 1117  evacInfo(p,c) [6]  ≈ var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}
- 1125  depletedBlock(p,c) [8]  v4.17 (Nikita, 04.10: 'когда планета истощается, то блокируется всё. Можно только нажать эвакуировать'): a spe
- 1133  lineGenBox(max) [8]  ≈ if(!max) return '';
- 1141  railTarget() [92]  ≈ if(!U.sel) return blk(T('tabTarget'),'<div class="dim">'+T('selectPlanet')+'</div>');
- 1234  lineBlock(p,c) [42]  v4.6: the line as a standing order — 'two haulers here'; the yards do the rest
- 1277  supplyRow(label,have,rate,bad) [6]  ≈ var d=Math.floor(have/Math.max(0.001,rate));
- 1283  fldNum(id,label,val) [3]  ≈ return '<label class="fld2"><span>'+label+'</span><input id="'+id+'" value="'+val+'"></lab
- 1286  tog(id,label,on) [3]  ≈ return '<button type="button" class="tg'+(on?' on':'')+'" id="'+id+'" data-tog="1" aria-pr
- 1289  shipState(s) [7]  ≈ if(s.mode==='building') return fill(T('mBuild'),{n:s.t});
- 1296  railWorlds() [23]  ≈ var keys=Object.keys(G.colonies).filter(proWorldVisible);
- 1320  drawDock() [30]  the yard dock, bottom-left of the chart: build, scrap, and the ark, without scrolling the rail
- 1351  layoutPanels() [10]  the advisor may grow down, the dock may grow up; neither may cover the other
- 1361  drawRail() [7]  ≈ if(U.tab==='fleet') U.tab='worlds';
- 1369  showLog() [7]  ≈ var box=el('logbox'); if(!box) return;
- 1378  saveLog() [8]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
- 1386  copyLog() [6]  ≈ var ta=el('logtxt'); ta.focus(); ta.select();
- 1392  drawLang() [4]  ≈ var b=el('lang'); if(!b) return;
- 1396  drawIntro() [78]  ≈ var b=el('intro'); if(!b) return;
- 1474  drawOverlay() [29]  ≈ var o=el('ov');
+  853  ## RAIL
+  854  freeHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
+  855  var ROMAN  ≈ ['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+  856  roman(n) [1]  ≈ return ROMAN[n]||String(n+1) }
+  857  hullName(h) [1]  v4.20: class + Greek name
+  858  nodeName(n) [1]  ≈ return n==='earth'?T('earthNode'):planet(n).name.toUpperCase()}
+  859  aliveHulls() [1]  ≈ return G.ships.filter(function(s){return s.mode!=='dead'&&s.mode!=='missing'})}
+  861  drawAdvice() [29]  ≈ var box=el('advisor'); if(!box) return;
+  892  shipChips(list) [20]  clickable pickers that survive a redraw, unlike a native <select>
+  913  assignable(pid) [4]  the hulls a world can actually be given: free at Earth and rated for its sector
+  917  busyFarLine(pid) [8]  ≈ var p=planet(pid); if(!p) return '';
+  927  themed(html,cls,acc) [1]  v4.20: a block with its own colour
+  928  blk(title,body,tag) [1]  ≈ return '<div class="blk"><h3><span>'+title+'</span>'+(tag||'')+'</h3><div class="bd">'+bod
+  929  row(k,v,cls) [1]  ≈ return '<div class="row"><span>'+k+'</span><b'+(cls?' class="'+cls+'"':'')+'>'+v+'</b></di
+  931  railEarthPro() [19]  ≈ var E=G.earth, h='', st=U.pro.stage;
+  952  arkSel() [1]  v4.24 (Nikita, 07.10, F-22 trial): the ark is four levels at a fixed price. v4.29 (Nikita, 09.10): the deposit
+  953  convoyRow(cv,cls) [1]  ≈ var h=cv.have[cls]||0, n=cv.need[cls]||0; return row(' '+T(cls),h+' / '+n,h>=n?'good':(nig
+  954  arkBlock(E) [39]  ≈ var lv=arkLevel(G), top=K.ARK_LEVELS.length, sel=arkSel();
+  993  railEarth() [94]  ≈ if(U.pro.on) return railEarthPro();
+ 1089  seamYears(pid) [2]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace, not uni
+ 1093  pickCourier(pid) [6]  v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
+ 1099  evacInfo(p,c) [6]  ≈ var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}
+ 1107  depletedBlock(p,c) [8]  v4.17 (Nikita, 04.10: 'когда планета истощается, то блокируется всё. Можно только нажать эвакуировать'): a spe
+ 1115  lineGenBox(max) [8]  ≈ if(!max) return '';
+ 1123  railTarget() [92]  ≈ if(!U.sel) return blk(T('tabTarget'),'<div class="dim">'+T('selectPlanet')+'</div>');
+ 1216  lineBlock(p,c) [42]  v4.6: the line as a standing order — 'two haulers here'; the yards do the rest
+ 1259  supplyRow(label,have,rate,bad) [6]  ≈ var d=Math.floor(have/Math.max(0.001,rate));
+ 1265  fldNum(id,label,val) [3]  ≈ return '<label class="fld2"><span>'+label+'</span><input id="'+id+'" value="'+val+'"></lab
+ 1268  tog(id,label,on) [3]  ≈ return '<button type="button" class="tg'+(on?' on':'')+'" id="'+id+'" data-tog="1" aria-pr
+ 1271  shipState(s) [7]  ≈ if(s.mode==='building') return fill(T('mBuild'),{n:s.t});
+ 1278  railWorlds() [23]  ≈ var keys=Object.keys(G.colonies).filter(proWorldVisible);
+ 1302  drawDock() [30]  the yard dock, bottom-left of the chart: build, scrap, and the ark, without scrolling the rail
+ 1333  layoutPanels() [10]  the advisor may grow down, the dock may grow up; neither may cover the other
+ 1343  drawRail() [7]  ≈ if(U.tab==='fleet') U.tab='worlds';
+ 1351  showLog() [7]  ≈ var box=el('logbox'); if(!box) return;
+ 1360  saveLog() [8]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
+ 1368  copyLog() [6]  ≈ var ta=el('logtxt'); ta.focus(); ta.select();
+ 1374  drawLang() [4]  ≈ var b=el('lang'); if(!b) return;
+ 1378  drawIntro() [78]  ≈ var b=el('intro'); if(!b) return;
+ 1456  drawOverlay() [29]  ≈ var o=el('ov');
 
- 1504  ## V4.17 (NIKITA, 04.10, BATCH 2)
- 1507  hullProgress(s) [1]  ≈ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/t
- 1508  cargoTxt(s) [1]  ≈ var out=[]; ['metal','food','fuel','parts','people'].forEach(function(k){ var v=s.cargo&&s
- 1509  fleetRow(s) [16]  ≈ var h=HULLS[s.hull], cls=h.key, free=s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to), st,
- 1525  fleetBody() [14]  ≈ var ships=G.ships.filter(function(s){return s.mode!=='dead'});
- 1539  genTrack(sel,max) [5]  ≈ var out='<div class="gtrack" data-gtrack="1" data-max="'+max+'" role="slider" aria-valuemi
- 1544  lineGenSel() [1]  ≈ var g=(U.lineGen===undefined||U.lineGen===null)?(G.gen||0):U.lineGen; return Math.max(0,Ma
- 1545  setLineGen(g,max) [1]  ≈ g=Math.max(0,Math.min(max,g)); if(U.lineGen===g) return; U.lineGen=(g>=(G.gen||0))?null:g;
- 1546  genFromX(x) [2]  ≈ var t=document.querySelector('.gtrack'); if(!t) return; var max=+t.dataset.max, r=t.getBou
+ 1486  ## V4.17 (NIKITA, 04.10, BATCH 2)
+ 1489  hullProgress(s) [1]  ≈ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/t
+ 1490  cargoTxt(s) [1]  ≈ var out=[]; ['metal','food','fuel','parts','people'].forEach(function(k){ var v=s.cargo&&s
+ 1491  fleetRow(s) [16]  ≈ var h=HULLS[s.hull], cls=h.key, free=s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to), st,
+ 1507  fleetBody() [14]  ≈ var ships=G.ships.filter(function(s){return s.mode!=='dead'});
+ 1521  genTrack(sel,max) [5]  ≈ var out='<div class="gtrack" data-gtrack="1" data-max="'+max+'" role="slider" aria-valuemi
+ 1526  lineGenSel() [1]  ≈ var g=(U.lineGen===undefined||U.lineGen===null)?(G.gen||0):U.lineGen; return Math.max(0,Ma
+ 1527  setLineGen(g,max) [1]  ≈ g=Math.max(0,Math.min(max,g)); if(U.lineGen===g) return; U.lineGen=(g>=(G.gen||0))?null:g;
+ 1528  genFromX(x) [2]  ≈ var t=document.querySelector('.gtrack'); if(!t) return; var max=+t.dataset.max, r=t.getBou
 
- 1548  ## V4.16 (NIKITA, 04.10: 'ИНТЕРФЕЙС — САМАЯ ГЛАВНАЯ ЧАСТЬ ФИДБЕКА')
- 1551  freeWorlds() [1]  ≈ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) 
- 1553  hpar(ic,txt,title,cls) [1]  v4.21 (Nikita, 06.10): every ship parameter wears its icon — hold: a container, speed: a speedometer, range: r
- 1554  speedTxt(hl) [1]  ≈ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
- 1555  freeFor(cls,pid,gen) [1]  ≈ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!
- 1556  assignChips(s) [6]  ≈ var out=''; for(var k in G.colonies){ var c=G.colonies[k]; var p=planet(k); if(!p||!canRea
- 1562  freeHullsBlock(p) [8]  ≈ var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
- 1570  watchRings() [6]  ≈ if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null }
- 1576  showNoFree() [5]  ≈ var d=document.createElement('div'); d.id='nofree';
- 1581  closeNoFree() [1]  ≈ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.pau
- 1582  drawSign() [15]  ≈ var e=el('ringsign'); if(!e) return;
- 1597  draw() [1]  ≈ proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawLog();drawRail(
+ 1530  ## V4.16 (NIKITA, 04.10: 'ИНТЕРФЕЙС — САМАЯ ГЛАВНАЯ ЧАСТЬ ФИДБЕКА')
+ 1533  freeWorlds() [1]  ≈ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) 
+ 1535  hpar(ic,txt,title,cls) [1]  v4.21 (Nikita, 06.10): every ship parameter wears its icon — hold: a container, speed: a speedometer, range: r
+ 1536  speedTxt(hl) [1]  ≈ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
+ 1537  freeFor(cls,pid,gen) [1]  ≈ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!
+ 1538  assignChips(s) [6]  ≈ var out=''; for(var k in G.colonies){ var c=G.colonies[k]; var p=planet(k); if(!p||!canRea
+ 1544  freeHullsBlock(p) [8]  ≈ var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
+ 1552  watchRings() [9]  ≈ if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null; U.ringNoted=unde
+ 1561  showNoFree() [5]  ≈ var d=document.createElement('div'); d.id='nofree';
+ 1566  closeNoFree() [1]  ≈ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.pau
+ 1567  drawSign() [15]  ≈ var e=el('ringsign'); if(!e) return;
+ 1585  var NOTE_CODES  v4.30 (Nikita, 11.10: 'уведомления по ивентам, сменам, ковчегу и новому кольцу вылазят на весь экран и сигнали
+ 1586  evName(t) [1]  ≈ return T('ev'+t.charAt(0).toUpperCase()+t.slice(1)) }
+ 1587  note(o) [1]  ≈ (U.notes=U.notes||[]).push(o) }
+ 1588  noteClose() [1]  ≈ (U.notes||[]).shift(); U.noteCur=null; if(!(U.notes||[]).length&&U.noteResume){ U.paused=f
+ 1589  drawNote() [13]  ≈ var d=el('note'), q=U.notes||[];
+ 1605  drawEvBar() [8]  v4.30 (Nikita, 11.10: 'когда идёт ивент, должно вылезть окошко и моргать, что вот такой ивент в таком секторе 
+ 1616  drawConvoy() [18]  v4.30 (Nikita, 11.10: 'кнопка выбрать суда для конвоя ковчега: список тех, что у причала на Земле, и ты плюсик
+ 1634  draw() [1]  ≈ proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawRail();drawDock
 
- 1605  ## ACTIONS
- 1608  pick(pid) [4]  v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured 
- 1612  tgOn(id) [1]  ≈ var e=el(id);return e&&e.classList.contains('on')?1:0}
- 1613  num(id,d) [1]  ≈ var e=el(id);if(!e)return d;var v=parseInt(e.value,10);return isNaN(v)?d:Math.max(0,v)}
+ 1642  ## ACTIONS
+ 1645  pick(pid) [4]  v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured 
+ 1649  tgOn(id) [1]  ≈ var e=el(id);return e&&e.classList.contains('on')?1:0}
+ 1650  num(id,d) [1]  ≈ var e=el(id);if(!e)return d;var v=parseInt(e.value,10);return isNaN(v)?d:Math.max(0,v)}
 
- 1740  ## THE MAP IS PANNABLE AND ZOOMABLE
+ 1779  ## THE MAP IS PANNABLE AND ZOOMABLE
 
- 1773  ## LOOP
- 1777  var MS  v4.2 (Nikita, 24.09: "игра слишком быстрая — сообщения не читаются"): the old clock ran a whole
- 1778  frame(ts) [25]  ≈ if(!U.last) U.last=ts;
- 1804  start(seed) [7]  ≈ G=newGame(seed||undefined);
+ 1812  ## LOOP
+ 1816  var MS  v4.2 (Nikita, 24.09: "игра слишком быстрая — сообщения не читаются"): the old clock ran a whole
+ 1817  frame(ts) [25]  ≈ if(!U.last) U.last=ts;
+ 1843  start(seed) [7]  ≈ G=newGame(seed||undefined);
 ```
 

@@ -17,10 +17,12 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   await tap('[data-lang="ru"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false}); await p.addScriptTag({content:BOT});
   // play 300 years through the real clock in chunks so voiceWatch sees the log grow
   await tap('#b-auto');
-  for(let i=0;i<6;i++){ await p.evaluate(()=>botRun(50)); await redraw(); const f=await pf(); if(f){ console.log('pf at', await p.evaluate(()=>window.LN.day), '|', f.text, '| lit px', f.lit); await p.screenshot({path:'v-pf-'+i+'.png'}); await tap('[data-act="pfok"]'); } }
+  // v4.30 (Nikita, 11.10): a crew voice that is not forced is a card at the foot of the chart (#pf.low), no pause; count the cards on screen (quiet:true lines stay journal-only in voice())
+  let lowSeen=0;
+  for(let i=0;i<6;i++){ await p.evaluate(()=>botRun(50)); await redraw(); if(await p.isVisible('#pf.low')) lowSeen++; const f=await pf(); if(f){ console.log('pf at', await p.evaluate(()=>window.LN.day), '|', f.text, '| lit px', f.lit); await p.screenshot({path:'v-pf-'+i+'.png'}); await tap('[data-act="pfok"]'); } }
   const vo=await p.evaluate(()=>window.LN.log.filter(e=>e.code==='voice').map(e=>e.day+' '+e.d.role+' '+e.d.name+' '+e.d.k));
   console.log('voice lines in 300y:', vo.length, vo.slice(0,8).join(' | '));
-  console.log('journal vo rendered:', await p.evaluate(()=>document.querySelectorAll('#log .le.vo').length), '| sample:', await p.evaluate(()=>{const e=document.querySelector('#log .le.vo'); return e?e.textContent.replace(/\s+/g,' ').slice(0,140):null}));
+  console.log('crew cards on screen (#pf.low):', lowSeen, '| card now:', await p.evaluate(()=>{const e=document.querySelector('#pf.low'); return e?e.textContent.replace(/\s+/g,' ').slice(0,140):null}));
   // the date
   await p.evaluate(()=>{ const G=window.LN; G.nightSeen=true; revealNight(G); }); await redraw();
   let f=await pf(); console.log('night_dated pf:', JSON.stringify(f)); await p.screenshot({path:'v-pf-night.png'}); if(f) await tap('[data-act="pfok"]');

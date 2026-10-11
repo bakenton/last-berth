@@ -1,0 +1,23 @@
+UI,noteEvent,Event,Событие,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteDrive,New generation,Новое поколение,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteArk,The Night,Ночь,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteEarth,Earth,Земля,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteRing,Survey,Разведка,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteRingBody,The next ring can be charted: Earth has the worlds and the stores for it. The order is on the Earth tab.,Следующее кольцо можно наносить на карту: миров и запасов для этого хватает. Приказ — на вкладке «Земля».,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteOk,Understood,Понятно,"v4.30 notices, event bar, convoy picker",live,new
+UI,evFold,Fold,Складка,"v4.30 notices, event bar, convoy picker",live,new
+UI,evDrag,Stretch,Растяжение,"v4.30 notices, event bar, convoy picker",live,new
+UI,evStorm,Storm,Буря,"v4.30 notices, event bar, convoy picker",live,new
+UI,evCrisis,Breakdowns,Поломки,"v4.30 notices, event bar, convoy picker",live,new
+UI,evSpoil,Spoilage,Порча,"v4.30 notices, event bar, convoy picker",live,new
+UI,evIn,begins in {n} y,начнётся через {n} л.,"v4.30 notices, event bar, convoy picker",live,new
+UI,evLeft,{n} y left,ещё {n} л.,"v4.30 notices, event bar, convoy picker",live,new
+UI,convoyPick,Choose convoy hulls,Выбрать суда конвоя,"v4.30 notices, event bar, convoy picker",live,new
+UI,convoyTitle,Convoy · Generation {g}+,Конвой · поколение {g}+,"v4.30 notices, event bar, convoy picker",live,new
+UI,convoyHint,"Hulls docked at Earth. Plus sets a hull aside for the ark — the yards leave it alone, and a hull on a line leaves its line. Minus gives it back.","Суда у причала Земли. Плюс ставит судно в резерв ковчега — верфи его не тронут, а судно с линии с неё снимется. Минус возвращает.","v4.30 notices, event bar, convoy picker",live,new
+UI,convoyOld,below Generation {g} — not fit for the convoy,ниже поколения {g} — в конвой не годится,"v4.30 notices, event bar, convoy picker",live,new
+UI,convoyOnLine,on the {p} line,на линии {p},"v4.30 notices, event bar, convoy picker",live,new
+UI,convoyNone,No hulls are docked at Earth right now.,У причала сейчас нет судов.,"v4.30 notices, event bar, convoy picker",live,new
+UI,convoyDone,Done,Готово,"v4.30 notices, event bar, convoy picker",live,new
+MSG,convoy_old,Too old for the convoy: it takes Generation {g} or newer.,Слишком старое для конвоя: нужно поколение {g} или новее.,"v4.30 notices, event bar, convoy picker",live,new
+UI,noteWarn,Warning,Предупреждение,"v4.30 notices, event bar, convoy picker",live,new

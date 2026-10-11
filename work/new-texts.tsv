@@ -123,3 +123,26 @@ MSG	ok_unreserve	Hull {n} released from the reserve.	Судно {n} снято �
 LOG	ark_noconvoy	The ark stayed: no convoy at the pier — {n} couriers, {h} haulers, {c} freighters of Generation {g} or newer.	Ковчег остался: у причала нет конвоя — курьеров {n}, тягачей {h}, грузовозов {c} поколения {g} или новее.
 UI	arkNoConvoy	no convoy — the ark stayed	нет конвоя — ковчег остался
 UI	arkFull	Every level is paid for. Whatever is left on Earth on the day rides along, up to the hold.	Все уровни оплачены. Что останется на Земле в тот день, поедет с ковчегом, сколько вместит трюм.
+UI	noteEvent	Event	Событие
+UI	noteDrive	New generation	Новое поколение
+UI	noteArk	The Night	Ночь
+UI	noteEarth	Earth	Земля
+UI	noteRing	Survey	Разведка
+UI	noteRingBody	The next ring can be charted: Earth has the worlds and the stores for it. The order is on the Earth tab.	Следующее кольцо можно наносить на карту: миров и запасов для этого хватает. Приказ — на вкладке «Земля».
+UI	noteOk	Understood	Понятно
+UI	evFold	Fold	Складка
+UI	evDrag	Stretch	Растяжение
+UI	evStorm	Storm	Буря
+UI	evCrisis	Breakdowns	Поломки
+UI	evSpoil	Spoilage	Порча
+UI	evIn	begins in {n} y	начнётся через {n} л.
+UI	evLeft	{n} y left	ещё {n} л.
+UI	convoyPick	Choose convoy hulls	Выбрать суда конвоя
+UI	convoyTitle	Convoy · Generation {g}+	Конвой · поколение {g}+
+UI	convoyHint	Hulls docked at Earth. Plus sets a hull aside for the ark — the yards leave it alone, and a hull on a line leaves its line. Minus gives it back.	Суда у причала Земли. Плюс ставит судно в резерв ковчега — верфи его не тронут, а судно с линии с неё снимется. Минус возвращает.
+UI	convoyOld	below Generation {g} — not fit for the convoy	ниже поколения {g} — в конвой не годится
+UI	convoyOnLine	on the {p} line	на линии {p}
+UI	convoyNone	No hulls are docked at Earth right now.	У причала сейчас нет судов.
+UI	convoyDone	Done	Готово
+MSG	convoy_old	Too old for the convoy: it takes Generation {g} or newer.	Слишком старое для конвоя: нужно поколение {g} или новее.
+UI	noteWarn	Warning	Предупреждение

@@ -8,7 +8,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); p.lastHit=await p.evaluate(([x,y])=>{var e=document.elementFromPoint(x,y); return e?(e.tagName+'.'+String(e.className).slice(0,30)+'#'+e.id+' act='+(e.dataset.act||'')+' dis='+e.getAttribute('aria-disabled')):null},[bb.x+bb.width/2,bb.y+bb.height/2]); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
+  // v4.30 (Nikita, 11.10): the full-screen notices (#note) sit over the page — close them ('Later') before a click
+  const tap=async sel=>{ for(let i=0;i<8&&await p.isVisible('#note [data-act="noteok"]');i++){ const nb=await p.locator('#note [data-act="noteok"]').first().boundingBox(); if(!nb) break; await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
+    const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); p.lastHit=await p.evaluate(([x,y])=>{var e=document.elementFromPoint(x,y); return e?(e.tagName+'.'+String(e.className).slice(0,30)+'#'+e.id+' act='+(e.dataset.act||'')+' dis='+e.getAttribute('aria-disabled')):null},[bb.x+bb.width/2,bb.y+bb.height/2]); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
   const closePf=async()=>{ for(let i=0;i<8;i++){ if(await p.isVisible('#pf')) await tap('[data-act="pfok"]'); else if(await p.evaluate(()=>!!LN.shiftOpen)) await tap('[data-act="shiftok"]'); else if(await p.isVisible('[data-act="nightok"]')) await tap('[data-act="nightok"]'); else break } };   // personal files and the 80-year shift report both block clicks
   const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ tick(LN); LN.pauseNow=false } LNdraw() },n); await closePf() };
   const toast=async()=>(await p.textContent('#toast'))||'';
@@ -142,6 +144,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // === phone width: sign must not hide the whole map
   await p.setViewportSize({width:390,height:844}); await p.evaluate(()=>{ LNU.lang='en'; LNdraw() }); await p.waitForTimeout(200);
   const ph=await p.evaluate(()=>{ var r=document.getElementById('ringsign').getBoundingClientRect(), m=document.getElementById('mapwrap').getBoundingClientRect(); return {w:Math.round(r.width), mw:Math.round(m.width), h:Math.round(r.height), mh:Math.round(m.height)} });
+  // v4.30: a visible notice covers the sign and the advisor and the probe would hit the notice, not the sign — measure with the page uncovered
+  for(let i=0;i<8&&await p.isVisible('#note [data-act="noteok"]');i++) await tap('#note [data-act="noteok"]');
   const cov=await p.evaluate(()=>{ var r=document.getElementById('ringsign').getBoundingClientRect(), a=document.getElementById('advisor').getBoundingClientRect(); var cx=r.left+r.width/2, cy=r.top+12; var top=document.elementFromPoint(cx,cy); return {onTop: !!(top&&top.closest('#ringsign')), signBottom:Math.round(r.bottom), advTop:Math.round(a.top)} });
   ok('390px: the sign sits on top and the advisor starts below it', cov.onTop&&cov.advTop>=cov.signBottom-4, JSON.stringify(cov));
   await p.screenshot({path:require('os').tmpdir()+'/v416-phone.png'});

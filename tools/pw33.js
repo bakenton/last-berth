@@ -11,7 +11,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
+  // v4.30 (Nikita, 11.10): the ring notice (#note, once per ring, when charting is possible) covers the Earth tab and the survey button — close it first (Позже)
+  const tap=async sel=>{ for(let i=0;i<8&&await p.isVisible('#note [data-act="noteok"]');i++){ const nb=await p.locator('#note [data-act="noteok"]').first().boundingBox(); if(!nb) break; await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(150) }
+    const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
   const closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]') };
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='966268745'; document.querySelector('[data-act="new"]').click(); });
@@ -67,7 +69,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // JSON log carries both numbers
   const log=await p.evaluate(()=>{ var J=JSON.parse(exportLog(LN)); return {v:J.v, reach:J.earth.reach, settled:J.earth.settled} });
-  ok('JSON log: version 4.15+ with reach and settled', /^4\.(1[5-9]|2\d)$/.test(log.v)&&log.reach===3&&log.settled>=6, JSON.stringify(log));
+  // v4.30: the version check was a regexp that stopped at 4.29 (4.30 failed it); now a numeric 'minor >= 15'
+  const vm=/^4\.(\d+)$/.exec(log.v||''); ok('JSON log: version 4.15+ with reach and settled', !!vm&&+vm[1]>=15&&log.reach===3&&log.settled>=6, JSON.stringify(log));
 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();

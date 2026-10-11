@@ -10,7 +10,9 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
     p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
     // v4.16 (F-04): once the bot has taken every charted world, the next redraw raises the full-screen 'no free worlds' stop; it covers the page
     // (the Night modal too) and no click below lands — press 'Later' first. The stop itself is checked in pw34.
+    // v4.30 (Nikita, 11.10): the full-screen notices (#note) sit over the tabs too; the Earth tab click was lost behind them (the rail stayed on Worlds)
     p.tap=async sel=>{ if(await p.isVisible('#nofree')){ const nb=await p.locator('[data-act="nofreeclose"]').boundingBox(); await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
+      for(let i=0;i<8&&await p.isVisible('#note [data-act="noteok"]');i++){ const nb=await p.locator('#note [data-act="noteok"]').first().boundingBox(); if(!nb) break; await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
       const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
     p.redraw=async()=>{ for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]'); await p.tap('.tab[data-tab="worlds"]'); for(let i=0;i<4&&await p.isVisible('#pf');i++) await p.tap('[data-act="pfok"]'); await p.tap('.tab[data-tab="earth"]'); await p.waitForTimeout(120) };
     await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
@@ -45,8 +47,8 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   if(!race.hit){ await p.evaluate(()=>{ const G=window.LN; const k=Object.keys(G.colonies).find(k=>planet(k).kind==='works')||Object.keys(G.colonies)[0]; while(!arkReady(G)) driveDone(G,k); }); }
   if(await p.isVisible('#pf')) await p.tap('[data-act="pfok"]');
   await p.redraw();
-  const logTxt=await p.textContent('#log');
-  ok('A log: ark drive commissioned line', /CAN PUSH THE ARK/.test(logTxt), (logTxt.match(/GENERATION [IVX]+ DRIVE CAN PUSH THE ARK[^.]*\.[^.]*\./)||[''])[0]);
+  // v4.30: the journal is gone; the commissioning is checked in LN.log (its wording is no longer on the page)
+  ok('A log: ark drive commissioned (LN.log ark_drive)', await p.evaluate(()=>LN.log.some(e=>e.code==='ark_drive')));
   const hd2=await p.evaluate(()=>({ark:document.getElementById('h-arkd').textContent,sub:document.getElementById('h-arkdsub').textContent,cls:document.getElementById('h-arkd').className}));
   ok('A header says READY', hd2.ark==='READY'&&/good/.test(hd2.cls), JSON.stringify(hd2));
   await p.screenshot({path:'w4-ready.png',clip:{x:0,y:0,width:1600,height:70}});

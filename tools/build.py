@@ -205,6 +205,28 @@ patch('  <symbol id="i-people" viewBox="0 0 16 16">',
       '  <symbol id="i-range" viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="3.8"/><circle cx="8" cy="8" r="6.6" stroke-dasharray="2 1.6"/></symbol>\n'
       '  <symbol id="i-people" viewBox="0 0 16 16">',
       'id="i-hold"')
+# v4.30 (Nikita, 11.10): full-screen notices, the event bar on the chart, the crew card at the foot, the convoy picker
+patch('.blk.hl{border-color:var(--ink)}',
+ '#note,#convoy{position:fixed;inset:0;z-index:29;background:rgba(0,0,0,.86);display:flex;align-items:center;justify-content:center;padding:20px}\n'
+ '.nt-box{width:min(600px,100%);max-height:86vh;overflow:auto;border:2px solid var(--ink);background:var(--bg);padding:24px 26px}\n'
+ '.nt-k{font-family:var(--sans);font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--ink2)}\n'
+ '.nt-box h2{letter-spacing:.12em;margin:6px 0 12px;font-size:20px;text-transform:uppercase}.nt-box p{line-height:1.55;margin:0 0 18px;color:var(--ink)}\n'
+ '.nt-row{display:flex;gap:10px;flex-wrap:wrap}.nt-row .btn{width:auto;padding:8px 16px}\n'
+ '#note.bad .nt-box{border-color:var(--red)}#note.bad h2{color:var(--red)}#note.good .nt-box{border-color:var(--teal)}#note.good h2{color:var(--teal)}\n'
+ '#note .nt-box{animation:lbblink .5s ease-in-out 3}\n'
+ '#evbar{position:absolute;top:10px;left:50%;transform:translateX(-50%);z-index:13;display:flex;flex-direction:column;gap:6px;pointer-events:none;max-width:min(380px,46%)}\n'
+ '#evbar.blink{animation:lbblink 1.1s ease-in-out infinite}\n'
+ '#evbar .evc{background:var(--bg);border:1px dashed var(--red);padding:6px 12px;text-align:center}#evbar .evc.on{border-style:solid;border-width:2px}\n'
+ '#evbar .evc b{display:block;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--red)}#evbar .evc span{display:block;font-size:12px;color:var(--ink2);margin-top:2px}\n'
+ '#evbar .evc.good{border-color:#5BC0EB}#evbar .evc.good b{color:#5BC0EB}#evbar .evc.warn{border-color:var(--orange)}#evbar .evc.warn b{color:var(--orange)}\n'
+ '#pf.low{inset:auto 366px 56px auto;background:none;padding:0;z-index:15;display:block;pointer-events:none}\n'
+ '#pf.low #pfbox{pointer-events:auto;width:min(460px,calc(100vw - 28px));padding:12px;gap:12px;background:rgba(0,0,0,.96)}#pf.low #pfbox canvas{width:72px;height:72px}\n'
+ '#pf.low #pfbox .pfn{font-size:15px}#pf.low #pfbox .pfl{font-size:13px;margin-top:6px}#pf.low #pfbox .btn{margin-top:6px}\n'
+ '@media(max-width:880px){#pf.low{inset:auto 14px 14px 14px}#evbar{max-width:none;left:10px;right:10px;transform:none;top:auto;bottom:10px}}\n'
+ '.cv-list{display:flex;flex-direction:column;gap:4px;max-height:44vh;overflow:auto}\n'
+ '.cv-row{display:flex;align-items:center;justify-content:space-between;gap:10px;border:1px solid var(--line2);padding:6px 10px}.cv-row.in{border-color:var(--teal)}.cv-row.old{opacity:.55}\n'
+ '.cv-row b{display:block;font-size:13px}.cv-row span{font-size:11.5px}.cv-row .btn{width:38px;flex:0 0 auto;font-size:16px;padding:4px 0;text-align:center}\n'
+ '.blk.hl{border-color:var(--ink)}','#evbar{')
 wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)

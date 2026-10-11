@@ -7,7 +7,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
-  const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
+  // v4.30 (Nikita, 11.10): full-screen notices (#note) cover the page and eat the clicks — close them before a click
+  const tap=async sel=>{ for(let i=0;i<8&&await p.isVisible('#note [data-act="noteok"]');i++){ const nb=await p.locator('#note [data-act="noteok"]').first().boundingBox(); if(!nb) break; await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
+    const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
   const closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]') };
   const redraw=async()=>{ await closePf(); await tap('.tab[data-tab="worlds"]'); await closePf(); await tap('.tab[data-tab="earth"]'); await p.waitForTimeout(120) };
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
@@ -20,17 +22,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await tap('[data-spd="1"]'); const y0=await p.evaluate(()=>LN.day); await p.waitForTimeout(3100); await tap('#b-pause');
   const y1=await p.evaluate(()=>LN.day);
   ok('1× is about a year per 1.5 s', y1-y0>=1&&y1-y0<=3, (y1-y0)+' years in 3.1 s');
-  // 2. journal: desk by default, receipts hidden, cycle desk -> all -> chronicle
+  // 2. v4.30 (Nikita, 11.10): the journal panel is gone — its Desk / All / Chronicle checks went with it (pw39 checks it is absent)
   await p.evaluate(()=>botRun(300)); await redraw();
-  const cnt=async()=>p.evaluate(()=>({mode:LNU.logMode, btn:document.getElementById('b-logf').textContent, lines:document.querySelectorAll('#log .le').length, receipts:[...document.querySelectorAll('#log .le')].filter(e=>/hauled|Delivered|took on|Picked up|leaves Earth|sets out/i.test(e.textContent)).length, voices:document.querySelectorAll('#log .le.vo').length}));
-  let c1=await cnt();
-  ok('journal opens on Desk with no receipts', c1.mode==='desk'&&c1.btn==='Desk'&&c1.receipts===0&&c1.lines>0, JSON.stringify(c1));
-  await tap('#b-logf'); let c2=await cnt();
-  ok('second view is All, with receipts', c2.mode==='all'&&c2.btn==='All entries'&&c2.lines>c1.lines, JSON.stringify(c2));
-  await tap('#b-logf'); let c3=await cnt();
-  ok('third view is Chronicle only', c3.mode==='chron'&&c3.btn==='Chronicle'&&c3.voices===0, JSON.stringify(c3));
-  await tap('#b-logf'); ok('cycles back to Desk', (await cnt()).mode==='desk');
-  await p.screenshot({path:'y1-desk.png',clip:{x:0,y:830,width:1600,height:170}});
   // 3. hull prices in the dock (gen IV freighter must be under 5k metal)
   const price=await p.evaluate(()=>{ ensureGen(3); const h=HULLS.find(h=>h.key==='freighter'&&h.gen===3); return {metal:h.metal,parts:h.parts,cap:h.cap} });
   ok('gen IV freighter costs about 4.4k metal / 3.3k parts', price.metal<5000&&price.parts>3000, JSON.stringify(price));
@@ -50,8 +43,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // a mutinied hull refuses a line order with the right message
   const ref=await p.evaluate(()=>{ const G=LN; const s=G.ships.find(s=>s.mutiny&&s.mode==='idle'); const k=Object.keys(G.colonies).find(k=>!G.colonies[k].dark); return {r:setLine(G,s.id,k,'earth'), msg:null} });
   ok('a mutinied hull refuses orders', ref.r==='mutiny', JSON.stringify(ref));
-  const logTxt=await p.textContent('#log');
-  ok('journal: mutiny line + captain voice', /REFUSES ORDERS/.test(logTxt)&&/(arithmetic on the bridge|The crew voted)/.test(logTxt));
+  // v4.30: the journal is gone; the mutiny is checked in LN.log (the line text is no longer on the page)
+  ok('mutiny is in the chronicle (LN.log) with the captain voice', await p.evaluate(()=>LN.log.some(e=>e.code==='mutiny'))&&await p.evaluate(()=>LN.log.some(e=>e.code==='voice'&&/^mutiny/.test(e.d.k))));
   const vo=await p.evaluate(()=>LN.log.filter(e=>e.code==='voice'&&/^mutiny/.test(e.d.k)).length);
   ok('captain voices logged for mutinies', vo>0, vo);
   // crews at home count for the ark

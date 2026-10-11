@@ -114,6 +114,7 @@ function bigAlert(html,cls,ms){ var a=el('alert'); if(!a){ a=document.createElem
 function toastLast(){ var e=G.log[G.log.length-1]; if(!e) return; var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return;
   var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
   if(e.code==='voice') d=voiceLine(e);   // v4.26 (playtest bot, 07.10): the toast showed '{who} DLAMINI: {line}' — only the journal filled the voice line
+  if(NOTE_CODES[e.code]&&!U.ff&&!U.pro.on) return;   // v4.30: these stop the desk with a full-screen notice (voiceWatch)
   if(e.code==='depleted'){ bigAlert('<b>'+T('alertDepleted')+'</b><span>'+esc(fill(tpl,d))+'</span>','red'); return }
   toast(esc(fill(tpl,d)), TONE[e.code]==='bd'?'bad':'', 6000); }
 /* v4.10 (Nikita, 27.09): rations low and no farm feeding Earth → yellow blinking block, once a shift */
@@ -187,7 +188,7 @@ function sico(cls){ return '<svg class="sico sico-'+cls+'" aria-hidden="true"><u
 function kico(kind,cls){ return '<svg class="'+(cls||'kico')+'" aria-hidden="true"><use href="#i-k-'+kind+'"/></svg>' }
 function pico(sym,k){ return '<span class="pico"><svg class="pi" aria-hidden="true"><use href="#i-'+sym+'"/></svg>'+(k?ico(k):'')+'</span>' }
 
-var U={hist:[], dockOpen:true, pro:{on:false,stage:0,w:null,calls:[],seen:{}}, start:false, lang:'en', langPicked:false, introStep:0, opening:false, openStep:0, logSeen:0, logBig:false, logMode:'desk', autopause:false, ff:false, shiftStop:true, manual:false, tab:'earth', sel:null, selShip:null, pickShip:null, pickDest:null, advOpen:true, speed:2, paused:true, acc:0, last:0};
+var U={hist:[], dockOpen:true, pro:{on:false,stage:0,w:null,calls:[],seen:{}}, start:false, lang:'en', langPicked:false, introStep:0, opening:false, openStep:0, autopause:false, ff:false, shiftStop:true, manual:false, tab:'earth', sel:null, selShip:null, pickShip:null, pickDest:null, advOpen:true, speed:2, paused:true, acc:0, last:0};
 var G=null;
 function T(k,p){var s=(L[U.lang][k]!==undefined?L[U.lang][k]:k);return fill(s,p)}
 var YRS={en:['year','years','years'],ru:['год','года','лет']};
@@ -341,7 +342,7 @@ function drawTask(box){
 function railsAllow(ev){
   if(!U.pro.on||U.pro.stage>=2) return true;
   var c=function(sel){ return ev.target.closest&&ev.target.closest(sel) };
-  if(c('#pf')||c('#b-pause')||c('[data-spd]')||c('#b-auto')||c('#b-lang')||c('#b-logx')||c('#b-logf')||c('#btm')||c('[data-zoom]')||c('#callout')||c('#intro')||c('#lang')||c('#ov')) return true;
+  if(c('#pf')||c('#b-pause')||c('[data-spd]')||c('#b-auto')||c('#b-lang')||c('#note')||c('[data-zoom]')||c('#callout')||c('#intro')||c('#lang')||c('#ov')) return true;
   if(c('[data-act="guide"]')||c('[data-ship]')||c('.tab[data-tab="earth"]')||c('.tab[data-tab="target"]')) return true;
   var t=proTask();
   var g=c('.pnode'); if(g) return t.pulse.indexOf('world:'+g.dataset.p)>=0;
@@ -402,9 +403,14 @@ function voice(trigger,role,d,o){
   log(G,'voice',{k:k,role:role,name:name,no:no,d:d||{}});
   if(o.quiet) return;   // v4.1: most of the world speaks in the journal only; the window is for the moments that matter
   if(o.force || G.day-(U.voiceLast||0)>=VOICE_GAP){
+    /* v4.30 (Nikita, 11.10: 'уведомления от экипажей норм, но пусть они не перекрывают весь экран, внизу вылазят'):
+       a crew's word is a card at the foot of the chart and the clock runs on; only the Night, the ark drive and
+       the last flights (force) still take the whole screen. */
+    if(!o.force&&U.pf&&!U.pf.low) return;
     U.voiceLast=G.day;
-    U.pf={k:k,role:role,name:name,no:no,d:d||{},seed:seed,sub:o.sub||''};
-    U.paused=true; SFX.play('voice');
+    U.pf={k:k,role:role,name:name,no:no,d:d||{},seed:seed,sub:o.sub||'',low:!o.force,day:G.day};
+    if(o.force) U.paused=true;
+    SFX.play('voice');
   }
 }
 ['fold','drag','storm','crisis','spoil'].forEach(function(t){ var g=t==='fold'; TONE[t+'_warn']=g?'gd':'bd'; TONE[t+'_start']=g?'gd':'bd'; TONE[t+'_end']='gd' }); TONE.pulse_short='bd';   // v4.21: the director's events
@@ -439,7 +445,13 @@ function voiceWatch(){
     else if(e.code==='ev_wreck') voice('wreck','role_head',{p:d.p,q:d.q,dep:d.dep},{quiet:true,seed:hash32(0x5a,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(e.code==='ev_disaster') voice('disaster','role_head',{p:d.p,q:d.q},{quiet:true,seed:hash32(0x5b,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
     else if(/^(fold|drag|storm|crisis|spoil)_(warn|start)$/.test(e.code)){ var dd={}; for(var qq in d) dd[qq]=d[qq]; if(dd.dep) dd.dep=DEP[U.lang][dd.dep]||dd.dep; if(dd.lobe!==undefined) dd.lobe=T('lobe'+dd.lobe);
-      toast(esc(fill(LOG[U.lang][e.code],dd)), e.code.indexOf('fold')===0?'':'bad', 9000, e.code.indexOf('fold')===0?'evgood':'evbad') }   // a small window — the screen has enough alarms
+      var evt=e.code.split('_')[0], evg=evt==='fold', evtxt=fill(LOG[U.lang][e.code],dd);
+      /* v4.30 (Nikita, 11.10): the warning stops the desk on the whole screen; while the event runs, the bar on the chart blinks */
+      if(/_warn$/.test(e.code)&&!U.ff) note({k:T('noteEvent'),title:evName(evt)+' · '+(d.lobe!==undefined?T('lobe'+d.lobe):T('earthNode')),body:evtxt,cls:evg?'good':'bad',snd:evg?'evgood':'evbad'});
+      else toast(esc(evtxt), evg?'':'bad', 9000, evg?'evgood':'evbad') }
+    else if(NOTE_CODES[e.code]&&!U.ff){ var nd={}; for(var nq in d) nd[nq]=d[nq]; if(nd.p&&planet(nd.p)) nd.p=pname(nd.p);
+      note(e.code==='drive_mark' ? {k:T('noteDrive'),title:fill(T('newGenTitle'),{g:roman(G.gen||0)}),body:fill(LOG[U.lang][e.code],nd)+' '+T('newGenBody'),cls:'good',snd:'evgood'}
+                                 : {k:T('noteWarn'),title:T(NOTE_CODES[e.code]),body:fill(LOG[U.lang][e.code],nd),cls:'bad',snd:'crit'}) }
     else if(e.code==='colony_founded'&&planet(e.d.p)&&planet(e.d.p).kind==='works'&&!U.worksSeen){ U.worksSeen=true; bigAlert('<b>'+T('alertWorks')+'</b><span>'+esc(fill(T('alertWorksBody'),{p:pname(e.d.p),n:driveWorkFor(G)}))+'</span>','warn',14000) }
     else if(e.code==='kit_built') voice('kit_built','role_head',{p:d.p,t:roman(d.t-1),x:d.x},{quiet:true,seed:hash32(0x5d,(+String(d.p).slice(1)||0)+d.t*7),day:e.day,seq:e.seq});
     else if(e.code==='kit_starved') voice('kit_starved','role_head',{p:d.p,t:roman(d.t-1)},{quiet:true,seed:hash32(0x5e,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
@@ -501,13 +513,15 @@ function drawPortrait(cv,seed){
   ctx.putImageData(img,0,0);
 }
 function drawPF(){
-  var old=el('pf'); if(old) old.remove();
-  var f=U.pf; if(!f) return;
-  if((el('intro')&&!el('intro').hidden)||(el('ov')&&!el('ov').hidden)) return;   // one window at a time: the desk speaks after the modal
+  var old=el('pf'), f=U.pf;
+  if(!f||(el('intro')&&!el('intro').hidden)||(el('ov')&&!el('ov').hidden)){ if(old) old.remove(); return }   // one window at a time: the desk speaks after the modal
+  if(old&&old._f===f&&old._lang===U.lang) return;   // v4.30: the card stays on a running clock — it is built once, or a click on it would be lost to the redraw
+  if(old) old.remove();
   var v=VOICE[U.lang]||{}, d={}; for(var q in f.d) d[q]=f.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p);
-  var box=document.createElement('div'); box.id='pf';
+  var box=document.createElement('div'); box.id='pf'; box._f=f; box._lang=U.lang; if(f.low) box.className='low';
+  if(f.low&&!f.timer) f.timer=setTimeout(function(){ if(U.pf===f){ U.pf=null; drawPF() } },20000);
   box.innerHTML='<div id="pfbox"><canvas width="64" height="64"></canvas><div class="pfb">'+
-    '<div class="pfk"><span>'+T('pfTitle')+'</span><span>'+String(G.day).padStart(4,'0')+'</span></div>'+
+    '<div class="pfk"><span>'+T('pfTitle')+'</span><span>'+String(f.day!==undefined?f.day:G.day).padStart(4,'0')+'</span></div>'+
     '<div class="pfn">'+esc(f.name)+'</div>'+
     '<div class="pfm">'+esc(v[f.role]||f.role)+' · '+esc(fill(T('pfNo'),{n:f.no}))+(f.sub?' · '+esc(f.sub):'')+'</div>'+
     '<div class="pfl">'+esc(fill(v[f.k]||f.k,d))+'</div>'+
@@ -737,12 +751,8 @@ function drawMap(){
 function drawHeader(){
   var E=G.earth;
   el('h-day').textContent=G.day;
-  ['h-stab','h-reach','h-sectors','h-night'].forEach(function(id){ var c=el(id).parentElement; c.hidden=!proSee('stats') });   // v4.13: Output and Drive cells are gone
+  ['h-reach','h-sectors','h-night'].forEach(function(id){ var c=el(id).parentElement; c.hidden=!proSee('stats') });   // v4.13: Output and Drive cells are gone
   var wt=document.querySelector('.tab[data-tab="worlds"]'); if(wt) wt.hidden=!proSee('worlds');
-  el('h-stab').textContent=n0(E.people);
-  el('h-stab').className='v'+(G.hungry?' bad':(E.people>120?' good':''));
-  var sb=el('h-stabbar'); sb.style.width=Math.max(0,Math.min(100,E.people/3))+'%';
-  sb.style.background = G.hungry?'var(--red)':'var(--ink)';
   el('h-sectors').textContent=SECTORS.length;
   el('h-reach').textContent=reach(G);
   var nl=nightLeft(G);
@@ -823,34 +833,6 @@ function drawRes(){
     cell('people',n0(E.people),trendHtml('people',T('onEarth').toLowerCase()),'');
 }
 
-var TRAFFIC={kit_loaded:1,pickup:1,delivered:1,launch_colony:1,launch_evac:1,launch_search:1,order_sent:1,reassigned:1,ship_ordered:1,ship_ready:1,scrapped:1,scrapped_many:1,dropped:1,relay_up:1,relief_done:1};
-function drawLog(){
-  var out='', n=0, unread=0, unreadBad=false;
-  // G.log is capped at 400 and shifts; track "seen" by a running count of entries ever logged
-  G.logTotal = G.logTotal||0;
-  for(var i=G.log.length-1;i>=0&&n<120;i--){
-    var e=G.log[i], tpl=LOG[U.lang][logKey(e)];
-    if(!tpl||tpl==='—') continue;
-    /* v4.2: three views. 'desk' (default) hides the freight receipts — pickups, deliveries, launches,
-       order acknowledgements — that were 45 of the last 60 lines in Nikita's run and buried every voice. */
-    var hide = U.logMode==='chron' ? TONE[e.code]!=='ch' : (U.logMode==='desk' ? !!TRAFFIC[e.code] : false);
-    if(hide){ if((e.seq||0)>U.logSeen){ unread++; if(TONE[e.code]==='bd') unreadBad=true } continue }
-    var d={}; for(var k in e.d) d[k]=e.d[k];
-    if(d.p&&planet(d.p)) d.p=pname(d.p);
-    if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe);
-    if(d.g!==undefined) d.g=roman(d.g);   // v4.0: generations read as roman numerals, like the header
-    if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);   // v4.4: kit tiers too
-    if(e.code==='voice') d=voiceLine(e);
-    var isNew = (e.seq||0) > U.logSeen;
-    if(isNew){ unread++; if(TONE[e.code]==='bd') unreadBad=true }
-    out+=logLine(e,tpl,d,isNew); n++;
-  }
-  setHTML('log',out||('<div class="le dim"><span class="d">----</span><span>'+T('logEmpty')+'</span></div>'));
-  var bd=el('logbadge'); if(bd){ bd.hidden=!unread; bd.textContent=fill(T('newEntries'),{n:unread}); bd.className=unreadBad?'bad':'' }
-  var bx=el('b-logx'); if(bx) bx.textContent=T(U.logBig?'collapse':'expand');
-  var bf=el('b-logf'); if(bf){ bf.textContent=T(U.logMode==='chron'?'logChron':(U.logMode==='all'?'logAll':'logDesk')); bf.classList.toggle('on2',U.logMode!=='all') }
-  el('btm').classList.toggle('big',!!U.logBig);
-}
 /* shift lines rotate between variants so a long calm run does not read as one sentence pasted ten times */
 function logKey(e){ if(e.code!=='shift') return e.code; var b='shift_'+e.d.k, v=(e.d.n||0)%3; return (v&&LOG[U.lang][b+(v+1)])?b+(v+1):b }
 function logLine(e,tpl,d,isNew){
@@ -867,7 +849,6 @@ function chronLines(k){
     out=logLine(e,tpl,d,false)+out; n++ }
   return out?'<div class="mhead" style="margin-bottom:6px">'+T('endChron')+'</div><div class="chron">'+out+'</div>':'';
 }
-function logSeen(){ var m=0; for(var i=0;i<G.log.length;i++) if((G.log[i].seq||0)>m) m=G.log[i].seq; U.logSeen=m; drawLog() }
 
 /* ---------- rail ---------- */
 function freeHulls(){return G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!s.mutiny})}
@@ -989,6 +970,7 @@ function arkBlock(E){
       row(fill(T('arkConvoyRow'),{g:roman(cv.gen)}),cv.ok?T('arkConvoyOk'):T('arkConvoyShort'),cv.ok?'good':(nightLeft(G)<=K.NIGHT_NEAR?'bad':'warn'))+
       convoyRow(cv,'courier')+convoyRow(cv,'hauler')+convoyRow(cv,'freighter')+
     '</div>'+
+    '<button class="btn" type="button" data-act="convoyopen">'+T('convoyPick')+'</button>'+
     '<div class="dim" style="font-size:12px;line-height:1.45">'+T('arkConvoyHint')+'</div>'+
     '<div class="rows" style="margin-top:2px">'+
       row(T('arkLeft'),'','dim')+
@@ -1568,10 +1550,13 @@ function freeHullsBlock(p){
   return themed(blk(T('freeHulls'),body,hs.length?'<span class="tag a">'+hs.length+'</span>':''),'sb sb-free');
 }
 function watchRings(){
-  if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null }
+  if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null; U.ringNoted=undefined; U.notes=[]; U.noteCur=null; U.convoyOpen=false }
   if((G.gen||0)>U.genSeen){ U.genSeen=G.gen||0; U.newGen=G.gen||0 }
   if(U.pro.on||!proSee('survey')||G.over||!U.langPicked) return;
   if(!freeWorlds().length&&U.noFreeAt!==SECTORS.length&&!el('nofree')){ U.noFreeAt=SECTORS.length; showNoFree() }
+  /* v4.30 (Nikita, 11.10: 'уведомления по новому кольцу — на весь экран'): once per ring, the day it can be charted */
+  if(U.ringNoted===undefined) U.ringNoted=SECTORS.length-1+(canSurvey(G)==='ok'?1:0);
+  if(canSurvey(G)==='ok'&&U.ringNoted<SECTORS.length&&!U.ff){ U.ringNoted=SECTORS.length; note({k:T('noteRing'),title:fill(T('ringSignTitle'),{s:secName(SECTORS.length)}),body:T('noteRingBody'),cls:'good',snd:'evgood',go:T('noFreeGo')}) }
 }
 function showNoFree(){
   var d=document.createElement('div'); d.id='nofree';
@@ -1594,7 +1579,59 @@ function drawSign(){
     (rng?'<div class="rs-range">'+esc(rng)+'</div>':'')+
     ((U.newGen!==null&&U.newGen!==undefined)?'<button type="button" class="ng blink" data-act="gotodock"><b>'+esc(fill(T('newGenTitle'),{g:roman(U.newGen)}))+'</b><span>'+esc(T('newGenBody'))+'</span></button>':'');
 }
-function draw(){proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawLog();drawRail();drawDock();drawSign();drawAdvice();layoutPanels();drawOverlay();drawLang();drawIntro();drawCallout();drawPF()}
+/* v4.30 (Nikita, 11.10: 'уведомления по ивентам, сменам, ковчегу и новому кольцу вылазят на весь экран и сигнализируют
+   игроку'): one queue of full-screen notices. A notice stops the clock and gives it back on the button. On fast-forward
+   nothing is queued — the same lines go out as toasts. */
+var NOTE_CODES={drive_mark:'noteDrive',mutiny_warn:'noteArk',food_horizon:'noteEarth',night_near:'noteArk'};
+function evName(t){ return T('ev'+t.charAt(0).toUpperCase()+t.slice(1)) }
+function note(o){ (U.notes=U.notes||[]).push(o) }
+function noteClose(){ (U.notes||[]).shift(); U.noteCur=null; if(!(U.notes||[]).length&&U.noteResume){ U.paused=false; U.noteResume=false } }
+function drawNote(){
+  var d=el('note'), q=U.notes||[];
+  if(G.over){ q.length=0 }
+  if(!q.length){ if(d) d.remove(); U.noteCur=null; return }
+  if((el('intro')&&!el('intro').hidden)||el('nofree')||U.convoyOpen||(U.pf&&!U.pf.low)){ if(d) d.remove(); U.noteCur=null; return }   // one window at a time
+  var n=q[0]; if(d&&U.noteCur===n) return;
+  if(d) d.remove(); d=document.createElement('div'); d.id='note'; d.className=n.cls||'';
+  d.innerHTML='<div class="nt-box"><div class="nt-k">'+esc(n.k)+'</div><h2>'+esc(n.title)+'</h2><p>'+esc(n.body)+'</p><div class="nt-row">'+
+    (n.go?'<button class="btn prim" type="button" data-act="notego">'+esc(n.go)+'</button>':'')+
+    '<button class="btn'+(n.go?'':' prim')+'" type="button" data-act="noteok">'+T(n.go?'noFreeLater':'noteOk')+'</button></div></div>';
+  document.body.appendChild(d); U.noteCur=n;
+  if(!n.shown){ n.shown=true; if(!U.paused) U.noteResume=true; U.paused=true; SFX.play(n.snd||'info'); drawHeader() }
+}
+/* v4.30 (Nikita, 11.10: 'когда идёт ивент, должно вылезть окошко и моргать, что вот такой ивент в таком секторе карты'):
+   the bar at the top of the chart names every event the director is running — steady while announced, blinking while it lasts.
+   The blink sits on the bar, not on its lines: the lines are rewritten every year and would restart it. */
+function drawEvBar(){
+  var m=el('mapwrap'), b=el('evbar'); if(!m) return;
+  if(!b){ b=document.createElement('div'); b.id='evbar'; m.appendChild(b); delete HTMLCACHE.evbar }
+  var E=(!U.pro.on&&G.dir&&G.dir.ev)||[], h='', live=false;
+  E.forEach(function(ev){ var on=ev.state==='active'; if(on) live=true;
+    h+='<div class="evc '+(ev.type==='fold'?'good':(ev.type==='storm'?'warn':'bad'))+(on?' on':'')+'"><b>'+esc(evName(ev.type))+' · '+esc(ev.lobe!==undefined?T('lobe'+ev.lobe):T('earthNode'))+'</b><span>'+esc(fill(T(on?'evLeft':'evIn'),{n:Math.max(0,(on?ev.end:ev.start)-G.day)}))+'</span></div>' });
+  setHTML('evbar',h); b.classList.toggle('blink',live);
+}
+/* v4.30 (Nikita, 11.10: 'кнопка выбрать суда для конвоя ковчега: список тех, что у причала на Земле, и ты плюсиком их
+   закидываешь'): the picker is the ark reserve (setReserve) with a list — every hull docked at Earth, a plus to set it
+   aside, a minus to give it back. A hull on a line is taken off it. Too old a generation is shown and refused. */
+function drawConvoy(){
+  var d=el('convoy');
+  if(!U.convoyOpen||G.over||!G.night){ if(d) d.remove(); if(U.convoyOpen){ U.convoyOpen=false; if(U.cvResume){ U.paused=false; U.cvResume=false } } return }
+  if(!d){ d=document.createElement('div'); d.id='convoy'; d.innerHTML='<div class="nt-box" id="convoybox"></div>'; document.body.appendChild(d); delete HTMLCACHE.convoybox }
+  var cv=arkConvoy(G), ord={freighter:0,hauler:1,courier:2};
+  var list=G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!s.mutiny });
+  list.sort(function(a,b){ return (b.reserve?1:0)-(a.reserve?1:0)||hullGen(b)-hullGen(a)||ord[shipClass(a)]-ord[shipClass(b)]||a.id-b.id });
+  var h='<div class="nt-k">'+T('arkTitle')+'</div><h2>'+esc(fill(T('convoyTitle'),{g:roman(cv.gen)}))+'</h2>'+
+    '<div class="rows">'+row(fill(T('arkConvoyRow'),{g:roman(cv.gen)}),cv.ok?T('arkConvoyOk'):T('arkConvoyShort'),cv.ok?'good':'warn')+convoyRow(cv,'courier')+convoyRow(cv,'hauler')+convoyRow(cv,'freighter')+'</div>'+
+    '<p class="dim" style="font-size:12px;margin:8px 0 10px">'+T('convoyHint')+'</p><div class="cv-list">';
+  list.forEach(function(s){ var hl=HULLS[s.hull], fit=hullGen(s)>=cv.gen, far=s.from&&s.to?(s.from==='earth'?s.to:s.from):null;
+    var st= !fit ? fill(T('convoyOld'),{g:roman(cv.gen)}) : (s.reserve?T('reservedHull'):(far?fill(T('convoyOnLine'),{p:pname(far)}):T('idleHull')));
+    h+='<div class="cv-row'+(s.reserve?' in':'')+(fit?'':' old')+'"><div><b>'+sico(hl.key)+esc(hullName(hl))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b><span class="'+(s.reserve?'good':'dim')+'">'+esc(st)+'</span></div>'+
+      '<button class="btn sm'+(s.reserve?' prim':'')+'" type="button" data-act="reserve" data-s="'+s.id+'" data-on="'+(s.reserve?0:1)+'"'+((fit||s.reserve)?'':off('convoy_old',{g:roman(cv.gen)}))+'>'+(s.reserve?'\u2212':'+')+'</button></div>' });
+  if(!list.length) h+='<div class="dim">'+T('convoyNone')+'</div>';
+  h+='</div><div class="nt-row" style="margin-top:14px"><button class="btn prim" type="button" data-act="convoyclose">'+T('convoyDone')+'</button></div>';
+  setHTML('convoybox',h);
+}
+function draw(){proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawRail();drawDock();drawSign();drawAdvice();layoutPanels();drawOverlay();drawLang();drawIntro();drawCallout();drawPF();drawEvBar();drawConvoy();drawNote()}
 window.addEventListener('resize',function(){ layoutPanels() });
 /* v4.17: the generation track is dragged with a pointer and survives the redraws (the pointer is tracked on the document) */
 document.addEventListener('pointerdown',function(e){ var t=e.target.closest&&e.target.closest('.gtrack'); if(!t) return; U.gdrag=true; genFromX(e.clientX); e.preventDefault() });
@@ -1681,6 +1718,9 @@ document.addEventListener('click',function(ev){
     else if(a==='gotodock'){ U.dockOpen=true; U.newGen=null; draw(); return }
     else if(a==='nofreego'){ closeNoFree(); U.tab='earth'; draw(); return }
     else if(a==='nofreeclose'){ closeNoFree(); draw(); return }
+    else if(a==='noteok'||a==='notego'){ noteClose(); if(a==='notego') U.tab='earth'; draw(); return }
+    else if(a==='convoyopen'){ U.convoyOpen=true; U.cvResume=!U.paused; U.paused=true; draw(); return }
+    else if(a==='convoyclose'){ U.convoyOpen=false; if(U.cvResume){ U.paused=false; U.cvResume=false } draw(); return }
     else if(a==='repeat') res=repeatRun(G,+b.dataset.s);
     else if(a==='pickship'){ U.pickShip=+b.dataset.s; U.tab='target'; draw(); return }
     else if(a==='evac'){ var ec=pickCourier(b.dataset.p), epid=b.dataset.p, ecol=G.colonies[epid], eh=ec?ec.id:undefined; res=eh===undefined?'evacNoHull':abandon(G,eh,epid);
@@ -1712,9 +1752,6 @@ document.addEventListener('click',function(ev){
   if(ev.target.id==='b-auto'){U.ff=!U.ff;act(G,'ff',{on:U.ff});draw();return}
   if(ev.target.id==='b-lang'){U.lang=U.lang==='en'?'ru':'en';draw();return}
   if(ev.target.id==='b-sfx'){SFX.set(!SFX.isOn()); if(SFX.isOn()) SFX.play('ok'); drawHeader();return}
-  if(ev.target.id==='b-logx'){U.logBig=!U.logBig;logSeen();return}
-  if(ev.target.id==='b-logf'){U.logMode= U.logMode==='desk'?'all':(U.logMode==='all'?'chron':'desk');drawLog();return}
-  if(ev.target.closest&&ev.target.closest('#btm')){logSeen();return}
 });
 document.addEventListener('keydown',function(e){
   if(e.target.tagName==='INPUT') return;
@@ -1735,7 +1772,9 @@ document.addEventListener('keypress',function(e){
   if(g&&(e.key==='Enter'||e.key===' ')){U.sel=g.dataset.p;U.tab='target';draw()}
 });
 
-el('btm').addEventListener('mouseenter',function(){ if(el('logbadge')&&!el('logbadge').hidden) logSeen() });
+/* v4.30 (Nikita, 11.10: 'панель Земля с кол-вом людей в самом верху удалить', 'журнал удалить, он вообще стал не нужен'):
+   both leave the page; G.log still feeds the voices, the notices, the epilogue and the exported run. */
+(function(){ var b=el('btm'); if(b) b.remove(); var hs=el('h-stab'); if(hs&&hs.parentElement) hs.parentElement.remove() })();
 
 /* ---------- the map is pannable and zoomable ----------
    Auto-fit keeps the whole chart on screen; this is for when it gets crowded. */

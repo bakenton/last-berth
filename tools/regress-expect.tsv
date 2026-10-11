@@ -23,7 +23,7 @@ pw17	советник после пролога	adv: true
 pw17	ошибок страницы нет	^errors: none
 pw18	окно личного дела с портретом	^pf at \d+ \| .* lit px [1-9]
 pw18	голоса в журнале	^voice lines in 300y: [1-9]
-pw18	голоса отрисованы	^journal vo rendered: [1-9]
+pw18	голоса экипажей видны карточкой внизу (v4.30: #pf.low, без паузы)	^crew cards on screen \(#pf\.low\): [1-9]
 pw18	личное дело на дате Ночи	^night_dated pf: \{"text"
 pw18	личное дело при закрытии ковчега	^ark_closed pf: \{"text"
 pw18	ошибок страницы нет	^errors: none

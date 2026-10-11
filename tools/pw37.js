@@ -11,7 +11,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
   // dialogs are state, not the feature under test: close them by DOM click (the rail re-renders every tick, a mouse tap can lose the node)
+  // v4.30 (Nikita, 11.10): the journal line of a pause is a full-screen notice (#note) now; each one is read here before it is closed ('Later')
   const closePf=async()=>{ for(let i=0;i<12;i++){ const did=await p.evaluate(()=>{ var q=function(s){var e=document.querySelector(s); return e&&e.offsetParent!==null?e:null};
+      var nn=document.querySelector('#note'); if(nn&&getComputedStyle(nn).display!=='none'){ (window.__notesSeen=window.__notesSeen||[]).push(nn.textContent); var nb=nn.querySelector('[data-act="noteok"]'); if(nb){ nb.click(); return true } }
       var e=q('[data-act="pfok"]')||q('[data-act="shiftok"]')||q('[data-act="nightok"]')||q('[data-act="nofreeclose"]'); if(e){ e.click(); return true } if(LN.shiftOpen){ LNU.shiftStop=false; LN.shiftOpen=false; LNdraw(); return true } return false }); if(!did) break; await p.waitForTimeout(80) } };
   const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() },n); await closePf() };
   const body=async()=>await p.evaluate(()=>document.body.textContent.replace(/\s+/g,' '));
@@ -27,8 +29,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('forecast year lies ahead by FOOD_HORIZON at most', warn&&warn.d.n>0&&warn.d.n<=400&&warn.d.y===warn.day+warn.d.n, warn&&JSON.stringify(warn.d));
   const fc=await p.evaluate(()=>LN.foodFc&&{y:LN.foodFc.y,n:LN.foodFc.n,hungry:!!LN.hungry,day:LN.day,food:Math.round(LN.earth.food)});
   ok('Earth is not hungry yet when the forecast speaks', fc&&!fc.hungry, JSON.stringify(fc));
-  const t1=await body();
-  ok('EN journal line visible', /THE LARDERS HAVE A DATE\. On today's lines Earth's rations run out around year \d+, \d+ years from now; \d+ in store, \d+ farms feeding home\./.test(t1), (t1.match(/THE LARDERS[^.]*\.[^.]*\./)||[''])[0]);
+  // v4.30: the line is shown as a notice; the texts read by closePf (window.__notesSeen)
+  const t1=await p.evaluate(()=>(window.__notesSeen||[]).join(' ').replace(/\s+/g,' '));
+  ok('EN larder line shown in a notice', /THE LARDERS HAVE A DATE\. On today's lines Earth's rations run out around year \d+, \d+ years from now; \d+ in store, \d+ farms feeding home\./.test(t1), (t1.match(/THE LARDERS[^.]*\.[^.]*\./)||[''])[0]);
   ok('no raw placeholders in the journal line', !/\{[ynhk]\}/.test((t1.match(/THE LARDERS.{0,400}/)||[''])[0]));
 
   // === the advisor carries it, worst-first colouring, no undefined
@@ -45,12 +48,25 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('food cell marked warn or bad', foodCell&&/warn|bad/.test(foodCell), foodCell);
   await p.screenshot({path:require('os').tmpdir()+'/v428-horizon-en.png',clip:{x:0,y:0,width:1600,height:1000}});
 
+  // v4.30: the notice is drawn once per pause and the language switch does not replay it — the RU notice comes from a second RU desk on the same idle case
+  const ruNotice=await (async()=>{ const q=await b.newPage({viewport:{width:1600,height:1000}}); q.setDefaultTimeout(8000);
+    await q.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
+    const qt=async sel=>{const L=q.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await q.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await q.waitForTimeout(150)};
+    await q.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await q.waitForTimeout(300);
+    await q.evaluate(()=>{ document.getElementById('seedin').value='11'; document.querySelector('[data-act="new"]').click(); });
+    await qt('[data-lang="ru"]'); await qt('[data-act="oskip"]'); await qt('[data-act="gskip"]');
+    await q.evaluate(()=>{ LNU.pro.on=false; LNU.pro.stage=99; LNU.paused=true; LNdraw() });
+    let got=''; for(let i=0;i<16&&got.indexOf('У КЛАДОВЫХ')<0;i++){ await q.evaluate(()=>{ for(let k=0;k<100;k++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() });
+      for(let j=0;j<12;j++){ const d=await q.evaluate(()=>{ var nn=document.querySelector('#note'); if(nn&&getComputedStyle(nn).display!=='none'){ window.__ns=(window.__ns||'')+' '+nn.textContent; var nb=nn.querySelector('[data-act="noteok"]'); if(nb){ nb.click(); return true } }
+          var e=document.querySelector('[data-act="pfok"],[data-act="nightok"]'); if(e&&e.offsetParent!==null){ e.click(); return true } if(LN.shiftOpen){ LNU.shiftStop=false; LN.shiftOpen=false; LNdraw(); return true } return false }); if(!d) break; await q.waitForTimeout(80) }
+      got=await q.evaluate(()=>(window.__ns||'').replace(/\s+/g,' ')) }
+    await q.close(); return got })();
   // === RU
   await p.evaluate(()=>document.querySelector('[data-lang="ru"]').click()); await p.waitForTimeout(200);
   await p.evaluate(()=>{ ['[data-act="oskip"]','[data-act="gskip"]'].forEach(function(q){ var e=document.querySelector(q); if(e&&e.offsetParent!==null) e.click() }) }); await p.waitForTimeout(200);   // the language switch replays the opening
   await p.evaluate(()=>{ LNU.advOpen=true; LNU.leftTab='advice'; LNdraw() }); await p.waitForTimeout(200);
-  const t2=await body();
-  ok('RU journal line visible', /У КЛАДОВЫХ ПОЯВИЛАСЬ ДАТА\. При нынешних линиях провизия Земли кончится около \d+ года, через \d+ лет; в запасе \d+, ферм кормят дом \d+\./.test(t2), (t2.match(/У КЛАДОВЫХ.{0,200}/)||[''])[0]);
+  const t2=ruNotice;
+  ok('RU larder line shown in a notice (own RU desk)', /У КЛАДОВЫХ ПОЯВИЛАСЬ ДАТА\. При нынешних линиях провизия Земли кончится около \d+ года, через \d+ лет; в запасе \d+, ферм кормят дом \d+\./.test(t2), (t2.match(/У КЛАДОВЫХ.{0,200}/)||[''])[0]);
   const adv2=await p.evaluate(()=>{ var e=document.querySelector('.advbody'); return e?e.textContent.replace(/\s+/g,' '):'' });
   ok('RU advisor: "Провизия кончится около N года — через M лет"', /Провизия кончится около \d+ года — через \d+ лет\./.test(adv2), adv2.slice(0,200));
   const rail2=await p.evaluate(()=>{ var e=document.querySelector('#res .r-food .d'); return e?e.textContent.replace(/\s+/g,' '):'' });

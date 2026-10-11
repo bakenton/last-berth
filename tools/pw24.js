@@ -7,7 +7,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
+  // v4.30 (Nikita, 11.10): full-screen notices (#note) cover the page and eat the clicks — close them before a click
+  const tap=async sel=>{ for(let i=0;i<8&&await p.isVisible('#note [data-act="noteok"]');i++){ const nb=await p.locator('#note [data-act="noteok"]').first().boundingBox(); if(!nb) break; await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(120) }
+    const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
   const closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]') };
   const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ tick(LN); LN.pauseNow=false } LNdraw() },n); await closePf() };
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
@@ -41,7 +43,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await tap('[data-act="kit"]');
   ok('kit ordered: metal charged 100', await p.evaluate(m0=>Math.round(m0-LN.earth.metal)===100,m0), await p.evaluate(()=>LN.earth.metal));
   ok('kit on the pier', await p.evaluate(id=>LN.colonies[id].kit&&LN.colonies[id].kit.tier===1,mine));
-  ok('log kit_ordered with roman tier', await p.evaluate(()=>{ LNU.logMode='all'; LNdraw(); return /Tier I kit for .* laid out on the pier/.test(document.getElementById('log').textContent) }));
+  // v4.30: the journal is gone (Nikita, 11.10); the chronicle entry is checked in LN.log, its wording is not on the page any more
+  ok('log kit_ordered (LN.log)', await p.evaluate(()=>LN.log.some(l=>l.code==='kit_ordered')));
   await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });
   ok('panel: kit will never fit a courier', await p.evaluate(()=>/will never fit/.test(document.querySelector('#rail').textContent)));
   await run(60);
@@ -54,8 +57,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('log kit_loaded', await p.evaluate(()=>LN.log.some(l=>l.code==='kit_loaded')));
   await run(40);
   ok('tier I built', await p.evaluate(id=>LN.colonies[id].tier===1,mine));
-  ok('log kit_built ×1.6', await p.evaluate(()=>{ LNU.logMode='all'; LNdraw(); return /TIER I MACHINES RUNNING\. Output ×1\.6/.test(document.getElementById('log').textContent) }));
-  ok('voice from the settlement head in the journal', await p.evaluate(()=>/(The rig is up|children came out)/.test(document.getElementById('log').textContent)));
+  // v4.30: the journal is gone; the build is checked in LN.log, the quiet settlement-head voice as a log voice (its card is #pf.low)
+  ok('log kit_built ×1.6 (LN.log)', await p.evaluate(()=>LN.log.some(l=>l.code==='kit_built')));
+  ok('voice from the settlement head in the chronicle (LN.log)', await p.evaluate(()=>LN.log.some(l=>l.code==='voice'&&l.d.role==='role_head'&&/^kit_built/.test(l.d.k))));
   ok('output multiplied ×1.6', await p.evaluate(id=>{ const c=LN.colonies[id], q=planet(id); return Math.abs(lineRate(LN,id).makes-c.pop*q.rich*K.PROD*1.6)<1e-6 },mine));
   ok('stockyard bottomless', await p.evaluate(id=>storeCap(LN.colonies[id])===Infinity,mine));
   await run(60);
