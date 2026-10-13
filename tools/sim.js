@@ -177,12 +177,7 @@ function step(C,G,bot,d,st){
       }
       if(!laid&&pool0.length){ const x=pool0.sort((a,b)=>(a.h.parts||0)-(b.h.parts||0)||a.h.metal-b.h.metal)[0]; if(E.metal-x.h.metal>=keep) C.buildShip(G,x.i) }   // a courier beats nothing
     }
-    // 3b. v4.27: a standing order the yards cannot fill for parts is pinned to the older generation they can
-    if(pro&&per(10)){
-      for(const k in G.colonies){ const L=C.lineOf(G,k); if(!L) continue;
-        for(const cls of ['courier','hauler','freighter']){ if(!(L.want[cls]>C.lineCount(G,k,cls))) continue;
-          if(C.yardCheck(G,k,cls)==='parts'&&(G.gen||0)>0){ const g=(G.gen||0)-1; if(!(L.gen&&L.gen[cls]===g)) C.setWant(G,k,cls,L.want[cls],g) } } }
-    }
+    // 3b (v4.27, pinning a parts-starved order to the older generation) is gone with v4.31: the yards build the current generation only
     // 4. the drive programme
     const partsStarved=pro&&Object.keys(G.colonies).some(k=>{ const L=C.lineOf(G,k); return L&&['courier','hauler','freighter'].some(c=>L.want[c]>C.lineCount(G,k,c)&&C.yardCheck(G,k,c)==='parts') });
     // v4.27: the ark mark is set from the drive held on the day the Night is dated (arkMark = driveLvl + ARK_ABOVE):

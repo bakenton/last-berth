@@ -47,7 +47,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const ev2=await p.evaluate(()=>({toast:document.getElementById('toast').textContent, cls:document.getElementById('toast').className, last:LN.actions[LN.actions.length-1]}));
   // v4.18 (F-17): only a courier lifts a settlement — the toast is MSG.evacNoCourier + evacW_wait / evacW_orderC
   ok('no free hull: red toast names a courier coming home or tells to build one', /bad/.test(ev2.cls)&&/No free courier at Earth can reach/.test(ev2.toast)&&/(Hull \d+ is home in \d+ years?|Build a courier in the dock)/.test(ev2.toast), ev2.toast);
-  ok('no free hull: action logged with reason evacNoHull', ev2.last&&ev2.last.r==='evacNoHull', JSON.stringify(ev2.last));
+  ok('v4.31: the button is off with data-why=evacNoCourier and nothing was logged', await p.evaluate(()=>{ var b=document.querySelector('[data-act="evac"]'); return b&&b.getAttribute('aria-disabled')==='true'&&b.getAttribute('data-why')==='evacNoCourier' })&&!(ev2.last&&ev2.last.k==='evacuate'&&ev2.last.r==='evacNoHull'), JSON.stringify(ev2.last));
 
   // 3. dead seam with a pile: + allowed, yards put a hull on it; empty pile: + blocked
   await run(12); await closePf();

@@ -11,7 +11,7 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
   const task=async()=>p.evaluate(()=>((document.querySelector('#task .tk span:last-child')||{}).textContent||'')+' · '+((document.querySelector('#task .tt')||{}).textContent||''));
   const stage=async()=>p.evaluate(()=>parseInt((document.querySelector('#task .tk span:last-child')||{textContent:'9'}).textContent));
-  const run=async(years)=>{ await tap('[data-spd="10"]'); await p.waitForTimeout(years*160); await tap('#b-pause') };
+  const run=async(years)=>{ await tap('[data-spd="10"]'); await p.waitForTimeout(years*220); await tap('#b-pause') };   // v4.31: 10x is 200 ms a year (was 150)
   const clickWorld=async pid=>{ const bb=await p.locator('[data-p="'+pid+'"] circle.hit').boundingBox(); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150) };
   const dismiss=async()=>{ while(await p.evaluate(()=>!!document.getElementById('callout'))){ await tap('[data-act="callok"]'); } };
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(400);

@@ -21,7 +21,7 @@ function botStep(G,d){
   if(!G.drive){ for(const k in G.colonies){ const p=planet(k);
     if(p.kind==='works'&&!G.colonies[k].dark&&G.colonies[k].pop>=K.DRIVE_POP&&settledCount(G)>=driveReachFor(G)){ if(startDrive(G,k)==='ok') break; } } }
   if(canSurvey(G)==='ok'){ const nd=G.need||{food:4,metal:3}; if(E.food>nd.food*90&&E.metal>300) survey(G); }
-  if(d%120===0) scrapIdle(G,(G.gen||0)-2);
+  if(d%30===0) for(let g=0;g<(G.gen||0);g++) scrapIdle(G,g);   // v4.31: the yards no longer break up idle old hulls — the bot presses 'Scrap idle Gen N' itself
 }
 window.botRun=function(years){ const G=window.LN; for(let d=0;d<years&&!G.over;d++){ tick(G); G.pauseNow=false; botStep(G,G.day); } };
 `;

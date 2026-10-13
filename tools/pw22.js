@@ -36,7 +36,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('crews mutiny inside the last ~200 years and come home', mut.n>0&&mut.home>0&&mut.lined<before&&mut.first<=220, JSON.stringify(mut)+' lined before '+before);
   await redraw();
   const rail=(await p.textContent('#railbody')).replace(/\s+/g,' ');
-  ok('Earth tab lists refusing hulls with MUTINIED pill and scrap', /Refusing orders/.test(rail)&&/MUTINIED/.test(rail)&&/breakers will have them/.test(rail), rail.match(/Refusing orders.{0,200}/)?.[0]);
+  ok('Earth tab lists refusing hulls with MUTINIED pill and scrap', /Refusing orders/.test(rail)&&/MUTINIED/.test(rail)&&/count for the ark's convoy/.test(rail), rail.match(/Refusing orders.{0,200}/)?.[0]);
   await p.locator('#railbody .blk:has-text("Refusing orders")').first().screenshot({path:'y2-mutiny.png'});
   const adv=await p.evaluate(()=>{ const a=advice(LN).find(x=>x.code==='a_mutiny'); return a?a.n:null });
   ok('advisor carries a_mutiny with the count', adv>0, adv);

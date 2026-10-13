@@ -52,12 +52,24 @@ const TMP=require('os').tmpdir();
   ok('convoy counts docked hulls (3/2/1) and is gathered', cv1.ok&&cv1.have.courier>=3&&cv1.have.hauler>=2&&cv1.have.freighter>=1, JSON.stringify(cv1));
   const r3=await rail();
   ok('ark block says the convoy is gathered', /gathered/.test(r3), (r3.match(/Convoy at the pier.{0,60}/)||[''])[0]);
-  ok('reserve button on a waiting hull', !!(await p.$('#railbody [data-act="reserve"][data-on="1"]')));
-  await tap('#railbody [data-act="reserve"][data-on="1"][data-s="'+ids[0]+'"]');
+  // v4.31: the Earth tab no longer lists free hulls — the reserve is set in the convoy window
+  ok('Earth tab has no "Free hulls — send them out" block', !/Free hulls — send them out/.test(r3));
+  await p.locator('#railbody [data-act="convoyopen"]').scrollIntoViewIfNeeded(); await tap('#railbody [data-act="convoyopen"]');
+  ok('reserve button on a docked hull in the convoy window', !!(await p.$('#convoybox [data-act="reserve"][data-on="1"]')));
+  await tap('#convoybox [data-act="reserve"][data-on="1"][data-s="'+ids[0]+'"]');
   const rs=await p.evaluate(id=>{ const s=shipById(LN,id); return {reserve:!!s.reserve, mode:s.mode} },ids[0]);
   ok('click sets the hull aside', rs.reserve, JSON.stringify(rs));
-  const r4=await rail();
-  ok('the pill reads "ark reserve" and the button flips to Release', /ark reserve/.test(r4)&&/Release from the reserve/.test(r4), (r4.match(/ark reserve.{0,80}/)||[''])[0]);
+  const r4=await p.evaluate(()=>({t:document.getElementById('convoybox').textContent, minus:!!document.querySelector('#convoybox .cv-row.in [data-act="reserve"][data-on="0"]')}));
+  ok('the row reads "ark reserve" and the button flips to minus', /ark reserve/.test(r4.t)&&r4.minus, (r4.t.match(/ark reserve.{0,80}/)||[''])[0]);
+  await tap('[data-act="convoyclose"]');
+  // v4.31 (F-35): a mutinied hull at the pier still counts for the convoy and is listed in the window, without a plus
+  const mut=await p.evaluate(id=>{ const s=shipById(LN,id); s.mutiny=true; s.from=null; s.to=null; s.pend=null; const cv=arkConvoy(LN); LNU.tab='earth'; LNdraw(); return {ok:cv.ok, hull:convoyHull(LN,s)} },ids[1]);
+  ok('a mutinied hull counts for the convoy', mut.ok&&mut.hull, JSON.stringify(mut));
+  await p.locator('#railbody [data-act="convoyopen"]').scrollIntoViewIfNeeded(); await tap('#railbody [data-act="convoyopen"]');
+  const mrow=await p.evaluate(id=>{ var rows=[].slice.call(document.querySelectorAll('#convoybox .cv-row')); var re=new RegExp('no\\.\\s*'+id+'(\\D|$)'); var r=rows.find(function(e){ return re.test(e.textContent) }); return r?{t:r.textContent.replace(/\s+/g,' '), btn:!!r.querySelector('[data-act="reserve"]')}:null },ids[1]);
+  ok('the window lists it as "mutinied · counts for the convoy" with no plus button', mrow&&/counts for the convoy/.test(mrow.t)&&!mrow.btn, JSON.stringify(mrow));
+  await tap('[data-act="convoyclose"]');
+  await p.evaluate(id=>{ shipById(LN,id).mutiny=false; LNdraw() },ids[1]);
   await p.evaluate(()=>{ var e=document.querySelector('#railbody [data-act="arkbuy"]'); if(e) e.scrollIntoView({block:'end'}) }); await p.waitForTimeout(150);
   await p.screenshot({path:TMP+'/v429-ark-en.png',clip:{x:1150,y:70,width:450,height:930}});
 
@@ -77,7 +89,7 @@ const TMP=require('os').tmpdir();
   await p.evaluate(()=>document.querySelector('[data-lang="ru"]').click()); await p.waitForTimeout(200);
   await p.evaluate(()=>{ ['[data-act="oskip"]','[data-act="gskip"]'].forEach(function(q){ var e=document.querySelector(q); if(e&&e.offsetParent!==null) e.click() }); LNU.tab='earth'; LNdraw() }); await p.waitForTimeout(200);
   const r5=await rail();
-  ok('RU: convoy row, buy button, reserve pill', /Конвой у причала, поколение [IVX]+\+/.test(r5)&&/Купить уровень 2/.test(r5)&&/резерв ковчега|В резерв ковчега/.test(r5), (r5.match(/Конвой у причала.{0,100}/)||[''])[0]);
+  ok('RU: convoy row, buy button', /Конвой у причала, поколение [IVX]+\+/.test(r5)&&/Купить уровень 2/.test(r5), (r5.match(/Конвой у причала.{0,100}/)||[''])[0]);
   ok('RU: no raw placeholders', !/\{[a-z]\}/.test(r5), (r5.match(/.{0,40}\{[a-z]\}.{0,40}/)||[''])[0]);
   await p.evaluate(()=>{ var e=document.querySelector('#railbody [data-act="arkbuy"]'); if(e) e.scrollIntoView({block:'end'}) }); await p.waitForTimeout(150);
   await p.screenshot({path:TMP+'/v429-ark-ru.png',clip:{x:1150,y:70,width:450,height:930}});

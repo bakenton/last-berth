@@ -29,12 +29,17 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const mine2=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[1].id);
   await p.evaluate(id=>{ LN.earth.people=40; LNU.sel=id; LNU.tab='target'; LNdraw() },mine2);
   ok('few-hands hint and disabled button', /Not enough hands at home/.test(await rail())&&await p.evaluate(()=>document.querySelector('[data-act="colonize"]').getAttribute('aria-disabled')==='true'));
-  // 4. idle old hull scrapped after IDLE_SCRAP years once a newer generation is open
+  // 4. v4.31 (F-39): an idle old hull stays on the pier once a newer generation is open; 'Scrap idle Gen N' in the dock breaks it up
   await p.evaluate(()=>{ LN.earth.people=300; LN.gen=1; ensureGen(1); LN.driveLvl=1; });
   const oldId=await p.evaluate(()=>{ const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)); return s?s.id:null });
   ok('an idle Gen I hull exists', oldId!==null);
   await run(12);
-  ok('yard_scrap logged and the hull is gone', await p.evaluate(id=>LN.log.some(l=>l.code==='yard_scrap'&&l.d.n===id)&&shipById(LN,id).mode==='dead',oldId));
+  ok('v4.31: no yard_scrap, the hull is still on the pier after 12 years', await p.evaluate(id=>!LN.log.some(l=>l.code==='yard_scrap')&&shipById(LN,id).mode==='idle',oldId));
+  await p.evaluate(()=>{ LNU.dockOpen=true; LNdraw() });
+  ok('the dock offers "Scrap idle Gen I" with a hint under it', await p.evaluate(()=>!!document.querySelector('#dock [data-act="scrapgen"][data-g="0"]')&&/no longer break them up/.test(document.getElementById('dock').textContent)));
+  await tap('#dock [data-act="scrapgen"][data-g="0"]');
+  ok('the button breaks it up (scrapped_many logged, hull dead)', await p.evaluate(id=>LN.log.some(l=>l.code==='scrapped_many')&&shipById(LN,id).mode==='dead',oldId));
+  await p.evaluate(()=>{ LNU.dockOpen=false; LNdraw() });
   // 5. line block: surface stock and hulls list
   await run(30); await p.evaluate(id=>{ LN.colonies[id].store.metal=1234; LN.earth.metal=900; LN.earth.parts=500; LN.earth.fuel=800; setWant(LN,id,'courier',1); LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   await run(2); await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });

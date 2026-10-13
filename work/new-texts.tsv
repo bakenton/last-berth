@@ -146,3 +146,8 @@ UI	convoyNone	No hulls are docked at Earth right now.	У причала сейч
 UI	convoyDone	Done	Готово
 MSG	convoy_old	Too old for the convoy: it takes Generation {g} or newer.	Слишком старое для конвоя: нужно поколение {g} или новее.
 UI	noteWarn	Warning	Предупреждение
+UI	lineTakeOff	Take off the line	Снять с линии
+UI	moveTo	Move to:	Перевести на:
+UI	kitNumbers	Output now {x} a year → with the kit {y} a year · fuel +{f} a year	Выработка сейчас {x} в год → с комплектом {y} в год · топливо +{f} в год
+UI	scrapIdleHint	Idle hulls of older generations stay on the pier until you scrap them here — the yards no longer break them up on their own.	Простаивающие суда старых поколений стоят у причала, пока ты не разберёшь их здесь — верфи сами их больше не ломают.
+UI	convoyMutiny	mutinied · counts for the convoy	бунт · идёт в конвой

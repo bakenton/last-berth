@@ -95,22 +95,22 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('fleet panel lists the hull in the yards with its destination world', fq.length>0&&fq.every(t=>/→ [A-Z]{2}-\d+/.test(t)), JSON.stringify(fq));
   ok('dock no longer lists the yard queue', await p.evaluate(()=>!document.querySelector('#dock .yardq')));
 
-  // === F-03: idle hulls — menu on Earth and block on the world
+  // === F-03: idle hulls - block on the world (v4.31: the Earth-tab 'free hulls - send them out' menu is gone)
   await closePf(); await p.evaluate(()=>{ LNU.tab='earth'; LNdraw() });
   const idleN=await p.evaluate(()=>LN.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)).length);
   if(idleN===0){ await p.evaluate(()=>{ buildShip(LN,0); }); await run(12); await p.evaluate(()=>{ LNU.tab='earth'; LNdraw() }) }
-  const chips=await p.evaluate(()=>document.querySelectorAll('#rail [data-act="assign"]').length);
-  ok('Earth tab: each free hull offers the worlds it can be sent to', chips>0, chips);
+  ok('Earth tab: no "Free hulls" send-out block and no send chips', await p.evaluate(()=>!/Free hulls \u2014 send them out/.test(document.getElementById('rail').textContent)&&!document.querySelector('#rail [data-act="assign"]')));
   await p.screenshot({path:require('os').tmpdir()+'/v416-earth.png',clip:{x:1040,y:60,width:560,height:900}});
-  const before=await p.evaluate(()=>LN.ships.filter(s=>s.from).length);
-  await tap('#rail [data-act="assign"]');
-  const tAs=await toast();
-  ok('tapping a world sends the hull and confirms it', /sent to/.test(tAs), tAs);
-  ok('the hull is on a line now', await p.evaluate(b=>LN.ships.filter(s=>s.from).length>b,before));
-  await p.evaluate(()=>{ buildShip(LN,0); }); await run(12);
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   const fb=await p.evaluate(()=>{ var h=[].slice.call(document.querySelectorAll('#rail .blk')).find(e=>/Free hulls at Earth/.test(e.textContent)); return h?h.textContent:null });
   ok('World tab: "Free hulls at Earth" block with a Send here button', fb&&/Send here/.test(fb), fb);
+  const before=await p.evaluate(()=>LN.ships.filter(s=>s.from).length);
+  await tap('#rail [data-act="assign"]');
+  const tAs=await toast();
+  ok('tapping Send here sends the hull and confirms it', /sent to/.test(tAs), tAs);
+  ok('the hull is on a line now', await p.evaluate(b=>LN.ships.filter(s=>s.from).length>b,before));
+  await p.evaluate(()=>{ buildShip(LN,0); }); await run(12);
+  await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   const order=await p.evaluate(()=>{ var h=[].slice.call(document.querySelectorAll('#rail .blk')).map(e=>e.querySelector('h3')?e.querySelector('h3').textContent:''); return h });
   ok('…and the order block is its own block: "Planet work fleet"', order.some(t=>/Planet work fleet/.test(t)), JSON.stringify(order));
   await p.screenshot({path:require('os').tmpdir()+'/v416-target.png',clip:{x:1040,y:60,width:560,height:900}});
