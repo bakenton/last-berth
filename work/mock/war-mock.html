@@ -1,0 +1,378 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — макет военки</title>
+<style>
+:root{
+  --bg:#000;--ink:#e6e6e6;--mute:#8a8a8a;--line:#2a2a2a;--panel:#070707;
+  --red:#ff2a1a;--grn:#39ff5a;--org:#ff9a1a;--yel:#ffd21a;--blu:#5ab0ff;
+  --mil:#1fd36a;--milDim:#0b2e18;--milLine:#17552c;
+  --note:#ffd21a;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:13px/1.35 "JetBrains Mono","Consolas","Menlo",monospace}
+a{color:inherit}
+.nav{position:sticky;top:0;z-index:9;display:flex;gap:0;background:#000;border-bottom:1px solid var(--line)}
+.nav a{padding:10px 16px;text-decoration:none;text-transform:uppercase;letter-spacing:.08em;font-size:12px;border-right:1px solid var(--line);color:var(--mute)}
+.nav a.on{color:#fff}
+.nav .sp{flex:1}
+.nav .tag{padding:10px 16px;color:var(--mute);font-size:11px}
+section.screen{min-height:100vh;border-bottom:4px solid #222;position:relative}
+h1.sc{margin:0;padding:8px 16px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#000;background:#ddd}
+.note{position:absolute;z-index:5;max-width:260px;background:var(--note);color:#000;padding:6px 8px;font-size:11px;line-height:1.3;box-shadow:2px 2px 0 #000}
+.note b{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:2px}
+.top{display:grid;grid-template-columns:170px repeat(4,auto) 1fr auto;border-bottom:1px solid var(--line);height:72px}
+.top>div{padding:8px 14px;border-right:1px solid var(--line)}
+.top .logo{display:flex;align-items:center;gap:10px;font-weight:700;letter-spacing:.12em}
+.top .logo i{width:12px;height:12px;background:var(--red);display:inline-block}
+.k{font-size:10px;letter-spacing:.1em;color:var(--mute);text-transform:uppercase}
+.v{font-size:26px;font-weight:700;line-height:1.1}
+.v.g{color:var(--grn)}.v.o{color:var(--org)}.v.y{color:var(--yel)}.v.r{color:var(--red)}.v.m{color:var(--mil)}
+.sw{display:flex;align-items:stretch}
+.sw div{padding:8px 16px;display:flex;align-items:center;border-left:1px solid var(--line);text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--mute);position:relative}
+.sw div.on{background:#fff;color:#000}
+.sw div.mil.on{background:var(--mil);color:#000}
+.sw .dot{position:absolute;top:6px;right:8px;width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 8px var(--red)}
+.res{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--line)}
+.res>div{padding:8px 14px;border-right:1px solid var(--line)}
+.res .d{font-size:11px;color:var(--mute)}
+.res .d em{font-style:normal;color:var(--grn)}
+.body{display:grid;grid-template-columns:1fr 380px;min-height:560px}
+.map{position:relative;border-right:1px solid var(--line)}
+.map svg{width:100%;height:100%;display:block}
+.side{display:flex;flex-direction:column}
+.tabs{display:flex;border-bottom:1px solid var(--line)}
+.tabs div{flex:1;text-align:center;padding:10px;text-transform:uppercase;letter-spacing:.1em;font-size:12px;color:var(--mute);border-right:1px solid var(--line)}
+.tabs div.on{background:#fff;color:#000}
+.panel{padding:10px 14px;border-bottom:1px solid var(--line)}
+.panel h3{margin:0 0 8px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:#fff}
+.row{display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px dotted #222}
+.row span:last-child{color:#fff}
+.btn{display:inline-block;padding:8px 12px;border:1px solid #666;text-transform:uppercase;letter-spacing:.08em;font-size:12px;margin:6px 6px 0 0;color:#fff}
+.btn.pri{background:var(--red);border-color:var(--red);color:#fff}
+.btn.mil{background:var(--mil);border-color:var(--mil);color:#000}
+.btn.off{color:#555;border-color:#333}
+.small{font-size:11px;color:var(--mute)}
+.bar{height:8px;background:#111;border:1px solid #333;position:relative;margin:4px 0}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:var(--mil)}
+.bar.r i{background:var(--red)}
+.log{border-top:1px solid var(--line);padding:8px 14px;background:var(--panel)}
+.log .hd{display:flex;gap:10px;align-items:center;margin-bottom:6px;text-transform:uppercase;letter-spacing:.1em;font-size:11px}
+.log .hd b{background:var(--red);color:#fff;padding:1px 6px;font-weight:400}
+.log p{margin:3px 0;color:#ccc}
+.log p .t{color:#555;margin-right:8px}
+.log p.war{color:var(--mil);border-left:3px solid var(--mil);padding-left:8px}
+.log p.red{color:var(--red)}
+.log p.vo{color:var(--yel)}
+/* military tint */
+.mil-screen .top,.mil-screen .res,.mil-screen .panel,.mil-screen .map,.mil-screen .tabs,.mil-screen .log{border-color:var(--milLine)}
+.mil-screen .row{border-color:#143a22}
+.mil-screen .tabs div.on{background:var(--mil);color:#000}
+.mil-screen{background:radial-gradient(1200px 500px at 50% 0,#07150c 0,#000 70%)}
+.alert{padding:8px 10px;margin-bottom:6px;border-left:3px solid var(--org);background:#0b0b0b}
+.alert.red{border-color:var(--red)}
+.alert.mil{border-color:var(--mil)}
+.alert b{display:block;color:#fff;font-weight:600}
+.alert .small{display:block}
+.fl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.slider{display:flex;align-items:center;gap:8px}
+.slider .tr{width:160px;height:6px;background:#111;border:1px solid #333;position:relative}
+.slider .tr i{position:absolute;left:0;top:0;bottom:0;width:30%;background:var(--mil)}
+.slider .tr b{position:absolute;left:calc(30% - 6px);top:-5px;width:12px;height:14px;background:#fff}
+.slider .tr s{position:absolute;left:5%;top:-3px;bottom:-3px;width:1px;background:var(--red);text-decoration:none}
+.pause{position:absolute;right:20px;top:20px;border:1px solid var(--mil);color:var(--mil);padding:6px 14px;letter-spacing:.2em;text-transform:uppercase;font-size:12px;background:rgba(0,0,0,.6)}
+/* HQ */
+.hq{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:auto auto;gap:14px;padding:18px;background:#050505;min-height:calc(100vh - 40px)}
+.mon{border:2px solid #333;background:#000;position:relative;min-height:240px;box-shadow:inset 0 0 40px #0a0a0a}
+.mon:before{content:attr(data-n);position:absolute;top:-1px;left:-1px;background:#333;color:#ccc;font-size:10px;padding:2px 6px;letter-spacing:.1em}
+.mon .ttl{padding:16px 12px 6px;font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#fff;border-bottom:1px solid #222}
+.mon .in{padding:10px 12px}
+.mon.mil{border-color:var(--milLine)}
+.mon.mil .ttl{color:var(--mil)}
+.mon.wide{grid-column:span 2}
+.mon .go{position:absolute;right:10px;bottom:10px;border:1px solid #555;padding:4px 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.stat{display:flex;gap:18px;flex-wrap:wrap}
+.stat div{min-width:90px}
+.stat .v{font-size:22px}
+.legend{padding:10px 16px;color:var(--mute);font-size:11px;border-top:1px solid var(--line)}
+.legend b{color:#fff;font-weight:400}
+</style>
+</head>
+<body>
+
+<div class="nav">
+  <a href="#s1">1 · Переключатель</a>
+  <a href="#s2">2 · Военный терминал</a>
+  <a href="#s3">3 · Штаб (овервью)</a>
+  <a href="#s4">4 · Колонизаторский: что добавилось</a>
+  <span class="sp"></span>
+  <span class="tag">макет · не играбельно · 13.10</span>
+</div>
+
+<!-- ============ 1. SWITCH ============ -->
+<section class="screen" id="s1" style="min-height:auto">
+  <h1 class="sc">1 · Переключатель терминалов — живёт в шапке всегда</h1>
+  <div class="top">
+    <div class="logo"><i></i>LAST BERTH</div>
+    <div><div class="k">Год</div><div class="v">2714</div></div>
+    <div><div class="k">Земля</div><div class="v g">1 840</div></div>
+    <div><div class="k">Живых миров</div><div class="v">6</div></div>
+    <div><div class="k">Ночь</div><div class="v o">3321</div></div>
+    <div></div>
+    <div class="sw" style="padding:0;border:0">
+      <div class="on">Колонии</div>
+      <div class="mil">Военный<span class="dot"></span></div>
+      <div>Штаб</div>
+      <div style="border-left:1px solid var(--line)">▶ 1× 2× 4× 10×</div>
+    </div>
+  </div>
+  <div class="note" style="right:120px;top:84px">
+    <b>Красная точка</b>В другом терминале есть срочное: налёт объявлен, судно замолчало, мир пал. Горит, пока не открыл.
+  </div>
+  <div class="legend">
+    Три кнопки заменяют текущие «Земля · Объект · Миры»? <b>Нет</b> — те остаются вкладками правой панели внутри колонизаторского терминала. Переключатель — уровнем выше, это смена всего экрана.
+    <br>Цвета: колонии — как сейчас (белое на чёрном), военный — зелёный, штаб — серый «мониторы».
+  </div>
+</section>
+
+<!-- ============ 2. MILITARY ============ -->
+<section class="screen mil-screen" id="s2">
+  <h1 class="sc" style="background:var(--mil)">2 · Военный терминал — время стоит</h1>
+
+  <div class="top">
+    <div class="logo"><i style="background:var(--mil)"></i>LAST BERTH</div>
+    <div><div class="k">Год</div><div class="v">2714</div></div>
+    <div><div class="k">Угроза империи</div><div class="v m">▮▮▮▯▯</div><div class="small">растёт · 6 миров, 14 судов в пути</div></div>
+    <div><div class="k">Заражено</div><div class="v r">1</div></div>
+    <div><div class="k">Тревог</div><div class="v o">3</div></div>
+    <div></div>
+    <div class="sw" style="padding:0;border:0">
+      <div>Колонии<span class="dot"></span></div>
+      <div class="mil on">Военный</div>
+      <div>Штаб</div>
+      <div style="border-left:1px solid var(--milLine);color:var(--mil)">⏸ пауза</div>
+    </div>
+  </div>
+
+  <div class="res">
+    <div>
+      <div class="k">Доля ВПК</div>
+      <div class="slider"><div class="tr"><s></s><i></i><b></b></div><span class="v m" style="font-size:20px">30%</span></div>
+      <div class="d">пол 5% · берёт <em>деталей 1.2/год</em>, людей 0.9/год</div>
+    </div>
+    <div><div class="k">◆ Снаряжение</div><div class="v m">1 240</div><div class="d">▲ +1.2/год · склад Земли</div></div>
+    <div><div class="k">♟ Корпус</div><div class="v m">820</div><div class="d">▲ +0.9/год · на Земле, ждёт транспорта</div></div>
+    <div><div class="k">⌂ Форты</div><div class="v">4</div><div class="d">на 3 мирах · Дельта ур.2</div></div>
+    <div><div class="k">⇄ Эскорт</div><div class="v">2</div><div class="d">линии Гамма, Дельта</div></div>
+  </div>
+  <div class="note" style="left:20px;top:200px">
+    <b>Ползунок</b>Единственная «налоговая» ручка. Красная риска — пол 5%, ниже нельзя. Меняется в любой момент, действует с текущего года.
+  </div>
+
+  <div class="body">
+    <div class="map">
+      <svg viewBox="0 0 900 560">
+        <defs>
+          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+            <line x1="0" y1="0" x2="0" y2="6" stroke="#ff2a1a" stroke-width="1.5"/>
+          </pattern>
+        </defs>
+        <!-- rings -->
+        <circle cx="450" cy="290" r="110" fill="none" stroke="#143a22"/>
+        <circle cx="450" cy="290" r="210" fill="none" stroke="#143a22"/>
+        <circle cx="450" cy="290" r="320" fill="none" stroke="#143a22"/>
+        <line x1="450" y1="-40" x2="450" y2="620" stroke="#0f2a18" stroke-dasharray="2 4"/>
+        <line x1="60" y1="290" x2="840" y2="290" stroke="#0f2a18" stroke-dasharray="2 4"/>
+        <text x="470" y="50" fill="#2d6b44" font-size="10">ЭОС</text>
+        <text x="810" y="180" fill="#2d6b44" font-size="10">ГЕЛИОС</text>
+        <text x="100" y="440" fill="#2d6b44" font-size="10">СЕЛЕНА</text>
+        <!-- threat halo around infected -->
+        <circle cx="700" cy="420" r="150" fill="#ff2a1a" opacity=".06"/>
+        <circle cx="700" cy="420" r="95" fill="#ff2a1a" opacity=".08"/>
+        <circle cx="700" cy="420" r="150" fill="none" stroke="#ff2a1a" stroke-opacity=".35" stroke-dasharray="3 5"/>
+        <!-- earth -->
+        <circle cx="450" cy="290" r="14" fill="#fff"/>
+        <text x="432" y="320" fill="#ccc" font-size="10">ЗЕМЛЯ</text>
+        <!-- lines -->
+        <line x1="450" y1="290" x2="560" y2="200" stroke="#1fd36a" stroke-width="1.5"/>
+        <line x1="450" y1="290" x2="300" y2="360" stroke="#1fd36a" stroke-width="1.5"/>
+        <line x1="450" y1="290" x2="640" y2="360" stroke="#3a3a3a" stroke-width="1.5"/>
+        <text x="585" y="330" fill="#ff9a1a" font-size="9">без эскорта · у заражения</text>
+        <!-- colonies -->
+        <g><rect x="554" y="194" width="12" height="12" fill="none" stroke="#39ff5a"/><text x="572" y="198" fill="#ccc" font-size="11">ДЕЛЬТА</text><text x="572" y="210" fill="#888" font-size="9">ферма · 400 · ополчение 40</text>
+           <text x="572" y="222" fill="#1fd36a" font-size="9">⌂ форт ур.2 → 120</text></g>
+        <g><polygon points="300,354 306,366 294,366" fill="none" stroke="#fff"/><text x="312" y="370" fill="#ccc" font-size="11">ТЭЛЛОУ</text><text x="312" y="382" fill="#888" font-size="9">завод · 260 · ополчение 26</text><text x="312" y="394" fill="#1fd36a" font-size="9">⌂ форт ур.1 → 52</text></g>
+        <g><circle cx="640" cy="360" r="6" fill="none" stroke="#fff"/><text x="650" y="356" fill="#ccc" font-size="11">БРАЙН</text><text x="650" y="368" fill="#888" font-size="9">рудник · 180 · ополчение 18</text><text x="650" y="380" fill="#ff9a1a" font-size="9">без форта · налёт через ~12 лет</text></g>
+        <g><circle cx="330" cy="150" r="6" fill="none" stroke="#fff"/><text x="340" y="146" fill="#ccc" font-size="11">ВЕСПЕР</text><text x="340" y="158" fill="#888" font-size="9">топливо · 120</text></g>
+        <!-- infected -->
+        <g><circle cx="700" cy="420" r="22" fill="url(#hatch)" stroke="#ff2a1a" stroke-width="2"/>
+           <text x="730" y="416" fill="#ff2a1a" font-size="11" font-weight="700">ГАММА — ЗАРАЖЕНА</text>
+           <text x="730" y="430" fill="#ff8a7a" font-size="9">пала в 2674 · гарнизон ксеносов ~210 ▲</text>
+           <text x="730" y="442" fill="#ff8a7a" font-size="9">рудник · было 300 жителей</text></g>
+        <!-- lost ship -->
+        <g><text x="600" y="470" fill="#ff9a1a" font-size="12">✕</text><text x="612" y="474" fill="#ff9a1a" font-size="9">«Орлан» не выходит на связь · 2706</text></g>
+        <!-- incoming raid -->
+        <g><path d="M 820 300 L 660 352" stroke="#ff9a1a" stroke-dasharray="4 3" fill="none"/><polygon points="660,352 672,344 670,358" fill="#ff9a1a"/>
+           <text x="770" y="290" fill="#ff9a1a" font-size="9">налёт ~160 → Брайн</text></g>
+      </svg>
+      <div class="pause">время стоит</div>
+      <div class="note" style="left:20px;top:420px">
+        <b>Карта та же</b>Те же кольца и миры, но слой другой: ополчение/форт у каждого мира, эскорт на линиях (зелёные — с эскортом), ореол угрозы вокруг заражения, стрелка объявленного налёта. Добыча и трюмы здесь не показаны.
+      </div>
+    </div>
+
+    <div class="side">
+      <div class="tabs"><div class="on">Тревоги</div><div>Объект</div><div>Корпус</div></div>
+
+      <div class="panel">
+        <h3>Тревоги · 3</h3>
+        <div class="alert"><b>▲ Брайн: налёт через ~12 лет</b><span class="small">сила ~160 · оборона 18 (без форта) · шанс удержать 1 из 700</span><span class="small">форт +1 нужно 200 снаряжения на месте · линия Брайн не везёт</span></div>
+        <div class="alert"><b>▲ «Орлан» не выходит на связь</b><span class="small">линия Гамма · последний сигнал 2706 · задержка 8 лет</span></div>
+        <div class="alert red"><b>● Гамма заражена 40 лет</b><span class="small">гарнизон ~210, растёт до потолка 400 · соседи: налёты чаще ×1.6</span></div>
+      </div>
+      <div class="note" style="left:620px;top:200px">
+        <b>Прогноз всегда</b>У каждой тревоги — сила против силы и шанс. Правило одно: равные — монетка, вдвое — 9 из 10, втрое — 24 из 25, впятеро — 99 из 100.
+      </div>
+
+      <div class="panel">
+        <h3>Выбрано: Гамма (заражена)</h3>
+        <div class="row"><span>Гарнизон ксеносов</span><span style="color:var(--red)">~210 ▲ +4/год</span></div>
+        <div class="row"><span>Переходов от Земли</span><span>2 · снабжение ×0.8</span></div>
+        <div class="row"><span>Ближайшая живая колония</span><span>Брайн · 1 переход</span></div>
+
+        <div style="margin-top:10px"><span class="btn mil">Отбить</span> <span class="small">корпус</span> <span class="btn">300 ▾</span> <span class="small">из 820</span></div>
+        <div class="bar"><i style="width:53%"></i></div>
+        <div class="row"><span>Сила на месте</span><span>300 × 0.8 = 240 против 210</span></div>
+        <div class="row"><span>Шанс</span><span style="color:var(--mil)">62 %</span></div>
+        <div class="row"><span>Потери при победе</span><span>~90 человек</span></div>
+        <div class="row"><span>Прибытие</span><span>2731 · транспорт «Атлант» II</span></div>
+        <div class="small" style="margin-top:4px">Корпус 500 → сила 400, шанс 87 %, прибытие 2735 (второй рейс).</div>
+
+        <div style="margin-top:12px"><span class="btn pri">Экстерминатус</span></div>
+        <div class="row"><span>Корпус судна</span><span>грузовоз в доке · есть 1</span></div>
+        <div class="row"><span>Взрывчатка</span><span>900 снаряжения · есть 1 240</span></div>
+        <div class="row"><span>Экипаж</span><span style="color:var(--red)">400 человек · не вернутся</span></div>
+        <div class="row"><span>Риск сбития у заражения</span><span style="color:var(--org)">35 %</span></div>
+        <div class="row"><span>Результат</span><span>Гамма уничтожена навсегда · область чиста</span></div>
+
+        <div style="margin-top:12px"><span class="btn off">Оставить</span> <span class="small">потери соседей ~3 чел/год, суда ×1.6</span></div>
+      </div>
+      <div class="note" style="left:20px;top:700px">
+        <b>Три выхода, цена каждого видна</b>Отбить — люди и время. Экстерминатус — судно, снаряжение, экипаж, риск, планета навсегда. Оставить — капля в год.
+      </div>
+    </div>
+  </div>
+
+  <div class="log">
+    <div class="hd">Журнал <b>2 новых</b> <span class="small">· военные записи зелёные и со своим звуком</span></div>
+    <p class="war"><span class="t">2714</span>Разведка: налёт силой около 160 выйдет к Брайну через 12 лет. Форта нет.</p>
+    <p class="war"><span class="t">2706</span>«Орлан» молчит восьмой год. Последний сигнал — у Гаммы.</p>
+    <p class="red"><span class="t">2674</span>Гамма пала. Связи нет. На карте — мёртвый круг.</p>
+    <p class="vo"><span class="t">2650</span>Генерал штаба: «Они идут за шумом. Чем больше вы строите, тем ближе они. Я могу дать вам стены — или дать вам людей. Не то и другое.»</p>
+  </div>
+</section>
+
+<!-- ============ 3. HQ ============ -->
+<section class="screen" id="s3">
+  <h1 class="sc">3 · Штаб — обзор, не управление. Время идёт</h1>
+  <div class="hq">
+    <div class="mon wide" data-n="МОНИТОР 1 · ИМПЕРИЯ">
+      <div class="ttl">Карта · 6 живых миров · 1 заражён</div>
+      <div class="in">
+        <svg viewBox="0 0 600 220" style="width:100%;height:200px">
+          <circle cx="300" cy="110" r="60" fill="none" stroke="#222"/><circle cx="300" cy="110" r="105" fill="none" stroke="#222"/>
+          <circle cx="300" cy="110" r="7" fill="#fff"/>
+          <rect x="352" y="60" width="8" height="8" fill="none" stroke="#39ff5a"/><text x="364" y="68" fill="#aaa" font-size="9">Дельта ⌂</text>
+          <polygon points="225,150 230,158 220,158" fill="none" stroke="#fff"/><text x="236" y="158" fill="#aaa" font-size="9">Тэллоу ⌂</text>
+          <circle cx="400" cy="150" r="4" fill="none" stroke="#fff"/><text x="408" y="154" fill="#ff9a1a" font-size="9">Брайн ▲12</text>
+          <circle cx="430" cy="185" r="9" fill="#ff2a1a" opacity=".6"/><text x="444" y="189" fill="#ff2a1a" font-size="9">Гамма ●</text>
+          <circle cx="240" cy="50" r="4" fill="none" stroke="#fff"/><text x="248" y="54" fill="#aaa" font-size="9">Веспер</text>
+        </svg>
+      </div>
+      <div class="go">→ колонии</div>
+    </div>
+    <div class="mon mil" data-n="МОНИТОР 2 · УГРОЗА">
+      <div class="ttl">Угроза ▮▮▮▯▯ · растёт</div>
+      <div class="in">
+        <div class="alert"><b>▲ Брайн · налёт ~12 лет</b><span class="small">оборона 18 против 160</span></div>
+        <div class="alert"><b>▲ «Орлан» молчит</b></div>
+        <div class="alert red"><b>● Гамма · 40 лет</b></div>
+        <div class="small" style="margin-top:8px">ВПК 30% · снаряжение 1 240 · корпус 820</div>
+      </div>
+      <div class="go">→ военный</div>
+    </div>
+    <div class="mon" data-n="МОНИТОР 3 · ЗЕМЛЯ">
+      <div class="ttl">Люди и склад</div>
+      <div class="in stat">
+        <div><div class="k">Люди</div><div class="v y">1 840</div><div class="small">+2.8/год − ВПК 0.9</div></div>
+        <div><div class="k">Провизия</div><div class="v g">8 150</div><div class="small">хватит до 2990</div></div>
+        <div><div class="k">Металл</div><div class="v">7 725</div></div>
+        <div><div class="k">Детали</div><div class="v">2 745</div><div class="small">− ВПК 1.2/год</div></div>
+        <div><div class="k">Топливо</div><div class="v o">8 320</div></div>
+      </div>
+      <div class="go">→ колонии</div>
+    </div>
+    <div class="mon" data-n="МОНИТОР 4 · ФЛОТ">
+      <div class="ttl">Суда · 14 в пути · 1 молчит</div>
+      <div class="in">
+        <div class="row"><span>Курьеры</span><span>6 · 1 свободен</span></div>
+        <div class="row"><span>Тягачи</span><span>5</span></div>
+        <div class="row"><span>Грузовозы</span><span>3 · 1 в доке</span></div>
+        <div class="row"><span style="color:var(--org)">«Орлан»</span><span style="color:var(--org)">молчит 8 лет</span></div>
+        <div class="row"><span>Эскорт</span><span>Гамма, Дельта</span></div>
+      </div>
+      <div class="go">→ колонии / флот</div>
+    </div>
+    <div class="mon" data-n="МОНИТОР 5 · ЭФИР">
+      <div class="ttl">Последние записи</div>
+      <div class="in">
+        <p class="small" style="color:var(--mil)">2714 · Налёт к Брайну через 12 лет.</p>
+        <p class="small" style="color:var(--mil)">2706 · «Орлан» молчит.</p>
+        <p class="small">2701 · Дельта: урожай, трюм полон.</p>
+        <p class="small" style="color:var(--red)">2674 · Гамма пала.</p>
+      </div>
+    </div>
+  </div>
+  <div class="note" style="left:40px;top:330px">
+    <b>Зачем штаб</b>Один взгляд на всё, без кнопок действия. Каждый монитор — дверь в свой терминал. «Пентагон с мониторами» — это оформление этого экрана, когда будет визуал.
+  </div>
+</section>
+
+<!-- ============ 4. COLONY ADDITIONS ============ -->
+<section class="screen" id="s4" style="min-height:auto">
+  <h1 class="sc">4 · Колонизаторский терминал — что в него добавляется</h1>
+  <div class="body" style="min-height:auto">
+    <div class="map" style="padding:14px">
+      <div class="panel" style="border:1px solid var(--line);max-width:420px">
+        <h3>Линия · Дельта ← Земля</h3>
+        <div class="row"><span>Везёт</span><span>провизия 40/год</span></div>
+        <div class="row"><span>Везёт</span><span style="color:var(--mil)">◆ снаряжение 20/год → форт</span></div>
+        <div class="row"><span>Эскорт</span><span style="color:var(--mil)">⇄ есть · потеря судна 2 % вместо 9 %</span></div>
+        <div class="small" style="margin-top:6px">Снаряжение — новый груз в том же списке, что металл и провизия. Форт растёт по мере довоза.</div>
+      </div>
+      <div class="panel" style="border:1px solid var(--line);max-width:420px;margin-top:14px">
+        <h3>Мир · Дельта</h3>
+        <div class="row"><span>Люди</span><span>400</span></div>
+        <div class="row"><span>Ополчение</span><span>40</span></div>
+        <div class="row"><span style="color:var(--mil)">⌂ Форт</span><span style="color:var(--mil)">ур.2 · оборона 120 · до ур.3: 140/200</span></div>
+        <div class="small" style="margin-top:6px">Только цифры. Кнопок войны здесь нет — они в военном терминале.</div>
+      </div>
+    </div>
+    <div class="side">
+      <div class="log" style="border:0">
+        <div class="hd">Журнал <b>1 новое</b></div>
+        <p><span class="t">2714</span>Дельта: урожай собран, трюм «Гермеса» полон.</p>
+        <p class="war"><span class="t">2714</span>▲ ВОЕННЫЙ: налёт к Брайну через 12 лет. Открыть военный терминал →</p>
+        <p><span class="t">2712</span>Тэллоу: завод выдал 60 деталей.</p>
+      </div>
+      <div class="note" style="right:14px;top:14px">
+        <b>Отдельный тип записи</b>Зелёная полоса, свой звук, и в конце — переход в военный терминал. Не смешивается с урожаем и трюмами.
+      </div>
+    </div>
+  </div>
+</section>
+
+</body>
+</html>
