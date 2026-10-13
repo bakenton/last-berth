@@ -14,7 +14,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const toast=async()=>(await p.textContent('#toast'))||'';
   const rail=async()=>await p.evaluate(()=>document.getElementById('rail').textContent.replace(/\s+/g,' '));
   const titles=async()=>await p.evaluate(()=>[].slice.call(document.querySelectorAll('#rail .blk h3')).map(e=>e.textContent.trim()));
-  const show=async id=>{ await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },id) };
+  const show=async id=>{ await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },id); await p.waitForTimeout(120) };   // v4.33: let the rail settle — the click raced the redraw (flaky "not attached")
   const killFree=async cls=>{ await p.evaluate(cls=>{ LN.ships.forEach(s=>{ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&(!cls||HULLS[s.hull].key===cls)) s.mode='dead' }) },cls) };
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });

@@ -80,7 +80,7 @@ function reloadTexts(){
 function textsVisible(){ return !!TXT_URL || /[?&]dev\b/.test(location.search) }
 
 
-var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_noconvoy:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',food_horizon:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
+var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_noconvoy:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',world_cut:'bd',food_horizon:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
  quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',fragment:'hi',order_sent:'hi'};
 
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
@@ -1073,20 +1073,26 @@ function seamYears(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pi
 /* v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
    the free courier that can lift everyone and gets there first; else the biggest one */
 function pickCourier(pid){ var p=planet(pid), c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
-  var list=freeHulls().filter(function(s){ return !(s.from&&s.to)&&!s.pend&&!s.job&&!s.retire&&HULLS[s.hull].key==='courier'&&p&&canReachSector(s,p.sec) });
+  var list=freeHulls().filter(function(s){ return !(s.from&&s.to)&&!s.pend&&!s.job&&!s.retire&&HULLS[s.hull].key==='courier'&&p&&canReachSector(s,p.sec)&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });   // v4.33: a courier that would not be home before the Night is not offered
   if(!list.length) return null;
   var fit=list.filter(function(s){return s.cap>=pop}).sort(function(a,b){ return legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b) || a.cap-b.cap });
   if(fit.length) return fit[0];
   return list.sort(function(a,b){return b.cap-a.cap})[0] }
 /* v4.31 (Nikita, 13.10, F-38): no free courier that reaches the world — the button is off and says why on a press */
 function evacBtn(p,cls){
-  var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}), ec=evg?null:pickCourier(p.id), nh=(!evg&&!ec)?nextHome(G,p.id,'courier'):null;
-  return '<button class="btn danger'+(cls?' '+cls:'')+'" type="button" data-act="evac" data-p="'+p.id+'"'+(evg?off('evacuating'):(ec?'':off('evacNoCourier',{p:pname(p.id),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')})))+'>'+(evg?T('evacGoing'):T('evac'))+'</button>' }
+  var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}), ec=evg?null:pickCourier(p.id), nh=(!evg&&!ec)?nextHome(G,p.id,'courier'):null, ll=lastLift(G,p.id);
+  return '<button class="btn danger'+(cls?' '+cls:'')+'" type="button" data-act="evac" data-p="'+p.id+'"'+(evg?off('evacuating'):(ll&&ll.st==='cut'?off('evacLate',{p:pname(p.id)}):ec?'':off('evacNoCourier',{p:pname(p.id),w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')})))+'>'+(evg?T('evacGoing'):T('evac'))+'</button>' }
+/* v4.33 (Nikita, 13.10): the last lift sits under the button it is about — the year, then the verdict once it is missed */
+function liftLine(p){ var ll=lastLift(G,p.id); if(!ll||ll.st==='going') return '';
+  if(ll.st==='cut') return '<div class="bad" style="font-size:12px;line-height:1.45;margin-top:6px;font-weight:600">'+esc(fill(T('liftCut'),{k:ll.pop}))+'</div>';
+  if(ll.st==='none') return '<div class="warn" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(T('liftNone'))+'</div>';
+  return '<div class="'+(ll.n<=25?'bad':(ll.n<=K.LIFT_WARN?'warn':'dim'))+'" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T('liftBy'),{y:ll.y,n:ll.n}))+'</div>' }
 function evacInfo(p,c){
   var evg=G.ships.some(function(o){return o.job==='evac'&&o.dest===p.id&&o.mode==='transit'}); if(evg) return '';
+  var cut=lastLift(G,p.id); if(cut&&cut.st==='cut') return liftLine(p);
   var s=pickCourier(p.id), pop=Math.floor(c.pop);
-  if(!s){ var nh=nextHome(G,p.id,'courier'); return '<div class="warn" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T('evacNoCourierHint'),{w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}))+'</div>' }
-  return '<div class="'+(s.cap<pop?'warn':'dim')+'" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T(s.cap<pop?'evacShort':'evacWho'),{n:s.id,h:hullName(HULLS[s.hull]),c:s.cap,k:pop,l:pop-s.cap,y:legDays(G,p.id,'earth',s)}))+'</div>';
+  if(!s){ var nh=nextHome(G,p.id,'courier'); return liftLine(p)+'<div class="warn" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T('evacNoCourierHint'),{w:nh?fill(T('evacW_wait'),{n:nh.id,l:nh.t}):T('evacW_orderC')}))+'</div>' }
+  return liftLine(p)+'<div class="'+(s.cap<pop?'warn':'dim')+'" style="font-size:12px;line-height:1.45;margin-top:6px">'+esc(fill(T(s.cap<pop?'evacShort':'evacWho'),{n:s.id,h:hullName(HULLS[s.hull]),c:s.cap,k:pop,l:pop-s.cap,y:legDays(G,p.id,'earth',s)}))+'</div>';
 }
 /* v4.17 (Nikita, 04.10: 'когда планета истощается, то блокируется всё. Можно только нажать эвакуировать'): a spent world offers one thing
    v4.18 (Nikita, 04.10): …but only when the surface is empty too. While the pile lasts, hulls can still be sent to collect it */
@@ -1111,6 +1117,8 @@ function railTarget(){
     row(T('sector'),p.sec+1)+
     row(T('travel'),fill(T('days'),{n:travelDays(G,p.dist,{hull:currentHull(G,'courier')})}))+
     (isFinite(res)? row(pico('pile',p.kind==='works'?'parts':p.dep)+T('seamLeft'), res>0? seamYears(p.id) : T('depleted'), res>0?'':'bad') : '')+
+    (function(){ var ll=lastLift(G,p.id); if(!ll||ll.st==='going') return '';   // v4.33: the last lift, where the eye already is
+      return ll.st==='cut' ? row(T('liftRow'),T('liftRowCut'),'bad') : ll.st==='none' ? row(T('liftRow'),T('liftRowNone'),'warn') : row(T('liftRow'),fill(T('liftRowBy'),{y:ll.y,n:ll.n}),ll.n<=25?'bad':(ll.n<=K.LIFT_WARN?'warn':'')) })()+
     '</div>',
     '<span class="tag">'+SECTORS[p.sec].name+'</span>');
   h=themed(h,'wc wc-head',KCOL[p.kind]);

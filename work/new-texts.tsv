@@ -152,3 +152,13 @@ UI	kitNumbers	Output now {x} a year → with the kit {y} a year · fuel +{f} a y
 UI	scrapIdleHint	Idle hulls of older generations stay on the pier until you scrap them here — the yards no longer break them up on their own.	Простаивающие суда старых поколений стоят у причала, пока ты не разберёшь их здесь — верфи сами их больше не ломают.
 UI	convoyMutiny	mutinied · counts for the convoy	бунт · идёт в конвой
 UI	lhMoveTo	moves to {p} when it docks	уйдёт на {p}, когда причалит
+UI	liftBy	Last lift: a courier must leave by year {y} — {n} years from now.	Последний рейс: курьер должен уйти до {y} года — через {n} лет.
+UI	liftCut	Cut off. No courier would be home before the Night — the {k} here stay.	Отрезан. Ни один курьер не успеет вернуться до Ночи — {k} человек остаются здесь.
+MSG	evacLate	Too late for {p}: a courier would not be home before the Night.	Для {p} поздно: курьер не успеет вернуться до Ночи.
+LOG	world_cut	{p} IS CUT OFF. No courier can go out and be home before the Night. {n} people stay there.	СВЯЗЬ С {p} ОБОРВАНА. Ни один курьер не успеет туда и обратно до Ночи. {n} человек остаются там.
+UI	a_lastlift	Last lift for {p} in {n} years (by year {y}): after that its {h} people stay. Worlds closing within {l} years: {k}.	Последний рейс на {p} — через {n} лет (до {y} года): потом {h} человек останутся там. Миров, которые закроются за {l} лет: {k}.
+UI	liftRow	Last lift	Последний рейс
+UI	liftRowBy	year {y} · in {n} yrs	{y} год · через {n} лет
+UI	liftRowCut	cut off	отрезан
+UI	liftNone	No courier in the fleet can get there and be home before the Night. A new one laid down now still could.	Ни один курьер флота не успеет туда и обратно до Ночи. Заложенный сейчас новый — ещё успеет.
+UI	liftRowNone	no courier makes it	ни один курьер не успеет

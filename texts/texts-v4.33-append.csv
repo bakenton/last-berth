@@ -1,0 +1,10 @@
+UI,liftBy,Last lift: a courier must leave by year {y} — {n} years from now.,Последний рейс: курьер должен уйти до {y} года — через {n} лет.,v4.33 last lift,live,new
+UI,liftCut,Cut off. No courier would be home before the Night — the {k} here stay.,Отрезан. Ни один курьер не успеет вернуться до Ночи — {k} человек остаются здесь.,v4.33 last lift,live,new
+MSG,evacLate,Too late for {p}: a courier would not be home before the Night.,Для {p} поздно: курьер не успеет вернуться до Ночи.,v4.33 last lift,live,new
+LOG,world_cut,{p} IS CUT OFF. No courier can go out and be home before the Night. {n} people stay there.,СВЯЗЬ С {p} ОБОРВАНА. Ни один курьер не успеет туда и обратно до Ночи. {n} человек остаются там.,v4.33 last lift,live,new
+UI,a_lastlift,Last lift for {p} in {n} years (by year {y}): after that its {h} people stay. Worlds closing within {l} years: {k}.,"Последний рейс на {p} — через {n} лет (до {y} года): потом {h} человек останутся там. Миров, которые закроются за {l} лет: {k}.",v4.33 last lift,live,new
+UI,liftRow,Last lift,Последний рейс,v4.33 last lift,live,new
+UI,liftRowBy,year {y} · in {n} yrs,{y} год · через {n} лет,v4.33 last lift,live,new
+UI,liftRowCut,cut off,отрезан,v4.33 last lift,live,new
+UI,liftNone,No courier in the fleet can get there and be home before the Night. A new one laid down now still could.,Ни один курьер флота не успеет туда и обратно до Ночи. Заложенный сейчас новый — ещё успеет.,v4.33 last lift,live,new
+UI,liftRowNone,no courier makes it,ни один курьер не успеет,v4.33 last lift,live,new
