@@ -187,7 +187,7 @@
  1600  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
-## ui.js (1821 строк)
+## ui.js (1823 строк)
 
 ```
 
@@ -360,29 +360,29 @@
  1509  freeFor(cls,pid) [1]  ≈ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!
  1510  assignChips(s,act,label,except) [6]  v4.31: also the 'move to' chips under a hull of a line (act 'move', the hull's own world left out)
  1516  freeHullsBlock(p) [8]  ≈ var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
- 1524  watchRings() [9]  ≈ if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null; U.ringNoted=unde
- 1533  showNoFree() [5]  ≈ var d=document.createElement('div'); d.id='nofree';
- 1538  closeNoFree() [1]  ≈ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.pau
- 1539  drawSign() [15]  ≈ var e=el('ringsign'); if(!e) return;
- 1557  var NOTE_CODES  v4.30 (Nikita, 11.10: 'уведомления по ивентам, сменам, ковчегу и новому кольцу вылазят на весь экран и сигнали
- 1558  evName(t) [1]  ≈ return T('ev'+t.charAt(0).toUpperCase()+t.slice(1)) }
- 1559  note(o) [1]  ≈ (U.notes=U.notes||[]).push(o) }
- 1560  noteClose() [1]  ≈ (U.notes||[]).shift(); U.noteCur=null; if(!(U.notes||[]).length&&U.noteResume){ U.paused=f
- 1561  drawNote() [13]  ≈ var d=el('note'), q=U.notes||[];
- 1577  drawEvBar() [8]  v4.30 (Nikita, 11.10: 'когда идёт ивент, должно вылезть окошко и моргать, что вот такой ивент в таком секторе 
- 1588  drawConvoy() [18]  v4.30 (Nikita, 11.10: 'кнопка выбрать суда для конвоя ковчега: список тех, что у причала на Земле, и ты плюсик
- 1606  draw() [1]  ≈ proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawRail();drawDock
+ 1524  watchRings() [11]  ≈ if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null; U.ringNoted=unde
+ 1535  showNoFree() [5]  ≈ var d=document.createElement('div'); d.id='nofree';
+ 1540  closeNoFree() [1]  ≈ var d=el('nofree'); if(d&&d.parentNode) d.parentNode.removeChild(d); if(U.nfResume){ U.pau
+ 1541  drawSign() [15]  ≈ var e=el('ringsign'); if(!e) return;
+ 1559  var NOTE_CODES  v4.30 (Nikita, 11.10: 'уведомления по ивентам, сменам, ковчегу и новому кольцу вылазят на весь экран и сигнали
+ 1560  evName(t) [1]  ≈ return T('ev'+t.charAt(0).toUpperCase()+t.slice(1)) }
+ 1561  note(o) [1]  ≈ (U.notes=U.notes||[]).push(o) }
+ 1562  noteClose() [1]  ≈ (U.notes||[]).shift(); U.noteCur=null; if(!(U.notes||[]).length&&U.noteResume){ U.paused=f
+ 1563  drawNote() [13]  ≈ var d=el('note'), q=U.notes||[];
+ 1579  drawEvBar() [8]  v4.30 (Nikita, 11.10: 'когда идёт ивент, должно вылезть окошко и моргать, что вот такой ивент в таком секторе 
+ 1590  drawConvoy() [18]  v4.30 (Nikita, 11.10: 'кнопка выбрать суда для конвоя ковчега: список тех, что у причала на Земле, и ты плюсик
+ 1608  draw() [1]  ≈ proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawRail();drawDock
 
- 1610  ## ACTIONS
- 1613  pick(pid) [4]  v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured 
- 1617  tgOn(id) [1]  ≈ var e=el(id);return e&&e.classList.contains('on')?1:0}
- 1618  num(id,d) [1]  ≈ var e=el(id);if(!e)return d;var v=parseInt(e.value,10);return isNaN(v)?d:Math.max(0,v)}
+ 1612  ## ACTIONS
+ 1615  pick(pid) [4]  v4.14 (Nikita, run 398763448: 15 of 15 evacuations answered 'not at Earth'): the picked hull is only honoured 
+ 1619  tgOn(id) [1]  ≈ var e=el(id);return e&&e.classList.contains('on')?1:0}
+ 1620  num(id,d) [1]  ≈ var e=el(id);if(!e)return d;var v=parseInt(e.value,10);return isNaN(v)?d:Math.max(0,v)}
 
- 1747  ## THE MAP IS PANNABLE AND ZOOMABLE
+ 1749  ## THE MAP IS PANNABLE AND ZOOMABLE
 
- 1780  ## LOOP
- 1784  var MS  v4.2 (Nikita, 24.09: "игра слишком быстрая — сообщения не читаются"): the old clock ran a whole
- 1785  frame(ts) [25]  ≈ if(!U.last) U.last=ts;
- 1811  start(seed) [7]  ≈ G=newGame(seed||undefined);
+ 1782  ## LOOP
+ 1786  var MS  v4.2 (Nikita, 24.09: "игра слишком быстрая — сообщения не читаются"): the old clock ran a whole
+ 1787  frame(ts) [25]  ≈ if(!U.last) U.last=ts;
+ 1813  start(seed) [7]  ≈ G=newGame(seed||undefined);
 ```
 

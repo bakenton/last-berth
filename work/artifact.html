@@ -3690,7 +3690,9 @@ function watchRings(){
   if(U.gk!==G){ U.gk=G; U.genSeen=G.gen||0; U.newGen=null; U.noFreeAt=null; U.ringNoted=undefined; U.notes=[]; U.noteCur=null; U.convoyOpen=false }
   if((G.gen||0)>U.genSeen){ U.genSeen=G.gen||0; U.newGen=G.gen||0 }
   if(U.pro.on||!proSee('survey')||G.over||!U.langPicked) return;
-  if(!freeWorlds().length&&U.noFreeAt!==SECTORS.length&&!el('nofree')){ U.noFreeAt=SECTORS.length; showNoFree() }
+  /* v4.32: the stop used to land on top of the Night window (and the convoy picker) — it waits its turn; noFreeAt is not set until it shows */
+  var busy=(el('intro')&&!el('intro').hidden)||(G.night&&!G.nightSeen)||U.convoyOpen;
+  if(!busy&&!freeWorlds().length&&U.noFreeAt!==SECTORS.length&&!el('nofree')){ U.noFreeAt=SECTORS.length; showNoFree() }
   /* v4.30 (Nikita, 11.10: 'уведомления по новому кольцу — на весь экран'): once per ring, the day it can be charted */
   if(U.ringNoted===undefined) U.ringNoted=SECTORS.length-1+(canSurvey(G)==='ok'?1:0);
   if(canSurvey(G)==='ok'&&U.ringNoted<SECTORS.length&&!U.ff){ U.ringNoted=SECTORS.length; note({k:T('noteRing'),title:fill(T('ringSignTitle'),{s:secName(SECTORS.length)}),body:T('noteRingBody'),cls:'good',snd:'evgood',go:T('noFreeGo')}) }

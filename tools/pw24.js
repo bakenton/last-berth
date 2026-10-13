@@ -2,8 +2,8 @@
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,300):''));
-(async()=>{ try{
-  const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
+(async()=>{ let b=null; try{
+  b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
@@ -106,7 +106,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const ru=await q.evaluate(()=>document.querySelector('#rail').textContent);
   ok('RU kit block', /Карьерная техника/.test(ru)&&/Ярус/.test(ru)&&/Заказать комплект яруса III/.test(ru), ru.match(/Карьерная[^\n]{0,80}/)?.[0]);
   ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
-  await b.close();
 }catch(e){ out.push('ERR '+e.stack) }
+  finally{ if(b) await b.close().catch(()=>{}) }   // v4.32: a failed run used to leave the browser open
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);
 })();

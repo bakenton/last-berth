@@ -9,7 +9,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
   await p.route('**/fonts.gstatic.com/**',r=>r.fulfill({status:204,body:''}));
-  const tap=async sel=>{ for(let k=0;;k++){ try{ const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded({timeout:5000}); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120); return }catch(e){ if(k>=2||!/not attached|no /.test(e.message)) throw e; await p.waitForTimeout(150) } } };   // the UI redraws panels: retry a detached node
+  // v4.32: 10x is 200 ms a year since v4.31 and panels are rebuilt every tick — a locator went stale between scroll and box.
+  // The box is read in one page call (no handle to detach), then the real mouse clicks it; a missing node is retried.
+  const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
+    if(bb){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); return } if(k>=6) throw new Error('no '+sel); await p.waitForTimeout(150) } };
   const closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]') };
   const dismiss=async()=>{ for(let i=0;i<8&&await p.evaluate(()=>!!document.getElementById('callout'));i++) await tap('[data-act="callok"]') };
   const stage=async()=>p.evaluate(()=>parseInt((document.querySelector('#task .tk span:last-child')||{textContent:'0'}).textContent));

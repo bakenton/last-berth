@@ -64,6 +64,14 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('a new ring count can raise it again', await p.isVisible('#nofree'));
   await tap('[data-act="nofreego"]');
   ok('"Go to survey" closes it and opens the Earth tab', !(await p.isVisible('#nofree'))&&await p.evaluate(()=>LNU.tab==='earth'));
+  // v4.32: the stop waits for the Night window instead of landing on top of it
+  await p.evaluate(()=>{ LNU.paused=true; LN.ghost={}; openSector(LN); if(!LN.night) LN.night=LN.day+500; if(LN.arkMark==null) LN.arkMark=4; LN.nightSeen=false; LNdraw() });
+  await p.evaluate(()=>{ PLANETS.forEach(q=>{ if(sectorOpen(LN,q.sec)&&!LN.colonies[q.id]) LN.ghost[q.id]=1 }); LNdraw() });
+  ok('Night window is up and the stop is not on top of it', await p.isVisible('#intro [data-act="nightok"]')&&!(await p.isVisible('#nofree')));
+  await p.screenshot({path:require('os').tmpdir()+'/v432-night-nofree.png'});
+  { const nb=await p.locator('#intro [data-act="nightok"]').boundingBox(); await p.mouse.click(nb.x+nb.width/2,nb.y+nb.height/2); await p.waitForTimeout(150) }
+  ok('the stop comes once the Night window is closed', await p.isVisible('#nofree'));
+  await tap('[data-act="nofreeclose"]');
   // undo the ghosts so the rest of the run has worlds to use
   await p.evaluate(()=>{ LN.ghost={}; LNU.paused=true; LNdraw() });
 
