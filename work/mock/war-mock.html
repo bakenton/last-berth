@@ -104,7 +104,7 @@ h1.sc{margin:0;padding:8px 16px;font-size:12px;letter-spacing:.12em;text-transfo
 
 <div class="nav">
   <a href="#s1">1 · Переключатель</a>
-  <a href="#s2">2 · Военный терминал</a>
+  <a href="#s2">2 · Военный терминал (v2)</a>
   <a href="#s3">3 · Штаб (овервью)</a>
   <a href="#s4">4 · Колонизаторский: что добавилось</a>
   <span class="sp"></span>
@@ -139,138 +139,95 @@ h1.sc{margin:0;padding:8px 16px;font-size:12px;letter-spacing:.12em;text-transfo
 
 <!-- ============ 2. MILITARY ============ -->
 <section class="screen mil-screen" id="s2">
-  <h1 class="sc" style="background:var(--mil)">2 · Военный терминал — время стоит</h1>
+  <h1 class="sc" style="background:var(--mil)">2 · Военный терминал — аркадный слой, время стоит</h1>
 
   <div class="top">
     <div class="logo"><i style="background:var(--mil)"></i>LAST BERTH</div>
     <div><div class="k">Год</div><div class="v">2714</div></div>
-    <div><div class="k">Угроза империи</div><div class="v m">▮▮▮▯▯</div><div class="small">растёт · 6 миров, 14 судов в пути</div></div>
+    <div><div class="k">Угроза</div><div class="v m">▮▮▮▯▯</div></div>
     <div><div class="k">Заражено</div><div class="v r">1</div></div>
-    <div><div class="k">Тревог</div><div class="v o">3</div></div>
+    <div><div class="k">Под угрозой</div><div class="v o">1</div></div>
     <div></div>
     <div class="sw" style="padding:0;border:0">
       <div>Колонии<span class="dot"></span></div>
       <div class="mil on">Военный</div>
       <div>Штаб</div>
-      <div style="border-left:1px solid var(--milLine);color:var(--mil)">⏸ пауза</div>
+      <div style="border-left:1px solid var(--milLine);color:var(--mil)">⏸</div>
     </div>
   </div>
 
   <div class="res">
-    <div>
-      <div class="k">Доля ВПК</div>
+    <div><div class="k">Люди</div><div class="v y">1 840</div></div>
+    <div><div class="k">Детали</div><div class="v">2 745</div></div>
+    <div style="background:var(--milDim)"><div class="k">◆ Снаряжение</div><div class="v m">1 240</div></div>
+    <div style="background:var(--milDim)"><div class="k">♟ Корпус</div><div class="v m">820</div></div>
+    <div style="background:var(--milDim)">
+      <div class="k">ВПК</div>
       <div class="slider"><div class="tr"><s></s><i></i><b></b></div><span class="v m" style="font-size:20px">30%</span></div>
-      <div class="d">пол 5% · берёт <em>деталей 1.2/год</em>, людей 0.9/год</div>
-    </div>
-    <div><div class="k">◆ Снаряжение</div><div class="v m">1 240</div><div class="d">▲ +1.2/год · склад Земли</div></div>
-    <div><div class="k">♟ Корпус</div><div class="v m">820</div><div class="d">▲ +0.9/год · на Земле, ждёт транспорта</div></div>
-    <div><div class="k">⌂ Форты</div><div class="v">4</div><div class="d">на 3 мирах · Дельта ур.2</div></div>
-    <div><div class="k">⇄ Эскорт</div><div class="v">2</div><div class="d">линии Гамма, Дельта</div></div>
-  </div>
-  <div class="note" style="left:20px;top:200px">
-    <b>Ползунок</b>Единственная «налоговая» ручка. Красная риска — пол 5%, ниже нельзя. Меняется в любой момент, действует с текущего года.
-  </div>
-
-  <div class="body">
-    <div class="map">
-      <svg viewBox="0 0 900 560">
-        <defs>
-          <pattern id="hatch" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-            <line x1="0" y1="0" x2="0" y2="6" stroke="#ff2a1a" stroke-width="1.5"/>
-          </pattern>
-        </defs>
-        <!-- rings -->
-        <circle cx="450" cy="290" r="110" fill="none" stroke="#143a22"/>
-        <circle cx="450" cy="290" r="210" fill="none" stroke="#143a22"/>
-        <circle cx="450" cy="290" r="320" fill="none" stroke="#143a22"/>
-        <line x1="450" y1="-40" x2="450" y2="620" stroke="#0f2a18" stroke-dasharray="2 4"/>
-        <line x1="60" y1="290" x2="840" y2="290" stroke="#0f2a18" stroke-dasharray="2 4"/>
-        <text x="470" y="50" fill="#2d6b44" font-size="10">ЭОС</text>
-        <text x="810" y="180" fill="#2d6b44" font-size="10">ГЕЛИОС</text>
-        <text x="100" y="440" fill="#2d6b44" font-size="10">СЕЛЕНА</text>
-        <!-- threat halo around infected -->
-        <circle cx="700" cy="420" r="150" fill="#ff2a1a" opacity=".06"/>
-        <circle cx="700" cy="420" r="95" fill="#ff2a1a" opacity=".08"/>
-        <circle cx="700" cy="420" r="150" fill="none" stroke="#ff2a1a" stroke-opacity=".35" stroke-dasharray="3 5"/>
-        <!-- earth -->
-        <circle cx="450" cy="290" r="14" fill="#fff"/>
-        <text x="432" y="320" fill="#ccc" font-size="10">ЗЕМЛЯ</text>
-        <!-- lines -->
-        <line x1="450" y1="290" x2="560" y2="200" stroke="#1fd36a" stroke-width="1.5"/>
-        <line x1="450" y1="290" x2="300" y2="360" stroke="#1fd36a" stroke-width="1.5"/>
-        <line x1="450" y1="290" x2="640" y2="360" stroke="#3a3a3a" stroke-width="1.5"/>
-        <text x="585" y="330" fill="#ff9a1a" font-size="9">без эскорта · у заражения</text>
-        <!-- colonies -->
-        <g><rect x="554" y="194" width="12" height="12" fill="none" stroke="#39ff5a"/><text x="572" y="198" fill="#ccc" font-size="11">ДЕЛЬТА</text><text x="572" y="210" fill="#888" font-size="9">ферма · 400 · ополчение 40</text>
-           <text x="572" y="222" fill="#1fd36a" font-size="9">⌂ форт ур.2 → 120</text></g>
-        <g><polygon points="300,354 306,366 294,366" fill="none" stroke="#fff"/><text x="312" y="370" fill="#ccc" font-size="11">ТЭЛЛОУ</text><text x="312" y="382" fill="#888" font-size="9">завод · 260 · ополчение 26</text><text x="312" y="394" fill="#1fd36a" font-size="9">⌂ форт ур.1 → 52</text></g>
-        <g><circle cx="640" cy="360" r="6" fill="none" stroke="#fff"/><text x="650" y="356" fill="#ccc" font-size="11">БРАЙН</text><text x="650" y="368" fill="#888" font-size="9">рудник · 180 · ополчение 18</text><text x="650" y="380" fill="#ff9a1a" font-size="9">без форта · налёт через ~12 лет</text></g>
-        <g><circle cx="330" cy="150" r="6" fill="none" stroke="#fff"/><text x="340" y="146" fill="#ccc" font-size="11">ВЕСПЕР</text><text x="340" y="158" fill="#888" font-size="9">топливо · 120</text></g>
-        <!-- infected -->
-        <g><circle cx="700" cy="420" r="22" fill="url(#hatch)" stroke="#ff2a1a" stroke-width="2"/>
-           <text x="730" y="416" fill="#ff2a1a" font-size="11" font-weight="700">ГАММА — ЗАРАЖЕНА</text>
-           <text x="730" y="430" fill="#ff8a7a" font-size="9">пала в 2674 · гарнизон ксеносов ~210 ▲</text>
-           <text x="730" y="442" fill="#ff8a7a" font-size="9">рудник · было 300 жителей</text></g>
-        <!-- lost ship -->
-        <g><text x="600" y="470" fill="#ff9a1a" font-size="12">✕</text><text x="612" y="474" fill="#ff9a1a" font-size="9">«Орлан» не выходит на связь · 2706</text></g>
-        <!-- incoming raid -->
-        <g><path d="M 820 300 L 660 352" stroke="#ff9a1a" stroke-dasharray="4 3" fill="none"/><polygon points="660,352 672,344 670,358" fill="#ff9a1a"/>
-           <text x="770" y="290" fill="#ff9a1a" font-size="9">налёт ~160 → Брайн</text></g>
-      </svg>
-      <div class="pause">время стоит</div>
-      <div class="note" style="left:20px;top:420px">
-        <b>Карта та же</b>Те же кольца и миры, но слой другой: ополчение/форт у каждого мира, эскорт на линиях (зелёные — с эскортом), ореол угрозы вокруг заражения, стрелка объявленного налёта. Добыча и трюмы здесь не показаны.
-      </div>
-    </div>
-
-    <div class="side">
-      <div class="tabs"><div class="on">Тревоги</div><div>Объект</div><div>Корпус</div></div>
-
-      <div class="panel">
-        <h3>Тревоги · 3</h3>
-        <div class="alert"><b>▲ Брайн: налёт через ~12 лет</b><span class="small">сила ~160 · оборона 18 (без форта) · шанс удержать 1 из 700</span><span class="small">форт +1 нужно 200 снаряжения на месте · линия Брайн не везёт</span></div>
-        <div class="alert"><b>▲ «Орлан» не выходит на связь</b><span class="small">линия Гамма · последний сигнал 2706 · задержка 8 лет</span></div>
-        <div class="alert red"><b>● Гамма заражена 40 лет</b><span class="small">гарнизон ~210, растёт до потолка 400 · соседи: налёты чаще ×1.6</span></div>
-      </div>
-      <div class="note" style="left:620px;top:200px">
-        <b>Прогноз всегда</b>У каждой тревоги — сила против силы и шанс. Правило одно: равные — монетка, вдвое — 9 из 10, втрое — 24 из 25, впятеро — 99 из 100.
-      </div>
-
-      <div class="panel">
-        <h3>Выбрано: Гамма (заражена)</h3>
-        <div class="row"><span>Гарнизон ксеносов</span><span style="color:var(--red)">~210 ▲ +4/год</span></div>
-        <div class="row"><span>Переходов от Земли</span><span>2 · снабжение ×0.8</span></div>
-        <div class="row"><span>Ближайшая живая колония</span><span>Брайн · 1 переход</span></div>
-
-        <div style="margin-top:10px"><span class="btn mil">Отбить</span> <span class="small">корпус</span> <span class="btn">300 ▾</span> <span class="small">из 820</span></div>
-        <div class="bar"><i style="width:53%"></i></div>
-        <div class="row"><span>Сила на месте</span><span>300 × 0.8 = 240 против 210</span></div>
-        <div class="row"><span>Шанс</span><span style="color:var(--mil)">62 %</span></div>
-        <div class="row"><span>Потери при победе</span><span>~90 человек</span></div>
-        <div class="row"><span>Прибытие</span><span>2731 · транспорт «Атлант» II</span></div>
-        <div class="small" style="margin-top:4px">Корпус 500 → сила 400, шанс 87 %, прибытие 2735 (второй рейс).</div>
-
-        <div style="margin-top:12px"><span class="btn pri">Экстерминатус</span></div>
-        <div class="row"><span>Корпус судна</span><span>грузовоз в доке · есть 1</span></div>
-        <div class="row"><span>Взрывчатка</span><span>900 снаряжения · есть 1 240</span></div>
-        <div class="row"><span>Экипаж</span><span style="color:var(--red)">400 человек · не вернутся</span></div>
-        <div class="row"><span>Риск сбития у заражения</span><span style="color:var(--org)">35 %</span></div>
-        <div class="row"><span>Результат</span><span>Гамма уничтожена навсегда · область чиста</span></div>
-
-        <div style="margin-top:12px"><span class="btn off">Оставить</span> <span class="small">потери соседей ~3 чел/год, суда ×1.6</span></div>
-      </div>
-      <div class="note" style="left:20px;top:700px">
-        <b>Три выхода, цена каждого видна</b>Отбить — люди и время. Экстерминатус — судно, снаряжение, экипаж, риск, планета навсегда. Оставить — капля в год.
-      </div>
     </div>
   </div>
 
-  <div class="log">
-    <div class="hd">Журнал <b>2 новых</b> <span class="small">· военные записи зелёные и со своим звуком</span></div>
-    <p class="war"><span class="t">2714</span>Разведка: налёт силой около 160 выйдет к Брайну через 12 лет. Форта нет.</p>
-    <p class="war"><span class="t">2706</span>«Орлан» молчит восьмой год. Последний сигнал — у Гаммы.</p>
-    <p class="red"><span class="t">2674</span>Гамма пала. Связи нет. На карте — мёртвый круг.</p>
-    <p class="vo"><span class="t">2650</span>Генерал штаба: «Они идут за шумом. Чем больше вы строите, тем ближе они. Я могу дать вам стены — или дать вам людей. Не то и другое.»</p>
+  <div class="map" style="border:0;height:620px">
+    <svg viewBox="0 0 1440 620">
+      <defs>
+        <pattern id="hatch2" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+          <line x1="0" y1="0" x2="0" y2="6" stroke="#ff2a1a" stroke-width="1.5"/>
+        </pattern>
+      </defs>
+      <circle cx="720" cy="310" r="120" fill="none" stroke="#143a22"/>
+      <circle cx="720" cy="310" r="230" fill="none" stroke="#143a22"/>
+      <circle cx="720" cy="310" r="340" fill="none" stroke="#143a22"/>
+
+      <!-- infected halo -->
+      <circle cx="990" cy="440" r="130" fill="#ff2a1a" opacity=".07"/>
+
+      <!-- earth -->
+      <circle cx="720" cy="310" r="16" fill="#fff"/>
+      <text x="700" y="345" fill="#ccc" font-size="11">ЗЕМЛЯ</text>
+
+      <!-- calm with fort -->
+      <g><circle cx="830" cy="210" r="22" fill="none" stroke="#1fd36a" stroke-width="2"/>
+         <text x="830" y="215" fill="#1fd36a" font-size="14" text-anchor="middle">⌂⌂</text>
+         <text x="830" y="250" fill="#fff" font-size="13" text-anchor="middle">ДЕЛЬТА</text>
+         <text x="830" y="264" fill="#1fd36a" font-size="10" text-anchor="middle">спокойно · форт 2</text></g>
+
+      <g><circle cx="560" cy="400" r="22" fill="none" stroke="#1fd36a" stroke-width="2"/>
+         <text x="560" y="405" fill="#1fd36a" font-size="14" text-anchor="middle">⌂</text>
+         <text x="560" y="440" fill="#fff" font-size="13" text-anchor="middle">ТЭЛЛОУ</text>
+         <text x="560" y="454" fill="#1fd36a" font-size="10" text-anchor="middle">спокойно · форт 1</text></g>
+
+      <!-- calm no fort -->
+      <g><circle cx="560" cy="150" r="22" fill="none" stroke="#777" stroke-width="2"/>
+         <text x="560" y="185" fill="#fff" font-size="13" text-anchor="middle">ВЕСПЕР</text>
+         <text x="560" y="199" fill="#888" font-size="10" text-anchor="middle">спокойно</text></g>
+
+      <!-- threatened -->
+      <g><circle cx="920" cy="380" r="22" fill="none" stroke="#ff9a1a" stroke-width="3"/>
+         <circle cx="920" cy="380" r="34" fill="none" stroke="#ff9a1a" stroke-opacity=".4" stroke-dasharray="4 4"/>
+         <text x="920" y="386" fill="#ff9a1a" font-size="16" text-anchor="middle" font-weight="700">12</text>
+         <text x="920" y="420" fill="#fff" font-size="13" text-anchor="middle">БРАЙН</text>
+         <text x="920" y="434" fill="#ff9a1a" font-size="10" text-anchor="middle">налёт через 12 лет</text></g>
+
+      <!-- infected -->
+      <g><circle cx="990" cy="440" r="26" fill="url(#hatch2)" stroke="#ff2a1a" stroke-width="3"/>
+         <text x="1030" y="438" fill="#ff2a1a" font-size="13" font-weight="700">ГАММА</text>
+         <text x="1030" y="452" fill="#ff8a7a" font-size="10">заражена · 40 лет</text></g>
+
+      <!-- lost ship marker -->
+      <text x="900" y="500" fill="#ff9a1a" font-size="16">✕</text>
+      <text x="916" y="504" fill="#ff9a1a" font-size="10">«Орлан»</text>
+    </svg>
+    <div class="pause">время стоит</div>
+  </div>
+
+  <div class="legend" style="border-color:var(--milLine);display:flex;gap:28px">
+    <span><b style="color:#777">○</b> спокойно</span>
+    <span><b style="color:var(--mil)">○ ⌂</b> форт (число домиков — уровень)</span>
+    <span><b style="color:var(--org)">○ 12</b> налёт объявлен, лет до него</span>
+    <span><b style="color:var(--red)">⊘</b> заражена, лет с падения</span>
+    <span><b style="color:var(--org)">✕</b> судно молчит</span>
+    <span class="sp" style="flex:1"></span>
+    <span>действия — по клику на планету, тут не показаны</span>
   </div>
 </section>
 
