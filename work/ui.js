@@ -934,10 +934,7 @@ function railEarthPro(){
   if(st>=1) h+=blk(T('burnTitle'),
     row(T('metal'), fill(T('burns'),{n:nd.metal.toFixed(1)})+' · '+fill(T('supplyDays'),{n:Math.floor(E.metal/Math.max(0.1,nd.metal))}), E.metal/Math.max(0.1,nd.metal)<30?'bad':'dim')+
     (st>=2?row(T('food'), fill(T('burns'),{n:nd.food.toFixed(1)})+' · '+fill(T('supplyDays'),{n:Math.floor(E.food/Math.max(0.1,nd.food))})+' · '+(G.foodFc?fill(T('foodHorizon'),{y:G.foodFc.y}):fill(T('foodHorizonOk'),{n:G.night?Math.max(1,G.night-G.day):K.FOOD_HORIZON_SPAN})), E.food/Math.max(0.1,nd.food)<30||foodShort(G)?'bad':'dim'):''));
-  var wait=G.ships.filter(function(s){return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)});
-  if(wait.length&&st>=2) h+=blk(T('awaiting'), wait.map(function(s){
-      return '<div class="wrow free"><div><b>'+sico(HULLS[s.hull].key)+esc(hullName(HULLS[s.hull]))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b> <span class="dim">'+fill(T('capacity'),{n:s.cap})+'</span></div><span class="pill free">'+T('idleHull')+'</span></div>';
-    }).join(''),'<span class="tag a">'+wait.length+'</span>');
+  /* v4.32 (Nikita, 13.10: 'the prologue is the tutorial, it keeps step with the main game'): the free-hulls block left the Earth tab in v4.31 and leaves here too */
   if(st>=5){
     var sc=surveyCost(SECTORS.length), sok=canSurvey(G), nxt=secName(SECTORS.length);
     h+=blk(T('surveyTitle'), row(T('sectorsOpen'),SECTORS.length,'dim')+row(T('settledRow'),settledCount(G),'dim')+
@@ -1227,6 +1224,7 @@ function lineBlock(p,c){
   all.slice().sort(function(a,b){return a.id-b.id}).forEach(function(o){
     var where= o.mode==='building' ? fill(T('lhYard'),{y:o.t}) : (o.mode==='idle' ? T('lhPier') : (o.dir==='out'? fill(T('lhOut'),{y:o.t}) : fill(T('lhBack'),{y:o.t})));
     var note= o.retire ? ' · <span class="warn">'+T('lhRetire')+'</span>' : (o.replaces?' · '+T('lhSuccessor'):'');
+    if(o.moveTo&&planet(o.moveTo)) note+=' · <span class="good">'+esc(fill(T('lhMoveTo'),{p:pname(o.moveTo)}))+'</span>';   // v4.32: a move ordered in flight happens when she docks
     hl+='<div class="lh"><b>'+sico(shipClass(o))+fill(T('lhName'),{n:o.id})+' · '+hullName(HULLS[o.hull])+'</b><span class="dim">'+where+note+'</span></div>'+(o.mode==='building'?'':'<div class="lh-act"><button class="chip x" type="button" data-act="unroute" data-s="'+o.id+'">'+esc(T('lineTakeOff'))+'</button>'+assignChips(o,'move','moveTo',p.id)+'</div>');   // v4.31 (F-36): take off the line, or move to another world; // v4.13: release lives here, the separate block is gone
   });
   var ren=lineOf(G,p.id)?'<div class="lhs" style="margin-top:8px"><button class="btn" type="button" data-act="renew" data-p="'+p.id+'" data-on="'+(L.renew?0:1)+'" aria-pressed="'+(!!L.renew)+'">'+T(L.renew?'lineRenewOn':'lineRenewOff')+'</button><div class="dim" style="font-size:11.5px;margin-top:4px">'+T('lineRenewHint')+'</div></div>':'';   // v4.22 (Nikita, 07.10): auto-replacement is a switch, off by default - no metal leaves Earth unasked
@@ -1483,7 +1481,9 @@ function fleetRow(s){
   if(s.reserve) sub.push('<span class="good">'+esc(T('reservedHull'))+'</span>');
   var bar = s.mode==='building' ? '<div class="pbar" title="'+esc(fill(T('flYards'),{y:s.t}))+'"><i style="width:'+Math.round(hullProgress(s)*100)+'%"></i></div>' : '';
   return '<div class="fl-row'+(free?' free':'')+(s.mode==='building'?' bld':'')+'"><div class="fl-top"><b>'+sico(cls)+esc(hullName(h))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+
-    (dest?'<span class="fl-to">\u2192 '+esc(dest)+'</span>':'')+'<span class="fl-st">'+esc(st)+'</span></div>'+bar+'<div class="fl-sub dim">'+sub.join(' \u00b7 ')+'</div></div>';
+    (dest?'<span class="fl-to">\u2192 '+esc(dest)+'</span>':'')+'<span class="fl-st">'+esc(st)+'</span></div>'+bar+'<div class="fl-sub dim">'+sub.join(' \u00b7 ')+'</div>'+
+    /* v4.32: with the Earth-tab block gone (v4.31) a free hull of the current generation had no scrap button anywhere */
+    (free&&!s.reserve&&!s.mutiny&&!U.pro.on?'<div class="fl-act" style="margin-top:5px"><button class="btn sm danger" type="button" data-act="scrap" data-s="'+s.id+'">'+T('scrapOne')+' <span class="c" style="float:none">'+costHtml({metal:scrapValue(h).metal,people:s.crew||0},null,'+')+'</span></button></div>':'')+'</div>';
 }
 function fleetBody(){
   var ships=G.ships.filter(function(s){return s.mode!=='dead'});

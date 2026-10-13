@@ -685,7 +685,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.31', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.32', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),convoy:arkConvoy(G),arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -837,7 +837,7 @@ function setLine(G,shipId,from,to){
 }
 /* v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
    sat in s.pend, and Release only cleared from/to — the hull came home and took the queued line anyway. */
-function clearLine(G,shipId){var s=shipById(G,shipId);if(s){ var pid=s.from||(s.pend&&s.pend.from); s.from=null;s.to=null;s.pend=null;s.retire=null;
+function clearLine(G,shipId){var s=shipById(G,shipId);if(s){ var pid=s.from||(s.pend&&s.pend.from); s.from=null;s.to=null;s.pend=null;s.retire=null;s.moveTo=null;
   if(pid&&G.lines&&G.lines[pid]){ var L=G.lines[pid], cls=shipClass(s); L.want[cls]=Math.max(0,Math.min(L.want[cls]||0,lineCount(G,pid,cls))); if(!L.want.courier&&!L.want.hauler&&!L.want.freighter&&!onLine(G,pid).length) delete G.lines[pid] } }return 'ok'}
 /* v4.31 (Nikita, 13.10, F-36): 'move to → world' under a hull of the line panel — off its line (the old counter follows,
    as in clearLine) and onto the other world's line. A refusal leaves the hull where it was: the cheap checks run first, a refusal from sail() is rolled back. */
@@ -849,6 +849,10 @@ function moveLine(G,shipId,pid){
   if((s.from||(s.pend&&s.pend.from))===pid) return 'samenode';
   if(!canReachSector(s,p.sec)) return 'range';
   if(G.reserves[pid]<=0&&p.kind!=='works'&&pileLeft(G,pid)<1) return 'depleted';
+  /* v4.32 (Nikita, 13.10: 'перевод по готовности, никаких очередей или наслоений'): a hull in flight only remembers the order
+     (s.moveTo). Both counters stay as they are until she docks and really changes line — see the docking step in tick. */
+  if(s.mode==='transit'){ s.moveTo=pid; return 'queued' }
+  s.moveTo=null;
   var cls=shipClass(s), oldPid=s.from||(s.pend&&s.pend.from), oldWant=(oldPid&&G.lines&&G.lines[oldPid])?(G.lines[oldPid].want[cls]||0):null;
   var snap={from:s.from,to:s.to,pend:s.pend,retire:s.retire,auto:s.auto,policy:s.policy,homeOnly:s.homeOnly,reserve:s.reserve,waiting:s.waiting};
   clearLine(G,shipId); var r=setLine(G,shipId,pid,'earth');
@@ -1316,6 +1320,12 @@ function tick(G){
       s.from=null; s.to=null; s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;
       continue;
     }
+    if(s.moveTo){ var mt=s.moveTo, mp=planet(mt); s.moveTo=null;   // v4.32: the move ordered in flight — she is at a pier now
+      if(mp&&G.colonies[mt]&&s.from&&s.from!==mt&&!s.retire&&!s.mutiny&&!s.homeOnly&&canReachSector(s,mp.sec)&&!(G.reserves[mt]<=0&&mp.kind!=='works'&&pileLeft(G,mt)<1)){
+        var mc=shipClass(s), mo=s.from; s.pend={from:mt,to:'earth'};
+        if(G.lines&&G.lines[mo]){ var Lo=G.lines[mo]; s.from=null; Lo.want[mc]=Math.max(0,Math.min(Lo.want[mc]||0,lineCount(G,mo,mc))); s.from=mo;
+          if(!Lo.want.courier&&!Lo.want.hauler&&!Lo.want.freighter&&onLine(G,mo).length<=1) delete G.lines[mo] }
+        var Ln=G.lines[mt]||(G.lines[mt]={want:{courier:0,hauler:0,freighter:0},renew:false}); if(lineCount(G,mt,mc)>(Ln.want[mc]||0)) Ln.want[mc]=lineCount(G,mt,mc) } }
     if(s.pend){ s.from=s.pend.from; s.to=s.pend.to; s.pend=null; s.auto=true; s.policy=null;
       log(G,'reassigned',{n:s.id,a:s.from,b:s.to}); }
     if(s.homeOnly){ var hp=s.homeOnly; s.homeOnly=null; s.from=null; s.to=null; s.pend=null; s.waiting=true; log(G,'nothing_left',{n:s.id,p:hp}); continue }

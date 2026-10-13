@@ -151,3 +151,4 @@ UI	moveTo	Move to:	Перевести на:
 UI	kitNumbers	Output now {x} a year → with the kit {y} a year · fuel +{f} a year	Выработка сейчас {x} в год → с комплектом {y} в год · топливо +{f} в год
 UI	scrapIdleHint	Idle hulls of older generations stay on the pier until you scrap them here — the yards no longer break them up on their own.	Простаивающие суда старых поколений стоят у причала, пока ты не разберёшь их здесь — верфи сами их больше не ломают.
 UI	convoyMutiny	mutinied · counts for the convoy	бунт · идёт в конвой
+UI	lhMoveTo	moves to {p} when it docks	уйдёт на {p}, когда причалит

@@ -111,8 +111,17 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('…labelled "Move to:"', /Move to:/.test(await rail()));
   const wantC=await p.evaluate(id=>LN.lines[id].want.courier,sel0);
   await tap('#rail .lh-act [data-act="move"][data-s="'+cid+'"][data-p="'+mine2+'"]');
-  const mv=await p.evaluate(a=>{ const s=shipById(LN,a.id); const dest=s.from||(s.pend&&s.pend.from); return {dest, want1:LN.lines[a.p1]?LN.lines[a.p1].want.courier:0, want2:LN.lines[a.p2]?LN.lines[a.p2].want.courier:0, toast:document.getElementById('toast').textContent} },{id:cid,p1:sel0,p2:mine2});
-  ok('the click moves the hull: new world on it, old counter -1, new counter 1', mv.dest===mine2&&mv.want1===wantC-1&&mv.want2>=1&&/sent to|changes line when it next docks/.test(mv.toast), JSON.stringify(mv));
+  // v4.32 (Nikita, 13.10: 'перевод по готовности, никаких очередей'): in flight the order is only remembered — nothing moves, no counter moves
+  const st=a=>{ const s=shipById(LN,a.id); return {mode:s.mode, from:s.from, moveTo:s.moveTo||null, want1:LN.lines[a.p1]?LN.lines[a.p1].want.courier:0, want2:LN.lines[a.p2]?LN.lines[a.p2].want.courier:0, toast:document.getElementById('toast').textContent, row:[].slice.call(document.querySelectorAll('#rail .lh')).map(e=>e.textContent.replace(/\s+/g,' ')).join(' | ')} };
+  const mv0=await p.evaluate(st,{id:cid,p1:sel0,p2:mine2});
+  if(mv0.moveTo){
+    ok('in flight: the order is remembered, the hull stays on its line, both counters untouched', mv0.from===sel0&&mv0.moveTo===mine2&&mv0.want1===wantC&&mv0.want2===0&&/changes line when it next docks/.test(mv0.toast), JSON.stringify(mv0));
+    ok('…and the hull row says where it will go', /moves to .+ when it docks/.test(mv0.row), mv0.row);
+    await p.screenshot({path:require('os').tmpdir()+'/v432-move-wait.png',clip:{x:1040,y:60,width:560,height:900}});
+    for(let i=0;i<40&&await p.evaluate(id=>!!shipById(LN,id).moveTo,cid);i++) await run(5);
+  } else ok('at the pier: the hull goes at once', mv0.from===mine2&&/sent to/.test(mv0.toast), JSON.stringify(mv0));
+  const mv=await p.evaluate(st,{id:cid,p1:sel0,p2:mine2});
+  ok('once it has docked the hull is on the new line: old counter -1, new counter 1', mv.from===mine2&&!mv.moveTo&&mv.want1===wantC-1&&mv.want2===1, JSON.stringify(mv));
   ok('core refuses a move onto the same world', await p.evaluate(a=>moveLine(LN,a.id,a.p)==='samenode',{id:cid,p:mine2}));
   await p.screenshot({path:require('os').tmpdir()+'/v431-line.png',clip:{x:1040,y:60,width:560,height:900}});
 
@@ -147,6 +156,18 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('RU: "Снять с линии" under the hulls, no generation track', /Снять с линии/.test(ru.rail)&&!/Поколение корпуса/.test(ru.rail), '');
   await p.screenshot({path:require('os').tmpdir()+'/v417-ru.png',clip:{x:0,y:60,width:1600,height:640}});
 
+  // === v4.32: a free hull of the current generation is scrapped from its Fleet row (the Earth-tab block went in v4.31)
+  await p.evaluate(()=>{ for(let i=0;i<8;i++){ const x=document.querySelector('#note [data-act="noteok"]'); if(x) x.click() } LNU.paused=true; LNU.pro.on=false;
+    let s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.reserve&&!o.mutiny);
+    if(!s){ s=LN.ships.find(o=>o.mode!=='dead'&&o.mode!=='building'); s.mode='idle'; s.at='earth'; s.from=null; s.to=null; s.pend=null; s.reserve=false; s.mutiny=false; s.retire=false }
+    window.__sc={id:s.id,metal:LN.earth.metal,n:LN.ships.filter(o=>o.mode!=='dead').length}; LNU.leftTab='fleet'; LNU.advOpen=true; LNdraw() });
+  const scSel='#advisor .fl-row.free [data-act="scrap"][data-s="'+(await p.evaluate(()=>window.__sc.id))+'"]';
+  ok('free hull has a Scrap button in its Fleet row', await p.isVisible(scSel), (await p.textContent(scSel).catch(()=>'')).replace(/\s+/g,' '));
+  await p.locator(scSel).scrollIntoViewIfNeeded(); await p.screenshot({path:require('os').tmpdir()+'/v432-fleet-scrap.png',clip:{x:0,y:60,width:700,height:560}});
+  { const bb=await p.locator(scSel).boundingBox(); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(200) }
+  const scR=await p.evaluate(()=>({n:LN.ships.filter(o=>o.mode!=='dead').length,metal:LN.earth.metal,gone:!LN.ships.some(o=>o.id===window.__sc.id&&o.mode!=='dead'),toast:document.getElementById('toast').textContent}));
+  ok('the click scraps that hull and pays the metal back', scR.gone&&scR.metal>await p.evaluate(()=>window.__sc.metal), JSON.stringify(scR));
+  ok('reserved and mutinied hulls get no Scrap button there', await p.evaluate(()=>{ const s=LN.ships.find(o=>o.mode!=='dead'&&o.mode!=='building'); if(!s) return true; s.mode='idle'; s.at='earth'; s.from=null; s.to=null; s.reserve=true; LNdraw(); const r=!document.querySelector('#advisor [data-act="scrap"][data-s="'+s.id+'"]'); s.reserve=false; LNdraw(); return r }));
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('ERROR '+String(e).slice(0,400)) }
