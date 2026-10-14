@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — суда, заход 3</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--pan2:#232327;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+main{max-width:1120px;margin:0 auto}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+h2{font-size:15px;margin:30px 0 2px;letter-spacing:.06em}
+.sub,.note{color:var(--mid);margin:0 0 12px;font-size:13px}
+.pal{border:1px solid var(--pan2);background:var(--pan);padding:10px 12px;margin-bottom:12px;font-size:12.5px;color:var(--mid);display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center}
+.pal b{color:var(--ink)}
+.pal span{display:inline-flex;align-items:center;gap:5px}
+.pal i{display:inline-block;width:12px;height:12px}
+.pal .busy i{width:9px;height:9px;margin-right:-3px}
+.row{display:grid;grid-template-columns:minmax(0,240px) minmax(0,360px) minmax(0,1fr);gap:16px;padding:14px;border:1px solid var(--pan2);background:var(--pan);margin-bottom:8px;align-items:center}
+.row.rec{border-color:#3DDC84}
+.row .t b{display:block;font-size:13px;margin-bottom:4px}
+.row .t span{color:var(--mid);font-size:12.5px;display:block}
+.row .t .pm{margin-top:6px}
+.row .t .p{color:#3DDC84}.row .t .n{color:#FF8A1F}
+.cls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cls div{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.cls em{font-style:normal;color:var(--mid);font-size:11.5px}
+.cls .sm{display:flex;gap:10px;align-items:center}
+svg.gi{fill:currentColor}
+.map{width:100%;height:auto;border:1px solid var(--pan2);background:#0B0B0C}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px}
+.c{background:var(--pan);border:1px solid var(--pan2);padding:10px;display:flex;flex-direction:column;gap:4px;min-height:140px}
+.c .ib{display:flex;align-items:flex-end;gap:10px;height:46px}
+.c b{font-size:12.5px}
+.c i{font-style:normal;color:var(--mid);font-size:11.5px}
+.bt{margin-top:auto;align-self:flex-start;display:inline-flex;gap:6px;align-items:center;background:var(--ink);color:#000;font:800 10px Arial,sans-serif;letter-spacing:.12em;padding:4px 10px}
+@media (max-width:860px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-courier" viewBox="0 0 64 40"><path d="M2 26 L12 34 H50 L60 26 Z"/><path d="M8 26 L14 16 H40 L44 26 Z"/><path d="M28 16 L34 10 H40 V16 Z" opacity=".35"/><path d="M50 30 H64 M54 34 H66" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+<symbol id="i-hauler" viewBox="0 0 64 40"><path d="M2 22 L8 36 H54 L60 22 Z"/><rect x="34" y="10" width="16" height="12"/><rect x="38" y="13" width="8" height="4" opacity=".35"/><rect x="18" y="2" width="3" height="20"/><path d="M20 4 L40 16 M20 4 L6 22" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+<symbol id="i-freighter" viewBox="0 0 64 40"><path d="M0 24 L6 36 H60 L64 24 Z"/><rect x="8" y="16" width="10" height="8"/><rect x="20" y="16" width="10" height="8"/><rect x="32" y="16" width="10" height="8"/><rect x="8" y="8" width="10" height="7"/><rect x="20" y="8" width="10" height="7"/><rect x="32" y="8" width="10" height="7"/><rect x="48" y="4" width="10" height="20"/><rect x="50" y="7" width="6" height="3" opacity=".35"/></symbol>
+<symbol id="n-courier" viewBox="0 0 64 40"><path d="M3 26 C10 33 40 34 58 27 L54 23 H9 Z"/><path d="M15 23 C19 15 31 13 45 23 Z"/><path d="M31 15 C33 11 37 10 40 11 L38 17 Z" opacity=".4"/><path d="M50 30 H63 M54 34 H65" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="n-hauler" viewBox="0 0 64 40"><path d="M2 24 C8 35 48 36 59 24 Z"/><path d="M32 24 V14 C32 12 33 11 35 11 H45 C47 11 48 12 48 14 V24 Z"/><path d="M36 14 H44 V18 H36 Z" opacity=".35"/><path d="M18 24 V5 M18 6 C24 6 30 9 34 13 M18 6 C13 10 9 16 7 22" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/></symbol>
+<symbol id="n-freighter" viewBox="0 0 64 40"><path d="M0 24 C6 36 54 37 64 24 Z"/><rect x="7" y="16" width="10" height="8" rx="1.6"/><rect x="19" y="16" width="10" height="8" rx="1.6"/><rect x="31" y="16" width="10" height="8" rx="1.6"/><rect x="7" y="8" width="10" height="7" rx="1.6"/><rect x="19" y="8" width="10" height="7" rx="1.6"/><path d="M47 24 V7 C47 5 48 4 50 4 H55 C57 4 58 5 58 7 V24 Z"/><path d="M49 8 H56 V11 H49 Z" opacity=".35"/></symbol>
+<clipPath id="wl" clipPathUnits="userSpaceOnUse"><rect x="-10" y="29.5" width="90" height="20"/></clipPath><clipPath id="cg" clipPathUnits="userSpaceOnUse"><rect x="-10" y="27" width="90" height="20"/></clipPath>
+</defs></svg>
+<main>
+<h1>LAST BERTH — СУДА, ЗАХОД 3</h1>
+<p class="sub">Основа — силуэты из игры. Класс различается цветом. Справа — кусок карты в настоящем масштабе, суда ходят по линиям.</p>
+<div class="pal"><b>Свободные цвета.</b> Пять цветов уже заняты ресурсами, ещё три — ковчег, Земля и тревога. Для классов остаются бирюзовый и розовый, третий — белый.
+ <span><i style="background:#45D4E8"></i>курьер</span><span><i style="background:#FF6FB5"></i>тягач</span><span><i style="background:#F2F1EC"></i>грузовоз</span>
+ <span class="busy"><i style="background:#C9CFD6"></i><i style="background:#3DDC84"></i><i style="background:#FF8A1F"></i><i style="background:#FFD23F"></i><i style="background:#B48CFF"></i><i style="background:#4FA3FF"></i><i style="background:#FF2A1A"></i>заняты</span></div>
+<div id="rows"></div>
+<h2>Значок постройки — ещё варианты</h2>
+<p class="note">Без кран-балки. Каждый — крупно и в 16 px, на тёмной кнопке со словом, как будет в игре.</p>
+<div class="grid" id="build"></div>
+</main>
+<script>
+const C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58'};
+const K=['#45D4E8','#FF6FB5','#F2F1EC'];
+const OLD=['i-courier','i-hauler','i-freighter'], SM=['n-courier','n-hauler','n-freighter'];
+const W=[18,21,26];
+/* a hull drawn in a 64×40 box: body colour, optional band (waterline / cargo) */
+const hull=(id,body,band,clip='wl')=>`<use href="#${id}" style="color:${body}"/>`+(band?`<g clip-path="url(#${clip})"><use href="#${id}" style="color:${band}"/></g>`:'');
+const V=[
+ {t:'А · Как сейчас',v:'Силуэты из игры, все белые.',p:'привычно, нравилось',n:'в мелком размере тягач и курьер различаются плохо',f:i=>hull(OLD[i],C.ink)},
+ {t:'Б · Как сейчас + цвет класса',v:'Тот же силуэт, заливка цветом класса: курьер бирюзовый, тягач розовый, грузовоз белый.',p:'класс читается цветом за долю секунды, даже когда силуэт мелкий',n:'на карте становится на два ярких цвета больше',f:i=>hull(OLD[i],K[i]),rec:1},
+ {t:'В · Как сейчас + цветная ватерлиния',v:'Корпус белый, полоса по днищу — цвет класса. Цвет — акцентом, не заливкой.',p:'спокойнее, чем Б; силуэт остаётся главным',n:'в 16 px полоса тоньше пикселя — различие пропадает',f:i=>hull(OLD[i],C.ink,K[i])},
+ {t:'Г · Плавные силуэты + цвет класса',v:'Перерисованы без коробок: округлые корпуса, рубка и кран — дугами. Цвет как в Б.',p:'те же три корабля, но мягче и «дороже»',n:'это новая отрисовка — проверять рядом с остальными значками',f:i=>hull(SM[i],K[i])},
+ {t:'Д · Плавные, белые + цветная ватерлиния',v:'Сочетание Г и В.',p:'самый сдержанный вид',n:'тот же минус, что у В, в мелком размере',f:i=>hull(SM[i],C.ink,K[i])},
+ {t:'Е · Как сейчас, цвет = груз',v:'Класс — по силуэту, низ корпуса — в цвет того, что везёт. Пустое судно белое.',p:'карта показывает поток металла, еды, топлива',n:'класс снова только по силуэту; на рейсе к миру груз другой',f:(i,cargo)=>hull(OLD[i],C.ink,cargo||null,'cg'),cargo:1}
+];
+const one=(inner,w)=>`<svg viewBox="0 0 64 40" width="${w}" class="gi" aria-hidden="true">${inner}</svg>`;
+function mini(v){
+  const E=[70,96],T=[[300,34,'mine',C.metal,'KILN'],[318,150,'farm',C.food,'PALE'],[200,176,'well',C.fuel,'WICK']];
+  let s=`<svg class="map gi" viewBox="0 0 360 200" aria-hidden="true">`;
+  [60,120,190,250].forEach(r=>s+=`<circle cx="${E[0]}" cy="${E[1]}" r="${r}" fill="none" stroke="${C.dim}" stroke-dasharray="1 4"/>`);
+  T.forEach(w=>s+=`<path d="M${E[0]} ${E[1]}L${w[0]} ${w[1]}" stroke="${w[3]}" stroke-opacity=".45" stroke-width="1.4"/>`);
+  const mk={mine:'<circle r="6"/>',farm:'<rect x="-5.5" y="-5.5" width="11" height="11"/>',well:'<path d="M0-7L7 0L0 7L-7 0Z"/>'};
+  T.forEach(w=>s+=`<g transform="translate(${w[0]} ${w[1]})" fill="${w[3]}">${mk[w[2]]}</g><text x="${w[0]-12}" y="${w[1]+(w[1]<100?-10:20)}" fill="${C.ink}" font-size="8.5" font-family="Arial" font-weight="700" letter-spacing=".08em">${w[4]}</text>`);
+  s+=`<circle cx="${E[0]}" cy="${E[1]}" r="10" fill="${C.earth}"/>`;
+  const plan=[[0,2,9,0],[0,1,9,4.5],[1,0,12,1],[1,1,12,7],[2,2,16,3],[2,1,16,11],[0,0,7,2]];
+  plan.forEach(p=>{const w=T[p[1]],d=`M${E[0]} ${E[1]} L${w[0]} ${w[1]} L${E[0]} ${E[1]}`,sw=W[p[0]],sh=sw*40/64;
+    const cargo=v.cargo?w[3]:null;
+    s+=`<g><g><g><svg x="${-sw/2}" y="${-sh}" width="${sw}" height="${sh}" viewBox="0 0 64 40" overflow="visible">${v.f(p[0],cargo)}</svg><animateTransform attributeName="transform" type="scale" values="1 1;-1 1" keyTimes="0;0.5" calcMode="discrete" dur="${p[2]}s" begin="-${p[3]}s" repeatCount="indefinite"/></g></g><animateMotion dur="${p[2]}s" begin="-${p[3]}s" repeatCount="indefinite" path="${d}"/></g>`});
+  return s+'</svg>';
+}
+document.getElementById('rows').innerHTML=V.map(v=>`<div class="row ${v.rec?'rec':''}"><div class="t"><b>${v.t}</b><span>${v.v}</span><span class="pm"><span class="p">＋</span> ${v.p}</span><span class="pm"><span class="n">−</span> ${v.n}</span></div>
+ <div class="cls">${[0,1,2].map(i=>{const cg=v.cargo?[null,C.food,C.metal][i]:null;return `<div>${one(v.f(i,cg),104)}<div class="sm">${one(v.f(i,cg),36)}${one(v.f(i,cg),22)}</div><em>${v.cargo?['курьер, пустой','тягач с едой','грузовоз с металлом'][i]:['курьер','тягач','грузовоз'][i]}</em></div>`}).join('')}</div>
+ <div>${mini(v)}</div></div>`).join('');
+
+/* build icons */
+const ST='fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"';
+const fp=(d,x='')=>`<path d="${d}" ${x} fill="currentColor"/>`;
+const g=(d,x='')=>`<path d="${d}" ${x} ${ST}/>`;
+const HULL='M2 15 L5 11 H17 L21 15 L18 18 H5 Z';
+const B=[
+ ['Полкорпуса','собранная часть сплошная, остальное пунктир',fp('M2 15 L5 11 H11 V18 H5 Z')+g('M11 11 H17 L21 15 L18 18 H11','stroke-dasharray="2.2 2"')],
+ ['Корпус на стапеле','судно на двух опорах',fp(HULL)+g('M6 18 L4 22 M17 18 L19 22 M2 22 H22')],
+ ['Сварка','корпус и искра над ним',fp(HULL)+fp('M15 2 L16.2 5.8 L20 7 L16.2 8.2 L15 12 L13.8 8.2 L10 7 L13.8 5.8 Z')],
+ ['Гаечный ключ','ключ поверх корпуса',fp('M2 19 L5 15 H15 L19 19 L16 22 H5 Z','opacity=".5"')+fp('M15 2 a5 5 0 0 0 -4.6 6.9 L3.6 15.7 a1.9 1.9 0 0 0 2.7 2.7 L13.1 11.6 a5 5 0 0 0 6.9 -4.6 L17.2 9.8 L14.2 6.8 Z')],
+ ['Ключ и молоток','классический знак «строить»',g('M4 20 L13 11 M13 11 L11 9 L15 5 L19 9 L17 11 Z','stroke-width="2"')+g('M20 20 L11 11 M6 4 a3 3 0 1 0 4 4','stroke-width="2"')],
+ ['Чертёж','контур судна на сетке',g('M3 3 H21 V21 H3 Z','opacity=".45"')+g('M3 9 H21 M3 15 H21 M9 3 V21 M15 3 V21','opacity=".25" stroke-width="1"')+g('M5 13 L7.5 10 H15 L18.5 13 L16 16 H7.5 Z')],
+ ['Сборка из секций','секция подходит к корпусу',fp('M2 14 L5 10 H11 V18 H5 Z')+fp('M14 10 H18 L22 14 L18 18 H14 Z')+g('M12.5 6 V8 M12.5 20 V22','stroke-width="1.6"')],
+ ['Корпус и плюс','контур с плюсом в углу',fp(HULL,'transform="translate(0 2)"')+g('M19 2 V9 M15.5 5.5 H22.5','stroke-width="2.4"')],
+ ['Корпус в кольце прогресса','кольцо заполняется, пока строится',g('M12 12 m-10 0 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0','opacity=".3"')+g('M12 2 A10 10 0 0 1 21.5 15','stroke-width="2.4"')+fp('M5 12.5 L7.5 9.5 H14.5 L17.5 12.5 L15 15 H7.5 Z')]
+];
+document.getElementById('build').innerHTML=B.map(b=>`<div class="c"><div class="ib"><svg viewBox="0 0 24 24" width="38" style="color:${C.ink}">${b[2]}</svg><svg viewBox="0 0 24 24" width="16" style="color:${C.ink}">${b[2]}</svg></div><b>${b[0]}</b><i>${b[1]}</i><span class="bt"><svg viewBox="0 0 24 24" width="14" style="color:#000">${b[2]}</svg>BUILD</span></div>`).join('');
+</script>
+</body>
+</html>

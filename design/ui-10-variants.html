@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — 10 вариантов интерфейса</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+.sub{color:var(--mid);margin:0 0 16px}
+.dict{display:flex;flex-wrap:wrap;gap:6px 16px;padding:10px 12px;border:1px solid var(--dim);margin-bottom:22px}
+.dict span{display:inline-flex;align-items:center;gap:6px;color:var(--mid);font-size:12px}
+.dict svg{width:22px;height:22px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,520px),1fr));gap:26px 22px}
+.card h2{font-size:15px;margin:0 0 2px;letter-spacing:.06em}
+.card h2 b{color:var(--red);margin-right:8px}
+.card .idea{color:var(--mid);margin:0 0 8px;font-size:13px}
+.card svg.m{display:block;width:100%;height:auto;border:1px solid var(--dim);background:var(--bg)}
+ol{list-style:none;margin:8px 0 6px;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:3px 14px;font-size:13px}
+ol li{display:flex;gap:7px;align-items:baseline}
+ol li i{flex:none;font-style:normal;background:var(--ink);color:#000;font-weight:700;font-size:11px;width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;transform:translateY(2px)}
+.pm{font-size:12.5px;color:var(--mid);margin:0}
+.pm .p{color:#3DDC84}.pm .n{color:#FF8A1F}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-metal" viewBox="-9 -9 18 18" overflow="visible"><path d="M-7 5L-4 -5H4L7 5Z" fill="currentColor"/></symbol>
+<symbol id="i-food" viewBox="-9 -9 18 18" overflow="visible"><path d="M0 7C-9 1-5-7 0-7C5-7 9 1 0 7Z" fill="currentColor"/><path d="M0 7V-2" stroke="#0B0B0C" stroke-width="1.3"/></symbol>
+<symbol id="i-fuel" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-8C6 0 6 4 0 7C-6 4-6 0 0-8Z" fill="currentColor"/></symbol>
+<symbol id="i-parts" viewBox="-9 -9 18 18" overflow="visible"><circle r="5" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="2.6 2.63"/><circle r="3.6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-people" viewBox="-9 -9 18 18" overflow="visible"><circle cy="-4.5" r="3" fill="currentColor"/><path d="M-6 7C-6-2 6-2 6 7Z" fill="currentColor"/></symbol>
+<symbol id="i-night" viewBox="-9 -9 18 18" overflow="visible"><path d="M3-7A7.5 7.5 0 1 0 3 7A9 9 0 0 1 3-7Z" fill="currentColor"/></symbol>
+<symbol id="i-ark" viewBox="-13 -9 26 18" overflow="visible"><path d="M-12 0L-6-5H8L12 0L8 5H-6Z" fill="currentColor"/><path d="M-3-5V5M3-5V5" stroke="#0B0B0C" stroke-width="1.2"/></symbol>
+<symbol id="s-c" viewBox="-9 -9 18 18" overflow="visible"><path d="M-6-3.5L6 0L-6 3.5L-3.5 0Z" fill="currentColor"/></symbol>
+<symbol id="s-t" viewBox="-9 -9 18 18" overflow="visible"><path d="M-6-4H1L6 0L1 4H-6Z" fill="currentColor"/></symbol>
+<symbol id="s-f" viewBox="-11 -9 22 18" overflow="visible"><path d="M-10-4H5L10 0L5 4H-10Z" fill="currentColor"/><path d="M-5-4V4M0-4V4" stroke="#0B0B0C" stroke-width="1.2"/></symbol>
+<symbol id="w-mine" viewBox="-9 -9 18 18" overflow="visible"><circle r="6" fill="currentColor"/></symbol>
+<symbol id="w-farm" viewBox="-9 -9 18 18" overflow="visible"><rect x="-5.5" y="-5.5" width="11" height="11" fill="currentColor"/></symbol>
+<symbol id="w-well" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-7L7 0L0 7L-7 0Z" fill="currentColor"/></symbol>
+<symbol id="w-works" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-7L7 5.5H-7Z" fill="currentColor"/></symbol>
+<symbol id="o-mine" viewBox="-9 -9 18 18" overflow="visible"><circle r="5.5" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="o-farm" viewBox="-9 -9 18 18" overflow="visible"><rect x="-5" y="-5" width="10" height="10" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="o-well" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-6.5L6.5 0L0 6.5L-6.5 0Z" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="o-works" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-6.5L6.5 5H-6.5Z" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="i-warn" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-7L8 6H-8Z" fill="currentColor"/><path d="M0-2.5V2M0 3.6V4.6" stroke="#0B0B0C" stroke-width="1.6"/></symbol>
+<symbol id="i-plus" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-6V6M-6 0H6" stroke="currentColor" stroke-width="2.6"/></symbol>
+<symbol id="i-x" viewBox="-9 -9 18 18" overflow="visible"><path d="M-5-5L5 5M5-5L-5 5" stroke="currentColor" stroke-width="2.6"/></symbol>
+<symbol id="i-play" viewBox="-9 -9 18 18" overflow="visible"><path d="M-4-6L6 0L-4 6Z" fill="currentColor"/></symbol>
+<symbol id="i-earth" viewBox="-9 -9 18 18" overflow="visible"><circle r="7" fill="currentColor"/><path d="M-7 0H7M0-7C-4-3-4 3 0 7C4 3 4-3 0-7" stroke="#0B0B0C" stroke-width="1.1" fill="none"/></symbol>
+</defs></svg>
+
+<h1>LAST BERTH — 10 ВАРИАНТОВ ИНТЕРФЕЙСА</h1>
+<p class="sub">Схемы, не макеты. Цифр нет намеренно: уровень — полоска, срок — дуга, беда — красное.</p>
+<div class="dict" id="dict"></div>
+<div class="grid" id="grid"></div>
+
+<script>
+const C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',dim:'#5E5D58',mid:'#9C9B95',bg:'#0B0B0C',pan:'#17171A',pan2:'#232327'};
+const RES=['metal','food','fuel','parts','people'];
+const KC={mine:C.metal,farm:C.food,well:C.fuel,works:C.parts};
+const f=n=>(+n).toFixed(1);
+const u=(id,x,y,s=1,col=C.ink,rot=0,op=1)=>`<use href="#${id}" x="-9" y="-9" width="18" height="18" style="color:${col}" opacity="${op}" transform="translate(${f(x)} ${f(y)}) rotate(${rot}) scale(${s})"/>`;
+const P=(cx,cy,r,a)=>[cx+r*Math.cos((a-90)*Math.PI/180),cy+r*Math.sin((a-90)*Math.PI/180)];
+const arc=(cx,cy,r,a0,a1,col,w=4,op=1,dash='')=>{const [x0,y0]=P(cx,cy,r,a0),[x1,y1]=P(cx,cy,r,a1);return `<path d="M${f(x0)} ${f(y0)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${f(x1)} ${f(y1)}" fill="none" stroke="${col}" stroke-width="${w}" opacity="${op}" ${dash?`stroke-dasharray="${dash}"`:''}/>`};
+const ln=(x1,y1,x2,y2,col=C.dim,w=1,dash='',op=1)=>`<path d="M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}" stroke="${col}" stroke-width="${w}" opacity="${op}" fill="none" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+const box=(x,y,w,h,fill=C.pan,stroke='none',rx=4,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${stroke}" ${extra}/>`;
+const circ=(x,y,r,fill='none',stroke='none',w=1,extra='')=>`<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" ${extra}/>`;
+const bar=(x,y,n,of,col,w=5,h=8,g=2)=>{let s='';for(let i=0;i<of;i++)s+=`<rect x="${x+i*(w+g)}" y="${y}" width="${w}" height="${h}" fill="${i<n?col:C.pan2}"/>`;return s};
+const vbar=(x,y,n,of,col,w=8,h=4,g=2)=>{let s='';for(let i=0;i<of;i++)s+=`<rect x="${x}" y="${y-i*(h+g)}" width="${w}" height="${h}" fill="${i<n?col:C.pan2}"/>`;return s};
+const pin=(n,x,y)=>`<circle cx="${x}" cy="${y}" r="9" fill="${C.ink}" stroke="#000" stroke-width="1.5"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#000" font-family="ui-monospace,Consolas,monospace">${n}</text>`;
+const stub=(x,y,w,col=C.dim,h=4)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}"/>`;
+const wm=(k,x,y,s=1,on=1,op=1)=>u((on?'w-':'o-')+k,x,y,s,on?KC[k]:C.mid,0,op);
+
+const W=[['mine',0,20,1],['farm',0,140,1],['well',0,255,1],['works',1,70,1],['mine',1,190,1],['farm',1,305,0],['well',2,30,0],['mine',2,110,1],['farm',2,222,0],['works',2,332,0]];
+const RR=[.4,.7,1];
+const wp=(cx,cy,R,i)=>P(cx,cy,R*RR[W[i][1]],W[i][2]);
+function map(cx,cy,R,o={}){
+  const op=o.op||1,sc=o.s||Math.max(.6,R/165);let s=`<g opacity="${op}">`;
+  RR.forEach(r=>s+=circ(cx,cy,R*r,'none',C.dim,1,'stroke-dasharray="1 4"'));
+  W.forEach((w,i)=>{const [x,y]=wp(cx,cy,R,i);
+    if(w[3]&&!o.noLines){s+=ln(cx,cy,x,y,KC[w[0]],o.lw||1.4,'',.55);
+      if(!o.noShips){const t=.35+.08*i,a=Math.atan2(y-cy,x-cx)*180/Math.PI;s+=u(i%3==0?'s-f':i%3==1?'s-t':'s-c',cx+(x-cx)*t,cy+(y-cy)*t,.8*sc,C.ink,i%2?a:a+180)}}
+    s+=wm(w[0],x,y,1.1*sc,w[3]);});
+  s+=u('i-earth',cx,cy,1.5*sc,C.earth);
+  return s+'</g>';
+}
+
+const M=[];
+
+/* 1 — всё на карте */
+M.push({t:'ВСЁ НА КАРТЕ',idea:'Панелей нет. Земля — прибор, мир — меню.',
+ leg:['Кольцо запасов вокруг Земли','Приказы веером у мира','Обод — время до Ночи','Беда мигает там, где случилась'],
+ plus:'глаз не уходит с карты',minus:'тесно, когда миров два десятка',
+ draw(){const cx=320,cy=200;let s=map(cx,cy,165);
+  s+=circ(cx,cy,33,C.bg,'none');
+  const lv=[.8,.3,.6,.5,.9];RES.forEach((k,i)=>{const a=i*72+6;s+=arc(cx,cy,26,a,a+60,C.pan2,6)+arc(cx,cy,26,a,a+60*lv[i],i==1?C.red:C[k],6);const [x,y]=P(cx,cy,43,a+30);s+=circ(x,y,8,C.bg)+u('i-'+k,x,y,.7,i==1?C.red:C[k])});
+  s+=u('i-earth',cx,cy,1.6,C.earth);
+  s+=arc(cx,cy,190,0,359.9,C.pan2,4)+arc(cx,cy,190,0,248,C.red,4);const [nx,ny]=P(cx,cy,190,248);s+=circ(nx,ny,10,C.bg,C.red,1.5)+u('i-night',nx,ny,.8,C.red);
+  const [ax,ay]=wp(cx,cy,165,4);s+=circ(ax,ay,13,'none',C.ink,1.5);
+  [['i-plus',-150,C.ink],['s-f',-100,C.ink],['i-parts',-50,C.parts],['i-people',0,C.people]].forEach(m=>{const [x,y]=P(ax,ay,34,m[1]+10);s+=circ(x,y,12,C.pan,C.mid,1)+u(m[0],x,y,.8,m[2])});
+  const [bx,by]=wp(cx,cy,165,7);s+=circ(bx,by,14,'none',C.red,2)+circ(bx,by,21,'none',C.red,1,'opacity=".5"')+u('i-warn',bx+20,by-18,.8,C.red);
+  s+=pin(1,cx+50,cy-30)+pin(2,ax-62,ay+4)+pin(3,nx-24,ny-8)+pin(4,bx+38,by+8);return s}});
+
+/* 2 — пульт */
+M.push({t:'ПУЛЬТ',idea:'Железо диспетчера: стрелки, лампы, рычаг.',
+ leg:['Экран — карта','Стрелка в красном = мало','Лампы вместо списка советника','Рычаг темпа'],
+ plus:'сильный образ, читается без слов',minus:'пульт съедает треть экрана',
+ draw(){let s=box(20,12,600,216,C.bg,C.mid,8)+map(320,120,98);
+  s+=`<path d="M4 244H636L620 392H20Z" fill="${C.pan}" stroke="${C.dim}"/>`;
+  const lv=[40,-70,10,-20,70];RES.forEach((k,i)=>{const x=62+i*72,y=306;s+=circ(x,y,28,C.bg,C.dim,1)+arc(x,y,21,-120,-60,C.red,5)+arc(x,y,21,-60,120,C.pan2,5);
+    const [nx,ny]=P(x,y,20,lv[i]);s+=ln(x,y,nx,ny,C.ink,2)+circ(x,y,3,C.ink)+u('i-'+k,x,y+50,.95,C[k])});
+  const lamps=[['i-food',C.red,1],['i-night',C.dim,0],['s-c',C.people,1],['i-parts',C.dim,0],['i-people',C.dim,0],['i-ark',C.dim,0]];
+  lamps.forEach((l,i)=>{const x=430+(i%3)*38,y=290+Math.floor(i/3)*40;s+=circ(x,y,14,l[2]?l[1]:C.bg,l[2]?l[1]:C.dim,1)+u(l[0],x,y,l[0]=='i-ark'?.6:.8,l[2]?'#000':C.dim)});
+  s+=box(574,268,10,104,C.bg,C.dim,5);[280,306,332,358].forEach(y=>s+=ln(590,y,598,y,C.mid,1.5));s+=box(562,296,34,20,C.ink,'none',4)+u('i-play',604,358,.6,C.mid)+u('i-play',610,280,.6,C.mid)+u('i-play',602,280,.6,C.mid);
+  s+=pin(1,40,30)+pin(2,26,290)+pin(3,400,270)+pin(4,548,306);return s}});
+
+/* 3 — схема метро */
+M.push({t:'СХЕМА МЕТРО',idea:'Игра про линии — рисуем линии. Земля — вокзал.',
+ leg:['Толщина = поток груза','Суда едут по своей линии','Пунктир — свободный мир','Столбцы — кольца'],
+ plus:'перегруз и простой видны сразу',minus:'пропадают доли карты и события на них',
+ draw(){let s='';RES.forEach((k,i)=>{s+=u('i-'+k,40+i*84,24,.9,C[k])+bar(54+i*84,20,[8,3,6,5,9][i],9,i==1?C.red:C[k],4,8,2)});
+  s+=u('i-night',586,24,.9,C.red)+arc(586,24,13,0,250,C.red,2.5)+arc(586,24,13,250,359.9,C.pan2,2.5);
+  const X=[250,410,570];[180,330,490].forEach((x,i)=>{s+=ln(x,50,x,388,C.dim,1,'2 5')+`<text x="${x+10}" y="64" font-size="12" fill="${C.dim}" font-family="serif">${['I','II','III'][i]}</text>`});
+  const L=[['mine',0,84,8,1,'s-f',2],['farm',0,134,5,1,'s-t',1],['well',1,184,3,1,'s-c',1],['works',1,244,6,1,'s-f',1],['mine',2,294,9,1,'s-f',3],['farm',2,344,0,0,'',0],['well',2,376,0,0,'',0]];
+  L.forEach(l=>{const xe=X[l[1]],y=l[2],col=KC[l[0]];const d=`M56 214C120 214 96 ${y} 160 ${y}H${xe}`;
+    s+=`<path d="${d}" fill="none" stroke="${l[4]?col:C.dim}" stroke-width="${l[4]?l[3]:1.5}" ${l[4]?'opacity=".8"':'stroke-dasharray="4 5"'}/>`;
+    for(let j=0;j<l[6];j++)s+=u(l[5],190+j*(xe-200)/(l[6]+.3),y,.95,C.bg,j%2?180:0)+u(l[5],190+j*(xe-200)/(l[6]+.3),y-(l[3]/2+8),.8,C.ink,j%2?180:0);
+    s+=circ(xe,y,11,C.bg,l[4]?col:C.dim,2)+wm(l[0],xe,y,.9,l[4]);
+    if(!l[4])s+=circ(xe+28,y,9,C.pan,C.mid,1)+u('i-plus',xe+28,y,.6,C.ink)});
+  s+=circ(56,214,22,C.bg,C.ink,3)+u('i-earth',56,214,1.6,C.earth);
+  s+=pin(1,300,274)+pin(2,222,58)+pin(3,520,360)+pin(4,198,104);return s}});
+
+/* 4 — лента до ночи */
+M.push({t:'ЛЕНТА ДО НОЧИ',idea:'Главный вопрос «успею ли» — внизу, всегда.',
+ leg:['Сейчас','Полоса тает — видно, когда кончится','Сроки значками на оси','Ночь'],
+ plus:'прогноз вместо метрики',minus:'карта сжата, приказы всё равно на ней',
+ draw(){let s=map(320,104,88);
+  s+=box(12,206,616,184,C.pan,'none',6);
+  const x0=70,xn=150,x1=590;
+  const band=(y,k,pts,col)=>u('i-'+k,40,y,.95,col||C[k])+`<path d="M${x0} ${y}${pts.map(p=>`L${p[0]} ${y-p[1]}`).join('')}${pts.slice().reverse().map(p=>`L${p[0]} ${y+p[1]}`).join('')}Z" fill="${col||C[k]}" opacity=".8"/>`;
+  s+=band(234,'food',[[x0,7],[xn,9],[260,7],[360,3],[420,0]],C.food)+u('i-x',424,234,.7,C.red);
+  s+=band(266,'metal',[[x0,4],[xn,8],[330,10],[480,7],[x1,4]]);
+  s+=band(298,'people',[[x0,3],[xn,5],[300,8],[450,10],[x1,11]]);
+  s+=box(x0,214,xn-x0,144,C.bg,'none',0,'opacity=".55"');
+  s+=ln(x0,350,x1,350,C.mid,1.5);for(let x=x0;x<=x1;x+=40)s+=ln(x,346,x,354,C.dim,1);
+  s+=ln(xn,212,xn,366,C.ink,2)+`<path d="M${xn-6} 366h12l-6 10z" fill="${C.ink}"/>`;
+  s+=ln(x1,212,x1,366,C.red,3)+circ(x1,372,11,C.bg,C.red,1.5)+u('i-night',x1,372,.8,C.red);
+  [[250,'i-parts',C.parts],[540,'i-ark',C.ark]].forEach(m=>s+=ln(m[0],350,m[0],364,C.mid,1)+u(m[1],m[0],374,m[1]=='i-ark'?.7:.8,m[2]));
+  [[390,'mine'],[468,'well']].forEach(m=>s+=ln(m[0],350,m[0],364,C.mid,1)+wm(m[1],m[0]-8,374,.75,1)+u('s-c',m[0]+8,374,.75,C.ink,180));
+  s+=pin(1,xn+16,222)+pin(2,440,218)+pin(3,366,384)+pin(4,x1-22,222);return s}});
+
+/* 5 — стол с картами */
+M.push({t:'СТОЛ С КАРТАМИ',idea:'Мир — карта, судно — фишка. Тащи фишку на карту.',
+ leg:['Карта мира: залежь, люди','Гнёзда под суда','Рука — свободные суда','Уголок — состояние'],
+ plus:'перенос судов рукой (F-40) сам собой',minus:'нет расстояний и колец — теряется космос',
+ draw(){let s=box(14,14,112,300,C.pan,C.earth,6)+u('i-earth',70,50,2.4,C.earth);
+  RES.forEach((k,i)=>s+=u('i-'+k,34,104+i*40,.95,C[k])+bar(50,100+i*40,[8,3,6,5,9][i],9,i==1?C.red:C[k],5,9,2));
+  const cards=[['mine',7,3,2,4,C.food],['farm',5,2,2,3,C.food],['well',2,2,1,2,C.people],['works',6,3,3,5,C.food],['mine',1,2,0,1,C.red],['farm',9,3,0,0,null]];
+  cards.forEach((c,i)=>{const x=138+(i%4)*124,y=14+Math.floor(i/4)*154,free=!c[5];
+    s+=box(x,y,114,146,free?C.bg:C.pan,i==4?C.red:C.dim,6,free?'stroke-dasharray="5 4"':'');
+    s+=wm(c[0],x+24,y+26,2,!free);if(!free)s+=circ(x+98,y+16,6,c[5]);
+    s+=bar(x+12,y+54,c[1],10,free?C.dim:KC[c[0]],7,9,2);
+    for(let j=0;j<c[2];j++)s+=box(x+12+j*32,y+76,28,22,C.bg,C.dim,3,j>=c[3]?'stroke-dasharray="3 3"':'')+(j<c[3]?u(j?'s-t':'s-f',x+26+j*32,y+87,.8,C.ink):'');
+    if(!free)for(let j=0;j<5;j++)s+=u('i-people',x+20+j*18,y+122,.75,j<c[4]?C.people:C.pan2);else s+=u('i-plus',x+57,y+120,1.1,C.mid)});
+  [6,7].forEach(i=>{const x=138+(i%4)*124,y=168;s+=box(x,y,114,146,C.bg,C.pan2,6)+`<text x="${x+57}" y="${y+84}" text-anchor="middle" font-size="30" fill="${C.pan2}" font-family="serif">?</text>`});
+  s+=box(14,326,612,62,C.pan,'none',6);['s-c','s-c','s-t','s-f','s-f'].forEach((k,i)=>s+=box(30+i*56,338,46,38,C.bg,C.mid,5)+u(k,53+i*56,357,1.2,C.ink));
+  s+=`<path d="M260 338C290 300 330 290 372 262" fill="none" stroke="${C.ink}" stroke-width="1.5" stroke-dasharray="4 4"/>`+box(352,236,46,38,C.pan2,C.ink,5,'opacity=".9"')+u('s-f',375,255,1.2,C.ink);
+  s+=pin(1,146,22)+pin(2,300,96)+pin(3,330,358)+pin(4,246,22);return s}});
+
+/* 6 — порт в разрезе */
+M.push({t:'ПОРТ В РАЗРЕЗЕ',idea:'Земля — сцена. Запас виден, как вода в баке.',
+ leg:['Баки: уровень = запас','Верфь: корпус растёт','Причалы: кто дома','Ковчег по секциям','Окно на карту'],
+ plus:'ни одной цифры, всё буквально',minus:'мирам остаётся иллюминатор; дорогая отрисовка',
+ draw(){let s=box(0,330,640,70,C.pan,'none',0)+ln(0,330,640,330,C.mid,1.5);
+  const lv=[.8,.25,.6,.5];['metal','food','fuel','parts'].forEach((k,i)=>{const x=24+i*48,h=112,l=h*lv[i];s+=box(x,218,36,h,C.bg,C.mid,4)+box(x+2,218+h-l,32,l-2,i==1?C.red:C[k],'none',2,'opacity=".85"')+u('i-'+k,x+18,202,.95,i==1?C.red:C[k])});
+  s+=`<path d="M222 330A46 46 0 0 1 314 330Z" fill="${C.bg}" stroke="${C.people}" stroke-width="1.5"/>`;[[246,316],[268,304],[290,316],[268,322]].forEach(p=>s+=u('i-people',p[0],p[1],.8,C.people));
+  s+=ln(340,330,340,236,C.mid,2)+ln(436,330,436,236,C.mid,2)+ln(334,236,442,236,C.mid,2)+ln(388,236,388,262,C.mid,1);
+  s+=`<path d="M352 290H408L424 302L408 314H352Z" fill="none" stroke="${C.ink}" stroke-width="1.5" stroke-dasharray="3 3"/><path d="M352 290H390V314H352Z" fill="${C.ink}"/>`;
+  [246,278,310].forEach((y,i)=>{s+=ln(470,y+12,626,y+12,C.dim,1.5);if(i<3)s+=u(['s-f','s-t','s-c'][i],500,y,1.3,C.ink);if(i==0)s+=u('s-f',560,y,1.3,C.ink);if(i==2)s+=u('s-c',548,y,1.3,C.dim)});
+  s+=ln(462,236,462,330,C.mid,2);
+  const ax=396,ay=74;for(let i=0;i<4;i++)s+=box(ax+i*46,ay,42,40,i<2?C.ark:C.bg,C.ark,3,i<2?'':'stroke-dasharray="4 3"');
+  s+=`<path d="M${ax+184} ${ay}L${ax+214} ${ay+20}L${ax+184} ${ay+40}Z" fill="none" stroke="${C.ark}" stroke-dasharray="4 3"/>`+[0,1,2].map(i=>u('s-'+'ftc'[i],ax+24+i*40,ay+62,.9,i<2?C.ink:C.dim)).join('');
+  s+=u('i-night',600,34,1.3,C.red)+arc(600,34,18,0,250,C.red,2.5);
+  s+=`<clipPath id="cp6"><circle cx="110" cy="100" r="74"/></clipPath><g clip-path="url(#cp6)">${box(30,20,160,160,C.bg)}${map(110,100,90,{s:.7})}</g>`+circ(110,100,74,'none',C.mid,3);
+  s+=`<path d="M500 240C460 180 300 190 186 120" fill="none" stroke="${C.dim}" stroke-dasharray="3 5"/>`;
+  s+=pin(1,14,226)+pin(2,326,252)+pin(3,618,232)+pin(4,384,66)+pin(5,42,34);return s}});
+
+/* 7 — одно решение */
+M.push({t:'ОДНО РЕШЕНИЕ',idea:'Игра приносит вопрос. Ответ — значком.',
+ leg:['Очередь: что ждёт','Карточка: кто говорит и о чём','Ответы-значки','Точки: что изменится'],
+ plus:'метрик почти нет',minus:'меняет жанр: игрок отвечает, а не планирует',
+ draw(){let s=map(320,205,175,{op:.28});
+  RES.forEach((k,i)=>s+=u('i-'+k,232+i*44,30,1.1,C[k]));s+=circ(276,48,4.5,C.ink)+circ(408,48,2.5,C.ink);
+  [['i-night',C.red],['i-parts',C.parts],['i-food',C.food]].forEach((q,i)=>s+=box(40+i*8,150-i*10,84,112,C.pan,C.dim,6)+(i==2?u(q[0],98,196,2,q[1]):''));
+  s+=circ(138,130,11,C.red)+`<text x="138" y="134" text-anchor="middle" font-size="12" font-weight="700" fill="#000" font-family="monospace">3</text>`;
+  s+=box(214,66,212,236,C.pan,C.ink,10);
+  s+=box(230,82,52,52,C.bg,C.mid,2)+box(244,96,8,8,C.ink,'none',0)+box(262,96,8,8,C.ink,'none',0)+box(248,116,18,5,C.ink,'none',0)+box(238,86,36,5,C.mid,'none',0);
+  s+=stub(294,90,96,C.mid,6)+stub(294,104,60,C.dim,5)+u('s-c',304,124,.9,C.ink);
+  s+=box(230,146,180,96,C.bg,'none',6)+wm('mine',276,194,2.6,1)+circ(276,194,26,'none',C.red,2)+u('i-people',276,172,.6,C.people)+u('i-people',262,214,.6,C.people)+u('i-people',292,214,.6,C.people);
+  s+=`<path d="M310 194H352" stroke="${C.ink}" stroke-width="1.5" stroke-dasharray="3 3"/>`+u('i-earth',374,194,1.6,C.earth);
+  s+=stub(230,256,180,C.dim,5)+stub(230,268,150,C.dim,5)+stub(230,280,100,C.dim,5);
+  [['s-c',C.ink,C.ink],['s-f',C.ink,C.mid],['i-x',C.mid,C.mid]].forEach((b,i)=>s+=circ(250+i*70,346,26,C.pan,b[2],i?1:2.5)+u(b[0],250+i*70,346,1.4,b[1]));
+  s+=box(560,20,56,26,C.pan,C.dim,13)+box(578,27,5,12,C.ink,'none',0)+box(588,27,5,12,C.ink,'none',0);
+  s+=pin(1,32,132)+pin(2,206,74)+pin(3,214,330)+pin(4,206,40);return s}});
+
+/* 8 — телефон */
+M.push({t:'ТЕЛЕФОН ПЕРВЫМ',idea:'Одна рука. Всё, что жмут, — внизу.',
+ leg:['Полоска запасов','Шторка выбранного мира','Крупные значки-приказы','Вкладки под большой палец'],
+ plus:'закрывает непроверенную телефонную ширину',minus:'это компоновка, а не идея — надевается на 1 или 10',
+ draw(){let s='';[120,360].forEach((px,pi)=>{
+   s+=box(px,8,168,384,C.bg,C.mid,20);
+   RES.forEach((k,i)=>s+=u('i-'+k,px+20+i*25,30,.75,i==1?C.red:C[k])+bar(px+12+i*25,40,[4,1,3,3,4][i],4,i==1?C.red:C[k],3,3,1));
+   s+=u('i-night',px+150,31,.75,C.red)+arc(px+150,31,10,0,250,C.red,2);
+   if(!pi){s+=map(px+84,180,70);s+=circ(px+138,300,17,C.ink)+u('i-play',px+139,300,.9,'#000');}
+   else{s+=map(px+84,118,56);const [x,y]=wp(px+84,118,56,4);s+=circ(x,y,10,'none',C.ink,1.5);
+     s+=box(px+1,190,166,150,C.pan,'none',14)+box(px+68,197,32,4,C.dim,'none',2)+wm('mine',px+26,224,1.8,1)+bar(px+48,214,6,10,C.metal,8,8,2)+[0,1,2,3].map(j=>u('i-people',px+53+j*15,234,.6,j<3?C.people:C.pan2)).join('');
+     [['i-plus','s-f',C.ink],['i-parts','',C.parts],['i-people','s-c',C.people],['i-night','s-c',C.red]].forEach((b,i)=>{const x=px+14+(i%2)*72,y=250+Math.floor(i/2)*44;s+=box(x,y,66,38,C.bg,C.dim,8)+u(b[0],x+(b[1]?22:33),y+19,1,b[2])+(b[1]?u(b[1],x+46,y+19,.9,C.ink):'')});}
+   s+=box(px+1,344,166,47,C.pan,'none',0)+`<path d="M${px+1} 372V374A18 18 0 0 0 ${px+19} 391H${px+149}A18 18 0 0 0 ${px+167} 374V372Z" fill="${C.pan}"/>`;
+   [['i-earth',C.earth],['s-f',C.ink],['i-warn',C.people],['i-ark',C.ark],['i-people',C.people]].forEach((t,i)=>{s+=u(t[0],px+22+i*31,366,t[0]=='i-ark'?.75:.95,i==0?t[1]:C.mid);if(i==0)s+=box(px+12,382,20,3,C.ink,'none',1);if(i==2)s+=circ(px+92,356,4,C.red)});
+ });
+ s+=pin(1,104,34)+pin(2,548,200)+pin(3,548,290)+pin(4,104,366);return s}});
+
+/* 9 — табло */
+M.push({t:'ТАБЛО',idea:'Диспетчерская доска: строка на мир, столбцы-значки.',
+ leg:['Строка = мир','Шапка из значков, по ней сортируют','Дуга — срок последнего рейса','Лампа: худшее наверх'],
+ plus:'не ломается на 25 мирах',minus:'самый «табличный» из десяти — от метрик уходит хуже всех',
+ draw(){let s=box(12,12,468,376,C.pan,'none',6);
+  const cx=[36,150,262,340,404,452];
+  s+=u('i-earth',cx[0],32,.9,C.mid)+u('i-metal',cx[1]-10,32,.8,C.mid)+u('i-fuel',cx[1]+8,32,.8,C.mid)+u('s-f',cx[2],32,.9,C.mid)+u('i-people',cx[3],32,.9,C.mid)+u('i-night',cx[4],32,.9,C.mid)+u('i-warn',cx[5],32,.9,C.ink)+`<path d="M${cx[5]-5} 46h10l-5 5z" fill="${C.ink}"/>`;
+  s+=ln(20,54,472,54,C.dim,1);
+  const rows=[['mine',1,2,1,60,C.red],['well',3,1,3,150,C.people],['farm',8,3,4,300,C.food],['mine',6,2,3,280,C.food],['works',5,3,5,330,C.food],['well',7,1,2,240,C.food],['farm',9,0,0,0,C.dim]];
+  rows.forEach((r,i)=>{const y=62+i*46;s+=box(20,y,452,40,i%2?C.pan:C.pan2,i==0?C.red:'none',4,r[2]==0?'opacity=".5"':'');
+    s+=wm(r[0],cx[0],y+20,1.3,r[2]>0)+stub(54,y+17,[40,28,48,34,44,30,38][i],C.mid,6);
+    s+=bar(cx[1]-34,y+15,r[1],10,r[2]?KC[r[0]]:C.dim,5,10,2);
+    for(let j=0;j<r[2];j++)s+=u(['s-f','s-t','s-c'][j],cx[2]-22+j*22,y+20,.85,C.ink);if(!r[2])s+=u('i-plus',cx[2],y+20,.7,C.mid);
+    for(let j=0;j<5;j++)s+=box(cx[3]-16+j*7,y+14,5,12,j<r[3]?C.people:C.bg,'none',0);
+    if(r[4])s+=arc(cx[4],y+20,9,0,359.9,C.bg,3.5)+arc(cx[4],y+20,9,0,r[4],r[4]<100?C.red:C.mid,3.5);
+    s+=circ(cx[5],y+20,7,r[5])});
+  s+=box(492,12,136,176,C.pan,'none',6)+map(560,100,66);const [x,y]=wp(560,100,66,7);s+=circ(x,y,9,'none',C.red,2);
+  s+=box(492,198,136,190,C.pan,'none',6);RES.forEach((k,i)=>s+=u('i-'+k,512,222+i*30,.9,i==1?C.red:C[k])+bar(528,218+i*30,[8,3,6,5,9][i],10,i==1?C.red:C[k],6,9,2));
+  s+=u('i-night',512,370,.9,C.red)+bar(528,366,7,10,C.red,6,9,2);
+  s+=pin(1,14,82)+pin(2,232,20)+pin(3,cx[4]-20,128)+pin(4,cx[5]+20,66);return s}});
+
+/* 10 — линзы */
+M.push({t:'ЛИНЗЫ',idea:'Одна карта, один вопрос за раз. Кнопка — вопрос.',
+ leg:['Линзы: еда, металл, суда, беда, Ночь','Размер = запас, толщина = поток','Точка на кнопке: там беда','Та же карта в других линзах'],
+ plus:'каждый экран отвечает на один вопрос',minus:'надо переключать; спасает точка-тревога на кнопке',
+ draw(){let s=box(10,40,48,320,C.pan,'none',24);
+  [['i-food',C.food],['i-metal',C.metal],['s-f',C.ink],['i-warn',C.people],['i-night',C.red]].forEach((b,i)=>{const y=76+i*62;s+=circ(34,y,19,i==0?C.food:C.bg,i==0?C.food:C.dim,1.5)+u(b[0],34,y,1,i==0?'#000':b[1]);if(i==3||i==4)s+=circ(50,y-15,5,C.red)});
+  const cx=262,cy=200,R=160;s+=map(cx,cy,R,{op:.3,noShips:1,lw:1});
+  [[1,26,1,9],[5,20,0,0],[8,30,0,0]].forEach(w=>{const [x,y]=wp(cx,cy,R,w[0]);
+    if(w[2])s+=ln(cx,cy,x,y,C.food,w[3],'',.9)+u('s-t',(cx+x)/2+10,(cy+y)/2-12,.9,C.ink,35);
+    s+=circ(x,y,w[1],w[2]?C.food:'none',C.food,1.5,w[2]?'opacity=".9"':'stroke-dasharray="4 4"')+u('w-farm',x,y,1,w[2]?'#000':C.food)});
+  s+=circ(cx,cy,24,C.bg,'none')+arc(cx,cy,19,0,359.9,C.pan2,6)+arc(cx,cy,19,0,110,C.red,6)+u('i-earth',cx,cy,1.4,C.earth);
+  [[36,'i-warn',C.people],[212,'i-night',C.red]].forEach((t,ti)=>{const y=t[0];s+=box(470,y,156,152,C.pan,C.dim,6)+map(548,y+78,60,{op:.45,noShips:1});s+=circ(488,y+18,12,C.bg,t[2],1.5)+u(t[1],488,y+18,.75,t[2]);
+    if(!ti){[4,7].forEach(i=>{const [x,yy]=wp(548,y+78,60,i);s+=circ(x,yy,10,'none',C.red,2)+circ(x,yy,16,'none',C.red,1,'opacity=".5"')})}
+    else{[[0,300],[1,250],[2,280],[3,200],[4,160],[7,50]].forEach(a=>{const [x,yy]=wp(548,y+78,60,a[0]);s+=arc(x,yy,9,0,359.9,C.bg,3)+arc(x,yy,9,0,a[1],a[1]<100?C.red:C.ink,3)})}});
+  s+=pin(1,34,26)+pin(2,cx+96,cy+150)+pin(3,66,246)+pin(4,458,44);return s}});
+
+const D=[['i-metal',C.metal,'металл'],['i-food',C.food,'еда'],['i-fuel',C.fuel,'топливо'],['i-parts',C.parts,'детали'],['i-people',C.people,'люди'],['s-c',C.ink,'курьер'],['s-t',C.ink,'тягач'],['s-f',C.ink,'грузовоз'],['w-mine',C.metal,'шахта'],['w-farm',C.food,'ферма'],['w-well',C.fuel,'скважина'],['w-works',C.parts,'завод'],['o-mine',C.mid,'свободный мир'],['i-earth',C.earth,'Земля'],['i-night',C.red,'Ночь'],['i-ark',C.ark,'ковчег'],['i-warn',C.people,'нужно решение']];
+document.getElementById('dict').innerHTML=D.map(d=>`<span><svg viewBox="-12 -11 24 22">${u(d[0],0,0,1,d[1])}</svg>${d[2]}</span>`).join('');
+document.getElementById('grid').innerHTML=M.map((m,i)=>`<section class="card"><h2><b>${String(i+1).padStart(2,'0')}</b>${m.t}</h2><p class="idea">${m.idea}</p><svg class="m" viewBox="0 0 640 400" role="img" aria-label="${m.t}">${m.draw()}</svg><ol>${m.leg.map((l,j)=>`<li><i>${j+1}</i>${l}</li>`).join('')}</ol><p class="pm"><span class="p">＋</span> ${m.plus} &nbsp; <span class="n">−</span> ${m.minus}</p></section>`).join('');
+</script>
+</body>
+</html>

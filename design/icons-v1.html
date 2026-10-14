@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — значки</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--pan2:#232327;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+main{max-width:1080px;margin:0 auto}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+h2{font-size:15px;margin:30px 0 2px;letter-spacing:.06em}
+.sub,.note{color:var(--mid);margin:0 0 12px;font-size:13px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.c{background:var(--pan);border:1px solid var(--pan2);padding:10px;display:flex;flex-direction:column;gap:4px;min-height:118px}
+.c .ib{display:flex;align-items:flex-end;gap:10px;height:46px}
+.c b{font-size:12.5px;font-weight:700}
+.c i{font-style:normal;color:var(--mid);font-size:11.5px}
+.tg{margin-top:auto;align-self:flex-start;font-size:9.5px;letter-spacing:.12em;padding:1px 5px;font-weight:700}
+.tg.g{background:var(--pan2);color:var(--mid)}
+.tg.n{background:#3DDC84;color:#000}
+svg.gi{fill:currentColor}
+svg.gi.st{fill:none;stroke:currentColor;stroke-width:1.4}
+.srow{display:grid;grid-template-columns:minmax(0,300px) minmax(0,1fr);gap:16px;padding:14px;border:1px solid var(--pan2);margin-bottom:8px;background:var(--pan)}
+.srow.rec{border-color:#3DDC84}
+.srow .st b{display:block;margin-bottom:4px;font-size:13px}
+.srow .st span{color:var(--mid);font-size:12.5px}
+.sset{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.sc{display:flex;flex-direction:column;gap:6px;align-items:flex-start}
+.sc .sm{display:flex;gap:12px;align-items:center}
+.sc em{font-style:normal;color:var(--mid);font-size:12px}
+.gen{display:inline-block;border:1px solid var(--mid);color:var(--ink);font:700 10px Arial,sans-serif;padding:1px 4px;letter-spacing:.06em}
+.ba{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px}
+.ba>div{background:var(--pan);border:1px solid var(--pan2);padding:12px}
+.ba em{display:block;font-style:normal;color:var(--mid);font-size:11px;letter-spacing:.14em;margin-bottom:6px}
+.hr{display:flex;align-items:center;gap:10px;min-height:32px;border-bottom:1px solid var(--pan2);font:12.5px Arial,sans-serif}
+.hr .nm{font-weight:700;width:150px}
+.hr .no{color:var(--mid);font-size:11px}
+.hr .st2{margin-left:auto;display:flex;align-items:center;gap:5px}
+.hr .st2 b{font-size:13px}
+@media (max-width:640px){.srow{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+  <symbol id="i-metal" viewBox="0 0 16 16"><path d="M3 11h10l-2-6H5z" fill="currentColor"/><path d="M5 5h6l1 2H4z" fill="currentColor" opacity=".55"/></symbol>
+  <symbol id="i-food" viewBox="0 0 16 16"><path d="M8 14c-3 0-5-2-5-5s3-6 5-7c2 1 5 4 5 7s-2 5-5 5z" fill="currentColor"/><path d="M8 2v12" stroke="#000" stroke-width="1.2" opacity=".6"/></symbol>
+  <symbol id="i-fuel" viewBox="0 0 16 16"><path d="M3 4h8v10H3z" fill="currentColor"/><path d="M5 2h4v2H5z" fill="currentColor"/><path d="M11 6h2l1 2v6h-3z" fill="currentColor" opacity=".55"/><path d="M5 7h4" stroke="#000" stroke-width="1.4" opacity=".6"/></symbol>
+  <symbol id="i-parts" viewBox="0 0 16 16"><path d="M8 1l6 3.5v7L8 15l-6-3.5v-7z" fill="currentColor"/><circle cx="8" cy="8" r="2.6" fill="#000" opacity=".7"/></symbol>
+  <symbol id="i-courier" viewBox="0 0 64 40"><path d="M2 26 L12 34 H50 L60 26 Z"/><path d="M8 26 L14 16 H40 L44 26 Z"/><path d="M28 16 L34 10 H40 V16 Z" opacity=".35"/><path d="M50 30 H64 M54 34 H66" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+  <symbol id="i-hauler" viewBox="0 0 64 40"><path d="M2 22 L8 36 H54 L60 22 Z"/><rect x="34" y="10" width="16" height="12"/><rect x="38" y="13" width="8" height="4" opacity=".35"/><rect x="18" y="2" width="3" height="20"/><path d="M20 4 L40 16 M20 4 L6 22" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
+  <symbol id="i-freighter" viewBox="0 0 64 40"><path d="M0 24 L6 36 H60 L64 24 Z"/><rect x="8" y="16" width="10" height="8"/><rect x="20" y="16" width="10" height="8"/><rect x="32" y="16" width="10" height="8"/><rect x="8" y="8" width="10" height="7"/><rect x="20" y="8" width="10" height="7"/><rect x="32" y="8" width="10" height="7"/><rect x="48" y="4" width="10" height="20"/><rect x="50" y="7" width="6" height="3" opacity=".35"/></symbol>
+  <symbol id="i-k-mine" viewBox="0 0 80 60"><rect x="4" y="44" width="30" height="14"/><rect x="10" y="30" width="18" height="14"/><rect x="13" y="33" width="7" height="6" opacity=".35"/><path d="M26 34 L48 8 L66 26" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M66 26 L60 44 L74 50 L78 38 Z"/><path d="M62 46 L60 52 M68 48 L67 54 M74 50 L74 56" stroke="currentColor" stroke-width="2.5" fill="none"/></symbol>
+  <symbol id="i-k-well" viewBox="0 0 80 60"><g fill="none" stroke="currentColor" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"><path d="M28 52 L38 22 L48 52"/><path d="M8 22 L68 24"/><path d="M10 26 L20 46"/><circle cx="20" cy="46" r="5"/><path d="M70 30 V52"/></g><path d="M62 16 L74 22 L66 36 Z"/><circle cx="6" cy="22" r="6"/><rect x="0" y="52" width="76" height="4"/></symbol>
+  <symbol id="i-k-farm" viewBox="0 0 80 60"><rect x="6" y="20" width="30" height="16"/><rect x="26" y="8" width="14" height="12"/><rect x="29" y="11" width="6" height="5" opacity=".35"/><circle cx="46" cy="40" r="12"/><circle cx="46" cy="40" r="4" opacity=".35"/><circle cx="12" cy="44" r="7"/><circle cx="12" cy="44" r="2" opacity=".35"/><rect x="58" y="34" width="10" height="4"/></symbol>
+  <symbol id="i-k-works" viewBox="0 0 80 60"><g transform="translate(22,28)"><circle r="12"/><rect x="-3" y="-19" width="6" height="8"/><rect x="-3" y="11" width="6" height="8"/><rect x="-19" y="-3" width="8" height="6"/><rect x="11" y="-3" width="8" height="6"/><g transform="rotate(45)"><rect x="-3" y="-19" width="6" height="8"/><rect x="-3" y="11" width="6" height="8"/><rect x="-19" y="-3" width="8" height="6"/><rect x="11" y="-3" width="8" height="6"/></g><circle r="5" opacity=".35"/></g><g transform="translate(58,28)"><circle r="12"/><rect x="-3" y="-19" width="6" height="8"/><rect x="-3" y="11" width="6" height="8"/><rect x="-19" y="-3" width="8" height="6"/><rect x="11" y="-3" width="8" height="6"/><g transform="rotate(45)"><rect x="-3" y="-19" width="6" height="8"/><rect x="-3" y="11" width="6" height="8"/><rect x="-19" y="-3" width="8" height="6"/><rect x="11" y="-3" width="8" height="6"/></g><circle r="5" opacity=".35"/></g><path d="M22 9 H58 M22 47 H58" stroke="currentColor" stroke-width="3" stroke-dasharray="5 3" fill="none"/></symbol>
+  <symbol id="i-pile" viewBox="0 0 64 48"><circle cx="16" cy="38" r="8"/><circle cx="32" cy="38" r="8"/><circle cx="48" cy="38" r="8"/><circle cx="24" cy="24" r="8"/><circle cx="40" cy="24" r="8"/><circle cx="32" cy="10" r="8"/></symbol>
+  <symbol id="i-house" viewBox="0 0 64 56"><path d="M4 26 L32 2 L60 26 V54 H4 Z" fill="none" stroke="currentColor" stroke-width="5" stroke-linejoin="round"/></symbol>
+  <symbol id="i-plant" viewBox="0 0 64 56"><path d="M4 54 V30 L18 20 V30 L32 20 V30 L46 20 V54 Z"/><rect x="50" y="6" width="10" height="48"/><path d="M6 8 H34" stroke="currentColor" stroke-width="4" fill="none"/><path d="M30 2 L40 8 L30 14 Z"/></symbol>
+  <symbol id="i-drive" viewBox="0 0 80 60"><rect x="2" y="20" width="26" height="20"/><path d="M28 24 L50 8 V52 L28 36 Z"/><rect x="8" y="26" width="14" height="8" opacity=".35"/><path d="M56 18 H72 M56 30 H80 M56 42 H72" stroke="currentColor" stroke-width="4" stroke-linecap="round" fill="none"/></symbol>
+  <symbol id="i-hold" viewBox="0 0 16 16"><rect x="1" y="4" width="14" height="8"/><path d="M4 4v8M6.7 4v8M9.3 4v8M12 4v8"/></symbol>
+  <symbol id="i-speed" viewBox="0 0 16 16"><path d="M2 12.5A6.5 6.5 0 1 1 14 12.5"/><path d="M8 11.5L11.5 6.5" stroke-linecap="round"/><circle cx="8" cy="11.5" r="1.2" fill="currentColor"/></symbol>
+  <symbol id="i-range" viewBox="0 0 16 16"><circle cx="8" cy="8" r="1.3" fill="currentColor"/><circle cx="8" cy="8" r="3.8"/><circle cx="8" cy="8" r="6.6" stroke-dasharray="2 1.6"/></symbol>
+  <symbol id="i-people" viewBox="0 0 16 16"><circle cx="8" cy="4" r="3" fill="currentColor"/><path d="M2 15c0-4 2.5-6 6-6s6 2 6 6z" fill="currentColor"/></symbol>
+</defs></svg>
+<main>
+<h1>LAST BERTH — ЗНАЧКИ</h1>
+<p class="sub">Что есть в игре сейчас, варианты судов и набор новых значков, которые заменяют слова. <b class="tg g">В ИГРЕ</b> — уже есть, <b class="tg n">НОВЫЙ</b> — предложение.</p>
+
+<h2>1 · Сейчас в игре</h2>
+<p class="note">19 значков из v4.33. Суда нарисованы морскими: лодка, траулер, контейнеровоз. Типы миров — сценки из деталей, на карте и в строках они мельчат.</p>
+<div class="grid" id="now"></div>
+
+<h2>2 · Суда: четыре направления</h2>
+<p class="note">Один ряд — один вариант. Класс должен читаться за полсекунды и в 16 px.</p>
+<div id="ships"></div>
+
+<h2>3 · Как это убирает текст</h2>
+<p class="note">Строка судна сейчас и с новыми значками.</p>
+<div id="rows"></div>
+
+<div id="sets"></div>
+</main>
+<script>
+const C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58'};
+const sv=(inner,vb='0 0 24 24',w=36,col=C.ink,cls='')=>`<svg class="ic ${cls}" viewBox="${vb}" width="${w}" style="color:${col}" aria-hidden="true">${inner}</svg>`;
+const ST='fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"';
+const F='fill="currentColor"';
+const g=(d,extra='')=>`<path d="${d}" ${extra} ${ST}/>`;
+const fp=(d,extra='')=>`<path d="${d}" ${extra} ${F}/>`;
+
+/* 1 — game icons */
+const NOW=[['i-metal','металл',C.metal],['i-food','еда (рационы)',C.food],['i-fuel','топливо',C.fuel],['i-parts','детали',C.parts],['i-people','люди',C.people],['i-courier','курьер',C.ink,'0 0 64 40'],['i-hauler','тягач',C.ink,'0 0 64 40'],['i-freighter','грузовоз',C.ink,'0 0 64 40'],['i-k-mine','шахта',C.metal,'0 0 80 60'],['i-k-well','скважина',C.fuel,'0 0 80 60'],['i-k-farm','ферма',C.food,'0 0 80 60'],['i-k-works','завод',C.parts,'0 0 80 60'],['i-pile','куча на поверхности',C.mid,'0 0 64 48'],['i-house','колония',C.mid,'0 0 64 56'],['i-plant','техника',C.mid,'0 0 64 56'],['i-drive','привод',C.ark,'0 0 80 60'],['i-hold','трюм',C.mid,'0 0 16 16','st'],['i-speed','скорость',C.mid,'0 0 16 16','st'],['i-range','дальность',C.mid,'0 0 16 16','st']];
+document.getElementById('now').innerHTML=NOW.map(n=>`<div class="c"><div class="ib">${sv(`<use href="#${n[0]}"/>`,n[3]||'0 0 16 16',n[3]&&n[3]!='0 0 16 16'?52:30,n[2],'gi '+(n[4]||''))}</div><b>${n[1]}</b><span class="tg g">В ИГРЕ</span></div>`).join('');
+
+/* 2 — ships */
+const SH={
+ A:{t:'А · Как сейчас — морские силуэты',v:'Узнаваемо, но это корабли, а не звездолёты; в 16 px траулер и лодка сливаются.',
+   s:[`<use href="#i-courier"/>`,`<use href="#i-hauler"/>`,`<use href="#i-freighter"/>`],vb:'0 0 64 40',gi:1},
+ B:{t:'Б · Космические силуэты',v:'Меньше абстракции, тот же смысл: дротик, буксир с захватом, длинный хребет с контейнерами.',
+   s:[fp('M2 12 L15 7 H33 L38 9.5 V14.5 L33 17 H15 Z')+fp('M38 10 H42 V14 H38 Z','opacity=".55"')+g('M43.5 12 H47'),
+      fp('M3 8 H27 L33 11 V15 L27 18 H3 Z')+fp('M33 12 H37 V14 H33 Z','opacity=".55"')+g('M8 18 V21 M22 18 V21 M6 21 H24')+g('M38 13 H46'),
+      fp('M3 11 H41 V13 H3 Z')+fp('M5 4 H12 V10 H5Z M13 4 H20 V10 H13Z M21 4 H28 V10 H21Z M5 14 H12 V20 H5Z M13 14 H20 V20 H13Z M21 14 H28 V20 H21Z')+fp('M41 7 L47 12 L41 17 Z')+fp('M31 9 H36 V15 H31 Z','opacity=".55"')],vb:'0 0 48 24'},
+ C:{t:'В · Условные знаки, как на штабной карте',v:'Самое читаемое в мелком размере; учить один раз. Полоски внутри — размер трюма.',
+   s:[g('M3 20 L12 4 L21 20 Z','transform="translate(12 0)"'),
+      g('M8 4 H40 V20 H8 Z')+fp('M12 13 H22 V17 H12 Z'),
+      g('M2 4 H46 V20 H2 Z')+fp('M6 13 H16 V17 H6Z M19 13 H29 V17 H19Z M32 13 H42 V17 H32Z')],vb:'0 0 48 24'},
+ D:{t:'Г · Модули: класс = сколько грузовых секций',v:'Моя рекомендация. Правило одно: нос, секции, двигатель. Курьер — без секций, тягач — две, грузовоз — пять. Трюм виден глазом.',
+   s:[fp('M3 12 L10 6 H14 V18 H10 Z')+fp('M15 8 H20 V16 H15 Z','opacity=".55"')+g('M21.5 12 H26'),
+      fp('M3 12 L10 6 H14 V18 H10 Z')+g('M15.5 7 H22.5 V17 H15.5 Z M23.5 7 H30.5 V17 H23.5 Z')+fp('M31.5 8 H36.5 V16 H31.5 Z','opacity=".55"')+g('M38 12 H42.5'),
+      fp('M1 12 L6 7 H9 V17 H6 Z')+g('M10 7 H15 V17 H10 Z M16 7 H21 V17 H16 Z M22 7 H27 V17 H22 Z M28 7 H33 V17 H28 Z M34 7 H39 V17 H34 Z')+fp('M40 8 H44 V16 H40 Z','opacity=".55"')+g('M45 12 H47.5')],vb:'0 0 48 24'}};
+const GEN=n=>`<span class="gen">${['I','II','III','IV','V'][n]}</span>`;
+document.getElementById('ships').innerHTML=Object.values(SH).map(r=>`<div class="srow ${r===SH.D?'rec':''}"><div class="st"><b>${r.t}</b><span>${r.v}</span></div><div class="sset">${r.s.map((x,i)=>`<div class="sc"><div class="big">${sv(x,r.vb,96,C.ink,r.gi?'gi':'')}</div><div class="sm">${sv(x,r.vb,32,C.ink,r.gi?'gi':'')}${sv(x,r.vb,22,C.ink,r.gi?'gi':'')}</div><em>${['курьер','тягач','грузовоз'][i]}</em></div>`).join('')}</div></div>`).join('')
+ +`<div class="srow"><div class="st"><b>Поколение</b><span>Римская цифра в плашке справа от значка — не новый значок для каждого поколения. Старое поколение тусклее.</span></div><div class="sset">${[1,3,4].map((n,i)=>`<div class="sc"><div class="big" style="display:flex;align-items:center;gap:8px">${sv(SH.D.s[1],SH.D.vb,72,n<3?C.mid:C.ink)}${GEN(n)}</div><em>${['тягач II — старое','тягач IV — текущее','тягач V — новое'][i]}</em></div>`).join('')}</div></div>`;
+
+/* 4 — icon sets */
+const I={
+ hold:g('M3 7 H21 V17 H3 Z')+g('M7.5 7 V17 M12 7 V17 M16.5 7 V17'),
+ speed:g('M4 17 A8 8 0 1 1 20 17')+g('M12 16 L16 10'),
+ range:g('M12 12 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0')+g('M12 12 m-6 0 a6 6 0 1 0 12 0 a6 6 0 1 0 -12 0','stroke-dasharray="2.5 2"')+g('M12 12 m-10 0 a10 10 0 1 0 20 0 a10 10 0 1 0 -20 0','stroke-dasharray="1.5 2.5" opacity=".6"'),
+ years:g('M12 12 m-9 0 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0')+g('M12 6 V12 L16 14'),
+ lift:g('M6 3 H18 M6 21 H18 M7 3 C7 9 17 9 17 12 C17 15 7 15 7 21 M17 3 C17 9 7 9 7 12')+fp('M9 19 L12 16 L15 19 Z'),
+ night:fp('M15 3 A9.5 9.5 0 1 0 21 17 A8 8 0 0 1 15 3 Z'),
+ ark:fp('M2 12 L7 7 H18 L22 12 L18 17 H7 Z')+g('M10 7 V17 M14 7 V17','stroke="#0B0B0C"'),
+ drive:fp('M3 8 H11 V16 H3 Z')+fp('M11 8 L16 5 V19 L11 16 Z')+g('M18 8 H22 M18 12 H23 M18 16 H22'),
+ gen:g('M4 6 L12 3 L20 6 V18 L12 21 L4 18 Z')+`<text x="12" y="15.5" text-anchor="middle" font-size="8" font-weight="800" fill="currentColor" font-family="Arial">III</text>`,
+ /* worlds */
+ mine:g('M5 19 L15 9')+g('M9 5 C13 3 18 5 20 10 C16 8 13 7 9 5 Z')+fp('M3 20 H9 V22 H3 Z'),
+ well:g('M8 21 L12 4 L16 21 M9.5 15 H14.5 M10.5 10 H13.5')+fp('M12 4 L15 7 H9 Z')+g('M4 21 H20'),
+ farm:g('M12 21 V6')+fp('M12 6 C9 6 8 3 8 2 C10 2 12 3 12 6 Z M12 10 C9 10 7.5 7.5 7.5 6 C10 6 12 7.5 12 10 Z M12 10 C15 10 16.5 7.5 16.5 6 C14 6 12 7.5 12 10 Z M12 14 C9 14 7.5 11.5 7.5 10 C10 10 12 11.5 12 14 Z M12 14 C15 14 16.5 11.5 16.5 10 C14 10 12 11.5 12 14 Z'),
+ works:g('M12 12 m-3.5 0 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0')+g('M12 2.5 V5.5 M12 18.5 V21.5 M2.5 12 H5.5 M18.5 12 H21.5 M5.3 5.3 L7.4 7.4 M16.6 16.6 L18.7 18.7 M5.3 18.7 L7.4 16.6 M16.6 7.4 L18.7 5.3','stroke-width="2.6"'),
+ free:g('M12 12 m-7 0 a7 7 0 1 0 14 0 a7 7 0 1 0 -14 0','stroke-dasharray="3 2.5"')+g('M12 9 V15 M9 12 H15'),
+ /* world states */
+ workedout:g('M3 19 H21')+g('M6 19 L12 11 L18 19','stroke-dasharray="2.5 2"')+g('M5 5 L19 17','stroke="#FF2A1A"'),
+ cutoff:g('M6 3 H18 M6 21 H18 M7 3 C7 9 17 9 17 12 C17 15 7 15 7 21 M17 3 C17 9 7 9 7 12')+g('M3 3 L21 21','stroke="#FF2A1A" stroke-width="2.4"'),
+ starving:fp('M12 21 C5 18 4 12 6 7 C8 4 11 3 12 3 C13 3 16 4 18 7 C20 12 19 18 12 21 Z','opacity=".9"')+g('M4 20 L20 4','stroke="#0B0B0C" stroke-width="4"')+g('M4 20 L20 4','stroke="#FF2A1A" stroke-width="2.2"'),
+ stopped:g('M12 12 m-3.5 0 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0')+g('M12 2.5 V5.5 M12 18.5 V21.5 M2.5 12 H5.5 M18.5 12 H21.5','stroke-width="2.6"')+g('M4 4 L20 20','stroke="#FF2A1A" stroke-width="2.4"'),
+ settlers:fp('M7 4 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M2.5 14 C2.5 9.5 11.5 9.5 11.5 14 Z')+g('M13 17 H21 M18 14 L21 17 L18 20'),
+ evac:fp('M12 5 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M7.5 15 C7.5 10.5 16.5 10.5 16.5 15 Z')+g('M12 23 V17.5 M9 20 L12 17 L15 20'),
+ fold:g('M2 12 H9 M6 9 L9 12 L6 15 M22 12 H15 M18 9 L15 12 L18 15'),
+ stretch:g('M9 12 H2 M5 9 L2 12 L5 15 M15 12 H22 M19 9 L22 12 L19 15'),
+ storm:fp('M13 2 L5 13 H11 L9 22 L19 9 H13 L15 2 Z'),
+ ring:g('M3 21 A18 18 0 0 1 21 3','stroke-dasharray="3 2.5"')+g('M3 21 A12 12 0 0 1 15 9')+g('M15 17 H21 M18 14 V20'),
+ /* hull states */
+ loading:g('M4 12 H20 V20 H4 Z')+g('M12 2 V10 M9 7 L12 10 L15 7'),
+ unloading:g('M4 12 H20 V20 H4 Z')+g('M12 10 V2 M9 5 L12 2 L15 5'),
+ toEarth:fp('M18 12 m-3.5 0 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0')+g('M2 12 H11 M8 9 L11 12 L8 15'),
+ toWorld:fp('M19 8.5 L22.5 12 L19 15.5 L15.5 12 Z')+g('M2 12 H11 M8 9 L11 12 L8 15'),
+ yard:fp('M2 12 L6 8 H11 V16 H6 Z')+g('M11 8 H16 L20 12 L16 16 H11','stroke-dasharray="2.2 2"'),
+ pier:g('M12 4 V21 M7 8 H17 M4 15 C4 19 8 21 12 21 C16 21 20 19 20 15')+g('M12 4 m-2 0 a2 2 0 1 0 4 0'),
+ overdue:g('M12 13 m-8 0 a8 8 0 1 0 16 0 a8 8 0 1 0 -16 0')+g('M12 8 V13.5')+fp('M11 16 H13 V18 H11 Z')+g('M9 2 H15'),
+ mutiny:fp('M8 4 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M3.5 14 C3.5 9.5 12.5 9.5 12.5 14 Z')+g('M15 6 L21 12 M21 6 L15 12','stroke="#FF2A1A" stroke-width="2.4"')+g('M3 19 H13'),
+ missing:g('M3 12 L8 7 H17 L21 12 L17 17 H8 Z','stroke-dasharray="2.5 2"')+`<text x="12" y="15.5" text-anchor="middle" font-size="9" font-weight="800" fill="currentColor" font-family="Arial">?</text>`,
+ reserve:fp('M2 13 L6 9 H15 L18 13 L15 17 H6 Z')+g('M18 4 V10 M15.5 4 H20.5','stroke-width="2.2"'),
+ kit:g('M3 8 H21 V20 H3 Z')+g('M12 14 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+g('M12 9.5 V11 M12 17 V18.5 M7.5 14 H9 M15 14 H16.5'),
+ movesTo:g('M4 18 V12 C4 8 7 6 11 6 H19 M16 3 L19 6 L16 9'),
+ /* actions */
+ assign:fp('M2 12 L6 8 H13 L16 12 L13 16 H6 Z')+g('M18 12 H23 M20.5 9.5 V14.5'),
+ move:g('M3 8 H19 M16 5 L19 8 L16 11 M21 16 H5 M8 13 L5 16 L8 19'),
+ takeoff:fp('M2 12 L6 8 H13 L16 12 L13 16 H6 Z')+g('M18 12 H23'),
+ scrap:fp('M2 12 L6 8 H10 L11.5 10 L10 12 L11.5 14 L10 16 H6 Z')+fp('M13 9 H16 L20 12 L16 15 H13 L14.5 13 L13 12 L14.5 11 Z','transform="translate(2 1)"'),
+ build:fp('M2 12 L6 8 H11 V16 H6 Z')+g('M11 8 H16 L20 12 L16 16 H11','stroke-dasharray="2.2 2"'),
+ upgrade:g('M10 13 m-3 0 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0')+g('M10 5 V7.5 M10 18.5 V21 M2 13 H4.5 M15.5 13 H18','stroke-width="2.4"')+g('M19 9 V2 M16 5 L19 2 L22 5'),
+ survey:g('M3 21 A18 18 0 0 1 21 3')+g('M3 21 L16 8','stroke-width="2.4"')+fp('M17 15 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0'),
+ startdrive:fp('M2 8 H9 V16 H2 Z')+fp('M9 8 L13 5 V19 L9 16 Z')+fp('M16 6 L23 12 L16 18 Z'),
+ send:fp('M6 4 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M1.5 14 C1.5 9.5 10.5 9.5 10.5 14 Z')+fp('M13 12 L17 9 H21 L23 12 L21 15 H17 Z'),
+ /* tabs */
+ tEarth:fp('M12 12 m-9 0 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0')+g('M3 12 H21 M12 3 C8 7 8 17 12 21 C16 17 16 7 12 3','stroke="#0B0B0C" stroke-width="1.4"'),
+ tWorlds:g('M12 12 m-9 0 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0','stroke-dasharray="2 2.5"')+fp('M12 12 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M18.4 5.6 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M4 16 H8 V20 H4 Z'),
+ tFleet:fp('M2 7 L5 4 H12 L14 7 L12 10 H5 Z M8 14 L11 11 H18 L20 14 L18 17 H11 Z M3 20 L5 18 H9 L10 20 L9 22 H5 Z'),
+ tYard:g('M3 6 V19 H21 V6')+fp('M6 13 L9 10 H15 L18 13 L15 16 H9 Z'),
+ /* resources alt */
+ metalA:fp('M3 18 H21 L18 9 H6 Z')+fp('M7 8 H17 L16 5 H8 Z','opacity=".55"'),
+ foodA:g('M12 22 V8')+fp('M12 8 C10 8 9.5 5 12 2 C14.5 5 14 8 12 8 Z M12 12.5 C9 12.5 7 10.5 7 8.5 C10 8.5 12 10 12 12.5 Z M12 12.5 C15 12.5 17 10.5 17 8.5 C14 8.5 12 10 12 12.5 Z M12 17 C9 17 7 15 7 13 C10 13 12 14.5 12 17 Z M12 17 C15 17 17 15 17 13 C14 13 12 14.5 12 17 Z'),
+ fuelA:fp('M12 2 C17 9 19 12.5 19 15 A7 7 0 0 1 5 15 C5 12.5 7 9 12 2 Z'),
+ partsA:fp('M12 2 L20.5 7 V17 L12 22 L3.5 17 V7 Z')+fp('M12 12 m-3.5 0 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0','fill="#0B0B0C"'),
+ peopleA:fp('M12 6 m-3.5 0 a3.5 3.5 0 1 0 7 0 a3.5 3.5 0 1 0 -7 0')+fp('M4 21 C4 13 20 13 20 21 Z')
+};
+const SETS=[
+ ['4 · Ресурсы','Цвета остаются. Меняется только топливо: канистра → капля, читается в 12 px.',[
+  ['metalA','металл',C.metal,'g',''],['foodA','еда — колос вместо листа',C.food,'n','«rations»'],['fuelA','топливо — капля',C.fuel,'n','канистра'],['partsA','детали',C.parts,'g',''],['peopleA','люди',C.people,'g','']]],
+ ['5 · Типы миров','Одна картинка на тип везде: на карте, в списке, в заголовке окна. Сценки из игры остаются для крупного вида в меню мира.',[
+  ['mine','шахта',C.metal,'n','«MINE»'],['well','скважина',C.fuel,'n','«WELL»'],['farm','ферма',C.food,'n','«FARM»'],['works','завод',C.parts,'n','«WORKS»'],['free','свободный мир',C.mid,'n','«FREE»']]],
+ ['6 · Параметры','Стоят перед числом — само число остаётся.',[
+  ['hold','трюм',C.mid,'g','«Hold»'],['speed','скорость',C.mid,'g','«Speed»'],['range','дальность — кольцо',C.mid,'g','«Reach ring 5»'],['years','лет в пути',C.mid,'n','«yrs», «crossing»'],['gen','поколение',C.mid,'n','«Generation IV»'],['lift','последний рейс',C.people,'n','«Last lift»'],['night','Ночь',C.red,'n','«NIGHT»'],['ark','ковчег',C.ark,'n','«THE ARK»'],['drive','привод',C.ark,'g','«Drive»']]],
+ ['7 · Состояние судна','Заменяют хвост строки: «loading here», «→ Earth · 4 yrs», «crew refuses the run».',[
+  ['loading','грузится',C.mid,'n','«loading»'],['unloading','разгружается',C.mid,'n','«unloading»'],['toEarth','летит к Земле',C.mid,'n','«→ Earth»'],['toWorld','летит к миру',C.mid,'n','«→ there»'],['yard','на верфи',C.mid,'n','«in the yard»'],['pier','свободен у причала',C.people,'n','«free at Earth»'],['movesTo','перейдёт на другую линию',C.ink,'n','«moves to X on docking»'],['kit','везёт технику',C.people,'n','«carries machines»'],['reserve','резерв ковчега',C.ark,'n','«ARK RESERVE»'],['overdue','опаздывает',C.red,'n','«overdue»'],['mutiny','экипаж отказался',C.red,'n','«crew refuses the run»'],['missing','пропал',C.dim,'n','«missing»']]],
+ ['8 · Состояние мира и события','В списке миров, в заголовке окна, рядом с миром на карте.',[
+  ['workedout','выработан',C.mid,'n','«worked out»'],['cutoff','отрезан — срок пропущен',C.red,'n','«cut off»'],['starving','кончается еда',C.red,'n','«rations 3 yrs»'],['stopped','техника стоит',C.red,'n','«machines stopped»'],['settlers','поселенцы в пути',C.people,'n','«settlers · 9 yrs»'],['evac','эвакуация',C.people,'n','«evacuation under way»'],['fold','складка: путь быстрее',C.food,'n','«FOLD»'],['stretch','растяжение: путь дольше',C.fuel,'n','«STRETCH»'],['storm','буря: посадки нет',C.red,'n','«STORM»'],['ring','можно открыть кольцо',C.food,'n','«Chart the next ring»']]],
+ ['9 · Действия','Кнопка = значок + одно слово. Слово уходит, когда значок выучен (после пролога).',[
+  ['assign','назначить',C.ink,'n','ASSIGN'],['move','перевести',C.ink,'n','MOVE →'],['takeoff','снять с линии',C.ink,'n','TAKE OFF'],['scrap','разобрать',C.mid,'n','SCRAP'],['build','построить',C.ink,'n','BUILD / ORDER'],['upgrade','техника на ярус выше',C.parts,'n','ORDER TIER III'],['evac','эвакуировать',C.red,'n','EVACUATE'],['send','высадить поселенцев',C.people,'n','SEND SETTLERS'],['survey','разведать кольцо',C.food,'n','SURVEY'],['startdrive','запустить привод',C.ark,'n','START MARK'],['reserve','в резерв ковчега',C.ark,'n','RESERVE FOR ARK']]],
+ ['10 · Вкладки','Пять кнопок слева. Подпись под значком остаётся.',[
+  ['tEarth','Земля',C.earth,'n',''],['tWorlds','миры',C.metal,'n',''],['tYard','верфь',C.ink,'n',''],['tFleet','флот',C.ink,'n',''],['ark','ковчег',C.ark,'n','']]]
+];
+document.getElementById('sets').innerHTML=SETS.map(s=>`<h2>${s[0]}</h2><p class="note">${s[1]}</p><div class="grid">${s[2].map(i=>`<div class="c"><div class="ib">${sv(I[i[0]],'0 0 24 24',34,i[2])}${sv(I[i[0]],'0 0 24 24',16,i[2])}</div><b>${i[1]}</b>${i[4]?`<i>вместо ${i[4]}</i>`:''}<span class="tg ${i[3]}">${i[3]=='g'?'В ИГРЕ':'НОВЫЙ'}</span></div>`).join('')}</div>`).join('');
+
+/* 3 — rows before / after */
+const R=[[1,'Hauler III no.88','→ Earth · 4 yrs','toEarth','4',C.mid,'88'],[2,'Freighter III no.41','carries tier III machines','kit','9',C.people,'41'],[1,'Hauler II no.49','crew refuses the run','mutiny','',C.red,'49'],[0,'Courier I no.7','free at Earth','pier','',C.people,'7']];
+const gTxt=['I','II','III'];
+document.getElementById('rows').innerHTML=`<div class="ba"><div><em>сейчас</em>${R.map(r=>`<div class="hr"><span class="nm">${r[1]}</span><span style="color:${r[5]}">${r[2]}</span></div>`).join('')}</div><div><em>со значками</em>${R.map(r=>`<div class="hr">${sv(SH.D.s[r[0]],SH.D.vb,40)}${GEN(+(r[1].match(/ (I+)/)[1].length)-1)}<span class="no">${r[6]}</span><span class="st2">${sv(I[r[3]],'0 0 24 24',20,r[5])}${r[4]?`<b>${r[4]}</b>${sv(I.years,'0 0 24 24',14,C.mid)}`:''}</span></div>`).join('')}</div></div>`;
+</script>
+</body>
+</html>

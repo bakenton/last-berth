@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — интерфейс, макет v1</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+main{max-width:1080px;margin:0 auto}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+.sub{color:var(--mid);margin:0 0 22px}
+.card{margin-bottom:34px}
+.card h2{font-size:15px;margin:0 0 2px;letter-spacing:.06em}
+.card h2 b{color:var(--red);margin-right:8px}
+.card .idea{color:var(--mid);margin:0 0 8px;font-size:13px}
+.card svg.m{display:block;width:100%;height:auto;border:1px solid var(--dim);background:var(--bg);font-family:Arial,Helvetica,sans-serif}
+ol{list-style:none;margin:8px 0 6px;padding:0;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:3px 14px;font-size:13px}
+ol li{display:flex;gap:7px;align-items:baseline}
+ol li i{flex:none;font-style:normal;background:var(--ink);color:#000;font-weight:700;font-size:11px;width:17px;height:17px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;transform:translateY(2px)}
+.pm{font-size:12.5px;color:var(--mid);margin:0}
+.pm .p{color:#3DDC84}.pm .n{color:#FF8A1F}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
+<symbol id="i-metal" viewBox="-9 -9 18 18" overflow="visible"><path d="M-7 5L-4 -5H4L7 5Z" fill="currentColor"/></symbol>
+<symbol id="i-food" viewBox="-9 -9 18 18" overflow="visible"><path d="M0 7C-9 1-5-7 0-7C5-7 9 1 0 7Z" fill="currentColor"/><path d="M0 7V-2" stroke="#0B0B0C" stroke-width="1.3"/></symbol>
+<symbol id="i-fuel" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-8C6 0 6 4 0 7C-6 4-6 0 0-8Z" fill="currentColor"/></symbol>
+<symbol id="i-parts" viewBox="-9 -9 18 18" overflow="visible"><circle r="5" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="2.6 2.63"/><circle r="3.6" fill="none" stroke="currentColor" stroke-width="2"/></symbol>
+<symbol id="i-people" viewBox="-9 -9 18 18" overflow="visible"><circle cy="-4.5" r="3" fill="currentColor"/><path d="M-6 7C-6-2 6-2 6 7Z" fill="currentColor"/></symbol>
+<symbol id="i-night" viewBox="-9 -9 18 18" overflow="visible"><path d="M3-7A7.5 7.5 0 1 0 3 7A9 9 0 0 1 3-7Z" fill="currentColor"/></symbol>
+<symbol id="i-ark" viewBox="-13 -9 26 18" overflow="visible"><path d="M-12 0L-6-5H8L12 0L8 5H-6Z" fill="currentColor"/><path d="M-3-5V5M3-5V5" stroke="#0B0B0C" stroke-width="1.2"/></symbol>
+<symbol id="s-c" viewBox="-9 -9 18 18" overflow="visible"><path d="M-6-3.5L6 0L-6 3.5L-3.5 0Z" fill="currentColor"/></symbol>
+<symbol id="s-t" viewBox="-9 -9 18 18" overflow="visible"><path d="M-6-4H1L6 0L1 4H-6Z" fill="currentColor"/></symbol>
+<symbol id="s-f" viewBox="-11 -9 22 18" overflow="visible"><path d="M-10-4H5L10 0L5 4H-10Z" fill="currentColor"/><path d="M-5-4V4M0-4V4" stroke="#0B0B0C" stroke-width="1.2"/></symbol>
+<symbol id="w-mine" viewBox="-9 -9 18 18" overflow="visible"><circle r="6" fill="currentColor"/></symbol>
+<symbol id="w-farm" viewBox="-9 -9 18 18" overflow="visible"><rect x="-5.5" y="-5.5" width="11" height="11" fill="currentColor"/></symbol>
+<symbol id="w-well" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-7L7 0L0 7L-7 0Z" fill="currentColor"/></symbol>
+<symbol id="w-works" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-7L7 5.5H-7Z" fill="currentColor"/></symbol>
+<symbol id="o-mine" viewBox="-9 -9 18 18" overflow="visible"><circle r="5.5" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="o-farm" viewBox="-9 -9 18 18" overflow="visible"><rect x="-5" y="-5" width="10" height="10" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="o-well" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-6.5L6.5 0L0 6.5L-6.5 0Z" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="o-works" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-6.5L6.5 5H-6.5Z" fill="#0B0B0C" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2.5 2"/></symbol>
+<symbol id="i-warn" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-7L8 6H-8Z" fill="currentColor"/><path d="M0-2.5V2M0 3.6V4.6" stroke="#0B0B0C" stroke-width="1.6"/></symbol>
+<symbol id="i-plus" viewBox="-9 -9 18 18" overflow="visible"><path d="M0-6V6M-6 0H6" stroke="currentColor" stroke-width="2.6"/></symbol>
+<symbol id="i-x" viewBox="-9 -9 18 18" overflow="visible"><path d="M-5-5L5 5M5-5L-5 5" stroke="currentColor" stroke-width="2.6"/></symbol>
+<symbol id="i-play" viewBox="-9 -9 18 18" overflow="visible"><path d="M-4-6L6 0L-4 6Z" fill="currentColor"/></symbol>
+<symbol id="i-earth" viewBox="-9 -9 18 18" overflow="visible"><circle r="7" fill="currentColor"/><path d="M-7 0H7M0-7C-4-3-4 3 0 7C4 3 4-3 0-7" stroke="#0B0B0C" stroke-width="1.1" fill="none"/></symbol>
+</defs></svg>
+<main>
+<h1>LAST BERTH — ИНТЕРФЕЙС, МАКЕТ v1</h1>
+<p class="sub">Один интерфейс, восемь экранов. Вкладки слева, меню мира — окно по центру. Числа условные.</p>
+<div id="grid"></div>
+</main>
+<script>
+const C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',dim:'#5E5D58',mid:'#9C9B95',bg:'#0B0B0C',pan:'#17171A',pan2:'#232327'};
+const RES=['metal','food','fuel','parts','people'];
+const KC={mine:C.metal,farm:C.food,well:C.fuel,works:C.parts};
+const f=n=>(+n).toFixed(1);
+const u=(id,x,y,s=1,col=C.ink,rot=0,op=1)=>`<use href="#${id}" x="-9" y="-9" width="18" height="18" style="color:${col}" opacity="${op}" transform="translate(${f(x)} ${f(y)}) rotate(${rot}) scale(${s})"/>`;
+const P=(cx,cy,r,a)=>[cx+r*Math.cos((a-90)*Math.PI/180),cy+r*Math.sin((a-90)*Math.PI/180)];
+const arc=(cx,cy,r,a0,a1,col,w=4,op=1,dash='')=>{const [x0,y0]=P(cx,cy,r,a0),[x1,y1]=P(cx,cy,r,a1);return `<path d="M${f(x0)} ${f(y0)}A${r} ${r} 0 ${a1-a0>180?1:0} 1 ${f(x1)} ${f(y1)}" fill="none" stroke="${col}" stroke-width="${w}" opacity="${op}" ${dash?`stroke-dasharray="${dash}"`:''}/>`};
+const ln=(x1,y1,x2,y2,col=C.dim,w=1,dash='',op=1)=>`<path d="M${f(x1)} ${f(y1)}L${f(x2)} ${f(y2)}" stroke="${col}" stroke-width="${w}" opacity="${op}" fill="none" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+const box=(x,y,w,h,fill=C.pan,stroke='none',rx=4,extra='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx}" fill="${fill}" stroke="${stroke}" ${extra}/>`;
+const circ=(x,y,r,fill='none',stroke='none',w=1,extra='')=>`<circle cx="${f(x)}" cy="${f(y)}" r="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${w}" ${extra}/>`;
+const bar=(x,y,n,of,col,w=5,h=8,g=2)=>{let s='';for(let i=0;i<of;i++)s+=`<rect x="${x+i*(w+g)}" y="${y}" width="${w}" height="${h}" fill="${i<n?col:C.pan2}"/>`;return s};
+const vbar=(x,y,n,of,col,w=8,h=4,g=2)=>{let s='';for(let i=0;i<of;i++)s+=`<rect x="${x}" y="${y-i*(h+g)}" width="${w}" height="${h}" fill="${i<n?col:C.pan2}"/>`;return s};
+const pin=(n,x,y)=>`<circle cx="${x}" cy="${y}" r="9" fill="${C.ink}" stroke="#000" stroke-width="1.5"/><text x="${x}" y="${y+4}" text-anchor="middle" font-size="11" font-weight="700" fill="#000" font-family="ui-monospace,Consolas,monospace">${n}</text>`;
+const stub=(x,y,w,col=C.dim,h=4)=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${col}"/>`;
+const wm=(k,x,y,s=1,on=1,op=1)=>u((on?'w-':'o-')+k,x,y,s,on?KC[k]:C.mid,0,op);
+
+const W=[['mine',0,20,1],['farm',0,140,1],['well',0,255,1],['works',1,70,1],['mine',1,190,1],['farm',1,305,0],['well',2,30,0],['mine',2,110,1],['farm',2,222,0],['works',2,332,0]];
+const RR=[.4,.7,1];
+const wp=(cx,cy,R,i)=>P(cx,cy,R*RR[W[i][1]],W[i][2]);
+function map(cx,cy,R,o={}){
+  const op=o.op||1,sc=o.s||Math.max(.6,R/165);let s=`<g opacity="${op}">`;
+  RR.forEach(r=>s+=circ(cx,cy,R*r,'none',C.dim,1,'stroke-dasharray="1 4"'));
+  W.forEach((w,i)=>{const [x,y]=wp(cx,cy,R,i);
+    if(w[3]&&!o.noLines){s+=ln(cx,cy,x,y,KC[w[0]],o.lw||1.4,'',.55);
+      if(!o.noShips){const t=.35+.08*i,a=Math.atan2(y-cy,x-cx)*180/Math.PI;s+=u(i%3==0?'s-f':i%3==1?'s-t':'s-c',cx+(x-cx)*t,cy+(y-cy)*t,.8*sc,C.ink,i%2?a:a+180)}}
+    s+=wm(w[0],x,y,1.1*sc,w[3]);});
+  s+=u('i-earth',cx,cy,1.5*sc,C.earth);
+  return s+'</g>';
+}
+
+const t=(x,y,str,size=11,col=C.ink,anchor='start',w=400,ls=0)=>`<text x="${x}" y="${y}" font-size="${size}" fill="${col}" text-anchor="${anchor}" font-weight="${w}" ${ls?`letter-spacing="${ls}"`:''}>${str}</text>`;
+const lab=(x,y,str,col=C.mid,anchor='start')=>t(x,y,str,8.5,col,anchor,700,'.16em');
+const NAMES=['KILN','PALE','WICK','HOLLOW','CINDER','BRINE','GANNET','VESPER','MIRE','ROOK'];
+const SEL=4;
+function mapL(cx,cy,R,o={}){
+  let s=map(cx,cy,R,o);const op=o.op||1;
+  if(!o.noNames)W.forEach((w,i)=>{if(!w[3])return;const [x,y]=wp(cx,cy,R,i);s+=`<g opacity="${op}">`+t(x+11,y-8,NAMES[i],8.5,C.ink,'start',700,'.08em')+'</g>'});
+  if(o.sel!==undefined){const [x,y]=wp(cx,cy,R,o.sel);s+=ln(cx,cy,x,y,C.ink,2.2)+circ(x,y,15,'none',C.ink,2)+wm(W[o.sel][0],x,y,1.2*Math.max(.6,R/165),1)}
+  return s;
+}
+const TABS=[['EARTH','i-earth',C.earth,''],['YARD','i-parts',C.ink,'2'],['FLEET','s-f',C.ink,'3'],['ARK','i-ark',C.ark,'']];
+function chrome(o={}){
+  let s=box(0,0,960,600,C.bg,'none',0);
+  s+=box(14,16,9,9,C.red,'none',0)+t(30,25,'LAST BERTH',12,C.ink,'start',800,'.2em');
+  s+=lab(170,14,'YEAR')+t(170,34,'3005',19,C.ink,'start',800);
+  s+=lab(246,14,'NIGHT',C.red)+t(246,34,'3735',19,C.red,'start',800)+t(300,34,'730 years',10,C.mid);
+  if(o.adv!==0){const hot=o.adv==='open';s+=box(420,9,170,25,hot?C.people:C.bg,C.people,3)+u('i-warn',436,21.5,.75,hot?'#000':C.people)+t(450,25,'NEEDS A DECISION',9.5,hot?'#000':C.people,'start',700,'.1em')+box(562,13,22,17,hot?'#000':C.people,'none',2)+t(573,25.5,'4',11,hot?C.people:'#000','middle',800)}
+  ['❚❚','1×','2×','4×','10×'].forEach((b,i)=>{const on=o.paused?i==0:i==2,x=764+i*38;s+=box(x,8,36,26,on?(o.paused?C.people:C.ink):C.bg,C.dim,0)+t(x+18,25,b,10.5,on?'#000':C.ink,'middle',700)});
+  if(o.paused)s+=lab(756,25,'PAUSED',C.people,'end');
+  s+=ln(0,42,960,42,C.dim);
+  const R=[['METAL','5 731','▼ −40.4/yr'],['RATIONS','27 920','▲ +4.6/yr'],['FUEL','19 194','▲ +28.6/yr'],['PARTS','197','▼ −0.7/yr'],['PEOPLE','2 816','▼ −2.7/yr']];
+  RES.forEach((k,i)=>{const x=i*192;s+=u('i-'+k,x+20,56,.7,C[k])+lab(x+31,59,R[i][0])+t(x+14,82,R[i][1],20,C[k],'start',800)+t(x+104,82,R[i][2],9.5,R[i][2][0]=='▼'?C.red:C.food);if(i)s+=ln(x,42,x,90,C.dim)});
+  s+=ln(0,90,960,90,C.dim);
+  if(o.tabs==='bottom'){TABS.forEach((b,i)=>{const x=250+i*115,on=o.tab===b[0];s+=box(x,552,115,38,on?C.ink:C.pan,C.mid,0)+u(b[1],x+24,571,b[1]=='i-ark'?.7:.9,on?'#000':b[2])+t(x+42,575,b[0],10.5,on?'#000':C.ink,'start',800,'.14em');if(b[3])s+=circ(x+104,558,8,C.people)+t(x+104,562,b[3],10,'#000','middle',800)})}
+  else{s+=box(0,90,66,510,C.pan,'none',0)+ln(66,90,66,600,C.dim);TABS.forEach((b,i)=>{const y=90+i*72,on=o.tab===b[0];s+=box(0,y,66,72,on?C.ink:C.pan,'none',0)+ln(0,y+72,66,y+72,C.dim)+u(b[1],33,y+30,b[1]=='i-ark'?1:1.3,on?'#000':b[2])+t(33,y+58,b[0],8.5,on?'#000':C.mid,'middle',800,'.14em');if(b[3])s+=circ(54,y+13,8,C.people)+t(54,y+17,b[3],10,'#000','middle',800)})}
+  return s;
+}
+function panel(x,y,w,h,title,sub,ic){let s=box(x,y,w,h,C.pan,C.ink,0)+box(x+.5,y+.5,w-1,30,C.pan2,'none',0)+ln(x,y+31,x+w,y+31,C.dim);let tx=x+14;if(ic){s+=ic(x+20,y+16);tx=x+38}
+  s+=t(tx,y+20.5,title,12.5,C.ink,'start',800,'.08em');if(sub)s+=lab(x+w-36,y+19.5,sub,C.mid,'end');return s+u('i-x',x+w-16,y+16,.6,C.ink)}
+const sec=(x,y,w,l,r)=>lab(x,y,l)+(r?lab(x+w,y,r,C.mid,'end'):'')+ln(x,y+6,x+w,y+6,C.dim);
+const row=(x,y,w,l,v,col)=>t(x,y,l,10.5,C.mid)+t(x+w,y,v,10.5,col||C.ink,'end',700);
+function btn(x,y,w,h,label,kind){const k=kind||'';const fill=k=='pri'?C.ink:C.bg,st=k=='red'?C.red:k=='off'?C.dim:k=='pri'?C.ink:C.mid,tc=k=='pri'?'#000':k=='red'?C.red:k=='off'?C.dim:C.ink;
+  return box(x,y,w,h,fill,st,0,k=='off'?'stroke-dasharray="3 3"':'')+t(x+w/2,y+h/2+3.5,label,9.5,tc,'middle',800,'.1em')}
+const step=(x,y,n)=>box(x,y,20,20,C.bg,C.mid,0)+t(x+10,y+14.5,'−',12,C.ink,'middle',700)+t(x+33,y+14.5,n,12,C.ink,'middle',800)+box(x+46,y,20,20,C.bg,C.mid,0)+t(x+56,y+14.5,'+',12,C.ink,'middle',700);
+const price=(x,y,a,gap=50)=>a.map((p,i)=>u('i-'+p[0],x+i*gap+5,y-3.5,.6,C[p[0]])+t(x+i*gap+13,y,p[1],9.5,p[2]?C.red:C[p[0]],'start',700)).join('');
+const prog=(x,y,w,p,col=C.ink)=>box(x,y,w,5,C.pan2,'none',0)+box(x,y,w*p,5,col,'none',0);
+
+/* planet blocks: each returns [svg,height] */
+function bState(x,y,w){let s=sec(x,y,w,'WORLD');const R=[['Deposit left','6 170',C.metal],['On the surface','412',C.metal],['World gives','9.4 /yr'],['Line carries','7.1 /yr',C.people],['People','24',C.people],['Last lift','3580 · 575 yrs']];
+  R.forEach((r,i)=>s+=row(x,y+24+i*17,w,r[0],r[1],r[2]));return [s,24+R.length*17]}
+function bKit(x,y,w){let s=sec(x,y,w,'MACHINES','TIER II');s+=t(x,y+24,'Tier III: 9.4 → 13.1 /yr',10.5,C.mid)+price(x,y+43,[['metal','420'],['parts','60'],['people','8']],54)+btn(x+w-92,y+30,92,20,'UPGRADE','pri');return [s,56]}
+function bLine(x,y,w){let s=sec(x,y,w,'SHIPS ON THIS LINE','YARDS KEEP THE COUNT');
+  [['s-c','Courier “Hermes”','0'],['s-t','Hauler “Sisyphus”','2'],['s-f','Freighter “Atlas”','1']].forEach((r,i)=>{const yy=y+16+i*26;s+=u(r[0],x+9,yy+10,1,C.ink)+t(x+26,yy+14,r[1],10.5,C.ink)+step(x+w-66,yy,r[2])});
+  let yy=y+16+78+8;s+=lab(x,yy,'HULLS',C.dim);
+  [['Hauler III no.100','loading here',1],['Hauler III no.88','→ Earth · 4 yrs',0],['Freighter III no.41','→ here · 9 yrs',0]].forEach((r,i)=>{const y2=yy+18+i*19;s+=t(x,y2,r[0],10,C.ink,'start',700)+t(x+118,y2,r[1],10,C.mid);if(r[2])s+=btn(x+w-70,y2-12,70,16,'TAKE OFF')});
+  s+=t(x,yy+18+57+2,'Yards are building 1 more hauler · 2 yrs',9.5,C.dim);return [s,16+78+8+18+57+6]}
+function bEvac(x,y,w){return [btn(x,y,w,24,'EVACUATE','red')+t(x+w/2,y+38,'Courier no.8 takes all 24 · home before the Night',9.5,C.mid,'middle'),42]}
+const pico=(x,y)=>wm('mine',x,y,1.2,1);
+
+const M=[];
+
+M.push({t:'ГЛАВНЫЙ ЭКРАН · КНОПКИ СЛЕВА',idea:'Карта и то, что нужно всегда. Остальное — по нажатию.',
+ leg:['Ресурсы с цифрами — как сейчас','Год, Ночь, темп','Советник: значок со счётчиком','Вкладки; на кнопке — что там ждёт (2 строятся, 3 свободны)','Нажал на мир — открылось его меню','Наведение: короткая справка'],
+ plus:'карта получает весь экран; верфь и флот не пропадают из виду — счётчик на кнопке',minus:'прогресс верфи теперь не виден без нажатия',
+ draw(){let s=chrome()+mapL(513,345,225);const [x,y]=wp(513,345,225,7);
+  s+=circ(x,y,14,'none',C.mid,1.5)+box(x+18,y-34,150,44,C.pan,C.mid,0)+t(x+28,y-18,'VESPER',10.5,C.ink,'start',800,'.08em')+lab(x+160,y-19,'MINE',C.mid,'end')+price(x+28,y,[['metal','2 904'],['people','52']],60)+u('s-t',x+148,y-3,.8,C.ink);
+  s+=pin(1,100,100)+pin(2,360,22)+pin(3,604,22)+pin(4,33,400)+pin(5,x-26,y+4)+pin(6,x+180,y-34);return s}});
+
+M.push({t:'ГЛАВНЫЙ ЭКРАН · КНОПКИ СНИЗУ',idea:'То же, но вкладки — полосой внизу, как док.',
+ leg:['Вкладки под рукой и на телефоне','Карта во всю ширину','Советник — там же, вверху'],
+ plus:'привычнее на телефоне; ближе к нынешнему доку верфи',minus:'боковая панель мира и нижняя полоса спорят за место; слева мне кажется чище',
+ draw(){let s=chrome({tabs:'bottom'})+mapL(480,318,215);s+=pin(1,236,571)+pin(2,60,318)+pin(3,604,22);return s}});
+
+M.push({t:'МЕНЮ МИРА · А · БОКОВАЯ ПАНЕЛЬ',idea:'Карта видна и живая. Время идёт.',
+ leg:['Мир выделен, его линия подсвечена','Метрики мира — цифрами','Техника: что даст следующий ярус и цена','Суда на линии: − / + по классу','Реальные корпуса и где они','Эвакуация и её срок','Другой мир — нажал на карте, панель сменилась'],
+ plus:'назначаешь суда и видишь карту; панель растёт на всю высоту, длинное — прокруткой',minus:'узкая: при десятке корпусов список длинный',
+ draw(){let s=chrome()+mapL(338,345,215,{sel:SEL});const x=612,y=98,w=336;
+  s+=panel(x,y,w,494,'KX-71 CINDER','MINE · RING 2',pico);let c=y+50,b;
+  b=bState(x+14,c,w-28);s+=b[0];c+=b[1]+12;const c1=c;b=bKit(x+14,c,w-28);s+=b[0];c+=b[1]+16;const c2=c;b=bLine(x+14,c,w-28);s+=b[0];c+=b[1]+10;const c3=c;b=bEvac(x+14,c,w-28);s+=b[0];
+  const [sx,sy]=wp(338,345,215,SEL);const [ox,oy]=wp(338,345,215,3);
+  s+=pin(1,sx-28,sy)+pin(2,x-2,y+84)+pin(3,x-2,c1+20)+pin(4,x-2,c2+40)+pin(5,x-2,c2+130)+pin(6,x-2,c3+12)+pin(7,ox+4,oy-24);return s}});
+
+M.push({t:'МЕНЮ МИРА · Б · ОКНО ПО ЦЕНТРУ',idea:'Крупное окно в две колонки, карта притушена.',
+ leg:['Слева — мир и техника','Справа — суда и эвакуация','Карту не видно: другой мир — только через закрытие'],
+ plus:'всё без прокрутки, читается спокойно',minus:'каждый мир = открыть-закрыть; для частого действия тяжело',
+ draw(){let s=chrome()+mapL(513,345,225,{op:.25,noNames:1});const x=190,y=124,w=620,h=372;
+  s+=panel(x,y,w,h,'KX-71 CINDER','MINE · RING 2',pico);let b,c=y+52;
+  b=bState(x+18,c,270);s+=b[0];c+=b[1]+14;b=bKit(x+18,c,270);s+=b[0];
+  c=y+52;b=bLine(x+332,c,270);s+=b[0];c+=b[1]+14;b=bEvac(x+332,c,270);s+=b[0];s+=ln(x+310,y+44,x+310,y+h-14,C.dim);
+  s+=pin(1,x,y+60)+pin(2,x+w,y+60)+pin(3,130,330);return s}});
+
+M.push({t:'МЕНЮ МИРА · В · ПОЛНЫЙ ЭКРАН',idea:'Мир — отдельная страница. Назад — к карте.',
+ leg:['Назад к карте','Стрелки: соседний мир без возврата','Три колонки: мир · суда · где он','Мини-карта вместо большой'],
+ plus:'места с запасом — войдёт и история мира, и события доли',minus:'игрок уходит с карты; для игры про линии это потеря',
+ draw(){let s=chrome()+box(66,90,894,510,C.bg,'none',0);
+  s+=btn(84,104,70,24,'← MAP')+pico(182,116)+t(200,122,'KX-71 CINDER',16,C.ink,'start',800,'.06em')+lab(352,121,'MINE · RING 2 · HELIOS')+btn(800,104,66,24,'‹ PALE')+btn(872,104,70,24,'BRINE ›')+ln(66,140,960,140,C.dim);
+  let b,c=162;b=bState(90,c,250);s+=b[0];c+=b[1]+18;b=bKit(90,c,250);s+=b[0];
+  b=bLine(380,162,270);s+=b[0];b=bEvac(380,162+b[1]+18,270);s+=b[0];
+  s+=sec(690,162,250,'WHERE')+box(690,176,250,230,C.pan,'none',0)+mapL(815,291,100,{sel:SEL,noNames:1,noShips:1});
+  s+=sec(690,430,250,'SECTOR HELIOS')+t(690,452,'Fold: crossings ×2 faster · 31 yrs left',10,C.food);
+  s+=pin(1,84,92)+pin(2,790,116)+pin(3,366,152)+pin(4,950,190);return s}});
+
+M.push({t:'ВЕРФЬ',idea:'Большое окно, время на паузе. Только постройка и причал.',
+ leg:['Пауза включается сама','Что строится и для кого','Заказ свободного корпуса: трюм, скорость, дальность, цена','Нельзя — видно почему','У причала: в резерв ковчега или на слом'],
+ plus:'дока в углу карты больше нет; три класса читаются крупно',minus:'верфь закрыта — прогресс виден только счётчиком на кнопке',
+ draw(){let s=chrome({tab:'YARD',paused:1})+mapL(513,345,225,{op:.2,noNames:1});const x=110,y=104,w=800,h=484;
+  s+=panel(x,y,w,h,'YARD','GENERATION IV',(a,b)=>u('i-parts',a,b,.9,C.ink));
+  s+=sec(x+18,y+52,w-36,'IN THE YARDS','2');
+  [['s-t','Hauler “Sisyphus” IV','→ CINDER line',.7,'2 yrs'],['s-c','Courier “Hermes” IV','→ free hull',.2,'6 yrs']].forEach((r,i)=>{const yy=y+78+i*30;s+=u(r[0],x+28,yy-3,1,C.ink)+t(x+46,yy,r[1],10.5,C.ink,'start',700)+t(x+210,yy,r[2],10.5,C.mid)+prog(x+340,yy-7,360,r[3])+t(x+w-18,yy,r[4],10.5,C.ink,'end',700)});
+  s+=sec(x+18,y+152,w-36,'BUILD A FREE HULL');
+  [['s-c','COURIER “HERMES” IV','480','4.22 yr/s','ring 5',[['metal','553'],['fuel','149'],['parts','172'],['people','33']],1],['s-t','HAULER “SISYPHUS” IV','3 318','2.61 yr/s','ring 6',[['metal','1 797'],['fuel','479'],['parts','190'],['people','82']],1],['s-f','FREIGHTER “ATLAS” IV','16 684','1.98 yr/s','ring 7',[['metal','4 424'],['fuel','1 278'],['parts','456',1],['people','184']],0]].forEach((c,i)=>{const cx=x+18+i*258,cy=y+168;
+    s+=box(cx,cy,248,170,C.bg,C.dim,0)+u(c[0],cx+26,cy+26,1.8,C.ink)+t(cx+52,cy+31,c[1],11,C.ink,'start',800,'.04em');
+    s+=row(cx+14,cy+62,220,'Hold',c[2])+row(cx+14,cy+79,220,'Speed',c[3])+row(cx+14,cy+96,220,'Reach',c[4])+price(cx+14,cy+120,c[5],56);
+    s+=c[6]?btn(cx+14,cy+134,220,24,'BUILD','pri'):btn(cx+14,cy+134,220,24,'259 PARTS SHORT','off')});
+  s+=sec(x+18,y+362,w-36,'AT THE PIER','3 FREE');
+  [['s-c','Courier I no.7',0],['s-c','Courier I no.9',0],['s-t','Hauler IV no.96',1]].forEach((r,i)=>{const cx=x+18+i*258,cy=y+378;s+=box(cx,cy,248,56,C.bg,r[2]?C.ark:C.dim,0)+u(r[0],cx+18,cy+17,1,C.ink)+t(cx+34,cy+21,r[1],10.5,C.ink,'start',700)+(r[2]?lab(cx+234,cy+20,'ARK RESERVE',C.ark,'end'):'')+btn(cx+14,cy+30,106,18,r[2]?'RELEASE':'RESERVE FOR ARK')+btn(cx+128,cy+30,106,18,'SCRAP')});
+  s+=t(x+18,y+462,'Hulls for a line are ordered on the world itself — the yards build them without asking.',9.5,C.dim);
+  s+=pin(1,742,46)+pin(2,x,y+82)+pin(3,x,y+250)+pin(4,x+w,y+314)+pin(5,x,y+404);return s}});
+
+M.push({t:'ЗЕМЛЯ',idea:'Дом, разведка колец, программа привода. Пауза.',
+ leg:['Дом: люди и на сколько хватит еды','Разведка следующего кольца: условие и цена','Привод: что нужно и что откроет','Ковчега здесь нет — у него своя вкладка'],
+ plus:'три решения Земли на одном экране, без прокрутки рейки',minus:'блоков мало — возможно, Землю и Ковчег стоит слить в одну вкладку',
+ draw(){let s=chrome({tab:'EARTH',paused:1})+mapL(513,345,225,{op:.2,noNames:1});const x=110,y=104,w=800,h=400,cw=236;
+  s+=panel(x,y,w,h,'EARTH','',(a,b)=>u('i-earth',a,b,1,C.earth));
+  let cx=x+18,cy=y+54;s+=sec(cx,cy,cw,'HOME');s+=t(cx,cy+40,'2 816',22,C.people,'start',800)+t(cx+80,cy+40,'people · −2.7 /yr',10,C.mid);
+  s+=row(cx,cy+66,cw,'Rations last until','≈ 3498',C.red)+row(cx,cy+83,cw,'Night','3735',C.red)+row(cx,cy+100,cw,'Live worlds','17')+row(cx,cy+117,cw,'Rings charted','6')+row(cx,cy+134,cw,'Crossings','×2.65');
+  s+=box(cx,cy+152,cw,40,C.bg,C.red,0)+t(cx+10,cy+168,'Rations end 237 years before the Night.',9.5,C.red)+t(cx+10,cy+182,'Open a farm line or cut what Earth burns.',9.5,C.mid);
+  cx+=cw+28;s+=sec(cx,cy,cw,'CHART THE NEXT RING');s+=t(cx,cy+34,'RING 7 · SULLA',13,C.ink,'start',800,'.06em');
+  s+=row(cx,cy+60,cw,'Worlds settled · needed','20 / 18',C.food)+lab(cx,cy+86,'PRICE')+price(cx,cy+104,[['metal','1 054'],['food','4 933'],['fuel','2 207']],78)+price(cx,cy+122,[['parts','456',1],['people','242']],78);
+  s+=btn(cx,cy+140,cw,26,'259 PARTS SHORT','off')+t(cx,cy+184,'Opens new worlds, farther out.',9.5,C.dim);
+  cx+=cw+28;s+=sec(cx,cy,cw,'DRIVE PROGRAMME','GEN IV → V');s+=prog(cx,cy+24,cw,.62,C.food);
+  s+=row(cx,cy+52,cw,'Worlds settled · needed','20 / 20',C.food)+row(cx,cy+69,cw,'Parts from works worlds','2 840 / 4 600')+row(cx,cy+86,cw,'Ready','≈ 3075');
+  s+=lab(cx,cy+112,'GENERATION V OPENS')+t(cx,cy+130,'· hulls: bigger hold, faster',10,C.mid)+t(cx,cy+146,'· reach: ring 8',10,C.mid)+t(cx,cy+162,'· ark: 80% wake instead of 60%',10,C.ark);
+  s+=pin(1,x,y+100)+pin(2,x+272,y+46)+pin(3,x+w,y+100)+pin(4,80,340);return s}});
+
+M.push({t:'ФЛОТ',idea:'Список слева, карта справа: нажал строку — судно подсвечено.',
+ leg:['Фильтры вместо прокрутки всего подряд','Строка: корпус · линия · где сейчас','Свободный — сразу «куда»','Выбранное судно видно на карте','Нажал на линию — открылось меню мира'],
+ plus:'нынешний блок «Флот» перестаёт закрывать угол карты',minus:'без паузы: я решил за тебя, флот — справочная вкладка, время идёт',
+ draw(){let s=chrome({tab:'FLEET'})+mapL(690,345,200,{sel:SEL});const x=74,y=98,w=390;
+  s+=panel(x,y,w,494,'FLEET','47 HULLS',(a,b)=>u('s-f',a,b,.9,C.ink));
+  [['ALL 47',1],['FREE 3',0],['ON LINES 42',0],['IN YARDS 2',0]].forEach((c,i)=>{const cx=x+14+[0,62,120,208][i],cw=[56,52,82,76][i];s+=box(cx,y+42,cw,20,c[1]?C.ink:C.bg,C.mid,0)+t(cx+cw/2,y+56,c[0],8.5,c[1]?'#000':C.ink,'middle',800,'.08em')});
+  s+=lab(x+14,y+84,'HULL')+lab(x+170,y+84,'LINE')+lab(x+w-14,y+84,'NOW',C.mid,'end')+ln(x+14,y+90,x+w-14,y+90,C.dim);
+  const R=[['s-c','Courier I no.7','—','free at Earth',2],['s-c','Courier I no.9','—','free at Earth',2],['s-t','Hauler IV no.96','—','ark reserve',3],['s-t','Hauler III no.100','CINDER','loading',1],['s-t','Hauler III no.88','CINDER','→ Earth · 4 yrs',0],['s-f','Freighter III no.41','CINDER','→ there · 9 yrs',0],['s-c','Courier I no.8','VESPER','→ Earth · 8 yrs',0],['s-f','Freighter II no.30','KILN','unloading',0],['s-t','Hauler II no.52','PALE','→ there · 3 yrs',0],['s-t','Hauler II no.49','KILN','overdue',4],['s-f','Freighter III no.44','HOLLOW','→ Earth · 12 yrs',0]];
+  R.forEach((r,i)=>{const yy=y+98+i*33;if(r[4]==1)s+=box(x+6,yy,w-12,31,C.pan2,C.ink,0);
+    s+=u(r[0],x+24,yy+15,1,C.ink)+t(x+42,yy+19,r[1],10.5,C.ink,'start',700)+t(x+170,yy+19,r[2],10.5,r[2]=='—'?C.dim:C.ink,'start',700);
+    if(r[4]==2)s+=btn(x+w-84,yy+6,70,19,'SEND →','pri')+t(x+w-92,yy+19,'free',10,C.people,'end');else s+=t(x+w-14,yy+19,r[3],10,r[4]==4?C.red:r[4]==3?C.ark:C.mid,'end');
+    s+=ln(x+14,yy+32,x+w-14,yy+32,C.pan2)});
+  const [sx,sy]=wp(690,345,200,SEL);s+=circ(690+(sx-690)*.75,345+(sy-345)*.75,10,'none',C.people,2);
+  s+=pin(1,x,y+52)+pin(2,x,y+214)+pin(3,x+w,y+114)+pin(4,690+(sx-690)*.75+22,345+(sy-345)*.75+6)+pin(5,x+200,y+196);return s}});
+
+M.push({t:'КОВЧЕГ',idea:'Одна вкладка на всё, что решает финал. Пауза.',
+ leg:['Срок и готовность привода','Уровни: что куплено, что дальше и почём','Конвой 3·2·1: гнёзда и кто в них','Итог: сколько уйдёт и проснётся, если Ночь сегодня'],
+ plus:'финал перестаёт быть строчками в рейке Земли; итог одной цифрой',minus:'до датировки Ночи вкладка пустая — прятать или показывать заглушку',
+ draw(){let s=chrome({tab:'ARK',paused:1})+mapL(513,345,225,{op:.2,noNames:1});const x=110,y=104,w=800,h=440;
+  s+=panel(x,y,w,h,'THE ARK','',(a,b)=>u('i-ark',a,b,.8,C.ark));let cx=x+18,cy=y+54;
+  s+=sec(cx,cy,220,'THE NIGHT');s+=t(cx,cy+44,'3735',26,C.red,'start',800)+t(cx+76,cy+44,'730 years',10.5,C.mid);
+  s+=row(cx,cy+72,220,'Ark drive','GEN IV · READY',C.food)+row(cx,cy+89,220,'Wake','60%')+row(cx,cy+106,220,'With Gen V · ≈ 3075','80%',C.ark);
+  cx=x+268;s+=sec(cx,cy,514,'LEVELS');
+  [['I','500 berths','PAID',2],['II','1 200 berths','',1],['III','2 400 berths','',0],['IV','4 000 berths','',0]].forEach((l,i)=>{const bx=cx+i*130;s+=box(bx,cy+16,122,98,l[3]==2?C.ark:C.bg,l[3]?C.ark:C.dim,0,l[3]?'':'stroke-dasharray="4 3"');const tc=l[3]==2?'#000':l[3]?C.ink:C.dim;
+    s+=t(bx+12,cy+44,l[0],20,tc,'start',800)+t(bx+12,cy+62,l[1],10,tc);if(l[3]==2)s+=lab(bx+110,cy+36,'PAID','#000','end');
+    if(l[3]==1)s+=price(bx+10,cy+78,[['metal','6 000',1],['parts','900',1]],58)+btn(bx+8,cy+90,106,18,'269 METAL SHORT','off');if(!l[3])s+=t(bx+12,cy+84,l[0]=='III'?'13 500 metal…':'27 000 metal…',9.5,C.dim)});
+  cx=x+18;cy=y+196;s+=sec(cx,cy,w-36,'CONVOY · 3 · 2 · 1 · GEN III OR NEWER, AT THE PIER ON THE DAY');
+  let k=0;[['s-c','COURIER',3,2],['s-t','HAULER',2,2],['s-f','FREIGHTER',1,0]].forEach(g=>{for(let j=0;j<g[2];j++){const bx=cx+k*100+(k>2?24:0)+(k>4?24:0),on=j<g[3];s+=box(bx,cy+18,92,58,C.bg,on?C.ark:C.red,0,on?'':'stroke-dasharray="4 3"')+u(g[0],bx+46,cy+40,1.6,on?C.ink:C.dim)+t(bx+46,cy+66,on?g[1]+' IV':'EMPTY',8.5,on?C.mid:C.red,'middle',700,'.1em');k++}});
+  s+=btn(cx+654,cy+34,110,26,'CHOOSE HULLS');
+  cy=y+300;s+=sec(cx,cy,w-36,'IF THE NIGHT CAME TODAY');s+=box(cx,cy+16,w-36,84,C.bg,C.red,0)+t(cx+18,cy+54,'THE ARK STAYS',20,C.red,'start',800,'.06em')+t(cx+18,cy+78,'The convoy is 1 courier and 1 freighter short.',10.5,C.mid);
+  s+=t(cx+440,cy+48,'With the convoy:',10.5,C.mid)+t(cx+440,cy+78,'500 sail · 300 wake',17,C.ink,'start',800)+t(cx+440,cy+92,'2 316 stay on Earth — level I holds 500',9.5,C.mid);
+  s+=pin(1,x,y+100)+pin(2,x+258,y+46)+pin(3,x,y+250)+pin(4,x,y+360);return s}});
+
+M.push({t:'СОВЕТНИК',idea:'Не панель, а выпадающий список. Строка ведёт туда, где решают.',
+ leg:['Худшее — сверху, цветом','Справа — куда ведёт строка','Нажал — открылось то самое меню: мир, верфь, ковчег','Мир из списка мигает на карте'],
+ plus:'советник становится навигацией: от проблемы к месту решения в одно нажатие',minus:'большие окна (верфь, ковчег) из списка открываются с паузой — к этому надо привыкнуть',
+ draw(){let s=chrome({adv:'open'})+mapL(513,345,225);const x=420,y=38,w=470;
+  s+=box(x,y,w,214,C.pan,C.people,0);
+  const R=[[C.red,'Rations end in 2 years on CINDER','Machines stop without food — add a hull to the line','CINDER',1],[C.red,'Hull 49 overdue on the KILN run','No carrier on the line','KILN',1],[C.people,'3 hulls free at the pier','Send them out or keep for the ark','FLEET',0],[C.ark,'Convoy is 2 hulls short','Night in 730 years','ARK',0]];
+  R.forEach((r,i)=>{const yy=y+8+i*50;s+=box(x+8,yy,w-16,44,C.bg,'none',0)+box(x+8,yy,4,44,r[0],'none',0)+t(x+24,yy+19,r[1],11,C.ink,'start',700)+t(x+24,yy+35,r[2],9.5,C.mid)+btn(x+w-102,yy+11,86,22,r[3]+' →',i==0?'pri':'')});
+  const [sx,sy]=wp(513,345,225,SEL);s+=circ(sx,sy,16,'none',C.red,2)+circ(sx,sy,24,'none',C.red,1,'opacity=".5"');
+  s+=`<path d="M${x+w-60} ${y+42}C${x+w-40} ${y+260} ${sx+120} ${sy+10} ${sx+30} ${sy+4}" fill="none" stroke="${C.ink}" stroke-dasharray="4 4"/>`;
+  s+=pin(1,x,y+30)+pin(2,x+w,y+30)+pin(3,x+w-20,y+150)+pin(4,sx-34,sy);return s}});
+
+function hrow(x,y,w,ic,name,note,b,kind,nc){return u(ic,x+9,y-3.5,.95,kind=='off'?C.dim:C.ink)+t(x+26,y,name,10.5,kind=='off'?C.mid:C.ink,'start',700)+t(x+132,y,note,9.5,nc||C.mid)+btn(x+w-64,y-13,64,18,b,kind)+ln(x,y+9,x+w,y+9,C.pan2)}
+M[3].t='МЕНЮ МИРА · ЗАСЕЛЁННЫЙ';M[3].idea='Окно по центру. Справа — кто на линии, кого добавить, что заказать.';
+M[3].leg=['Мир и техника','На линии: каждый корпус, где он, «снять»','Добавить судно: свободные у причала — выбрал и назначил','Не подходит — видно почему','Свободных нет или мало — заказ нового, с ценой и сроком','Автовосстановление потерянных — галочкой, а не счётчиком','Стрелки: соседний мир без закрытия окна','Перевести: у корпуса на линии — список миров, куда','Забрать с другой линии: тот же список «добавить», вторая вкладка'];
+M[3].plus='назначение перестаёт быть слепым: видно, какое судно и с каким трюмом уходит на мир';M[3].minus='счётчик «− / +» по классу исчез — заказ нового теперь кнопкой';
+M[3].draw=function(){let s=chrome()+mapL(513,345,225,{op:.25,noNames:1});const x=160,y=100,w=680,h=486,lw=262,rx=x+322,rw=340;
+  s+=panel(x,y,w,h,'KX-71 CINDER','MINE · RING 2',pico);let b,c=y+52;
+  b=bState(x+18,c,lw);s+=b[0];c+=b[1]+16;b=bKit(x+18,c,lw);s+=b[0];c+=b[1]+22;b=bEvac(x+18,c,lw);s+=b[0];
+  s+=ln(x+300,y+44,x+300,y+h-14,C.dim);
+  c=y+52;s+=sec(rx,c,rw,'ON THIS LINE','3 HULLS');
+  [['s-t','Hauler III no.100','loading here'],['s-t','Hauler III no.88','→ Earth · 4 yrs'],['s-f','Freighter III no.41','→ here · 9 yrs']].forEach((r,i)=>s+=hrow(rx,c+26+i*24,rw,r[0],r[1],r[2],'TAKE OFF')+btn(rx+rw-132,c+13+i*24,62,18,'MOVE →',i==1?'pri':''));
+  {const px=846,py=c+26;s+=box(px,py,110,112,C.pan,C.ink,0)+lab(px+10,py+16,'MOVE TO')+ln(rx+rw-70,c+50-9,px,py+30,C.ink,1,'3 3');[['mine','KILN'],['farm','PALE'],['mine','VESPER'],['works','HOLLOW']].forEach((r,i)=>{s+=(i==1?box(px+4,py+24+i*21,102,19,C.pan2,'none',0):'')+wm(r[0],px+16,py+34+i*21,.8,1)+t(px+30,py+38+i*21,r[1],10,C.ink,'start',700,'.06em')});s+=pin(8,px+110,py)}
+  s+=t(rx,c+26+72+2,'Carries 7.1 /yr of the 9.4 the world gives.',9.5,C.people);
+  const c2=c+124;s+=sec(rx,c2,rw,'ADD A HULL')+box(rx+rw-176,c2-11,72,14,C.ink,'none',0)+t(rx+rw-140,c2-1,'FREE · 3',8,'#000','middle',800,'.1em')+box(rx+rw-100,c2-11,100,14,C.bg,C.mid,0)+t(rx+rw-50,c2-1,'OTHER LINES · 42',8,C.ink,'middle',800,'.1em')+pin(9,rx+rw-50,c2-22);
+  [['s-c','Courier I no.7','hold 70 · 3.0 yr/s','ASSIGN','pri'],['s-t','Hauler IV no.96','hold 3 318 · 2.6 yr/s','ASSIGN','pri'],['s-c','Courier I no.2','reach ring 1 — too short','—','off',C.red]].forEach((r,i)=>s+=hrow(rx,c2+26+i*24,rw,r[0],r[1],r[2],r[3],r[4],r[5]));
+  const c3=c2+112;s+=sec(rx,c3,rw,'OR ORDER A NEW ONE','YARD · GEN IV');
+  [['s-c','COURIER',[['metal','553'],['parts','172']],'6 yrs',1],['s-t','HAULER',[['metal','1 797'],['parts','190']],'9 yrs',1],['s-f','FREIGHTER',[['metal','4 424'],['parts','456',1]],'259 parts short',0]].forEach((r,i)=>{const bx=rx+i*116;
+    s+=box(bx,c3+16,108,84,C.bg,r[4]?C.mid:C.dim,0,r[4]?'':'stroke-dasharray="3 3"')+u(r[0],bx+18,c3+33,1.1,r[4]?C.ink:C.dim)+t(bx+36,c3+37,r[1],9.5,r[4]?C.ink:C.dim,'start',800,'.08em')+price(bx+8,c3+58,r[2],50)+(r[4]?btn(bx+8,c3+72,92,20,'ORDER · '+r[3].toUpperCase(),'pri'):t(bx+54,c3+86,r[3],9,C.red,'middle',700))});
+  const c4=c3+118;s+=box(rx,c4,12,12,C.ink,'none',0)+t(rx+6,c4+10,'✓',10,'#000','middle',800)+t(rx+20,c4+10,'Rebuild a lost hull on this line without asking',10,C.mid);
+  s+=btn(116,310,32,40,'‹')+btn(852,330,32,40,'›');
+  s+=pin(1,x,y+60)+pin(2,x+w,y+84)+pin(3,x+w,c2+30)+pin(4,x+w,c2+74)+pin(5,x+w,c3+58)+pin(6,rx-14,c4+6)+pin(7,132,296);return s};
+const FREE={t:'МЕНЮ МИРА · СВОБОДНЫЙ',idea:'То же окно, но одно решение: заселять или нет.',
+ leg:['Что здесь есть и как далеко','Кто повезёт поселенцев — выбираешь из свободных','Одна кнопка; нельзя — на ней причина'],
+ plus:'свободный мир не показывает пустые блоки судов и техники',minus:'нет',
+ draw(){let s=chrome()+mapL(513,345,225,{op:.25,noNames:1});const x=260,y=140,w=440,h=330;
+  s+=panel(x,y,w,h,'TS-2 HARROW','FARM · RING 3 · FREE',(a,b)=>wm('farm',a,b,1.2,0));
+  s+=sec(x+18,y+52,w-36,'WORLD')+row(x+18,y+76,w-36,'Deposit','28 400 rations',C.food)+row(x+18,y+93,w-36,'Crossing','14 yrs one way')+row(x+18,y+110,w-36,'Sector','HEMERA · calm');
+  s+=sec(x+18,y+140,w-36,'FOUND A COLONY')+row(x+18,y+164,w-36,'Settlers','52 people',C.people)+lab(x+18,y+184,'WHO GOES',C.dim)+[['Courier I no.7','hold 70 · arrives in 14 yrs',1],['Hauler IV no.96','hold 3 318 · arrives in 16 yrs',0]].map((r,i)=>circ(x+24,y+198+i*20,5,r[2]?C.ink:C.bg,C.mid,1)+t(x+38,y+202+i*20,r[0],10.5,C.ink,'start',700)+t(x+150,y+202+i*20,r[1],9.5,C.mid)).join('');
+  s+=lab(x+18,y+246,'PRICE')+price(x+70,y+246,[['metal','180'],['food','240'],['fuel','90'],['people','52']],64);
+  s+=btn(x+18,y+260,w-36,28,'SEND SETTLERS','pri')+t(x+w/2,y+308,'After landfall you order hulls for the line in this same window.',9.5,C.dim,'middle');
+  s+=btn(216,290,32,40,'‹')+btn(712,290,32,40,'›');
+  s+=pin(1,x,y+80)+pin(2,x,y+200)+pin(3,x+w,y+274);return s}};
+{const keep=[M[0],M[3],FREE,M[5],M[6],M[7],M[8],M[9]];M.length=0;keep.forEach(m=>M.push(m));
+ M[0].t='ГЛАВНЫЙ ЭКРАН';}
+{const old0=M[0].draw;M[0].draw=()=>{let s=old0();
+  [['Can chart ring 7',C.food],['1 hull built',C.ink],['3 hulls idle at the pier',C.people],['Level II in reach',C.ark]].forEach((f,i)=>{const y=90+i*72+24,w=f[0].length*5.7+24;
+    s+=`<path d="M66 ${y+12}l7 -6v12z" fill="${f[1]}"/>`+box(72,y,w,24,C.pan,f[1],0)+t(84,y+16,f[0],10,f[1],'start',700)});
+  [['s-t','Hauler IV','→ CINDER',.7,'2 yrs'],['s-c','Courier IV','→ free',.2,'6 yrs']].forEach((c,i)=>{const x=764,y=100+i*44;
+    s+=box(x,y,184,38,C.pan,C.dim,0,'opacity=".92"')+u(c[0],x+16,y+14,.9,C.ink)+t(x+32,y+17,c[1],10,C.ink,'start',700)+t(x+90,y+17,c[2],9.5,C.mid)+t(x+174,y+17,c[4],9.5,C.ink,'end',700)+prog(x+10,y+27,164,c[3])});
+  s+=lab(948,198,'YARD · 2 BUILDING',C.dim,'end');
+  return s+pin(7,238,198)+pin(8,750,119)};
+ M[0].leg.push('Флажок напротив вкладки: что там случилось, в три слова','Строится — карточка с полосой в углу; достроилось — исчезает, на верфи загорается флажок');
+ M[0].plus='карта получает весь экран; что строится и что ждёт — видно без открытия меню';M[0].minus='флажок и советник не должны говорить об одном и том же';}
+document.getElementById('grid').innerHTML=M.map((m,i)=>`<section class="card"><h2><b>${String(i+1).padStart(2,'0')}</b>${m.t}</h2><p class="idea">${m.idea}</p><svg class="m" viewBox="0 0 960 600" role="img" aria-label="${m.t}">${m.draw()}</svg><ol>${m.leg.map((l,j)=>`<li><i>${j+1}</i>${l}</li>`).join('')}</ol><p class="pm"><span class="p">＋</span> ${m.plus} &nbsp; <span class="n">−</span> ${m.minus}</p></section>`).join('');
+</script>
+</body>
+</html>

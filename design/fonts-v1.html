@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — шрифты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;700;800&family=JetBrains+Mono:wght@400;700&family=Grenze+Gotisch:wght@500;700&family=UnifrakturMaguntia&family=Ruslan+Display&family=PT+Serif:wght@400;700&family=Cinzel:wght@600;800&family=Cormorant+SC:wght@600;700&family=Spectral:wght@400;600&family=IBM+Plex+Mono:wght@400;600&family=Old+Standard+TT:wght@400;700&family=Tektur:wght@500;800&family=Oswald:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--pan2:#232327;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+main{max-width:1120px;margin:0 auto}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+.sub{color:var(--mid);margin:0 0 18px;font-size:13px}
+.card{border:1px solid var(--pan2);background:var(--pan);margin-bottom:14px}
+.card.rec{border-color:#3DDC84}
+.hd{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:10px 14px;border-bottom:1px solid var(--pan2)}
+.hd b{font-size:13.5px}
+.hd span{color:var(--mid);font-size:12px}
+.hd .pm{width:100%}
+.hd .p{color:#3DDC84}.hd .n{color:#FF8A1F}
+.ui{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;padding:14px}
+.strip{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--dim)}
+.strip div{padding:6px 14px;border-right:1px solid var(--dim)}
+.strip small{display:block;font-size:10px;letter-spacing:.16em;color:var(--mid)}
+.strip big{display:block;font-size:24px;line-height:1.1}
+.win{border:1px solid var(--ink);background:#0B0B0C}
+.win .tt{padding:8px 12px;background:var(--pan2);font-size:17px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:baseline}
+.win .tt small{font-size:10px;letter-spacing:.16em;color:var(--mid)}
+.win .rows{padding:8px 12px}
+.win .r{display:flex;justify-content:space-between;font-size:13px;padding:2px 0;color:var(--mid)}
+.win .r b{color:var(--ink)}
+.btns{display:flex;gap:8px;padding:4px 12px 12px}
+.btn{background:var(--ink);color:#000;padding:6px 12px;font-size:11px;letter-spacing:.14em}
+.btn.o{background:none;color:var(--red);border:1px solid var(--red)}
+.note{border:1px solid var(--red);padding:14px 16px;background:#0B0B0C}
+.note .big{font-size:26px;line-height:1.1;color:var(--red);margin-bottom:6px}
+.note p{margin:0 0 8px;font-size:13.5px;color:var(--ink)}
+.note .ru{color:var(--mid)}
+@media (max-width:760px){.ui{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>LAST BERTH — ШРИФТЫ</h1>
+<p class="sub">Один и тот же кусок игры в семи наборах: верхняя полоса с числами, окно мира, кнопки, окно важного события. В каждом окне события есть строка по-русски — проверка кириллицы.</p>
+<div id="list"></div>
+</main>
+<script>
+const SETS=[
+ {t:'0 · Как сейчас',f:'Inter Tight (заголовки, числа) + JetBrains Mono (текст)',h:"'Inter Tight',sans-serif",hw:800,b:"'JetBrains Mono',monospace",n:"'Inter Tight',sans-serif",nw:800,up:1,
+  p:'чисто, всё читается',n2:'нейтрально — без характера'},
+ {t:'1 · Готика в заголовках',f:'Grenze Gotisch (заголовки) + PT Serif (текст) + JetBrains Mono (числа)',h:"'Grenze Gotisch','Ruslan Display',serif",hw:700,b:"'PT Serif',serif",n:"'JetBrains Mono',monospace",nw:700,rec:1,
+  p:'характер «Долгой Ночи» там, где он нужен: имена миров, события, Ночь',n2:'у готики нет кириллицы: русские заголовки подменяются другим шрифтом (Ruslan Display) — видно в строке события'},
+ {t:'2 · Готика везде',f:'UnifrakturMaguntia — заголовки, текст и числа',h:"'UnifrakturMaguntia','Ruslan Display',serif",hw:400,b:"'UnifrakturMaguntia','Ruslan Display',serif",n:"'UnifrakturMaguntia',serif",nw:400,
+  p:'атмосфера на максимум',n2:'числа и мелкий текст не читаются — для игры на цифрах не годится; показываю, чтобы было видно почему'},
+ {t:'3 · Имперская антиква',f:'Cinzel / Cormorant SC (заголовки) + Spectral (текст) + IBM Plex Mono (числа)',h:"'Cinzel','Cormorant SC',serif",hw:800,b:"'Spectral',serif",n:"'IBM Plex Mono',monospace",nw:600,
+  p:'торжественно, как надпись на камне; читается лучше готики',n2:'у Cinzel нет кириллицы — русский заголовок уходит в Cormorant SC, он похож, но не тот'},
+ {t:'4 · Старая типографика',f:'Old Standard TT (заголовки и текст) + IBM Plex Mono (числа)',h:"'Old Standard TT',serif",hw:700,b:"'Old Standard TT',serif",n:"'IBM Plex Mono',monospace",nw:600,
+  p:'книжный, «архивный» вид; кириллица родная — русский и английский одинаковы',n2:'мягче, чем хочется для пульта'},
+ {t:'5 · Пульт',f:'Tektur (заголовки) + IBM Plex Mono (текст и числа)',h:"'Tektur',sans-serif",hw:800,b:"'IBM Plex Mono',monospace",n:"'IBM Plex Mono',monospace",nw:600,up:1,
+  p:'техника, приборы, диспетчерская; кириллица есть',n2:'близко к научной фантастике «вообще», мало своего'},
+ {t:'6 · Узкий плакат',f:'Oswald (заголовки и числа) + IBM Plex Mono (текст)',h:"'Oswald',sans-serif",hw:700,b:"'IBM Plex Mono',monospace",n:"'Oswald',sans-serif",nw:700,up:1,
+  p:'плотный, много влезает в узкую панель; кириллица есть',n2:'похож на нынешний — шаг небольшой'}
+];
+const up=(s,u)=>u?s.toUpperCase():s;
+document.getElementById('list').innerHTML=SETS.map(s=>`<section class="card ${s.rec?'rec':''}"><div class="hd"><b>${s.t}</b><span>${s.f}</span><span class="pm"><span class="p">＋</span> ${s.p} &nbsp; <span class="n">−</span> ${s.n2}</span></div>
+<div class="ui" style="font-family:${s.b}">
+ <div class="strip">${[['Year','3005','#F2F1EC'],['Night','3735','#FF2A1A'],['Metal','5 731','#C9CFD6'],['Rations','27 920','#3DDC84'],['Fuel','19 194','#FF8A1F'],['People','2 816','#FFD23F']].map(c=>`<div><small style="font-family:${s.b}">${c[0].toUpperCase()}</small><big style="font-family:${s.n};font-weight:${s.nw};color:${c[2]}">${c[1]}</big></div>`).join('')}</div>
+ <div class="win"><div class="tt" style="font-family:${s.h};font-weight:${s.hw}">${up('Cinder',s.up)}<small style="font-family:${s.b}">MINE · RING 2</small></div>
+  <div class="rows">${[['Deposit left','6 170'],['World gives','9.4 /yr'],['People','24'],['Last lift','3580']].map(r=>`<div class="r">${r[0]}<b style="font-family:${s.n};font-weight:${s.nw}">${r[1]}</b></div>`).join('')}</div>
+  <div class="btns"><span class="btn" style="font-family:${s.b};font-weight:700">ASSIGN</span><span class="btn" style="font-family:${s.b};font-weight:700">BUILD</span><span class="btn o" style="font-family:${s.b};font-weight:700">EVACUATE</span></div></div>
+ <div class="note"><div class="big" style="font-family:${s.h};font-weight:${s.hw}">${up('The Night has a date',s.up)}</div>
+  <p>Year 3735. Whoever is not aboard the ark stays behind.</p>
+  <div class="big" style="font-family:${s.h};font-weight:${s.hw};font-size:20px">${up('Ночь назначена',s.up)}</div>
+  <p class="ru">3735 год. Кто не на ковчеге — остаётся.</p></div>
+</div></section>`).join('');
+</script>
+</body>
+</html>

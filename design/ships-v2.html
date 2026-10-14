@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — суда на карте</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--pan2:#232327;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+main{max-width:1120px;margin:0 auto}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+h2{font-size:15px;margin:30px 0 2px;letter-spacing:.06em}
+.sub,.note{color:var(--mid);margin:0 0 12px;font-size:13px}
+.row{display:grid;grid-template-columns:minmax(0,250px) minmax(0,330px) minmax(0,1fr);gap:16px;padding:14px;border:1px solid var(--pan2);background:var(--pan);margin-bottom:8px;align-items:center}
+.row.rec{border-color:#3DDC84}
+.row .t b{display:block;font-size:13px;margin-bottom:4px}
+.row .t span{color:var(--mid);font-size:12.5px;display:block}
+.row .t .pm{margin-top:6px}
+.row .t .p{color:#3DDC84}.row .t .n{color:#FF8A1F}
+.cls{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.cls div{display:flex;flex-direction:column;align-items:flex-start;gap:6px}
+.cls em{font-style:normal;color:var(--mid);font-size:11.5px}
+.cls .sm{display:flex;gap:10px;align-items:center}
+.map{width:100%;height:auto;border:1px solid var(--pan2);background:#0B0B0C}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.c{background:var(--pan);border:1px solid var(--pan2);padding:10px;display:flex;flex-direction:column;gap:4px;min-height:110px}
+.c.rec{border-color:#3DDC84}
+.c .ib{display:flex;align-items:flex-end;gap:10px;height:44px}
+.c b{font-size:12.5px}
+.c i{font-style:normal;color:var(--mid);font-size:11.5px}
+@media (max-width:820px){.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>LAST BERTH — СУДА НА КАРТЕ</h1>
+<p class="sub">Вид сверху, нос по ходу движения. Справа в каждом ряду — живой кусок карты в настоящем масштабе: суда ходят по линиям и поворачиваются.</p>
+<div id="rows"></div>
+<h2>Значок постройки — замена «виселицы»</h2>
+<p class="note">Кран-балка читалась как виселица. Три замены; та же картинка нужна для вкладки верфи и состояния «на верфи».</p>
+<div class="grid" id="build"></div>
+</main>
+<script>
+const C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',pan2:'#232327'};
+const ST='fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"';
+const F='fill="currentColor"';
+const fp=(d,x='')=>`<path d="${d}" ${x} ${F}/>`;
+const g=(d,x='')=>`<path d="${d}" ${x} ${ST}/>`;
+const R=(x,y,w,h,x2='')=>`<rect x="${x}" y="${y}" width="${w}" height="${h}" ${x2} ${F}/>`;
+
+/* every hull: centred on 0,0, nose to +x. cargo: colour for the loaded pods, or null */
+const V=[
+ {k:'E',t:'Д · Поезд: класс = число вагонов',rec:1,
+  v:'Голова и сцепка грузовых секций. Курьер — одна голова, тягач — голова и вагон, грузовоз — голова и три вагона. Длина видна при любом повороте.',
+  p:'длину видно в 10 px, правило без объяснений',n:'грузовоз длинный — на тесной карте налезает на подписи',
+  s:[c=>fp('M7 0 L-5 -4.5 L-2.5 0 L-5 4.5 Z'),
+     c=>fp('M10 0 L3 -4.5 V4.5 Z')+g('M3 0 H1.5')+R(-6,-3.5,7.5,7,c?`style="color:${c}"`:'opacity=".55"'),
+     c=>fp('M15 0 L8 -4.5 V4.5 Z')+R(-0.5,-3.5,7.5,7,c?`style="color:${c}"`:'opacity=".55"')+R(-9.5,-3.5,7.5,7,c?`style="color:${c}"`:'opacity=".55"')+R(-18.5,-3.5,7.5,7,c?`style="color:${c}"`:'opacity=".55"')]},
+ {k:'F',t:'Е · Три фигуры: дротик, кирпич, капсула',
+  v:'Разные геометрические фигуры вместо размера. Узнаются по контуру, даже если все три одной длины.',
+  p:'самое чёткое различие в 8–10 px',n:'абстрактно: что внутри «кирпича», игрок не видит',
+  s:[c=>fp('M8 0 L-6 -5.5 L-6 5.5 Z'),
+     c=>fp('M-6 -5.5 H5 V5.5 H-6 Z')+g('M5 -3.5 H9 M5 3.5 H9'),
+     c=>fp('M-14 -5 H9 A5 5 0 0 1 9 5 H-14 Z')]},
+ {k:'G',t:'Ж · Один шеврон, три размера',
+  v:'Одна фигура, размер = класс. Как стрелки маршрутов в стратегиях.',
+  p:'проще некуда, читается направление',n:'при приближении карты размеры путаются: крупный курьер = мелкий грузовоз',
+  s:[c=>fp('M5 0 L-4 -4 L-2 0 L-4 4 Z'),
+     c=>fp('M8 0 L-6.5 -6.5 L-3 0 L-6.5 6.5 Z'),
+     c=>fp('M12 0 L-10 -9.5 L-5 0 L-10 9.5 Z')]},
+ {k:'H',t:'З · Космические силуэты сверху',
+  v:'Курьер со стреловидными крыльями, тягач с захватами, грузовоз — широкая палуба с контейнерами.',
+  p:'самые «настоящие», лучше всего на крупном плане',n:'в 10 px детали сливаются, тягач и курьер похожи',
+  s:[c=>fp('M9 0 L-1 -1.6 L-5 -5.5 L-4.5 -1.3 L-7 0 L-4.5 1.3 L-5 5.5 L-1 1.6 Z'),
+     c=>fp('M-7 -4 H3 V-6.5 H10 V-4 H5.5 V4 H10 V6.5 H3 V4 H-7 Z')+fp('M-9 -2.5 H-7 V2.5 H-9 Z','opacity=".6"'),
+     c=>fp('M-14 -6.5 H8 L12 -3 V3 L8 6.5 H-14 Z')+g('M-10 -6.5 V6.5 M-4.5 -6.5 V6.5 M1 -6.5 V6.5 M-14 0 H8','stroke="#0B0B0C"')]},
+ {k:'I',t:'И · Кометы: точка и хвост',
+  v:'Не корабль, а метка движения. Размер головы и длина хвоста = класс.',
+  p:'карта остаётся спокойной при сотне судов',n:'классы различаются хуже всего; нужна подсказка при наведении',
+  s:[c=>`<circle r="2.6" ${F}/>`+g('M-2.6 0 H-9','opacity=".5"'),
+     c=>`<circle r="3.8" ${F}/>`+g('M-3.8 0 H-16','opacity=".5" stroke-width="2.4"'),
+     c=>R(-4.5,-4.5,9,9)+g('M-4.5 0 H-24','opacity=".5" stroke-width="3.4"')]},
+ {k:'J',t:'К · Модули (Г из прошлого листа)',
+  v:'Нос, секции, двигатель — тот же принцип, что у «поезда», но секции сплошной трубой.',
+  p:'класс по числу секций',n:'в повороте секции сливаются в полосу — «поезд» с промежутками читается лучше',
+  s:[c=>fp('M8 0 L3 -4 H1 V4 H3 Z')+fp('M0 -3 H-5 V3 H0 Z','opacity=".55"'),
+     c=>fp('M12 0 L7 -4 H5 V4 H7 Z')+g('M-4 -3.5 H4 V3.5 H-4 Z M4 -3.5 V3.5 M0 -3.5 V3.5')+fp('M-5 -3 H-9 V3 H-5 Z','opacity=".55"'),
+     c=>fp('M16 0 L11 -4 H9 V4 H11 Z')+g('M-12 -3.5 H8 V3.5 H-12 Z M-8 -3.5 V3.5 M-4 -3.5 V3.5 M0 -3.5 V3.5 M4 -3.5 V3.5')+fp('M-13 -3 H-17 V3 H-13 Z','opacity=".55"')]}
+];
+const VB=['-10 -8 20 16','-10 -8 22 16','-21 -10 38 20'];
+const one=(f,vb,w,col=C.ink,cargo=null)=>`<svg viewBox="${vb}" width="${w}" style="color:${col}" aria-hidden="true">${f(cargo)}</svg>`;
+
+/* a piece of the real map: Earth, three lines, hulls going out and back */
+function mini(v,withCargo){
+  const E=[70,96],W=[[300,30,'mine',C.metal],[318,150,'farm',C.food],[190,176,'well',C.fuel]];
+  let s=`<svg class="map" viewBox="0 0 360 200" aria-hidden="true">`;
+  [60,120,190,250].forEach(r=>s+=`<circle cx="${E[0]}" cy="${E[1]}" r="${r}" fill="none" stroke="${C.dim}" stroke-dasharray="1 4"/>`);
+  W.forEach(w=>s+=`<path d="M${E[0]} ${E[1]}L${w[0]} ${w[1]}" stroke="${w[3]}" stroke-opacity=".45" stroke-width="1.4"/>`);
+  const mk={mine:'<circle r="6"/>',farm:'<rect x="-5.5" y="-5.5" width="11" height="11"/>',well:'<path d="M0-7L7 0L0 7L-7 0Z"/>'};
+  W.forEach(w=>s+=`<g transform="translate(${w[0]} ${w[1]})" fill="${w[3]}">${mk[w[2]]}</g><text x="${w[0]-12}" y="${w[1]+(w[1]<100?-10:20)}" fill="${C.ink}" font-size="8.5" font-family="Arial" font-weight="700" letter-spacing=".08em">${{mine:'KILN',farm:'PALE',well:'WICK'}[w[2]]}</text>`);
+  s+=`<circle cx="${E[0]}" cy="${E[1]}" r="10" fill="${C.earth}"/>`;
+  const plan=[[0,2,9,0],[0,1,9,4.5],[1,0,12,1],[1,1,12,7],[2,2,16,3],[2,1,16,11],[0,0,7,2]];
+  plan.forEach((p,i)=>{const w=W[p[1]],d=`M${E[0]} ${E[1]} L${w[0]} ${w[1]} L${E[0]} ${E[1]}`;
+    const cargo=withCargo?w[3]:null, full=withCargo;
+    s+=`<g style="color:${C.ink}"><g>${v.s[p[0]](cargo)}</g><animateMotion dur="${p[2]}s" begin="-${p[3]}s" repeatCount="indefinite" rotate="auto" path="${d}"/></g>`});
+  return s+'</svg>';
+}
+document.getElementById('rows').innerHTML=V.map(v=>`<div class="row ${v.rec?'rec':''}"><div class="t"><b>${v.t}</b><span>${v.v}</span><span class="pm"><span class="p">＋</span> ${v.p}</span><span class="pm"><span class="n">−</span> ${v.n}</span></div>
+ <div class="cls">${v.s.map((f,i)=>`<div>${one(f,VB[2],96)}<div class="sm">${one(f,VB[2],40)}${one(f,VB[2],24)}</div><em>${['курьер','тягач','грузовоз'][i]}</em></div>`).join('')}</div>
+ <div>${mini(v,false)}</div></div>`).join('')
+ +`<div class="row rec"><div class="t"><b>Д + груз · вагоны в цвете груза</b><span>Добавка к «поезду»: гружёный вагон окрашен в цвет ресурса, пустой — серый. С карты видно, что везут и куда — без подписи.</span><span class="pm"><span class="p">＋</span> карта сама показывает поток металла, еды и топлива</span><span class="pm"><span class="n">−</span> курьер без вагонов — его груз не виден</span></div>
+ <div class="cls">${V[0].s.map((f,i)=>`<div>${one(f,VB[2],96,C.ink,[null,C.food,C.metal][i])}<div class="sm">${one(f,VB[2],40,C.ink,[null,C.food,C.metal][i])}${one(f,VB[2],24,C.ink,[null,C.food,C.metal][i])}</div><em>${['курьер','тягач с едой','грузовоз с металлом'][i]}</em></div>`).join('')}</div>
+ <div>${mini(V[0],true)}</div></div>`;
+
+const B=[
+ ['Полкорпуса: собранная часть сплошная, остальное — пунктир',fp('M2 12 L6 8 H11 V16 H6 Z')+g('M11 8 H16 L20 12 L16 16 H11','stroke-dasharray="2.2 2"'),1],
+ ['Контур судна с плюсом',g('M2 13 L6 9 H14 L17 13 L14 17 H6 Z','stroke-dasharray="2.2 2"')+g('M19 3 V9 M16 6 H22','stroke-width="2.2"'),0],
+ ['Молоток',fp('M11 3 H21 V8 H11 Z')+g('M14.5 8 L5 20','stroke-width="2.6"'),0],
+ ['Вкладка верфи: судно в сухом доке',g('M3 6 V19 H21 V6')+fp('M6 13 L9 10 H15 L18 13 L15 16 H9 Z'),1],
+ ['Состояние «на верфи» (маленькое)',fp('M2 12 L6 8 H11 V16 H6 Z')+g('M11 8 H16 L20 12 L16 16 H11','stroke-dasharray="2.2 2"'),1]];
+document.getElementById('build').innerHTML=B.map(b=>`<div class="c ${b[2]?'rec':''}"><div class="ib"><svg viewBox="0 0 24 24" width="34" style="color:${C.ink}">${b[1]}</svg><svg viewBox="0 0 24 24" width="16" style="color:${C.ink}">${b[1]}</svg></div><b>${b[0]}</b>${b[2]?'<i>рекомендую</i>':''}</div>`).join('');
+</script>
+</body>
+</html>

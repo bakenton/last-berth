@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — шрифты, заход 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;700;800&family=JetBrains+Mono:wght@400;700&family=Unbounded:wght@600;700&family=Geist:wght@400;600&family=Geist+Mono:wght@400;600&family=Sofia+Sans+Extra+Condensed:wght@700;800&family=Martian+Mono:wght@400;600&family=Geologica:wght@400;800&family=Exo+2:wght@400;800&family=Advent+Pro:wght@400;700&family=Jost:wght@400;600&family=Onest:wght@400;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0C;--pan:#17171A;--pan2:#232327;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 ui-monospace,Consolas,Menlo,monospace;padding:20px 16px 60px}
+main{max-width:1120px;margin:0 auto}
+h1{font-size:18px;margin:0 0 4px;letter-spacing:.08em}
+.sub{color:var(--mid);margin:0 0 18px;font-size:13px}
+.card{border:1px solid var(--pan2);background:var(--pan);margin-bottom:14px}
+.card.rec{border-color:#3DDC84}
+.hd{display:flex;flex-wrap:wrap;gap:4px 14px;align-items:baseline;padding:10px 14px;border-bottom:1px solid var(--pan2)}
+.hd b{font-size:13.5px}
+.hd span{color:var(--mid);font-size:12px}
+.hd .pm{width:100%}
+.hd .p{color:#3DDC84}.hd .n{color:#FF8A1F}
+.ui{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px;padding:14px}
+.strip{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:0;border:1px solid var(--dim)}
+.strip div{padding:6px 14px;border-right:1px solid var(--dim)}
+.strip small{display:block;font-size:10px;letter-spacing:.16em;color:var(--mid)}
+.strip big{display:block;font-size:24px;line-height:1.1}
+.win{border:1px solid var(--ink);background:#0B0B0C}
+.win .tt{padding:8px 12px;background:var(--pan2);font-size:17px;letter-spacing:.06em;display:flex;justify-content:space-between;align-items:baseline}
+.win .tt small{font-size:10px;letter-spacing:.16em;color:var(--mid)}
+.win .rows{padding:8px 12px}
+.win .r{display:flex;justify-content:space-between;font-size:13px;padding:2px 0;color:var(--mid)}
+.win .r b{color:var(--ink)}
+.btns{display:flex;gap:8px;padding:4px 12px 12px}
+.btn{background:var(--ink);color:#000;padding:6px 12px;font-size:11px;letter-spacing:.14em}
+.btn.o{background:none;color:var(--red);border:1px solid var(--red)}
+.note{border:1px solid var(--red);padding:14px 16px;background:#0B0B0C}
+.note .big{font-size:26px;line-height:1.1;color:var(--red);margin-bottom:6px}
+.note p{margin:0 0 8px;font-size:13.5px;color:var(--ink)}
+.note .ru{color:var(--mid)}
+@media (max-width:760px){.ui{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+<h1>LAST BERTH — ШРИФТЫ, ЗАХОД 2: СОВРЕМЕННАЯ ФАНТАСТИКА</h1>
+<p class="sub">У всех наборов полная кириллица — проверено по Google Fonts. Один и тот же кусок игры в восьми наборах: верхняя полоса с числами, окно мира, кнопки, окно важного события. В каждом окне события есть строка по-русски — проверка кириллицы.</p>
+<div id="list"></div>
+</main>
+<script>
+const SETS=[
+ {t:'0 · Как сейчас',f:'Inter Tight (заголовки, числа) + JetBrains Mono (текст)',h:"'Inter Tight',sans-serif",hw:800,b:"'JetBrains Mono',monospace",n:"'Inter Tight',sans-serif",nw:800,up:1,
+  p:'чисто, всё читается',n2:'нейтрально, без характера'},
+ {t:'1 · Широкий геометрический',f:'Unbounded (заголовки) + Geist (текст) + Geist Mono (числа)',h:"'Unbounded',sans-serif",hw:700,b:"'Geist',sans-serif",n:"'Geist Mono',monospace",nw:600,up:1,rec:1,
+  p:'самый современный вид: так сейчас выглядят космические и технологические бренды; кириллица полная',n2:'широкий — длинные имена миров в узкой панели придётся сокращать'},
+ {t:'2 · Узкий интерфейс корабля',f:'Sofia Sans Extra Condensed (заголовки и числа) + Martian Mono (текст)',h:"'Sofia Sans Extra Condensed',sans-serif",hw:800,b:"'Martian Mono',monospace",n:"'Sofia Sans Extra Condensed',sans-serif",nw:800,up:1,
+  p:'высокий и плотный, как бортовые экраны в современной фантастике; в узкую панель влезает больше',n2:'крупные узкие цифры прыгают по ширине, когда меняются'},
+ {t:'3 · Острый гротеск',f:'Geologica (заголовки) + Geologica (текст) + Geist Mono (числа)',h:"'Geologica',sans-serif",hw:800,b:"'Geologica',sans-serif",n:"'Geist Mono',monospace",nw:600,up:1,
+  p:'строгий современный гротеск с рублеными концами — холодно, по-инженерному',n2:'спокойнее остальных — «фантастика» в нём только в цвете и сетке'},
+ {t:'4 · Классическая фантастика',f:'Exo 2 (заголовки и текст) + Martian Mono (числа)',h:"'Exo 2',sans-serif",hw:800,b:"'Exo 2',sans-serif",n:"'Martian Mono',monospace",nw:600,up:1,
+  p:'сразу читается как космос',n2:'встречается в сотнях инди-игр — мало своего'},
+ {t:'5 · Тонкий футуризм',f:'Advent Pro (заголовки) + Geist (текст) + Geist Mono (числа)',h:"'Advent Pro',sans-serif",hw:700,b:"'Geist',sans-serif",n:"'Geist Mono',monospace",nw:600,up:1,
+  p:'лёгкий, «стеклянный», как интерфейсы из фильмов о космосе',n2:'тонкий — на тёмном фоне в мелком размере теряется'},
+ {t:'6 · Ретро-модерн',f:'Jost (заголовки и текст) + Geist Mono (числа)',h:"'Jost',sans-serif",hw:600,b:"'Jost',sans-serif",n:"'Geist Mono',monospace",nw:600,up:1,
+  p:'наследник Futura — шрифта «Космической одиссеи»; современный и узнаваемо космический',n2:'мягкие круглые формы — меньше напряжения, чем у остальных'},
+ {t:'7 · Чистый современный интерфейс',f:'Onest (заголовки и текст) + Martian Mono (числа)',h:"'Onest',sans-serif",hw:800,b:"'Onest',sans-serif",n:"'Martian Mono',monospace",nw:600,up:1,
+  p:'аккуратно, как хорошее приложение; русский и английский одинаково хороши',n2:'почти как нынешний — фантастику делают цвет и значки, не шрифт'}
+];
+const up=(s,u)=>u?s.toUpperCase():s;
+document.getElementById('list').innerHTML=SETS.map(s=>`<section class="card ${s.rec?'rec':''}"><div class="hd"><b>${s.t}</b><span>${s.f}</span><span class="pm"><span class="p">＋</span> ${s.p} &nbsp; <span class="n">−</span> ${s.n2}</span></div>
+<div class="ui" style="font-family:${s.b}">
+ <div class="strip">${[['Year','3005','#F2F1EC'],['Night','3735','#FF2A1A'],['Metal','5 731','#C9CFD6'],['Rations','27 920','#3DDC84'],['Fuel','19 194','#FF8A1F'],['People','2 816','#FFD23F']].map(c=>`<div><small style="font-family:${s.b}">${c[0].toUpperCase()}</small><big style="font-family:${s.n};font-weight:${s.nw};color:${c[2]}">${c[1]}</big></div>`).join('')}</div>
+ <div class="win"><div class="tt" style="font-family:${s.h};font-weight:${s.hw}">${up('Cinder',s.up)}<small style="font-family:${s.b}">MINE · RING 2</small></div>
+  <div class="rows">${[['Deposit left','6 170'],['World gives','9.4 /yr'],['People','24'],['Last lift','3580']].map(r=>`<div class="r">${r[0]}<b style="font-family:${s.n};font-weight:${s.nw}">${r[1]}</b></div>`).join('')}</div>
+  <div class="btns"><span class="btn" style="font-family:${s.b};font-weight:700">ASSIGN</span><span class="btn" style="font-family:${s.b};font-weight:700">BUILD</span><span class="btn o" style="font-family:${s.b};font-weight:700">EVACUATE</span></div></div>
+ <div class="note"><div class="big" style="font-family:${s.h};font-weight:${s.hw}">${up('The Night has a date',s.up)}</div>
+  <p>Year 3735. Whoever is not aboard the ark stays behind.</p>
+  <div class="big" style="font-family:${s.h};font-weight:${s.hw};font-size:20px">${up('Ночь назначена',s.up)}</div>
+  <p class="ru">3735 год. Кто не на ковчеге — остаётся.</p></div>
+</div></section>`).join('');
+</script>
+</body>
+</html>
