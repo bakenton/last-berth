@@ -507,7 +507,7 @@ const clone=o=>JSON.parse(JSON.stringify(o));
 const MID={W:clone(W),H:clone(H),BUILD:clone(BUILD)};
 /* faceless android: smooth head, a visor line, a jointed neck — the character comes later */
 const AVA=`<svg viewBox="0 0 72 72" width="72" height="72"><rect width="72" height="72" fill="#202024"/><path d="M9 72 C11 58 23 54 36 54 C49 54 61 58 63 72 Z" fill="#3A3A40"/><path d="M22 62 H50" stroke="#5E5D58" stroke-width="1.2"/><rect x="31.5" y="42" width="9" height="12" fill="#5E5D58"/><path d="M31.5 46 H40.5 M31.5 50 H40.5" stroke="#202024" stroke-width="1.2"/><ellipse cx="36" cy="28" rx="12.5" ry="15" fill="#9C9B95"/><path d="M36 13 C30 13 25 17 23.6 23" stroke="#C9C8C2" stroke-width="1.4" fill="none"/><rect x="25" y="27" width="22" height="2.6" fill="#FFD23F"/><path d="M48.5 24 V34" stroke="#5E5D58" stroke-width="1.2"/></svg>`;
-const HNAME='ALEX';   /* working name (Nikita 15.10): plain and abstract, like David in Prometheus */
+const HNAME='ALEXANDRA';   /* Nikita 15.10 */
 const EW=()=>[
  {id:'kiln',n:'KILN',k:'mine',ring:1,a:20,st:'free',f:{dep:'5 300',cross:'4 yrs one way',sec:'EOS · calm'}},
  {id:'pale',n:'PALE',k:'farm',ring:1,a:140,st:'free',f:{dep:'12 800',cross:'5 yrs one way',sec:'HEMERA · calm'}},
@@ -610,7 +610,7 @@ function drawScript(){el('m-mid').className=TUT.on?'':'on';el('m-tut').className
   el('scr').innerHTML=`<h3>Обучение: что и когда открывается</h3>
   <p>Шаг открывает <b>состояние забега</b>, а не таймер и не кнопка «далее»: условие вроде «у причала нет свободного судна» рано или поздно наступает, застрять нельзя. Пока говорит помощник, <b>время стоит</b>, экран темнеет, светлое — то, о чём речь. Новая вкладка встаёт на своё место (места не прыгают) с жёлтой точкой; точка гаснет при первом открытии. На первом сообщении — <b>SKIP THE HELPER</b>: открывается всё сразу; в ≡ — Helper on/off.</p>
   <p><b>Ресурсы — по мере хода.</b> Ресурс появляется на экране в тот момент, когда впервые нужен: в цене, которую игрок видит, или в первой доставке. Ни одна цена и ни один расход Земли не берут ресурс, которого игрок ещё не видит. Старт — голод: RATIONS и PEOPLE; FUEL — в цене первых поселенцев; METAL — в цене первого судна; PARTS — в цене тягача или с первыми деталями.</p>
-  <p><b>Помощник — андроид,</b> пока безликий; позже — конкретный персонаж, женщина-андроид. Рабочее имя — <b>ALEX / АЛЕКС</b>: простое и абстрактное, как Дэвид в «Прометее».</p>
+  <p><b>Помощник — андроид,</b> пока безликий; позже — конкретный персонаж, женщина-андроид. Имя — <b>ALEXANDRA / АЛЕКСАНДРА</b> (Никита 15.10).</p>
   <p>В макете шаги-«сделай» идут сами; после шагов-«смотри» внизу слева появляется пунктирная кнопка «Дальше» — это не игра, а перемотка к следующему условию.</p>
   ${STEPS.map((s,i)=>`<div class="st1${TUT.on&&TUT.step===i?' cur':''}"><i>${i+1}</i><div><b>${s.t}</b><em>КОГДА</em>${s.when}<em>ОТКРЫВАЕТ</em><div class="opn">${s.opens.length?s.opens.map(o=>`<span>${OPN[o]}</span>`).join(''):'<span>—</span>'}</div></div><div>${s.msgs.map(msg).join('')}</div>${btn('ПОКАЗАТЬ','tgo',i)}</div>`).join('')}
   <h3>Подсказки по случаю — один раз, когда это впервые случилось</h3>
