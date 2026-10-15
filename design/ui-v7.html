@@ -195,9 +195,18 @@ svg.gi{fill:currentColor}
 .st1 .b{width:100%}.st1 .b+.b{margin-top:6px}
 .opn{display:flex;flex-wrap:wrap;gap:4px}.opn span{border:1px solid var(--ln);padding:1px 6px;font-size:11.5px;color:var(--ink)}
 /* narrative: launch screen (E), Alexandra's voice (V), the big window (W) */
-#launch{position:absolute;inset:0;z-index:30;background:#000;display:none;flex-direction:column;justify-content:center;padding:0 210px;cursor:pointer}
-#launch.on{display:flex}#launch.out{animation:lout .6s forwards}@keyframes lout{to{opacity:0}}
-.lcap{font-size:11px;letter-spacing:.34em;color:var(--dim);font-weight:600;margin-bottom:28px;opacity:0;animation:lin .8s forwards}
+#launch{position:absolute;inset:0;z-index:30;background:#000;display:none;cursor:pointer;overflow:hidden}
+#launch.on{display:block}#launch.out{animation:lout .6s forwards}@keyframes lout{to{opacity:0}}
+.lcap{position:absolute;left:40px;top:30px;z-index:2;font-size:11px;letter-spacing:.34em;color:var(--dim);font-weight:600;opacity:0;animation:lin .8s forwards}
+/* one frame per line: picture band, slow push-in, the line under it; the last one dives into the map */
+.lfr{position:absolute;inset:0;opacity:0;transition:opacity .9s}.lfr.on{opacity:1}
+.lfr img{position:absolute;left:0;top:70px;width:1280px;height:533px;object-fit:cover;transform:scale(1);transition:transform 6s linear}
+.lfr.on img{transform:scale(1.06)}
+#launch.out .lfr.on img{transform:scale(1.35);transition:transform .6s ease-in}
+.lfr .lln{position:absolute;left:120px;right:120px;top:628px;text-align:center;opacity:0;animation:none}
+.lfr.on .lln{animation:lin 1s .5s forwards}
+.lskip{position:absolute;right:28px;top:22px;z-index:2;border:1px solid var(--dim);color:var(--mid);padding:5px 12px;font-size:10.5px;letter-spacing:.2em;font-weight:600}
+.ldots{position:absolute;left:0;right:0;bottom:24px;display:flex;justify-content:center;gap:8px}.ldots i{width:22px;height:2px;background:var(--ln)}.ldots i.on{background:var(--ppl)}
 .lln{font-size:24px;line-height:1.45;margin:5px 0;opacity:0;animation:lin 1.1s forwards}
 #launch.all .lln,#launch.all .lcap{animation-delay:0s!important;animation-duration:.3s}
 @keyframes lin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -215,7 +224,7 @@ svg.gi{fill:currentColor}
 .nwin>.b{align-self:flex-end;padding:8px 22px}
 .st1 .ms.nar{border-left-color:var(--mid)}.st1 .ms.nar u{color:var(--mid)}
 /* phone: the stage shrinks to ~0.3, so the story grows back by --k (set in fit) */
-#stage.small #launch{padding:0 40px}#stage.small .lln{font-size:calc(18px*var(--k))}#stage.small .lcap{font-size:calc(9px*var(--k))}
+#stage.small .lfr .lln{top:612px;left:30px;right:30px}#stage.small .lln{font-size:calc(18px*var(--k))}#stage.small .lcap{font-size:calc(9px*var(--k))}
 #stage.small #voice{zoom:var(--k);left:calc(20px/var(--k));bottom:calc(14px/var(--k));width:calc(1236px/var(--k))}
 .fm{display:inline-block;border:1px solid var(--mid);padding:0 5px;margin-right:6px;font-size:11px;color:var(--ink)}
 @media (max-width:720px){.st1{grid-template-columns:28px minmax(0,1fr)}.st1>div:nth-child(3){grid-column:2}.st1>div:nth-child(4){grid-column:2}.st1>.b{grid-column:2}}
@@ -650,15 +659,18 @@ let narT=null;
 function narReset(){clearTimeout(narT);TUT.nar=null;TUT.after=null;['launch','voice'].forEach(i=>{el(i).className='';el(i).dataset.k=''})}
 function narShow(id,fromQ){const N=NAR[id];clearTimeout(narT);if(N.pre)N.pre();TUT.nar={id,fromQ,k:String(Math.random()),t0:Date.now()};
   if(N.f==='V')narT=setTimeout(()=>{narDone();render()},8000);
-  if(N.f==='E')narT=setTimeout(launchEnd,9800)}
+  if(N.f==='E'){TUT.nar.i=0;narT=setTimeout(launchStep,5200)}}
 function narDone(){if(!TUT.nar)return;clearTimeout(narT);const N=NAR[TUT.nar.id],fq=TUT.nar.fromQ;if(N.post)N.post();TUT.nar=null;
   if(TUT.after){const n=TUT.after;TUT.after=null;show(n,false);return}
   if(fq)nextInQ();else tutWhen()}
 function launchEnd(){clearTimeout(narT);el('launch').classList.add('out');narT=setTimeout(()=>{narDone();render()},600)}
-function launchClick(){const L=el('launch');if(!TUT.nar||L.classList.contains('out'))return;
-  if(Date.now()-TUT.nar.t0<6900&&!L.classList.contains('all')){L.classList.add('all');clearTimeout(narT);narT=setTimeout(launchEnd,2600)}else launchEnd()}
+function launchFrame(i){const L=el('launch');L.querySelectorAll('.lfr').forEach((f,j)=>f.classList.toggle('on',j===i));L.querySelectorAll('.ldots i').forEach((d,j)=>d.classList.toggle('on',j<=i))}
+function launchStep(){const n=TUT.nar;if(!n||NAR[n.id].f!=='E')return;clearTimeout(narT);n.i++;if(n.i>=NAR[n.id].en.length){launchEnd();return}launchFrame(n.i);narT=setTimeout(launchStep,5200)}
+function launchClick(){const L=el('launch');if(!TUT.nar||L.classList.contains('out'))return;launchStep()}
 function narPlace(){const n=TUT.nar,N=n&&NAR[n.id],L=el('launch'),V=el('voice');
-  if(N&&N.f==='E'){if(L.dataset.k!==n.k){L.dataset.k=n.k;L.innerHTML=`<div class="lcap">INSTITUTE</div>`+nl(N,'en').map((t,i)=>`<div class="lln" style="animation-delay:${(.8+i*1.7).toFixed(1)}s">${t}</div>`).join('');L.className='on'}}
+  if(N&&N.f==='E'){if(L.dataset.k!==n.k){L.dataset.k=n.k;const ls=nl(N,'en');
+    L.innerHTML=`<div class="lcap">INSTITUTE</div><button class="lskip" data-a="launchskip">SKIP</button>`+ls.map((t,i)=>`<div class="lfr"><img src="intro-${i+1}.webp" alt=""><div class="lln">${t}</div></div>`).join('')+`<div class="ldots">${ls.map(()=>'<i></i>').join('')}</div>`;
+    L.className='on';requestAnimationFrame(()=>launchFrame(n.i||0))}}
   else{L.className='';L.dataset.k=''}
   if(N&&N.f==='V'){if(V.dataset.k!==n.k){V.dataset.k=n.k;V.innerHTML=`<div class="hav">${ava(48)}</div><div><div class="hnm">${HNAME}</div><div class="vtx">${nl(N,'en').join('<br>')}</div></div><i class="vbar"></i>`;V.className='';void V.offsetWidth;V.className='on'}}
   else{V.className='';V.dataset.k=''}}
@@ -698,6 +710,7 @@ function tutCtl(a,v){
   if(a==='tutok'){tutDone();render();return true}
   if(a==='narok'){narDone();render();return true}
   if(a==='launch'){launchClick();return true}
+  if(a==='launchskip'){launchEnd();return true}
   if(a==='narshow'){narDemo(v);el('wrap').scrollIntoView({behavior:'smooth'});return true}
   if(a==='tutskip'){TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.done=true;Object.keys(OPN).forEach(k=>TUT.open.add(k));TUT.rings=3;U.zoom=1;drawMap();render();return true}
   if(a==='tnext'){go(TUT.step+1);return true}
