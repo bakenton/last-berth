@@ -174,7 +174,7 @@ svg.gi{fill:currentColor}
 #tutRing.shake{animation:sh .3s 2}@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 #helper{position:absolute;z-index:22;left:300px;width:640px;display:none;grid-template-columns:72px 1fr;gap:14px;background:var(--pan);border:1px solid var(--ppl);padding:12px 14px 12px 12px;animation:tin .25s}
 #helper.on{display:grid}
-.hav{width:72px;height:72px;border:1px solid var(--ln)}
+.hav{width:72px;height:72px;border:1px solid var(--ln);overflow:hidden;background:#202024}
 .hnm{font-size:10px;letter-spacing:.2em;color:var(--ppl);font-weight:700;display:flex;gap:10px}.hnm span{color:var(--dim)}
 .htx{font-size:16px;line-height:1.35;margin:5px 0 8px}
 .hbt{display:flex;gap:8px;justify-content:flex-end}.hbt .b{padding:6px 14px}
@@ -192,18 +192,42 @@ svg.gi{fill:currentColor}
 .st1>i{font:600 18px var(--n);font-style:normal;color:var(--ink)}
 .st1 em{font-style:normal;display:block;font-size:10px;letter-spacing:.16em;color:var(--dim);font-weight:600;margin:6px 0 2px}.st1 em:first-child{margin-top:0}
 .st1 .ms{border-left:2px solid var(--ppl);padding:2px 0 2px 10px;margin:4px 0}.st1 .ms span{display:block;color:var(--ink)}.st1 .ms small{display:block;color:var(--mid);font-size:12.5px}.st1 .ms u{text-decoration:none;font-size:10px;letter-spacing:.14em;color:var(--dim)}
-.st1 .b{width:100%}
+.st1 .b{width:100%}.st1 .b+.b{margin-top:6px}
 .opn{display:flex;flex-wrap:wrap;gap:4px}.opn span{border:1px solid var(--ln);padding:1px 6px;font-size:11.5px;color:var(--ink)}
-@media (max-width:720px){.st1{grid-template-columns:28px minmax(0,1fr)}.st1>div:nth-child(3){grid-column:2}.st1>.b{grid-column:2}}
+/* narrative: launch screen (E), Alexandra's voice (V), the big window (W) */
+#launch{position:absolute;inset:0;z-index:30;background:#000;display:none;flex-direction:column;justify-content:center;padding:0 210px;cursor:pointer}
+#launch.on{display:flex}#launch.out{animation:lout .6s forwards}@keyframes lout{to{opacity:0}}
+.lcap{font-size:11px;letter-spacing:.34em;color:var(--dim);font-weight:600;margin-bottom:28px;opacity:0;animation:lin .8s forwards}
+.lln{font-size:24px;line-height:1.45;margin:5px 0;opacity:0;animation:lin 1.1s forwards}
+#launch.all .lln,#launch.all .lcap{animation-delay:0s!important;animation-duration:.3s}
+@keyframes lin{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+#voice{position:absolute;z-index:19;left:104px;bottom:16px;width:560px;display:none;grid-template-columns:48px 1fr;gap:12px;background:rgba(20,20,23,.95);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:10px 16px 14px 10px;cursor:pointer;animation:tin .3s;overflow:hidden}
+#voice.on{display:grid}#voice .hav{width:48px;height:48px}
+.vtx{font-size:15px;line-height:1.4;margin-top:4px}
+.vbar{position:absolute;left:0;bottom:0;height:2px;background:var(--ppl);opacity:.7;animation:vb 8s linear forwards}@keyframes vb{from{width:100%}to{width:0}}
+.nwin{width:640px;border:1px solid var(--mid);background:var(--pan);padding:22px 30px 22px;display:flex;flex-direction:column;gap:11px}
+.icap{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.34em;color:var(--mid);font-weight:600;border-bottom:1px solid var(--ln);padding-bottom:9px}.icap span{color:var(--dim);letter-spacing:.18em}
+.nbig{display:flex;align-items:baseline;gap:14px}.nbig small{font-size:11px;letter-spacing:.24em;font-weight:600}.nbig b{font:600 42px/1 var(--n)}
+.nwin p{margin:0;font-size:16px;line-height:1.45}
+.nrows{display:grid;grid-template-columns:1fr 90px 90px;font:600 13px var(--n);border-top:1px solid var(--ln);padding-top:6px}.nrows span{padding:3px 0;display:flex;gap:6px;align-items:center}.nrows .h{font:600 9.5px var(--h);letter-spacing:.16em;color:var(--dim)}.nrows span:not(:nth-child(3n+1)){justify-content:flex-end}
+.ncnt{font-size:11px;letter-spacing:.14em;color:var(--mid);font-weight:600}
+.alx{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;border-top:1px solid var(--ln);padding-top:12px;margin-top:2px}.alx .hav{width:40px;height:40px}.alx p{font-size:15px}
+.nwin>.b{align-self:flex-end;padding:8px 22px}
+.st1 .ms.nar{border-left-color:var(--mid)}.st1 .ms.nar u{color:var(--mid)}
+/* phone: the stage shrinks to ~0.3, so the story grows back by --k (set in fit) */
+#stage.small #launch{padding:0 40px}#stage.small .lln{font-size:calc(18px*var(--k))}#stage.small .lcap{font-size:calc(9px*var(--k))}
+#stage.small #voice{zoom:var(--k);left:calc(20px/var(--k));bottom:calc(14px/var(--k));width:calc(1236px/var(--k))}
+.fm{display:inline-block;border:1px solid var(--mid);padding:0 5px;margin-right:6px;font-size:11px;color:var(--ink)}
+@media (max-width:720px){.st1{grid-template-columns:28px minmax(0,1fr)}.st1>div:nth-child(3){grid-column:2}.st1>div:nth-child(4){grid-column:2}.st1>.b{grid-column:2}}
 </style>
 </head>
 <body>
-<div class="intro"><b>LAST BERTH — макет v7, кликабельный.</b> <span class="mode" style="display:inline-flex;vertical-align:middle;margin:0 6px"><button data-a="mode" data-v="mid" id="m-mid">СЕРЕДИНА ИГРЫ</button><button data-a="mode" data-v="tut" id="m-tut">ОБУЧЕНИЕ С НУЛЯ</button></span> Обучение (15.10): вкладки и действия открываются по ходу игры, помощник внизу, экран темнеет, нужное подсвечено; сценарий шагов — под макетом. Текст сокращён: на экране только числа для решений, причины отказа и тревоги; правила — в обучение. Крестиков нет: вкладка закрывается своей кнопкой слева, окно мира — нажатием мимо окна. Новое: вкладка TECH по нынешнему правилу привода, полосы делений масштабируются, доли с разметкой и именами. Вкладки слева, миры на карте, стрелки ‹ › в окне мира, советник, ≡, скорость, Skip — всё нажимается. Назначение, перевод, снятие, заказ, резерв, слом и высадка меняют данные макета. Время не идёт: это не игра, числа условные. Шрифт — Jost + Geist Mono.</div>
+<div class="intro"><b>LAST BERTH — макет v7, кликабельный.</b> <span class="mode" style="display:inline-flex;vertical-align:middle;margin:0 6px"><button data-a="mode" data-v="mid" id="m-mid">СЕРЕДИНА ИГРЫ</button><button data-a="mode" data-v="tut" id="m-tut">ОБУЧЕНИЕ С НУЛЯ</button></span> Обучение (15.10): вкладки и действия открываются по ходу игры, помощник внизу, экран темнеет, нужное подсвечено; сценарий шагов — под макетом. Нарратив (15.10): обучение начинается с экрана запуска; реплики Института и Александры — по ходу, все блоки с кнопками «Показать» — в конце сценария. Текст сокращён: на экране только числа для решений, причины отказа и тревоги; правила — в обучение. Крестиков нет: вкладка закрывается своей кнопкой слева, окно мира — нажатием мимо окна. Новое: вкладка TECH по нынешнему правилу привода, полосы делений масштабируются, доли с разметкой и именами. Вкладки слева, миры на карте, стрелки ‹ › в окне мира, советник, ≡, скорость, Skip — всё нажимается. Назначение, перевод, снятие, заказ, резерв, слом и высадка меняют данные макета. Время не идёт: это не игра, числа условные. Шрифт — Jost + Geist Mono.</div>
 <div id="wrap"><div id="stage">
 <div id="top"></div><div id="res"></div><nav id="tabs"></nav>
 <div id="mapbox"><svg id="map" preserveAspectRatio="xMidYMid meet"></svg><div id="evbar"></div><div id="cards"></div><div id="zoom"></div><div id="tip"></div></div>
 <div id="side"></div><div id="ovl"></div><div id="pop"></div><div id="toasts"></div><div id="noteL"></div>
-<div id="tutL"></div><div id="tutRing"></div><div id="helper"></div><button id="tnext" data-a="tnext"></button>
+<div id="voice" data-a="narok"></div><div id="launch" data-a="launch"></div><div id="tutL"></div><div id="tutRing"></div><div id="helper"></div><button id="tnext" data-a="tnext"></button>
 </div></div>
 <div id="scr" class="scr"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
@@ -342,7 +366,7 @@ const stTxt=h=>{const s=SS[h.st];return s[1].replace('{y}',h.y||'').replace('{w}
 const stRow=h=>{const s=SS[h.st];return `<span class="hst" style="color:${s[2]}">${ic(s[0],15,s[2])}${stTxt(h)}</span>`+(h.moveTo?`<span class="hst" style="color:${C.ink}">${ic('movesTo',15)}moves to ${WI(h.moveTo).n} on docking</span>`:'')};
 function toast(t,col){const d=document.createElement('div');d.className='toast';if(col)d.style.borderColor=col;d.innerHTML=t;el('toasts').prepend(d);setTimeout(()=>d.remove(),3600)}
 const el=id=>document.getElementById(id);
-const paused=()=>U.userPause||['yard','earth','ark'].includes(U.win)||U.note||!!TUT.msg;
+const paused=()=>U.userPause||['yard','earth','ark'].includes(U.win)||U.note||!!TUT.msg||!!(TUT.nar&&NAR[TUT.nar.id].f!=='V');
 
 /* ---------- top ---------- */
 function drawTop(){
@@ -489,7 +513,8 @@ function picker(){const [kind,hid]=U.pop.split(':').slice(1),h=H.find(x=>x.id==h
   return `<div class="pick">${sec((kind==='move'?'MOVE ':'SEND ')+hname(h).toUpperCase()+' TO')}${ws.map(w=>{const ok=REACH(h.g)>=w.ring;return `<button data-a="${ok?'pickgo':''}" data-v="${kind}:${h.id}:${w.id}" class="${ok?'':'dis'}">${wmark(w.k)}<b>${w.n}</b><span>${ok?'ring '+w.ring:'out of reach'}</span></button>`}).join('')}<button class="cancel" data-a="pop" data-v="">KEEP IT WHERE IT IS</button></div>`}
 function popAdv(){return `<div class="advl">${ADV().map(r=>`<button data-a="world" data-v="${r[3]}"><i style="background:${r[0]}"></i><b>${r[1]}</b><span>${r[2]}</span><em>${WI(r[3]).n} →</em></button>`).join('')}</div>`}
 function popMenu(){return `<div class="menu"><button>${ic('tWorlds',15)}Language <b>EN</b> · RU</button><button>${ic('loading',15)}Sound <b>on</b></button><button>${ic('unloading',15)}Export the run log</button><button>${ic('assign',15)}Helper <b>on</b> · off</button><button data-a="note">${ic('warn',15)}Preview: an event window</button></div>`}
-function noteWin(){return `<div class="note">${ic('night',40,C.red)}<b>THE NIGHT HAS A DATE</b><p>Year 3735. Whoever is not aboard the ark stays behind. You have 730 years.</p>${btn('CONTINUE','noteclose',null,'pri')}</div>`}
+/* the Night window is now the narrative block N-09 (the Institute speaks) */
+function noteWin(){return narWin('N09','noteclose')}
 
 /* ---------- tutorial: unlocks + the android helper ----------
    A step opens by the state of the run, never by a timer. While the helper speaks, time stops,
@@ -505,8 +530,8 @@ const PRICE_E={courier:[['metal','40'],['fuel','14'],['people','8']],hauler:[['m
 const prices=c=>TUT.on&&curGen===1?PRICE_E[c]:PRICE[c];
 const clone=o=>JSON.parse(JSON.stringify(o));
 const MID={W:clone(W),H:clone(H),BUILD:clone(BUILD)};
-/* faceless android: smooth head, a visor line, a jointed neck — the character comes later */
-const AVA=`<svg viewBox="0 0 72 72" width="72" height="72"><rect width="72" height="72" fill="#202024"/><path d="M9 72 C11 58 23 54 36 54 C49 54 61 58 63 72 Z" fill="#3A3A40"/><path d="M22 62 H50" stroke="#5E5D58" stroke-width="1.2"/><rect x="31.5" y="42" width="9" height="12" fill="#5E5D58"/><path d="M31.5 46 H40.5 M31.5 50 H40.5" stroke="#202024" stroke-width="1.2"/><ellipse cx="36" cy="28" rx="12.5" ry="15" fill="#9C9B95"/><path d="M36 13 C30 13 25 17 23.6 23" stroke="#C9C8C2" stroke-width="1.4" fill="none"/><rect x="25" y="27" width="22" height="2.6" fill="#FFD23F"/><path d="M48.5 24 V34" stroke="#5E5D58" stroke-width="1.2"/></svg>`;
+/* Alexandra has a face from her first appearance (Nikita 15.10); the art is a placeholder */
+const AVA=`<img src="alexandra-placeholder.webp" alt="" style="width:100%;height:100%;object-fit:cover;object-position:50% 28%;display:block">`;
 const HNAME='ALEXANDRA';   /* Nikita 15.10 */
 const EW=()=>[
  {id:'kiln',n:'KILN',k:'mine',ring:1,a:20,st:'free',f:{dep:'5 300',cross:'4 yrs one way',sec:'EOS · calm'}},
@@ -525,18 +550,18 @@ const hu=id=>H.find(h=>h.id===id);
 function settle(id,f,extra){const w=WI(id);w.st='ok';w.tier=0;w.f=Object.assign({ppl:52,lift:'3610 · 605 yrs'},f);Object.assign(w,extra||{})}
 const OPN={people:'PEOPLE',speed:'скорость ❚❚ 1× 2× 4× 10×',line:'окно мира: линия, ADD A HULL (только свободные)',metal:'METAL',skip:'SKIP',food:'RATIONS + «ends ≈»',earth:'вкладка EARTH',fuel:'FUEL',order:'заказ судна в окне мира',yard:'вкладка YARD + карточки постройки',fleet:'вкладка FLEET, MOVE / TAKE OFF, «Other lines»',parts:'PARTS',machines:'блок MACHINES',tech:'вкладка TECH',advisor:'NEEDS A DECISION',worlds:'вкладка WORLDS',sectors:'доли карты',events:'полоса события',ring2:'кольцо II',zoom:'масштаб − + FIT',ring3:'кольцо III',night:'счётчик NIGHT',ark:'вкладка ARK',reserve:'RESERVE FOR ARK',lift:'строка Last lift',evac:'EVACUATE у живых миров'};
 const STEPS=[
- {t:'Голод',when:'новая игра; время стоит',opens:['people','food','line'],year:4,ends:'412',R:{people:['2 000','▲ +2.0/yr',1],food:['3 120','▼ −7.6/yr',0]},msgs:['m0','m1','m2'],auto:true},
+ {t:'Голод',when:'новая игра; время стоит',opens:['people','food','line'],year:4,ends:'412',R:{people:['2 000','▲ +2.0/yr',1],food:['3 120','▼ −7.6/yr',0]},msgs:['N01','m0','m1','m2'],auto:true},
  {t:'Время',when:'поселенцы отправлены',opens:['speed'],win:'pale',toast:`${ic('send',15,C.people)}52 settlers leave for PALE`,R:{fuel:['234','▼ −0.4/yr',0]},set(){WI('pale').st='settling';Object.assign(hu(1),{line:'pale',st:'settlers',y:5})},msgs:['m3'],auto:true},
- {t:'Первая линия',when:'поселенцы сели — окно мира открывается само',opens:['fuel'],year:9,win:'pale',toast:'Year 9 · settlers land on PALE',set(){settle('pale',{dep:'12 800',left:'1 400 yrs',surf:'50',gives:'8.8',carries:'0'});Object.assign(hu(1),{line:null,st:'pier'})},msgs:['m4'],auto:true},
- {t:'Рационы дома',when:'первые рационы дома',opens:['earth','skip'],year:21,ends:'640',toast:'Year 21 · the first rations are home',R:{food:['3 020','▼ −2.1/yr',0],fuel:['221','▼ −0.6/yr',0]},set(){Object.assign(WI('pale').f,{carries:'4.4',surf:'12'});Object.assign(hu(1),{line:'pale',st:'unloading'})},msgs:['m5']},
- {t:'Второй мир и верфь',when:'второй мир заселён, его линия пуста, у причала нет свободного судна',opens:['metal','order','yard'],year:61,win:'kiln',R:{metal:['430','▼ −0.2/yr',0],fuel:['196','▼ −0.6/yr',0],food:['2 900','▼ −3.0/yr',0]},set(){settle('kiln',{dep:'5 300',left:'880 yrs',surf:'36',gives:'6.0',carries:'0'});Object.assign(hu(2),{line:null,st:'toEarth',y:4})},msgs:['m8','mM','m9']},
+ {t:'Первая линия',when:'поселенцы сели — окно мира открывается само',opens:['fuel'],year:9,win:'pale',toast:'Year 9 · settlers land on PALE',set(){settle('pale',{dep:'12 800',left:'1 400 yrs',surf:'50',gives:'8.8',carries:'0'});Object.assign(hu(1),{line:null,st:'pier'})},msgs:['N02','m4'],auto:true},
+ {t:'Рационы дома',when:'первые рационы дома',opens:['earth','skip'],year:21,ends:'640',toast:'Year 21 · the first rations are home',R:{food:['3 020','▼ −2.1/yr',0],fuel:['221','▼ −0.6/yr',0]},set(){Object.assign(WI('pale').f,{carries:'4.4',surf:'12'});Object.assign(hu(1),{line:'pale',st:'unloading'})},msgs:['N03']},
+ {t:'Второй мир и верфь',when:'второй мир заселён, его линия пуста, у причала нет свободного судна',opens:['metal','order','yard'],year:61,win:'kiln',R:{metal:['430','▼ −0.2/yr',0],fuel:['196','▼ −0.6/yr',0],food:['2 900','▼ −3.0/yr',0]},set(){settle('kiln',{dep:'5 300',left:'880 yrs',surf:'36',gives:'6.0',carries:'0'});Object.assign(hu(2),{line:null,st:'toEarth',y:4})},msgs:['m8','mM','m9','N04a']},
  {t:'Флот',when:'судов больше, чем линий: 4 судна и 2 линии',opens:['fleet'],year:140,ends:'1 950',R:{metal:['1 240','▲ +9.6/yr',1],fuel:['520','▲ +2.1/yr',1],food:['3 400','▼ −2.2/yr',0],people:['2 140','▲ +1.1/yr',1]},set(){settle('wick',{dep:'7 420',left:'1 700 yrs',surf:'20',gives:'4.4',carries:'4.4'});WI('kiln').f.carries='6.0';H.push({id:3,c:'courier',g:1,line:'kiln',st:'toWorld',y:3},{id:4,c:'courier',g:1,line:null,st:'pier'});Object.assign(hu(2),{line:'wick',st:'loading'})},msgs:['m10']},
  {t:'Линия не успевает',when:'первый мир, где линия увозит меньше, чем мир даёт',opens:[],year:260,win:'pale',set(){const w=WI('pale');w.st='half';Object.assign(w.f,{carries:'4.1',surf:'940'})},msgs:['m11']},
  {t:'Детали, техника, TECH',when:'первые детали дома; не позже, чем в цене впервые появились детали (тягач — с 3 живых миров)',opens:['parts','machines','tech'],year:420,R:{parts:['24','▲ +1.4/yr',1]},set(){settle('hollow',{},{works:{metal:'9.0 /yr · 120 yrs',food:'5.0 /yr · 80 yrs',bad:0,parts:'4.6 /yr',run:'100%'}});Object.assign(hu(4),{line:'hollow',st:'toEarth',y:6})},msgs:['m12','m14']},
  {t:'Советник',when:'первая строка советника; не позже 5 живых миров',opens:['advisor','worlds'],year:520,set(){H.push({id:5,c:'hauler',g:1,line:'kiln',st:'toWorld',y:2})},msgs:['m15']},
- {t:'События',when:'первое предупреждение режиссёра (≈ 600-й год)',opens:['sectors','events'],year:640,msgs:['m17']},
- {t:'Кольцо II',when:'нанесено второе кольцо (разведка — во вкладке TECH)',opens:['ring2','zoom'],rings:2,year:900,msgs:['m16']},
- {t:'Ночь и ковчег',when:'нанесено третье кольцо — у Ночи есть дата (большое окно)',opens:['ring3','night','ark','reserve','lift','evac'],rings:3,year:3005,ends:'3498',note:true,msgs:['m18','m19']}
+ {t:'События',when:'первое предупреждение режиссёра (≈ 600-й год)',opens:['sectors','events'],year:640,msgs:['N07','m17']},
+ {t:'Кольцо II',when:'нанесено второе кольцо (разведка — во вкладке TECH)',opens:['ring2','zoom'],rings:2,year:900,msgs:['N08','m16']},
+ {t:'Ночь и ковчег',when:'нанесено третье кольцо — у Ночи есть дата (большое окно)',opens:['ring3','night','ark','reserve','lift','evac'],rings:3,year:3005,ends:'3498',msgs:['N09','m18','m19']}
 ];
 const MSG={
  m0:{at:'#res [data-r="food"]',mode:'see',en:'Earth eats more every year. Rations run out in 412.',ru:'Земля ест больше с каждым годом. Рационы кончатся в 412-м.'},
@@ -544,7 +569,6 @@ const MSG={
  m2:{at:'#ovl [data-a="send"]',mode:'do',also:'#ovl .prow',opens:['fuel'],R:{fuel:['240','▼ −0.4/yr',0]},done:a=>a==='send',en:'Settlers cost people and fuel. Every flight burns fuel.',ru:'Поселенцы стоят людей и топлива. Каждый рейс жжёт топливо.'},
  m3:{at:'#top .spd',mode:'do',done:(a,v)=>a==='spd'&&v!=='0',en:'Time is stopped. Start it. PALE takes no orders until the settlers land.',ru:'Время стоит. Запустите его. Пока поселенцы не сели, PALE приказов не принимает.'},
  m4:{at:'#ovl [data-a="assign"]',mode:'do',done:a=>a==='assign',en:"They've landed. Put a hull on the line — it brings PALE's rations home.",ru:'Сели. Поставьте судно на линию — оно повезёт рационы PALE домой.'},
- m5:{at:'#res [data-r="food"]',mode:'see',en:'Rations are home. The end moved to 640.',ru:'Рационы дома. Конец сдвинулся на 640-й.'},
  m8:{at:'#ordblk',mode:'do',done:a=>a==='order',en:'No free hull at the pier. Order one here — it goes straight to this line.',ru:'Свободных судов у причала нет. Закажите здесь — судно сразу пойдёт на эту линию.'},
  mM:{at:'#res [data-r="metal"]',mode:'see',pre(){U.win=null},en:'Hulls are built from metal. KILN mines it.',ru:'Суда строят из металла. Его добывает KILN.'},
  m9:{at:'#cards',mode:'see',en:'Being built — here, and all of it in the YARD.',ru:'Что строится — здесь, а всё целиком — во вкладке YARD.'},
@@ -555,46 +579,133 @@ const MSG={
  m15:{at:'#top .adv',mode:'see',en:'When a world needs you, it shows here. Worst first.',ru:'Когда миру нужно ваше решение, он здесь. Худшее — сверху.'},
  m17:{at:'#evbar',mode:'see',en:'Space shifts by sector. What is on, and for how long — in this bar.',ru:'Пространство меняется по долям. Что идёт и сколько ещё — на этой полосе.'},
  m16:{at:'#map .wd[data-v="cinder"]',mode:'see',en:'Ring 2 is charted. Generation I hulls reach it; ring 3 needs generation II.',ru:'Кольцо 2 нанесено. Суда I поколения туда долетают; на кольцо 3 нужно II.'},
- m18:{at:'#noteL .note',mode:'see',en:'Big news stops time. It comes one window at a time.',ru:'Большие новости останавливают время. Приходят по одному окну.'},
- m19:{at:'#tabs [data-v="ark"]',mode:'see',pre(){U.note=false},en:'The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation III or newer, at the pier that day.',ru:'Ковчег уходит в Ночь с теми, кто на борту. Нужны оплаченные уровни и конвой — суда III поколения и новее у причала в тот день.'},
+ m18:{at:'#top .night',mode:'see',en:'The year of the Night stays up here. Big news stops time and comes one window at a time.',ru:'Год Ночи — здесь, наверху. Большие новости останавливают время и приходят по одному окну.'},
+ m19:{at:'#tabs [data-v="ark"]',mode:'see',en:'The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation III or newer, at the pier that day.',ru:'Ковчег уходит в Ночь с теми, кто на борту. Нужны оплаченные уровни и конвой — суда III поколения и новее у причала в тот день.'},
  /* by occasion: once each, when the thing first happens */
  m7:{at:'#ovl .wh small',mode:'see',when:'первое открытие EARTH, YARD или ARK',demo:{step:3,win:'earth'},en:'Time stops while Earth, the Yard or the Ark is open.',ru:'Пока открыты Земля, Верфь или Ковчег, время стоит.'},
  m13:{at:'#mach',mode:'see',when:'первое окно мира после того, как открылась техника',demo:{step:7,win:'kiln'},en:"Machines make a world give more. They burn its fuel and ride out on the line's next hull.",ru:'Техника поднимает выработку мира. Жжёт его топливо и уходит со следующим судном линии.'},
  m20:{at:'#convoy',mode:'see',when:'первое открытие ARK',demo:{step:11,win:'ark'},en:'Hold hulls for the convoy with RESERVE FOR ARK in the Yard.',ru:'Суда для конвоя придерживайте кнопкой RESERVE FOR ARK во вкладке YARD.'},
- m21:{at:'#rw-lift',mode:'see',when:'первое окно мира после даты Ночи',demo:{step:11,win:'kiln'},en:'Last lift: the year a courier must leave to bring everyone home before the Night.',ru:'Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.'},
- m22:{at:'#ovl [data-a="evac"]',mode:'see',when:'первый выработанный мир',demo:{mid:1,win:'gallows'},en:'The seam is dead. Only evacuation is left — a courier takes everyone.',ru:'Жила мертва. Осталась только эвакуация — курьер забирает всех.'},
- m24:{at:'#hr-57',mode:'see',when:'первое опоздавшее судно',demo:{mid:1,win:'vesper'},en:'A hull is overdue. If it is lost, nothing replaces it — you order the next one.',ru:'Судно опаздывает. Если пропадёт, замены не будет — следующее заказываете вы.'},
- m23:{at:'#hr-49',mode:'see',when:'первый отказ экипажа',demo:{mid:1,win:'kiln'},en:'Near the end, crews refuse runs. A hull that refused still sails with the convoy.',ru:'Под конец экипажи отказываются от рейсов. Отказавшее судно в конвой всё равно идёт.'}
+ m21:{at:'#rw-lift',mode:'see',when:'первое окно мира после даты Ночи',demo:{step:11,win:'kiln'},nar:['N10','later'],en:'Last lift: the year a courier must leave to bring everyone home before the Night.',ru:'Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.'},
+ m22:{at:'#ovl [data-a="evac"]',mode:'see',when:'первый выработанный мир',demo:{mid:1,win:'gallows'},nar:['N06','before'],en:'The seam is dead. Only evacuation is left — a courier takes everyone.',ru:'Жила мертва. Осталась только эвакуация — курьер забирает всех.'},
+ m24:{at:'#hr-57',mode:'see',when:'первое опоздавшее судно',demo:{mid:1,win:'vesper'},nar:['N05','later'],en:'A hull is overdue. If it is lost, nothing replaces it — you order the next one.',ru:'Судно опаздывает. Если пропадёт, замены не будет — следующее заказываете вы.'},
+ m23:{at:'#hr-49',mode:'see',when:'первый отказ экипажа',demo:{mid:1,win:'kiln'},nar:['N11','before'],en:'Near the end, crews refuse runs. A hull that refused still sails with the convoy.',ru:'Под конец экипажи отказываются от рейсов. Отказавшее судно в конвой всё равно идёт.'}
 };
 const JIT=['m7','m13','m20','m21','m22','m24','m23'];
-function setMid(){TUT.on=false;TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.step=-1;W=clone(MID.W);H=clone(MID.H);BUILD=clone(MID.BUILD);curGen=4;SPEC=SPEC_M;Object.assign(U,{win:null,tab:null,pop:null,note:false,zoom:1,who:{},addTab:'free',scrapArm:null});drawMap()}
-function build(i){TUT.on=true;TUT.step=i;TUT.wait=false;TUT.done=false;TUT.msg=null;
+/* ---------- narrative (Claude's clean copy 15.10 — awaits Nikita; text lives in Notion «Нарратив: блоки для текста») ----------
+   Two voices. The INSTITUTE is dry, has no face: the launch screen and the big windows.
+   ALEXANDRA is warm and says «вы»: her panel at the bottom, and her line under the Institute's in a window.
+   E — launch screen, black, lines come one by one, then the map. V — her voice: no dim, time runs,
+   closes itself in 8 s or on any press. W — a big window, time stops.
+   Story and rules never speak at once: both go through the same queue, the story first. {x} — the game fills it in. */
+const SHIFT1=[['food','RATIONS','+260','−610'],['fuel','FUEL','—','−38'],['metal','METAL','—','−40'],['people','PEOPLE','+160','−104']];
+const SHIFTK=[['metal','METAL','+3 120','−3 640'],['food','RATIONS','+2 980','−2 410'],['fuel','FUEL','+2 210','−1 950'],['parts','PARTS','+380','−410'],['people','PEOPLE','+210','−260']];
+const NAR={
+ N01:{n:'N-01',f:'E',t:'Запуск',when:'новая игра — чёрный экран до карты; затем первая подсказка обучения',demo:{go:0},
+  en:['Earth is worked out: no ore, dead soil, poisoned seas.','The nations gave all that was left to a single Institute.','Its work: settle other worlds and bring home what Earth lacks.','Shift 1 takes the desk. Shift adviser: the android Alexandra.'],
+  ru:['Земля выработана: руды нет, почва мертва, моря отравлены.','Страны отдали всё, что осталось, одному Институту.','Его дело — заселять миры и везти с них то, чего нет на Земле.','Смена 1 заступает. Советник смены — андроид Александра.']},
+ N02:{n:'N-02',f:'V',t:'Первая посадка',when:'поселенцы сели (шаг 3) — доклад капитана её голосом, затем подсказка «поставьте судно на линию»',demo:{go:2},p:{world:'PALE',n:52},
+  en:['Report from {world}: {n} people landed. Ready to mine and ship.'],ru:['Доклад с {world}: высадились {n} человек. К добыче и поставкам готовы.']},
+ N03:{n:'N-03',f:'V',t:'Первый груз дома',when:'первые рационы дома (шаг 4) — заменяет подсказку m5 «конец сдвинулся»',demo:{go:3},p:{year:640},
+  en:['The first cargo is home — rations now last until {year}. Earth breathes a little easier.'],ru:['Первый груз дома — рационов теперь хватит до {year}. Земле стало чуть легче дышать.']},
+ N04a:{n:'N-04',f:'W',t:'Смена — первая',when:'80-й год, конец первой смены; в макете — в конце шага «Второй мир и верфь». В окне — цифры смены (только открытые ресурсы)',demo:{go:4},cap:'SHIFT REPORT · YEAR 80',rows:SHIFT1,cnt:'HULLS BUILT 1 · LOST 0 · WORLDS SETTLED 2',
+  pre(){TUT.year=80},post(){if(TUT.on&&STEPS[TUT.step])TUT.year=STEPS[TUT.step].year},
+  en:['Shift 1 hands over the desk. Shift 2 takes it.'],ru:['Смена 1 сдаёт пульт. Заступает смена 2.'],
+  a:{en:'People change — I stay. Nice to meet you, shift 2.',ru:'Люди меняются — я остаюсь. Рада знакомству, смена 2.'}},
+ N04b:{n:'N-04',f:'W',t:'Смена — общая',when:'каждые следующие 80 лет (вместо нынешнего отчёта смены)',demo:{mid:1},cap:'SHIFT REPORT · YEAR 2960',p:{k:37},rows:SHIFTK,cnt:'HULLS BUILT 9 · LOST 2 · WORLDS SETTLED 1',
+  en:['Shift {k} hands over the desk.'],ru:['Смена {k} сдаёт пульт.'],
+  a:{en:"I remember every shift before you. I'll remember this one too.",ru:'Я помню все смены до вас. Эту тоже запомню.'}},
+ N05:{n:'N-05',f:'V',t:'Первая потеря судна',when:'первое пропавшее судно — позже подсказки m24 «судно опаздывает», отдельно от неё',demo:{mid:1},p:{ship:'Hauler III no.57',n:82},
+  en:['{ship} did not come back. {n} crew went with her.',"No one will remember them. I'll write them down."],ru:['{ship} не вернулось. С ним {n} человек экипажа.','Их никто не вспомнит. Я запишу.']},
+ N06:{n:'N-06',f:'V',t:'Первый выработанный мир',when:'первая жила кончилась — сразу перед подсказкой m22 «осталась только эвакуация»',demo:{mid:1,win:'gallows'},p:{world:'GALLOWS',n:31},
+  en:['{world} is worked out — a grey husk in the dark.','{n} people are still there, waiting for someone to come.'],ru:['{world} выработан — серый объедок в космосе.','Там ещё {n} человек. Они ждут, что за ними прилетят.']},
+ N07:{n:'N-07',f:'V',t:'Первое событие пространства',when:'шаг «События» — перед подсказкой о полосе события',demo:{go:9},p:{sector:'HELIOS'},
+  en:["Space over {sector} flows differently. The physicists can't say why yet."],ru:['Над {sector} пространство течёт иначе. Физики пока не знают почему.']},
+ N08:{n:'N-08',f:'V',t:'Кольцо II',when:'шаг «Кольцо II» — перед подсказкой о кольце',demo:{go:10},
+  en:["We're going further. It's darker past the edge of the map — or it seems so to me."],ru:['Мы идём дальше. За краем карты стало темнее — или мне кажется.']},
+ N09:{n:'N-09',f:'W',t:'У Ночи есть дата',when:'шаг «Ночь и ковчег» — заменяет окно THE NIGHT HAS A DATE (и в ≡ середины игры); после него — подсказки о счётчике Ночи и ковчеге',demo:{go:11},cap:'YEAR 3005',big:['NIGHT','{year}','red'],p:{year:3735},
+  en:['The physicists have named the date: in {year} our galaxy collapses.',"The Institute's task changes: build an ark and take people to another galaxy.",'Until then Earth must live: whoever starves will not fly.'],
+  ru:['Физики назвали дату: в {year} наша галактика схлопнется.','Задача Института меняется: построить ковчег и увести людей в другую галактику.','До отлёта Земля должна жить: кто умрёт от голода, не полетит.']},
+ N10:{n:'N-10',f:'V',t:'Первый отрезанный мир',when:'у мира ушёл последний рейс — позже подсказки m21 о Last lift, отдельно от неё',demo:{mid:1,win:'brine'},p:{world:'BRINE',n:38},
+  en:['{world}: the last lift has left. {n} people will stay.',"The Institute doesn't count them. I'll remember their names."],ru:['{world}: последний рейс ушёл. {n} человек останутся.','Институт их не считает. Я запомню их имена.']},
+ N11:{n:'N-11',f:'V',t:'Первый бунт',when:'первый отказ экипажа — сразу перед подсказкой m23',demo:{mid:1,win:'kiln'},p:{ship:'Hauler II no.49'},
+  en:['The crew of {ship} refused the run. People are afraid and want a place on the ark.'],ru:['Экипаж {ship} отказался от рейса. Люди боятся и хотят на ковчег.']},
+ N12a:{n:'N-12',f:'V',t:'Ночь близко · 400 лет',when:'за 400 лет до Ночи',demo:{mid:1},en:['Four hundred years. People start counting.'],ru:['Четыреста лет. Люди начинают считать.']},
+ N12b:{n:'N-12',f:'V',t:'Ночь близко · 100 лет',when:'за 100 лет до Ночи',demo:{mid:1},en:['One hundred years. Earth queues for the ark — the line is longer than the berths.'],ru:['Сто лет. На Земле очередь на ковчег — длиннее, чем мест.']},
+ N12c:{n:'N-12',f:'V',t:'Ночь близко · 25 лет',when:'за 25 лет до Ночи',demo:{mid:1},en:['Twenty-five years. The ark is packed, and people keep coming.'],ru:['Двадцать пять лет. Ковчег забит под завязку, а люди всё идут.']},
+ N13a:{n:'N-13',f:'W',t:'Финал (а) · ковчег ушёл',when:'год Ночи, ковчег ушёл — число душ на экране',demo:{mid:1},cap:'YEAR 3735 · THE NIGHT',big:['ABOARD','{n}','ark'],p:{n:'2 400'},
+  en:['The ark has sailed with {n} aboard. The rest stay behind, without honours or names.'],ru:['Ковчег ушёл. На борту {n} человек. Остальные остались без почестей и имён.'],
+  a:{en:'Except the ones I remember.',ru:'Кроме тех, что помню я.'}},
+ N13b:{n:'N-13',f:'W',t:'Финал (б) · ковчег не ушёл',when:'год Ночи, нет конвоя или двигателя — причину подставляет игра',demo:{mid:1},cap:'YEAR 3735 · THE NIGHT',p:{reason:'the convoy is one hauler short'},pr:{reason:'конвою не хватает одного тягача'},
+  en:['The ark did not sail: {reason}.'],ru:['Ковчег не ушёл: {reason}.'],
+  a:{en:"Was it the Institute's mistake? Or did people not want to be saved?",ru:'Это просчёт Института? Или люди не хотели спасаться?'}},
+ N13c:{n:'N-13',f:'W',t:'Финал (в) · голод раньше Ночи',when:'рационы кончились до Ночи — проигрыш',demo:{mid:1},cap:'YEAR 3412',big:['RATIONS','0','red'],
+  en:['Earth did not live to see the Night: hunger came first.'],ru:['Земля не дожила до Ночи: голод пришёл раньше.'],
+  a:{en:'We rushed so hard toward the ark that we forgot to feed the ones meant to fly.',ru:'Мы так спешили к ковчегу, что забыли накормить тех, кто должен был на нём лететь.'}}
+};
+const FM={E:['Э','экран запуска · Институт · время стоит'],V:['Г','голос Александры · без затемнения · время идёт · 8 с или нажатие'],W:['О','окно · Институт + строка Александры · время стоит']};
+const fill=(t,p)=>t.replace(/\{(\w+)\}/g,(m,k)=>p&&p[k]!==undefined?p[k]:m);
+const nl=(N,lang)=>N[lang].map(t=>fill(t,lang==='ru'&&N.pr?N.pr:N.p));
+const ava=()=>AVA;
+let narT=null;
+function narReset(){clearTimeout(narT);TUT.nar=null;TUT.after=null;['launch','voice'].forEach(i=>{el(i).className='';el(i).dataset.k=''})}
+function narShow(id,fromQ){const N=NAR[id];clearTimeout(narT);if(N.pre)N.pre();TUT.nar={id,fromQ,k:String(Math.random()),t0:Date.now()};
+  if(N.f==='V')narT=setTimeout(()=>{narDone();render()},8000);
+  if(N.f==='E')narT=setTimeout(launchEnd,9800)}
+function narDone(){if(!TUT.nar)return;clearTimeout(narT);const N=NAR[TUT.nar.id],fq=TUT.nar.fromQ;if(N.post)N.post();TUT.nar=null;
+  if(TUT.after){const n=TUT.after;TUT.after=null;show(n,false);return}
+  if(fq)nextInQ();else tutWhen()}
+function launchEnd(){clearTimeout(narT);el('launch').classList.add('out');narT=setTimeout(()=>{narDone();render()},600)}
+function launchClick(){const L=el('launch');if(!TUT.nar||L.classList.contains('out'))return;
+  if(Date.now()-TUT.nar.t0<6900&&!L.classList.contains('all')){L.classList.add('all');clearTimeout(narT);narT=setTimeout(launchEnd,2600)}else launchEnd()}
+function narPlace(){const n=TUT.nar,N=n&&NAR[n.id],L=el('launch'),V=el('voice');
+  if(N&&N.f==='E'){if(L.dataset.k!==n.k){L.dataset.k=n.k;L.innerHTML=`<div class="lcap">INSTITUTE</div>`+nl(N,'en').map((t,i)=>`<div class="lln" style="animation-delay:${(.8+i*1.7).toFixed(1)}s">${t}</div>`).join('');L.className='on'}}
+  else{L.className='';L.dataset.k=''}
+  if(N&&N.f==='V'){if(V.dataset.k!==n.k){V.dataset.k=n.k;V.innerHTML=`<div class="hav">${ava(48)}</div><div><div class="hnm">${HNAME}</div><div class="vtx">${nl(N,'en').join('<br>')}</div></div><i class="vbar"></i>`;V.className='';void V.offsetWidth;V.className='on'}}
+  else{V.className='';V.dataset.k=''}}
+function narWin(id,closeA){const N=NAR[id],p=N.p||{},big=N.big;
+  return `<div class="nwin"><div class="icap">INSTITUTE<span>${N.cap||''}</span></div>`
+   +(big?`<div class="nbig" style="color:${C[big[2]]}"><small>${big[0]}</small><b>${fill(big[1],p)}</b></div>`:'')
+   +nl(N,'en').map(t=>`<p>${t}</p>`).join('')
+   +(N.rows?`<div class="nrows"><span class="h">LAST 80 YEARS</span><span class="h">IN</span><span class="h">OUT</span>${N.rows.filter(r=>can(r[0])).map(r=>`<span>${res(r[0],13)}${r[1]}</span><span>${r[2]}</span><span>${r[3]}</span>`).join('')}</div><div class="ncnt">${N.cnt}</div>`:'')
+   +(N.a?`<div class="alx"><div class="hav">${ava(40)}</div><div><div class="hnm">${HNAME}</div><p>${fill(N.a.en,p)}</p></div></div>`:'')
+   +btn('CONTINUE',closeA||'narok',null,'pri')+`</div>`}
+/* phone: grow the window as far as it still fits the stage */
+function narZoom(){const n=document.querySelector('#noteL .nwin');if(!n)return;const k=+el('stage').style.getPropertyValue('--k')||1;n.style.zoom='';n.style.width='';if(k<=1)return;
+  for(let z=k;z>1;z-=.1){n.style.width=Math.min(640,1236/z)+'px';if(n.offsetHeight*z<=740){n.style.zoom=z;return}}n.style.width=''}
+function narDemo(id){const d=NAR[id].demo;TUT.seen=new Set();if(d.go!==undefined){go(d.go);return}
+  if(d.mid)setMid();else{build(d.step);STEPS[d.step].msgs.forEach(x=>TUT.seen.add(x));TUT.q=[];TUT.wait=true}
+  U.win=d.win||null;U.note=false;show(id,false);render()}
+function setMid(){narReset();TUT.on=false;TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.step=-1;W=clone(MID.W);H=clone(MID.H);BUILD=clone(MID.BUILD);curGen=4;SPEC=SPEC_M;Object.assign(U,{win:null,tab:null,pop:null,note:false,zoom:1,who:{},addTab:'free',scrapArm:null});drawMap()}
+function build(i){narReset();TUT.on=true;TUT.step=i;TUT.wait=false;TUT.done=false;TUT.msg=null;
   W=EW();H=EH();BUILD=[];curGen=1;SPEC=SPEC_E;TUT.open=new Set();TUT.rings=1;TUT.R={};TUT.ends='—';
   for(let k=0;k<=i;k++){const s=STEPS[k];s.opens.forEach(o=>TUT.open.add(o));if(s.set)s.set();Object.assign(TUT.R,s.R||{});if(s.year)TUT.year=s.year;if(s.rings)TUT.rings=s.rings;if(s.ends)TUT.ends=s.ends;if(k<i)s.msgs.forEach(m=>TUT.seen.add(m))}
   TUT.fresh=new Set(STEPS[i].opens);
   Object.assign(U,{win:STEPS[i].win||null,tab:null,pop:null,note:!!STEPS[i].note,who:{},addTab:'free',scrapArm:null,userPause:false,zoom:[1,2.2,1.45,1][TUT.rings]});drawMap()}
 function go(i){build(i);TUT.q=STEPS[i].msgs.slice();nextInQ();render()}
-function show(id,fromQ){const m=MSG[id];if(m.pre)m.pre();if(TUT.on&&m.opens)m.opens.forEach(o=>{TUT.open.add(o);TUT.fresh.add(o)});if(TUT.on&&m.R)Object.assign(TUT.R,m.R);TUT.msg=id;TUT.fromQ=fromQ}
+function show(id,fromQ){if(NAR[id]){narShow(id,fromQ);return}const m=MSG[id];if(m.pre)m.pre();if(TUT.on&&m.opens)m.opens.forEach(o=>{TUT.open.add(o);TUT.fresh.add(o)});if(TUT.on&&m.R)Object.assign(TUT.R,m.R);TUT.msg=id;TUT.fromQ=fromQ}
 function nextInQ(){if(TUT.q.length){show(TUT.q.shift(),true);return}
   const i=TUT.step;if(i>=STEPS.length-1){TUT.done=true;tutWhen();return}
   if(STEPS[i].auto){if(STEPS[i+1].toast)toast(STEPS[i+1].toast);setTimeout(()=>go(i+1),STEPS[i+1].toast?900:300)}else{TUT.wait=true;tutWhen()}}
 function tutDone(){TUT.seen.add(TUT.msg);const fq=TUT.fromQ;TUT.msg=null;if(fq)nextInQ();else tutWhen()}
-function tutWhen(){if(TUT.msg||!TUT.on)return;const w=U.win,ww=w&&WI(w),settled=ww&&!['free','settling','workedout'].includes(ww.st);
+function tutWhen(){if(TUT.msg||TUT.nar||!TUT.on)return;const w=U.win,ww=w&&WI(w),settled=ww&&!['free','settling','workedout'].includes(ww.st);
   const c=[['m7',['earth','yard','ark'].includes(w)],['m20',w==='ark'&&can('ark')],['m13',settled&&can('machines')],['m21',settled&&can('lift')]];
   for(const [id,ok] of c)if(ok&&!TUT.seen.has(id)){show(id,false);return}}
 function tutBlocked(){if(TUT.msg&&MSG[TUT.msg].mode==='see'){tutDone();render();return}const r=el('tutRing');r.classList.remove('shake');void r.offsetWidth;r.classList.add('shake')}
 function tutCtl(a,v){
   if(a==='mode'){TUT.seen=new Set();if(v==='mid'){setMid();render()}else go(0);return true}
   if(a==='tgo'){TUT.seen=new Set();go(+v);el('wrap').scrollIntoView({behavior:'smooth'});return true}
-  if(a==='tjit'){const m=MSG[v];TUT.seen=new Set();if(m.demo.mid)setMid();else{build(m.demo.step);STEPS[m.demo.step].msgs.forEach(x=>TUT.seen.add(x));TUT.q=[];TUT.wait=true}U.win=m.demo.win;U.note=false;show(v,false);render();el('wrap').scrollIntoView({behavior:'smooth'});return true}
+  if(a==='tjit'){const m=MSG[v];TUT.seen=new Set();if(m.demo.mid)setMid();else{build(m.demo.step);STEPS[m.demo.step].msgs.forEach(x=>TUT.seen.add(x));TUT.q=[];TUT.wait=true}U.win=m.demo.win;U.note=false;if(m.nar&&m.nar[1]==='before'){TUT.after=v;show(m.nar[0],false)}else show(v,false);render();el('wrap').scrollIntoView({behavior:'smooth'});return true}
   if(a==='tutok'){tutDone();render();return true}
+  if(a==='narok'){narDone();render();return true}
+  if(a==='launch'){launchClick();return true}
+  if(a==='narshow'){narDemo(v);el('wrap').scrollIntoView({behavior:'smooth'});return true}
   if(a==='tutskip'){TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.done=true;Object.keys(OPN).forEach(k=>TUT.open.add(k));TUT.rings=3;U.zoom=1;drawMap();render();return true}
   if(a==='tnext'){go(TUT.step+1);return true}
   return false}
 function tutAfter(a,v){if(a==='tab')TUT.fresh.delete(v);
   if(TUT.msg){const m=MSG[TUT.msg];if(m.mode==='do'?m.done(a,v):true)tutDone()}else tutWhen()}
 function tutPlace(){const L=el('tutL'),Rg=el('tutRing'),hp=el('helper'),nx=el('tnext');
-  const nxOn=TUT.on&&TUT.wait&&!TUT.msg&&TUT.step<STEPS.length-1;nx.className=nxOn?'on':'';nx.innerHTML=nxOn?`▸ Дальше (макет): ${STEPS[TUT.step+1].when}`:'';
+  const nxOn=TUT.on&&TUT.wait&&!TUT.msg&&!TUT.nar&&TUT.step<STEPS.length-1;nx.className=nxOn?'on':'';nx.innerHTML=nxOn?`▸ Дальше (макет): ${STEPS[TUT.step+1].when}`:'';
   if(!TUT.msg){L.className='';Rg.style.display='none';hp.className='';return}
   const m=MSG[TUT.msg],t=document.querySelector(m.at),st=el('stage').getBoundingClientRect(),sc=st.width/1280;
   hp.innerHTML=`<div class="hav">${AVA}</div><div><div class="hnm">${HNAME}</div><div class="htx">${m.en}</div><div class="hbt">${TUT.on&&TUT.step===0&&TUT.fromQ?btn('SKIP THE HELPER','tutskip'):''}${m.mode==='see'?btn('GOT IT','tutok',null,'pri'):''}</div></div>`;
@@ -606,17 +717,24 @@ function tutPlace(){const L=el('tutL'),Rg=el('tutRing'),hp=el('helper'),nx=el('t
   else{L.style.clipPath='none';Rg.style.display='none'}
   hp.style.top=top+'px'}
 function drawScript(){el('m-mid').className=TUT.on?'':'on';el('m-tut').className=TUT.on?'on':'';
-  const msg=id=>{const m=MSG[id];return `<div class="ms"><u>${m.mode==='do'?'СДЕЛАЙ — нажать можно только подсвеченное':'СМОТРИ — GOT IT или любое нажатие'}</u><span>${m.en}</span><small>${m.ru}</small></div>`};
+  const narMs=id=>{const N=NAR[id];return `<div class="ms nar"><u>${N.n} · ИСТОРИЯ · ${FM[N.f][1]}</u>${N.en.map(t=>`<span>${t}</span>`).join('')}${N.a?`<span>A: ${N.a.en}</span>`:''}<small>${N.ru.join(' / ')}${N.a?` / А: ${N.a.ru}`:''}</small></div>`};
+  const msg=id=>{if(NAR[id])return narMs(id);const m=MSG[id];return `<div class="ms"><u>${m.mode==='do'?'СДЕЛАЙ — нажать можно только подсвеченное':'СМОТРИ — GOT IT или любое нажатие'}</u><span>${m.en}</span><small>${m.ru}</small></div>`};
   el('scr').innerHTML=`<h3>Обучение: что и когда открывается</h3>
   <p>Шаг открывает <b>состояние забега</b>, а не таймер и не кнопка «далее»: условие вроде «у причала нет свободного судна» рано или поздно наступает, застрять нельзя. Пока говорит помощник, <b>время стоит</b>, экран темнеет, светлое — то, о чём речь. Новая вкладка встаёт на своё место (места не прыгают) с жёлтой точкой; точка гаснет при первом открытии. На первом сообщении — <b>SKIP THE HELPER</b>: открывается всё сразу; в ≡ — Helper on/off.</p>
   <p><b>Ресурсы — по мере хода.</b> Ресурс появляется на экране в тот момент, когда впервые нужен: в цене, которую игрок видит, или в первой доставке. Ни одна цена и ни один расход Земли не берут ресурс, которого игрок ещё не видит. Старт — голод: RATIONS и PEOPLE; FUEL — в цене первых поселенцев; METAL — в цене первого судна; PARTS — в цене тягача или с первыми деталями.</p>
-  <p><b>Помощник — андроид,</b> пока безликий; позже — конкретный персонаж, женщина-андроид. Имя — <b>ALEXANDRA / АЛЕКСАНДРА</b> (Никита 15.10).</p>
+  <p><b>Помощник — андроид,</b> с лицом с первого появления (Никита 15.10); портрет — плейсхолдер <code>alexandra-placeholder.webp</code>. Имя — <b>ALEXANDRA / АЛЕКСАНДРА</b> (Никита 15.10).</p>
   <p>В макете шаги-«сделай» идут сами; после шагов-«смотри» внизу слева появляется пунктирная кнопка «Дальше» — это не игра, а перемотка к следующему условию.</p>
   ${STEPS.map((s,i)=>`<div class="st1${TUT.on&&TUT.step===i?' cur':''}"><i>${i+1}</i><div><b>${s.t}</b><em>КОГДА</em>${s.when}<em>ОТКРЫВАЕТ</em><div class="opn">${s.opens.length?s.opens.map(o=>`<span>${OPN[o]}</span>`).join(''):'<span>—</span>'}</div></div><div>${s.msgs.map(msg).join('')}</div>${btn('ПОКАЗАТЬ','tgo',i)}</div>`).join('')}
   <h3>Подсказки по случаю — один раз, когда это впервые случилось</h3>
-  ${JIT.map(id=>`<div class="st1"><i>·</i><div><em>КОГДА</em>${MSG[id].when}</div><div>${msg(id)}</div>${btn('ПОКАЗАТЬ','tjit',id)}</div>`).join('')}
+  ${JIT.map(id=>{const m=MSG[id],n=m.nar;return `<div class="st1"><i>·</i><div><em>КОГДА</em>${m.when}${n?`<em>ИСТОРИЯ</em>${n[1]==='before'?'то же событие: сначала реплика, потом подсказка':'отдельное, более позднее событие: '+NAR[n[0]].when}`:''}</div><div>${n&&n[1]==='before'?narMs(n[0]):''}${msg(id)}${n&&n[1]==='later'?narMs(n[0]):''}</div><div>${btn('ПОКАЗАТЬ','tjit',id)}${n&&n[1]==='later'?btn(NAR[n[0]].n,'narshow',n[0]):''}</div></div>`}).join('')}
+  <h3>Нарратив — чистовик Claude 15.10, ждёт оценки Никиты</h3>
+  <p>Два голоса. <b>Институт</b> — сухо, без портрета, подпись INSTITUTE: экран запуска и большие окна. <b>Александра</b> — тепло, на «вы»: её панель внизу и её строка под строкой Института в окне. Капитаны — только доклады её голосом.</p>
+  <p>Три формы. <b>Э</b> — экран запуска: чёрный фон, строки по одной, потом карта (нажатие — показать все строки сразу, второе — к карте). <b>Г</b> — голос: панель внизу слева, серая рамка с жёлтой кромкой, <b>без затемнения, время идёт</b>, закрывается сама через 8 с (полоска внизу) или нажатием. Подсказки-правила — другое: жёлтая рамка, затемнение, вырез, время стоит. <b>О</b> — окно поверх всего, время стоит: строка Института, ниже строка Александры с портретом. История и правила идут <b>одной очередью</b> и никогда не звучат вместе; если событие одно, сначала история, потом правило.</p>
+  <p>В макете — EN; в сценарии — шаблон с {x}: это подставит игра (в макете — числа макета). Ключи {x} в EN и RU одинаковые.</p>
+  ${Object.keys(NAR).map(id=>{const N=NAR[id];return `<div class="st1"><i>${N.n.slice(2)}</i><div><b>${N.t}</b><em>ФОРМА</em><span class="fm">${FM[N.f][0]}</span>${FM[N.f][1]}<em>КОГДА</em>${N.when}</div><div>${narMs(id)}</div>${btn('ПОКАЗАТЬ','narshow',id)}</div>`}).join('')}
+  <p><b>N-14 · арка Александры.</b> Запуск: Институт называет её «советник смены» — функция → первая смена: «люди меняются — я остаюсь», первое «я» → первая потеря: «я запишу» → кольцо II: «или мне кажется», первое сомнение → смены: «помню все смены до вас» → отрезанный мир: «Институт их не считает» — она против Института → финал: «кроме тех, что помню я». Открыто для Никиты: когда у неё появляется лицо (предложение — на дате Ночи) и летит ли она.</p>
   <h3>Вид</h3>
-  <p>Слой темноты 80 % поверх всего экрана с прямоугольным вырезом (+6 px вокруг цели); по краю выреза — жёлтая рамка 2 px с мягкой пульсацией. Нажатие мимо выреза в «сделай» — рамка вздрагивает. Помощник — панель 640 px с жёлтой рамкой: безликий андроид 72 px, имя, одна-две строки 16 px, кнопки. Стоит внизу над картой; если цель внизу — поднимается над ней. Без стрелок и без шагов «1 из 12».</p>`}
+  <p>Слой темноты 80 % поверх всего экрана с прямоугольным вырезом (+6 px вокруг цели); по краю выреза — жёлтая рамка 2 px с мягкой пульсацией. Нажатие мимо выреза в «сделай» — рамка вздрагивает. Помощник — панель 640 px с жёлтой рамкой: портрет Александры 72 px, имя, одна-две строки 16 px, кнопки. Стоит внизу над картой; если цель внизу — поднимается над ней. Без стрелок и без шагов «1 из 12».</p>`}
 
 /* ---------- render ---------- */
 function render(){drawTop();drawTabs();drawMapUI();
@@ -626,12 +744,14 @@ function render(){drawTop();drawTabs();drawMapUI();
   el('ovl').innerHTML=w;el('ovl').className=w?'on':'';
   let p='';if(U.pop==='adv')p=popAdv();else if(U.pop==='menu')p=popMenu();else if(U.pop&&U.pop.startsWith('pick'))p=picker();
   el('pop').innerHTML=p;el('pop').className=U.pop?('on p-'+(U.pop.startsWith('pick')?'center':U.pop)):'';
-  el('noteL').innerHTML=U.note?noteWin():'';el('noteL').className=U.note?'on':'';
+  const nw=TUT.nar&&NAR[TUT.nar.id].f==='W'?narWin(TUT.nar.id):U.note?noteWin():'';el('noteL').innerHTML=nw;el('noteL').className=nw?'on':'';narZoom();
   document.querySelectorAll('#map .wd').forEach(g=>g.classList.toggle('sel',g.dataset.v===U.win));
-  tutPlace();drawScript();
+  narPlace();tutPlace();drawScript();
 }
 const ORDER=()=>W.filter(vis).map(w=>w.id);
 document.addEventListener('click',e=>{if(e.target.closest('#tutL')){tutBlocked();return}
+  /* her voice does not block: a press elsewhere on the stage closes it and goes on; if a rule hint comes next, that press only closes */
+  if(TUT.nar&&NAR[TUT.nar.id].f==='V'&&!e.target.closest('#voice')&&e.target.closest('#stage')){narDone();render();if(TUT.msg)return}
   const t=e.target.closest('[data-a]');if(t&&tutCtl(t.dataset.a,t.dataset.v))return;if(!t){if(U.pop&&(!e.target.closest('#pop')||e.target.id==='pop')){U.pop=null;render();return}if(e.target.id==='ovl'&&U.win&&!['yard','earth','ark'].includes(U.win)){U.win=null;U.scrapArm=null;render()}return}
   const a=t.dataset.a,v=t.dataset.v;
   if(a==='tab'){U.pop=null;if(['worlds','fleet','tech'].includes(v)){U.tab=U.tab===v?null:v;U.win=null}else{U.win=U.win===v?null:v}}
@@ -666,7 +786,7 @@ document.addEventListener('mouseover',e=>{const g=e.target.closest('#map .wd');c
   const w=WI(g.dataset.v),r=g.querySelector('circle[fill="transparent"]').getBoundingClientRect(),s=el('mapbox').getBoundingClientRect(),sc=el('stage').getBoundingClientRect().width/1280;const n=H.filter(h=>h.line===w.id).length;
   tip.innerHTML=`${wmark(w.k,w.st!=='free')}<b>${w.n}</b><span>${KIND[w.k]}</span>${w.f.dep?`<em>${res(w.k==='farm'?'food':w.k==='mine'?'metal':'fuel',12)}${w.f.dep}</em>`:''}${w.f.ppl?`<em>${res('people',12)}${w.f.ppl}</em>`:''}<em>${ship('hauler',18)}${n}</em>`;
   tip.style.left=((r.right-s.left)/sc+8)+'px';tip.style.top=((r.top-s.top)/sc-6)+'px';tip.className='on';});
-function fit(){const vw=Math.min(window.innerWidth||1280,document.documentElement.clientWidth||1280,(window.visualViewport&&window.visualViewport.width)||1280);const s=Math.min(1,(vw-8)/1280);el('stage').style.transform=`scale(${s})`;el('wrap').style.height=(760*s)+'px';el('wrap').style.width=(1280*s)+'px'}
+function fit(){const vw=Math.min(window.innerWidth||1280,document.documentElement.clientWidth||1280,(window.visualViewport&&window.visualViewport.width)||1280);const s=Math.min(1,(vw-8)/1280),k=s<.6?Math.min(3,.8/s):1;el('stage').style.setProperty('--k',k);el('stage').classList.toggle('small',k>1);narZoom();el('stage').style.transform=`scale(${s})`;el('wrap').style.height=(760*s)+'px';el('wrap').style.width=(1280*s)+'px'}
 window.addEventListener('resize',fit);window.addEventListener('load',fit);if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);setTimeout(fit,300);
 go(0);fit();
 </script>
