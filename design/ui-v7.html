@@ -414,7 +414,7 @@ function winWorld(id){const w=WI(id),f=w.f;let L='',R='';
     const can=H.filter(h=>h.st==='pier'&&REACH(h.g)>=w.ring);if(!U.who[id]&&can[0])U.who[id]=can[0].id;
     return `<div class="win sm">${head(w.n,sub,wmark(w.k,false,16))}<div class="bd one">${sec('WORLD')}${w.k=='works'?row('Makes','parts',KC[w.k]):row('Deposit',f.dep+(w.k=='farm'?' rations':w.k=='mine'?' metal':' fuel'),KC[w.k])}${row('Crossing',f.cross)}${row('Sector',f.sec)}
      ${sec('FOUND A COLONY')}${row('Settlers','52 people',C.people)}<div class="lab">WHO GOES</div>${can.length?can.map(h=>`<label class="radio${U.who[id]===h.id?' on':''}" data-a="who" data-v="${id}:${h.id}"><i></i>${ship(h.c,26)}${gen(h.g)}<b>no.${h.id}</b><span>hold ${SPEC[h.c][0]} · arrives in ${w.ring*5} yrs</span></label>`).join(''):`<div class="why">No free hull at Earth reaches ring ${w.ring}.</div>`}
-     <div class="prow"><span class="lab">PRICE</span>${price([['metal','180'],['food','240'],['fuel','90'],['people','52']])}</div>${btn('SEND SETTLERS','send',id,can.length?'pri':'off','send')}</div>${nav}</div>`;}
+     <div class="prow"><span class="lab">PRICE</span>${price([['fuel',TUT.on?'6':'90'],['people','52']])}</div>${btn('SEND SETTLERS','send',id,can.length?'pri':'off','send')}</div>${nav}</div>`;}
   if(w.st==='settling'||w.st==='landing'){const h=H.find(x=>x.line===id&&x.st==='settlers');
     return `<div class="win sm">${head(w.n,KIND[w.k]+' · RING '+w.ring+' · IN TRANSIT',wmark(w.k,false,16))}<div class="bd one">${sec('SETTLERS ON THE WAY')}<div class="trn">${h?ship(h.c,30)+gen(h.g):''}<b>${h?hname(h):''} · 52 people</b><span>lands in ${h?h.y:9} yrs</span></div><div class="bar"><u style="width:35%;background:${C.people}"></u></div></div>${nav}</div>`;}
   if(w.st==='workedout'){
@@ -443,7 +443,7 @@ function winYard(){const pier=H.filter(h=>h.st==='pier'||h.st==='reserve');
 function winEarth(){return `<div class="win sm">${head('EARTH','TIME IS PAUSED',ic('tEarth',18,C.earth))}<div class="bd one">
   ${sec('HOME')}<div class="hero" style="color:${C.people}">2 816<span>people · −2.7 /yr</span></div>${row(res('food',13)+' Rations last until','≈ '+(TUT.on?TUT.ends:3498),C.red)+(can('night')?row(ic('night',13,C.red)+' Night','3735',C.red):'')+row('Live worlds',W.filter(w=>!['free','settling','workedout'].includes(w.st)).length)+row('Crossings','×2.65')}
   <div class="alert">${ic('starving',16,C.red)}${can('night')?'Rations end 237 years before the Night':`Rations end ≈ ${TUT.ends}`}</div>
-  ${sec('EARTH BURNS EACH YEAR')}${row(res('metal',13)+' Metal','46.9 /yr',C.metal)+row(res('food',13)+' Rations','28.4 /yr',C.food)+row(res('fuel',13)+' Fuel','6.8 /yr',C.fuel)}
+  ${sec('EARTH BURNS EACH YEAR')}${(can('metal')?row(res('metal',13)+' Metal','46.9 /yr',C.metal):'')+row(res('food',13)+' Rations','28.4 /yr',C.food)+(can('fuel')?row(res('fuel',13)+' Fuel','6.8 /yr',C.fuel):'')}
   </div></div>`}
 function convoy(){const need={courier:3,hauler:2,freighter:1},have={courier:[],hauler:[],freighter:[]};H.filter(h=>(h.st==='pier'||h.st==='reserve')&&h.g>=3).forEach(h=>have[h.c].push(h));return {need,have}}
 function winArk(){const cv=convoy();let short=[];Object.keys(cv.need).forEach(c=>{const d=cv.need[c]-cv.have[c].length;if(d>0)short.push(d+' '+c+(d>1?'s':''))});
@@ -491,10 +491,12 @@ function popAdv(){return `<div class="advl">${ADV().map(r=>`<button data-a="worl
 function popMenu(){return `<div class="menu"><button>${ic('tWorlds',15)}Language <b>EN</b> · RU</button><button>${ic('loading',15)}Sound <b>on</b></button><button>${ic('unloading',15)}Export the run log</button><button>${ic('assign',15)}Helper <b>on</b> · off</button><button data-a="note">${ic('warn',15)}Preview: an event window</button></div>`}
 function noteWin(){return `<div class="note">${ic('night',40,C.red)}<b>THE NIGHT HAS A DATE</b><p>Year 3735. Whoever is not aboard the ark stays behind. You have 730 years.</p>${btn('CONTINUE','noteclose',null,'pri')}</div>`}
 
-/* ---------- tutorial: unlocks + the harbourmaster ----------
+/* ---------- tutorial: unlocks + the android helper ----------
    A step opens by the state of the run, never by a timer. While the helper speaks, time stops,
    the screen dims and only the lit thing is bright. 'do' — only the lit thing can be pressed;
-   'see' — GOT IT, the lit thing or any press on the dark closes it. */
+   'see' — GOT IT, the lit thing or any press on the dark closes it.
+   A resource shows up the moment it is first needed — in a price the player sees, or in a first delivery.
+   No price and no burn ever uses a resource the player cannot see yet. */
 const TUT={on:false,open:new Set(),fresh:new Set(),seen:new Set(),msg:null,fromQ:false,q:[],step:-1,wait:false,done:false,year:3005,ends:3498,rings:3,R:{}};
 const can=k=>!TUT.on||TUT.open.has(k);
 const vis=w=>!TUT.on||w.ring<=TUT.rings;
@@ -503,7 +505,10 @@ const PRICE_E={courier:[['metal','40'],['fuel','14'],['people','8']],hauler:[['m
 const prices=c=>TUT.on&&curGen===1?PRICE_E[c]:PRICE[c];
 const clone=o=>JSON.parse(JSON.stringify(o));
 const MID={W:clone(W),H:clone(H),BUILD:clone(BUILD)};
-const AVA=`<svg viewBox="0 0 72 72" width="72" height="72"><rect width="72" height="72" fill="#202024"/><path d="M8 72 C10 54 22 49 36 49 C50 49 62 54 64 72 Z" fill="#5E5D58"/><path d="M29 49 L36 59 L43 49 Z" fill="#141417"/><rect x="31" y="41" width="10" height="9" fill="#9C9B95"/><circle cx="36" cy="33" r="11" fill="#9C9B95"/><path d="M22 25 C22 15 50 15 50 25 V27 H22 Z" fill="#F2F1EC"/><rect x="18" y="26" width="36" height="3.5" fill="#F2F1EC"/><rect x="33" y="18" width="6" height="5" fill="#FF2A1A"/><rect x="27" y="34" width="18" height="2" fill="#141417" opacity=".55"/><path d="M48 62 H58" stroke="#FFD23F" stroke-width="2"/></svg>`;
+/* faceless android: smooth head, a visor line, a jointed neck — the character comes later */
+const AVA=`<svg viewBox="0 0 72 72" width="72" height="72"><rect width="72" height="72" fill="#202024"/><path d="M9 72 C11 58 23 54 36 54 C49 54 61 58 63 72 Z" fill="#3A3A40"/><path d="M22 62 H50" stroke="#5E5D58" stroke-width="1.2"/><rect x="31.5" y="42" width="9" height="12" fill="#5E5D58"/><path d="M31.5 46 H40.5 M31.5 50 H40.5" stroke="#202024" stroke-width="1.2"/><ellipse cx="36" cy="28" rx="12.5" ry="15" fill="#9C9B95"/><path d="M36 13 C30 13 25 17 23.6 23" stroke="#C9C8C2" stroke-width="1.4" fill="none"/><rect x="25" y="27" width="22" height="2.6" fill="#FFD23F"/><path d="M48.5 24 V34" stroke="#5E5D58" stroke-width="1.2"/></svg>`;
+const NAMES=[['VESTA','ВЕСТА','хранительница очага Рима: пока горит её огонь, Рим стоит — она держит огонь людей до Ночи'],['ARIADNE','АРИАДНА','нить из лабиринта — та, что выводит; роль помощника буквально'],['MNEME','МНЕМА','муза памяти — когда люди уйдут, она останется их памятью (летопись, личные дела)'],['TETHYS','ТЕФИДА','титанида морей — причал, гавань, «последняя пристань»'],['KORE','КОРА','«дева», Персефона: уходит в подземный мир и возвращается — под поворот с Ночью'],['IRIS','ИРИДА','вестница между мирами, как курьеры; но имя затёрто в фантастике']];
+let HNAME='VESTA';
 const EW=()=>[
  {id:'kiln',n:'KILN',k:'mine',ring:1,a:20,st:'free',f:{dep:'5 300',cross:'4 yrs one way',sec:'EOS · calm'}},
  {id:'pale',n:'PALE',k:'farm',ring:1,a:140,st:'free',f:{dep:'12 800',cross:'5 yrs one way',sec:'HEMERA · calm'}},
@@ -521,29 +526,29 @@ const hu=id=>H.find(h=>h.id===id);
 function settle(id,f,extra){const w=WI(id);w.st='ok';w.tier=0;w.f=Object.assign({ppl:52,lift:'3610 · 605 yrs'},f);Object.assign(w,extra||{})}
 const OPN={people:'PEOPLE',speed:'скорость ❚❚ 1× 2× 4× 10×',line:'окно мира: линия, ADD A HULL (только свободные)',metal:'METAL',skip:'SKIP',food:'RATIONS + «ends ≈»',earth:'вкладка EARTH',fuel:'FUEL',order:'заказ судна в окне мира',yard:'вкладка YARD + карточки постройки',fleet:'вкладка FLEET, MOVE / TAKE OFF, «Other lines»',parts:'PARTS',machines:'блок MACHINES',tech:'вкладка TECH',advisor:'NEEDS A DECISION',worlds:'вкладка WORLDS',sectors:'доли карты',events:'полоса события',ring2:'кольцо II',zoom:'масштаб − + FIT',ring3:'кольцо III',night:'счётчик NIGHT',ark:'вкладка ARK',reserve:'RESERVE FOR ARK',lift:'строка Last lift',evac:'EVACUATE у живых миров'};
 const STEPS=[
- {t:'Первая колония',when:'новая игра, сразу после выбора языка; время стоит',opens:['people','line'],year:4,R:{people:['2 000','▲ +2.0/yr',1]},msgs:['m1','m2'],auto:true},
- {t:'Время',when:'поселенцы отправлены',opens:['speed'],win:'kiln',toast:`${ic('send',15,C.people)}52 settlers leave for KILN`,set(){WI('kiln').st='settling';Object.assign(hu(1),{line:'kiln',st:'settlers',y:5})},msgs:['m3'],auto:true},
- {t:'Первая линия',when:'поселенцы сели — окно мира открывается само',opens:[],year:9,win:'kiln',toast:'Year 9 · settlers land on KILN',set(){settle('kiln',{dep:'5 300',left:'880 yrs',surf:'36',gives:'6.0',carries:'0'});Object.assign(hu(1),{line:null,st:'pier'})},msgs:['m4'],auto:true},
- {t:'Металл',when:'первый металл дома',opens:['metal','skip'],year:21,toast:'Year 21 · the first metal is home',R:{metal:['42','▲ +6.0/yr',1]},set(){Object.assign(WI('kiln').f,{carries:'6.0',surf:'12'});Object.assign(hu(1),{line:'kiln',st:'unloading'})},msgs:['m5']},
- {t:'Еда и Земля',when:'сразу за металлом: у рационов есть дата конца',opens:['food','earth'],year:22,ends:'412',R:{food:['3 120','▼ −7.6/yr',0]},msgs:['m6']},
- {t:'Верфь',when:'у заселённого мира пустая линия, а у причала нет свободного судна',opens:['fuel','order','yard'],year:61,win:'pale',R:{metal:['388','▲ +5.8/yr',1],fuel:['310','▼ −1.2/yr',0],food:['2 810','▼ −8.1/yr',0]},set(){settle('pale',{dep:'12 800',left:'1 400 yrs',surf:'50',gives:'8.8',carries:'0'});Object.assign(hu(2),{line:null,st:'toEarth',y:4})},msgs:['m8','m9']},
- {t:'Флот',when:'судов больше, чем линий: 4 судна и 2 линии',opens:['fleet'],year:140,ends:'1 950',R:{metal:['1 240','▲ +9.6/yr',1],fuel:['520','▲ +2.1/yr',1],food:['3 400','▼ −2.2/yr',0],people:['2 140','▲ +1.1/yr',1]},set(){settle('wick',{dep:'7 420',left:'1 700 yrs',surf:'20',gives:'4.4',carries:'4.4'});WI('pale').f.carries='4.4';H.push({id:3,c:'courier',g:1,line:'pale',st:'toWorld',y:3},{id:4,c:'courier',g:1,line:null,st:'pier'});Object.assign(hu(2),{line:'wick',st:'loading'})},msgs:['m10']},
+ {t:'Голод',when:'новая игра; время стоит',opens:['people','food','line'],year:4,ends:'412',R:{people:['2 000','▲ +2.0/yr',1],food:['3 120','▼ −7.6/yr',0]},msgs:['m0','m1','m2'],auto:true},
+ {t:'Время',when:'поселенцы отправлены',opens:['speed'],win:'pale',toast:`${ic('send',15,C.people)}52 settlers leave for PALE`,R:{fuel:['234','▼ −0.4/yr',0]},set(){WI('pale').st='settling';Object.assign(hu(1),{line:'pale',st:'settlers',y:5})},msgs:['m3'],auto:true},
+ {t:'Первая линия',when:'поселенцы сели — окно мира открывается само',opens:['fuel'],year:9,win:'pale',toast:'Year 9 · settlers land on PALE',set(){settle('pale',{dep:'12 800',left:'1 400 yrs',surf:'50',gives:'8.8',carries:'0'});Object.assign(hu(1),{line:null,st:'pier'})},msgs:['m4'],auto:true},
+ {t:'Рационы дома',when:'первые рационы дома',opens:['earth','skip'],year:21,ends:'640',toast:'Year 21 · the first rations are home',R:{food:['3 020','▼ −2.1/yr',0],fuel:['221','▼ −0.6/yr',0]},set(){Object.assign(WI('pale').f,{carries:'4.4',surf:'12'});Object.assign(hu(1),{line:'pale',st:'unloading'})},msgs:['m5']},
+ {t:'Второй мир и верфь',when:'второй мир заселён, его линия пуста, у причала нет свободного судна',opens:['metal','order','yard'],year:61,win:'kiln',R:{metal:['430','▼ −0.2/yr',0],fuel:['196','▼ −0.6/yr',0],food:['2 900','▼ −3.0/yr',0]},set(){settle('kiln',{dep:'5 300',left:'880 yrs',surf:'36',gives:'6.0',carries:'0'});Object.assign(hu(2),{line:null,st:'toEarth',y:4})},msgs:['m8','mM','m9']},
+ {t:'Флот',when:'судов больше, чем линий: 4 судна и 2 линии',opens:['fleet'],year:140,ends:'1 950',R:{metal:['1 240','▲ +9.6/yr',1],fuel:['520','▲ +2.1/yr',1],food:['3 400','▼ −2.2/yr',0],people:['2 140','▲ +1.1/yr',1]},set(){settle('wick',{dep:'7 420',left:'1 700 yrs',surf:'20',gives:'4.4',carries:'4.4'});WI('kiln').f.carries='6.0';H.push({id:3,c:'courier',g:1,line:'kiln',st:'toWorld',y:3},{id:4,c:'courier',g:1,line:null,st:'pier'});Object.assign(hu(2),{line:'wick',st:'loading'})},msgs:['m10']},
  {t:'Линия не успевает',when:'первый мир, где линия увозит меньше, чем мир даёт',opens:[],year:260,win:'pale',set(){const w=WI('pale');w.st='half';Object.assign(w.f,{carries:'4.1',surf:'940'})},msgs:['m11']},
- {t:'Детали, техника, TECH',when:'первые детали дома; не позже, чем в цене судна впервые появились детали (тягач — с 3 живых миров)',opens:['parts','machines','tech'],year:420,R:{parts:['24','▲ +1.4/yr',1]},set(){settle('hollow',{},{works:{metal:'9.0 /yr · 120 yrs',food:'5.0 /yr · 80 yrs',bad:0,parts:'4.6 /yr',run:'100%'}});Object.assign(hu(4),{line:'hollow',st:'toEarth',y:6})},msgs:['m12','m14']},
+ {t:'Детали, техника, TECH',when:'первые детали дома; не позже, чем в цене впервые появились детали (тягач — с 3 живых миров)',opens:['parts','machines','tech'],year:420,R:{parts:['24','▲ +1.4/yr',1]},set(){settle('hollow',{},{works:{metal:'9.0 /yr · 120 yrs',food:'5.0 /yr · 80 yrs',bad:0,parts:'4.6 /yr',run:'100%'}});Object.assign(hu(4),{line:'hollow',st:'toEarth',y:6})},msgs:['m12','m14']},
  {t:'Советник',when:'первая строка советника; не позже 5 живых миров',opens:['advisor','worlds'],year:520,set(){H.push({id:5,c:'hauler',g:1,line:'kiln',st:'toWorld',y:2})},msgs:['m15']},
  {t:'События',when:'первое предупреждение режиссёра (≈ 600-й год)',opens:['sectors','events'],year:640,msgs:['m17']},
  {t:'Кольцо II',when:'нанесено второе кольцо (разведка — во вкладке TECH)',opens:['ring2','zoom'],rings:2,year:900,msgs:['m16']},
  {t:'Ночь и ковчег',when:'нанесено третье кольцо — у Ночи есть дата (большое окно)',opens:['ring3','night','ark','reserve','lift','evac'],rings:3,year:3005,ends:'3498',note:true,msgs:['m18','m19']}
 ];
 const MSG={
- m1:{at:'#map .wd[data-v="kiln"]',mode:'do',done:(a,v)=>a==='world'&&v==='kiln',en:"Earth can't feed itself much longer. Settle a world — KILN has metal.",ru:'Земля скоро не прокормит себя. Заселите мир — на KILN есть металл.'},
- m2:{at:'#ovl [data-a="send"]',mode:'do',done:a=>a==='send',en:'Send settlers. Once they land, you put hulls on its line right here.',ru:'Отправьте поселенцев. Когда сядут, суда на линию ставятся здесь же.'},
- m3:{at:'#top .spd',mode:'do',done:(a,v)=>a==='spd'&&v!=='0',en:'Time is stopped. Start it. KILN takes no orders until the settlers land.',ru:'Время стоит. Запустите его. Пока поселенцы не сели, KILN приказов не принимает.'},
- m4:{at:'#ovl [data-a="assign"]',mode:'do',done:a=>a==='assign',en:"They've landed. Put a hull on the line — it brings KILN's metal home.",ru:'Сели. Поставьте судно на линию — оно повезёт металл KILN домой.'},
- m5:{at:'#res [data-r="metal"]',mode:'see',en:'Metal is home. Hulls and machines are built from it.',ru:'Металл дома. Из него строят суда и технику.'},
- m6:{at:'#res [data-r="food"]',mode:'see',en:'Earth eats more every year. Rations run out in 412. Settle a farm.',ru:'Земля ест больше с каждым годом. Рационы кончатся в 412-м. Заселите ферму.'},
+ m0:{at:'#res [data-r="food"]',mode:'see',en:'Earth eats more every year. Rations run out in 412.',ru:'Земля ест больше с каждым годом. Рационы кончатся в 412-м.'},
+ m1:{at:'#map .wd[data-v="pale"]',mode:'do',done:(a,v)=>a==='world'&&v==='pale',en:'Settle a world that grows food — PALE.',ru:'Заселите мир, где растёт еда, — PALE.'},
+ m2:{at:'#ovl [data-a="send"]',mode:'do',also:'#ovl .prow',opens:['fuel'],R:{fuel:['240','▼ −0.4/yr',0]},done:a=>a==='send',en:'Settlers cost people and fuel. Every flight burns fuel.',ru:'Поселенцы стоят людей и топлива. Каждый рейс жжёт топливо.'},
+ m3:{at:'#top .spd',mode:'do',done:(a,v)=>a==='spd'&&v!=='0',en:'Time is stopped. Start it. PALE takes no orders until the settlers land.',ru:'Время стоит. Запустите его. Пока поселенцы не сели, PALE приказов не принимает.'},
+ m4:{at:'#ovl [data-a="assign"]',mode:'do',done:a=>a==='assign',en:"They've landed. Put a hull on the line — it brings PALE's rations home.",ru:'Сели. Поставьте судно на линию — оно повезёт рационы PALE домой.'},
+ m5:{at:'#res [data-r="food"]',mode:'see',en:'Rations are home. The end moved to 640.',ru:'Рационы дома. Конец сдвинулся на 640-й.'},
  m8:{at:'#ordblk',mode:'do',done:a=>a==='order',en:'No free hull at the pier. Order one here — it goes straight to this line.',ru:'Свободных судов у причала нет. Закажите здесь — судно сразу пойдёт на эту линию.'},
- m9:{at:'#cards',mode:'see',pre(){U.win=null},en:'Being built — here, and all of it in the YARD.',ru:'Что строится — здесь, а всё целиком — во вкладке YARD.'},
+ mM:{at:'#res [data-r="metal"]',mode:'see',pre(){U.win=null},en:'Hulls are built from metal. KILN mines it.',ru:'Суда строят из металла. Его добывает KILN.'},
+ m9:{at:'#cards',mode:'see',en:'Being built — here, and all of it in the YARD.',ru:'Что строится — здесь, а всё целиком — во вкладке YARD.'},
  m10:{at:'#tabs [data-v="fleet"]',mode:'see',en:'Every hull and where it is. A hull you move changes lines when it docks.',ru:'Все суда и где они. Переведённое судно меняет линию, когда причалит.'},
  m11:{at:'#rw-carries',mode:'see',en:'PALE gives more than its line carries. The rest waits on the surface.',ru:'PALE даёт больше, чем увозит линия. Остальное ждёт на поверхности.'},
  m12:{at:'#res [data-r="parts"]',mode:'see',en:'Parts are home. Works make them from metal and rations — without rations they stop.',ru:'Детали дома. Заводы делают их из металла и рационов — без рационов встают.'},
@@ -554,10 +559,10 @@ const MSG={
  m18:{at:'#noteL .note',mode:'see',en:'Big news stops time. It comes one window at a time.',ru:'Большие новости останавливают время. Приходят по одному окну.'},
  m19:{at:'#tabs [data-v="ark"]',mode:'see',pre(){U.note=false},en:'The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation III or newer, at the pier that day.',ru:'Ковчег уходит в Ночь с теми, кто на борту. Нужны оплаченные уровни и конвой — суда III поколения и новее у причала в тот день.'},
  /* by occasion: once each, when the thing first happens */
- m7:{at:'#ovl .wh small',mode:'see',when:'первое открытие EARTH, YARD или ARK',demo:{step:4,win:'earth'},en:'Time stops while Earth, the Yard or the Ark is open.',ru:'Пока открыты Земля, Верфь или Ковчег, время стоит.'},
- m13:{at:'#mach',mode:'see',when:'первое окно мира после того, как открылась техника',demo:{step:8,win:'kiln'},en:"Machines make a world give more. They burn its fuel and ride out on the line's next hull.",ru:'Техника поднимает выработку мира. Жжёт его топливо и уходит со следующим судном линии.'},
- m20:{at:'#convoy',mode:'see',when:'первое открытие ARK',demo:{step:12,win:'ark'},en:'Hold hulls for the convoy with RESERVE FOR ARK in the Yard.',ru:'Суда для конвоя придерживайте кнопкой RESERVE FOR ARK во вкладке YARD.'},
- m21:{at:'#rw-lift',mode:'see',when:'первое окно мира после даты Ночи',demo:{step:12,win:'kiln'},en:'Last lift: the year a courier must leave to bring everyone home before the Night.',ru:'Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.'},
+ m7:{at:'#ovl .wh small',mode:'see',when:'первое открытие EARTH, YARD или ARK',demo:{step:3,win:'earth'},en:'Time stops while Earth, the Yard or the Ark is open.',ru:'Пока открыты Земля, Верфь или Ковчег, время стоит.'},
+ m13:{at:'#mach',mode:'see',when:'первое окно мира после того, как открылась техника',demo:{step:7,win:'kiln'},en:"Machines make a world give more. They burn its fuel and ride out on the line's next hull.",ru:'Техника поднимает выработку мира. Жжёт его топливо и уходит со следующим судном линии.'},
+ m20:{at:'#convoy',mode:'see',when:'первое открытие ARK',demo:{step:11,win:'ark'},en:'Hold hulls for the convoy with RESERVE FOR ARK in the Yard.',ru:'Суда для конвоя придерживайте кнопкой RESERVE FOR ARK во вкладке YARD.'},
+ m21:{at:'#rw-lift',mode:'see',when:'первое окно мира после даты Ночи',demo:{step:11,win:'kiln'},en:'Last lift: the year a courier must leave to bring everyone home before the Night.',ru:'Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.'},
  m22:{at:'#ovl [data-a="evac"]',mode:'see',when:'первый выработанный мир',demo:{mid:1,win:'gallows'},en:'The seam is dead. Only evacuation is left — a courier takes everyone.',ru:'Жила мертва. Осталась только эвакуация — курьер забирает всех.'},
  m24:{at:'#hr-57',mode:'see',when:'первое опоздавшее судно',demo:{mid:1,win:'vesper'},en:'A hull is overdue. If it is lost, nothing replaces it — you order the next one.',ru:'Судно опаздывает. Если пропадёт, замены не будет — следующее заказываете вы.'},
  m23:{at:'#hr-49',mode:'see',when:'первый отказ экипажа',demo:{mid:1,win:'kiln'},en:'Near the end, crews refuse runs. A hull that refused still sails with the convoy.',ru:'Под конец экипажи отказываются от рейсов. Отказавшее судно в конвой всё равно идёт.'}
@@ -570,7 +575,7 @@ function build(i){TUT.on=true;TUT.step=i;TUT.wait=false;TUT.done=false;TUT.msg=n
   TUT.fresh=new Set(STEPS[i].opens);
   Object.assign(U,{win:STEPS[i].win||null,tab:null,pop:null,note:!!STEPS[i].note,who:{},addTab:'free',scrapArm:null,userPause:false,zoom:[1,2.2,1.45,1][TUT.rings]});drawMap()}
 function go(i){build(i);TUT.q=STEPS[i].msgs.slice();nextInQ();render()}
-function show(id,fromQ){const m=MSG[id];if(m.pre)m.pre();TUT.msg=id;TUT.fromQ=fromQ}
+function show(id,fromQ){const m=MSG[id];if(m.pre)m.pre();if(TUT.on&&m.opens)m.opens.forEach(o=>{TUT.open.add(o);TUT.fresh.add(o)});if(TUT.on&&m.R)Object.assign(TUT.R,m.R);TUT.msg=id;TUT.fromQ=fromQ}
 function nextInQ(){if(TUT.q.length){show(TUT.q.shift(),true);return}
   const i=TUT.step;if(i>=STEPS.length-1){TUT.done=true;tutWhen();return}
   if(STEPS[i].auto){if(STEPS[i+1].toast)toast(STEPS[i+1].toast);setTimeout(()=>go(i+1),STEPS[i+1].toast?900:300)}else{TUT.wait=true;tutWhen()}}
@@ -583,6 +588,7 @@ function tutCtl(a,v){
   if(a==='mode'){TUT.seen=new Set();if(v==='mid'){setMid();render()}else go(0);return true}
   if(a==='tgo'){TUT.seen=new Set();go(+v);el('wrap').scrollIntoView({behavior:'smooth'});return true}
   if(a==='tjit'){const m=MSG[v];TUT.seen=new Set();if(m.demo.mid)setMid();else{build(m.demo.step);STEPS[m.demo.step].msgs.forEach(x=>TUT.seen.add(x));TUT.q=[];TUT.wait=true}U.win=m.demo.win;U.note=false;show(v,false);render();el('wrap').scrollIntoView({behavior:'smooth'});return true}
+  if(a==='hname'){HNAME=v;render();return true}
   if(a==='tutok'){tutDone();render();return true}
   if(a==='tutskip'){TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.done=true;Object.keys(OPN).forEach(k=>TUT.open.add(k));TUT.rings=3;U.zoom=1;drawMap();render();return true}
   if(a==='tnext'){go(TUT.step+1);return true}
@@ -593,9 +599,9 @@ function tutPlace(){const L=el('tutL'),Rg=el('tutRing'),hp=el('helper'),nx=el('t
   const nxOn=TUT.on&&TUT.wait&&!TUT.msg&&TUT.step<STEPS.length-1;nx.className=nxOn?'on':'';nx.innerHTML=nxOn?`▸ Дальше (макет): ${STEPS[TUT.step+1].when}`:'';
   if(!TUT.msg){L.className='';Rg.style.display='none';hp.className='';return}
   const m=MSG[TUT.msg],t=document.querySelector(m.at),st=el('stage').getBoundingClientRect(),sc=st.width/1280;
-  hp.innerHTML=`<div class="hav">${AVA}</div><div><div class="hnm">HARBOURMASTER</div><div class="htx">${m.en}</div><div class="hbt">${TUT.on&&TUT.step===0&&TUT.fromQ?btn('SKIP THE HELPER','tutskip'):''}${m.mode==='see'?btn('GOT IT','tutok',null,'pri'):''}</div></div>`;
+  hp.innerHTML=`<div class="hav">${AVA}</div><div><div class="hnm">${HNAME}</div><div class="htx">${m.en}</div><div class="hbt">${TUT.on&&TUT.step===0&&TUT.fromQ?btn('SKIP THE HELPER','tutskip'):''}${m.mode==='see'?btn('GOT IT','tutok',null,'pri'):''}</div></div>`;
   hp.className='on';L.className='on';const hh=hp.offsetHeight;let top=760-hh-14;
-  if(t){const r=t.getBoundingClientRect(),p=6,x0=Math.max(0,(r.left-st.left)/sc-p),y0=Math.max(0,(r.top-st.top)/sc-p),x1=Math.min(1280,(r.right-st.left)/sc+p),y1=Math.min(760,(r.bottom-st.top)/sc+p);
+  if(t){const r0=t.getBoundingClientRect(),t2=m.also&&document.querySelector(m.also),r1=t2?t2.getBoundingClientRect():r0,r={left:Math.min(r0.left,r1.left),top:Math.min(r0.top,r1.top),right:Math.max(r0.right,r1.right),bottom:Math.max(r0.bottom,r1.bottom)},p=6,x0=Math.max(0,(r.left-st.left)/sc-p),y0=Math.max(0,(r.top-st.top)/sc-p),x1=Math.min(1280,(r.right-st.left)/sc+p),y1=Math.min(760,(r.bottom-st.top)/sc+p);
     L.style.clipPath=`polygon(evenodd,0 0,1280px 0,1280px 760px,0 760px,0 0,${x0}px ${y0}px,${x1}px ${y0}px,${x1}px ${y1}px,${x0}px ${y1}px,${x0}px ${y0}px)`;
     Object.assign(Rg.style,{display:'block',left:x0+'px',top:y0+'px',width:(x1-x0)+'px',height:(y1-y0)+'px'});
     if(y1>top-10)top=Math.max(104,y0-hh-16);}
@@ -605,12 +611,15 @@ function drawScript(){el('m-mid').className=TUT.on?'':'on';el('m-tut').className
   const msg=id=>{const m=MSG[id];return `<div class="ms"><u>${m.mode==='do'?'СДЕЛАЙ — нажать можно только подсвеченное':'СМОТРИ — GOT IT или любое нажатие'}</u><span>${m.en}</span><small>${m.ru}</small></div>`};
   el('scr').innerHTML=`<h3>Обучение: что и когда открывается</h3>
   <p>Шаг открывает <b>состояние забега</b>, а не таймер и не кнопка «далее»: условие вроде «у причала нет свободного судна» рано или поздно наступает, застрять нельзя. Пока говорит помощник, <b>время стоит</b>, экран темнеет, светлое — то, о чём речь. Новая вкладка встаёт на своё место (места не прыгают) с жёлтой точкой; точка гаснет при первом открытии. На первом сообщении — <b>SKIP THE HELPER</b>: открывается всё сразу; в ≡ — Helper on/off.</p>
+  <p><b>Ресурсы — по мере хода.</b> Ресурс появляется на экране в тот момент, когда впервые нужен: в цене, которую игрок видит, или в первой доставке. Ни одна цена и ни один расход Земли не берут ресурс, которого игрок ещё не видит. Старт — голод: RATIONS и PEOPLE; FUEL — в цене первых поселенцев; METAL — в цене первого судна; PARTS — в цене тягача или с первыми деталями.</p>
+  <p><b>Помощник — андроид,</b> пока безликий; позже — конкретный персонаж, женщина-андроид. Имя (нажмите, чтобы примерить): <span class="mode" style="display:inline-flex">${NAMES.map(n=>`<button data-a="hname" data-v="${n[0]}" class="${HNAME===n[0]?'on':''}">${n[0]} · ${n[1]}</button>`).join('')}</span></p>
+  <ul style="margin:4px 0 0;padding-left:18px">${NAMES.map(n=>`<li><b>${n[0]} / ${n[1]}</b> — ${n[2]}</li>`).join('')}</ul>
   <p>В макете шаги-«сделай» идут сами; после шагов-«смотри» внизу слева появляется пунктирная кнопка «Дальше» — это не игра, а перемотка к следующему условию.</p>
   ${STEPS.map((s,i)=>`<div class="st1${TUT.on&&TUT.step===i?' cur':''}"><i>${i+1}</i><div><b>${s.t}</b><em>КОГДА</em>${s.when}<em>ОТКРЫВАЕТ</em><div class="opn">${s.opens.length?s.opens.map(o=>`<span>${OPN[o]}</span>`).join(''):'<span>—</span>'}</div></div><div>${s.msgs.map(msg).join('')}</div>${btn('ПОКАЗАТЬ','tgo',i)}</div>`).join('')}
   <h3>Подсказки по случаю — один раз, когда это впервые случилось</h3>
   ${JIT.map(id=>`<div class="st1"><i>·</i><div><em>КОГДА</em>${MSG[id].when}</div><div>${msg(id)}</div>${btn('ПОКАЗАТЬ','tjit',id)}</div>`).join('')}
   <h3>Вид</h3>
-  <p>Слой темноты 80 % поверх всего экрана с прямоугольным вырезом (+6 px вокруг цели); по краю выреза — жёлтая рамка 2 px с мягкой пульсацией. Нажатие мимо выреза в «сделай» — рамка вздрагивает. Помощник — панель 640 px с жёлтой рамкой: портрет начальника порта 72 px, имя, одна-две строки 16 px, кнопки. Стоит внизу над картой; если цель внизу — поднимается над ней. Без стрелок и без шагов «1 из 12».</p>`}
+  <p>Слой темноты 80 % поверх всего экрана с прямоугольным вырезом (+6 px вокруг цели); по краю выреза — жёлтая рамка 2 px с мягкой пульсацией. Нажатие мимо выреза в «сделай» — рамка вздрагивает. Помощник — панель 640 px с жёлтой рамкой: безликий андроид 72 px, имя, одна-две строки 16 px, кнопки. Стоит внизу над картой; если цель внизу — поднимается над ней. Без стрелок и без шагов «1 из 12».</p>`}
 
 /* ---------- render ---------- */
 function render(){drawTop();drawTabs();drawMapUI();
