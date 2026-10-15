@@ -153,6 +153,8 @@ svg.gi{fill:currentColor}
 .side .bd,.side .tbl>.b{width:100%}.side .tbl>.b{padding:8px;margin-top:6px}
 .ico3{display:flex;gap:14px;font:600 13px var(--n);margin:4px 0}.ico3 span{display:flex;gap:5px;align-items:center}
 /* pops */
+/* the fix the advisor sent you to: a yellow ring that fades */
+.focus{animation:foc 3s forwards}@keyframes foc{0%,65%{box-shadow:0 0 0 2px var(--ppl),0 0 0 9px rgba(255,210,63,.16)}100%{box-shadow:0 0 0 0 rgba(255,210,63,0)}}
 #pop{position:absolute;z-index:8;display:none}#pop.on{display:block}
 #pop.p-adv{left:360px;top:42px;width:520px}#pop.p-menu{right:12px;top:42px;width:260px}
 #pop.p-center{left:0;right:0;top:0;bottom:0;background:rgba(5,5,6,.5);display:flex;align-items:center;justify-content:center}
@@ -395,11 +397,12 @@ function drawTabs(){const F=flags();
    return `<button class="tab${on?' on':''}" data-a="tab" data-v="${t[0]}">${ic(t[1],30,on?(['earth','ark'].includes(t[0])?t[3]:'#000'):t[3])}<span>${t[2]}</span>${TUT.fresh.has(t[0])&&!on?'<i class="new"></i>':''}${f&&!on&&!U.win&&!U.tab?`<em class="flag" style="color:${f[1]};border-color:${f[1]}">${f[0]}</em>`:''}</button>`}).join('');}
 /* ---------- advisor (worlds only) ---------- */
 function ADV(){const a=[];
-  W.forEach(w=>{if(w.st==='workedout')a.push([C.red,`${w.n}: the seam is dead`,`${w.f.ppl} people still there — evacuate`,w.id]);
-   if(w.st==='starve')a.push([C.red,`${w.n}: rations for 3 years`,'The works stop without food — add a hull',w.id]);
-   if(w.st==='cutoff')a.push([C.red,`${w.n} is cut off`,`${w.f.ppl} people stay — no courier is home in time`,w.id]);
-   if(w.st==='half')a.push([C.people,`${w.n}: the line carries half of what it gives`,'One hauler for 210 years of seam',w.id]);});
-  H.filter(h=>h.st==='mutiny').forEach(h=>a.push([C.red,`${WI(h.line).n}: ${hname(h)} refuses the run`,'Take it off the line or wait it out',h.line]));
+  /* each row: the problem in numbers, why it matters, a button that names the fix; the button opens the world with the fix lit */
+  W.forEach(w=>{if(w.st==='workedout')a.push([C.red,`${w.n}: the seam is dead`,`${w.f.ppl} people are still there`,w.id,'EVACUATE','evac']);
+   if(w.st==='starve')a.push([C.red,`${w.n}: rations for 3 years`,'Then the works stop',w.id,'ADD A HULL','add']);
+   if(w.st==='cutoff')a.push([C.red,`${w.n} is cut off`,`${w.f.ppl} people stay — no courier gets home in time`,w.id,'SEE','lift']);
+   if(w.st==='half')a.push([C.people,`${w.n}: ${w.f.carries} of ${w.f.gives} ${{farm:'rations',mine:'metal',well:'fuel'}[w.k]} a year reach Earth`,'The rest piles up on the surface',w.id,'ADD A HULL','add']);});
+  H.filter(h=>h.st==='mutiny').forEach(h=>a.push([C.red,`${WI(h.line).n}: ${hname(h)} refuses the run`,'It sits idle until the crew gives in',h.line,'TAKE IT OFF','hr-'+h.id]));
   return a.sort((x,y)=>(x[0]===C.red?0:1)-(y[0]===C.red?0:1));}
 /* ---------- map ---------- */
 const CX=500,CY=350,RR=[0,115,205,295];
@@ -463,8 +466,9 @@ function winWorld(id){const w=WI(id),f=w.f;let L='',R='';
   const on=H.filter(h=>h.line===id);
   R+=sec('ON THIS LINE',`${on.length} HULLS`)+(on.length?on.map(h=>hullRow(h,can('fleet')?btn('MOVE','pick',`move:${h.id}`,'',`move`)+btn('TAKE OFF','takeoff',h.id,'','takeoff'):'')).join(''):'<div class="why">No hulls on this line — nothing comes home from here.</div>')+(on.length&&w.k!=='works'?``:'');
   const pool=U.addTab==='free'?H.filter(h=>h.st==='pier'):H.filter(h=>h.line&&h.line!==id&&h.st!=='settlers');
-  R+=`<div class="sec"><span>ADD A HULL</span><span class="seg"><button data-a="addtab" data-v="free" class="${U.addTab==='free'?'on':''}">FREE · ${H.filter(h=>h.st==='pier').length}</button>${can('fleet')?`<button data-a="addtab" data-v="other" class="${U.addTab==='other'?'on':''}">OTHER LINES · ${H.filter(h=>h.line&&h.line!==id).length}</button>`:''}</span></div>`;
+  R+=`<div id="addblk"><div class="sec"><span>ADD A HULL</span><span class="seg"><button data-a="addtab" data-v="free" class="${U.addTab==='free'?'on':''}">FREE · ${H.filter(h=>h.st==='pier').length}</button>${can('fleet')?`<button data-a="addtab" data-v="other" class="${U.addTab==='other'?'on':''}">OTHER LINES · ${H.filter(h=>h.line&&h.line!==id).length}</button>`:''}</span></div>`;
   R+=`<div class="lst">`+(pool.length?pool.map(h=>{const ok=REACH(h.g)>=w.ring;return `<div class="hr${ok?'':' dis'}">${ship(h.c,30)}${gen(h.g,h.g<curGen-1)}<span class="hn">${CLS[h.c]} no.${h.id}</span><span class="hs">${ok?`<span class="hst">${ic('hold',15,C.mid)}${SPEC[h.c][0]} · ${ic('speed',15,C.mid)}${SPEC[h.c][1]}</span>`+(h.line?`<span class="hst">from ${WI(h.line).n}</span>`:''):`<span class="hst" style="color:${C.red}">${ic('range',15,C.red)}reaches ring ${REACH(h.g)} — too short</span>`}</span><span class="ha">${ok?btn('ASSIGN','assign',`${h.id}:${id}`,'pri','assign'):''}</span></div>`}).join(''):'<div class="why">No free hulls at the pier. Order one below or take one from another line.</div>')+`</div>`;
+  R+='</div>';
   if(can('order'))R+=`<div id="ordblk">`+sec('OR ORDER A NEW ONE',`YARD · GEN ${ROM[curGen]}`)+`<div class="ord">${classes().map(c=>{const sh=c==='freighter';return `<div class="oc${sh?' dis':''}">${ship(c,40)}<b>${CLS[c].toUpperCase()} ${ROM[curGen]}</b>${price(prices(c).slice(0,3))}${sh?`<div class="why">259 parts short</div>`:btn('BUILD · '+(c==='courier'?6:9)+' YRS','order',`${c}:${id}`,'pri','build')}</div>`}).join('')}</div></div>`;
   return `<div class="win">${head(w.n,sub,wmark(w.k,true,16))}<div class="bd two"><div>${L}</div><div>${R}</div></div>${nav}</div>`;
 }
@@ -520,7 +524,7 @@ function sideFleet(){const F={all:h=>true,free:h=>h.st==='pier'||h.st==='reserve
   <div class="lst tall">${U.filter==='yards'?BUILD.map(b=>`<div class="hr">${ship(b.c,30)}${gen(b.g)}<span class="hn">${CLS[b.c]}</span><span class="hs"><span class="hst">${ic('build',15,C.mid)}in the yard · ${b.y} yrs → ${b.for?WI(b.for).n:'free'}</span></span></div>`).join(''):list.map(h=>hullRow(h,h.st==='pier'?btn('SEND','pick',`send:${h.id}`,'pri','assign'):h.line?`<button class="lnk" data-a="world" data-v="${h.line}">${WI(h.line).n} →</button>`:'')).join('')}</div></div>`}
 function picker(){const [kind,hid]=U.pop.split(':').slice(1),h=H.find(x=>x.id==hid);const ws=W.filter(w=>vis(w)&&!['free','workedout','settling'].includes(w.st)&&w.id!==h.line);
   return `<div class="pick">${sec((kind==='move'?'MOVE ':'SEND ')+hname(h).toUpperCase()+' TO')}${ws.map(w=>{const ok=REACH(h.g)>=w.ring;return `<button data-a="${ok?'pickgo':''}" data-v="${kind}:${h.id}:${w.id}" class="${ok?'':'dis'}">${wmark(w.k)}<b>${w.n}</b><span>${ok?'ring '+w.ring:'out of reach'}</span></button>`}).join('')}<button class="cancel" data-a="pop" data-v="">KEEP IT WHERE IT IS</button></div>`}
-function popAdv(){return `<div class="advl">${ADV().map(r=>`<button data-a="world" data-v="${r[3]}"><i style="background:${r[0]}"></i><b>${r[1]}</b><span>${r[2]}</span><em>${WI(r[3]).n} →</em></button>`).join('')}</div>`}
+function popAdv(){return `<div class="advl">${ADV().map(r=>`<button data-a="world" data-v="${r[3]}" data-f="${r[5]}"><i style="background:${r[0]}"></i><b>${r[1]}</b><span>${r[2]}</span><em>${r[4]} →</em></button>`).join('')}</div>`}
 function popMenu(){return `<div class="menu"><button>${ic('tWorlds',15)}Language <b>EN</b> · RU</button><button>${ic('loading',15)}Sound <b>on</b></button><button>${ic('unloading',15)}Export the run log</button><button>${ic('assign',15)}Helper <b>on</b> · off</button><button data-a="note">${ic('warn',15)}Preview: an event window</button></div>`}
 /* the Night window is now the narrative block N-09 (the Institute speaks) */
 function noteWin(){return narWin('N09','noteclose')}
@@ -582,10 +586,10 @@ const MSG={
  mM:{at:'#res [data-r="metal"]',mode:'see',pre(){U.win=null},en:'Hulls are built from metal. KILN mines it.',ru:'Суда строят из металла. Его добывает KILN.'},
  m9:{at:'#cards',mode:'see',en:'Being built — here, and all of it in the YARD.',ru:'Что строится — здесь, а всё целиком — во вкладке YARD.'},
  m10:{at:'#tabs [data-v="fleet"]',mode:'see',en:'Every hull and where it is. A hull you move changes lines when it docks.',ru:'Все суда и где они. Переведённое судно меняет линию, когда причалит.'},
- m11:{at:'#rw-carries',mode:'see',en:'PALE gives more than its line carries. The rest waits on the surface.',ru:'PALE даёт больше, чем увозит линия. Остальное ждёт на поверхности.'},
+ m11:{at:'#rw-carries',mode:'see',en:'PALE gives 8.8 a year, its line carries 4.1. The rest waits on the surface — another hull carries more.',ru:'PALE даёт 8.8 в год, линия увозит 4.1. Остальное ждёт на поверхности — ещё одно судно увезёт больше.'},
  m12:{at:'#res [data-r="parts"]',mode:'see',en:'Parts are home. Works make them from metal and rations — without rations they stop.',ru:'Детали дома. Заводы делают их из металла и рационов — без рационов встают.'},
  m14:{at:'#tabs [data-v="tech"]',mode:'see',en:'Each hull generation reaches one ring farther. The next needs settled worlds and parts from a works.',ru:'Каждое поколение судов летит на кольцо дальше. Следующему нужны заселённые миры и детали с завода.'},
- m15:{at:'#top .adv',mode:'see',en:'When a world needs you, it shows here. Worst first.',ru:'Когда миру нужно ваше решение, он здесь. Худшее — сверху.'},
+ m15:{at:'#top .adv',mode:'see',en:'When a world needs you, it shows here, worst first. The button takes you straight to the fix.',ru:'Когда миру нужно ваше решение, он здесь, худшее сверху. Кнопка ведёт прямо к делу.'},
  m17:{at:'#evbar',mode:'see',en:'Space shifts by sector. What is on, and for how long — in this bar.',ru:'Пространство меняется по долям. Что идёт и сколько ещё — на этой полосе.'},
  m16:{at:'#map .wd[data-v="cinder"]',mode:'see',en:'Ring 2 is charted. Generation I hulls reach it; ring 3 needs generation II.',ru:'Кольцо 2 нанесено. Суда I поколения туда долетают; на кольцо 3 нужно II.'},
  m18:{at:'#top .night',mode:'see',en:'The year of the Night stays up here. Big news stops time and comes one window at a time.',ru:'Год Ночи — здесь, наверху. Большие новости останавливают время и приходят по одному окну.'},
@@ -750,6 +754,8 @@ function drawScript(){el('m-mid').className=TUT.on?'':'on';el('m-tut').className
   <p>Слой темноты 80 % поверх всего экрана с прямоугольным вырезом (+6 px вокруг цели); по краю выреза — жёлтая рамка 2 px с мягкой пульсацией. Нажатие мимо выреза в «сделай» — рамка вздрагивает. Помощник — панель 640 px с жёлтой рамкой: портрет Александры 72 px, имя, одна-две строки 16 px, кнопки. Стоит внизу над картой; если цель внизу — поднимается над ней. Без стрелок и без шагов «1 из 12».</p>`}
 
 /* ---------- render ---------- */
+const FOCUS={evac:'#ovl [data-a="evac"]',add:'#addblk',lift:'#rw-lift'};
+function focusFix(){if(!U.focus)return;const k=U.focus;U.focus=null;const e=document.querySelector(k.startsWith('hr-')?'#'+k:FOCUS[k]);if(e){e.classList.add('focus');e.scrollIntoView({block:'nearest'})}}
 function render(){drawTop();drawTabs();drawMapUI();
   el('side').innerHTML=U.tab==='tech'?sideTech():U.tab==='worlds'?sideWorlds():U.tab==='fleet'?sideFleet():'';
   el('side').className=U.tab?'on':'';
@@ -759,7 +765,7 @@ function render(){drawTop();drawTabs();drawMapUI();
   el('pop').innerHTML=p;el('pop').className=U.pop?('on p-'+(U.pop.startsWith('pick')?'center':U.pop)):'';
   const nw=TUT.nar&&NAR[TUT.nar.id].f==='W'?narWin(TUT.nar.id):U.note?noteWin():'';el('noteL').innerHTML=nw;el('noteL').className=nw?'on':'';narZoom();
   document.querySelectorAll('#map .wd').forEach(g=>g.classList.toggle('sel',g.dataset.v===U.win));
-  narPlace();tutPlace();drawScript();
+  narPlace();focusFix();tutPlace();drawScript();
 }
 const ORDER=()=>W.filter(vis).map(w=>w.id);
 document.addEventListener('click',e=>{if(e.target.closest('#tutL')){tutBlocked();return}
@@ -768,7 +774,7 @@ document.addEventListener('click',e=>{if(e.target.closest('#tutL')){tutBlocked()
   const t=e.target.closest('[data-a]');if(t&&tutCtl(t.dataset.a,t.dataset.v))return;if(!t){if(U.pop&&(!e.target.closest('#pop')||e.target.id==='pop')){U.pop=null;render();return}if(e.target.id==='ovl'&&U.win&&!['yard','earth','ark'].includes(U.win)){U.win=null;U.scrapArm=null;render()}return}
   const a=t.dataset.a,v=t.dataset.v;
   if(a==='tab'){U.pop=null;if(['worlds','fleet','tech'].includes(v)){U.tab=U.tab===v?null:v;U.win=null}else{U.win=U.win===v?null:v}}
-  else if(a==='world'){U.pop=null;U.win=v;U.scrapArm=null}
+  else if(a==='world'){U.pop=null;U.win=v;U.scrapArm=null;U.focus=t.dataset.f||null}
   else if(a==='close'){U.win=null;U.scrapArm=null}
   else if(a==='step'){const O=ORDER(),i=O.indexOf(U.win);U.win=O[(i+(+v)+O.length)%O.length]}
   else if(a==='pop'){U.pop=U.pop===v||!v?null:v}
