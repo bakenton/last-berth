@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LAST BERTH — макет v7</title>
+<title>LAST BERTH — макет v7 и обучение</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600;700&family=Geist+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -161,21 +161,51 @@ svg.gi{fill:currentColor}
 .advl i{grid-row:1/3;align-self:stretch}.advl b{font-size:13px;font-weight:600}.advl span{grid-column:2;font-size:12px;color:var(--mid)}.advl em{grid-row:1/3;grid-column:3;align-self:center;font-style:normal;font-size:11px;letter-spacing:.12em;font-weight:600;border:1px solid var(--mid);padding:3px 8px}
 .menu{border-color:var(--mid)}.menu button{display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;font-size:13px;text-align:left}.menu button:hover{background:var(--pan2)}.menu b{margin-left:4px}
 .pick{border-color:var(--ink);width:360px;padding:10px 14px}.pick button{display:flex;gap:10px;align-items:center;width:100%;padding:7px 4px;border-bottom:1px solid var(--pan2);font-size:13px}.pick button span{margin-left:auto;color:var(--mid);font-size:12px}.pick button.dis{opacity:.4;cursor:default}.pick .cancel{justify-content:center;color:var(--ink);letter-spacing:.14em;font-size:11px;border:1px solid var(--mid);margin-top:10px;padding:8px}
-#toasts{position:absolute;right:12px;bottom:52px;display:flex;flex-direction:column;gap:6px;z-index:9;width:380px}
+#toasts{position:absolute;right:12px;bottom:52px;display:flex;flex-direction:column;gap:6px;z-index:23;width:300px}
 .toast{background:var(--pan);border:1px solid var(--mid);padding:8px 12px;font-size:12.5px;display:flex;gap:8px;align-items:center;animation:tin .25s}
 @keyframes tin{from{transform:translateY(8px);opacity:0}}
 #noteL{position:absolute;inset:0;z-index:10;background:rgba(5,5,6,.85);display:none;align-items:center;justify-content:center}#noteL.on{display:flex}
 .note{width:560px;border:1px solid var(--red);background:var(--pan);padding:26px 30px;display:flex;flex-direction:column;align-items:flex-start;gap:10px}
 .note b{font-size:28px;color:var(--red);letter-spacing:.06em;font-weight:600}.note p{margin:0;font-size:15px}.note .d{color:var(--mid);font-size:12.5px}.note .b{margin-top:8px;padding:8px 22px}
+/* tutorial: dim layer with a hole, ring round the hole, the helper */
+#tutL{position:absolute;inset:0;z-index:20;background:rgba(5,5,6,.8);display:none}#tutL.on{display:block}
+#tutRing{position:absolute;z-index:21;border:2px solid var(--ppl);pointer-events:none;display:none;animation:tr 1.3s infinite}
+@keyframes tr{0%{box-shadow:0 0 0 0 rgba(255,210,63,.45)}70%{box-shadow:0 0 0 10px rgba(255,210,63,0)}100%{box-shadow:0 0 0 0 rgba(255,210,63,0)}}
+#tutRing.shake{animation:sh .3s 2}@keyframes sh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+#helper{position:absolute;z-index:22;left:300px;width:640px;display:none;grid-template-columns:72px 1fr;gap:14px;background:var(--pan);border:1px solid var(--ppl);padding:12px 14px 12px 12px;animation:tin .25s}
+#helper.on{display:grid}
+.hav{width:72px;height:72px;border:1px solid var(--ln)}
+.hnm{font-size:10px;letter-spacing:.2em;color:var(--ppl);font-weight:700;display:flex;gap:10px}.hnm span{color:var(--dim)}
+.htx{font-size:16px;line-height:1.35;margin:5px 0 8px}
+.hbt{display:flex;gap:8px;justify-content:flex-end}.hbt .b{padding:6px 14px}
+.tab.tlk{cursor:default}
+.tab .new{position:absolute;right:8px;top:8px;width:8px;height:8px;background:var(--ppl)}
+.rc.off{background:repeating-linear-gradient(135deg,transparent 0 6px,rgba(46,46,51,.35) 6px 7px)}
+#tnext{position:absolute;left:94px;bottom:12px;z-index:23;display:none;border:1px dashed var(--ppl);color:var(--ppl);background:var(--bg);padding:8px 12px;font-size:12.5px;max-width:330px;text-align:left}#tnext.on{display:block}
+/* the script below the stage */
+.scr{max-width:1280px;margin:14px auto 40px;padding:0 8px;color:var(--mid);font-size:13px}
+.scr h3{color:var(--ink);font-size:15px;letter-spacing:.06em;margin:22px 0 8px;font-weight:600}
+.scr p{margin:6px 0}.scr b{color:var(--ink);font-weight:600}
+.mode{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.mode button{border:1px solid var(--mid);padding:6px 12px;font-size:12px;letter-spacing:.08em;font-weight:600}.mode button.on{background:var(--ink);color:#000}
+.st1{display:grid;grid-template-columns:34px minmax(0,1fr) minmax(0,1.5fr) 92px;gap:12px;padding:10px 6px;border-top:1px solid var(--ln);align-items:start}
+.st1.cur{background:#16161a;box-shadow:inset 3px 0 0 var(--ppl)}
+.st1>i{font:600 18px var(--n);font-style:normal;color:var(--ink)}
+.st1 em{font-style:normal;display:block;font-size:10px;letter-spacing:.16em;color:var(--dim);font-weight:600;margin:6px 0 2px}.st1 em:first-child{margin-top:0}
+.st1 .ms{border-left:2px solid var(--ppl);padding:2px 0 2px 10px;margin:4px 0}.st1 .ms span{display:block;color:var(--ink)}.st1 .ms small{display:block;color:var(--mid);font-size:12.5px}.st1 .ms u{text-decoration:none;font-size:10px;letter-spacing:.14em;color:var(--dim)}
+.st1 .b{width:100%}
+.opn{display:flex;flex-wrap:wrap;gap:4px}.opn span{border:1px solid var(--ln);padding:1px 6px;font-size:11.5px;color:var(--ink)}
+@media (max-width:720px){.st1{grid-template-columns:28px minmax(0,1fr)}.st1>div:nth-child(3){grid-column:2}.st1>.b{grid-column:2}}
 </style>
 </head>
 <body>
-<div class="intro"><b>LAST BERTH — макет v7, кликабельный.</b> Текст сокращён: на экране только числа для решений, причины отказа и тревоги; правила — в пролог. Крестиков нет: вкладка закрывается своей кнопкой слева, окно мира — нажатием мимо окна. Новое: вкладка TECH по нынешнему правилу привода, полосы делений масштабируются, доли с разметкой и именами. Вкладки слева, миры на карте, стрелки ‹ › в окне мира, советник, ≡, скорость, Skip — всё нажимается. Назначение, перевод, снятие, заказ, резерв, слом и высадка меняют данные макета. Время не идёт: это не игра, числа условные. Шрифт — Jost + Geist Mono.</div>
+<div class="intro"><b>LAST BERTH — макет v7, кликабельный.</b> <span class="mode" style="display:inline-flex;vertical-align:middle;margin:0 6px"><button data-a="mode" data-v="mid" id="m-mid">СЕРЕДИНА ИГРЫ</button><button data-a="mode" data-v="tut" id="m-tut">ОБУЧЕНИЕ С НУЛЯ</button></span> Обучение (15.10): вкладки и действия открываются по ходу игры, помощник внизу, экран темнеет, нужное подсвечено; сценарий шагов — под макетом. Текст сокращён: на экране только числа для решений, причины отказа и тревоги; правила — в обучение. Крестиков нет: вкладка закрывается своей кнопкой слева, окно мира — нажатием мимо окна. Новое: вкладка TECH по нынешнему правилу привода, полосы делений масштабируются, доли с разметкой и именами. Вкладки слева, миры на карте, стрелки ‹ › в окне мира, советник, ≡, скорость, Skip — всё нажимается. Назначение, перевод, снятие, заказ, резерв, слом и высадка меняют данные макета. Время не идёт: это не игра, числа условные. Шрифт — Jost + Geist Mono.</div>
 <div id="wrap"><div id="stage">
 <div id="top"></div><div id="res"></div><nav id="tabs"></nav>
 <div id="mapbox"><svg id="map" preserveAspectRatio="xMidYMid meet"></svg><div id="evbar"></div><div id="cards"></div><div id="zoom"></div><div id="tip"></div></div>
 <div id="side"></div><div id="ovl"></div><div id="pop"></div><div id="toasts"></div><div id="noteL"></div>
+<div id="tutL"></div><div id="tutRing"></div><div id="helper"></div><button id="tnext" data-a="tnext"></button>
 </div></div>
+<div id="scr" class="scr"></div>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
 <symbol id="i-courier" viewBox="0 0 64 40"><path d="M2 26 L12 34 H50 L60 26 Z"/><path d="M8 26 L14 16 H40 L44 26 Z"/><path d="M28 16 L34 10 H40 V16 Z" opacity=".35"/><path d="M50 30 H64 M54 34 H66" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
 <symbol id="i-hauler" viewBox="0 0 64 40"><path d="M2 22 L8 36 H54 L60 22 Z"/><rect x="34" y="10" width="16" height="12"/><rect x="38" y="13" width="8" height="4" opacity=".35"/><rect x="18" y="2" width="3" height="20"/><path d="M20 4 L40 16 M20 4 L6 22" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
@@ -262,7 +292,7 @@ const KC={mine:C.metal,farm:C.food,well:C.fuel,works:C.parts};
 const KIND={mine:'MINE',farm:'FARM',well:'WELL',works:'WORKS'};
 const ROM=['','I','II','III','IV','V','VI'];
 const CLS={courier:'Courier',hauler:'Hauler',freighter:'Freighter'};
-const W=[
+let W=[
  {id:'kiln',n:'KILN',k:'mine',ring:1,a:20,st:'ok',f:{dep:'5 300',left:'300 yrs',surf:'210',gives:'6.2',carries:'6.0',ppl:60,lift:'3610 · 605 yrs'},tier:1},
  {id:'pale',n:'PALE',k:'farm',ring:1,a:140,st:'half',f:{dep:'12 800',left:'210 yrs',surf:'940',gives:'8.8',carries:'4.1',ppl:44,lift:'3622 · 617 yrs'},tier:1},
  {id:'wick',n:'WICK',k:'well',ring:1,a:255,st:'ok',f:{dep:'7 420',left:'420 yrs',surf:'120',gives:'4.4',carries:'4.4',ppl:18,lift:'3618 · 613 yrs'},tier:0},
@@ -290,7 +320,8 @@ let H=[
 ];
 let BUILD=[{c:'hauler',g:4,for:'cinder',p:.7,y:2},{c:'freighter',g:4,for:'kiln',p:.45,y:5},{c:'courier',g:4,for:null,p:.2,y:6},{c:'hauler',g:4,for:null,p:.1,y:8},{c:'courier',g:4,for:'pale',p:.05,y:7},{c:'freighter',g:4,for:null,p:.02,y:12}];
 const PRICE={courier:[['metal','553'],['fuel','149'],['parts','172'],['people','33']],hauler:[['metal','1 797'],['fuel','479'],['parts','190'],['people','82']],freighter:[['metal','4 424'],['fuel','1 278'],['parts','456',1],['people','184']]};
-const SPEC={courier:['480','4.22','5'],hauler:['3 318','2.61','6'],freighter:['16 684','1.98','7']};
+let SPEC={courier:['480','4.22','5'],hauler:['3 318','2.61','6'],freighter:['16 684','1.98','7']};
+const SPEC_M=SPEC,SPEC_E={courier:['70','1.70','2'],hauler:['240','1.05','2'],freighter:['760','0.80','2']};
 const REACH=g=>g+1;   /* a hull of generation g reaches ring g+1 */
 const U={tab:null,win:null,speed:2,userPause:false,pop:null,zoom:1,filter:'all',addTab:'free',who:{},driveAt:'hollow',scrapArm:null,note:false};
 
@@ -301,9 +332,9 @@ const ship=(c,sz=34)=>`<svg class="gi" viewBox="0 0 64 40" width="${sz}" height=
 const gen=(g,old)=>`<span class="gen${old?' old':''}">${ROM[g]}</span>`;
 const wmark=(k,on=true,sz=14)=>`<svg viewBox="-9 -9 18 18" width="${sz}" height="${sz}" style="color:${on?KC[k]:C.mid}">${{mine:'<circle r="6"/>',farm:'<rect x="-5.5" y="-5.5" width="11" height="11"/>',well:'<path d="M0-7L7 0L0 7L-7 0Z"/>',works:'<path d="M0-7L7 5.5H-7Z"/>'}[k].replace('/>',on?' fill="currentColor"/>':' fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.5 2"/>')}</svg>`;
 const kico=k=>ic(k,15,KC[k]);
-const price=a=>a.map(p=>`<span class="pr${p[2]?' short':''}">${res(p[0],13)}${p[1]}</span>`).join('');
+const price=a=>a.filter(p=>can(p[0])).map(p=>`<span class="pr${p[2]?' short':''}">${res(p[0],13)}${p[1]}</span>`).join('');
 const hname=h=>`${CLS[h.c]} ${ROM[h.g]} no.${h.id}`;
-const curGen=4;
+let curGen=4;
 const SS={loading:['loading','loading there',C.mid],unloading:['unloading','unloading',C.mid],toEarth:['toEarth','Earth · {y} yrs',C.mid],toWorld:['toWorld','{w} · {y} yrs',C.mid],
  pier:['pier','free at Earth',C.people],reserve:['reserve','ark reserve',C.ark],kit:['kit','carries tier III machines',C.people],overdue:['overdue','overdue · 12 yrs late',C.red],
  mutiny:['mutiny','crew refuses the run',C.red],settlers:['settlers','settlers aboard · lands in {y} yrs',C.people]};
@@ -311,23 +342,24 @@ const stTxt=h=>{const s=SS[h.st];return s[1].replace('{y}',h.y||'').replace('{w}
 const stRow=h=>{const s=SS[h.st];return `<span class="hst" style="color:${s[2]}">${ic(s[0],15,s[2])}${stTxt(h)}</span>`+(h.moveTo?`<span class="hst" style="color:${C.ink}">${ic('movesTo',15)}moves to ${WI(h.moveTo).n} on docking</span>`:'')};
 function toast(t,col){const d=document.createElement('div');d.className='toast';if(col)d.style.borderColor=col;d.innerHTML=t;el('toasts').prepend(d);setTimeout(()=>d.remove(),3600)}
 const el=id=>document.getElementById(id);
-const paused=()=>U.userPause||['yard','earth','ark'].includes(U.win)||U.note;
+const paused=()=>U.userPause||['yard','earth','ark'].includes(U.win)||U.note||!!TUT.msg;
 
 /* ---------- top ---------- */
 function drawTop(){
   const adv=ADV();
   el('top').innerHTML=`<div class="logo"><i></i>LAST BERTH</div>
-  <div class="yr"><small>YEAR</small><b>3005</b></div><div class="yr night"><small>${ic('night',11,C.red)} NIGHT</small><b>3735</b><span>730 years</span></div>
-  <button class="adv${U.pop==='adv'?' on':''}" data-a="pop" data-v="adv">${ic('warn',15)}<span>NEEDS A DECISION</span><b>${adv.length}</b></button>
-  <div class="spd">${paused()?'<span class="pz">PAUSED</span>':''}${['❚❚','1×','2×','4×','10×'].map((s,i)=>`<button data-a="spd" data-v="${i}" class="${(i==0&&paused())||(i==U.speed&&!paused())?'on':''}${i==0&&paused()?' pzb':''}">${s}</button>`).join('')}<button data-a="skip">SKIP</button><button data-a="pop" data-v="menu" class="${U.pop==='menu'?'on':''}">≡</button></div>`;
+  <div class="yr"><small>YEAR</small><b>${TUT.on?TUT.year:3005}</b></div>${can('night')?`<div class="yr night"><small>${ic('night',11,C.red)} NIGHT</small><b>3735</b><span>730 years</span></div>`:''}
+  ${can('advisor')?`<button class="adv${U.pop==='adv'?' on':''}" data-a="pop" data-v="adv">${ic('warn',15)}<span>NEEDS A DECISION</span><b>${adv.length}</b></button>`:''}
+  <div class="spd">${paused()?'<span class="pz">PAUSED</span>':''}${can('speed')?['❚❚','1×','2×','4×','10×'].map((s,i)=>`<button data-a="spd" data-v="${i}" class="${(i==0&&paused())||(i==U.speed&&!paused())?'on':''}${i==0&&paused()?' pzb':''}">${s}</button>`).join(''):''}${can('skip')?'<button data-a="skip">SKIP</button>':''}<button data-a="pop" data-v="menu" class="${U.pop==='menu'?'on':''}">≡</button></div>`;
   const R=[['metal','METAL','5 731','▼ −40.4/yr',0],['food','RATIONS','27 920','▲ +4.6/yr',1],['fuel','FUEL','19 194','▲ +28.6/yr',1],['parts','PARTS','197','▼ −0.7/yr',0],['people','PEOPLE','2 816','▼ −2.7/yr',0]];
-  el('res').innerHTML=R.map(r=>`<div class="rc"><small>${res(r[0],13)}${r[1]}${r[0]=='food'?'<em>ENDS ≈ 3498</em>':''}</small><b style="color:${C[r[0]]}">${r[2]}</b><span class="${r[4]?'up':'dn'}">${r[3]}</span></div>`).join('');
+  if(TUT.on)R.forEach(r=>{const t=TUT.R[r[0]];if(t){r[2]=t[0];r[3]=t[1];r[4]=t[2]}});
+  el('res').innerHTML=R.map(r=>can(r[0])?`<div class="rc" data-r="${r[0]}"><small>${res(r[0],13)}${r[1]}${r[0]=='food'?`<em>ENDS ≈ ${TUT.on?TUT.ends:3498}</em>`:''}</small><b style="color:${C[r[0]]}">${r[2]}</b><span class="${r[4]?'up':'dn'}">${r[3]}</span></div>`:'<div class="rc off"></div>').join('');
 }
 /* ---------- tabs and flags ---------- */
-function flags(){const free=H.filter(h=>h.st==='pier').length;const cv=convoy();let sh=0;Object.keys(cv.need).forEach(c=>sh+=Math.max(0,cv.need[c]-cv.have[c].length));return {earth:['Rations end before the Night',C.red],yard:BUILD.length?['1 hull built',C.ink]:null,fleet:free?[`${free} hulls idle at the pier`,C.people]:null,ark:sh?[`Convoy ${sh} hulls short`,C.ark]:['Convoy ready',C.food]}}
+function flags(){const free=H.filter(h=>h.st==='pier').length;const cv=convoy();let sh=0;Object.keys(cv.need).forEach(c=>sh+=Math.max(0,cv.need[c]-cv.have[c].length));return {earth:can('night')?['Rations end before the Night',C.red]:[`Rations end ≈ ${TUT.ends}`,C.red],yard:BUILD.length?[TUT.on?`${BUILD.length} being built`:'1 hull built',C.ink]:null,fleet:free?[`${free} hulls idle at the pier`,C.people]:null,ark:sh?[`Convoy ${sh} hulls short`,C.ark]:['Convoy ready',C.food]}}
 function drawTabs(){const F=flags();
-  el('tabs').innerHTML=[['earth','tEarth','EARTH',C.earth],['worlds','tWorlds','WORLDS',C.metal],['tech','tTech','TECH',C.ink],['yard','tYard','YARD',C.ink],['fleet','tFleet','FLEET',C.ink],['ark','ark','ARK',C.ark]].map(t=>{const on=U.win===t[0]||U.tab===t[0];const f=F[t[0]];
-   return `<button class="tab${on?' on':''}" data-a="tab" data-v="${t[0]}">${ic(t[1],30,on?(['earth','ark'].includes(t[0])?t[3]:'#000'):t[3])}<span>${t[2]}</span>${f&&!on&&!U.win&&!U.tab?`<em class="flag" style="color:${f[1]};border-color:${f[1]}">${f[0]}</em>`:''}</button>`}).join('');}
+  el('tabs').innerHTML=[['earth','tEarth','EARTH',C.earth],['worlds','tWorlds','WORLDS',C.metal],['tech','tTech','TECH',C.ink],['yard','tYard','YARD',C.ink],['fleet','tFleet','FLEET',C.ink],['ark','ark','ARK',C.ark]].map(t=>{const on=U.win===t[0]||U.tab===t[0];const f=F[t[0]];if(!can(t[0]))return '<div class="tab tlk"></div>';
+   return `<button class="tab${on?' on':''}" data-a="tab" data-v="${t[0]}">${ic(t[1],30,on?(['earth','ark'].includes(t[0])?t[3]:'#000'):t[3])}<span>${t[2]}</span>${TUT.fresh.has(t[0])&&!on?'<i class="new"></i>':''}${f&&!on&&!U.win&&!U.tab?`<em class="flag" style="color:${f[1]};border-color:${f[1]}">${f[0]}</em>`:''}</button>`}).join('');}
 /* ---------- advisor (worlds only) ---------- */
 function ADV(){const a=[];
   W.forEach(w=>{if(w.st==='workedout')a.push([C.red,`${w.n}: the seam is dead`,`${w.f.ppl} people still there — evacuate`,w.id]);
@@ -341,17 +373,20 @@ const CX=500,CY=350,RR=[0,115,205,295];
 const wpos=w=>{const r=RR[w.ring],a=(w.a-90)*Math.PI/180;return [CX+r*Math.cos(a),CY+r*Math.sin(a)]};
 function drawMap(){
   let s=`<g id="lobe"></g>`;
-  [1,2,3].forEach(r=>s+=`<circle cx="${CX}" cy="${CY}" r="${RR[r]}" class="ring"/><text x="${CX+4}" y="${CY-RR[r]-5}" class="rn">${ROM[r]} · ${['CATO','SCIPIO','CAESAR'][r-1]}</text>`);
-  s+=`<circle cx="${CX}" cy="${CY}" r="380" class="ring dim"/>`;
+  const RN=TUT.on?TUT.rings:3;
+  [1,2,3].filter(r=>r<=RN).forEach(r=>s+=`<circle cx="${CX}" cy="${CY}" r="${RR[r]}" class="ring"/><text x="${CX+4}" y="${CY-RR[r]-5}" class="rn">${ROM[r]} · ${['CATO','SCIPIO','CAESAR'][r-1]}</text>`);
+  if(RN>=3)s+=`<circle cx="${CX}" cy="${CY}" r="380" class="ring dim"/>`;
   const PT=(r,b)=>[CX+r*Math.cos((b-90)*Math.PI/180),CY+r*Math.sin((b-90)*Math.PI/180)];
-  {const [a0,b0]=PT(340,30),[a1,b1]=PT(340,90);s+=`<path d="M${CX} ${CY}L${a0} ${b0}A340 340 0 0 1 ${a1} ${b1}Z" class="lobe"/>`;}
-  [30,90,150,210,270,330].forEach(b=>{const [x0,y0]=PT(24,b),[x1,y1]=PT(340,b);s+=`<path d="M${x0} ${y0}L${x1} ${y1}" class="lobeln"/>`});
-  ['EOS','HELIOS','HEMERA','HESPEROS','SELENE','NYX'].forEach((n,i)=>{const [x,y]=PT(i?330:300,i*60);s+=`<text x="${x}" y="${y+4}" text-anchor="middle" class="lname${n==='HELIOS'?' ev':''}">${n}</text>`});
-  W.forEach(w=>{if(w.st==='free')return;const [x,y]=wpos(w);s+=`<path d="M${CX} ${CY}L${x} ${y}" stroke="${KC[w.k]}" stroke-opacity=".45" stroke-width="1.6"/>`});
+  const LR=RR[RN]+45;
+  if(can('sectors')){
+  if(can('events')){const [a0,b0]=PT(LR,30),[a1,b1]=PT(LR,90);s+=`<path d="M${CX} ${CY}L${a0} ${b0}A${LR} ${LR} 0 0 1 ${a1} ${b1}Z" class="lobe"/>`;}
+  [30,90,150,210,270,330].forEach(b=>{const [x0,y0]=PT(24,b),[x1,y1]=PT(LR,b);s+=`<path d="M${x0} ${y0}L${x1} ${y1}" class="lobeln"/>`});
+  ['EOS','HELIOS','HEMERA','HESPEROS','SELENE','NYX'].forEach((n,i)=>{const [x,y]=PT(i?LR-10:LR-40,i*60);s+=`<text x="${x}" y="${y+4}" text-anchor="middle" class="lname${n==='HELIOS'&&can('events')?' ev':''}">${n}</text>`});}
+  W.forEach(w=>{if(w.st==='free'||!vis(w))return;const [x,y]=wpos(w);s+=`<path d="M${CX} ${CY}L${x} ${y}" stroke="${KC[w.k]}" stroke-opacity=".45" stroke-width="1.6"/>`});
   H.forEach((h,i)=>{if(!h.line)return;const w=WI(h.line),[x,y]=wpos(w),d=`M${CX} ${CY} L${x} ${y} L${CX} ${CY}`,sw=[20,22,28][['courier','hauler','freighter'].indexOf(h.c)],sh=sw*40/64,dur=8+w.ring*4+(i%3),off=(i*2.3)%dur;
     const flip=x<CX?'-1 1;1 1':'1 1;-1 1';
     s+=`<g><g><g><svg x="${-sw/2}" y="${-sh}" width="${sw}" height="${sh}" viewBox="0 0 64 40" overflow="visible" class="gi" style="color:${K[h.c]}"><use href="#i-${h.c}"/></svg><animateTransform attributeName="transform" type="scale" values="${flip}" keyTimes="0;0.5" calcMode="discrete" dur="${dur}s" begin="-${off}s" repeatCount="indefinite"/></g></g><animateMotion dur="${dur}s" begin="-${off}s" repeatCount="indefinite" path="${d}"/></g>`});
-  W.forEach(w=>{const [x,y]=wpos(w),on=w.st!=='free';const mk={mine:'<circle r="7"/>',farm:'<rect x="-6.5" y="-6.5" width="13" height="13"/>',well:'<path d="M0-8L8 0L0 8L-8 0Z"/>',works:'<path d="M0-8L8 6.5H-8Z"/>'}[w.k];
+  W.forEach(w=>{if(!vis(w))return;const [x,y]=wpos(w),on=w.st!=='free';const mk={mine:'<circle r="7"/>',farm:'<rect x="-6.5" y="-6.5" width="13" height="13"/>',well:'<path d="M0-8L8 0L0 8L-8 0Z"/>',works:'<path d="M0-8L8 6.5H-8Z"/>'}[w.k];
     const bad=['workedout','starve','cutoff'].includes(w.st);
     s+=`<g class="wd" data-a="world" data-v="${w.id}" transform="translate(${x} ${y})">${bad?'<circle r="15" class="alarm"/>':''}<circle r="18" fill="transparent"/><g ${on?`fill="${KC[w.k]}"`:`fill="#0B0B0C" stroke="${C.mid}" stroke-width="1.6" stroke-dasharray="3 2.5"`}>${mk}</g><text x="12" y="-9" class="wn">${w.n}</text></g>`});
   s+=`<g class="wd" data-a="tab" data-v="earth" transform="translate(${CX} ${CY})"><circle r="15" fill="${C.earth}"/><path d="M-15 0H15M0-15C-7-8-7 8 0 15C7 8 7-8 0-15" stroke="#0B0B0C" stroke-width="1.4" fill="none"/></g>`;
@@ -359,10 +394,10 @@ function drawMap(){
 }
 function setZoom(){const z=U.zoom,w=1000/z,h=700/z;el('map').setAttribute('viewBox',`${CX-w/2} ${CY-h/2} ${w} ${h}`)}
 function drawMapUI(){
-  el('evbar').innerHTML=`${ic('fold',16,C.food)}<b>FOLD · HELIOS</b><span>crossings twice as fast · 31 years left</span>`;
-  const b=BUILD.slice(0,3);
+  el('evbar').innerHTML=can('events')?`${ic('fold',16,C.food)}<b>FOLD · HELIOS</b><span>crossings twice as fast · 31 years left</span>`:'';el('evbar').style.display=can('events')?'':'none';
+  const b=can('yard')?BUILD.slice(0,3):[];
   el('cards').innerHTML=b.map(x=>`<button class="bcard" data-a="tab" data-v="yard">${ship(x.c,26)}<b>${CLS[x.c]} ${ROM[x.g]}</b><span>→ ${x.for?WI(x.for).n:'free'}</span><i>${x.y} yrs</i><u style="width:${Math.round(x.p*100)}%"></u></button>`).join('')+(BUILD.length>3?`<div class="more">+ ${BUILD.length-3} MORE IN THE YARD</div>`:'');
-  el('zoom').innerHTML=`<button data-a="zoom" data-v="-">−</button><button data-a="zoom" data-v="+">+</button><button data-a="zoom" data-v="0">FIT</button>`;
+  el('zoom').innerHTML=!can('zoom')?'':`<button data-a="zoom" data-v="-">−</button><button data-a="zoom" data-v="+">+</button><button data-a="zoom" data-v="0">FIT</button>`;
   const m=el('map'); if(m.pauseAnimations){paused()?m.pauseAnimations():m.unpauseAnimations()}
 }
 /* ---------- windows ---------- */
@@ -370,14 +405,14 @@ const head=(title,sub,icon)=>`<div class="wh">${icon||''}<b>${title}</b><small>$
 const sec=(l,r)=>`<div class="sec"><span>${l}</span>${r?`<span>${r}</span>`:''}</div>`;
 const row=(l,v,col)=>`<div class="rw"><span>${l}</span><b${col?` style="color:${col}"`:''}>${v}</b></div>`;
 const btn=(label,a,v,kind,icon,why)=>`<button class="b ${kind||''}" ${a?`data-a="${a}"`:''} ${v!==undefined?`data-v="${v}"`:''} ${why?`data-why="${why}"`:''}>${icon?ic(icon,15):''}${label}</button>`;
-function hullRow(h,acts){return `<div class="hr">${ship(h.c,30)}${gen(h.g,h.g<curGen-1)}<span class="hn">${CLS[h.c]} no.${h.id}</span><span class="hs">${stRow(h)}</span><span class="ha">${acts}</span></div>`}
-function machines(w,now,what){return sec('MACHINES',w.tier?`TIER ${ROM[w.tier]} · RUNNING`:'NONE')+(w.tier?row(`${res('fuel',13)} Burn`,(2.2*w.tier).toFixed(1)+' fuel /yr',C.fuel)+row(`${res('fuel',13)} Fuel`,'71 yrs'):'')+`<div class="hint">${ROM[w.tier+1]}: ${now} → ${(now*1.4).toFixed(1)} /yr</div><div class="prow">${price([['metal','420'],['parts','60']])}${btn('ORDER TIER '+ROM[w.tier+1],'kitorder',w.id,'pri','upgrade')}</div>`}
+function hullRow(h,acts){return `<div class="hr" id="hr-${h.id}">${ship(h.c,30)}${gen(h.g,h.g<curGen-1)}<span class="hn">${CLS[h.c]} no.${h.id}</span><span class="hs">${stRow(h)}</span><span class="ha">${acts}</span></div>`}
+function machines(w,now,what){if(!can('machines'))return '';return '<div id="mach">'+sec('MACHINES',w.tier?`TIER ${ROM[w.tier]} · RUNNING`:'NONE')+(w.tier?row(`${res('fuel',13)} Burn`,(2.2*w.tier).toFixed(1)+' fuel /yr',C.fuel)+row(`${res('fuel',13)} Fuel`,'71 yrs'):'')+`<div class="hint">${ROM[w.tier+1]}: ${now} → ${(now*1.4).toFixed(1)} /yr</div><div class="prow">${price([['metal','420'],['parts','60']])}${btn('ORDER TIER '+ROM[w.tier+1],'kitorder',w.id,'pri','upgrade')}</div></div>`}
 function winWorld(id){const w=WI(id),f=w.f;let L='',R='';
   const nav=`<button class="nav l" data-a="step" data-v="-1">‹</button><button class="nav r" data-a="step" data-v="1">›</button>`;
   const sub=`${KIND[w.k]} · RING ${w.ring}${w.st==='free'?' · FREE':''}`;
   if(w.st==='free'){
     const can=H.filter(h=>h.st==='pier'&&REACH(h.g)>=w.ring);if(!U.who[id]&&can[0])U.who[id]=can[0].id;
-    return `<div class="win sm">${head(w.n,sub,wmark(w.k,false,16))}<div class="bd one">${sec('WORLD')}${row('Deposit',f.dep+(w.k=='farm'?' rations':w.k=='mine'?' metal':' fuel'),KC[w.k])}${row('Crossing',f.cross)}${row('Sector',f.sec)}
+    return `<div class="win sm">${head(w.n,sub,wmark(w.k,false,16))}<div class="bd one">${sec('WORLD')}${w.k=='works'?row('Makes','parts',KC[w.k]):row('Deposit',f.dep+(w.k=='farm'?' rations':w.k=='mine'?' metal':' fuel'),KC[w.k])}${row('Crossing',f.cross)}${row('Sector',f.sec)}
      ${sec('FOUND A COLONY')}${row('Settlers','52 people',C.people)}<div class="lab">WHO GOES</div>${can.length?can.map(h=>`<label class="radio${U.who[id]===h.id?' on':''}" data-a="who" data-v="${id}:${h.id}"><i></i>${ship(h.c,26)}${gen(h.g)}<b>no.${h.id}</b><span>hold ${SPEC[h.c][0]} · arrives in ${w.ring*5} yrs</span></label>`).join(''):`<div class="why">No free hull at Earth reaches ring ${w.ring}.</div>`}
      <div class="prow"><span class="lab">PRICE</span>${price([['metal','180'],['food','240'],['fuel','90'],['people','52']])}</div>${btn('SEND SETTLERS','send',id,can.length?'pri':'off','send')}</div>${nav}</div>`;}
   if(w.st==='settling'||w.st==='landing'){const h=H.find(x=>x.line===id&&x.st==='settlers');
@@ -387,35 +422,34 @@ function winWorld(id){const w=WI(id),f=w.f;let L='',R='';
      ${btn('EVACUATE','evac',id,'red','evac')}<div class="hint c">Courier no.7 · all ${f.ppl}</div></div>${nav}</div>`;}
   /* settled */
   L+=sec('WORLD');
-  if(w.k==='works'){const k=w.works;L+=row('People',f.ppl,C.people)+row('Last lift',f.lift,w.st==='starve'?C.people:null)+sec('THIS WORLD EATS')+row(`${res('metal',13)} Metal`,k.metal)+row(`${res('food',13)} Rations`,k.food,k.bad?C.red:null)+(k.bad?`<div class="alert">${ic('starving',16,C.red)}Rations: 3 years left</div>`:'')+sec('MAKES')+row(`${res('parts',13)} Parts`,k.parts)+(k.bad?row('Running at',k.run,C.people):'')+``+machines(w,parseFloat(k.parts),'parts');}
-  else{L+=row('Deposit',f.left,KC[w.k])+row('On the surface',f.surf)+row('World gives',f.gives+' /yr')+row('Line carries',f.carries+' /yr',(+f.carries<+f.gives*0.8)?C.people:null)+row(`${res('people',13)} People`,f.ppl,C.people)+row(`${ic('lift',13,C.people)} Last lift`,f.lift,w.st==='cutoff'?C.red:null);
+  if(w.k==='works'){const k=w.works;L+=row('People',f.ppl,C.people)+(can('lift')?`<div id="rw-lift">${row('Last lift',f.lift,w.st==='starve'?C.people:null)}</div>`:'')+sec('THIS WORLD EATS')+row(`${res('metal',13)} Metal`,k.metal)+row(`${res('food',13)} Rations`,k.food,k.bad?C.red:null)+(k.bad?`<div class="alert">${ic('starving',16,C.red)}Rations: 3 years left</div>`:'')+sec('MAKES')+row(`${res('parts',13)} Parts`,k.parts)+(k.bad?row('Running at',k.run,C.people):'')+``+machines(w,parseFloat(k.parts),'parts');}
+  else{L+=row('Deposit',f.left,KC[w.k])+row('On the surface',f.surf)+`<div id="rw-carries">${row('World gives',f.gives+' /yr')+row('Line carries',f.carries+' /yr',(+f.carries<+f.gives*0.8)?C.people:null)}</div>`+row(`${res('people',13)} People`,f.ppl,C.people)+(can('lift')?`<div id="rw-lift">${row(`${ic('lift',13,C.people)} Last lift`,f.lift,w.st==='cutoff'?C.red:null)}</div>`:'');
     L+=machines(w,parseFloat(f.gives),{mine:'metal',farm:'rations',well:'fuel'}[w.k]);}
   if(w.st==='cutoff')L+=`<div class="alert">${ic('cutoff',16,C.red)}Last lift missed · 3655</div>`+btn('EVACUATE · TOO LATE',null,null,'off','evac');
-  else L+=btn('EVACUATE','evac',id,'red','evac')+`<div class="hint c">Courier no.7 · all ${f.ppl}</div>`;
+  else if(can('evac'))L+=btn('EVACUATE','evac',id,'red','evac')+`<div class="hint c">Courier no.7 · all ${f.ppl}</div>`;
   const on=H.filter(h=>h.line===id);
-  R+=sec('ON THIS LINE',`${on.length} HULLS`)+(on.length?on.map(h=>hullRow(h,btn('MOVE','pick',`move:${h.id}`,'',`move`)+btn('TAKE OFF','takeoff',h.id,'','takeoff'))).join(''):'<div class="why">No hulls on this line — nothing comes home from here.</div>')+(on.length&&w.k!=='works'?``:'');
+  R+=sec('ON THIS LINE',`${on.length} HULLS`)+(on.length?on.map(h=>hullRow(h,can('fleet')?btn('MOVE','pick',`move:${h.id}`,'',`move`)+btn('TAKE OFF','takeoff',h.id,'','takeoff'):'')).join(''):'<div class="why">No hulls on this line — nothing comes home from here.</div>')+(on.length&&w.k!=='works'?``:'');
   const pool=U.addTab==='free'?H.filter(h=>h.st==='pier'):H.filter(h=>h.line&&h.line!==id&&h.st!=='settlers');
-  R+=`<div class="sec"><span>ADD A HULL</span><span class="seg"><button data-a="addtab" data-v="free" class="${U.addTab==='free'?'on':''}">FREE · ${H.filter(h=>h.st==='pier').length}</button><button data-a="addtab" data-v="other" class="${U.addTab==='other'?'on':''}">OTHER LINES · ${H.filter(h=>h.line&&h.line!==id).length}</button></span></div>`;
+  R+=`<div class="sec"><span>ADD A HULL</span><span class="seg"><button data-a="addtab" data-v="free" class="${U.addTab==='free'?'on':''}">FREE · ${H.filter(h=>h.st==='pier').length}</button>${can('fleet')?`<button data-a="addtab" data-v="other" class="${U.addTab==='other'?'on':''}">OTHER LINES · ${H.filter(h=>h.line&&h.line!==id).length}</button>`:''}</span></div>`;
   R+=`<div class="lst">`+(pool.length?pool.map(h=>{const ok=REACH(h.g)>=w.ring;return `<div class="hr${ok?'':' dis'}">${ship(h.c,30)}${gen(h.g,h.g<curGen-1)}<span class="hn">${CLS[h.c]} no.${h.id}</span><span class="hs">${ok?`<span class="hst">${ic('hold',15,C.mid)}${SPEC[h.c][0]} · ${ic('speed',15,C.mid)}${SPEC[h.c][1]}</span>`+(h.line?`<span class="hst">from ${WI(h.line).n}</span>`:''):`<span class="hst" style="color:${C.red}">${ic('range',15,C.red)}reaches ring ${REACH(h.g)} — too short</span>`}</span><span class="ha">${ok?btn('ASSIGN','assign',`${h.id}:${id}`,'pri','assign'):''}</span></div>`}).join(''):'<div class="why">No free hulls at the pier. Order one below or take one from another line.</div>')+`</div>`;
-  R+=sec('OR ORDER A NEW ONE',`YARD · GEN ${ROM[curGen]}`)+`<div class="ord">${['courier','hauler','freighter'].map(c=>{const sh=c==='freighter';return `<div class="oc${sh?' dis':''}">${ship(c,40)}<b>${CLS[c].toUpperCase()} ${ROM[curGen]}</b>${price(PRICE[c].slice(0,3))}${sh?`<div class="why">259 parts short</div>`:btn('BUILD · '+(c==='courier'?6:9)+' YRS','order',`${c}:${id}`,'pri','build')}</div>`}).join('')}</div>`;
+  if(can('order'))R+=`<div id="ordblk">`+sec('OR ORDER A NEW ONE',`YARD · GEN ${ROM[curGen]}`)+`<div class="ord">${classes().map(c=>{const sh=c==='freighter';return `<div class="oc${sh?' dis':''}">${ship(c,40)}<b>${CLS[c].toUpperCase()} ${ROM[curGen]}</b>${price(prices(c).slice(0,3))}${sh?`<div class="why">259 parts short</div>`:btn('BUILD · '+(c==='courier'?6:9)+' YRS','order',`${c}:${id}`,'pri','build')}</div>`}).join('')}</div></div>`;
   return `<div class="win">${head(w.n,sub,wmark(w.k,true,16))}<div class="bd two"><div>${L}</div><div>${R}</div></div>${nav}</div>`;
 }
 function winYard(){const pier=H.filter(h=>h.st==='pier'||h.st==='reserve');
   return `<div class="win wide">${head('YARD','GENERATION '+ROM[curGen]+' · TIME IS PAUSED',ic('tYard',18))}<div class="bd one">${sec('IN THE YARDS',BUILD.length)}${BUILD.map(b=>`<div class="yr2">${ship(b.c,30)}<b>${CLS[b.c]} ${ROM[b.g]}</b><span>→ ${b.for?WI(b.for).n+' line':'free hull'}</span><div class="bar"><u style="width:${Math.round(b.p*100)}%"></u></div><i>${b.y} yrs</i></div>`).join('')}
-   ${sec('BUILD A FREE HULL')}<div class="ord big">${['courier','hauler','freighter'].map(c=>{const sh=c==='freighter';return `<div class="oc${sh?' dis':''}">${ship(c,64)}<b>${CLS[c].toUpperCase()} ${ROM[curGen]}</b><div class="ico3"><span>${ic('hold',15,C.mid)}${SPEC[c][0]}</span><span>${ic('speed',15,C.mid)}${SPEC[c][1]}</span><span>${ic('range',15,C.mid)}${SPEC[c][2]}</span></div><div class="prow">${price(PRICE[c])}</div>${sh?`<div class="why">259 parts short</div>`:btn('BUILD','build',c,'pri','build')}</div>`}).join('')}</div>
-   ${sec('AT THE PIER',pier.length+' HULLS')}<div class="pier">${pier.map(h=>`<div class="pc${h.st==='reserve'?' res':''}">${ship(h.c,34)}${gen(h.g,h.g<curGen-1)}<b>no.${h.id}</b>${h.st==='reserve'?`<em>${ic('reserve',14,C.ark)}ARK RESERVE</em>`:''}<div>${btn(h.st==='reserve'?'RELEASE':'RESERVE FOR ARK','reserve',h.id,'',`reserve`)}${btn(U.scrapArm===h.id?'CONFIRM SCRAP':'SCRAP','scrap',h.id,U.scrapArm===h.id?'red':'','scrap')}</div></div>`).join('')}</div>
+   ${sec('BUILD A FREE HULL')}<div class="ord big">${classes().map(c=>{const sh=c==='freighter';return `<div class="oc${sh?' dis':''}">${ship(c,64)}<b>${CLS[c].toUpperCase()} ${ROM[curGen]}</b><div class="ico3"><span>${ic('hold',15,C.mid)}${SPEC[c][0]}</span><span>${ic('speed',15,C.mid)}${SPEC[c][1]}</span><span>${ic('range',15,C.mid)}${SPEC[c][2]}</span></div><div class="prow">${price(prices(c))}</div>${sh?`<div class="why">259 parts short</div>`:btn('BUILD','build',c,'pri','build')}</div>`}).join('')}</div>
+   ${sec('AT THE PIER',pier.length+' HULLS')}<div class="pier">${pier.map(h=>`<div class="pc${h.st==='reserve'?' res':''}">${ship(h.c,34)}${gen(h.g,h.g<curGen-1)}<b>no.${h.id}</b>${h.st==='reserve'?`<em>${ic('reserve',14,C.ark)}ARK RESERVE</em>`:''}<div>${can('reserve')?btn(h.st==='reserve'?'RELEASE':'RESERVE FOR ARK','reserve',h.id,'',`reserve`):''}${btn(U.scrapArm===h.id?'CONFIRM SCRAP':'SCRAP','scrap',h.id,U.scrapArm===h.id?'red':'','scrap')}</div></div>`).join('')}</div>
    </div></div>`}
 function winEarth(){return `<div class="win sm">${head('EARTH','TIME IS PAUSED',ic('tEarth',18,C.earth))}<div class="bd one">
-  ${sec('HOME')}<div class="hero" style="color:${C.people}">2 816<span>people · −2.7 /yr</span></div>${row(res('food',13)+' Rations last until','≈ 3498',C.red)+row(ic('night',13,C.red)+' Night','3735',C.red)+row('Live worlds','8')+row('Crossings','×2.65')}
-  <div class="alert">${ic('starving',16,C.red)}Rations end 237 years before the Night</div>
+  ${sec('HOME')}<div class="hero" style="color:${C.people}">2 816<span>people · −2.7 /yr</span></div>${row(res('food',13)+' Rations last until','≈ '+(TUT.on?TUT.ends:3498),C.red)+(can('night')?row(ic('night',13,C.red)+' Night','3735',C.red):'')+row('Live worlds',W.filter(w=>!['free','settling','workedout'].includes(w.st)).length)+row('Crossings','×2.65')}
+  <div class="alert">${ic('starving',16,C.red)}${can('night')?'Rations end 237 years before the Night':`Rations end ≈ ${TUT.ends}`}</div>
   ${sec('EARTH BURNS EACH YEAR')}${row(res('metal',13)+' Metal','46.9 /yr',C.metal)+row(res('food',13)+' Rations','28.4 /yr',C.food)+row(res('fuel',13)+' Fuel','6.8 /yr',C.fuel)}
   </div></div>`}
 function convoy(){const need={courier:3,hauler:2,freighter:1},have={courier:[],hauler:[],freighter:[]};H.filter(h=>(h.st==='pier'||h.st==='reserve')&&h.g>=3).forEach(h=>have[h.c].push(h));return {need,have}}
 function winArk(){const cv=convoy();let short=[];Object.keys(cv.need).forEach(c=>{const d=cv.need[c]-cv.have[c].length;if(d>0)short.push(d+' '+c+(d>1?'s':''))});
   return `<div class="win wide">${head('THE ARK','TIME IS PAUSED',ic('ark',18,C.ark))}<div class="bd one"><div class="arktop"><div>${sec('THE NIGHT')}<div class="hero" style="color:${C.red}">3735<span>730 years</span></div>${row(ic('drive',13,C.ark)+' Ark drive','GEN IV · READY',C.food)+row('Wake','60%')+row('With Gen V · ≈ 3075','80%',C.ark)}</div>
    <div>${sec('LEVELS')}<div class="lv">${[['I','500 berths',2],['II','1 200 berths',1],['III','2 400 berths',0],['IV','4 000 berths',0]].map(l=>`<div class="lc l${l[2]}"><b>${l[0]}</b><span>${l[1]}</span>${l[2]==2?'<em>PAID</em>':l[2]==1?`<div class="prow">${price([['metal','6 000',1],['parts','900',1]])}</div>${btn('269 METAL SHORT',null,null,'off')}`:`<i>${l[0]=='III'?'13 500':'27 000'} metal…</i>`}</div>`).join('')}</div></div></div>
-   ${sec('CONVOY · 3 · 2 · 1','GEN III+')}<div class="cv">${Object.keys(cv.need).map(c=>`<div class="cg">${[...Array(cv.need[c])].map((_,i)=>{const h=cv.have[c][i];return `<div class="slot${h?' on':''}">${ship(c,40)}<span>${h?`${CLS[c]} ${ROM[h.g]} no.${h.id}`:'EMPTY'}</span></div>`}).join('')}</div>`).join('')}</div>
-   
+   <div id="convoy">${sec('CONVOY · 3 · 2 · 1','GEN III+')}<div class="cv">${Object.keys(cv.need).map(c=>`<div class="cg">${[...Array(cv.need[c])].map((_,i)=>{const h=cv.have[c][i];return `<div class="slot${h?' on':''}">${ship(c,40)}<span>${h?`${CLS[c]} ${ROM[h.g]} no.${h.id}`:'EMPTY'}</span></div>`}).join('')}</div>`).join('')}</div></div>
    ${sec('IF THE NIGHT CAME TODAY')}<div class="verdict">${short.length?`<b>THE ARK STAYS</b><span>The convoy is short: ${short.join(', ')}.</span>`:`<b style="color:${C.food}">THE ARK SAILS</b><span>500 sail · 300 wake · 2 316 stay on Earth</span>`}<i>With the convoy: 500 sail · 300 wake</i></div></div></div>`}
 
 const NEXT={courier:[['480','720'],['4.22','5.10'],['5','6'],[['metal','820'],['parts','240']]],hauler:[['3 318','4 980'],['2.61','3.20'],['6','7'],[['metal','2 600'],['parts','280']]],freighter:[['16 684','25 000'],['1.98','2.40'],['7','8'],[['metal','6 400'],['parts','640']]]};
@@ -446,16 +480,137 @@ function sideTech(){const works=W.filter(w=>w.k==='works'&&!['free','settling'].
    
   </div></div>`}
 function sideWorlds(){const sev={workedout:0,cutoff:1,starve:2,half:3,ok:5,settling:6,free:7};const st={workedout:['evacuate',C.red,'workedout'],cutoff:['cut off',C.red,'cutoff'],starve:['rations 3 yrs',C.red,'starving'],half:['line carries half',C.people,'warn'],settling:['settlers · 9 yrs',C.people,'settlers'],free:['free',C.mid,'free'],ok:['',C.mid,'']};
-  const list=W.slice().sort((a,b)=>sev[a.st]-sev[b.st]);
+  const list=W.filter(vis).slice().sort((a,b)=>sev[a.st]-sev[b.st]);
   return `<div class="side">${head('WORLDS',`${W.filter(w=>w.st!=='free').length} LIVE · ${W.filter(w=>w.st==='free').length} FREE`,ic('tWorlds',18,C.metal))}<div class="tbl"><div class="th"><span>WORLD</span><span>RING</span><span>LEFT</span><span>HULLS</span><span>PEOPLE</span><span>STATE</span></div>${list.map(w=>{const n=H.filter(h=>h.line===w.id).length,s=st[w.st]||st.ok;return `<button class="tr${s[1]===C.red?' red':''}" data-a="world" data-v="${w.id}"><span>${wmark(w.k,w.st!=='free')}<b>${w.n}</b></span><span>${w.ring}</span><span>${w.f.left||(w.st==='workedout'?'worked out':'—')}</span><span style="color:${n||w.st==='free'?C.ink:C.red}">${w.st==='free'?'—':n}</span><span style="color:${C.people}">${w.f.ppl||'—'}</span><span style="color:${s[1]}">${s[2]?ic(s[2],14,s[1]):''}${s[0]}</span></button>`}).join('')}</div></div>`}
 function sideFleet(){const F={all:h=>true,free:h=>h.st==='pier'||h.st==='reserve',lines:h=>!!h.line};const list=U.filter==='yards'?[]:H.filter(F[U.filter]);
   return `<div class="side">${head('FLEET',H.length+' HULLS',ic('tFleet',18))}<div class="seg wide">${[['all','ALL '+H.length],['free','FREE '+H.filter(F.free).length],['lines','ON LINES '+H.filter(F.lines).length],['yards','IN YARDS '+BUILD.length]].map(f=>`<button data-a="filter" data-v="${f[0]}" class="${U.filter===f[0]?'on':''}">${f[1]}</button>`).join('')}</div>
   <div class="lst tall">${U.filter==='yards'?BUILD.map(b=>`<div class="hr">${ship(b.c,30)}${gen(b.g)}<span class="hn">${CLS[b.c]}</span><span class="hs"><span class="hst">${ic('build',15,C.mid)}in the yard · ${b.y} yrs → ${b.for?WI(b.for).n:'free'}</span></span></div>`).join(''):list.map(h=>hullRow(h,h.st==='pier'?btn('SEND','pick',`send:${h.id}`,'pri','assign'):h.line?`<button class="lnk" data-a="world" data-v="${h.line}">${WI(h.line).n} →</button>`:'')).join('')}</div></div>`}
-function picker(){const [kind,hid]=U.pop.split(':').slice(1),h=H.find(x=>x.id==hid);const ws=W.filter(w=>!['free','workedout','settling'].includes(w.st)&&w.id!==h.line);
+function picker(){const [kind,hid]=U.pop.split(':').slice(1),h=H.find(x=>x.id==hid);const ws=W.filter(w=>vis(w)&&!['free','workedout','settling'].includes(w.st)&&w.id!==h.line);
   return `<div class="pick">${sec((kind==='move'?'MOVE ':'SEND ')+hname(h).toUpperCase()+' TO')}${ws.map(w=>{const ok=REACH(h.g)>=w.ring;return `<button data-a="${ok?'pickgo':''}" data-v="${kind}:${h.id}:${w.id}" class="${ok?'':'dis'}">${wmark(w.k)}<b>${w.n}</b><span>${ok?'ring '+w.ring:'out of reach'}</span></button>`}).join('')}<button class="cancel" data-a="pop" data-v="">KEEP IT WHERE IT IS</button></div>`}
 function popAdv(){return `<div class="advl">${ADV().map(r=>`<button data-a="world" data-v="${r[3]}"><i style="background:${r[0]}"></i><b>${r[1]}</b><span>${r[2]}</span><em>${WI(r[3]).n} →</em></button>`).join('')}</div>`}
-function popMenu(){return `<div class="menu"><button>${ic('tWorlds',15)}Language <b>EN</b> · RU</button><button>${ic('loading',15)}Sound <b>on</b></button><button>${ic('unloading',15)}Export the run log</button><button data-a="note">${ic('warn',15)}Preview: an event window</button></div>`}
+function popMenu(){return `<div class="menu"><button>${ic('tWorlds',15)}Language <b>EN</b> · RU</button><button>${ic('loading',15)}Sound <b>on</b></button><button>${ic('unloading',15)}Export the run log</button><button>${ic('assign',15)}Helper <b>on</b> · off</button><button data-a="note">${ic('warn',15)}Preview: an event window</button></div>`}
 function noteWin(){return `<div class="note">${ic('night',40,C.red)}<b>THE NIGHT HAS A DATE</b><p>Year 3735. Whoever is not aboard the ark stays behind. You have 730 years.</p>${btn('CONTINUE','noteclose',null,'pri')}</div>`}
+
+/* ---------- tutorial: unlocks + the harbourmaster ----------
+   A step opens by the state of the run, never by a timer. While the helper speaks, time stops,
+   the screen dims and only the lit thing is bright. 'do' — only the lit thing can be pressed;
+   'see' — GOT IT, the lit thing or any press on the dark closes it. */
+const TUT={on:false,open:new Set(),fresh:new Set(),seen:new Set(),msg:null,fromQ:false,q:[],step:-1,wait:false,done:false,year:3005,ends:3498,rings:3,R:{}};
+const can=k=>!TUT.on||TUT.open.has(k);
+const vis=w=>!TUT.on||w.ring<=TUT.rings;
+const classes=()=>{if(!TUT.on)return ['courier','hauler','freighter'];const live=W.filter(w=>!['free','settling','workedout'].includes(w.st)).length;return ['courier'].concat(live>=3&&can('parts')?['hauler']:[]).concat(live>=6?['freighter']:[])};
+const PRICE_E={courier:[['metal','40'],['fuel','14'],['people','8']],hauler:[['metal','130'],['fuel','45'],['parts','26'],['people','20']],freighter:[['metal','320'],['fuel','120'],['parts','85'],['people','45']]};
+const prices=c=>TUT.on&&curGen===1?PRICE_E[c]:PRICE[c];
+const clone=o=>JSON.parse(JSON.stringify(o));
+const MID={W:clone(W),H:clone(H),BUILD:clone(BUILD)};
+const AVA=`<svg viewBox="0 0 72 72" width="72" height="72"><rect width="72" height="72" fill="#202024"/><path d="M8 72 C10 54 22 49 36 49 C50 49 62 54 64 72 Z" fill="#5E5D58"/><path d="M29 49 L36 59 L43 49 Z" fill="#141417"/><rect x="31" y="41" width="10" height="9" fill="#9C9B95"/><circle cx="36" cy="33" r="11" fill="#9C9B95"/><path d="M22 25 C22 15 50 15 50 25 V27 H22 Z" fill="#F2F1EC"/><rect x="18" y="26" width="36" height="3.5" fill="#F2F1EC"/><rect x="33" y="18" width="6" height="5" fill="#FF2A1A"/><rect x="27" y="34" width="18" height="2" fill="#141417" opacity=".55"/><path d="M48 62 H58" stroke="#FFD23F" stroke-width="2"/></svg>`;
+const EW=()=>[
+ {id:'kiln',n:'KILN',k:'mine',ring:1,a:20,st:'free',f:{dep:'5 300',cross:'4 yrs one way',sec:'EOS · calm'}},
+ {id:'pale',n:'PALE',k:'farm',ring:1,a:140,st:'free',f:{dep:'12 800',cross:'5 yrs one way',sec:'HEMERA · calm'}},
+ {id:'wick',n:'WICK',k:'well',ring:1,a:255,st:'free',f:{dep:'7 420',cross:'4 yrs one way',sec:'SELENE · calm'}},
+ {id:'hollow',n:'HOLLOW',k:'works',ring:1,a:80,st:'free',f:{dep:'—',cross:'5 yrs one way',sec:'HELIOS · calm'}},
+ {id:'gallows',n:'GALLOWS',k:'mine',ring:1,a:320,st:'free',f:{dep:'4 100',cross:'4 yrs one way',sec:'NYX · calm'}},
+ {id:'cinder',n:'CINDER',k:'mine',ring:2,a:190,st:'free',f:{dep:'6 170',cross:'9 yrs one way',sec:'HESPEROS · calm'}},
+ {id:'brine',n:'BRINE',k:'well',ring:2,a:300,st:'free',f:{dep:'3 900',cross:'10 yrs one way',sec:'NYX · calm'}},
+ {id:'harrow',n:'HARROW',k:'farm',ring:3,a:222,st:'free',f:{dep:'28 400',cross:'14 yrs one way',sec:'HESPEROS · calm'}},
+ {id:'tallow',n:'TALLOW',k:'mine',ring:3,a:20,st:'free',f:{dep:'9 100',cross:'14 yrs one way',sec:'EOS · calm'}},
+ {id:'ossuary',n:'OSSUARY',k:'well',ring:3,a:332,st:'free',f:{dep:'6 600',cross:'16 yrs one way',sec:'NYX · calm'}},
+ {id:'vesper',n:'VESPER',k:'works',ring:3,a:110,st:'free',f:{dep:'—',cross:'15 yrs one way',sec:'HELIOS · calm'}}];
+const EH=()=>[{id:1,c:'courier',g:1,line:null,st:'pier'},{id:2,c:'courier',g:1,line:null,st:'pier'}];
+const hu=id=>H.find(h=>h.id===id);
+function settle(id,f,extra){const w=WI(id);w.st='ok';w.tier=0;w.f=Object.assign({ppl:52,lift:'3610 · 605 yrs'},f);Object.assign(w,extra||{})}
+const OPN={people:'PEOPLE',speed:'скорость ❚❚ 1× 2× 4× 10×',line:'окно мира: линия, ADD A HULL (только свободные)',metal:'METAL',skip:'SKIP',food:'RATIONS + «ends ≈»',earth:'вкладка EARTH',fuel:'FUEL',order:'заказ судна в окне мира',yard:'вкладка YARD + карточки постройки',fleet:'вкладка FLEET, MOVE / TAKE OFF, «Other lines»',parts:'PARTS',machines:'блок MACHINES',tech:'вкладка TECH',advisor:'NEEDS A DECISION',worlds:'вкладка WORLDS',sectors:'доли карты',events:'полоса события',ring2:'кольцо II',zoom:'масштаб − + FIT',ring3:'кольцо III',night:'счётчик NIGHT',ark:'вкладка ARK',reserve:'RESERVE FOR ARK',lift:'строка Last lift',evac:'EVACUATE у живых миров'};
+const STEPS=[
+ {t:'Первая колония',when:'новая игра, сразу после выбора языка; время стоит',opens:['people','line'],year:4,R:{people:['2 000','▲ +2.0/yr',1]},msgs:['m1','m2'],auto:true},
+ {t:'Время',when:'поселенцы отправлены',opens:['speed'],win:'kiln',toast:`${ic('send',15,C.people)}52 settlers leave for KILN`,set(){WI('kiln').st='settling';Object.assign(hu(1),{line:'kiln',st:'settlers',y:5})},msgs:['m3'],auto:true},
+ {t:'Первая линия',when:'поселенцы сели — окно мира открывается само',opens:[],year:9,win:'kiln',toast:'Year 9 · settlers land on KILN',set(){settle('kiln',{dep:'5 300',left:'880 yrs',surf:'36',gives:'6.0',carries:'0'});Object.assign(hu(1),{line:null,st:'pier'})},msgs:['m4'],auto:true},
+ {t:'Металл',when:'первый металл дома',opens:['metal','skip'],year:21,toast:'Year 21 · the first metal is home',R:{metal:['42','▲ +6.0/yr',1]},set(){Object.assign(WI('kiln').f,{carries:'6.0',surf:'12'});Object.assign(hu(1),{line:'kiln',st:'unloading'})},msgs:['m5']},
+ {t:'Еда и Земля',when:'сразу за металлом: у рационов есть дата конца',opens:['food','earth'],year:22,ends:'412',R:{food:['3 120','▼ −7.6/yr',0]},msgs:['m6']},
+ {t:'Верфь',when:'у заселённого мира пустая линия, а у причала нет свободного судна',opens:['fuel','order','yard'],year:61,win:'pale',R:{metal:['388','▲ +5.8/yr',1],fuel:['310','▼ −1.2/yr',0],food:['2 810','▼ −8.1/yr',0]},set(){settle('pale',{dep:'12 800',left:'1 400 yrs',surf:'50',gives:'8.8',carries:'0'});Object.assign(hu(2),{line:null,st:'toEarth',y:4})},msgs:['m8','m9']},
+ {t:'Флот',when:'судов больше, чем линий: 4 судна и 2 линии',opens:['fleet'],year:140,ends:'1 950',R:{metal:['1 240','▲ +9.6/yr',1],fuel:['520','▲ +2.1/yr',1],food:['3 400','▼ −2.2/yr',0],people:['2 140','▲ +1.1/yr',1]},set(){settle('wick',{dep:'7 420',left:'1 700 yrs',surf:'20',gives:'4.4',carries:'4.4'});WI('pale').f.carries='4.4';H.push({id:3,c:'courier',g:1,line:'pale',st:'toWorld',y:3},{id:4,c:'courier',g:1,line:null,st:'pier'});Object.assign(hu(2),{line:'wick',st:'loading'})},msgs:['m10']},
+ {t:'Линия не успевает',when:'первый мир, где линия увозит меньше, чем мир даёт',opens:[],year:260,win:'pale',set(){const w=WI('pale');w.st='half';Object.assign(w.f,{carries:'4.1',surf:'940'})},msgs:['m11']},
+ {t:'Детали, техника, TECH',when:'первые детали дома; не позже, чем в цене судна впервые появились детали (тягач — с 3 живых миров)',opens:['parts','machines','tech'],year:420,R:{parts:['24','▲ +1.4/yr',1]},set(){settle('hollow',{},{works:{metal:'9.0 /yr · 120 yrs',food:'5.0 /yr · 80 yrs',bad:0,parts:'4.6 /yr',run:'100%'}});Object.assign(hu(4),{line:'hollow',st:'toEarth',y:6})},msgs:['m12','m14']},
+ {t:'Советник',when:'первая строка советника; не позже 5 живых миров',opens:['advisor','worlds'],year:520,set(){H.push({id:5,c:'hauler',g:1,line:'kiln',st:'toWorld',y:2})},msgs:['m15']},
+ {t:'События',when:'первое предупреждение режиссёра (≈ 600-й год)',opens:['sectors','events'],year:640,msgs:['m17']},
+ {t:'Кольцо II',when:'нанесено второе кольцо (разведка — во вкладке TECH)',opens:['ring2','zoom'],rings:2,year:900,msgs:['m16']},
+ {t:'Ночь и ковчег',when:'нанесено третье кольцо — у Ночи есть дата (большое окно)',opens:['ring3','night','ark','reserve','lift','evac'],rings:3,year:3005,ends:'3498',note:true,msgs:['m18','m19']}
+];
+const MSG={
+ m1:{at:'#map .wd[data-v="kiln"]',mode:'do',done:(a,v)=>a==='world'&&v==='kiln',en:"Earth can't feed itself much longer. Settle a world — KILN has metal.",ru:'Земля скоро не прокормит себя. Заселите мир — на KILN есть металл.'},
+ m2:{at:'#ovl [data-a="send"]',mode:'do',done:a=>a==='send',en:'Send settlers. Once they land, you put hulls on its line right here.',ru:'Отправьте поселенцев. Когда сядут, суда на линию ставятся здесь же.'},
+ m3:{at:'#top .spd',mode:'do',done:(a,v)=>a==='spd'&&v!=='0',en:'Time is stopped. Start it. KILN takes no orders until the settlers land.',ru:'Время стоит. Запустите его. Пока поселенцы не сели, KILN приказов не принимает.'},
+ m4:{at:'#ovl [data-a="assign"]',mode:'do',done:a=>a==='assign',en:"They've landed. Put a hull on the line — it brings KILN's metal home.",ru:'Сели. Поставьте судно на линию — оно повезёт металл KILN домой.'},
+ m5:{at:'#res [data-r="metal"]',mode:'see',en:'Metal is home. Hulls and machines are built from it.',ru:'Металл дома. Из него строят суда и технику.'},
+ m6:{at:'#res [data-r="food"]',mode:'see',en:'Earth eats more every year. Rations run out in 412. Settle a farm.',ru:'Земля ест больше с каждым годом. Рационы кончатся в 412-м. Заселите ферму.'},
+ m8:{at:'#ordblk',mode:'do',done:a=>a==='order',en:'No free hull at the pier. Order one here — it goes straight to this line.',ru:'Свободных судов у причала нет. Закажите здесь — судно сразу пойдёт на эту линию.'},
+ m9:{at:'#cards',mode:'see',pre(){U.win=null},en:'Being built — here, and all of it in the YARD.',ru:'Что строится — здесь, а всё целиком — во вкладке YARD.'},
+ m10:{at:'#tabs [data-v="fleet"]',mode:'see',en:'Every hull and where it is. A hull you move changes lines when it docks.',ru:'Все суда и где они. Переведённое судно меняет линию, когда причалит.'},
+ m11:{at:'#rw-carries',mode:'see',en:'PALE gives more than its line carries. The rest waits on the surface.',ru:'PALE даёт больше, чем увозит линия. Остальное ждёт на поверхности.'},
+ m12:{at:'#res [data-r="parts"]',mode:'see',en:'Parts are home. Works make them from metal and rations — without rations they stop.',ru:'Детали дома. Заводы делают их из металла и рационов — без рационов встают.'},
+ m14:{at:'#tabs [data-v="tech"]',mode:'see',en:'Each hull generation reaches one ring farther. The next needs settled worlds and parts from a works.',ru:'Каждое поколение судов летит на кольцо дальше. Следующему нужны заселённые миры и детали с завода.'},
+ m15:{at:'#top .adv',mode:'see',en:'When a world needs you, it shows here. Worst first.',ru:'Когда миру нужно ваше решение, он здесь. Худшее — сверху.'},
+ m17:{at:'#evbar',mode:'see',en:'Space shifts by sector. What is on, and for how long — in this bar.',ru:'Пространство меняется по долям. Что идёт и сколько ещё — на этой полосе.'},
+ m16:{at:'#map .wd[data-v="cinder"]',mode:'see',en:'Ring 2 is charted. Generation I hulls reach it; ring 3 needs generation II.',ru:'Кольцо 2 нанесено. Суда I поколения туда долетают; на кольцо 3 нужно II.'},
+ m18:{at:'#noteL .note',mode:'see',en:'Big news stops time. It comes one window at a time.',ru:'Большие новости останавливают время. Приходят по одному окну.'},
+ m19:{at:'#tabs [data-v="ark"]',mode:'see',pre(){U.note=false},en:'The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation III or newer, at the pier that day.',ru:'Ковчег уходит в Ночь с теми, кто на борту. Нужны оплаченные уровни и конвой — суда III поколения и новее у причала в тот день.'},
+ /* by occasion: once each, when the thing first happens */
+ m7:{at:'#ovl .wh small',mode:'see',when:'первое открытие EARTH, YARD или ARK',demo:{step:4,win:'earth'},en:'Time stops while Earth, the Yard or the Ark is open.',ru:'Пока открыты Земля, Верфь или Ковчег, время стоит.'},
+ m13:{at:'#mach',mode:'see',when:'первое окно мира после того, как открылась техника',demo:{step:8,win:'kiln'},en:"Machines make a world give more. They burn its fuel and ride out on the line's next hull.",ru:'Техника поднимает выработку мира. Жжёт его топливо и уходит со следующим судном линии.'},
+ m20:{at:'#convoy',mode:'see',when:'первое открытие ARK',demo:{step:12,win:'ark'},en:'Hold hulls for the convoy with RESERVE FOR ARK in the Yard.',ru:'Суда для конвоя придерживайте кнопкой RESERVE FOR ARK во вкладке YARD.'},
+ m21:{at:'#rw-lift',mode:'see',when:'первое окно мира после даты Ночи',demo:{step:12,win:'kiln'},en:'Last lift: the year a courier must leave to bring everyone home before the Night.',ru:'Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.'},
+ m22:{at:'#ovl [data-a="evac"]',mode:'see',when:'первый выработанный мир',demo:{mid:1,win:'gallows'},en:'The seam is dead. Only evacuation is left — a courier takes everyone.',ru:'Жила мертва. Осталась только эвакуация — курьер забирает всех.'},
+ m24:{at:'#hr-57',mode:'see',when:'первое опоздавшее судно',demo:{mid:1,win:'vesper'},en:'A hull is overdue. If it is lost, nothing replaces it — you order the next one.',ru:'Судно опаздывает. Если пропадёт, замены не будет — следующее заказываете вы.'},
+ m23:{at:'#hr-49',mode:'see',when:'первый отказ экипажа',demo:{mid:1,win:'kiln'},en:'Near the end, crews refuse runs. A hull that refused still sails with the convoy.',ru:'Под конец экипажи отказываются от рейсов. Отказавшее судно в конвой всё равно идёт.'}
+};
+const JIT=['m7','m13','m20','m21','m22','m24','m23'];
+function setMid(){TUT.on=false;TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.step=-1;W=clone(MID.W);H=clone(MID.H);BUILD=clone(MID.BUILD);curGen=4;SPEC=SPEC_M;Object.assign(U,{win:null,tab:null,pop:null,note:false,zoom:1,who:{},addTab:'free',scrapArm:null});drawMap()}
+function build(i){TUT.on=true;TUT.step=i;TUT.wait=false;TUT.done=false;TUT.msg=null;
+  W=EW();H=EH();BUILD=[];curGen=1;SPEC=SPEC_E;TUT.open=new Set();TUT.rings=1;TUT.R={};TUT.ends='—';
+  for(let k=0;k<=i;k++){const s=STEPS[k];s.opens.forEach(o=>TUT.open.add(o));if(s.set)s.set();Object.assign(TUT.R,s.R||{});if(s.year)TUT.year=s.year;if(s.rings)TUT.rings=s.rings;if(s.ends)TUT.ends=s.ends;if(k<i)s.msgs.forEach(m=>TUT.seen.add(m))}
+  TUT.fresh=new Set(STEPS[i].opens);
+  Object.assign(U,{win:STEPS[i].win||null,tab:null,pop:null,note:!!STEPS[i].note,who:{},addTab:'free',scrapArm:null,userPause:false,zoom:[1,2.2,1.45,1][TUT.rings]});drawMap()}
+function go(i){build(i);TUT.q=STEPS[i].msgs.slice();nextInQ();render()}
+function show(id,fromQ){const m=MSG[id];if(m.pre)m.pre();TUT.msg=id;TUT.fromQ=fromQ}
+function nextInQ(){if(TUT.q.length){show(TUT.q.shift(),true);return}
+  const i=TUT.step;if(i>=STEPS.length-1){TUT.done=true;tutWhen();return}
+  if(STEPS[i].auto){if(STEPS[i+1].toast)toast(STEPS[i+1].toast);setTimeout(()=>go(i+1),STEPS[i+1].toast?900:300)}else{TUT.wait=true;tutWhen()}}
+function tutDone(){TUT.seen.add(TUT.msg);const fq=TUT.fromQ;TUT.msg=null;if(fq)nextInQ();else tutWhen()}
+function tutWhen(){if(TUT.msg||!TUT.on)return;const w=U.win,ww=w&&WI(w),settled=ww&&!['free','settling','workedout'].includes(ww.st);
+  const c=[['m7',['earth','yard','ark'].includes(w)],['m20',w==='ark'&&can('ark')],['m13',settled&&can('machines')],['m21',settled&&can('lift')]];
+  for(const [id,ok] of c)if(ok&&!TUT.seen.has(id)){show(id,false);return}}
+function tutBlocked(){if(TUT.msg&&MSG[TUT.msg].mode==='see'){tutDone();render();return}const r=el('tutRing');r.classList.remove('shake');void r.offsetWidth;r.classList.add('shake')}
+function tutCtl(a,v){
+  if(a==='mode'){TUT.seen=new Set();if(v==='mid'){setMid();render()}else go(0);return true}
+  if(a==='tgo'){TUT.seen=new Set();go(+v);el('wrap').scrollIntoView({behavior:'smooth'});return true}
+  if(a==='tjit'){const m=MSG[v];TUT.seen=new Set();if(m.demo.mid)setMid();else{build(m.demo.step);STEPS[m.demo.step].msgs.forEach(x=>TUT.seen.add(x));TUT.q=[];TUT.wait=true}U.win=m.demo.win;U.note=false;show(v,false);render();el('wrap').scrollIntoView({behavior:'smooth'});return true}
+  if(a==='tutok'){tutDone();render();return true}
+  if(a==='tutskip'){TUT.msg=null;TUT.q=[];TUT.wait=false;TUT.done=true;Object.keys(OPN).forEach(k=>TUT.open.add(k));TUT.rings=3;U.zoom=1;drawMap();render();return true}
+  if(a==='tnext'){go(TUT.step+1);return true}
+  return false}
+function tutAfter(a,v){if(a==='tab')TUT.fresh.delete(v);
+  if(TUT.msg){const m=MSG[TUT.msg];if(m.mode==='do'?m.done(a,v):true)tutDone()}else tutWhen()}
+function tutPlace(){const L=el('tutL'),Rg=el('tutRing'),hp=el('helper'),nx=el('tnext');
+  const nxOn=TUT.on&&TUT.wait&&!TUT.msg&&TUT.step<STEPS.length-1;nx.className=nxOn?'on':'';nx.innerHTML=nxOn?`▸ Дальше (макет): ${STEPS[TUT.step+1].when}`:'';
+  if(!TUT.msg){L.className='';Rg.style.display='none';hp.className='';return}
+  const m=MSG[TUT.msg],t=document.querySelector(m.at),st=el('stage').getBoundingClientRect(),sc=st.width/1280;
+  hp.innerHTML=`<div class="hav">${AVA}</div><div><div class="hnm">HARBOURMASTER</div><div class="htx">${m.en}</div><div class="hbt">${TUT.on&&TUT.step===0&&TUT.fromQ?btn('SKIP THE HELPER','tutskip'):''}${m.mode==='see'?btn('GOT IT','tutok',null,'pri'):''}</div></div>`;
+  hp.className='on';L.className='on';const hh=hp.offsetHeight;let top=760-hh-14;
+  if(t){const r=t.getBoundingClientRect(),p=6,x0=Math.max(0,(r.left-st.left)/sc-p),y0=Math.max(0,(r.top-st.top)/sc-p),x1=Math.min(1280,(r.right-st.left)/sc+p),y1=Math.min(760,(r.bottom-st.top)/sc+p);
+    L.style.clipPath=`polygon(evenodd,0 0,1280px 0,1280px 760px,0 760px,0 0,${x0}px ${y0}px,${x1}px ${y0}px,${x1}px ${y1}px,${x0}px ${y1}px,${x0}px ${y0}px)`;
+    Object.assign(Rg.style,{display:'block',left:x0+'px',top:y0+'px',width:(x1-x0)+'px',height:(y1-y0)+'px'});
+    if(y1>top-10)top=Math.max(104,y0-hh-16);}
+  else{L.style.clipPath='none';Rg.style.display='none'}
+  hp.style.top=top+'px'}
+function drawScript(){el('m-mid').className=TUT.on?'':'on';el('m-tut').className=TUT.on?'on':'';
+  const msg=id=>{const m=MSG[id];return `<div class="ms"><u>${m.mode==='do'?'СДЕЛАЙ — нажать можно только подсвеченное':'СМОТРИ — GOT IT или любое нажатие'}</u><span>${m.en}</span><small>${m.ru}</small></div>`};
+  el('scr').innerHTML=`<h3>Обучение: что и когда открывается</h3>
+  <p>Шаг открывает <b>состояние забега</b>, а не таймер и не кнопка «далее»: условие вроде «у причала нет свободного судна» рано или поздно наступает, застрять нельзя. Пока говорит помощник, <b>время стоит</b>, экран темнеет, светлое — то, о чём речь. Новая вкладка встаёт на своё место (места не прыгают) с жёлтой точкой; точка гаснет при первом открытии. На первом сообщении — <b>SKIP THE HELPER</b>: открывается всё сразу; в ≡ — Helper on/off.</p>
+  <p>В макете шаги-«сделай» идут сами; после шагов-«смотри» внизу слева появляется пунктирная кнопка «Дальше» — это не игра, а перемотка к следующему условию.</p>
+  ${STEPS.map((s,i)=>`<div class="st1${TUT.on&&TUT.step===i?' cur':''}"><i>${i+1}</i><div><b>${s.t}</b><em>КОГДА</em>${s.when}<em>ОТКРЫВАЕТ</em><div class="opn">${s.opens.length?s.opens.map(o=>`<span>${OPN[o]}</span>`).join(''):'<span>—</span>'}</div></div><div>${s.msgs.map(msg).join('')}</div>${btn('ПОКАЗАТЬ','tgo',i)}</div>`).join('')}
+  <h3>Подсказки по случаю — один раз, когда это впервые случилось</h3>
+  ${JIT.map(id=>`<div class="st1"><i>·</i><div><em>КОГДА</em>${MSG[id].when}</div><div>${msg(id)}</div>${btn('ПОКАЗАТЬ','tjit',id)}</div>`).join('')}
+  <h3>Вид</h3>
+  <p>Слой темноты 80 % поверх всего экрана с прямоугольным вырезом (+6 px вокруг цели); по краю выреза — жёлтая рамка 2 px с мягкой пульсацией. Нажатие мимо выреза в «сделай» — рамка вздрагивает. Помощник — панель 640 px с жёлтой рамкой: портрет начальника порта 72 px, имя, одна-две строки 16 px, кнопки. Стоит внизу над картой; если цель внизу — поднимается над ней. Без стрелок и без шагов «1 из 12».</p>`}
 
 /* ---------- render ---------- */
 function render(){drawTop();drawTabs();drawMapUI();
@@ -467,14 +622,16 @@ function render(){drawTop();drawTabs();drawMapUI();
   el('pop').innerHTML=p;el('pop').className=U.pop?('on p-'+(U.pop.startsWith('pick')?'center':U.pop)):'';
   el('noteL').innerHTML=U.note?noteWin():'';el('noteL').className=U.note?'on':'';
   document.querySelectorAll('#map .wd').forEach(g=>g.classList.toggle('sel',g.dataset.v===U.win));
+  tutPlace();drawScript();
 }
-const ORDER=W.map(w=>w.id);
-document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t){if(U.pop&&(!e.target.closest('#pop')||e.target.id==='pop')){U.pop=null;render();return}if(e.target.id==='ovl'&&U.win&&!['yard','earth','ark'].includes(U.win)){U.win=null;U.scrapArm=null;render()}return}
+const ORDER=()=>W.filter(vis).map(w=>w.id);
+document.addEventListener('click',e=>{if(e.target.closest('#tutL')){tutBlocked();return}
+  const t=e.target.closest('[data-a]');if(t&&tutCtl(t.dataset.a,t.dataset.v))return;if(!t){if(U.pop&&(!e.target.closest('#pop')||e.target.id==='pop')){U.pop=null;render();return}if(e.target.id==='ovl'&&U.win&&!['yard','earth','ark'].includes(U.win)){U.win=null;U.scrapArm=null;render()}return}
   const a=t.dataset.a,v=t.dataset.v;
   if(a==='tab'){U.pop=null;if(['worlds','fleet','tech'].includes(v)){U.tab=U.tab===v?null:v;U.win=null}else{U.win=U.win===v?null:v}}
   else if(a==='world'){U.pop=null;U.win=v;U.scrapArm=null}
   else if(a==='close'){U.win=null;U.scrapArm=null}
-  else if(a==='step'){const i=ORDER.indexOf(U.win);U.win=ORDER[(i+(+v)+ORDER.length)%ORDER.length]}
+  else if(a==='step'){const O=ORDER(),i=O.indexOf(U.win);U.win=O[(i+(+v)+O.length)%O.length]}
   else if(a==='pop'){U.pop=U.pop===v||!v?null:v}
   else if(a==='spd'){if(v==='0')U.userPause=!U.userPause;else{U.speed=+v;U.userPause=false}}
   else if(a==='skip')toast('Skipped to the next event: year 3011');
@@ -496,6 +653,7 @@ document.addEventListener('click',e=>{const t=e.target.closest('[data-a]');if(!t
   else if(a==='driveat')U.driveAt=v;
   else if(a==='note'){U.note=true;U.pop=null}
   else if(a==='noteclose')U.note=false;
+  tutAfter(a,v);
   render();
 });
 document.addEventListener('mouseover',e=>{const g=e.target.closest('#map .wd');const tip=el('tip');if(!g||g.dataset.a!=='world'){tip.className='';return}
@@ -504,7 +662,7 @@ document.addEventListener('mouseover',e=>{const g=e.target.closest('#map .wd');c
   tip.style.left=((r.right-s.left)/sc+8)+'px';tip.style.top=((r.top-s.top)/sc-6)+'px';tip.className='on';});
 function fit(){const vw=Math.min(window.innerWidth||1280,document.documentElement.clientWidth||1280,(window.visualViewport&&window.visualViewport.width)||1280);const s=Math.min(1,(vw-8)/1280);el('stage').style.transform=`scale(${s})`;el('wrap').style.height=(760*s)+'px';el('wrap').style.width=(1280*s)+'px'}
 window.addEventListener('resize',fit);window.addEventListener('load',fit);if(window.visualViewport)window.visualViewport.addEventListener('resize',fit);setTimeout(fit,300);
-drawMap();render();fit();
+go(0);fit();
 </script>
 </body>
 </html>
