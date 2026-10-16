@@ -180,7 +180,12 @@ function fill(s,p){ if(!p) return s; return String(s).replace(/\{(\w+)\}/g,funct
 function el(id){ return document.getElementById(id) }
 /* v4.8 (Nikita, 27.09: 'игра подтормаживает'): a panel is only rewritten when its markup changed */
 var HTMLCACHE={};
-function setHTML(id,html){ if(HTMLCACHE[id]===html) return false; HTMLCACHE[id]=html; el(id).innerHTML=html; return true }
+/* v4.35 (reviewer): a panel rewritten on every tick kept losing its scroll — the scroll of its lists is carried over while it shows the same thing (key) */
+function setHTML(id,html,key){ if(HTMLCACHE[id]===html) return false; HTMLCACHE[id]=html; var e=el(id), keep=null;
+  if(key!==undefined&&e._k===key){ keep=[]; e.querySelectorAll('.lst,.bd,.tbl').forEach(function(x){ keep.push(x.scrollTop) }) }
+  e._k=key; e.innerHTML=html;
+  if(keep&&keep.length){ var n=e.querySelectorAll('.lst,.bd,.tbl'); for(var i=0;i<n.length&&i<keep.length;i++) n[i].scrollTop=keep[i] }
+  return true }
 function esc(s){ return String(s).replace(/[&<>]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;'}[c] }) }
 /* numbers read in groups of three: 27 920 */
 function num(x){ var n=Math.round(+x||0), s=String(Math.abs(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' '); return (n<0?'−':'')+s }
@@ -693,7 +698,7 @@ function chronLines(k){ var out='', n=0;
 function rw2(k,v,cls){ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
 function bigHtml(kind){
   if(kind==='lang') return '<div class="nwin" id="lang"><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><p>Choose a language.<br>Выберите язык.</p><div class="langrow"><button class="b pri" type="button" data-lang="en">English</button><button class="b pri" type="button" data-lang="ru">Русский</button></div>'+
-    (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(T('u_continue'),{y:U.saveDay}))+'</button>':'')+'</div>';
+    (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(L[U.saveLang||'en'].u_continue||'',{y:U.saveDay}))+'</button>':'')+'</div>';
   if(kind==='over'){
     if(G.over==='night'){ var sl=G.souls||0, lb=G.left||leftBehind(G), tier=sl<=0?0:(sl<300?1:(sl<1200?2:3)), behind=lb.home+lb.hulls+lb.colonies+lb.transit;
       return '<div class="nwin '+(tier?'good':'bad')+'"><div class="icap">'+esc(T('noteArk'))+'<span>'+G.day+'</span></div><h2>'+esc(T(tier?'endNightT':'endNight0'))+'</h2>'+
@@ -740,8 +745,8 @@ function drawBig(){ var k=bigKind(), L0=el('noteL'), key=k==='shift'?'shift'+G.d
 function drawPF(){
   var L0=el('pfL'), f=U.pf;
   if(!f||(!f.low&&bigKind())||(f.low&&U.win)){ if(L0._f){ L0._f=null; L0.innerHTML='' } L0.className=''; return }
-  if(L0._f===f&&L0._lang===U.lang) return;   // v4.30: the card is built once, or a press on it would be lost to the redraw
-  L0._f=f; L0._lang=U.lang; L0.className=f.low?'low':'full';
+  if(L0._f===f&&L0._lang===U.lang&&L0._tab===!!U.tab) return;   // v4.30: the card is built once, or a press on it would be lost to the redraw
+  L0._f=f; L0._lang=U.lang; L0._tab=!!U.tab; L0.className=f.low?'low'+(U.tab?' side':''):'full';
   if(f.low&&!f.timer) f.timer=setTimeout(function(){ if(U.pf===f){ U.pf=null; drawPF() } },20000);
   var v=VOICE[U.lang]||{}, d={}; for(var q in f.d) d[q]=f.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p);
   L0.innerHTML='<div class="pfbox"><canvas width="64" height="64"></canvas><div><div class="pfk"><span>'+esc(T('pfTitle'))+'</span><span>'+String(f.day!==undefined?f.day:G.day).padStart(4,'0')+'</span></div>'+
@@ -766,16 +771,18 @@ function uiOpenRes(){ if(!G||!U.langPicked) return; ['metal','fuel','parts'].for
 function appZoom(){ return +(el('app').dataset.z||1) }
 function drawSide(){ var t=U.tab, h='';
   if(t==='worlds') h=sideWorlds(); else if(t==='tech') h=sideTech(); else if(t==='fleet') h=sideFleet();
-  setHTML('side',h); el('side').className=t?'on':'' }
+  setHTML('side',h,t+':'+U.filter); el('side').className=t?'on':'' }
 function drawWin(){ var w=U.win, h='';
   if(w==='earth') h=winEarth(); else if(w==='yard') h=winYard(); else if(w==='ark') h=winArk(); else if(w&&planet(w)) h=winWorld(w);
-  setHTML('ovl',h); el('ovl').className=h?'on':'' }
+  setHTML('ovl',h,w); el('ovl').className=h?'on':'' }
 function drawPop(){ var p=U.pop, h='', cls='';
   if(p==='adv'){ h=popAdv(); cls='p-adv' } else if(p==='menu'){ h=popMenu(); cls='p-menu' } else if(p&&p.indexOf('pick:')===0){ h=picker(); cls='p-center' }
   if(!h) U.pop=null;
-  setHTML('pop',h); el('pop').className=h?'on '+cls:'' }
-function focusFix(){ if(!U.focus) return; var k=U.focus; U.focus=null; var e=document.querySelector(k);
-  if(e){ e.classList.remove('focus'); void e.offsetWidth; e.classList.add('focus'); e.scrollIntoView({block:'nearest'}) } }
+  setHTML('pop',h,p); el('pop').className=h?'on '+cls:'' }
+function focusFix(){ var now=Date.now();
+  if(U.focus){ U.focusK=U.focus; U.focusT=now; U.focus=null; var e0=document.querySelector(U.focusK); if(e0) e0.scrollIntoView({block:'nearest'}) }
+  if(!U.focusK) return; if(now-U.focusT>3000){ U.focusK=null; return }
+  var e=document.querySelector(U.focusK); if(e&&!e.classList.contains('focus')){ e.style.animationDelay=-(now-U.focusT)+'ms'; e.classList.add('focus') } }
 function draw(){
   if(!G) return;
   uiOpenRes(); voiceWatch(); watchRings();
@@ -835,12 +842,13 @@ function pickCourier(pid){ var c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
   if(fit.length) return fit[0];
   return list.sort(function(a,b){ return b.cap-a.cap })[0] }
 function evacGoing(pid){ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }) }
-function evacW(pid){ var nh=nextHome(G,pid,'courier'); return nh?fill(T('u_evacW_wait'),{n:nh.id,l:nh.t}):T('u_evacW_orderC') }
+function evacW(pid){ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id}); return nh?fill(T('u_evacW_wait'),{n:nh.id,l:nh.t}):T('u_evacW_orderC') }
 function evacBlock(p){ var c=G.colonies[p.id];
   if(evacGoing(p.id)) return btn(esc(T('evacGoing')),'evac',{p:p.id},'red full','evac',off('evacuating'));
   var ll=lastLift(G,p.id);
   if(ll&&ll.st==='cut') return alertBox('cutoff',esc(fill(T('liftCut'),{k:num(ll.pop)})))+btn(esc(T('u_evacLate')),'evac',{p:p.id},'full','evac',off('evacLate',{p:pname(p.id)}));
-  var s=pickCourier(p.id), pop=Math.floor(c.pop);
+  var s=pickCourier(p.id), pop=Math.floor(c.pop), ef=Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)));
+  if(s&&G.earth.fuel<ef) return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac',off('short_fuel',{n:Math.ceil(ef-G.earth.fuel)}));
   if(!s) return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac',off('evacNoCourier',{p:pname(p.id),w:evacW(p.id)}));
   return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac')+hint(esc(fill(T(s.cap<pop?'u_evacShort':'u_evacWho'),{h:T('courier')+' '+fill(T('hullNo'),{n:s.id}),c:s.cap,k:pop,l:pop-s.cap,t:legDays(G,p.id,'earth',s)})),'c') }
 function liftRow(p){ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
@@ -872,12 +880,12 @@ function winWorld(pid){
       '<div class="bar"><u style="width:'+Math.round((1-er.t/Math.max(1,er.total))*100)+'%;background:'+C.people+'"></u></div></div>'+nav+'</div>' }
   if(!c){
     var hs=assignable(pid), who=hs.filter(function(s){ return s.id===U.who[pid] })[0];
-    if(!who&&hs.length){ who=hs.slice().sort(function(a,b){ return foundParty(G,b,pid)-foundParty(G,a,pid)||legDays(G,'earth',pid,a)-legDays(G,'earth',pid,b) })[0]; U.who[pid]=who.id }
+    if(!who&&hs.length){ who=hs.slice().sort(function(a,b){ return (a.reserve?1:0)-(b.reserve?1:0)||foundParty(G,b,pid)-foundParty(G,a,pid)||legDays(G,'earth',pid,a)-legDays(G,'earth',pid,b) })[0]; U.who[pid]=who.id }
     var party=who?foundParty(G,who,pid):0, fuel=sendFuel(p);
     L0+=sec(esc(T('u_world')))+(p.kind==='works'?row(esc(T('u_makes')),esc(T('parts')),C.parts):row(esc(T('u_deposit')),resIc(dep,13)+num(G.reserves[pid]),KCOL[p.kind]));
     L0+=row(esc(T('u_crossing')),esc(fill(T('u_oneWay'),{n:legDays(G,'earth',pid,who||{hull:currentHull(G,'courier')})})))+row(esc(T('u_sector')),esc(lobeTxt(p)));
     L0+=sec(esc(T('u_found')))+row(resIc('people',13)+esc(T('u_settlers')),esc(fill(T('u_peopleN'),{n:party})),C.people)+'<div class="lab">'+esc(T('u_whoGoes'))+'</div>';
-    if(hs.length) L0+=hs.map(function(s){ return '<button type="button" class="radio'+(who===s?' on':'')+'" data-act="who" data-p="'+pid+'" data-s="'+s.id+'"><i></i>'+shipIc(shipClass(s),26)+genB(hullGen(s))+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b><span>'+esc(fill(T('u_whoLine'),{c:num(s.cap),n:legDays(G,'earth',pid,s)}))+'</span></button>' }).join('');
+    if(hs.length) L0+=hs.map(function(s){ return '<button type="button" class="radio'+(who===s?' on':'')+'" data-act="who" data-p="'+pid+'" data-s="'+s.id+'"><i></i>'+shipIc(shipClass(s),26)+genB(hullGen(s))+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b><span>'+(s.reserve?'<em style="color:'+C.ark+';font-style:normal">'+esc(T('u_stReserve'))+'</em> · ':'')+esc(fill(T('u_whoLine'),{c:num(s.cap),n:legDays(G,'earth',pid,s)}))+'</span></button>' }).join('');
     else L0+='<div class="why">'+esc(freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait }).length?fill(T('u_noneReach'),{n:p.sec+1}):T('u_noFree'))+'</div>';
     var w=!who?'nofree':(party<K.MIN_FOUND?['fewhands',{n:K.MIN_FOUND-party}]:shortWhy({fuel:fuel,people:party},G.earth));
     if(enRoute(G,pid)) w='enroute';
@@ -915,12 +923,12 @@ function winWorld(pid){
       (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+' · '+ic('speed',15,C.mid)+esc(fill(T('u_roundTrip'),{n:legDays(G,pid,'earth',s)*2}))+'</span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
          :'<span class="hst" style="color:'+C.red+'">'+ic('range',15,C.red)+esc(fill(T('u_tooShort'),{n:shipRange(s)+1}))+'</span>')+
       '</span><span class="ha">'+(ok?btn(esc(T(tab==='free'?'u_assign':'u_moveHere')),tab==='free'?'assign':'move',{s:s.id,p:pid},'pri','assign'):'')+'</span></div>' }).join('')
-    :'<div class="why">'+esc(T(tab==='free'?'u_noFreePier':'u_noOther'))+'</div>';
+    :'<div class="why dim">'+esc(T(tab==='free'?'u_noFreePier':'u_noOther'))+'</div>';
   R+='</div></div>';
   if(can('order')){
     R+='<div id="ordblk">'+sec(esc(T('u_orderNew')),esc(fill(T('u_yardGen'),{g:roman(G.gen||0)})))+'<div class="ord">';
     CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null) return; var h=HULLS[hi];
-      if(reach(G)<h.reach){ R+='<div class="oc dis">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="why">'+esc(fill(T('u_needLive'),{n:h.reach}))+'</div></div>'; return }
+      if(reach(G)<h.reach){ R+='<div class="oc dis">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="why dim">'+esc(fill(T('u_needLive'),{n:h.reach}))+'</div></div>'; return }
       var w=orderCheck(G,pid,cls); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth);
       var okb=(typeof w==='string'?w:w[0])==='ok';
       R+='<div class="oc'+(okb?'':' dis')+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
@@ -928,6 +936,7 @@ function winWorld(pid){
     R+='</div></div>' }
   return '<div class="win">'+head(esc(pname(pid)),wsub(p),wmark(p.kind,true,16))+'<div class="bd two"><div>'+L0+'</div><div>'+R+'</div></div>'+nav+'</div>' }
 /* v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace */
+function seamShort(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid), rate=c?c.pop*p.rich*K.PROD*rateMult(c):0; return rate<=0.001?num(res):fill(T('u_yShort'),{n:num(res/rate)}) }
 function seamLeft(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
   var rate=c?c.pop*p.rich*K.PROD*rateMult(c):0; if(rate<=0.001) return num(res);
   return fill(T('u_yearsN'),{n:num(res/rate)}) }
@@ -948,13 +957,13 @@ function winYard(){ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
   CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null) return; var hl=HULLS[hi], c=hullCost(hl);
     var w=reach(G)<hl.reach?['needreach',{n:hl.reach,r:reach(G)}]:shortWhy(c,G.earth), okb=w[0]==='ok';
     h+='<div class="oc'+(okb?'':' dis')+'">'+shipIc(cls,64)+'<b>'+esc(T(cls)+' '+roman(hl.gen))+'</b><div class="ico3">'+specIcons(hl)+'</div><div class="prow">'+price(c,G.earth)+'</div>'+
-      (reach(G)<hl.reach?'<div class="why">'+esc(fill(T('u_needLive'),{n:hl.reach}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:hl.days})),'build',{h:hi},'pri','build',offW(w)))+'</div>' });
+      (reach(G)<hl.reach?'<div class="why dim">'+esc(fill(T('u_needLive'),{n:hl.reach}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:hl.days})),'build',{h:hi},'pri','build',offW(w)))+'</div>' });
   h+='</div>'+sec(esc(T('u_atPier')),esc(fill(T('u_hullsN'),{n:pier.length})).toUpperCase());
   h+=pier.length?'<div class="pier">'+pier.sort(function(a,b){ return (b.reserve?1:0)-(a.reserve?1:0)||hullGen(b)-hullGen(a)||a.id-b.id }).map(function(s){ var v=scrapValue(HULLS[s.hull]), arm=U.scrapArm===s.id;
     return '<div class="pc'+(s.reserve?' res':'')+(s.mutiny?' mut':'')+'">'+shipIc(shipClass(s),34)+genB(hullGen(s),hullGen(s)<g-1)+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+
       (s.reserve?'<em>'+ic('reserve',14,C.ark)+esc(T('u_stReserve').toUpperCase())+'</em>':(s.mutiny?'<em>'+ic('mutiny',14,C.red)+esc(T('u_stMutiny').toUpperCase())+'</em>':''))+
       '<div>'+(G.night&&can('reserve')&&!s.mutiny?btn(esc(T(s.reserve?'u_release':'u_reserve')),'reserve',{s:s.id,on:s.reserve?0:1},'','reserve',(!s.reserve&&hullGen(s)<convoyGen(G))?off('convoy_old',{g:roman(convoyGen(G))}):''):'')+
-      btn(esc(arm?fill(T('u_scrapSure'),{m:num(v.metal)}):T('u_scrap')),'scrap',{s:s.id},arm?'red':'','scrap')+'</div></div>' }).join('')+'</div>':hint(esc(T('u_pierEmpty')));
+      (s.reserve?'':(arm?'<button class="b red" type="button" data-act="scrap" data-s="'+s.id+'">'+esc(T('u_scrapSure'))+' '+price({metal:v.metal,parts:v.parts,people:s.crew||0},null,11)+'</button>':btn(esc(T('u_scrap')),'scrap',{s:s.id},'','scrap')))+'</div></div>' }).join('')+'</div>':hint(esc(T('u_pierEmpty')));
   return '<div class="win wide">'+head(esc(T('u_tabYard').toUpperCase()),esc(fill(T('u_genPaused'),{g:roman(g)})),ic('tYard',18))+'<div class="bd">'+h+'</div></div>' }
 
 /* ---------- Fleet: every hull and where it is (no pause) ---------- */
@@ -966,10 +975,11 @@ function sideFleet(){ var all=G.ships.filter(function(s){ return s.mode!=='dead'
   var seg=['all','free','lines','yards','away'].map(function(k){ return '<button type="button" data-act="filter" data-v="'+k+'" class="'+(f===k?'on':'')+'">'+esc(fill(T('u_fl_'+k),{n:all.filter(F[k]).length}))+'</button>' }).join('');
   var rows=list.map(function(s){ var acts='', wl=s.from||(s.pend&&s.pend.from)||forWorld(s);
     if(F.free(s)&&!s.mutiny&&!s.crewWait&&!s.job) acts=btn(esc(T('u_send')),'pick',{v:'send:'+s.id},'pri','assign');
-    else if(s.mode==='missing') acts=btn(esc(T('u_search')),'search',{m:s.id},'','overdue',bestSearch(s)?'':off('nofree'));
+    else if(s.mode==='missing') acts=btn(esc(T('u_search')),'search',{m:s.id},'','overdue',!bestSearch(s)?off('nofree'):(G.earth.fuel<searchFuel(s)?off('fuel'):''));
     else if(wl&&planet(wl)) acts='<button type="button" class="lnk" data-act="world" data-v="'+wl+'">'+esc(pname(wl))+' →</button>';
     return hullRow(s,acts) }).join('');
   return '<div class="side">'+head(esc(T('u_tabFleet').toUpperCase()),esc(fill(T('u_hullsN'),{n:all.length})).toUpperCase(),ic('tFleet',18))+'<div class="seg wide">'+seg+'</div><div class="lst tall">'+(rows||hint(esc(T('u_none'))))+'</div></div>' }
+function searchFuel(m){ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=w&&planet(w); return p?Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G))):0 }
 function bestSearch(m){ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target); if(!where||!planet(where)) return null;
   return assignable(where).sort(function(a,b){ return legDays(G,'earth',where,a)-legDays(G,'earth',where,b) })[0]||null }
 
@@ -980,7 +990,7 @@ function sideWorlds(){ var list=PLANETS.filter(function(p){ return sectorOpen(G,
   var live=Object.keys(G.colonies).length, fr=list.filter(function(x){ return x.st==='free' }).length;
   var rows=list.map(function(x){ var p=x.p, c=G.colonies[p.id], n=c?onLine(G,p.id).length:0, st=x.st, red=SEV[st]<=2, col=red?C.red:((st==='noline'||st==='half'||st==='settling')?C.people:C.mid);
     var icn={dead:'workedout',cut:'cutoff',starve:'starving',noline:'warn',half:'warn',dry:'workedout',settling:'settlers',free:'free'}[st];
-    var left=!c?'—':(p.kind==='works'?'—':(isDry(p.id)?T('u_workedOut'):seamLeft(p.id)));
+    var left=!c?'—':(p.kind==='works'?'—':(isDry(p.id)?T('u_dryShort'):seamShort(p.id)));
     return '<button type="button" class="tr'+(red?' red':'')+(st==='free'?' free':'')+'" data-act="world" data-v="'+p.id+'"><span>'+wmark(p.kind,!!c)+'<b>'+esc(pname(p.id))+'</b></span><span>'+(p.sec+1)+'</span><span>'+esc(left)+'</span><span style="color:'+(!c||n?'':C.red)+'">'+(c?n:'—')+'</span><span style="color:'+C.people+'">'+(c?num(c.pop):'—')+'</span><span style="color:'+col+'">'+(icn?ic(icn,14,col):'')+esc(T('u_ws_'+st))+'</span></button>' }).join('');
   return '<div class="side">'+head(esc(T('u_tabWorlds').toUpperCase()),esc(fill(T('u_liveFree'),{l:live,f:fr})).toUpperCase(),ic('tWorlds',18,C.metal))+'<div class="tbl"><div class="th"><span>'+esc(T('u_thWorld'))+'</span><span>'+esc(T('u_thRing'))+'</span><span>'+esc(T('u_thLeft'))+'</span><span>'+esc(T('u_thHulls'))+'</span><span>'+esc(T('people'))+'</span><span>'+esc(T('u_thState'))+'</span></div>'+rows+'</div></div>' }
 
@@ -1096,7 +1106,7 @@ function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinit
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
   G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
   var u=o.U||{}; if(!U.langPicked&&u.lang) U.lang=u.lang; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] });
-  U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=null; U.langPicked=true; HTMLCACHE={};
+  U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; lineWhy={}; U.langPicked=true; HTMLCACHE={};
   VFIT=true; VSECS=-1; window.LN=G; draw() }
 function autosave(){ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
 function saveFile(){ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
@@ -1117,7 +1127,7 @@ function copyLog(){ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false
   if(!done){ try{ done=document.execCommand('copy') }catch(e){} say(done?'copied':'copyfail') } }
 
 /* ---------- skip: the clock runs on until something wants the desk ---------- */
-function skipAhead(){ if(modal()||G.over) return; var t0=performance.now(), d0=G.day;
+function skipAhead(){ if(modal()||G.over) return; if(winPause()) U.win=null; var t0=performance.now(), d0=G.day;
   for(var i=0;i<500&&!G.over;i++){ tick(G);
     if(G.shiftOpen){ if(!U.shiftStop) G.shiftOpen=false; else break }
     if(G.night&&!G.nightSeen) break;
@@ -1126,6 +1136,11 @@ function skipAhead(){ if(modal()||G.over) return; var t0=performance.now(), d0=G
   act(G,'skip',{from:d0,to:G.day}); U.paused=true; toast(esc(fill(T('u_skipped'),{n:G.day-d0,y:G.day})),'',4000); autosave(); draw() }
 
 /* ---------- presses ---------- */
+/* v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier on the line, which is not a refusal */
+var lineWhy={};
+function lineRes(res,sid,pid){ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res; return 'ok' } delete lineWhy[sid]; return res }
+function lineWait(sid){ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
+function resLeft(sid){ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
 function doAct(a,b){
   var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
   if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null } else U.win=U.win===v?null:v; SFX.play('tab') }
@@ -1138,13 +1153,13 @@ function doAct(a,b){
   else if(a==='addtab') U.addTab=v;
   else if(a==='filter') U.filter=v;
   else if(a==='who') U.who[d.p]=+d.s;
-  else if(a==='assign'){ res=setLine(G,+d.s,d.p,'earth'); act(G,'line',{p:d.p,hull:+d.s},res); okc='ok_assign'; okp={n:+d.s,p:pname(d.p)} }
+  else if(a==='assign'){ var wr=(shipById(G,+d.s)||{}).reserve; res=setLine(G,+d.s,d.p,'earth'); act(G,'line',{p:d.p,hull:+d.s},res); okc='ok_assign'; okp={n:+d.s,p:pname(d.p)}; res=lineRes(res,+d.s,d.p); if(res==='ok'&&lineWait(+d.s)){ okc='ok_assignWait'; okp.w=lineWait(+d.s) } if(wr&&res==='ok') resLeft(+d.s) }
   else if(a==='move'){ res=moveLine(G,+d.s,d.p); act(G,'move',{p:d.p,hull:+d.s},res); okc='ok_assign'; okp={n:+d.s,p:pname(d.p)}; if(res==='queued'){ res='ok'; okc='ok_moveDock' } }
   else if(a==='unroute'){ res=clearLine(G,+d.s); act(G,'release',{hull:+d.s},res); okc='ok_release' }
   else if(a==='pick'){ U.pop='pick:'+v }
   else if(a==='pickgo'){ var pk=v.split(':'), sid=+pk[1], pid=pk[2]; U.pop=null;
     if(pk[0]==='move'){ res=moveLine(G,sid,pid); act(G,'move',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)}; if(res==='queued'){ res='ok'; okc='ok_moveDock' } }
-    else { res=setLine(G,sid,pid,'earth'); act(G,'line',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)} } }
+    else { var wr2=(shipById(G,sid)||{}).reserve; res=setLine(G,sid,pid,'earth'); act(G,'line',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)}; res=lineRes(res,sid,pid); if(res==='ok'&&lineWait(sid)){ okc='ok_assignWait'; okp.w=lineWait(sid) } if(wr2&&res==='ok') resLeft(sid) } }
   else if(a==='order'){ res=orderFor(G,d.p,d.c); act(G,'order',{p:d.p,c:d.c},res); if(res==='ok'){ var oh=HULLS[currentHull(G,d.c)]; okc='ok_order'; okp={p:pname(d.p),c:hullName(oh),y:oh.days} } }
   else if(a==='build'){ var bh=HULLS[+d.h]; res=buildShip(G,+d.h); act(G,'build',{hull:bh.key,gen:bh.gen},res); okc='ok_build'; okp={n:G.nextShip-1,h:hullName(bh),y:bh.days} }
   else if(a==='reserve'){ var ron=d.on==='1'; res=setReserve(G,+d.s,ron); act(G,'reserve',{hull:+d.s,on:ron},res); okc=ron?'ok_reserve':'ok_unreserve'; okp={n:+d.s} }
@@ -1154,7 +1169,7 @@ function doAct(a,b){
     res=abandon(G,ec.id,ep); act(G,'evacuate',{p:ep,hull:ec.id},res);
     if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ okc='ok_evac_short'; okp={n:hullName(HULLS[ec.hull]),p:pname(ep),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap} } else { okc='ok_evac'; okp={p:pname(ep)} } }
   else if(a==='kit'){ var kct=kitCost(G.colonies[d.p]||{}).tier; res=orderKit(G,d.p); act(G,'kit',{p:d.p,t:kct},res); okc='ok_kit'; okp={p:pname(d.p),t:roman(kct-1)} }
-  else if(a==='send'){ var sp=d.p, ss=shipById(G,U.who[sp]); if(!ss){ res='nofree' } else { var np=foundParty(G,ss,sp); res=colonize(G,ss.id,sp,np,0); act(G,'colonize',{p:sp,hull:ss.id,people:np},res); okc='ok_found'; okp={p:pname(sp),n:np} } }
+  else if(a==='send'){ var sp=d.p, ss=shipById(G,U.who[sp]); if(!ss){ res='nofree' } else { var np=foundParty(G,ss,sp), wasRes=ss.reserve; res=colonize(G,ss.id,sp,np,0); if(res==='ok'&&wasRes){ setReserve(G,ss.id,false); resLeft(ss.id) } act(G,'colonize',{p:sp,hull:ss.id,people:np},res); okc='ok_found'; okp={p:pname(sp),n:np} } }
   else if(a==='driveat') U.driveAt=v;
   else if(a==='drive'){ var dp=d.p||driveHost(); res=startDrive(G,dp); act(G,'drive',{p:dp,mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={p:pname(dp)} }
   else if(a==='survey'){ var nsec=secName(SECTORS.length); res=survey(G); act(G,'survey',{sector:SECTORS.length},res); okc='ok_survey'; okp={s:nsec} }
@@ -1257,13 +1272,13 @@ function frame(ts){
 }
 function start(seed){
   G=newGame(seed||undefined);
-  U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; HTMLCACHE={};
+  U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags};   // v4.35: what the interface derives, for the scenarios and the bot player
   draw();
 }
-(function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1] } }catch(e){} })();
+(function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en' } }catch(e){} })();
 fit();
 start();
 requestAnimationFrame(frame);

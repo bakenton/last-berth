@@ -189,12 +189,12 @@ UI	u_flFood	Rations end ≈ {y}	Рационы кончатся ≈ {y}
 UI	u_flMetal	Metal is running out	Металл кончается
 UI	u_flFuel	Fuel is low	Топлива мало
 UI	u_flYard	{n} being built	строится: {n}
-UI	u_flCrew	{n} hulls wait for crews	без экипажа: {n}
-UI	u_flIdle	{n} hulls idle at the pier	у причала без дела: {n}
-UI	u_flMutiny	{n} crews refuse to fly	отказ экипажей: {n}
+UI	u_flCrew	Waiting for crews: {n}	Ждут экипаж: {n}
+UI	u_flIdle	Idle at the pier: {n}	У причала без дела: {n}
+UI	u_flMutiny	Crews refusing: {n}	Отказ экипажей: {n}
 UI	u_flArkNone	No ark level paid	Ни один уровень ковчега не оплачен
 UI	u_flArkDrive	The ark drive is not ready	Двигатель ковчега не готов
-UI	u_flConvoy	Convoy {n} hulls short	Конвою не хватает судов: {n}
+UI	u_flConvoy	Convoy short: {n}	Конвою не хватает: {n}
 UI	u_flConvoyOk	Convoy ready	Конвой собран
 UI	u_flSurvey	Ring {n} can be charted	Можно нанести кольцо {n}
 UI	u_flDrive	The drive programme can start	Можно запустить программу двигателя
@@ -289,7 +289,7 @@ UI	u_workedOut	worked out	выработан
 UI	u_seamDead	The seam is dead	Жила мертва
 UI	u_eats	This world eats	Этот мир ест
 UI	u_worksIdle	The works stand — no metal or rations on site.	Завод стоит — на месте нет металла или рационов.
-UI	u_worksLow	Metal or rations for {n} years — then the works stop.	Металла или рационов на {n} лет — потом завод встанет.
+UI	u_worksLow	Metal or rations for {n} {yr} — then the works stop.	Металла или рационов на {n} {yr} — потом завод встанет.
 UI	u_onSurface	On the surface	На поверхности
 UI	u_lineCarries	Line carries	Линия увозит
 UI	u_worldGives	World gives	Мир даёт
@@ -326,7 +326,7 @@ UI	u_buildFree	Build a free hull	Построить свободное судн�
 UI	u_atPier	At the pier	У причала
 UI	u_release	Release	Вернуть
 UI	u_reserve	Reserve for ark	В резерв ковчега
-UI	u_scrapSure	Confirm scrap · +{m} metal	Точно в слом · +{m} металла
+UI	u_scrapSure	Confirm scrap	Точно в слом
 UI	u_scrap	Scrap	В слом
 UI	u_pierEmpty	Nobody free at the pier.	У причала свободных нет.
 UI	u_fl_all	All {n}	Все {n}
@@ -360,7 +360,7 @@ UI	u_step1	1 · Worlds ever settled · {n} of {m}	1 · Заселено миро
 UI	u_step2	2 · Parts for the programme · {n} of {m}	2 · Деталей на программу · {n} из {m}
 UI	u_runAt	Run the programme at	Где вести программу
 UI	u_start	Start the programme	Запустить программу
-UI	u_startMore	Start · {n} more worlds	Запуск · ещё {n} миров
+UI	u_startMore	Start · settle {n} more	Запуск · заселить ещё {n}
 UI	u_genGives	Generation {g} gives	Поколение {g} даёт
 UI	u_hold	Hold	Трюм
 UI	u_speedH	Speed	Скорость
@@ -371,8 +371,8 @@ UI	u_charted	{n} charted	нанесено {n}
 UI	u_ringNext	Ring {s}	Кольцо {s}
 UI	u_settledOf	Worlds ever settled: {n} of {m}	Заселено миров: {n} из {m}
 UI	u_survey	Survey	Разведать
-UI	u_surveyMore	Survey · {n} more worlds	Разведка · ещё {n} миров
-UI	u_beyond	{k} free worlds lie past ring {n} — generation {g} reaches them.	{k} свободных миров дальше кольца {n} — туда долетит поколение {g}.
+UI	u_surveyMore	Survey · settle {n} more	Разведка · заселить ещё {n}
+UI	u_beyond	Free worlds past ring {n}: {k} — generation {g} reaches them.	Свободных миров дальше кольца {n}: {k} — туда долетит поколение {g}.
 UI	u_tech	Technology	Технологии
 UI	u_arkReady	Gen {g} · ready	пок. {g} · готов
 UI	u_arkBy	Gen {g} · ≈ {y}	пок. {g} · ≈ {y}
@@ -440,3 +440,7 @@ MSG	nohost	No works world with {n} people to host the programme.	Нет заво
 MSG	ok_moveDock	Hull {n} moves to {p} when it docks at Earth.	Судно {n} перейдёт на {p}, когда причалит к Земле.
 MSG	ok_search	A hull goes to look for hull {n}.	Судно ушло искать судно {n}.
 UI	u_newGenBody	Order them in the Yard or under a world's line.	Заказывайте их на верфи или под линию мира.
+UI	u_resLeft	Hull {n} left the ark reserve.	Судно {n} вышло из резерва ковчега.
+UI	u_evacW_line	Courier {n} is at the pier on a line — take it off the line.	Курьер {n} у причала, но на линии — снимите его с линии.
+UI	u_yShort	{n} y	{n} л.
+MSG	ok_assignWait	Hull {n} is on the {p} line but waits at the pier: {w}	Судно {n} на линии {p}, но ждёт у причала: {w}
