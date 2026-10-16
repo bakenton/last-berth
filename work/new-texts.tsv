@@ -344,7 +344,7 @@ UI	u_ws_noline	no hulls	нет судов
 UI	u_ws_half	line carries less	линия не успевает
 UI	u_ws_dry	seam dead	жила мертва
 UI	u_ws_ok	—	—
-UI	u_ws_settling	settlers on the way	поселенцы в пути
+UI	u_ws_settling	on the way	в пути
 UI	u_ws_free	free	свободен
 UI	u_liveFree	{l} live · {f} free	{l} живых · {f} свободных
 UI	u_thWorld	World	Мир

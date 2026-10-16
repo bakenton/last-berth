@@ -178,7 +178,7 @@ UI,u_ws_noline,no hulls,нет судов,v4.35 interface,live,new
 UI,u_ws_half,line carries less,линия не успевает,v4.35 interface,live,new
 UI,u_ws_dry,seam dead,жила мертва,v4.35 interface,live,new
 UI,u_ws_ok,—,—,v4.35 interface,live,new
-UI,u_ws_settling,settlers on the way,поселенцы в пути,v4.35 interface,live,new
+UI,u_ws_settling,on the way,в пути,v4.35 interface,live,new
 UI,u_ws_free,free,свободен,v4.35 interface,live,new
 UI,u_liveFree,{l} live · {f} free,{l} живых · {f} свободных,v4.35 interface,live,new
 UI,u_thWorld,World,Мир,v4.35 interface,live,new

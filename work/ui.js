@@ -996,7 +996,7 @@ function sideWorlds(){ var list=PLANETS.filter(function(p){ return sectorOpen(G,
   var live=Object.keys(G.colonies).length, fr=list.filter(function(x){ return x.st==='free' }).length;
   var rows=list.map(function(x){ var p=x.p, c=G.colonies[p.id], n=c?onLine(G,p.id).length:0, st=x.st, red=SEV[st]<=2, col=red?C.red:((st==='noline'||st==='half'||st==='settling')?C.people:C.mid);
     var icn={dead:'workedout',cut:'cutoff',starve:'starving',noline:'warn',half:'warn',dry:'workedout',settling:'settlers',free:'free'}[st];
-    var left=!c?'—':(p.kind==='works'?'—':(isDry(p.id)?T('u_dryShort'):seamShort(p.id)));
+    var left=!c?'—':(p.kind==='works'?'—':(isDry(p.id)?'0':seamShort(p.id)));
     return '<button type="button" class="tr'+(red?' red':'')+(st==='free'?' free':'')+'" data-act="world" data-v="'+p.id+'"><span>'+wmark(p.kind,!!c)+'<b>'+esc(pname(p.id))+'</b></span><span>'+(p.sec+1)+'</span><span>'+esc(left)+'</span><span style="color:'+(!c||n?'':C.red)+'">'+(c?n:'—')+'</span><span style="color:'+C.people+'">'+(c?num(c.pop):'—')+'</span><span style="color:'+col+'">'+(icn?ic(icn,14,col):'')+esc(T('u_ws_'+st))+'</span></button>' }).join('');
   return '<div class="side">'+head(esc(T('u_tabWorlds').toUpperCase()),esc(fill(T('u_liveFree'),{l:live,f:fr})).toUpperCase(),ic('tWorlds',18,C.metal))+'<div class="tbl"><div class="th"><span>'+esc(T('u_thWorld'))+'</span><span>'+esc(T('u_thRing'))+'</span><span>'+esc(T('u_thLeft'))+'</span><span>'+esc(T('u_thHulls'))+'</span><span>'+esc(T('people'))+'</span><span>'+esc(T('u_thState'))+'</span></div>'+rows+'</div></div>' }
 
