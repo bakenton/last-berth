@@ -19,7 +19,11 @@ function inv(G,C){
   const ids=new Set();
   for(const s of G.ships){ if(ids.has(s.id)) out.push('dup ship id '+s.id); ids.add(s.id);
     if(s.cargo) for(const r in s.cargo){ if(bad(s.cargo[r])||s.cargo[r]<-1e-6) out.push('ship '+s.id+' cargo.'+r+' '+s.cargo[r]) }
-    if(bad(s.crew)||s.crew<0) out.push('ship '+s.id+' crew '+s.crew) }
+    if(bad(s.crew)||s.crew<0) out.push('ship '+s.id+' crew '+s.crew);
+    // v4.34 (reviewer): no hull is left idle at a foreign pier, none is on two lines, none waits on a world that is gone
+    if(s.mode==='idle'&&s.at&&s.at!=='earth') out.push('ship '+s.id+' idle away at '+s.at);
+    if(s.mode!=='dead'&&s.lineFor&&s.pend&&s.pend.from!==s.lineFor) out.push('ship '+s.id+' on two lines '+s.lineFor+'/'+s.pend.from);
+    if(s.mode!=='dead'&&s.lineFor&&!G.colonies[s.lineFor]) out.push('ship '+s.id+' built for a gone world '+s.lineFor) }
   if(bad(G.day)) out.push('day NaN');
   return out;
 }
@@ -35,13 +39,12 @@ function run(seed){
       ['colonize',()=>{ if(!free.length||!pl.length) return; return C.colonize(G,pick(free).id,pick(pl).id,Math.floor(R()*60),Math.floor(R()*20)) }],
       ['setLine',()=>{ if(!live.length||!keys.length) return; return C.setLine(G,pick(live).id,pick(keys),'earth') }],
       ['clearLine',()=>{ if(!live.length) return; return C.clearLine(G,pick(live).id) }],
-      ['setWant',()=>{ if(!keys.length) return; return C.setWant(G,pick(keys),pick(['courier','hauler','freighter']),Math.floor(R()*5)) }],
-      ['setRenew',()=>{ if(!keys.length) return; return C.setRenew(G,pick(keys),R()<.5) }],
+      ['orderFor',()=>{ if(!keys.length) return; return C.orderFor(G,pick(keys),pick(['courier','hauler','freighter'])) }],   // v4.34: lines by hand
+      ['moveLine',()=>{ if(!live.length||!keys.length) return; return C.moveLine(G,pick(live).id,pick(keys)) }],
       ['survey',()=>C.survey(G)],
       ['startDrive',()=>{ if(!keys.length) return; return C.startDrive(G,pick(keys)) }],
       ['abandon',()=>{ if(!live.length||!keys.length) return; return C.abandon(G,pick(live).id,pick(keys)) }],
       ['scrap',()=>{ if(!live.length) return; return C.scrap(G,pick(live).id) }],
-      ['scrapIdle',()=>C.scrapIdle(G,Math.floor(R()*3))],
       ['orderKit',()=>{ if(!keys.length) return; return C.orderKit(G,pick(keys)) }],
       ['arkBuy',()=>C.arkBuy&&C.arkBuy(G,1+Math.floor(R()*4))],
       ['setReserve',()=>{ if(!live.length||!C.setReserve) return; return C.setReserve(G,pick(live).id,R()<.5) }],   // v4.29: the ark reserve instead of the deposits

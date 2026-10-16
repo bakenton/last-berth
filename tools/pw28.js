@@ -29,19 +29,24 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const mine2=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[1].id);
   await p.evaluate(id=>{ LN.earth.people=40; LNU.sel=id; LNU.tab='target'; LNdraw() },mine2);
   ok('few-hands hint and disabled button', /Not enough hands at home/.test(await rail())&&await p.evaluate(()=>document.querySelector('[data-act="colonize"]').getAttribute('aria-disabled')==='true'));
-  // 4. v4.31 (F-39): an idle old hull stays on the pier once a newer generation is open; 'Scrap idle Gen N' in the dock breaks it up
+  // 4. v4.31 (F-39), v4.34: an idle old hull stays on the pier once a newer generation is open. v4.34: no 'Scrap idle Gen N' in the dock any more; a hull is broken up one by one from its Fleet row
   await p.evaluate(()=>{ LN.earth.people=300; LN.gen=1; ensureGen(1); LN.driveLvl=1; });
   const oldId=await p.evaluate(()=>{ const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)); return s?s.id:null });
   ok('an idle Gen I hull exists', oldId!==null);
   await run(12);
   ok('v4.31: no yard_scrap, the hull is still on the pier after 12 years', await p.evaluate(id=>!LN.log.some(l=>l.code==='yard_scrap')&&shipById(LN,id).mode==='idle',oldId));
   await p.evaluate(()=>{ LNU.dockOpen=true; LNdraw() });
-  ok('the dock offers "Scrap idle Gen I" with a hint under it', await p.evaluate(()=>!!document.querySelector('#dock [data-act="scrapgen"][data-g="0"]')&&/no longer break them up/.test(document.getElementById('dock').textContent)));
-  await tap('#dock [data-act="scrapgen"][data-g="0"]');
-  ok('the button breaks it up (scrapped_many logged, hull dead)', await p.evaluate(id=>LN.log.some(l=>l.code==='scrapped_many')&&shipById(LN,id).mode==='dead',oldId));
+  ok('v4.34: the dock has no "Scrap idle Gen N" button and no hint under it', await p.evaluate(()=>!document.querySelector('#dock [data-act="scrapgen"]')&&!/no longer break them up/.test(document.getElementById('dock').textContent)));
   await p.evaluate(()=>{ LNU.dockOpen=false; LNdraw() });
-  // 5. line block: surface stock and hulls list
-  await run(30); await p.evaluate(id=>{ LN.colonies[id].store.metal=1234; LN.earth.metal=900; LN.earth.parts=500; LN.earth.fuel=800; setWant(LN,id,'courier',1); LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
+  // v4.34: the hull is broken up by hand, one at a time, from its Fleet row
+  await p.evaluate(()=>{ LNU.leftTab='fleet'; LNU.advOpen=true; LNdraw() });
+  const oldSel='#advisor .fl-row.free [data-act="scrap"][data-s="'+oldId+'"]';
+  ok('v4.34: the idle Gen I hull has a Scrap button in its Fleet row', await p.isVisible(oldSel));
+  await p.locator(oldSel).first().click(); await p.waitForTimeout(200);
+  ok('the click breaks that one hull up (scrapped logged, hull dead)', await p.evaluate(id=>LN.log.some(l=>l.code==='scrapped')&&shipById(LN,id).mode==='dead',oldId));
+  await p.evaluate(()=>{ LNU.advOpen=false; LNdraw() });
+  // 5. line block: surface stock and hulls list. v4.34: a free hull is sent to the line by hand (setLine), or a new one is ordered (orderFor)
+  await run(30); await p.evaluate(id=>{ LN.colonies[id].store.metal=1234; LN.earth.metal=900; LN.earth.parts=500; LN.earth.fuel=800; const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.reserve&&!o.mutiny); if(s) setLine(LN,s.id,id,'earth'); else orderFor(LN,id,'courier'); LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   await run(2); await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });
   const r=await rail();
   ok('surface stock shown (big status)', /On the surface\d{3,5}People\d+/.test(r), r.match(/On the surface[^\n]{0,60}/)?.[0]);

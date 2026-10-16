@@ -65,40 +65,40 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('no generation track or pages in the line panel', await p.evaluate(()=>!document.querySelector('.gtrack')&&!document.querySelector('.lg-box')&&!document.querySelector('[data-act="lgen"]')));
   const rowName0=await p.evaluate(()=>document.querySelector('.so-row .so-name b').textContent);
   ok('the order rows are the current generation (III)', /III/.test(rowName0), rowName0);
-  ok('one row per open class', await p.evaluate(()=>{ var n={}; document.querySelectorAll('.so-row [data-act="want"].plus').forEach(function(b){ n[b.dataset.c]=(n[b.dataset.c]||0)+1 }); return Object.keys(n).every(function(c){return n[c]===1}) }));
-  // press + on the courier row: a Courier III is laid down for THIS world
+  ok('one row per open class', await p.evaluate(()=>{ var n={}; document.querySelectorAll('.so-row [data-act="order"].plus').forEach(function(b){ n[b.dataset.c]=(n[b.dataset.c]||0)+1 }); return Object.keys(n).every(function(c){return n[c]===1}) }));
+  // v4.34: + on the courier row orders a Courier III for THIS line (paid now; no standing order, no pinned generation)
   await p.evaluate(()=>{ LN.ships.forEach(s=>{ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&shipClass(s)==='courier') s.mode='dead' }); LNU.tab='target'; LNdraw() });
-  await tap('[data-act="want"][data-c="courier"].plus');
-  const t1=await toast(); await run(2);   // the yards lay the hull down on their next yearly pass
-  const laid=await p.evaluate(id=>({want:LN.lines[id].want.courier, ys:LN.ships.filter(s=>s.mode==='building'&&s.hull===hullAt('courier',2)).length, gen:LN.lines[id].gen||null}),sel0);
-  ok('+ orders the current generation: the yards build a Courier III for this world, nothing pinned', laid.want>=1&&laid.ys>=1&&!laid.gen&&/yards are building/.test(t1), JSON.stringify(laid)+' | '+t1);
+  await tap('[data-act="order"][data-c="courier"].plus');
+  const t1=await toast(); await run(2);
+  const laid=await p.evaluate(id=>({ys:LN.ships.filter(s=>s.mode==='building'&&s.hull===hullAt('courier',2)&&s.lineFor===id).length, line:LN.ships.filter(s=>s.lineFor===id&&s.mode!=='dead').length}),sel0);
+  ok('v4.34: + orders the current generation: the yards build a Courier III for this world', laid.ys>=1&&laid.line>=1&&/yards lay down/.test(t1), JSON.stringify(laid)+' | '+t1);
   await run(14);
   const onLine=await p.evaluate(id=>LN.ships.filter(s=>(s.from===id||(s.pend&&s.pend.from===id))&&s.mode!=='dead'&&shipClass(s)==='courier').map(s=>hullGen(s)),sel0);
   ok('the hull that took the line is generation III', onLine.length>0&&onLine.every(g=>g===2), JSON.stringify(onLine));
   ok('one generation on the line: the row says "1 on the line" and lists no generations (v4.31)', /1 on the line/.test(await rail())&&!/on line: [IVX]+\u00d7/.test(await rail()), (await rail()).match(/on the line[^\n]{0,30}/));
-  // an idle hull of an OLDER generation at Earth goes first, not a new build (no pages: any generation that reaches)
+  // v4.34: + never takes a free hull. An idle hull of an OLDER generation at Earth stays where it is; the order lays down a hauler of the current generation
   await p.evaluate(()=>{ buildShip(LN,hullAt('hauler',1)) }); await run(20);
   const freeH=await p.evaluate(()=>LN.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&shipClass(s)==='hauler'&&hullGen(s)===1).length);
   await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });
-  const ybefore=await p.evaluate(()=>LN.ships.filter(s=>s.mode==='building').length);
-  await tap('[data-act="want"][data-c="hauler"].plus');
+  await tap('[data-act="order"][data-c="hauler"].plus');
   const t2=await toast();
-  ok('a free hull of an older generation is announced as going first', freeH>0&&/free hull at Earth goes first/.test(t2), 'free='+freeH+' | '+t2);
+  ok('v4.34: + does not take the free older hauler; it stays at Earth and the order is announced', freeH>0&&/yards lay down/.test(t2)&&await p.evaluate(()=>LN.ships.some(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&shipClass(s)==='hauler')), 'free='+freeH+' | '+t2);
   await run(2);
-  ok('…and nothing new was laid down', await p.evaluate(()=>LN.ships.filter(s=>s.mode==='building').length)<=ybefore);
+  ok('…and the new hauler is laid down for this line', await p.evaluate(id=>LN.ships.some(s=>s.lineFor===id&&s.hull===currentHull(LN,'hauler')&&s.mode!=='dead'),sel0));
+  // v4.34: the free older hauler goes on the line by hand (Send here = setLine)
+  await p.evaluate(id=>{ const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&shipClass(o)==='hauler'&&hullGen(o)===1); if(s) setLine(LN,s.id,id,'earth') },sel0);
   await run(3);
-  ok('the hull rows under the line name the generation (Hauler II)', /Hauler [^\n]{0,20}II(?![IVX])/.test(await rail()), (await rail()).match(/Hull \d+[^\n]{0,60}/g));
-  // under the hulls: 'Take off the line' and 'Move to:' chips
+  ok('the hull rows under the line name the generation (Courier III)', /Courier [^\n]{0,20}III(?![IVX])/.test(await rail()), (await rail()).match(/Hull \d+[^\n]{0,60}/g));
+  // under the hulls: 'Take off the line' and 'Move to:' chips. v4.34: a hull still in the yards has no such row
   const hulls=await p.evaluate(()=>document.querySelectorAll('#rail .lh').length);
   const acts=await p.evaluate(()=>[].slice.call(document.querySelectorAll('#rail .lh-act')).map(e=>e.textContent.replace(/\s+/g,' ').trim()));
-  ok('every hull of the line has a "Take off the line" button under it', hulls>=2&&acts.length===hulls&&acts.every(t=>/Take off the line/.test(t)), JSON.stringify(acts));
+  ok('every hull of the line that is not in the yards has a "Take off the line" button under it', hulls>=1&&acts.length>=1&&acts.every(t=>/Take off the line/.test(t)), JSON.stringify(acts));
   ok('…and no "Move to" chips while this is the only world', acts.every(t=>!/Move to/.test(t)), '');
   ok('the old × chip is gone', await p.evaluate(()=>![].slice.call(document.querySelectorAll('#rail .chip.x')).some(e=>e.textContent.trim()==='×')));
   const hid=await p.evaluate(id=>LN.ships.filter(s=>(s.from===id||(s.pend&&s.pend.from===id))&&s.mode!=='dead'&&shipClass(s)==='hauler')[0].id,sel0);
-  const wantB=await p.evaluate(id=>LN.lines[id].want.hauler,sel0);
   await tap('#rail .lh-act [data-act="unroute"][data-s="'+hid+'"]');
-  const off1=await p.evaluate(a=>{ const s=shipById(LN,a.id); return {from:s.from, pend:!!s.pend, want:LN.lines[a.pid]?LN.lines[a.pid].want.hauler:0, toast:document.getElementById('toast').textContent} },{id:hid,pid:sel0});
-  ok('"Take off the line" with the mouse: the hull is off the line and the counter follows', !off1.from&&!off1.pend&&off1.want===wantB-1&&/released/i.test(off1.toast), JSON.stringify(off1));
+  const off1=await p.evaluate(a=>{ const s=shipById(LN,a.id); return {from:s.from, pend:!!s.pend, toast:document.getElementById('toast').textContent} },{id:hid});
+  ok('"Take off the line" with the mouse: the hull is off the line (v4.34: no counter, nothing replaces it)', !off1.from&&!off1.pend&&/released/i.test(off1.toast), JSON.stringify(off1));
   // a second world: the chips appear and move a hull with one click
   const mine2=await p.evaluate(id=>PLANETS.filter(q=>q.sec===0&&q.id!==id&&q.kind!=='works').sort((a,b)=>a.dist-b.dist)[0].id,sel0);
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine2);
@@ -109,19 +109,18 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const chip=await p.$('#rail .lh-act [data-act="move"][data-s="'+cid+'"][data-p="'+mine2+'"]');
   ok('a "Move to → world" chip for the other world under the courier', !!chip, await p.evaluate(()=>[].slice.call(document.querySelectorAll('#rail .lh-act')).map(e=>e.textContent.replace(/\s+/g,' ').trim()).join(' | ')));
   ok('…labelled "Move to:"', /Move to:/.test(await rail()));
-  const wantC=await p.evaluate(id=>LN.lines[id].want.courier,sel0);
   await tap('#rail .lh-act [data-act="move"][data-s="'+cid+'"][data-p="'+mine2+'"]');
   // v4.32 (Nikita, 13.10: 'перевод по готовности, никаких очередей'): in flight the order is only remembered — nothing moves, no counter moves
-  const st=a=>{ const s=shipById(LN,a.id); return {mode:s.mode, from:s.from, moveTo:s.moveTo||null, want1:LN.lines[a.p1]?LN.lines[a.p1].want.courier:0, want2:LN.lines[a.p2]?LN.lines[a.p2].want.courier:0, toast:document.getElementById('toast').textContent, row:[].slice.call(document.querySelectorAll('#rail .lh')).map(e=>e.textContent.replace(/\s+/g,' ')).join(' | ')} };
-  const mv0=await p.evaluate(st,{id:cid,p1:sel0,p2:mine2});
+  const st=a=>{ const s=shipById(LN,a.id); return {mode:s.mode, from:s.from, moveTo:s.moveTo||null, toast:document.getElementById('toast').textContent, row:[].slice.call(document.querySelectorAll('#rail .lh')).map(e=>e.textContent.replace(/\s+/g,' ')).join(' | ')} };
+  const mv0=await p.evaluate(st,{id:cid});
   if(mv0.moveTo){
-    ok('in flight: the order is remembered, the hull stays on its line, both counters untouched', mv0.from===sel0&&mv0.moveTo===mine2&&mv0.want1===wantC&&mv0.want2===0&&/changes line when it next docks/.test(mv0.toast), JSON.stringify(mv0));
+    ok('in flight: the order is remembered, the hull stays on its line (v4.32; v4.34: no counters)', mv0.from===sel0&&mv0.moveTo===mine2&&/changes line when it next docks/.test(mv0.toast), JSON.stringify(mv0));
     ok('…and the hull row says where it will go', /moves to .+ when it docks/.test(mv0.row), mv0.row);
     await p.screenshot({path:require('os').tmpdir()+'/v432-move-wait.png',clip:{x:1040,y:60,width:560,height:900}});
     for(let i=0;i<40&&await p.evaluate(id=>!!shipById(LN,id).moveTo,cid);i++) await run(5);
   } else ok('at the pier: the hull goes at once', mv0.from===mine2&&/sent to/.test(mv0.toast), JSON.stringify(mv0));
   const mv=await p.evaluate(st,{id:cid,p1:sel0,p2:mine2});
-  ok('once it has docked the hull is on the new line: old counter -1, new counter 1', mv.from===mine2&&!mv.moveTo&&mv.want1===wantC-1&&mv.want2===1, JSON.stringify(mv));
+  ok('once it has docked the hull is on the new line (v4.34: no counters)', mv.from===mine2&&!mv.moveTo, JSON.stringify(mv));
   ok('core refuses a move onto the same world', await p.evaluate(a=>moveLine(LN,a.id,a.p)==='samenode',{id:cid,p:mine2}));
   await p.screenshot({path:require('os').tmpdir()+'/v431-line.png',clip:{x:1040,y:60,width:560,height:900}});
 
@@ -159,7 +158,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // === v4.32: a free hull of the current generation is scrapped from its Fleet row (the Earth-tab block went in v4.31)
   await p.evaluate(()=>{ for(let i=0;i<8;i++){ const x=document.querySelector('#note [data-act="noteok"]'); if(x) x.click() } LNU.paused=true; LNU.pro.on=false;
     let s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.reserve&&!o.mutiny);
-    if(!s){ s=LN.ships.find(o=>o.mode!=='dead'&&o.mode!=='building'); s.mode='idle'; s.at='earth'; s.from=null; s.to=null; s.pend=null; s.reserve=false; s.mutiny=false; s.retire=false }
+    if(!s){ s=LN.ships.find(o=>o.mode!=='dead'&&o.mode!=='building'); s.mode='idle'; s.at='earth'; s.from=null; s.to=null; s.pend=null; s.reserve=false; s.mutiny=false }
     window.__sc={id:s.id,metal:LN.earth.metal,n:LN.ships.filter(o=>o.mode!=='dead').length}; LNU.leftTab='fleet'; LNU.advOpen=true; LNdraw() });
   const scSel='#advisor .fl-row.free [data-act="scrap"][data-s="'+(await p.evaluate(()=>window.__sc.id))+'"]';
   ok('free hull has a Scrap button in its Fleet row', await p.isVisible(scSel), (await p.textContent(scSel).catch(()=>'')).replace(/\s+/g,' '));

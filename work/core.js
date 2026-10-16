@@ -92,7 +92,7 @@ function canSurvey(G){
 function survey(G){
   var chk=canSurvey(G); if(chk!=='ok') return chk;
   var c=surveyCost(SECTORS.length);
-  G.earth.metal-=c.metal; G.earth.food-=c.food; G.earth.fuel-=c.fuel; G.earth.parts-=c.parts;
+  G.earth.metal-=c.metal; G.earth.food-=c.food; G.earth.fuel-=c.fuel; G.earth.parts-=c.parts; openPaid(G,c);
   G.earth.people-=c.people;                       // the survey party stays out there
   G.ledger.metalSurvey=(G.ledger.metalSurvey||0)+c.metal;
   G.ledger.peopleSurvey=(G.ledger.peopleSurvey||0)+c.people;
@@ -289,8 +289,6 @@ var K={
   KIT_GATE_DRIVE:2,     // the engineering programme opens with the Generation III yards (drive mark 2)
   FEED_BUFFER:1.5,      // v4.4: a line brings what the far end burns until the next hull, times this
   FEED_FUEL_FLOOR:200,  // Earth keeps this much fuel back from the machines
-  YARD_KEEP:10,         // v4.6: the yards leave Earth this many years of its own metal burn
-  RENEW_SLOTS:2,        // v4.6: successors for old hulls in the yards at once
   /* v4.7 (Nikita, 26.09: 'людей в лейте слишком много' — 1,800 idle at the pier, 3,500 left behind). Two sinks:
      Earth empties (hands per year decay with age), and the crossings kill (a share of every crew is lost per
      round trip and the hull re-crews from the pier before it sails again — no hands, no departure). */
@@ -345,7 +343,7 @@ function canKit(G,pid){
 function orderKit(G,pid){
   var r=canKit(G,pid); if(r!=='ok') return r;
   var c=G.colonies[pid], k=kitCost(c);
-  G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal;
+  G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts});
   c.kit={tier:k.tier,metal:k.metal,parts:k.parts,w:k.w,day:G.day};
   log(G,'kit_ordered',{p:pid,t:k.tier,w:k.w});
   return 'ok';
@@ -380,13 +378,21 @@ function crewDocked(G){ return crewOut(G)-crewAway(G) }
 function earthNeed(G){
   var d=G.day;
   var age=1 + d/K.APPETITE + (d/K.DECAY_KNEE)*(d/K.DECAY_KNEE);
-  var ageM=1 + d/K.APPETITE;     // v4.23 (Nikita, 07.10): metal is the working currency — its burn grows with the calendar only, not squared (food keeps the squared knee)
-  return { food:K.EARTH_EAT*age, metal:K.EARTH_BURN*ageM };
+  /* v4.23 (Nikita, 07.10): metal is the working currency — its burn grows with the calendar only, not squared (food keeps the squared knee).
+     v4.34 (Nikita, 15.10, option B): and only from the day metal is open — the age counts from that day, so the burn starts small */
+  return { food:K.EARTH_EAT*age, metal:isOpen(G,'metal')?K.EARTH_BURN*burnAge(G,'metal'):0 };
 }
+/* v4.34 (Nikita, 15.10: 'игрок должен всё получать постепенно', option B): a resource is open from the day the player first meets it —
+   a price paid in it, a load of it taken from or brought to Earth. Earth's own burn of it and a crisis on it start that day.
+   Rations are open from the start. The tutorial will open a resource when it first shows a price (it calls openRes too). */
+function openRes(G,res){ if(!G.opened) G.opened={food:0,metal:0,fuel:0,parts:0}; if(G.opened[res]===undefined) G.opened[res]=G.day }   // no G.opened = a save from before v4.34: everything was open from day 0
+function isOpen(G,res){ return res==='food'||!G.opened||G.opened[res]!==undefined }   // a save from before v4.34 has every resource open
+function burnAge(G,res){ return 1+Math.max(0,G.day-((G.opened&&G.opened[res])||0))/K.APPETITE }
+function openPaid(G,c){ for(var r in c){ if(r!=='people'&&r!=='food'&&(c[r]||0)>0) openRes(G,r) } }
 /* v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the empire
    has been bringing home of that resource, so the crisis grows with the empire (a fixed number is nothing to a big one) */
 function pulseDrain(G,res){
-  var nd=earthNeed(G), base= res==='food'?nd.food : res==='metal'?nd.metal : nd.metal*(res==='fuel'?0.5:0.25);
+  var nd=earthNeed(G), base= res==='food'?nd.food : res==='metal'?nd.metal : K.EARTH_BURN*burnAge(G,res)*(res==='fuel'?0.5:0.25);   // v4.34: fuel and parts age from their own opening
   return Math.max(base*(K.PULSE_MULT-1), K.PULSE_SHARE*((G.inRate&&G.inRate[res])||0));
 }
 /* v4.21 (Nikita, 06.10, F-21): the director. Events come in three families, each told before it happens:
@@ -434,9 +440,10 @@ function directorStep(G){
     if(withCol.length){ kinds.push('drag'); kinds.push('storm') }
     var kd=kinds[Math.floor(R()*kinds.length)];
     if(kd==='crisis'){
-      var opts=['food','metal'];
-      if(Object.keys(G.colonies).some(function(k2){ return planet(k2).kind==='well'&&G.reserves[k2]>0 })) opts.push('fuel');
-      if((G.partsRate||0)>0.05) opts.push('parts');
+      var opts=['food'];
+      if(isOpen(G,'metal')) opts.push('metal');   // v4.34: no crisis on a resource the player has not met
+      if(isOpen(G,'fuel')&&Object.keys(G.colonies).some(function(k2){ return planet(k2).kind==='well'&&G.reserves[k2]>0 })) opts.push('fuel');
+      if(isOpen(G,'parts')&&(G.partsRate||0)>0.05) opts.push('parts');
       var rs=opts[Math.floor(R()*opts.length)];
       ev={type:rs==='food'?'spoil':'crisis',res:rs,warn:K.CRISIS_WARN,len:K.CRISIS_LEN};   // food: lost stores; the rest: broken infrastructure
     } else {
@@ -462,7 +469,7 @@ function newGame(seed){
     seed:seed, rnd:mulberry32(seed), day:0, over:null,
     earth:{metal:430, food:230, fuel:240, parts:0, people:128, lost:0, lostCrew:0,
            pMetal:K.EARTH_METAL, pFood:K.EARTH_FOOD, pFuel:K.EARTH_FUEL},
-    colonies:{}, ships:[], orders:[], log:[], nextShip:1, nextMissing:1, lines:{},   // v4.6: standing orders per world
+    colonies:{}, ships:[], orders:[], log:[], nextShip:1, nextMissing:1, opened:{food:0},   // v4.34: the day each resource was first met (openRes)
     driveLvl:0, gen:0, drive:null, driveWork:0, sectors:0, dismissed:{}, actions:[], ghost:{}, settled:{},
     night:null, nightSeen:false, ark:{paid:{metal:0,parts:0,food:0,fuel:0},lv:0}, souls:0, arkMark:null, partsRate:0, boarded:0, grounded:false,
     pauseNow:false, ledger:{metalOut:0,metalYards:0,metalIn:0,metalSurvey:0}, reserves:{}, delivered:{metal:0,food:0,fuel:0,parts:0,people:0},
@@ -531,7 +538,7 @@ function loadAt(G,s,node){
         var need=Math.ceil(Math.max(0,(rates[kk]||0)*interval*K.FEED_BUFFER-(cc0.store[kk]||0)));
         var floor= kk==='fuel' ? Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_METAL_KEEP) : Math.max(0,(nd[kk]||0)*K.EARTH_METAL_KEEP);     // Earth keeps this many years of its own burn — fuel included, or the machines ground the fleet
         var got=Math.min(need,room,Math.floor(G.earth[kk]-floor));
-        if(got>0){ G.earth[kk]-=got; s.cargo[kk]=got; room-=got; var lk='metal'===kk?'metalOut':(kk+'Out'); G.ledger[lk]=(G.ledger[lk]||0)+got }
+        if(got>0){ G.earth[kk]-=got; openRes(G,kk); s.cargo[kk]=got; room-=got; var lk='metal'===kk?'metalOut':(kk+'Out'); G.ledger[lk]=(G.ledger[lk]||0)+got }
       }
     }
     // spare hold goes to hands: a world short of people digs slower than it could
@@ -559,7 +566,7 @@ function loadAt(G,s,node){
     if(g>0){ c.store[k2]-=g; s.cargo[k2]=g; room-=g; took+=g; s.lastHaul[k2]=g }
   }
   /* v4.11: dead seam and nothing left on the surface — this hull goes home for good */
-  if(G.reserves[node]<=0&&planet(node).kind!=='works'){ var left=0; for(var j2=0;j2<list.length;j2++) left+=Math.floor(c.store[list[j2]]||0); if(left<1){ s.homeOnly=node; if(G.lines&&G.lines[node]&&!onLine(G,node).some(function(o){return o.id!==s.id&&!o.homeOnly})) delete G.lines[node] } }
+  if(G.reserves[node]<=0&&planet(node).kind!=='works'){ var left=0; for(var j2=0;j2<list.length;j2++) left+=Math.floor(c.store[list[j2]]||0); if(left<1){ s.homeOnly=node } }
   if(took>0){
     c.lastHaul=s.lastHaul; c.lastHaulDay=G.day;
     c.hauledOut=c.hauledOut||{metal:0,food:0,fuel:0,parts:0};
@@ -573,6 +580,7 @@ function loadAt(G,s,node){
 function unload(G,s,node){
   var any=s.cargo.metal+s.cargo.food+s.cargo.fuel+s.cargo.parts+s.cargo.people;
   if(node==='earth'){
+    openPaid(G,s.cargo);   // v4.34: the first load home opens what it carries
     G.earth.metal+=s.cargo.metal; G.earth.food+=s.cargo.food; G.earth.fuel+=s.cargo.fuel;
     G.earth.parts+=s.cargo.parts; G.earth.people+=s.cargo.people;
     /* v4.7: the crossing took its share of the crew */
@@ -666,6 +674,7 @@ function sail(G,s){
   var f=Math.max(1,Math.round(d*K.FUEL_PER_DIST*((HULLS[s.hull]&&HULLS[s.hull].burn)||1)/Math.sqrt(driveSpeed(G))));   // v4.5: by class
   if(G.earth.fuel<f&&here==='earth') return 'fuel';
   if(here==='earth') G.earth.fuel-=f; else G.earth.fuel=Math.max(0,G.earth.fuel-f*0.5);
+  if(f>0) openRes(G,'fuel');
   G.fuelSpent=(G.fuelSpent||0)+(here==='earth'?f:f*0.5);   // v4.4: the year's departures, for the fuel floor
   loadAt(G,s,here);
   s.waiting=false; s.origin=here; s.dest=dest; s.at=null;
@@ -702,9 +711,9 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.33', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.34', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),convoy:arkConvoy(G),arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
-    earth:snap(G), stats:G.stats, lines:G.lines||{}, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
+    earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
 }
 function exportLogText(G){
@@ -744,7 +753,7 @@ function buildShip(G,hullId){
   if(reach(G)<h.reach) return 'locked';
   if(G.earth.metal<h.metal||G.earth.fuel<h.fuel||G.earth.parts<(h.parts||0)) return 'cost';
   if(G.earth.people-K.EARTH_KEEP<(h.crew||0)) return 'crew';
-  G.earth.metal-=h.metal; G.earth.fuel-=h.fuel; G.earth.parts-=(h.parts||0);
+  G.earth.metal-=h.metal; G.earth.fuel-=h.fuel; G.earth.parts-=(h.parts||0); openPaid(G,{metal:h.metal,fuel:h.fuel,parts:h.parts||0});
   G.earth.people-=(h.crew||0);                     // she signs on for the life of the hull
   G.ledger.metalYards+=h.metal;
   var s={id:G.nextShip++, hull:hullId, cap:h.cap, gen:h.gen, crew:(h.crew||0), mode:'building', t:h.days, at:'earth',
@@ -762,21 +771,13 @@ function scrap(G,shipId){
   if(s.mode==='dead') return 'noship';
   if(!(s.mode==='idle'&&s.at==='earth')) return 'busy';
   var v=scrapValue(HULLS[s.hull]);
-  G.earth.metal+=v.metal; G.earth.parts+=v.parts;
+  G.earth.metal+=v.metal; G.earth.parts+=v.parts; openPaid(G,v);
   G.earth.people+=(s.crew||0);                     // the crew walks off and goes home
   G.ledger.metalScrap=(G.ledger.metalScrap||0)+v.metal;
   var cw=s.crew||0;
   s.mode='dead'; s.crew=0; s.from=null; s.to=null; s.pend=null; s.scrapped=G.day;
   log(G,'scrapped',{n:s.id,m:v.metal,t:v.parts,c:cw});
   return 'ok';
-}
-function scrapIdle(G,gen){
-  var n=0, m=0, p=0;
-  for(var i=0;i<G.ships.length;i++){ var s=G.ships[i];
-    if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.reserve&&hullGen(s)===gen){
-      var v=scrapValue(HULLS[s.hull]); if(scrap(G,s.id)==='ok'){ n++; m+=v.metal; p+=v.parts } } }
-  if(n) log(G,'scrapped_many',{n:n,m:m,t:p,g:gen+1});
-  return n?'ok':'none';
 }
 function shipById(G,id){for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
 
@@ -796,7 +797,7 @@ function canDepart(G,s,pid){
 function launch(G,s,pid,job,cargo){
   var p=planet(pid);
   var f=Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)));
-  G.earth.fuel-=f;
+  G.earth.fuel-=f; if(f>0) openRes(G,'fuel');
   s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
   for(var k in cargo){s.cargo[k]=cargo[k]; G.earth[k==='people'?'people':k]-=cargo[k];}
   G.ledger.metalOut+=(cargo.metal||0);
@@ -823,7 +824,7 @@ function colonize(G,shipId,pid,people,food){
   people=foundParty(G,s,pid);
   if(people<K.MIN_FOUND) return 'people';
   var f=Math.max(1,Math.round(planet(pid).dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G))));
-  G.earth.fuel-=f; G.earth.people-=people;
+  G.earth.fuel-=f; G.earth.people-=people; openRes(G,'fuel');   // v4.34: fuel opens with the first settlers' price
   s.cargo={metal:0,food:0,fuel:0,parts:0,people:people};
   s.job='colonize'; s.origin='earth'; s.dest=pid; s.at=null; s.waiting=false;
   s.mode='transit'; s.dir='out'; s.t=legDays(G,'earth',pid,s); s.total=s.t;
@@ -845,19 +846,18 @@ function setLine(G,shipId,from,to){
   if(s.mode==='missing') return 'lost';
   if(s.mutiny) return 'mutiny';
   if(!canReachSector(s,planet(from).sec)) return 'range';
-  if(s.mode==='building'||s.mode==='transit'){ s.pend={from:from,to:to}; return 'queued' }
+  if(s.mode==='building'||s.mode==='transit'){ s.pend={from:from,to:to}; s.lineFor=null; s.moveTo=null; return 'queued' }   // v4.34: one line at a time
   if(from!=='earth'&&G.reserves[from]<=0&&planet(from)&&planet(from).kind!=='works'&&pileLeft(G,from)<1) return 'depleted';   // v4.9/v4.11
-  s.pend=null; s.from=from; s.to=to; s.auto=true; s.policy=null; s.retire=null; s.homeOnly=null; s.reserve=false;
+  s.pend=null; s.from=from; s.to=to; s.auto=true; s.policy=null; s.homeOnly=null; s.reserve=false;
   if(s.mode==='idle'){ if(!s.at) s.at='earth'; var r=sail(G,s); if(r!=='ok') return r }
-  if(!s.lineFor){ G.lines=G.lines||{}; var L=G.lines[from]||(G.lines[from]={want:{courier:0,hauler:0,freighter:0},renew:false}); var cls=shipClass(s); if(lineCount(G,from,cls)>(L.want[cls]||0)) L.want[cls]=lineCount(G,from,cls) }   // v4.6: the counters follow the hand
   return 'ok';
 }
 /* v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
-   sat in s.pend, and Release only cleared from/to — the hull came home and took the queued line anyway. */
-function clearLine(G,shipId){var s=shipById(G,shipId);if(s){ var pid=s.from||(s.pend&&s.pend.from); s.from=null;s.to=null;s.pend=null;s.retire=null;s.moveTo=null;
-  if(pid&&G.lines&&G.lines[pid]){ var L=G.lines[pid], cls=shipClass(s); L.want[cls]=Math.max(0,Math.min(L.want[cls]||0,lineCount(G,pid,cls))); if(!L.want.courier&&!L.want.hauler&&!L.want.freighter&&!onLine(G,pid).length) delete G.lines[pid] } }return 'ok'}
-/* v4.31 (Nikita, 13.10, F-36): 'move to → world' under a hull of the line panel — off its line (the old counter follows,
-   as in clearLine) and onto the other world's line. A refusal leaves the hull where it was: the cheap checks run first, a refusal from sail() is rolled back. */
+   sat in s.pend, and Release only cleared from/to — the hull came home and took the queued line anyway.
+   v4.34: a hull still in the yards for a line comes out free. */
+function clearLine(G,shipId){var s=shipById(G,shipId);if(s){ s.from=null;s.to=null;s.pend=null;s.moveTo=null;s.lineFor=null }return 'ok'}
+/* v4.31 (Nikita, 13.10, F-36): 'move to → world' under a hull of the line panel — off its line and onto the other world's line.
+   A refusal leaves the hull where it was: the cheap checks run first, a refusal from sail() is rolled back. */
 function moveLine(G,shipId,pid){
   var s=shipById(G,shipId); if(!s||s.mode==='dead') return 'noship';
   if(s.mode==='missing') return 'lost';
@@ -867,112 +867,56 @@ function moveLine(G,shipId,pid){
   if(!canReachSector(s,p.sec)) return 'range';
   if(G.reserves[pid]<=0&&p.kind!=='works'&&pileLeft(G,pid)<1) return 'depleted';
   /* v4.32 (Nikita, 13.10: 'перевод по готовности, никаких очередей или наслоений'): a hull in flight only remembers the order
-     (s.moveTo). Both counters stay as they are until she docks and really changes line — see the docking step in tick. */
+     (s.moveTo) and changes line when she docks — see the docking step in tick. */
   if(s.mode==='transit'){ s.moveTo=pid; return 'queued' }
   s.moveTo=null;
-  var cls=shipClass(s), oldPid=s.from||(s.pend&&s.pend.from), oldWant=(oldPid&&G.lines&&G.lines[oldPid])?(G.lines[oldPid].want[cls]||0):null;
-  var snap={from:s.from,to:s.to,pend:s.pend,retire:s.retire,auto:s.auto,policy:s.policy,homeOnly:s.homeOnly,reserve:s.reserve,waiting:s.waiting};
+  var snap={from:s.from,to:s.to,pend:s.pend,lineFor:s.lineFor,auto:s.auto,policy:s.policy,homeOnly:s.homeOnly,reserve:s.reserve,waiting:s.waiting};
   clearLine(G,shipId); var r=setLine(G,shipId,pid,'earth');
-  if(r!=='ok'&&r!=='queued'){                        // sail refused (fuel, crew…): the hull goes back where it was, the old counter too
-    if(!s.mutiny){ for(var f in snap) s[f]=snap[f] }
-    if(oldPid&&oldWant!==null&&!s.mutiny){ var L0=G.lines[oldPid]||(G.lines[oldPid]={want:{courier:0,hauler:0,freighter:0},renew:false}); L0.want[cls]=oldWant }
-    return r }
-  if(r==='queued'){ var L=G.lines[pid]||(G.lines[pid]={want:{courier:0,hauler:0,freighter:0},renew:false}); if(lineCount(G,pid,cls)>(L.want[cls]||0)) L.want[cls]=lineCount(G,pid,cls) }   // the counter follows the hand even while it is still in flight
+  if(r!=='ok'&&r!=='queued'){ if(!s.mutiny){ for(var f in snap) s[f]=snap[f] } return r }   // sail refused (fuel, crew…): the hull goes back where it was
   return r }
-/* ---------- v4.6: a line is a standing order ----------
-   (Nikita, 26.09: 'менеджмент, но не такой быстрый'; 90 build/assign/release clicks a game.) The player says
-   'two haulers on Mire'. The yards order what is missing when they can pay for it, a finished hull takes its
-   line on its own, a new generation replaces the old one hull by hull, and a hull that is no longer wanted
-   comes home and goes to scrap. Manual assignment still works and simply moves the counters. */
+/* ---------- v4.34: lines are manned by hand (Nikita, 14–15.10) ----------
+   The v4.6 standing order ('two haulers on Mire', the yards filling it, renewal, retiring the extra hulls) is gone.
+   A line is the hulls on it: the player puts a free hull on it, moves one from another line, or orders a new hull for it.
+   A hull that is lost, refuses the Night or comes home from a spent world is not replaced by anyone. */
 var CLASSES=['courier','hauler','freighter'];
-function lineOf(G,pid){ return G.lines&&G.lines[pid]||null }
 function pileLeft(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return 0; return Math.floor(c.store[p.kind==='works'?'parts':p.dep]||0) }   // v4.11: what is still on the surface
 function shipClass(s){ return HULLS[s.hull]?HULLS[s.hull].key:'courier' }
 function onLine(G,pid){ var out=[]; for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='dead') continue;
   if((o.from===pid&&o.to==='earth')||(o.pend&&o.pend.from===pid)||(o.lineFor===pid&&o.mode==='building')) out.push(o) } return out }
-function lineCount(G,pid,cls){ var n=0, ships=onLine(G,pid); for(var i=0;i<ships.length;i++){ var o=ships[i]; if(o.retire) continue; if(shipClass(o)===cls) n++ } return n }
-function lineWant(G,pid,cls){ var L=lineOf(G,pid); return L?(L.want[cls]||0):0 }
-/* the hull of a given generation. v4.31 (Nikita, 13.10, F-36): the generation pages of the line panel are gone — a standing
-   order always takes the current generation (lineHull/lineGenPin removed; an old save's L.gen is ignored) */
+function lineCount(G,pid,cls){ var n=0, ships=onLine(G,pid); for(var i=0;i<ships.length;i++){ if(shipClass(ships[i])===cls) n++ } return n }
+/* the hull of a given generation. v4.31 (Nikita, 13.10, F-36): an order always takes the current generation */
 function hullAt(cls,gen){ for(var i=0;i<HULLS.length;i++){ if(HULLS[i].key===cls&&HULLS[i].gen===gen) return i } return null }
 function currentHull(G,cls){ var best=null; for(var i=0;i<HULLS.length;i++){ var h=HULLS[i]; if(h.key!==cls) continue; if(h.gen>(G.gen||0)) continue; if(best===null||h.gen>HULLS[best].gen) best=i } return best }
-/* why the yards cannot order this class for this line right now; 'ok' when they can */
-function yardCheck(G,pid,cls){
+/* why a new hull of this class cannot be ordered for this line right now; 'ok' when it can */
+function orderCheck(G,pid,cls){
+  if(!G.colonies[pid]) return 'nocolony';
+  if(CLASSES.indexOf(cls)<0) return 'noclass';
   var hi=currentHull(G,cls); if(hi===null) return 'locked';
-  var h=HULLS[hi], p=planet(pid); if(!p) return 'noplanet';
-  if(h.gen<(G.gen||0)-K.GEN_OVERLAP) return 'retired';      // v4.17: the yards no longer lay down that generation
-  if(!canReachSector({hull:hi},p.sec)) return 'range';
+  var h=HULLS[hi], p=planet(pid);
   if(reach(G)<h.reach) return 'locked';
-  if(G.night&&nightLeft(G)<h.days+K.MUTINY_MIN*legDays(G,pid,'earth',{hull:hi})*2) return 'mutiny';   // no crew would sign — v4.14: the yard time counts too (run 398763448: a 5452-part Courier VI laid down 30 years out, ready with 4 to go, refused at once)
-  var nd=G.need||earthNeed(G);
-  if(G.earth.metal-h.metal<(nd.metal||0)*K.YARD_KEEP) return 'metal';     // the yards never take Earth below YARD_KEEP years of its own burn
-  if(G.earth.fuel-h.fuel<K.FEED_FUEL_FLOOR) return 'fuel';
-  if(G.earth.parts<(h.parts||0)) return 'parts';
+  if(!canReachSector({hull:hi},p.sec)) return 'range';
+  if(G.reserves[pid]<=0&&p.kind!=='works'&&pileLeft(G,pid)<1) return 'depleted';   // nothing to carry: the seam is dead and the pile is gone
+  for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.job==='evac'&&o.dest===pid&&o.mode==='transit') return 'evacuating' }   // the world is being lifted
+  if(G.night&&nightLeft(G)<h.days+K.MUTINY_MIN*legDays(G,pid,'earth',{hull:hi})*2) return 'orderNight';   // no crew would sign — the yard time counts too (v4.14)
+  if(G.earth.metal<h.metal||G.earth.fuel<h.fuel||G.earth.parts<(h.parts||0)) return 'cost';
   if(G.earth.people-K.EARTH_KEEP<(h.crew||0)) return 'crew';
   return 'ok';
 }
-function setWant(G,pid,cls,n){
-  if(!G.colonies[pid]) return 'nocolony';
-  if(n>0&&G.reserves[pid]<=0&&pileLeft(G,pid)<1) return 'depleted';   // v4.9/v4.11: nothing to carry — the seam is dead and the pile is gone
-  if(CLASSES.indexOf(cls)<0) return 'noclass';
-  n=Math.max(0,Math.min(12,Math.round(n)));
-  G.lines=G.lines||{};
-  var L=G.lines[pid]||(G.lines[pid]={want:{courier:0,hauler:0,freighter:0},renew:false});
-  var had=lineCount(G,pid,cls);
-  L.want[cls]=n;
-  /* fewer wanted than flying: retire the oldest first — they come home and go to scrap */
-  if(n<had){ var ships=onLine(G,pid).filter(function(o){return !o.retire&&shipClass(o)===cls}).sort(function(a,b){return hullGen(a)-hullGen(b)});
-    for(var i=0;i<had-n;i++){ var o=ships[i]; if(!o) break; retireHull(G,o,'fewer') } }
-  if(!L.want.courier&&!L.want.hauler&&!L.want.freighter&&!onLine(G,pid).length) delete G.lines[pid];
+/* order a new hull of the current generation for this line: paid now, she takes the line when she leaves the yards */
+function orderFor(G,pid,cls){
+  var r=orderCheck(G,pid,cls); if(r!=='ok') return r;
+  r=buildShip(G,currentHull(G,cls)); if(r!=='ok') return r;
+  var ns=G.ships[G.ships.length-1]; ns.lineFor=pid; ns.pend={from:pid,to:'earth'};
+  log(G,'yard_line',{n:ns.id,p:pid,g:hullGen(ns)}); G.stats.yardBuilt=(G.stats.yardBuilt||0)+1;
   return 'ok';
 }
-function setRenew(G,pid,on){ var L=lineOf(G,pid); if(!L) return 'noline'; L.renew=!!on; return 'ok' }
-function retireHull(G,o,why){
-  o.retire=why||'fewer'; o.lineFor=null;
-  if(o.mode==='building'){ o.pend=null }                             // it will come out idle and be scrapped
-  if(o.mode==='idle'&&o.at==='earth'){ var v=scrapValue(HULLS[o.hull]); o.from=null; o.to=null; o.pend=null; if(scrap(G,o.id)==='ok'){ G.stats.renewed=(G.stats.renewed||0)+1; G.stats.renewMetal=(G.stats.renewMetal||0)+v.metal; log(G,'line_retired',{n:o.id,why:o.retire,m:v.metal}) } }
-  // in transit: keeps its line until it is home; the arrival code scraps it
+/* v4.34: a save from before manual lines — the standing orders are dropped, the hulls on the lines stay where they are */
+function upgradeSave(G){
+  if(!G.opened) G.opened={food:0,metal:0,fuel:0,parts:0};   // v4.34: an older save burns as it did — every resource open from day 0
+  if(G.lines===undefined) return;   // every save since v4.6 carries G.lines; a v4.34 game never does
+  delete G.lines;
+  for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.retire!==undefined) delete s.retire; if(s.replaces!==undefined) delete s.replaces; if(s.successor!==undefined) delete s.successor }
 }
-/* the yards, once a year */
-function yardsTick(G){
-  /* v4.31 (Nikita, 13.10, F-39): the yards no longer break up idle hulls of older generations on their own —
-     the dock button 'scrap idle Gen N' is the player's call */
-  if(!G.lines) return;
-  for(var pid in G.lines){ var L=G.lines[pid], c=G.colonies[pid];
-    if(!c){ closeLine(G,pid); continue }
-    for(var ci=0;ci<CLASSES.length;ci++){ var cls=CLASSES[ci], want=L.want[cls]||0;
-      var have=lineCount(G,pid,cls);
-      L.wait=L.wait||{};
-      if(have<want&&G.reserves[pid]<=0&&planet(pid).kind!=='works'&&pileLeft(G,pid)<1){ L.wait[cls]='depleted'; continue }   // v4.11: a dead seam gets no new hulls — v4.14 (Nikita, run 398763448: 5901 metal on w10 and no way to call a hull): unless there is still a pile to carry
-      if(have<want){
-        /* an idle hull of the class already at Earth goes first — the yards do not build what is sitting on the pier */
-        var idle=null, p0=planet(pid); for(var si=0;si<G.ships.length;si++){ var o0=G.ships[si]; if(o0.mode==='idle'&&o0.at==='earth'&&!(o0.from&&o0.to)&&!o0.pend&&!o0.mutiny&&!o0.retire&&!o0.job&&!o0.reserve&&shipClass(o0)===cls&&canReachSector(o0,p0.sec)&&(!idle||hullGen(o0)>hullGen(idle))) idle=o0 }
-        if(idle){ idle.lineFor=pid; var ra=setLine(G,idle.id,pid,'earth'); idle.lineFor=null; if(ra==='ok'||ra==='queued'){ L.wait[cls]=null; log(G,'yard_take',{n:idle.id,p:pid}); continue } }
-        var r=yardCheck(G,pid,cls); L.wait[cls]=r==='ok'?null:r;
-        if(r==='ok'){ var hi=currentHull(G,cls); if(buildShip(G,hi)==='ok'){ var ns=G.ships[G.ships.length-1]; ns.lineFor=pid; ns.pend={from:pid,to:'earth'}; log(G,'yard_line',{n:ns.id,p:pid,g:hullGen(ns)}); G.stats.yardBuilt=(G.stats.yardBuilt||0)+1 } }
-      } else {
-        L.wait[cls]=null;
-        /* renewal: one old hull per class at a time gets a successor ordered */
-        if(L.renew&&want>0){
-          var ships=onLine(G,pid).filter(function(o){return !o.retire&&shipClass(o)===cls&&o.mode!=='building'});
-          var old=null; for(var q=0;q<ships.length;q++){ if(hullGen(ships[q])<(G.gen||0)&&(!old||hullGen(ships[q])<hullGen(old))) old=ships[q] }
-          var pendingRenew=onLine(G,pid).some(function(o){return o.mode==='building'&&o.replaces});
-          /* v4.6 balance: renewal is paced — at most RENEW_SLOTS successors in the yards at once, and never
-             below EARTH_METAL_KEEP years of Earth's own burn (unpaced renewal drained the bots to death) */
-          var renewing=0; for(var rq=0;rq<G.ships.length;rq++){ if(G.ships[rq].mode==='building'&&G.ships[rq].replaces) renewing++ }
-          var hOld=old?HULLS[currentHull(G,cls)]:null, ndr=G.need||earthNeed(G);
-          var rich=hOld&&(G.earth.metal-hOld.metal>=(ndr.metal||0)*K.EARTH_METAL_KEEP);
-          /* and only where it pays: a line that already keeps up with the world does not need a bigger hull
-             (bots renewed everything and bled 2,300 metal by year 700 for nothing) */
-          var lrr=old?lineRate(G,pid):null, pays=!!(lrr&&lrr.piling);
-          if(old&&!pendingRenew&&renewing<K.RENEW_SLOTS&&rich&&pays){ var r2=yardCheck(G,pid,cls); L.wait[cls]=r2==='ok'?null:r2;
-            if(r2==='ok'){ var hi2=currentHull(G,cls); if(buildShip(G,hi2)==='ok'){ var ns2=G.ships[G.ships.length-1]; ns2.lineFor=pid; ns2.replaces=old.id; ns2.pend={from:pid,to:'earth'}; old.retire='renew'; old.successor=ns2.id; log(G,'yard_renew',{n:ns2.id,o:old.id,p:pid,g:hullGen(ns2)}); G.stats.yardBuilt=(G.stats.yardBuilt||0)+1 } } }
-        }
-      }
-    }
-  }
-}
-function closeLine(G,pid){ var ships=onLine(G,pid); for(var i=0;i<ships.length;i++) retireHull(G,ships[i],'closed'); if(G.lines) delete G.lines[pid] }
 function setAuto(G,shipId,pid){ return setLine(G,shipId,'earth',pid) }
 function setAutoOld(G,shipId,pid){
   var s=shipById(G,shipId); if(!s) return 'noship';
@@ -1036,7 +980,6 @@ function abandon(G,shipId,pid){
   var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
   if(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) return 'evacLate';   // v4.33: she would not be home before the Night
   if(c.kit){ G.earth.metal+=c.kit.metal; G.earth.parts+=c.kit.parts; c.kit=null }   // v4.4: a kit not yet shipped goes back to the yards
-  if(G.lines&&G.lines[pid]) closeLine(G,pid);   // v4.6: the standing order dies with the world; the hulls come home to scrap
   launch(G,s,pid,'evac',{});
   log(G,'launch_evac',{n:s.id,p:pid});
   return 'ok';
@@ -1070,7 +1013,7 @@ function startDrive(G,pid){
   for(var wk in G.colonies){ if(planet(wk).kind==='works'){
     G.driveWork+=(G.colonies[wk].store.parts||0); G.colonies[wk].store.parts=0 } }
   var fromHome=Math.min(G.earth.parts, driveWorkFor(G));   // the yards ship their stock to the programme
-  G.earth.parts-=fromHome; G.driveWork+=fromHome;
+  G.earth.parts-=fromHome; G.driveWork+=fromHome; if(fromHome>0) openRes(G,'parts');
   log(G,'drive_started',{p:pid,n:G.driveLvl+1});
   if(G.driveWork>=driveWorkFor(G)) driveDone(G,pid);
   return 'ok';
@@ -1140,7 +1083,7 @@ function arkBuy(G,l){
   var w=arkCheck(G,l); if(w!=='ok') return w;
   var o=arkOwed(G,l), E=G.earth, cost={}, i, r;
   for(i=0;i<4;i++){ r=ARK_RES[i]; cost[r]=Math.ceil(o[r]); if(E[r]<cost[r]) return r }
-  var c=arkPrice(l); for(i=0;i<4;i++){ r=ARK_RES[i]; E[r]-=cost[r]; G.ark.paid[r]=Math.max(G.ark.paid[r],c[r]) }
+  var c=arkPrice(l); for(i=0;i<4;i++){ r=ARK_RES[i]; E[r]-=cost[r]; if(cost[r]>0) openRes(G,r); G.ark.paid[r]=Math.max(G.ark.paid[r],c[r]) }
   G.ark.lv=l;
   log(G,'ark_bought',{l:l}); return 'ok' }
 /* v4.29: the convoy — hulls docked at Earth, of the ark drive's generation or ARK_CONVOY_BELOW under it. The ark does
@@ -1203,10 +1146,10 @@ function chronShift(G,cols){
     founded:G.stats.founded-m.founded, lost:G.stats.lost-m.lost, mutinies:(G.stats.mutinies||0)-m.mutinies, kits:(G.stats.kits||0)-m.kits,
     sectors:SECTORS.length-m.sectors, drive:(G.driveLvl||0)-m.drive, cols:cols, colsWas:m.cols, idle:idle, hands:Math.round(E.people),
     berths:arkSouls(G), berthsWas:m.berths, arkLv:arkLevel(G), left:left, hungry:!!G.hungry,
-    built:(G.stats.yardBuilt||0)-(m.built||0), renewed:(G.stats.renewed||0)-(m.renewed||0), renewMetal:(G.stats.renewMetal||0)-(m.renewMetal||0),
+    built:(G.stats.yardBuilt||0)-(m.built||0),
     attrition:(G.stats.attrition||0)-(m.attrition||0), handsRate:+handsRate(G).toFixed(2)};
   G.shiftMark={delivered:{metal:G.delivered.metal,food:G.delivered.food,fuel:G.delivered.fuel,parts:G.delivered.parts,people:G.delivered.people},
-    founded:G.stats.founded,lost:G.stats.lost,mutinies:G.stats.mutinies||0,kits:G.stats.kits||0,sectors:SECTORS.length,drive:G.driveLvl||0,cols:cols,berths:arkSouls(G),arkLv:arkLevel(G),day:G.day,built:G.stats.yardBuilt||0,renewed:G.stats.renewed||0,renewMetal:G.stats.renewMetal||0,attrition:G.stats.attrition||0};
+    founded:G.stats.founded,lost:G.stats.lost,mutinies:G.stats.mutinies||0,kits:G.stats.kits||0,sectors:SECTORS.length,drive:G.driveLvl||0,cols:cols,berths:arkSouls(G),arkLv:arkLevel(G),day:G.day,built:G.stats.yardBuilt||0,attrition:G.stats.attrition||0};
   G.shiftOpen=true;
 }
 
@@ -1251,13 +1194,11 @@ function tick(G){
   E.metal+=E.pMetal; E.food+=E.pFood; E.fuel+=E.pFuel;
   if(!G.hungry) E.people+=handsRate(G);        // v4.7: a fed home world keeps turning out colonists, fewer every century
 
-  // ---- the yards (v4.6) ----
-  yardsTick(G);
+  upgradeSave(G);   // v4.34: a pre-manual-lines save loses its standing orders on the first tick
   // ---- ships ----
   for(var i=0;i<G.ships.length;i++){
     var s=G.ships[i];
     if(s.mode==='building'){s.t--;if(s.t<=0){s.mode='idle';s.at='earth';log(G,'ship_ready',{n:s.id});
-        if(s.retire){ var rv=scrapValue(HULLS[s.hull]); s.pend=null; s.from=null; s.to=null; if(scrap(G,s.id)==='ok'){ G.stats.renewed=(G.stats.renewed||0)+1; G.stats.renewMetal=(G.stats.renewMetal||0)+rv.metal; log(G,'line_retired',{n:s.id,why:s.retire,m:rv.metal}) } continue }
         if(s.pend&&G.colonies[s.pend.from]){ var pf=s.pend.from; s.pend=null; var pr=setLine(G,s.id,pf,'earth'); s.lineFor=null; if(pr!=='ok'){ s.waiting=true; G.pauseNow=true; log(G,'awaiting',{n:s.id}) } continue }
       }continue}
     if(s.mode==='missing'){
@@ -1312,7 +1253,7 @@ function tick(G){
         ['metal','food','fuel','parts'].forEach(function(kk){ var g=Math.min(roomE,Math.floor(ce.store[kk]||0)); if(g>0){ s.cargo[kk]=g; roomE-=g } });
         delete G.colonies[node];
         if(G.reserves[node]!==Infinity&&G.reserves[node]<=0){ G.ghost[node]=G.day }
-        for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.from===node){ o.from=null; o.to=null } if(o.pend&&o.pend.from===node) o.pend=null }
+        for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.from===node){ o.from=null; o.to=null } if(o.pend&&o.pend.from===node) o.pend=null; if(o.lineFor===node) o.lineFor=null; if(o.moveTo===node) o.moveTo=null }
         if(G.drive===node){ G.drive=null; log(G,'drive_lost',{p:node}) }
         log(G,lift<ce.pop-0.5?'evac_partial':'evacuated',{p:node,pop:lift});
         var ho=ce.hauledOut||{}, pe=planet(node), qd=pe.kind==='works'?'parts':pe.dep;
@@ -1332,22 +1273,24 @@ function tick(G){
     unload(G,s,node);
     if(node!=='earth'&&s.from&&s.to&&!s.mutiny&&mutinyDue(G,s,legDays(G,node,'earth',s)*2)){
       // v4.2: the crew loads, sails home, and will not come back. The word goes out from the far end.
-      s.mutiny=true; s.pend=null; s.lineFor=null; s.retire=null; G.stats.mutinies=(G.stats.mutinies||0)+1;
+      s.mutiny=true; s.pend=null; s.lineFor=null; s.moveTo=null; G.stats.mutinies=(G.stats.mutinies||0)+1;
       log(G,'mutiny',{n:s.id,p:node,at:'far'});
       loadAt(G,s,node);                       // they take what is on the ground; the line is still set here
       s.from=null; s.to=null; s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;
       continue;
     }
-    if(s.moveTo){ var mt=s.moveTo, mp=planet(mt); s.moveTo=null;   // v4.32: the move ordered in flight — she is at a pier now
-      if(mp&&G.colonies[mt]&&s.from&&s.from!==mt&&!s.retire&&!s.mutiny&&!s.homeOnly&&canReachSector(s,mp.sec)&&!(G.reserves[mt]<=0&&mp.kind!=='works'&&pileLeft(G,mt)<1)){
-        var mc=shipClass(s), mo=s.from; s.pend={from:mt,to:'earth'};
-        if(G.lines&&G.lines[mo]){ var Lo=G.lines[mo]; s.from=null; Lo.want[mc]=Math.max(0,Math.min(Lo.want[mc]||0,lineCount(G,mo,mc))); s.from=mo;
-          if(!Lo.want.courier&&!Lo.want.hauler&&!Lo.want.freighter&&onLine(G,mo).length<=1) delete G.lines[mo] }
-        var Ln=G.lines[mt]||(G.lines[mt]={want:{courier:0,hauler:0,freighter:0},renew:false}); if(lineCount(G,mt,mc)>(Ln.want[mc]||0)) Ln.want[mc]=lineCount(G,mt,mc) } }
-    if(s.pend){ s.from=s.pend.from; s.to=s.pend.to; s.pend=null; s.auto=true; s.policy=null;
-      log(G,'reassigned',{n:s.id,a:s.from,b:s.to}); }
-    if(s.homeOnly){ var hp=s.homeOnly; s.homeOnly=null; s.from=null; s.to=null; s.pend=null; s.waiting=true; log(G,'nothing_left',{n:s.id,p:hp}); continue }
-    if(s.retire){ var v0=scrapValue(HULLS[s.hull]); s.from=null; s.to=null; s.pend=null; if(scrap(G,s.id)==='ok'){ G.stats.renewed=(G.stats.renewed||0)+1; G.stats.renewMetal=(G.stats.renewMetal||0)+v0.metal; log(G,'line_retired',{n:s.id,why:s.retire,m:v0.metal}) } continue }
+    /* v4.34 (reviewer): a hull from a spent world stands down at Earth — unless the player has already given her another line */
+    if(s.homeOnly){ var hp=s.homeOnly; s.homeOnly=null; s.from=null; s.to=null;
+      if(node!=='earth'){ s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t; continue }
+      if(!s.pend&&!s.moveTo){ s.waiting=true; log(G,'nothing_left',{n:s.id,p:hp}); continue } }
+    /* v4.34 (reviewer: a hull docking at the far end flew world→world past Earth, and one from a spent world was left idle at a
+       foreign pier for good): a new line is taken only at Earth — at the far end she loads and comes home on the old one first.
+       A line is always world ↔ Earth. */
+    if(node==='earth'){
+      if(s.moveTo){ var mt=s.moveTo, mp=planet(mt); s.moveTo=null;   // v4.32: the move ordered in flight — she is at the pier now
+        if(mp&&G.colonies[mt]&&s.from!==mt&&!s.mutiny&&canReachSector(s,mp.sec)&&!(G.reserves[mt]<=0&&mp.kind!=='works'&&pileLeft(G,mt)<1)) s.pend={from:mt,to:'earth'} }
+      if(s.pend){ if(G.colonies[s.pend.from]){ s.from=s.pend.from; s.to=s.pend.to; s.auto=true; s.policy=null; log(G,'reassigned',{n:s.id,a:s.from,b:s.to}) } s.pend=null }
+    }
     if(s.from&&s.to) sail(G,s);
     else if(node!=='earth'){ s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t }   // v4.14: a hull released in flight lands with no line — it heads home; the yards only see hulls at Earth
     else { s.waiting=true; G.pauseNow=true; log(G,'awaiting',{n:s.id}) }
@@ -1525,8 +1468,6 @@ function advice(G){
     if(dry&&sitting>20){ out.push({code:'a_lastload',sev:'warn',pid:k,n:sitting}); continue }
     if(dry){ if(lines.length) out.push({code:'a_dry',sev:'bad',pid:k,n:lines.length}); continue }
 
-    // v4.6: the standing order waits on the yards
-    var Lk=lineOf(G,k); if(Lk&&Lk.wait){ for(var wc in Lk.wait){ var wr=Lk.wait[wc]; if(wr&&(Lk.want[wc]||0)>lineCount(G,k,wc)){ out.push({code:(wr==='metal'||wr==='parts'||wr==='fuel'||wr==='crew')?'a_yard_cost':(wr==='mutiny'?'a_yard_mutiny':'a_yard_range'),sev:'warn',pid:k,c:wc,r:wr}); break } } }
     // v4.4: kits
     if(c.kit&&lines.length&&lineHold(G,k)<c.kit.w) out.push({code:'a_kithold',sev:'warn',pid:k,n:c.kit.w,t:c.kit.tier});
     if(c.kit&&!lines.length) out.push({code:'a_kithold',sev:'warn',pid:k,n:c.kit.w,t:c.kit.tier});
@@ -1563,7 +1504,7 @@ function advice(G){
   // v4.4: rations pile up for the ark — say so, or the player reads it as waste
   if(G.night&&fd>60) out.push({code:'a_foodpile',sev:'ok',n:fd});
   // v4.10 (Nikita, 27.09): a flock of couriers where one hauler would do
-  for(k in G.colonies){ var Lb=lineOf(G,k); if(!Lb) continue; var nc=lineCount(G,k,'courier'); if(nc<3) continue;
+  for(k in G.colonies){ var nc=lineCount(G,k,'courier'); if(nc<3) continue;
     var hi=currentHull(G,'hauler'); if(hi===null||!canReachSector({hull:hi},planet(k).sec)||reach(G)<HULLS[hi].reach) continue;
     out.push({code:'a_bigger',sev:'ok',pid:k,n:nc}); break }
   // v4.7: hulls on the pier with no hands to sign

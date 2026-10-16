@@ -13,7 +13,7 @@ pw15	советник сворачивается (2 экрана)	advisor folded
 pw15	ошибок страницы нет (2 экрана)	errors: none	2
 pw16	мир открывается из пролога	^target opened: target
 pw16	стадия 2 пролога	^stage 2 reached: true
-pw16	карточка постоянного приказа	^standing order card: \S
+pw16	карточка линии (v4.34: постоянного приказа нет, строка линии)	^line card: \S
 pw16	стадия 3 пролога	^stage 3 reached: true
 pw16	ошибок страницы нет	^errors: none
 pw17	стадия 4	^S3: 4 / 6

@@ -25,7 +25,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('world founded', await p.evaluate(id=>!!LN.colonies[id],mine));
 
   // === the pile bar (screenshot question): numbers, no red, the verdict carries both rates
-  await p.evaluate(id=>{ LN.colonies[id].store.metal=42; setWant(LN,id,'courier',1) },mine); await run(12); await show(mine);
+  /* v4.34: setWant is gone — a free courier goes on the line by hand (setLine), or the order lays one down (orderFor) */
+  await p.evaluate(id=>{ LN.colonies[id].store.metal=42; const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&shipClass(o)==='courier'); if(s) setLine(LN,s.id,id,'earth'); else orderFor(LN,id,'courier') },mine); await run(12); await show(mine);
   const pb=await p.evaluate(()=>{ var t=document.querySelector('.pile-take'), l=document.querySelector('.pile-lbl'); var cs=t?getComputedStyle(t):null; return {lbl:l?l.textContent:'', bg:cs?cs.backgroundColor:null, border:cs?cs.borderTopColor:null} });
   ok('no pile bar or label (v4.22: removed, unclear)', !pb.lbl.includes('one hold')&&pb.bg===null, JSON.stringify(pb));
   ok('no red hold mark remains (v4.22)', await p.evaluate(()=>!document.querySelector('.pile-take')));
@@ -39,10 +40,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('seam spent + pile: a "Seam exhausted" notice on top', t1.some(t=>/Seam exhausted/.test(t)), JSON.stringify(t1));
   ok('…and the order blocks are still there', t1.some(t=>/Planet work fleet/.test(t))&&t1.some(t=>/Free hulls at Earth/.test(t)), JSON.stringify(t1));
   ok('…the notice says how much is left and that hulls can collect it', /300 metal\) still lies on the surface|300 \(metal\)|300 metal/.test(await rail())||/still lies on the surface/.test(await rail()), (await rail()).match(/Nothing more to dig[^.]*\./));
-  const plus=await p.evaluate(()=>{ var bt=document.querySelector('[data-act="want"][data-c="courier"].plus'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
-  ok('+ in the standing order is open', plus&&plus.d!=='true', JSON.stringify(plus));
-  await tap('[data-act="want"][data-c="courier"].plus');
-  ok('pressing + is accepted', !/exhausted\. Nothing to carry/.test(await toast())&&/wanted/.test(await toast()), await toast());
+  const plus=await p.evaluate(()=>{ var bt=document.querySelector('[data-act="order"][data-c="courier"].plus'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
+  ok('v4.34: the order + is open on a spent seam with a pile', plus&&plus.d!=='true', JSON.stringify(plus));
+  await tap('[data-act="order"][data-c="courier"].plus');
+  ok('pressing + is accepted: the yards lay one down', !/exhausted\. Nothing to carry/.test(await toast())&&/yards lay down/.test(await toast()), await toast());
   // a free hull sent from the world tab
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(10); await show(mine);
   const sendBtn=await p.evaluate(()=>!!document.querySelector('#rail [data-act="assign"]'));
@@ -54,7 +55,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.colonies[id].store.metal=0 },mine); await show(mine);
   const t2=await titles();
   ok('seam spent + empty surface: only the card and "Spent world"', t2.length===2&&/Spent world/.test(t2[1]), JSON.stringify(t2));
-  ok('core refuses + with "depleted"', await p.evaluate(id=>setWant(LN,id,'courier',5)==='depleted',mine));
+  ok('core refuses the order with "depleted" (v4.34: orderFor, was setWant)', await p.evaluate(id=>orderFor(LN,id,'courier')==='depleted',mine));
 
   // === evacuation: courier only
   await killFree(null); await p.evaluate(()=>{ LN.gen=1; ensureGen(1); LN.lastB=buildShip(LN,hullAt('hauler',1)) }); await run(20); await killFree('courier'); await show(mine);   // a gen-I hauler has no live-world gate; couriers that came home from the line are removed

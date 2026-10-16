@@ -29,21 +29,21 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ LN.driveLvl=2; LN.gen=2; ensureGen(2); revealNight(LN); LNU.paused=false }); await p.waitForTimeout(400);
   ok('Night stops the clock', await p.evaluate(()=>LNU.paused===true&&!LN.nightSeen));
   await tap('[data-act="nightok"]'); await p.evaluate(()=>{ LNU.paused=true });
-  // 4. dead seam: alert, red ring, hulls come home and stand down, + disabled, setWant refused
+  // 4. dead seam: alert, red ring, hulls come home and stand down, the order button is off (v4.34: order instead of setWant)
   const mine=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
-  await p.evaluate(id=>{ LN.earth.people=300; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); setLine(LN,s.id,id,'earth'); setRenew(LN,id,false); window.T1=s.id; LN.reserves[id]=3; },mine);
+  await p.evaluate(id=>{ LN.earth.people=300; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); setLine(LN,s.id,id,'earth'); window.T1=s.id; LN.reserves[id]=3; },mine);   // v4.34: no renewal switch (setRenew removed)
   await p.evaluate(()=>{ LNU.shiftStop=false; LNU.speed=10; LNU.paused=false }); await p.waitForTimeout(900); await p.evaluate(()=>{ LNU.paused=true; LNdraw() });
   ok('depleted logged, big alert shown', await p.evaluate(()=>LN.log.some(l=>l.code==='depleted')&&document.getElementById('alert')&&document.getElementById('alert').className.indexOf('show')>=0));
   ok('clock not paused by depletion', await p.evaluate(()=>LNU.paused===true&&LN.pauseNow===false));
   ok('map ring red on the dead world', await p.evaluate(id=>!!document.querySelector('.pnode.dead[data-p="'+id+'"] .blinkring'),mine));
   await p.evaluate(()=>{ for(let i=0;i<60;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } LNdraw() }); await closePf();
-  ok('standing order removed once the hull found nothing (v4.11)', await p.evaluate(id=>!lineOf(LN,id),mine));
-  ok('setWant refused on a dead seam with an empty surface', await p.evaluate(id=>setWant(LN,id,'courier',1)==='depleted',mine));
+  ok('v4.34: nobody replaces the hull that found nothing (no hull is ordered or left on the spent line)', await p.evaluate(id=>onLine(LN,id).length===0,mine));   // v4.11 standing order is gone
+  ok('orderFor refused on a dead seam with an empty surface (orderCheck depleted)', await p.evaluate(id=>orderCheck(LN,id,'courier')==='depleted'&&orderFor(LN,id,'courier')==='depleted',mine));   // v4.34: setWant -> orderFor
   ok('hull came home and stood down (nothing_left)', await p.evaluate(()=>{ const s=shipById(LN,window.T1); return LN.log.some(l=>l.code==='nothing_left'&&l.d.n===s.id)&&(s.mode==='idle'||s.mode==='dead')&&!s.from }));
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   // v4.17/v4.18: a spent world with an empty surface shows the 'Spent world' block and one action — evacuation; the standing order (and its +) is not drawn
-  const dead=await p.evaluate(()=>({want:document.querySelectorAll('#rail [data-act="want"]').length, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), txt:document.querySelector('#rail').textContent}));
-  ok('dead world, empty surface: no + at all, only evacuation under "Spent world"', dead.want===0&&dead.acts==='evac'&&/Spent world/.test(dead.txt)&&/The seam is exhausted and the surface is empty/.test(dead.txt), JSON.stringify({want:dead.want,acts:dead.acts}));
+  const dead=await p.evaluate(()=>({want:document.querySelectorAll('#rail [data-act="order"]').length, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), txt:document.querySelector('#rail').textContent}));
+  ok('dead world, empty surface: no order + at all (v4.34: data-act=order), only evacuation under "Spent world"', dead.want===0&&dead.acts==='evac'&&/Spent world/.test(dead.txt)&&/The seam is exhausted and the surface is empty/.test(dead.txt), JSON.stringify({want:dead.want,acts:dead.acts}));
   // 5. evacuate button greys once pressed
   await p.evaluate(id=>{ LN.earth.metal=5000; buildShip(LN,HULLS.findIndex(h=>h.gen===LN.gen&&h.key==='courier')); const s=LN.ships[LN.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.crew=HULLS[s.hull].crew; LNU.pickShip=s.id; LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   const evr=await p.evaluate(id=>abandon(LN,LNU.pickShip,id),mine);

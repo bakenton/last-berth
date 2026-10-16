@@ -13,6 +13,8 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   const stage=async()=>p.evaluate(()=>parseInt((document.querySelector('#task .tk span:last-child')||{textContent:'9'}).textContent));
   const run=async(years)=>{ await tap('[data-spd="10"]'); await p.waitForTimeout(years*220); await tap('#b-pause') };   // v4.31: 10x is 200 ms a year (was 150)
   const clickWorld=async pid=>{ const bb=await p.locator('[data-p="'+pid+'"] circle.hit').boundingBox(); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150) };
+  // v4.34: a line gets a free hull by hand (Send here, data-act=assign, in the world card) or, with none free, a new one ordered (data-act=order)
+  const lineHull=async pid=>{ await clickWorld(pid); const free=await p.evaluate(()=>LN.ships.some(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.reserve&&!s.mutiny)); if(free) await tap('#rail [data-act="assign"]'); else await tap('[data-act="order"][data-c="courier"].plus') };
   const dismiss=async()=>{ while(await p.evaluate(()=>!!document.getElementById('callout'))){ await tap('[data-act="callok"]'); } };
   await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(400);
   await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
@@ -20,11 +22,11 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   // fast path through stages 0-2 (already verified in pw16)
   const w=await p.evaluate(()=>{ const W={}; PLANETS.forEach(p=>{ if(p.sec!==0) return; if(!W[p.kind]||p.dist<W[p.kind].dist) W[p.kind]=p }); return {mine:W.mine.id,farm:W.farm.id,well:W.well.id,works:W.works.id} });
   await clickWorld(w.mine); await tap('[data-act="colonize"]'); await run(40);
-  await clickWorld(w.mine); await tap('[data-act="want"][data-c="courier"].plus'); await run(45);
+  await lineHull(w.mine); await run(45);
   console.log('after 0-2:', await task()); await dismiss();
   // stage 2: farm
   await clickWorld(w.farm); await tap('[data-act="colonize"]'); await run(40);
-  await clickWorld(w.farm); await tap('[data-act="want"][data-c="courier"].plus'); await run(2);
+  await lineHull(w.farm); await run(2);
   console.log('S3:', await task(), '| dock visible:', await p.evaluate(()=>!document.getElementById('dock').hidden), '| res:', await p.evaluate(()=>[...document.querySelectorAll('#res .k')].map(e=>e.textContent.trim()).join('/')));
   await p.screenshot({path:'q5-s3.png'}); await dismiss(); await p.screenshot({path:'q5b-s3.png'});
   console.log('rails at S3:', await p.evaluate(()=>[...document.querySelectorAll('.rail')].map(e=>e.textContent.trim().slice(0,20)).join('|')));
@@ -34,13 +36,13 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   await tap('#dock .dbtn'); await p.waitForTimeout(150); console.log('free before', free0, '| ships:', await p.evaluate(()=>window.LN.ships.length), '|', await task());
   await run(12); console.log('after build:', await task());
   await clickWorld(w.well); await tap('[data-act="colonize"]'); await run(50);
-  await clickWorld(w.well); await tap('[data-act="want"][data-c="courier"].plus'); await run(2);
+  await lineHull(w.well); await run(2);
   console.log('S4:', await task()); await dismiss();
   await p.evaluate(()=>{ window.LN.earth.metal=Math.max(window.LN.earth.metal,300); window.LN.earth.fuel=Math.max(window.LN.earth.fuel,300); window.LN.earth.people=Math.max(window.LN.earth.people,80) });
   const fr=await p.evaluate(()=>window.LN.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)).length);
   if(!fr){ await tap('#dock .dbtn'); await run(12); }
   await clickWorld(w.works); await tap('[data-act="colonize"]'); await run(60);
-  await clickWorld(w.works); await tap('[data-act="want"][data-c="courier"].plus'); await run(2);
+  await lineHull(w.works); await run(2);
   console.log('S5:', await task(), '| worlds on map:', await p.evaluate(()=>document.querySelectorAll('#map .pnode').length), '| hdr cells:', await p.evaluate(()=>[...document.querySelectorAll('#hdr .hcell')].filter(c=>!c.hidden).length));
   await p.screenshot({path:'q6-s5.png'}); await dismiss();
   await tap('[data-act="prodone"]'); await p.waitForTimeout(200);

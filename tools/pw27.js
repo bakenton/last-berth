@@ -22,7 +22,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const fp=await p.evaluate(id=>{ LN.earth.people=100; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); return foundParty(LN,s,id) },mine);
   ok('founding party = min(world, hold, people−35)', fp===65, fp);
   // 3. attrition on return: a courier with 8 crew loses its share over trips (debt accumulates)
-  await p.evaluate(id=>{ LN.earth.people=300; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:500,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); s.crew=8; setLine(LN,s.id,id,'earth'); setRenew(LN,id,false); window.T1=s.id },mine);
+  await p.evaluate(id=>{ LN.earth.people=300; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:500,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); s.crew=8; setLine(LN,s.id,id,'earth'); window.T1=s.id },mine);   // v4.34: no renewal switch — setRenew removed; the hull is sent by hand (setLine)
   await run(200);
   const st=await p.evaluate(()=>{ const s=shipById(LN,window.T1); return {crew:s.crew, debt:s.crewDebt, attr:LN.stats.attrition||0, lostLog:LN.log.filter(l=>l.code==='crew_lost').length} });
   ok('crew_lost logged and attrition counted', st.attr>=1&&st.lostLog>=1, JSON.stringify(st));

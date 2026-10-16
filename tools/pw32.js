@@ -50,30 +50,32 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('v4.31: the button is off with data-why=evacNoCourier and nothing was logged', await p.evaluate(()=>{ var b=document.querySelector('[data-act="evac"]'); return b&&b.getAttribute('aria-disabled')==='true'&&b.getAttribute('data-why')==='evacNoCourier' })&&!(ev2.last&&ev2.last.k==='evacuate'&&ev2.last.r==='evacNoHull'), JSON.stringify(ev2.last));
 
   // 3. dead seam with a pile: + allowed, yards put a hull on it; empty pile: + blocked
+  // v4.34: setWant and the standing-order + are gone; the order button (data-act=order) and orderFor take their place
   await run(12); await closePf();
   const D=await p.evaluate(w=>{ const id=w.b; const c=LN.colonies[id]; if(!c) return null; LN.reserves[id]=0; c.store.metal=500; LN.earth.metal=3000; LN.earth.fuel=5000; LN.earth.people=400;
-    const r1=setWant(LN,id,'courier',1); tick(LN); LN.pauseNow=false; const L=lineOf(LN,id); LNU.sel=id; LNU.tab='target'; LNdraw();
-    const plus=document.querySelector('[data-act="want"][data-c="courier"].plus'); return {r1, wait:L&&L.wait&&L.wait.courier, on:onLine(LN,id).length, plus:!!plus, plusOff:plus&&plus.getAttribute('aria-disabled')} },W);
-  ok('dead seam + pile: setWant ok, yards do not answer depleted, a hull is on the line', D&&D.r1==='ok'&&D.wait!=='depleted'&&D.on>0, JSON.stringify(D));
-  ok('dead seam + pile: + button is there and enabled', D&&D.plus&&D.plusOff!=='true', JSON.stringify(D));   // 05.10: a missing button used to pass
-  // v4.17/v4.18: seam spent AND surface empty — the standing order is not drawn at all, the card is the 'Spent world' block with evacuation only
-  const D2=await p.evaluate(w=>{ const id=w.b; LN.colonies[id].store.metal=0; LNdraw(); const plus=document.querySelector('[data-act="want"][data-c="courier"].plus');
-    return {plus:!!plus, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), spent:/Spent world/.test(document.querySelector('#rail').textContent), r:setWant(LN,id,'courier',3)} },W);
-  ok('dead seam, empty pile: no +, only evacuation under "Spent world", setWant depleted', !D2.plus&&D2.acts==='evac'&&D2.spent&&D2.r==='depleted', JSON.stringify(D2));
+    const r1=orderFor(LN,id,'courier'); tick(LN); LN.pauseNow=false; LNU.sel=id; LNU.tab='target'; LNdraw();
+    const plus=document.querySelector('[data-act="order"][data-c="courier"].plus'); return {r1, on:onLine(LN,id).length, plus:!!plus, plusOff:plus&&plus.getAttribute('aria-disabled')} },W);
+  ok('dead seam + pile: order ok, the ordered hull is on the line (not depleted)', D&&D.r1==='ok'&&D.on>0, JSON.stringify(D));
+  ok('dead seam + pile: order button is there and enabled', D&&D.plus&&D.plusOff!=='true', JSON.stringify(D));   // 05.10: a missing button used to pass
+  // v4.17/v4.18: seam spent AND surface empty — the order button is not drawn at all, the card is the 'Spent world' block with evacuation only
+  const D2=await p.evaluate(w=>{ const id=w.b; LN.colonies[id].store.metal=0; LNdraw(); const plus=document.querySelector('[data-act="order"][data-c="courier"].plus');
+    return {plus:!!plus, acts:[...new Set([...document.querySelectorAll('#railbody .blk [data-act]')].map(b=>b.dataset.act))].join(','), spent:/Spent world/.test(document.querySelector('#rail').textContent), r:orderFor(LN,id,'courier')} },W);
+  ok('dead seam, empty pile: no order button, only evacuation under "Spent world", orderFor depleted', !D2.plus&&D2.acts==='evac'&&D2.spent&&D2.r==='depleted', JSON.stringify(D2));
 
-  // 4. yards: build time counts against the mutiny check
+  // 4. yards: build time counts against the mutiny check (v4.34: orderCheck, the yardCheck of v4.14, is what the order button asks)
   const Y=await p.evaluate(w=>{ const id=w.b; LN.reserves[id]=5000; LN.night=LN.day+30; LN.arkMark=3; LN.earth.metal=99999; LN.earth.fuel=99999; LN.earth.parts=99999; LN.earth.people=999;
-    const hi=currentHull(LN,'courier'); const h=HULLS[hi]; const round=legDays(LN,id,'earth',{hull:hi})*2; return {chk:yardCheck(LN,id,'courier'), days:h.days, round, left:30} },W);
-  ok('yardCheck says mutiny when build time + 1.5×round exceeds the years left', Y.chk==='mutiny'&&Y.days+1.5*Y.round>30, JSON.stringify(Y));
-  const Y2=await p.evaluate(w=>{ LN.night=LN.day+3000; return yardCheck(LN,w.b,'courier') },W);
-  ok('yardCheck ok again with the Night far away', Y2==='ok', Y2);
+    const hi=currentHull(LN,'courier'); const h=HULLS[hi]; const round=legDays(LN,id,'earth',{hull:hi})*2; return {chk:orderCheck(LN,id,'courier'), days:h.days, round, left:30} },W);
+  ok('orderCheck says orderNight when build time + 1.5×round exceeds the years left (v4.34: own refusal, not the mutiny text)', Y.chk==='orderNight'&&Y.days+1.5*Y.round>30, JSON.stringify(Y));
+  const Y2=await p.evaluate(w=>{ LN.night=LN.day+3000; return orderCheck(LN,w.b,'courier') },W);
+  ok('orderCheck ok again with the Night far away', Y2==='ok', Y2);
 
-  // 5. a_yard_cost reads as a sentence, not "— metal"
-  const A=await p.evaluate(w=>{ const id=w.b; LN.earth.metal=0; LN.ships.forEach(s=>{ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)){ s.mode='transit'; s.at=null; s.origin='earth'; s.dest='earth'; s.dir='in'; s.t=9; s.total=9 } });
-    setWant(LN,id,'courier',4); tick(LN); LN.pauseNow=false; LNU.sel=id; LNdraw(); const t=document.getElementById('advisor').textContent; const adv=advice(LN).find(x=>x.code==='a_yard_cost');
-    setWant(LN,id,'courier',1); LN.earth.metal=3000; return {adv:adv&&adv.r, t} },W);
-  ok('advisor: a_yard_cost raised with reason metal', A.adv==='metal', JSON.stringify(A.adv));
-  ok('advisor: yard reason translated (no raw "— metal")', !/— metal\./.test(A.t)&&(!/waits on the yards/.test(A.t)||/waits on the yards — yards wait: not enough metal/.test(A.t)), A.t.slice(0,300));
+  // 5. v4.34: a_yard_cost is gone (no such advice); the order button says why it is off: data-why=cost, aria-disabled
+  const A=await p.evaluate(w=>{ const id=w.b; LN.night=null; LN.reserves[id]=5000; LN.colonies[id].store.metal=500; LN.earth.metal=0; LNU.sel=id; LNU.tab='target'; LNdraw();
+    const plus=document.querySelector('[data-act="order"][data-c="courier"].plus');
+    return {code:orderCheck(LN,id,'courier'), off:plus&&plus.getAttribute('aria-disabled'), why:plus&&plus.getAttribute('data-why'), noAdv:!advice(LN).some(x=>x.code==='a_yard_cost')} },W);
+  ok('v4.34: order refused for cost — button off with data-why=cost', A.code==='cost'&&A.off==='true'&&A.why==='cost', JSON.stringify(A));
+  ok('v4.34: no a_yard_cost advice (removed with the standing order)', A.noAdv, JSON.stringify(A));
+  await p.evaluate(w=>{ LN.earth.metal=3000 },W);
 
   // 6. physicist line without a forecast: a sentence, no "year —"
   await p.evaluate(()=>{ LN.night=null; LN.nightSeen=false; LN.arkMark=null; revealNight(LN); LNdraw() });

@@ -317,7 +317,7 @@ function proTask(){
     else { key='t0'; d={p:pn(w.mine)}; pulse.push('world:'+w.mine,'[data-act="colonize"]') }
   } else if(s===1){
     if(proLined(w.mine)){ key='t1b'; var ln=G.ships.filter(function(x){return x.from===w.mine})[0]; d={y:ln?legDays(G,w.mine,'earth',ln)*2:0}; if(U.paused) pulse.push('#b-pause') }
-    else { key='t1'; d={p:pn(w.mine)}; pulse.push('world:'+w.mine,'[data-act="want"][data-c="courier"].plus') }
+    else { key='t1'; d={p:pn(w.mine)}; pulse.push('world:'+w.mine,'[data-act="assign"]') }   // v4.34: no standing order — the free hull goes out with 'Send here' (the prologue goes away with the new interface)
   } else if(s===2){ key='t2'; d={p:pn(w.farm),n:(proFree()[0]||{}).id||''}; if(!proFree().length&&!G.colonies[w.farm]) key='t2w' }
   else if(s===3){
     var building=G.ships.filter(function(x){return x.mode==='building'})[0];
@@ -1073,7 +1073,7 @@ function seamYears(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pi
 /* v4.18 (Nikita, 04.10: 'при эвакуации снимал население только курьер. Любой свободный по нажатию назначается'):
    the free courier that can lift everyone and gets there first; else the biggest one */
 function pickCourier(pid){ var p=planet(pid), c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
-  var list=freeHulls().filter(function(s){ return !(s.from&&s.to)&&!s.pend&&!s.job&&!s.retire&&HULLS[s.hull].key==='courier'&&p&&canReachSector(s,p.sec)&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });   // v4.33: a courier that would not be home before the Night is not offered
+  var list=freeHulls().filter(function(s){ return !(s.from&&s.to)&&!s.pend&&!s.job&&HULLS[s.hull].key==='courier'&&p&&canReachSector(s,p.sec)&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });   // v4.33: a courier that would not be home before the Night is not offered
   if(!list.length) return null;
   var fit=list.filter(function(s){return s.cap>=pop}).sort(function(a,b){ return legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b) || a.cap-b.cap });
   if(fit.length) return fit[0];
@@ -1199,47 +1199,39 @@ function railTarget(){
   }
   return h;
 }
-/* v4.6: the line as a standing order — 'two haulers here'; the yards do the rest */
+/* v4.34 (Nikita, 14–15.10): the line is manned by hand — the count is the hulls on it, + orders a new one for it (paid now) */
 function lineBlock(p,c){
-  var L=lineOf(G,p.id)||{want:{courier:0,hauler:0,freighter:0},renew:false,wait:{}};
   var all=onLine(G,p.id), rows='';
   for(var ci=0;ci<CLASSES.length;ci++){ var cls=CLASSES[ci];
     var hi=currentHull(G,cls), hh=hi!==null?HULLS[hi]:null;   // v4.31 (F-36): one row per class, the yards lay down the current generation
     if(!hh||reach(G)<hh.reach) continue;                      // v4.10 (Nikita, 27.09): classes not yet open stay off the card
-    var want=L.want[cls]||0;
-    var flying=all.filter(function(o){return !o.retire&&shipClass(o)===cls&&o.mode!=='building'}).length;
+    var flying=all.filter(function(o){return shipClass(o)===cls&&o.mode!=='building'}).length;
     var yard=all.filter(function(o){return shipClass(o)===cls&&o.mode==='building'}).length;
-    var retiring=all.filter(function(o){return o.retire&&shipClass(o)===cls&&o.mode!=='building'}).length;
     var reachOk=!!(hh&&canReachSector({hull:hi},p.sec)&&reach(G)>=hh.reach);
     var meta= hh ? (reachOk ? fill(T('lineMeta'),{c:n0(hh.cap),y:legDays(G,p.id,'earth',{hull:hi})*2,m:n0(hh.metal)}) : T('lineRange')) : T('lineLocked');
     var st='';
     if(hh){ var pl=pileLeft(G,p.id); st+=fill(T('lineTrip'),{n:n0(Math.min(hh.cap,pl||hh.cap))}) }
     if(flying) st+=(st?' · ':'')+fill(T('lineFlying'),{n:flying});
     if(yard) st+=(st?' · ':'')+fill(T('lineYard'),{n:yard});
-    if(retiring) st+=(st?' · ':'')+fill(T('lineRetiring'),{n:retiring});
-    var gmap={}; all.forEach(function(o){ if(!o.retire&&shipClass(o)===cls){ var gg=hullGen(o); gmap[gg]=(gmap[gg]||0)+1 } });
+    var gmap={}; all.forEach(function(o){ if(shipClass(o)===cls){ var gg=hullGen(o); gmap[gg]=(gmap[gg]||0)+1 } });
     var gtxt=Object.keys(gmap).sort(function(a,b){return a-b}).map(function(g){ return roman(+g)+'\u00d7'+gmap[g] }).join(' \u00b7 ');
     if(gtxt&&Object.keys(gmap).length>1) st+=(st?' \u00b7 ':'')+fill(T('lineGens'),{g:gtxt});   // v4.31: only when the line mixes generations (one generation is already 'N on the line')
-    var wr=L.wait&&L.wait[cls];
-    if(want>flying+yard&&wr) st+=(st?' · ':'')+'<span class="warn">'+T('lineWait_'+wr)+'</span>';
     rows+='<div class="so-row"><span class="so-name"><b>'+sico(cls)+(hh?hullName(hh):T(cls))+'</b><small>'+meta+'</small></span>'+   // v4.13: .so-row is big now (CSS)
-      '<span class="so-cnt"><button class="btn sm" type="button" data-act="want" data-p="'+p.id+'" data-c="'+cls+'" data-n="'+(want-1)+'"'+off(want<=0?'why_zero':'ok')+'>&minus;</button>'+
-      '<b>'+want+'</b><button class="btn sm plus" type="button" data-act="want" data-p="'+p.id+'" data-c="'+cls+'" data-n="'+(want+1)+'"'+off(!reachOk?'range':(want>=12?'why_max':(G.reserves[p.id]<=0&&pileLeft(G,p.id)<1?'depleted':'ok')))+'>+</button></span>'+
+      '<span class="so-cnt"><b>'+(flying+yard)+'</b><button class="btn sm plus" type="button" data-act="order" data-p="'+p.id+'" data-c="'+cls+'"'+off(orderCheck(G,p.id,cls))+'>+</button></span>'+
       '<span class="so-st dim">'+(st||T('lineNone'))+'</span></div>';
   }
   /* v4.8 (Nikita, 27.09: 'хочу знать, чего и сколько на планете и какие суда там работают') */
   var hl='';
   all.slice().sort(function(a,b){return a.id-b.id}).forEach(function(o){
     var where= o.mode==='building' ? fill(T('lhYard'),{y:o.t}) : (o.mode==='idle' ? T('lhPier') : (o.dir==='out'? fill(T('lhOut'),{y:o.t}) : fill(T('lhBack'),{y:o.t})));
-    var note= o.retire ? ' · <span class="warn">'+T('lhRetire')+'</span>' : (o.replaces?' · '+T('lhSuccessor'):'');
+    var note='';
     if(o.moveTo&&planet(o.moveTo)) note+=' · <span class="good">'+esc(fill(T('lhMoveTo'),{p:pname(o.moveTo)}))+'</span>';   // v4.32: a move ordered in flight happens when she docks
     hl+='<div class="lh"><b>'+sico(shipClass(o))+fill(T('lhName'),{n:o.id})+' · '+hullName(HULLS[o.hull])+'</b><span class="dim">'+where+note+'</span></div>'+(o.mode==='building'?'':'<div class="lh-act"><button class="chip x" type="button" data-act="unroute" data-s="'+o.id+'">'+esc(T('lineTakeOff'))+'</button>'+assignChips(o,'move','moveTo',p.id)+'</div>');   // v4.31 (F-36): take off the line, or move to another world; // v4.13: release lives here, the separate block is gone
   });
-  var ren=lineOf(G,p.id)?'<div class="lhs" style="margin-top:8px"><button class="btn" type="button" data-act="renew" data-p="'+p.id+'" data-on="'+(L.renew?0:1)+'" aria-pressed="'+(!!L.renew)+'">'+T(L.renew?'lineRenewOn':'lineRenewOff')+'</button><div class="dim" style="font-size:11.5px;margin-top:4px">'+T('lineRenewHint')+'</div></div>':'';   // v4.22 (Nikita, 07.10): auto-replacement is a switch, off by default - no metal leaves Earth unasked
   /* v4.13 (Nikita, 30.09): the counters come first and big — silhouette, class, number; the hulls serving the line
      sit under them; evacuation is the last button */
   var ev=evacBtn(p)+evacInfo(p,c);   // v4.18: who goes, and whether everyone fits; v4.31: off without a courier
-  return themed(blk(T('lineT'),'<div class="dim line-hint">'+T('lineUpkeepHint')+'</div>'+rows+(hl?'<div class="lhs" style="margin-top:8px"><div class="dim" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">'+T('lineHulls')+'</div>'+hl+'</div>':'<div class="lhs dim" style="margin-top:8px">'+T('lineNoHulls')+'</div>')+ren+ev, lineOf(G,p.id)?'<span class="tag t">'+T('lineOn')+'</span>':''),'sb sb-line');
+  return themed(blk(T('lineT'),'<div class="dim line-hint">'+T('lineUpkeepHint')+'</div>'+rows+(hl?'<div class="lhs" style="margin-top:8px"><div class="dim" style="font-size:11px;letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px">'+T('lineHulls')+'</div>'+hl+'</div>':'<div class="lhs dim" style="margin-top:8px">'+T('lineNoHulls')+'</div>')+ev, all.length?'<span class="tag t">'+T('lineOn')+'</span>':''),'sb sb-line');
 }
 
 function supplyRow(label,have,rate,bad){
@@ -1306,12 +1298,6 @@ function drawDock(){
     }
     if(rowh) h+='<div class="dockrow">'+rowh+'</div>';
   });
-  // idle hulls of older generations: one button per generation
-  var idleOld={}; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.reserve&&hullGen(s)<gnow){ /* v4.29: scrapIdle skips the ark reserve, so does the count */ (idleOld[hullGen(s)]=idleOld[hullGen(s)]||[]).push(s) } });
-  Object.keys(idleOld).forEach(function(g){ var list=idleOld[g], m=0, pp=0; list.forEach(function(s){ m+=scrapValue(HULLS[s.hull]).metal; pp+=s.crew||0 });
-    h+='<div class="dockrow"><button type="button" class="dbtn wide" data-act="scrapgen" data-g="'+g+'"><b>'+esc(fill(T('scrapIdleGen'),{g:roman(+g),n:list.length}))+'</b>'+costHtml({metal:m,people:pp},null,'+')+'</button></div>';
-  });
-  if(Object.keys(idleOld).length) h+='<div class="dim" style="font-size:11.5px;padding:2px 8px 6px">'+esc(T('scrapIdleHint'))+'</div>';   // v4.31 (F-39): the yards no longer break them up on their own
   setHTML('dock',h+'</div>');
   d.classList.toggle('shut',!U.dockOpen);
   if(!U.dockOpen) d.style.height='';
@@ -1383,7 +1369,6 @@ function drawIntro(){
     if(R.drive>0) rows+=srow(T('shDrive'), fill(T('shDriveN'),{n:R.drive}),'good');
     if(R.kits>0) rows+=srow(T('shKits'), R.kits,'good');
     if(R.built>0) rows+=srow(T('shBuilt'), R.built,'dim');
-    if(R.renewed>0) rows+=srow(T('shRenewed'), fill(T('shRenewedN'),{n:R.renewed,m:n0(R.renewMetal||0)}),'dim');
     if(R.attrition>0) rows+=srow(T('shAttrition'), R.attrition,'bad');
     rows+=srow(T('shHandsRate'), fill(T('shHandsRateN'),{n:(R.handsRate||0).toFixed(2)}), (R.handsRate||0)<1?'warn':'dim');
     if(R.lost>0) rows+=srow(T('shLost'), R.lost,'bad');
@@ -1485,7 +1470,6 @@ function fleetRow(s){
   if(s.crew) sub.push(esc(n0(s.crew)+' '+T('people').toLowerCase()));
   var cg=(s.mode!=='building')?cargoTxt(s):''; if(cg) sub.push(cg);
   if(s.mutiny) sub.push('<span class="bad">'+esc(T('mutinied'))+'</span>');
-  if(s.retire) sub.push('<span class="warn">'+esc(T('lhRetire'))+'</span>');
   if(s.reserve) sub.push('<span class="good">'+esc(T('reservedHull'))+'</span>');
   var bar = s.mode==='building' ? '<div class="pbar" title="'+esc(fill(T('flYards'),{y:s.t}))+'"><i style="width:'+Math.round(hullProgress(s)*100)+'%"></i></div>' : '';
   return '<div class="fl-row'+(free?' free':'')+(s.mode==='building'?' bld':'')+'"><div class="fl-top"><b>'+sico(cls)+esc(hullName(h))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+
@@ -1514,7 +1498,6 @@ function freeWorlds(){ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLAN
 /* v4.21 (Nikita, 06.10): every ship parameter wears its icon — hold: a container, speed: a speedometer, range: rings */
 function hpar(ic,txt,title,cls){ return '<span class="hp'+(cls?' '+cls:'')+'" title="'+esc(title)+'"><svg class="hpi" aria-hidden="true"><use href="#i-'+ic+'"/></svg>'+esc(txt)+'</span>' }
 function speedTxt(hl){ return (hl.speed*driveSpeed(G)/(MS[1]/1000)).toFixed(2)+' '+T('speedUnit') }
-function freeFor(cls,pid){ var p=planet(pid), n=0; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.mutiny&&!s.retire&&!s.job&&!s.reserve&&shipClass(s)===cls&&p&&canReachSector(s,p.sec)) n++ }); return n }
 function assignChips(s,act,label,except){   // v4.31: also the 'move to' chips under a hull of a line (act 'move', the hull's own world left out)
   var out=''; for(var k in G.colonies){ var c=G.colonies[k]; var p=planet(k); if(!p||k===except||!canReachSector(s,p.sec)) continue;
     if(G.reserves[k]<=0&&p.kind!=='works'&&pileLeft(G,k)<1) continue;
@@ -1522,7 +1505,7 @@ function assignChips(s,act,label,except){   // v4.31: also the 'move to' chips u
   return out?'<div class="dim" style="font-size:11px;margin-top:4px">'+T(label||'assignTo')+'</div><div class="chips">'+out+'</div>':'';
 }
 function freeHullsBlock(p){
-  var hs=assignable(p.id).filter(function(s){return !s.retire&&!s.pend});
+  var hs=assignable(p.id).filter(function(s){return !s.pend});
   var body= hs.length ? hs.map(function(s){
     return '<div class="wrow free"><div><b>'+sico(HULLS[s.hull].key)+esc(hullName(HULLS[s.hull]))+' '+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+(s.reserve?' <span class="pill">'+esc(T('reservedHull'))+'</span>':'')+' <span class="dim">'+esc(fill(T('capacity'),{n:s.cap})+' \u00b7 '+speedTxt(HULLS[s.hull])+' \u00b7 '+fill(T('legDays'),{n:legDays(G,p.id,'earth',s)}))+'</span></div>'+
       '<button class="btn sm" type="button" data-act="assign" data-s="'+s.id+'" data-p="'+p.id+'">'+T('assignHere')+'</button></div>' }).join('')
@@ -1613,7 +1596,12 @@ function drawConvoy(){
   h+='</div><div class="nt-row" style="margin-top:14px"><button class="btn prim" type="button" data-act="convoyclose">'+T('convoyDone')+'</button></div>';
   setHTML('convoybox',h);
 }
-function draw(){proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawRail();drawDock();drawSign();drawAdvice();layoutPanels();drawOverlay();drawLang();drawIntro();drawCallout();drawPF();drawEvBar();drawConvoy();drawNote()}
+/* v4.34 (Nikita 15.10, option B; reviewer): Earth burns a resource only once the player has met it. This interface shows the
+   resources the prologue has called out (metal from step 2, fuel from 4, parts from 5) and all of them without the prologue —
+   so it opens them as it shows them. The tutorial of the new interface will do the same at its own steps. */
+function uiOpenRes(){ if(!G||U.start||U.intro||U.opening) return; var st=(U.pro&&U.pro.on)?U.pro.stage:99;
+  if(st>=1) openRes(G,'metal'); if(st>=3) openRes(G,'fuel'); if(st>=4) openRes(G,'parts') }
+function draw(){uiOpenRes();proUpdate();voiceWatch();watchRings();drawHeader();drawMap();drawRes();drawRail();drawDock();drawSign();drawAdvice();layoutPanels();drawOverlay();drawLang();drawIntro();drawCallout();drawPF();drawEvBar();drawConvoy();drawNote()}
 window.addEventListener('resize',function(){ layoutPanels() });
 /* v4.31: the generation track (pointer drag on .gtrack) is gone with the pages */
 
@@ -1656,19 +1644,11 @@ document.addEventListener('click',function(ev){
     else if(a==='nightok'){ G.nightSeen=true; el('intro').hidden=true; draw(); return }
     else if(a==='shiftok'){ var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; el('intro').hidden=true; U.paused=false; act(G,'shift_go',{stop:U.shiftStop}); draw(); return }
     else if(a==='scrap'){ res=scrap(G,+b.dataset.s); act(G,'scrap',{hull:+b.dataset.s},res); okc='ok_scrap' }
-    else if(a==='scrapgen'){ res=scrapIdle(G,+b.dataset.g); act(G,'scrapgen',{gen:+b.dataset.g},res); okc='ok_scrap' }
     else if(a==='scrapmut'){ var nm=0; G.ships.slice().forEach(function(s){ if(s.mutiny&&s.mode==='idle'&&s.at==='earth'&&scrap(G,s.id)==='ok') nm++ }); res=nm?'ok':'noship'; act(G,'scrapmut',{n:nm},res); okc='ok_scrap' }
     else if(a==='intro'){ U.intro=false; U.start=!!U.fromStart; U.fromStart=false; draw(); return }
     else if(a==='prologue'){ U.start=false; U.intro=false; proStart(); draw(); return }
-    else if(a==='want'){ var wn=parseInt(b.dataset.n,10), wpid=b.dataset.p, wcls=b.dataset.c, wbefore=lineCount(G,wpid,wcls);
-      res=setWant(G,wpid,wcls,wn); act(G,'want',{p:wpid,c:wcls,n:wn},res); okc='ok_want'; okp={p:pname(wpid),n:wn,c:T(wcls)};
-      /* v4.16 (F-01, F-02): say whether a free hull goes first or the yards build a new one — and for which world */
-      if(res==='ok'&&wn>wbefore){ var wneed=wn-wbefore-freeFor(wcls,wpid);
-        if(wneed<=0) okc='ok_want_free';
-        else { var wyc=yardCheck(G,wpid,wcls), whi=currentHull(G,wcls);
-          if(wyc==='ok'){ okc='ok_want_build'; okp.k=wneed; okp.y=whi!==null?HULLS[whi].days:0 }
-          else { okc='want_wait'; okp.w=T('lineWait_'+wyc) } } } }
-    else if(a==='renew'){ res=setRenew(G,b.dataset.p,b.dataset.on==='1'); act(G,'renew',{p:b.dataset.p,on:b.dataset.on==='1'},res); okc=b.dataset.on==='1'?'ok_renew_on':'ok_renew_off' }
+    else if(a==='order'){ var opid=b.dataset.p, ocls=b.dataset.c; res=orderFor(G,opid,ocls); act(G,'order',{p:opid,c:ocls},res);   // v4.34: a new hull for this line
+      if(res==='ok'){ var ohi=currentHull(G,ocls); okc='ok_order'; okp={p:pname(opid),c:hullName(HULLS[ohi]),y:HULLS[ohi].days} } }
     else if(a==='onext'){ openNext(); draw(); return }
     else if(a==='oskip'){ openDone(); draw(); return }
     else if(a==='opening'){ openStart(); draw(); return }

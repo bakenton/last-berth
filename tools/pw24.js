@@ -34,7 +34,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('canKit = kitgate', await p.evaluate(id=>canKit(LN,id)==='kitgate',mine));
   // 3. open the gate, give resources, put a courier on the line, order a kit: it does not fit a courier
   await p.evaluate(id=>{ LN.driveLvl=2; LN.gen=2; ensureGen(2); LN.earth.metal=5000; LN.earth.parts=2000; LN.earth.fuel=3000; LN.earth.people=300;
-    const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)); setLine(LN,s.id,id,'earth'); setRenew(LN,id,false); LNdraw() },mine);   // v4.6: renewal off, or the yards would lay down a Gen II courier that carries the kit
+    const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)); setLine(LN,s.id,id,'earth'); LNdraw() },mine);   // v4.34: no renewal — setRenew is gone, the yards lay down nothing by themselvesI courier that carries the kit
   await run(3); await p.evaluate(()=>{ LNU.tab='target'; LNdraw() });
   ok('order button enabled', await p.evaluate(()=>{ const bt=document.querySelector('[data-act="kit"]'); return bt&&!bt.disabled }));
   const wtxt=await p.evaluate(()=>document.querySelector('#rail').textContent);

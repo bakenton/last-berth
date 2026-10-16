@@ -39,8 +39,8 @@ const CSS=fs.readFileSync('fonts-local.css','utf8');
   await tap('#b-pause'); await p.screenshot({path:'q3-s1.png'});
   // open the line: click mine, route
   bb=await p.locator('[data-p="'+mine+'"] circle.hit').boundingBox(); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(200);
-  console.log('standing order card:', (await p.textContent('.so-row')||'').slice(0,80));   // v4.13: no Orders block, no #prev on a settled world
-  await tap('[data-act="want"][data-c="courier"].plus'); await p.waitForTimeout(200);
+  console.log('line card:', (await p.textContent('.so-row')||'').slice(0,80));   // v4.13: no Orders block, no #prev on a settled world
+  await tap('[data-act="assign"]'); await p.waitForTimeout(200);   // v4.34: the prologue line step is Send here (assign) on the free hull, not + (coordinator 16.10)
   console.log('after line:', JSON.stringify(await state()));
   await tap('[data-spd="10"]');
   console.log('stage 3 reached:', await waitStage(3,60000), JSON.stringify(await state()));

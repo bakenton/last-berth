@@ -26,9 +26,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('seam in years', /Seam lasts\d+ yrs at this pace/.test(r), r.match(/Seam lasts[^\n]{0,40}/)?.[0]);
   ok('hull row on top of the order block', await p.evaluate(()=>!!document.querySelector('#rail .lhs .lh')));
   ok('only the courier row before hauler opens', await p.evaluate(()=>document.querySelectorAll('#rail .so-row').length===1));
-  ok('renewal switch shown on a line, default OFF (v4.22)', await p.isVisible('[data-act="renew"]') && /OFF/.test(await p.innerText('[data-act="renew"]')));
+  ok('v4.34: no renewal switch on a line (setRenew removed; hulls are put on by hand, nothing renews)', await p.evaluate(()=>!document.querySelector('[data-act="renew"]')));   // v4.22 switch is gone
   await p.evaluate(()=>{ LN.gen=2; ensureGen(2); LN.driveLvl=2; PLANETS.filter(q=>q.sec<=1).forEach(q=>{ if(!LN.colonies[q.id]) LN.colonies[q.id]={pid:q.id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0} }); LNU.tab='target'; LNdraw() });
-  ok('renewal toggle at Gen III', await p.isVisible('[data-act="renew"]'));
+  ok('v4.34: still no renewal switch at Gen III', await p.evaluate(()=>!document.querySelector('[data-act="renew"]')));
   ok('hauler row once it reaches', await p.evaluate(()=>document.querySelectorAll('#rail .so-row').length>=2));
   // 3. kit text
   ok('kit text says the hull carries it', /carries it out and installs it/.test(await rail()));
@@ -41,7 +41,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const loss=await p.evaluate(id=>{ const c=LN.colonies[id]; c.pop=100; const p0=c.pop; for(let i=0;i<200;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } return [p0, LN.stats.colonyLoss||0] },mine);
   ok('hazard takes a share over 200 years', loss[1]>=1, loss.join(' '));
   // 7. a_bigger advice with three couriers on a line
-  await p.evaluate(id=>{ LN.reserves[id]=1e6; LN.colonies[id].dry=false; LN.earth.metal=1e5; LN.earth.parts=1e4; LN.earth.fuel=1e5; LN.earth.people=500; const rw=setWant(LN,id,'courier',3); for(let i=0;i<40;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } },mine);
+  await p.evaluate(id=>{ LN.reserves[id]=1e6; LN.colonies[id].dry=false; LN.earth.metal=1e5; LN.earth.parts=1e4; LN.earth.fuel=1e5; LN.earth.people=500; for(let k=0;k<3;k++){ const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.reserve&&!o.mutiny&&shipClass(o)==='courier'); if(s) setLine(LN,s.id,id,'earth'); else orderFor(LN,id,'courier') } /* v4.34: three couriers on the line by hand or ordered (setWant removed) */ for(let i=0;i<40;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } },mine);
   ok('a_bigger', await p.evaluate(()=>advice(LN).some(a=>a.code==='a_bigger')), await p.evaluate(id=>lineCount(LN,id,'courier'),mine));
   // 8. yellow food alert once per shift when rations are low and no farm is lined
   await p.evaluate(()=>{ LN.earth.food=100; LNU.foodWarnAt=null; for(const k in LN.colonies){ if(planet(k).kind==='farm') LN.colonies[k].dark=true } LNU.paused=false; LNU.speed=10 }); await p.waitForTimeout(500); await p.evaluate(()=>{ LNU.paused=true });

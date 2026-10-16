@@ -1,6 +1,6 @@
 /* LONG NIGHT — headless balance harness.
    node sim.js <core.js> <days> [seeds]
-   Bots (F-20, Nikita 05.10): idle and greedy are the floor — they must lose. The rest are STYLES of play, all on standing orders:
+   Bots (F-20, Nikita 05.10): idle and greedy are the floor — they must lose. The rest are STYLES of play, all manning lines by hand (v4.34):
      rush    — Nikita: settle everything in reach at once, chart and run the drive as early as allowed, biggest hulls
      serial  — the tester: one live world per trade; when it runs dry, evacuate and settle the next
      ark     — v4.29: the ark runner — buys the next level as soon as the larder keeps a reserve after it (up to 4), stops growing 1200 years out
@@ -19,10 +19,10 @@ const fs=require('fs');
 function load(path){
   const src=fs.readFileSync(path,'utf8');
   const names=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','reach','settledCount','buildShip','colonize',
-    'setLine','survey','canSurvey','startDrive','scrap','scrapIdle','shipById','canDepart','canReachSector',
+    'setLine','survey','canSurvey','startDrive','scrap','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
     'arkBuy','arkLevel','arkSouls','arkOwed','arkReady','arkConvoy','setReserve','nightLeft','abandon','clearLine','leftBehind',
-    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','setWant','setRenew','lineOf','lineCount','lineWant','yardCheck','legDays','mutinyForecast','foodForecast','foodShort'];
+    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort'];
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }
@@ -30,6 +30,56 @@ function freeHulls(G){return G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&
 const CLS=['courier','hauler','freighter'];
 let noFreeWellNow=G=>true;
 function lined(G,pid){return G.ships.some(s=>s.mode!=='dead'&&s.from===pid)}
+/* v4.34 (Nikita, 14–15.10): the core has no standing orders — lines are manned by hand. The planner keeps its own plan per
+   world (st.want: what the v4.6 standing order used to hold) and each year does by hand what the yards did on their own:
+   a free hull at Earth goes first (the newest generation), else a new hull is ordered for the line — never below YARD_KEEP
+   years of Earth's metal burn or the fuel floor (the old yards' rule, now the bot's). No renewal: the planner never used it.
+   Every core call is a player's action — tools/load.js counts them. */
+const YARD_KEEP=10;
+function plan(st,k){ return st.want[k]||null }
+function wantN(st,k,c){ const L=st.want[k]; return L?(L[c]||0):0 }
+function wantSum(L){ return L?(L.courier||0)+(L.hauler||0)+(L.freighter||0):0 }
+/* the plan for one class on one world; fewer than on the line — the oldest come off (they come home free) */
+function setW(C,G,st,k,cls,n){
+  if(!G.colonies[k]) return 'nocolony';
+  if(n>0&&G.reserves[k]<=0&&C.planet(k).kind!=='works'&&C.pileLeft(G,k)<1) return 'depleted';
+  n=Math.max(0,Math.min(12,Math.round(n)));
+  const L=st.want[k]||(st.want[k]={courier:0,hauler:0,freighter:0});
+  const had=C.lineCount(G,k,cls); L[cls]=n;
+  if(n<had){ const ships=C.onLine(G,k).filter(o=>C.HULLS[o.hull].key===cls).sort((a,b)=>C.hullGen(a)-C.hullGen(b));
+    for(let i=0;i<had-n&&i<ships.length;i++) C.clearLine(G,ships[i].id) }
+  if(!wantSum(L)) delete st.want[k];
+  return 'ok';
+}
+/* why the planner would not order this class for this line now (the v4.6 yards' check: metal floor, fuel floor, parts, crew) */
+function yardOk(C,G,k,cls){
+  const hi=C.currentHull(G,cls); if(hi===null) return 'locked';
+  const h=C.HULLS[hi], p=C.planet(k); if(!p) return 'noplanet';
+  if(!C.canReachSector({hull:hi},p.sec)) return 'range';
+  if(C.reach(G)<h.reach) return 'locked';
+  if(G.night&&C.nightLeft(G)<h.days+C.K.MUTINY_MIN*C.legDays(G,k,'earth',{hull:hi})*2) return 'mutiny';
+  const nd=G.need||{};
+  if(G.earth.metal-h.metal<(nd.metal||0)*YARD_KEEP) return 'metal';
+  if(G.earth.fuel-h.fuel<C.K.FEED_FUEL_FLOOR) return 'fuel';
+  if(G.earth.parts<(h.parts||0)) return 'parts';
+  if(G.earth.people-C.K.EARTH_KEEP<(h.crew||0)) return 'crew';
+  return 'ok';
+}
+/* the hands on the lines, once a year, after the planner has decided: one hull per class per line at most */
+function fillLines(C,G,st){
+  for(const k in st.want){ const L=st.want[k];
+    if(!G.colonies[k]){ delete st.want[k]; continue }
+    const p=C.planet(k);
+    for(const cls of CLS){ const want=L[cls]||0; if(C.lineCount(G,k,cls)>=want) continue;
+      if(G.reserves[k]<=0&&p.kind!=='works'&&C.pileLeft(G,k)<1) continue;
+      let idle=null; for(const o of G.ships){ if(o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.pend&&!o.mutiny&&!o.job&&!o.reserve&&C.HULLS[o.hull].key===cls&&C.canReachSector(o,p.sec)&&(!idle||C.hullGen(o)>C.hullGen(idle))) idle=o }
+      if(idle){ const r=C.setLine(G,idle.id,k,'earth'); if(r==='ok'||r==='queued') continue }
+      if(yardOk(C,G,k,cls)==='ok') C.orderFor(G,k,cls) } }
+}
+/* a hull the planner puts on a line by hand joins the plan (the v4.6 counter followed the hand) */
+function assign(C,G,st,sid,k){ const s=C.shipById(G,sid), r=C.setLine(G,sid,k,'earth');
+  if((r==='ok'||r==='queued')&&s){ const L=st.want[k]||(st.want[k]={courier:0,hauler:0,freighter:0}), c=C.HULLS[s.hull].key, n=C.lineCount(G,k,c); if(n>(L[c]||0)) L[c]=n }
+  return r }
 
 /* v4.27: one year of the bot — the same head drives the sim and the browser bot (playtest.js --brain sim) */
 function step(C,G,bot,d,st){
@@ -44,6 +94,7 @@ function step(C,G,bot,d,st){
     if(P.every&&d%P.every!==0) return;                    // a visitor is away between visits
     const per=n=>!!P.every||d%n===0;                         // on a visit every periodic chore is due
     const need=G.need||{food:5,metal:3};
+    st.want=st.want||{};
     for(let rep=0;rep<(P.reps||1);rep++){
 
     // 1. every settled world wants a line.
@@ -78,15 +129,16 @@ function step(C,G,bot,d,st){
       resv={metal:Math.max(500,sc.metal+200), fuel:sc.fuel+300, food:sc.food+need.food*(late?nl+30:30)};
       const fuelShort=E.fuel<Math.max(1500,resv.fuel)||wellNeed, foodShort=E.food<Math.max(need.food*60,resv.food)||farmNeed, metalShort=E.metal<1500||mineNeed;
       // freeze: when a reserve is broken, standing orders that do not haul the short trade stop growing (the yards spend it)
-      if(E.metal<resv.metal||E.fuel<resv.fuel){ for(const k in G.colonies){ const L=C.lineOf(G,k); if(!L) continue; const p=C.planet(k);
+      if(E.metal<resv.metal||E.fuel<resv.fuel){ for(const k in G.colonies){ const L=plan(st,k); if(!L) continue; const p=C.planet(k);
         const helps=(E.metal<resv.metal&&p.kind==='mine')||(E.fuel<resv.fuel&&p.kind==='well'); if(helps) continue;
-        for(const c of CLS){ const have=C.lineCount(G,k,c); if((L.want[c]||0)>have) C.setWant(G,k,c,have) } } }
+        for(const c of CLS){ const have=C.lineCount(G,k,c); if((L[c]||0)>have) setW(C,G,st,k,c,have) } } }
       const order=[];
-      for(const k in G.colonies){ const p=C.planet(k), lr=C.lineRate(G,k); if(!lr) continue; let L=C.lineOf(G,k);
-        if(lr.dry&&lr.sitting<1){ if(L){ for(const c of CLS) if(L.want[c]) C.setWant(G,k,c,0) } continue }
-        if(L){ for(const c of CLS){ const w=L.want[c]||0, have=C.lineCount(G,k,c); if(w>have){ const yc=C.yardCheck(G,k,c);
-          if(yc==='range'||yc==='locked'||yc==='retired'||yc==='mutiny') C.setWant(G,k,c,have); else unfilled+=w-have } } }
-        if(!L||!(L.want.courier||L.want.hauler||L.want.freighter)){ C.setWant(G,k,'courier',1); C.setRenew(G,k,false); if(C.lineOf(G,k)) unfilled++; continue }
+      for(const k in G.colonies){ const p=C.planet(k), lr=C.lineRate(G,k); if(!lr) continue; let L=plan(st,k);
+        if(lr.dry&&lr.sitting<1){ if(L){ for(const c of CLS) if(L[c]) setW(C,G,st,k,c,0) } continue }
+        if(L){ for(const c of CLS){ const w=L[c]||0, have=C.lineCount(G,k,c); if(w>have){ const yc=yardOk(C,G,k,c);
+          if(yc==='range'||yc==='locked'||yc==='mutiny') setW(C,G,st,k,c,have); else unfilled+=w-have } } }
+        L=plan(st,k);
+        if(!wantSum(L)){ setW(C,G,st,k,'courier',1); if(plan(st,k)) unfilled++; continue }
         const pri=(p.kind==='well'&&fuelShort?3:0)+(p.kind==='farm'&&foodShort?3:0)+(p.kind==='mine'&&metalShort?2.5:0)+(p.kind==='works'?2:0)+Math.min(1,lr.sitting/3000);
         if(lr.piling&&(lr.sitting>1500||lr.hulls===0)) order.push({k,pri}) }
       order.sort((a,b)=>b.pri-a.pri);
@@ -98,13 +150,12 @@ function step(C,G,bot,d,st){
         for(const sh of G.ships){ if(sh.mode!=='dead'&&sh.from&&sh.to&&(sh.from===k||sh.to===k)) C.clearLine(G,sh.id) } } }
       if(fuelFalling){ for(let i=order.length-1;i>=0;i--){ if(C.planet(order[i].k).kind!=='well') order.splice(i,1) } }
       if(prelude){ for(let i=order.length-1;i>=0;i--){ const kind=C.planet(order[i].k).kind; if(kind==='mine'&&E.metal>sc.metal+300) order.splice(i,1) } }
-      if(order.length&&per(5)&&unfilled<=2&&!(fuelTight&&noFreeWellNow(G))&&!(prelude&&E.fuel<sc.fuel+200)&&C.lineOf(G,order[0].k)){ const k=order[0].k, L=C.lineOf(G,k);   // v4.29: a world whose order was just released has no line (null) — three sweeps crashed here
+      if(order.length&&per(5)&&unfilled<=2&&!(fuelTight&&noFreeWellNow(G))&&!(prelude&&E.fuel<sc.fuel+200)&&plan(st,order[0].k)){ const k=order[0].k, L=plan(st,k);   // v4.29: a world whose order was just released has no line (null) — three sweeps crashed here
         const classes=P.big?['freighter','hauler','courier']:['hauler','courier'];
         const crewOf=c=>{ let b=null; for(const h of HULLS){ if(h.key===c&&h.gen<=(G.gen||0)&&(!b||h.gen>b.gen)) b=h } return b?b.crew:999 };
         const fits=c=>E.people-K.EARTH_KEEP-P.hands>2*crewOf(c)&&crewOut+crewOf(c)<=crewBudget;
-        const cls=classes.find(c=>fits(c)&&C.yardCheck(G,k,c)==='ok')||classes.find(c=>fits(c)&&C.yardCheck(G,k,c)==='parts')||(fits('courier')?'courier':null);
-        const tot=(L.want.courier||0)+(L.want.hauler||0)+(L.want.freighter||0);
-        if(cls&&tot<8) C.setWant(G,k,cls,(L.want[cls]||0)+1) }
+        const cls=classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='ok')||classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='parts')||(fits('courier')?'courier':null);
+        if(cls&&wantSum(L)<8) setW(C,G,st,k,cls,(L[cls]||0)+1) }
     } else for(const k in G.colonies){
       if(lined(G,k)) continue;
       const p=C.planet(k);
@@ -141,8 +192,8 @@ function step(C,G,bot,d,st){
         const lr=C.lineRate(G,k); if(!lr||!lr.piling) continue;
         if((c.store[lr.dep]||0)<3000) continue;   // v4.5: the yard is bottomless; a pile this big means the line is thin
         // v4.6: one more hull on the standing order — a hauler if the class reaches, else a courier
-        const cls=(C.yardCheck(G,k,'hauler')!=='range'&&C.yardCheck(G,k,'hauler')!=='locked')?'hauler':'courier';
-        if(C.lineWant(G,k,cls)<4){ C.setWant(G,k,cls,C.lineWant(G,k,cls)+1); C.setRenew(G,k,true); break }
+        const cls=(yardOk(C,G,k,'hauler')!=='range'&&yardOk(C,G,k,'hauler')!=='locked')?'hauler':'courier';
+        if(wantN(st,k,cls)<4){ setW(C,G,st,k,cls,wantN(st,k,cls)+1); break }   // v4.34: renewal is gone with the standing orders
       }
     }
     // 3. yards — cheapest hull that can serve the deepest world wanting service
@@ -179,7 +230,7 @@ function step(C,G,bot,d,st){
     }
     // 3b (v4.27, pinning a parts-starved order to the older generation) is gone with v4.31: the yards build the current generation only
     // 4. the drive programme
-    const partsStarved=pro&&Object.keys(G.colonies).some(k=>{ const L=C.lineOf(G,k); return L&&['courier','hauler','freighter'].some(c=>L.want[c]>C.lineCount(G,k,c)&&C.yardCheck(G,k,c)==='parts') });
+    const partsStarved=pro&&Object.keys(G.colonies).some(k=>{ const L=plan(st,k); return L&&CLS.some(c=>(L[c]||0)>C.lineCount(G,k,c)&&yardOk(C,G,k,c)==='parts') });
     // v4.27: the ark mark is set from the drive held on the day the Night is dated (arkMark = driveLvl + ARK_ABOVE):
     //         a mark run before that day only raises the bar and the price of every hull after it. So: none before the
     //         Night; after it, up to the mark, and only while the yards owe nothing
@@ -214,7 +265,7 @@ function step(C,G,bot,d,st){
         else {
           const cands=HULLS.map((h,i)=>({h,i})).filter(x=>x.h.gen===(G.gen||0)&&x.h.cap>=best.kc.w&&C.canReachSector({hull:x.i},best.p.sec)).sort((a,b)=>a.h.metal-b.h.metal);
           const free=freeHulls(G).find(s=>s.cap>=best.kc.w&&reachOK(s,best.p));
-          if(free){ C.setLine(G,free.id,best.k,'earth'); C.orderKit(G,best.k) }
+          if(free){ assign(C,G,st,free.id,best.k); C.orderKit(G,best.k) }
           else if(cands.length&&E.metal-cands[0].h.metal-best.kc.metal>400) C.buildShip(G,cands[0].i);
         }
       }
@@ -257,7 +308,7 @@ function step(C,G,bot,d,st){
         if(!cv.ok&&(C.arkReady(G)||left<=600)){
           // convoy first in the last 400 years: no new hulls for the lines while it is short (the yards would eat the parts
           // and the fuel a freighter needs). Earlier a freeze starves the empire of the very parts the convoy is built from.
-          if(left<=400) for(const k in G.colonies){ const L=C.lineOf(G,k); if(!L) continue; for(const c of CLS){ const have=C.lineCount(G,k,c); if((L.want[c]||0)>have) C.setWant(G,k,c,have) } }
+          if(left<=400) for(const k in G.colonies){ const L=plan(st,k); if(!L) continue; for(const c of CLS){ const have=C.lineCount(G,k,c); if((L[c]||0)>have) setW(C,G,st,k,c,have) } }
           for(const s of G.ships){ const cls=HULLS[s.hull].key; if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny&&!s.reserve&&C.hullGen(s)>=cv.gen&&(cv.have[cls]||0)<cv.need[cls]){ if(C.setReserve(G,s.id,true)==='ok') cv.have[cls]=(cv.have[cls]||0)+1 } }
           const building=cls=>G.ships.filter(s=>s.mode==='building'&&s.reserve&&HULLS[s.hull].key===cls).length;
           if(per(5)) for(const cls of ['freighter','hauler','courier']){ if((cv.have[cls]||0)+building(cls)>=cv.need[cls]) continue;
@@ -279,8 +330,9 @@ function step(C,G,bot,d,st){
       }
     }
     // 6. break up hulls the yards no longer build (legacy bots; the planner scraps by idle years)
-    if(pro&&P.legacy&&per(120)) C.scrapIdle(G,(G.gen||0)-2);
+    if(pro&&P.legacy&&per(120)) G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.reserve&&C.hullGen(s)===(G.gen||0)-2).forEach(s=>C.scrap(G,s.id));   // v4.34: no 'scrap idle Gen N' — hull by hull
     }
+    if(pro) fillLines(C,G,st);   // v4.34: what the yards did at the start of the next year, by hand at the end of this one
 }
 
 function play(C,seed,days,bot,hook){
@@ -304,7 +356,7 @@ function play(C,seed,days,bot,hook){
     deepest:Math.max(0,...Object.keys(G.colonies).map(k=>C.planet(k).sec))};
 }
 
-module.exports={STYLES,load,play,step};
+module.exports={STYLES,load,play,step,CLS};
 if(require.main===module){
   const corePath=process.argv[2]||'core.js';
   const days=+(process.argv[3]||2600);

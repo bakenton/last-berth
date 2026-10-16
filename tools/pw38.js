@@ -79,9 +79,10 @@ const TMP=require('os').tmpdir();
   const alive=await p.evaluate(id=>{ const s=shipById(LN,id); const others=LN.ships.filter(function(o){return o.mode==='dead'&&o.scrapped}).length; return {mode:s.mode, reserve:!!s.reserve, from:s.from, scrappedOthers:others} },ids[0]);
   ok('after 15 years the reserved hull is still at the pier', alive.mode==='idle'&&alive.reserve&&!alive.from, JSON.stringify(alive));
   const pid=await p.evaluate(()=>Object.keys(LN.colonies)[0]||null);
-  if(pid){ await p.evaluate(pid=>{ setWant(LN,pid,'courier',(lineWant(LN,pid,'courier')||0)+1) },pid); await run(3);
-    const took=await p.evaluate(id=>{ const s=shipById(LN,id); return {from:s.from, pend:!!s.pend, reserve:!!s.reserve, taken:LN.log.some(function(e){return e.code==='yard_take'&&e.d.n===id})} },ids[0]);
-    ok('a standing order does not take the reserved hull', !took.from&&!took.pend&&!took.taken, JSON.stringify(took)); }
+  // v4.34: setWant and the standing-order yard take are gone. An order (orderFor) for this line does not take the reserved hull: it stays at the pier
+  if(pid){ const r=await p.evaluate(pid=>orderFor(LN,pid,'courier'),pid); await run(3);
+    const took=await p.evaluate(id=>{ const s=shipById(LN,id); return {from:s.from, pend:!!s.pend, reserve:!!s.reserve, mode:s.mode} },ids[0]);
+    ok('v4.34: an order for a line does not take the reserved hull (order ok, hull still reserved at the pier)', r==='ok'&&!took.from&&!took.pend&&took.reserve&&took.mode==='idle', r+' '+JSON.stringify(took)); }
   // a hand-given line releases it
   if(pid){ const rel=await p.evaluate((a)=>{ const r=setLine(LN,a.id,a.pid,'earth'); const s=shipById(LN,a.id); return {r:r, reserve:!!s.reserve} },{id:ids[0],pid}); ok('a line ordered by hand releases the reserve', (rel.r==='ok'||rel.r==='queued')&&!rel.reserve, JSON.stringify(rel)); }
 

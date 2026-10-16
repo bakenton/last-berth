@@ -39,7 +39,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
     const names=(simSrc.match(/const names=\[([\s\S]*?)\];/)||[])[1];
     const inPage=simSrc.replace("const fs=require('fs');","const fs=null;").replace(/module\.exports=[^\n]*\n/,'window.SIM={STYLES,step};\n').replace('if(require.main===module){','if(false){');
     await p.addScriptTag({content:inPage});
-    await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C=Object.fromEntries(list.map(n=>[n,window[n]])); window.__st={idleY:{},fuelHist:[]}; window.__lastDay=-1 },names);
+    await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C=Object.fromEntries(list.map(n=>[n,window[n]])); window.__st={idleY:{},fuelHist:[],want:{}}; window.__lastDay=-1 },names);
     rec('brain',{brain:'sim',style:STYLE});
   }
 
@@ -141,7 +141,7 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
   const SER=STYLE==='serial', RUSH=STYLE==='rush';
   const lineFail={};   // a world whose + was refused (spent seam, out of range): leave it alone for 60 years, try the next one
   // serial: «закрывать по очереди» — следующий мир только когда у всех живых есть линия и прошлый обжился
-  const allLined=()=>p.evaluate(skip=>{ for(const k in LN.colonies){ if(skip.includes(k)) continue; if(!lineWant(LN,k,'courier')&&!lineWant(LN,k,'hauler')&&!lineWant(LN,k,'freighter')) return false } return true },Object.keys(lineFail));   // a spent world has no + — it does not hold the queue
+  const allLined=()=>p.evaluate(skip=>{ for(const k in LN.colonies){ if(skip.includes(k)) continue; if(!onLine(LN,k).length) return false } return true },Object.keys(lineFail));   // a spent world has no + — it does not hold the queue
   const freeWorldLeft=()=>p.evaluate(()=>{ for(const q of PLANETS){ if(q.sec<SECTORS.length&&!LN.colonies[q.id]&&!LN.ghost[q.id]) return true } return false });
   async function policy(s){
     // 0. последний шаг пролога — кнопка «взять стол»
@@ -159,13 +159,14 @@ const rec=(type,o)=>ev.push(Object.assign({t:wall(),type},o));
     const needBuild=RUSH?(s.free<3&&s.metal>200):SER?(s.free<1&&s.metal>400):(s.free<2&&s.metal>260);
     if(needBuild&&!s.arkMode&&every('build',RUSH?2:SER?12:5,s.day)){
       if(await act('build',async()=>{ await tap('.tab[data-tab="earth"]',{soft:true}); await dismiss(); return tap('[data-act="build"]:not([aria-disabled="true"])',{soft:true}) })) return }
-    // 3. линии: у каждого мира должен быть курьер на постоянном заказе (рашер — два)
+    // 3. линии (v4.34 — вручную): у каждого мира курьер (у рашера — два): свободное судно «Отправить сюда», иначе + — заказ под линию
     if(every('line',RUSH?3:8,s.day)){
       const skip=Object.keys(lineFail).filter(k=>s.day-lineFail[k]<60);
-      const pid=await p.evaluate(({lim,skip})=>{ let best=null,bw=1e9; for(const k in LN.colonies){ if(skip.includes(k)) continue; const w=(lineWant(LN,k,'courier')||0)+(lineWant(LN,k,'hauler')||0)+(lineWant(LN,k,'freighter')||0); if(w<lim&&w<bw){ bw=w; best=k } } return best },{lim:RUSH?2:1,skip});
+      const pid=await p.evaluate(({lim,skip})=>{ let best=null,bw=1e9; for(const k in LN.colonies){ if(skip.includes(k)) continue; const w=onLine(LN,k).length; if(w<lim&&w<bw){ bw=w; best=k } } return best },{lim:RUSH?2:1,skip});
       if(pid&&!(await act('line',async()=>{ if(!(await tapPlanet(pid))) return false; await p.waitForTimeout(100);
-        for(const cls of (RUSH&&!s.pro?['freighter','hauler','courier']:['courier'])){ if(await tap('[data-act="want"].plus[data-c="'+cls+'"]:not([aria-disabled="true"])',{soft:true})) return true }   // the rusher takes the biggest hull the card allows
-        const why=await p.evaluate(()=>{ const b=document.querySelector('[data-act="want"].plus[data-c="courier"]'); return b?(b.dataset.why||'disabled'):'no-button' }); rec('line-refused',{pid,why,year:s.day}); return false }))) lineFail[pid]=s.day;
+        if(await tap('[data-act="assign"]',{soft:true})) return true;   // a free hull at Earth goes first
+        for(const cls of (RUSH&&!s.pro?['freighter','hauler','courier']:['courier'])){ if(await tap('[data-act="order"].plus[data-c="'+cls+'"]:not([aria-disabled="true"])',{soft:true})) return true }   // the rusher takes the biggest hull the card allows
+        const why=await p.evaluate(()=>{ const b=document.querySelector('[data-act="order"].plus[data-c="courier"]'); return b?(b.dataset.why||'disabled'):'no-button' }); rec('line-refused',{pid,why,year:s.day}); return false }))) lineFail[pid]=s.day;
       else if(pid) return }
     // 4. разведка колец (serial — только когда заселять больше нечего; rush — как только можно)
     const svOk=RUSH?(s.canSurvey==='ok'):SER?(s.canSurvey==='ok'&&s.food>300&&s.metal>300&&(!(await freeWorldLeft())||s.day-(lastDid.colonize||0)>150)):(s.canSurvey==='ok'&&s.food>300&&s.metal>300);

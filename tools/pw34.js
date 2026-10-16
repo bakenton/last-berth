@@ -83,22 +83,23 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('the unit has a tooltip', /Years of route/.test(tip||''), tip);
   await p.screenshot({path:require('os').tmpdir()+'/v416-dock.png',clip:{x:0,y:560,width:1250,height:440}});
 
-  // === F-01 / F-02: what the standing order does
+  // === F-01 / F-02 (v4.34): + orders a new hull for this line, paid now. It takes no free hull: the free ones stay at Earth (Send here sends them by hand)
   await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },mine);
   await closePf();
-  const freeCour=await p.evaluate(()=>LN.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.mutiny&&!s.retire&&!s.job&&shipClass(s)==='courier').length);
-  await tap('[data-act="want"][data-c="courier"].plus');
+  const freeN=()=>p.evaluate(()=>LN.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny&&shipClass(s)==='courier').length);
+  const freeBefore=await freeN();
+  await tap('[data-act="order"][data-c="courier"].plus');
   let t1=await toast();
-  if(freeCour>0) ok('1st +: a free hull goes first — says so', /free hull at Earth goes first/.test(t1), t1+' | hit='+p.lastHit);
-  else ok('1st +: no free hull — says the yards build one, for this world', /yards are building/.test(t1)||/cannot start/.test(t1), t1);
-  // exhaust free couriers, then press again
+  ok('1st +: the yards lay a courier down for this world (ok_order)', /yards lay down/.test(t1), t1+' | hit='+p.lastHit);
+  ok('v4.34: + takes no free hull — the free couriers stay at Earth', (await freeN())===freeBefore, 'before '+freeBefore+' after '+(await freeN()));
+  // no free hull at all: + still orders (v4.34: the old 'No free hull of that class' refusal is gone)
   await p.evaluate(()=>{ LN.ships.forEach(s=>{ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&shipClass(s)==='courier'){ s.mode='dead' } }); LNdraw() });
-  await tap('[data-act="want"][data-c="courier"].plus');
+  await tap('[data-act="order"][data-c="courier"].plus');
   let t2=await toast();
-  ok('+ with no free hull: "No free hull of that class… building… for <world>"', /No free hull of that class/.test(t2)&&/yards are building \d+ new one\(s\) for [A-Z]{2}-\d+/.test(t2), t2);
+  ok('+ with no free hull: still orders for this world, no refusal', /yards lay down/.test(t2)&&!/No free hull of that class/.test(t2), t2);
   await p.screenshot({path:require('os').tmpdir()+'/v416-want.png',clip:{x:0,y:60,width:1600,height:300}});
   await run(2);
-  // F-02 (v4.17: the yard queue moved from the dock and the Earth tab into the fleet panel, top left)
+  // F-02 (v4.17: the yard queue lives in the fleet panel, top left)
   const fq=await p.evaluate(()=>{ var r=[].slice.call(document.querySelectorAll('#advisor .fl-row.bld')); return r.map(e=>e.textContent.replace(/\s+/g,' ')) });
   ok('fleet panel lists the hull in the yards with its destination world', fq.length>0&&fq.every(t=>/→ [A-Z]{2}-\d+/.test(t)), JSON.stringify(fq));
   ok('dock no longer lists the yard queue', await p.evaluate(()=>!document.querySelector('#dock .yardq')));

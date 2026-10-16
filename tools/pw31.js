@@ -17,15 +17,16 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // 1. unsettled label: people cap only
   ok('unsettled label: no × or %, and (v4.21, Nikita) no people count before anyone lands', await p.evaluate(id=>{ const g=document.querySelector('.pnode[data-p="'+id+'"]'); return g&&!/×|%/.test(g.textContent)&&!g.querySelector('use[href="#i-people"]') },mine));
   // 2. dead seam with a pile: line keeps running, + allowed, hulls stand down only when the surface is empty
-  await p.evaluate(id=>{ LN.earth.people=300; LN.earth.fuel=5000; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:200,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); setLine(LN,s.id,id,'earth'); setRenew(LN,id,false); window.T1=s.id; LN.reserves[id]=0; LN.colonies[id].dry=true; },mine);
+  await p.evaluate(id=>{ LN.earth.people=300; LN.earth.fuel=5000; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:200,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); setLine(LN,s.id,id,'earth'); window.T1=s.id;   /* v4.34: no renewal switch (setRenew removed) */ LN.reserves[id]=0; LN.colonies[id].dry=true; },mine);
   await run(3);
-  ok('line survives depletion while the pile remains', await p.evaluate(id=>!!lineOf(LN,id)&&!shipById(LN,window.T1).homeOnly,mine));
-  ok('setWant allowed while the pile remains', await p.evaluate(id=>setWant(LN,id,'courier',1)==='ok',mine));
-  ok('yards still serve a dead seam while the pile remains (v4.14)', await p.evaluate(id=>{ setWant(LN,id,'courier',2); tick(LN); const w=lineOf(LN,id).wait.courier; setWant(LN,id,'courier',1); return w!=='depleted' },mine));
+  ok('line survives depletion while the pile remains (v4.34: the hull is still on the line, s.from)', await p.evaluate(id=>shipById(LN,window.T1).from===id&&!shipById(LN,window.T1).homeOnly,mine));
+  /* v4.34: setWant is gone; an order (orderFor) for a dead seam is the same test: allowed while the pile remains (v4.14) */
+  ok('order allowed while the pile remains: orderFor is not refused as depleted (v4.14)', await p.evaluate(id=>{ LN.earth.metal=1e5; LN.earth.parts=1e4; LN.earth.fuel=1e5; LN.earth.people=500; return orderFor(LN,id,'courier')==='ok'&&orderCheck(LN,id,'courier')!=='depleted' },mine));
+  ok('the ordered hull is laid down for the dead seam (on the line while building)', await p.evaluate(id=>onLine(LN,id).some(s=>s.mode==='building'),mine));
   await run(200);
   const st=await p.evaluate(id=>{ const s=shipById(LN,window.T1); return {pile:Math.floor(LN.colonies[id].store.metal), res:LN.reserves[id], mode:s.mode, from:s.from, nl:LN.log.some(l=>l.code==='nothing_left'&&l.d.p===id), seamEv:LN.log.some(l=>l.code==='ev_seam'&&l.d.p===id), hauled:Math.round((LN.colonies[id].hauledOut||{}).metal||0)} },mine);
   ok('pile carried out to zero, then the hull stood down (or a seam event revived the world)', (st.pile<1&&st.nl&&st.mode==='idle'&&!st.from)||(st.seamEv&&st.res>0), JSON.stringify(st));
-  ok('setWant refused once the pile is gone (unless revived)', await p.evaluate(id=>(LN.reserves[id]>0)||setWant(LN,id,'courier',1)==='depleted',mine));
+  ok('orderFor refused once the pile is gone (unless revived) (v4.34: setWant -> orderFor)', await p.evaluate(id=>(LN.reserves[id]>0)||orderFor(LN,id,'courier')==='depleted',mine));
   // 3. pile bar and per-trip share
   const mine2=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[1].id);
   await p.evaluate(id=>{ LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:700,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; LN.earth.metal=2000; buildShip(LN,0); const s=LN.ships[LN.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.crew=8; LNU.pickShip=s.id; LNU.sel=id; LNU.tab='target'; LNdraw() },mine2);
