@@ -69,7 +69,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   const lost={n:0,retried:0,gaveUp:0};
   async function box(sel){ const L=p.locator(sel).first(); if(!(await L.count())) return null; try{ await L.scrollIntoViewIfNeeded({timeout:1200}) }catch(e){} return L.boundingBox() }
   const probeJs=({x,y,sel})=>{ const t=document.elementFromPoint(x,y); let want=document.querySelector(sel); if(want&&want.closest&&want.closest('#map .wd')) want=want.closest('#map .wd');
-    return {ok:!!(t&&want&&(want.contains(t)||t.contains(want))), top:t?(t.id?'#'+t.id:t.tagName+'.'+String(t.className&&t.className.baseVal!==undefined?t.className.baseVal:t.className).split(' ')[0]):null} };
+    return {big:!!(t&&t.closest&&t.closest('#noteL,#pfL,#logbox')),ok:!!(t&&want&&(want.contains(t)||t.contains(want))), top:t?(t.id?'#'+t.id:t.tagName+'.'+String(t.className&&t.className.baseVal!==undefined?t.className.baseVal:t.className).split(' ')[0]):null} };
   /* tap(sel) → 'ok' | 'disabled' | 'covered' | 'missing' | 'lost'. A press on a refused button is made on purpose: the player
      gets the reason in a toast, and the reason is what the report wants. Taps the FIRST element matching sel. */
   async function tap(sel,opt){ opt=opt||{};
@@ -78,7 +78,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
       const aim=async()=>{ const x=bb.x+bb.width/2, y=bb.y+bb.height/2; const h=await p.evaluate(probeJs,{x,y,sel}).catch(()=>({ok:true})); return Object.assign(h,{x,y}) };
       let hit=await aim();
       if(!hit.ok){ await p.waitForTimeout(120); bb=await box(sel); if(!bb) return 'missing'; hit=await aim() }   // the page redraws every tick: measure again before blaming the layout
-      if(!hit.ok&&!opt.nd&&(hit.top==='#noteL'||hit.top==='#pfL'||hit.top==='#logbox')&&attempt<2){ if(await dismiss()) continue }   // a window popped up in the middle of the task: the player closes it and goes on
+      if(!hit.ok&&!opt.nd&&hit.big&&attempt<2){ if(await dismiss()) continue }   // a window popped up in the middle of the task: the player closes it and goes on
       if(!hit.ok){ if(!opt.soft) addIssue('warn','click-covered',sel+' перекрыт '+hit.top,await shot('covered')); rec('tap-covered',{sel,top:hit.top}); return 'covered' }
       const info=await p.evaluate(sel=>{ const e=document.querySelector(sel); return e?{d:e.getAttribute('aria-disabled')==='true',why:e.dataset.why||null,txt:(e.textContent||'').trim().replace(/\s+/g,' ').slice(0,50),act:e.dataset.act||null}:null },sel).catch(()=>null);
       const nT=await p.evaluate(()=>{ window.__ck=null; return window.__toasts.length }).catch(()=>0);
