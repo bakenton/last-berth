@@ -18,7 +18,10 @@ export PYTHONUTF8=1 PYTHONIOENCODING=utf-8
 command -v node >/dev/null || PATH="/c/Program Files/nodejs:$PATH"
 np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; fi; }   # путь в виде, который понимает node
 # Живые сценарии (full). Правка списка — после решения по аудиту (last-berth/AUDIT.md).
-FULL="fuzz pw9 pw13 pw15 pw16 pw17 pw18 pw19 pw20 pw21 pw22 pw23 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw34 pw35 pw36 pw37 pw38 pw39 pw40 sim"
+# v4.35 (16.10): сценарии переведены на новый интерфейс (окна, вкладки, тосты); убраны из full, т.к. проверяют удалённое:
+#   pw15 (док и рейка), pw16 и pw17 (пролог), pw23 (шесть вступительных карточек), pw34 (знак кольца, #nofree, рейка, телефон F-01..F-08),
+#   pw35 (панель флота с полосами v4.17 — заменена окном мира и вкладкой Fleet), pw39 (журнал, ячейка Земли, док у подвала). Файлы не удалены.
+FULL="smoke fuzz pw9 pw13 pw18 pw19 pw20 pw21 pw22 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw36 pw37 pw38 pw40 sim"
 SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
 SHOTS=0 RESUME=0 FRESH=0 REBASE=0 QUIET=0 NAMES=()
 for a in "$@"; do case "$a" in
@@ -159,7 +162,8 @@ if [ "$MODE" = full ]; then
       echo "full: готово $(grep -c '^[^ ]' "$ST")/${#NAMES[@]} — бюджет вызова исчерпан, продолжить: bash tools/regress.sh full --resume"; exit 3; fi
     run_one "$n" >> "$ST"
   done
-  if [ $QUIET = 1 ]; then grep -v '^[^ ]* [0-9]*/[0-9]* PASS' "$ST"; echo "full: $(grep -c ' PASS' "$ST") PASS · $(grep -c ' FAIL' "$ST") FAIL"; else cat "$ST"; fi; ! grep -q "FAIL" "$ST"
+  # итог: считаются строки сценариев (с начала строки), не строки подробностей
+  if [ $QUIET = 1 ]; then grep -v '^[^ ]* [0-9]*/[0-9]* PASS' "$ST"; echo "full: $(grep -c '^[^ ].* PASS' "$ST") PASS · $(grep -c '^[^ ].* FAIL' "$ST") FAIL"; else cat "$ST"; fi; ! grep -q "FAIL" "$ST"
 else
   bad=0; for n in "${NAMES[@]}"; do out=$(run_one "$n"); if [ $QUIET = 1 ] && echo "$out" | head -1 | grep -q ' PASS'; then echo "$(echo "$out" | head -1 | cut -d' ' -f1) PASS"; else echo "$out"; fi; echo "$out" | head -1 | grep -q FAIL && bad=1; done; exit $bad
 fi

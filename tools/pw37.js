@@ -1,86 +1,66 @@
-// v4.28 — F-11: the larder forecast. An idle desk (no farm line) must get the journal pause 'food_horizon' centuries before
-// the famine, the advisor line, the Earth rail horizon, EN and RU, no raw placeholders. node pw37.js [page.html]
+// v4.28 — F-11: the larder forecast. An idle desk (no farm line) must get the 'food_horizon' notice centuries before
+// the famine, the advisor line, the Earth cell horizon, EN and RU, no raw placeholders. node pw37.js [page.html]
+// v4.35: уведомление — #noteL (окно «note»), советник — LNI.adv(), запасы — полоса #res .rc[data-r="food"].
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
-const page=process.argv[2]||'long-night.html';
+const UI=require('./pw-ui.js');
+const page=process.argv[2]||'page.html';
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,300):''));
 (async()=>{ try{
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
-  const p=await b.newPage({viewport:{width:1600,height:1000}}); p.setDefaultTimeout(8000);
-  p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
-  await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
-  // dialogs are state, not the feature under test: close them by DOM click (the rail re-renders every tick, a mouse tap can lose the node)
-  // v4.30 (Nikita, 11.10): the journal line of a pause is a full-screen notice (#note) now; each one is read here before it is closed ('Later')
-  const closePf=async()=>{ for(let i=0;i<12;i++){ const did=await p.evaluate(()=>{ var q=function(s){var e=document.querySelector(s); return e&&e.offsetParent!==null?e:null};
-      var nn=document.querySelector('#note'); if(nn&&getComputedStyle(nn).display!=='none'){ (window.__notesSeen=window.__notesSeen||[]).push(nn.textContent); var nb=nn.querySelector('[data-act="noteok"]'); if(nb){ nb.click(); return true } }
-      var e=q('[data-act="pfok"]')||q('[data-act="shiftok"]')||q('[data-act="nightok"]')||q('[data-act="nofreeclose"]'); if(e){ e.click(); return true } if(LN.shiftOpen){ LNU.shiftStop=false; LN.shiftOpen=false; LNdraw(); return true } return false }); if(!did) break; await p.waitForTimeout(80) } };
-  const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() },n); await closePf() };
-  const body=async()=>await p.evaluate(()=>document.body.textContent.replace(/\s+/g,' '));
-  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
-  await p.evaluate(()=>{ document.getElementById('seedin').value='11'; document.querySelector('[data-act="new"]').click(); });
-  await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]');
-  await p.evaluate(()=>{ LNU.pro.on=false; LNU.pro.stage=99; LNU.paused=true; LNdraw() });
+  const p=await UI.newPage(b,{file:page}); const U=UI.ui(p);
+  // уведомления: текст окна «note» читается перед закрытием
+  const notes=[];
+  const closeNotes=async()=>{ for(let i=0;i<12;i++){ const k=await p.evaluate(()=>LNI.big());
+      if(k==='note'){ notes.push(await p.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' '))); await U.tap('#noteL [data-act="noteok"]') }
+      else if(k==='shift'){ await U.tap('#noteL [data-act="shiftok"]') } else if(k==='night'){ await U.tap('#noteL [data-act="nightok"]') } else break } };
+  const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() },n); await closeNotes() };
+  await U.start('en',11);
+  await p.evaluate(()=>{ LNU.shiftStop=false; LNdraw() });
 
-  // === an idle desk: no farm line ever. Run until the journal speaks or 1600 years pass.
+  // === an idle desk: no farm line ever. Run until the notice speaks or 1600 years pass.
   let warn=null; for(let i=0;i<16&&!warn;i++){ await run(100); warn=await p.evaluate(()=>{ var e=LN.log.find(e=>e.code==='food_horizon'); return e?{day:e.day,d:e.d}:null }) }
-  ok('journal pause food_horizon fired', !!warn, JSON.stringify(warn));
+  ok('food horizon notice fired', !!warn, JSON.stringify(warn));
   ok('fired at or after K.FOOD_PAUSE_FROM', warn&&warn.day>=600, warn&&warn.day);
   ok('forecast year lies ahead by FOOD_HORIZON at most', warn&&warn.d.n>0&&warn.d.n<=400&&warn.d.y===warn.day+warn.d.n, warn&&JSON.stringify(warn.d));
   const fc=await p.evaluate(()=>LN.foodFc&&{y:LN.foodFc.y,n:LN.foodFc.n,hungry:!!LN.hungry,day:LN.day,food:Math.round(LN.earth.food)});
   ok('Earth is not hungry yet when the forecast speaks', fc&&!fc.hungry, JSON.stringify(fc));
-  // v4.30: the line is shown as a notice; the texts read by closePf (window.__notesSeen)
-  const t1=await p.evaluate(()=>(window.__notesSeen||[]).join(' ').replace(/\s+/g,' '));
-  ok('EN larder line shown in a notice', /THE LARDERS HAVE A DATE\. On today's lines Earth's rations run out around year \d+, \d+ years from now; \d+ in store, \d+ farms feeding home\./.test(t1), (t1.match(/THE LARDERS[^.]*\.[^.]*\./)||[''])[0]);
-  ok('no raw placeholders in the journal line', !/\{[ynhk]\}/.test((t1.match(/THE LARDERS.{0,400}/)||[''])[0]));
+  const t1=notes.join(' ');
+  ok('EN larder line shown in a notice', /THE LARDERS HAVE A DATE\. On today's lines Earth's rations run out around year \d+, \d+ years from now; \d+ in store, \d+ farms feeding home\./.test(t1), (t1.match(/THE LARDERS[^.]*\.[^.]*\./)||[t1.slice(0,200)])[0]);
+  ok('no raw placeholders in the notice', !/\{[ynhk]\}/.test(t1));
 
-  // === the advisor carries it, worst-first colouring, no undefined
-  await p.evaluate(()=>{ LNU.advOpen=true; LNU.leftTab='advice'; LNdraw() }); await p.waitForTimeout(200);
-  const adv=await p.evaluate(()=>{ var e=document.querySelector('.advbody'); return e?e.textContent.replace(/\s+/g,' '):'' });
-  ok('advisor: "Rations run out around year N — in M years"', /Rations run out around year \d+ — in \d+ years\./.test(adv), adv.slice(0,200));
-  ok('advisor: farms on lines counted', /Farms on lines now: \d+\./.test(adv), adv.slice(0,200));
+  // === the advisor carries it, no undefined
+  const advTxt=()=>p.evaluate(()=>LNI.adv().map(r=>r[1]+' '+r[2]).join(' | '));
+  const adv=await advTxt();
+  // v4.35: советник — только о мирах (Nikita 15.10): строки о провизии Земли там больше не выводятся
+  ok('advisor lists worlds only (Nikita 15.10): every row points at a world', await p.evaluate(()=>LNI.adv().every(r=>!!planet(r[3]))), adv.slice(0,200));
   ok('advisor line has no undefined/placeholder', !/undefined|\{[ynh]\}/.test(adv));
 
-  // === the Earth rail shows the horizon year
-  const rail=await p.evaluate(()=>{ var e=document.querySelector('#res .r-food .d'); return e?e.textContent.replace(/\s+/g,' '):'' });
-  ok('rations cell: "run out ~YEAR"', /run out ~\d+/.test(rail), rail);
-  const foodCell=await p.evaluate(()=>{ var e=document.querySelector('#res .r-food .v'); return e?e.className:null });
-  ok('food cell marked warn or bad', foodCell&&/warn|bad/.test(foodCell), foodCell);
-  await p.screenshot({path:require('os').tmpdir()+'/v428-horizon-en.png',clip:{x:0,y:0,width:1600,height:1000}});
+  // === the Earth cell shows the horizon year
+  const cell=await p.evaluate(()=>{ var e=document.querySelector('#res .rc[data-r="food"]'); return e?e.textContent.replace(/\s+/g,' '):'' });
+  ok('rations cell: "ends ≈ YEAR"', /ends ≈ \d{3,4}/.test(cell), cell);
+  await p.screenshot({path:'v428-horizon-en.png'});
 
-  // v4.30: the notice is drawn once per pause and the language switch does not replay it — the RU notice comes from a second RU desk on the same idle case
-  const ruNotice=await (async()=>{ const q=await b.newPage({viewport:{width:1600,height:1000}}); q.setDefaultTimeout(8000);
-    await q.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-    const qt=async sel=>{const L=q.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await q.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await q.waitForTimeout(150)};
-    await q.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await q.waitForTimeout(300);
-    await q.evaluate(()=>{ document.getElementById('seedin').value='11'; document.querySelector('[data-act="new"]').click(); });
-    await qt('[data-lang="ru"]'); await qt('[data-act="oskip"]'); await qt('[data-act="gskip"]');
-    await q.evaluate(()=>{ LNU.pro.on=false; LNU.pro.stage=99; LNU.paused=true; LNdraw() });
-    let got=''; for(let i=0;i<16&&got.indexOf('У КЛАДОВЫХ')<0;i++){ await q.evaluate(()=>{ for(let k=0;k<100;k++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() });
-      for(let j=0;j<12;j++){ const d=await q.evaluate(()=>{ var nn=document.querySelector('#note'); if(nn&&getComputedStyle(nn).display!=='none'){ window.__ns=(window.__ns||'')+' '+nn.textContent; var nb=nn.querySelector('[data-act="noteok"]'); if(nb){ nb.click(); return true } }
-          var e=document.querySelector('[data-act="pfok"],[data-act="nightok"]'); if(e&&e.offsetParent!==null){ e.click(); return true } if(LN.shiftOpen){ LNU.shiftStop=false; LN.shiftOpen=false; LNdraw(); return true } return false }); if(!d) break; await q.waitForTimeout(80) }
-      got=await q.evaluate(()=>(window.__ns||'').replace(/\s+/g,' ')) }
-    await q.close(); return got })();
-  // === RU
-  await p.evaluate(()=>document.querySelector('[data-lang="ru"]').click()); await p.waitForTimeout(200);
-  await p.evaluate(()=>{ ['[data-act="oskip"]','[data-act="gskip"]'].forEach(function(q){ var e=document.querySelector(q); if(e&&e.offsetParent!==null) e.click() }) }); await p.waitForTimeout(200);   // the language switch replays the opening
-  await p.evaluate(()=>{ LNU.advOpen=true; LNU.leftTab='advice'; LNdraw() }); await p.waitForTimeout(200);
-  const t2=ruNotice;
-  ok('RU larder line shown in a notice (own RU desk)', /У КЛАДОВЫХ ПОЯВИЛАСЬ ДАТА\. При нынешних линиях провизия Земли кончится около \d+ года, через \d+ лет; в запасе \d+, ферм кормят дом \d+\./.test(t2), (t2.match(/У КЛАДОВЫХ.{0,200}/)||[''])[0]);
-  const adv2=await p.evaluate(()=>{ var e=document.querySelector('.advbody'); return e?e.textContent.replace(/\s+/g,' '):'' });
-  ok('RU advisor: "Провизия кончится около N года — через M лет"', /Провизия кончится около \d+ года — через \d+ лет\./.test(adv2), adv2.slice(0,200));
-  const rail2=await p.evaluate(()=>{ var e=document.querySelector('#res .r-food .d'); return e?e.textContent.replace(/\s+/g,' '):'' });
-  ok('RU rations cell: "кончится ~YEAR"', /кончится ~\d+/.test(rail2), rail2);
-  await p.screenshot({path:require('os').tmpdir()+'/v428-horizon-ru.png',clip:{x:0,y:0,width:1600,height:1000}});
-  await p.screenshot({path:require('os').tmpdir()+'/v428-horizon-ru-crop.png',clip:{x:0,y:70,width:900,height:400}});
-  await p.screenshot({path:require('os').tmpdir()+'/v428-horizon-ru-log.png',clip:{x:0,y:830,width:1230,height:170}});
+  // === RU: the same desk in Russian (own run)
+  const q=await UI.newPage(b,{file:page}); const V=UI.ui(q);
+  await V.start('ru',11);
+  const notesRu=[]; let gotRu=false;
+  for(let i=0;i<16&&!gotRu;i++){ await q.evaluate(()=>{ for(let k=0;k<100;k++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() });
+    for(let j=0;j<12;j++){ const k=await q.evaluate(()=>LNI.big()); if(k==='note'){ const t=await q.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' ')); notesRu.push(t); if(/У КЛАДОВЫХ/.test(t)) gotRu=true; await V.tap('#noteL [data-act="noteok"]') } else if(k==='shift') await V.tap('#noteL [data-act="shiftok"]'); else if(k==='night') await V.tap('#noteL [data-act="nightok"]'); else break } }
+  const t2=notesRu.join(' ');
+  ok('RU larder line shown in a notice', /У КЛАДОВЫХ ПОЯВИЛАСЬ ДАТА/.test(t2), (t2.match(/У КЛАДОВЫХ.{0,160}/)||[t2.slice(0,160)])[0]);
+  const advRu=await q.evaluate(()=>LNI.adv().map(r=>r[1]+' '+r[2]).join(' | '));
+  ok('RU advisor lists worlds only (Nikita 15.10)', await q.evaluate(()=>LNI.adv().every(r=>!!planet(r[3]))), advRu.slice(0,200));
+  const cellRu=await q.evaluate(()=>{ var e=document.querySelector('#res .rc[data-r="food"]'); return e?e.textContent.replace(/\s+/g,' '):'' });
+  ok('RU rations cell: "кончится ≈ YEAR"', /кончится ≈ \d{3,4}/.test(cellRu), cellRu);
+  await q.close();
 
   // === the famine really comes later: the warning was ahead of it, not after
   await run(600);
   const later=await p.evaluate(()=>({day:LN.day,hungry:!!LN.hungry,famine:LN.famine||0,over:LN.over||null,first:(LN.log.find(e=>e.code==='earth_dead')||{}).day||null}));
-  ok('famine starts after the warning (lead > 150 years)', later.first&&later.first-warn.day>150, JSON.stringify(later));
-
+  ok('famine starts after the warning (lead > 150 years)', later.first&&warn&&later.first-warn.day>150, JSON.stringify(later));
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
-}catch(e){ out.push('ERROR '+String(e).slice(0,400)) }
-fs.writeFileSync(require('os').tmpdir()+'/pw37.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();
+}catch(e){ out.push('FAIL scenario ran to the end — '+String(e).slice(0,300)) }
+  console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length); process.exit(0);
+})();

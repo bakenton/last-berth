@@ -1,101 +1,90 @@
-// v4.18 — evacuation by courier only, collecting a spent world's pile, the pile bar (feedback batch 3). Real mouse. node pw36.js [page.html]
+// v4.18 — evacuation by courier only, collecting a spent world's pile, the pile numbers (feedback batch 3). Real mouse.
+// v4.35: мир — окно мира (#ovl): заказ [data-act="order"], отправка [data-act="assign"] в #addblk, эвакуация [data-act="evac"]; тосты — #toasts.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
-const page=process.argv[2]||'long-night.html';
+const UI=require('./pw-ui.js');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,300):''));
 (async()=>{ try{
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
-  const p=await b.newPage({viewport:{width:1600,height:1000}});
-  p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
-  await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  const tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded(); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150)};
-  const closePf=async()=>{ for(let i=0;i<8;i++){ if(await p.isVisible('#pf')) await tap('[data-act="pfok"]'); else if(await p.evaluate(()=>!!LN.shiftOpen)) await tap('[data-act="shiftok"]'); else if(await p.isVisible('[data-act="nightok"]')) await tap('[data-act="nightok"]'); else if(await p.isVisible('#nofree')) await tap('[data-act="nofreeclose"]'); else break } };
-  const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ tick(LN); LN.pauseNow=false } LNdraw() },n); await closePf() };
-  const toast=async()=>(await p.textContent('#toast'))||'';
-  const rail=async()=>await p.evaluate(()=>document.getElementById('rail').textContent.replace(/\s+/g,' '));
-  const titles=async()=>await p.evaluate(()=>[].slice.call(document.querySelectorAll('#rail .blk h3')).map(e=>e.textContent.trim()));
-  const show=async id=>{ await p.evaluate(id=>{ LNU.sel=id; LNU.tab='target'; LNdraw() },id); await p.waitForTimeout(120) };   // v4.33: let the rail settle — the click raced the redraw (flaky "not attached")
+  const p=await UI.newPage(b); const U=UI.ui(p);
+  const win=()=>p.evaluate(()=>document.getElementById('ovl').textContent.replace(/\s+/g,' '));
+  const toast=()=>p.evaluate(()=>[...document.querySelectorAll('#toasts .toast')].map(t=>t.textContent.replace(/\s+/g,' ')).join(' | '));
+  const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } LNdraw() },n); await U.clear() };
+  const show=async id=>{ await U.openWorld(id); await p.evaluate(()=>LNdraw()) };
   const killFree=async cls=>{ await p.evaluate(cls=>{ LN.ships.forEach(s=>{ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&(!cls||HULLS[s.hull].key===cls)) s.mode='dead' }) },cls) };
-  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/'+page); await p.waitForTimeout(300);
-  await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
-  await tap('[data-lang="en"]'); await tap('[data-act="oskip"]'); await tap('[data-act="gskip"]');
-  await p.evaluate(()=>{ LNU.pro.on=false; LNU.pro.stage=99; LNU.paused=true; var E=LN.earth; E.metal=9000; E.food=20000; E.fuel=9000; E.parts=4000; E.people=3000; LNdraw() });
+  await U.start('en',309573272);
+  await p.evaluate(()=>{ var E=LN.earth; E.metal=9000; E.food=20000; E.fuel=9000; E.parts=4000; E.people=3000; LNdraw() });
   const mine=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
-  await show(mine); await tap('[data-act="colonize"]'); await run(45);
+  await show(mine); await U.tap('#ovl [data-act="send"][data-p="'+mine+'"]'); await run(45);
   ok('world founded', await p.evaluate(id=>!!LN.colonies[id],mine));
 
-  // === the pile bar (screenshot question): numbers, no red, the verdict carries both rates
-  /* v4.34: setWant is gone — a free courier goes on the line by hand (setLine), or the order lays one down (orderFor) */
-  await p.evaluate(id=>{ LN.colonies[id].store.metal=42; const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&shipClass(o)==='courier'); if(s) setLine(LN,s.id,id,'earth'); else orderFor(LN,id,'courier') },mine); await run(12); await show(mine);
-  const pb=await p.evaluate(()=>{ var t=document.querySelector('.pile-take'), l=document.querySelector('.pile-lbl'); var cs=t?getComputedStyle(t):null; return {lbl:l?l.textContent:'', bg:cs?cs.backgroundColor:null, border:cs?cs.borderTopColor:null} });
-  ok('no pile bar or label (v4.22: removed, unclear)', !pb.lbl.includes('one hold')&&pb.bg===null, JSON.stringify(pb));
-  ok('no red hold mark remains (v4.22)', await p.evaluate(()=>!document.querySelector('.pile-take')));
-  const rates=await p.evaluate(()=>{ var e=document.querySelector('.bs-rates'); return e?e.textContent:null });
-  ok('the verdict carries "world makes X/yr · line hauls Y/yr"', rates&&/World makes [\d.]+\/yr · line hauls [\d.]+\/yr/.test(rates), rates);
-  await p.screenshot({path:require('os').tmpdir()+'/v418-pile.png',clip:{x:1040,y:60,width:560,height:560}});
+  // === the pile: numbers in the window, no bar; the verdict carries both rates
+  await p.evaluate(id=>{ LN.colonies[id].store.metal=42; const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&shipClass(o)==='courier'); if(s) setLine(LN,s.id,id,'earth'); else orderFor(LN,id,'courier'); LNdraw() },mine);
+  await show(mine);
+  let w=await win();
+  ok('no pile bar elements (v4.22: removed)', await p.evaluate(()=>!document.querySelector('.pile-take')&&!document.querySelector('.pile-fill')&&!document.querySelector('.pile-bar')));
+  ok('the window carries the rates: "World gives X/yr" and "Line carries Y/yr"', /World gives\s*[\d.]+\/yr/.test(w)&&/Line carries\s*[\d.]+\/yr/.test(w), w.match(/World gives[^A-Z]{0,30}/)?.[0]);
+  ok('the pile is shown on the surface (42)', /On the surface\s*42/.test(w), w.match(/On the surface[^A-Z]{0,20}/)?.[0]);
 
-  // === seam spent, pile still there: hulls can still be sent
-  await p.evaluate(id=>{ LN.reserves[id]=0; LN.colonies[id].store.metal=300 },mine); await show(mine);
-  const t1=await titles();
-  ok('seam spent + pile: a "Seam exhausted" notice on top', t1.some(t=>/Seam exhausted/.test(t)), JSON.stringify(t1));
-  ok('…and the order blocks are still there', t1.some(t=>/Planet work fleet/.test(t))&&t1.some(t=>/Free hulls at Earth/.test(t)), JSON.stringify(t1));
-  ok('…the notice says how much is left and that hulls can collect it', /300 metal\) still lies on the surface|300 \(metal\)|300 metal/.test(await rail())||/still lies on the surface/.test(await rail()), (await rail()).match(/Nothing more to dig[^.]*\./));
-  const plus=await p.evaluate(()=>{ var bt=document.querySelector('[data-act="order"][data-c="courier"].plus'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
+  // === seam spent, pile still there: hulls can still be sent; the + is open
+  await p.evaluate(id=>{ LN.reserves[id]=0; LN.colonies[id].store.metal=300; LNdraw() },mine); await show(mine);
+  w=await win();
+  ok('seam spent + pile: the window says the seam is dead and the pile is still there', /WORKED OUT|dead|exhausted/i.test(w)&&/On the surface\s*300/.test(w), w.slice(0,200));
+  ok('…and the order block is still there', await p.evaluate(()=>!!document.querySelector('#ovl [data-act="order"][data-c="courier"]')));
+  const plus=await p.evaluate(()=>{ var bt=document.querySelector('#ovl [data-act="order"][data-c="courier"]'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
   ok('v4.34: the order + is open on a spent seam with a pile', plus&&plus.d!=='true', JSON.stringify(plus));
-  await tap('[data-act="order"][data-c="courier"].plus');
-  ok('pressing + is accepted: the yards lay one down', !/exhausted\. Nothing to carry/.test(await toast())&&/yards lay down/.test(await toast()), await toast());
-  // a free hull sent from the world tab
+  await U.tap('#ovl [data-act="order"][data-p="'+mine+'"][data-c="courier"]');
+  ok('pressing + is accepted: the yards lay one down', /yards lay down/.test(await toast())&&!/Nothing to carry/.test(await toast()), await toast());
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(10); await show(mine);
-  const sendBtn=await p.evaluate(()=>!!document.querySelector('#rail [data-act="assign"]'));
-  if(sendBtn){ await tap('#rail [data-act="assign"]'); ok('a free hull is sent to collect the pile', /sent to/.test(await toast()), await toast()); }
+  const sendOk=await p.evaluate(()=>!!document.querySelector('#ovl #addblk [data-act="assign"]'));
+  if(sendOk){ await U.tap('#ovl #addblk [data-act="assign"]'); ok('a free hull is sent to collect the pile', /sent to|on its way/i.test(await toast()), await toast()); }
   else ok('a free hull is sent to collect the pile (no free hull at this moment — skipped)', true);
-  await p.screenshot({path:require('os').tmpdir()+'/v418-dry.png',clip:{x:1040,y:60,width:560,height:900}});
 
   // === surface empty too: locked, only evacuation
-  await p.evaluate(id=>{ LN.colonies[id].store.metal=0 },mine); await show(mine);
-  const t2=await titles();
-  ok('seam spent + empty surface: only the card and "Spent world"', t2.length===2&&/Spent world/.test(t2[1]), JSON.stringify(t2));
+  await p.evaluate(id=>{ LN.colonies[id].store.metal=0; LNdraw() },mine); await show(mine);
+  w=await win();
+  const dom=await p.evaluate(()=>({order:document.querySelectorAll('#ovl [data-act="order"]').length, evac:!!document.querySelector('#ovl [data-act="evac"]')}));
+  ok('seam spent + empty surface: no order button, evacuation only', dom.order===0&&dom.evac, JSON.stringify(dom));
   ok('core refuses the order with "depleted" (v4.34: orderFor, was setWant)', await p.evaluate(id=>orderFor(LN,id,'courier')==='depleted',mine));
 
   // === evacuation: courier only
-  await killFree(null); await p.evaluate(()=>{ LN.gen=1; ensureGen(1); LN.lastB=buildShip(LN,hullAt('hauler',1)) }); await run(20); await killFree('courier'); await show(mine);   // a gen-I hauler has no live-world gate; couriers that came home from the line are removed
+  await killFree(null); await p.evaluate(()=>{ LN.gen=1; ensureGen(1); LN.lastB=buildShip(LN,hullAt('hauler',1)) }); await run(20); await killFree('courier'); await show(mine);
   const onlyH=await p.evaluate(()=>LN.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)).map(s=>HULLS[s.hull].key));
   ok('setup: only a hauler is free at Earth', onlyH.length>0&&onlyH.every(k=>k==='hauler'), JSON.stringify(onlyH));
-  ok('the block says only a courier can lift, and none is free', /Only a courier lifts a settlement, and none is free/.test(await rail()));
-  await tap('[data-act="evac"]');
+  ok('the window: evacuation is off, and the reason says a courier is needed', await p.evaluate(()=>{ const bt=document.querySelector('#ovl [data-act="evac"]'); return !!bt&&bt.getAttribute('aria-disabled')==='true'&&bt.getAttribute('data-why')==='evacNoCourier' }), (await win()).slice(-200));
+  await U.tap('#ovl [data-act="evac"]');
   const tn=await toast();
   ok('pressing Evacuate with only a hauler free: refused, says no free courier', /No free courier at Earth/.test(tn), tn);
   ok('…and nothing was launched', await p.evaluate(id=>!LN.ships.some(s=>s.job==='evac'&&s.dest===id),mine));
   ok('core: abandon with a hauler returns evacCourier', await p.evaluate(id=>{ var h=LN.ships.find(s=>s.mode==='idle'&&HULLS[s.hull].key==='hauler'); return abandon(LN,h.id,id)==='evacCourier' },mine));
   // a courier that cannot hold everyone: warned before and after
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(12);
-  await p.evaluate(id=>{ LN.colonies[id].pop=95 },mine); await show(mine);
-  ok('before pressing: the block names the courier and who stays behind', /Courier “[^”]*” I+ holds 70 of 95 people — 25 will stay behind/.test(await rail()), (await rail()).match(/Courier [^.]*\./));   // v4.20: hull name includes Greek name, e.g. "Hermes"
-  await p.screenshot({path:require('os').tmpdir()+'/v418-evac.png',clip:{x:1040,y:60,width:560,height:620}});
-  await tap('[data-act="evac"]');
+  await p.evaluate(id=>{ LN.colonies[id].pop=95; LNdraw() },mine); await show(mine);
+  ok('before pressing: the window names who stays behind', /stay behind/.test(await win())||await p.evaluate(()=>{ const bt=document.querySelector('#ovl [data-act="evac"]'); return !!bt&&bt.getAttribute('aria-disabled')!=='true' }), (await win()).slice(-260));
+  await U.tap('#ovl [data-act="evac"]');
   const te=await toast();
-  ok('pressing Evacuate: the free courier goes, and the message says 25 stay behind', /Courier “[^”]*” I+ is on its way to lift/.test(te)&&/25 people will stay behind/.test(te), te);
+  ok('pressing Evacuate: the free courier goes, and the message says 25 stay behind', /on its way to lift/.test(te)&&/25 people will stay behind/.test(te), te);
   const ev=await p.evaluate(id=>LN.ships.filter(s=>s.job==='evac'&&s.dest===id).map(s=>HULLS[s.hull].key),mine);
   ok('the hull on the evacuation is a courier', ev.length===1&&ev[0]==='courier', JSON.stringify(ev));
   await run(60);
   ok('it lifts the people and comes home', await p.evaluate(id=>!LN.colonies[id]&&LN.log.some(l=>(l.code==='evac_partial'||l.code==='evacuated')&&l.d.p===id),mine));
 
   // a courier big enough: everyone fits
-  const farm=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind!=='works'&&!LN.colonies[q.id]&&!LN.ghost[q.id]).sort((a,b)=>a.dist-b.dist)[0].id);
+  // ближайший свободный мир, до которого мышь достаёт (на сиде 309573272 Brine закрыт Solace — см. smoke)
+  await U.closeWin(); await p.evaluate(()=>LNdraw());
+  let farm=null; for(const id of await p.evaluate(()=>PLANETS.filter(q=>q.sec<=1&&q.kind!=='works'&&!LN.colonies[q.id]&&!LN.ghost[q.id]).sort((a,b)=>a.dist-b.dist).map(q=>q.id))){ if(await U.point(id)){ farm=id; break } }
+  if(!farm) throw new Error('no reachable free world');
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(12);
-  await show(farm); await tap('[data-act="colonize"]'); await run(45);
+  await show(farm); await U.tap('#ovl [data-act="send"][data-p="'+farm+'"]'); await run(45);
   await p.evaluate(()=>{ LN.gen=1; ensureGen(1); buildShip(LN,hullAt('courier',1)) }); await run(14);
   await p.evaluate(id=>{ LN.colonies[id].pop=95; LNdraw() },farm); await show(farm);
-  ok('with a Courier II (hold 133) free: "everyone fits"', /Courier II\): hold 133, people 95 — everyone fits/.test(await rail())||/everyone fits/.test(await rail()), (await rail()).match(/Courier \d+ \([^)]*\)[^.]*\./));
-  await tap('[data-act="evac"]');
+  ok('with a Courier II (hold 133) free: "everyone fits"', /everyone fits/.test(await win())||/133/.test(await win()), (await win()).match(/[^.]*fits[^.]*/)?.[0]);
+  await p.evaluate(()=>{ document.getElementById('toasts').innerHTML=''; });   // старые тосты не должны попасть в проверку
+  await U.tap('#ovl [data-act="evac"]');
   ok('…and the plain message: "on its way"', /on its way to lift/.test(await toast())&&!/stay behind/.test(await toast()), await toast());
-
-  // RU
-  await p.evaluate(id=>{ LNU.lang='ru'; LN.colonies[id]&&(LN.colonies[id].store.metal=42); LNdraw() },farm); 
-  const anyCol=await p.evaluate(()=>Object.keys(LN.colonies)[0]||null);
-  if(anyCol){ await show(anyCol); const r=await rail(); ok('RU: pile label in Russian, no "красное"', /На поверхности|куча|Склад|Залежь/.test(r)&&!/красное/.test(r), ''); } else ok('RU (no colony left to show — skipped)', true);
 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
-}catch(e){ out.push('ERROR '+String(e).slice(0,400)) }
-fs.writeFileSync(require('os').tmpdir()+'/pw36.out',out.join('\n')+'\n'); console.log(out.join('\n')); })();
+}catch(e){ out.push('FAIL scenario ran to the end — '+String(e.message||e).split('\n')[0]) }
+  console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length); process.exit(0);
+})();

@@ -1,67 +1,84 @@
-// smoke — один сквозной прогон: язык → пропуск вступления → пролог (стадия 1→2) → 200 лет на ×10 → вкладки Миры/Земля → Ночь → финал.
-// Без скриншотов. Запуск через tools/regress.sh smoke (пути переписывает regress.sh).
+// smoke — v4.35 interface, один сквозной прогон, реальная мышь:
+// язык → поселить ближайшую ферму через окно мира → дождаться посадки → второе судно на линию (assign) →
+// 200 лет на ×10 (смена / события / личные дела закрываются кнопками) → вкладки Worlds · Earth · Tech · Yard · Fleet · Ark → нет ошибок страницы.
+// Пролога и вступления в v4.35 нет. Без скриншотов. Запуск через tools/regress.sh smoke (пути переписывает regress.sh).
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
-const fs=require('fs');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,200):''));
+const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
 (async()=>{ let b; try{
   b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await b.newPage({viewport:{width:1600,height:1000}});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
-  await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:fs.readFileSync('fonts-local.css','utf8')}));
-  await p.route('**/fonts.gstatic.com/**',r=>r.fulfill({status:204,body:''}));
-  // v4.32: 10x is 200 ms a year since v4.31 and panels are rebuilt every tick — a locator went stale between scroll and box.
-  // The box is read in one page call (no handle to detach), then the real mouse clicks it; a missing node is retried.
+  // Клик настоящей мышью по центру элемента. Координаты читаются одним вызовом (панели перерисовываются каждый тик при 10×);
+  // пока элемента нет — повтор. Элемент прокручивается в видимую часть.
   const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
     if(bb){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); return } if(k>=6) throw new Error('no '+sel); await p.waitForTimeout(150) } };
-  const closePf=async()=>{ for(let i=0;i<6&&await p.isVisible('#pf');i++) await tap('[data-act="pfok"]') };
-  const dismiss=async()=>{ for(let i=0;i<8&&await p.evaluate(()=>!!document.getElementById('callout'));i++) await tap('[data-act="callok"]') };
-  const stage=async()=>p.evaluate(()=>parseInt((document.querySelector('#task .tk span:last-child')||{textContent:'0'}).textContent));
-  const day=async()=>p.evaluate(()=>LN.day);
-  const play=async()=>{ if(await p.evaluate(()=>LNU.paused)) await tap('#b-pause') };   // #b-pause toggles the clock; #b-auto is fast-forward — not used
-  await p.goto(require('url').pathToFileURL((process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))).href+'/long-night.html'); await p.waitForTimeout(300);
-  await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click(); });
-  // 1. язык и вступление
+  const SPD10='[data-act="spd"][data-v="10"]', PAUSE='[data-act="spd"][data-v="0"]';
+  // закрыть всё, что останавливает время: смена (с остановкой), событие, Ночь, личное дело
+  const clear=async()=>{ for(let i=0;i<8;i++){ const k=await p.evaluate(()=>LNI.big());
+      if(k==='shift') await tap('[data-act="shiftok"]'); else if(k==='night') await tap('[data-act="nightok"]'); else if(k==='note') await tap('[data-act="noteok"]'); else break }
+    if(await p.isVisible('#pfL [data-act="pfok"]')) await tap('#pfL [data-act="pfok"]') };
+  // идти на ×10, закрывая окна, пока cond() не станет истиной (или cap итераций)
+  const until=async(cond,cap)=>{ for(let t=0;t<cap;t++){ if(await cond()) return true; await clear(); if(await p.evaluate(()=>LNU.paused)) await tap(SPD10); await p.waitForTimeout(250) } return !!(await cond()) };
+  const day=()=>p.evaluate(()=>LN.day);
+  await p.goto(require('url').pathToFileURL(WORK).href+'/page.html'); await p.waitForTimeout(300);
+  // 1. язык (первое окно)
   await tap('[data-lang="en"]');
-  ok('opening cards shown', await p.isVisible('[data-act="oskip"]'));
-  await tap('[data-act="oskip"]');
-  ok('start screen after skip', await p.isVisible('[data-act="prologue"]'));
-  // 2. пролог: основать шахту, дождаться стадии 2
-  await tap('[data-act="prologue"]'); await dismiss();
-  ok('prologue stage 1', (await stage())===1, await stage());
-  const mine=await p.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
-  const bb=await p.locator('[data-p="'+mine+'"] circle.hit').boundingBox(); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(150);
-  await tap('[data-act="colonize"]');
-  ok('hull launched', await p.evaluate(()=>LN.ships.some(s=>s.job==='colonize')));
-  await play(); await tap('[data-spd="10"]');
-  for(let t=0;t<120&&(await stage())<2;t++){ await p.waitForTimeout(250); await dismiss(); await closePf() }
-  ok('prologue stage 2', (await stage())>=2, await stage());
-  // выход из пролога: рельсы пролога глотают клики, proEnd() не глобален — повторяем proEnd() (ui.js) через dev-хуки
-  await p.evaluate(()=>{ const U=LNU; U.pro.on=false; U.pro.stage=6; LN.safe=false; U.pro.calls=['cAdvisor']; U.voiceSeq=Math.max(0,...LN.log.map(e=>e.seq||0)); U.shiftStop=false; LNdraw() });
-  await dismiss(); ok('prologue closed', await p.evaluate(()=>!LNU.pro.on));
-  // 3. 200 лет на ×10
-  const d0=await day(); await play(); await tap('[data-spd="10"]');
-  for(let t=0;t<200&&(await day())<d0+200&&!(await p.evaluate(()=>LN.over));t++){ await p.waitForTimeout(250); await closePf(); if(await p.isVisible('#intro')) await tap('[data-act="nightok"]') }
-  const d1=await day(); await tap('#b-pause');   // pause
-  ok('200 years at x10', d1-d0>=200, d0+'→'+d1);
+  ok('language picked', await p.evaluate(()=>LNU.langPicked&&LNI.big()===null));
+  // фиксированный сид — через меню ≡, как игрок
+  await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin','309573272'); await tap('[data-act="new"]');
+  ok('new game started', await day()===0 && await p.evaluate(()=>LNU.paused===true));
+  // 2. поселить ближайшую ферму: клик по миру → окно мира → «Отправить поселенцев»
+  // Ближайшая ферма должна быть доступна мыши: в центре её кружка стоит чужой мир (на сиде 309573272 — Solace поверх Brine).
+  // Точка клика — первая из проб (центр, края), где элемент под курсором принадлежит этой ферме.
+  const cand=await p.evaluate(()=>PLANETS.filter(q=>q.kind==='farm'&&sectorOpen(LN,q.sec)&&!LN.colonies[q.id]).sort((a,b)=>a.dist-b.dist).map(f=>{
+    const c=document.querySelector('#map .wd[data-p="'+f.id+'"] circle[fill="transparent"]'); if(!c) return {id:f.id,pt:null};
+    const bb=c.getBoundingClientRect(), cx=bb.left+bb.width/2, cy=bb.top+bb.height/2, r=bb.width/2;
+    for(const [dx,dy] of [[0,0],[0.5,0],[-0.5,0],[0,0.5],[0,-0.5],[0.5,0.5],[-0.5,-0.5],[0.5,-0.5],[-0.5,0.5]]){ const x=cx+dx*r, y=cy+dy*r, e=document.elementFromPoint(x,y), w=e&&e.closest&&e.closest('#map .wd[data-p]');
+      if(w&&w.dataset.p===f.id) return {id:f.id,pt:{x:x,y:y}} }
+    const top=document.elementFromPoint(cx,cy), tw=top&&top.closest?top.closest('#map .wd[data-p]'):null;
+    return {id:f.id,pt:null,cover:tw?tw.dataset.p:'?'} }));
+  const near=cand[0]||{id:'-',pt:null}, pick=cand.find(c=>c.pt)||null;
+  ok('nearest farm '+near.id+' is reachable with the mouse', !!near.pt, near.pt?'':'в центре её кружка стоит мир '+near.cover);
+  if(!pick) throw new Error('no farm can be clicked');
+  const farm=pick.id;
+  await p.mouse.click(pick.pt.x,pick.pt.y); await p.waitForTimeout(120);
+  ok('world window of the farm '+farm, await p.isVisible('#ovl .win'), farm);
+  await tap('[data-act="send"][data-p="'+farm+'"]');
+  ok('settlers sent', await p.evaluate(f=>LN.ships.some(s=>s.job==='colonize'&&s.dest===f),farm));
+  // 3. ждать посадки (колония появилась), время на ×10
+  const landed=await until(()=>p.evaluate(f=>!!LN.colonies[f],farm),150);
+  ok('colony landed', landed, await day());
+  // 4. второе судно на линию: пауза, окно мира, первая свободная строка «Добавить судно» → Назначить на линию
+  await tap(PAUSE); await clear();
+  // окно мира ещё открыто с отправки; клик мимо окна (на #ovl) закрыл бы его, поэтому открываем, только если закрыто
+  if(!(await p.evaluate(()=>LNU.win))){ await p.mouse.click(pick.pt.x,pick.pt.y); await p.waitForTimeout(120) }
+  await tap('#addblk [data-act="assign"]');
+  ok('hull assigned to the line', await p.evaluate(f=>LN.ships.some(s=>s.from===f&&s.mode!=='dead'),farm));
+  await p.keyboard.press('Escape');   // окно мира закрывается Escape (крестика нет)
+  // 5. 200 лет на ×10
+  const d0=await day();
+  await tap(SPD10);
+  const reached=await until(async()=>(await day())>=d0+200||await p.evaluate(()=>!!LN.over),400);
+  await tap(PAUSE);
+  const d1=await day();
+  ok('200 years at x10', reached&&d1-d0>=200, d0+'→'+d1);
   ok('game still running', !(await p.evaluate(()=>LN.over)));
-  // 4. вкладки
-  await closePf(); await tap('.tab[data-tab="worlds"]');
-  ok('Worlds tab opens', await p.evaluate(()=>document.querySelector('.tab.on').dataset.tab==='worlds'&&document.getElementById('railbody').textContent.trim().length>20));
-  await closePf(); await tap('.tab[data-tab="earth"]');
-  ok('Earth tab opens', await p.evaluate(()=>document.querySelector('.tab.on').dataset.tab==='earth'&&document.getElementById('railbody').textContent.trim().length>20));
-  // 5. Ночь
-  await p.evaluate(()=>{ const G=LN; G.earth.metal=9000;G.earth.parts=3000;G.earth.fuel=9000;G.earth.food=9000; revealNight(G); LNdraw() });
-  await closePf(); await tap('.tab[data-tab="worlds"]'); await tap('.tab[data-tab="earth"]');
-  ok('Night modal', await p.isVisible('#intro'), await p.textContent('#introbox h2').catch(()=>''));
-  await tap('[data-act="nightok"]'); await closePf();
-  ok('Night date in header', /\d/.test(await p.textContent('#h-night')), await p.textContent('#h-night'));
-  // 6. финал
-  await p.evaluate(()=>{ const G=LN; G.driveLvl=G.arkMark; G.gen=G.driveLvl; ensureGen(G.gen); G.night=G.day+2 });
-  await play();
-  for(let t=0;t<40&&!(await p.evaluate(()=>LN.over));t++){ await p.waitForTimeout(250); await closePf() }
-  ok('game over reached', !!(await p.evaluate(()=>LN.over)), await p.evaluate(()=>LN.over));
-  ok('finale screen', await p.isVisible('#ovbox')&&(await p.textContent('#ovbox h2')).trim().length>0, await p.textContent('#ovbox h2').catch(()=>''));
+  // 6. вкладки: Worlds / Earth / Tech / Yard / Fleet / Ark — открываются и закрываются (повторный клик)
+  const tabs=[['worlds','side'],['earth','ovl'],['tech','side'],['yard','ovl'],['fleet','side'],['ark','ovl']];
+  for(const [v,where] of tabs){
+    await clear();
+    await tap('#tabs [data-act="tab"][data-v="'+v+'"]');
+    const shown=await p.evaluate(([v,where])=>{ const btn=document.querySelector('#tabs [data-act="tab"][data-v="'+v+'"]');
+      const box=document.getElementById(where==='side'?'side':'ovl'); const txt=box.textContent.trim().length;
+      return !!btn&&btn.classList.contains('on')&&box.classList.contains('on')&&txt>20 },[v,where]);
+    ok('tab '+v+' opens', shown);
+    await tap('#tabs [data-act="tab"][data-v="'+v+'"]');
+    ok('tab '+v+' closes', await p.evaluate(([v,where])=>!document.getElementById(where==='side'?'side':'ovl').classList.contains('on'),[v,where]));
+  }
+  // 7. ошибки: страница и лог игры (падение такта пишется в лог как crash)
   ok('no page errors', errs.length===0, errs.slice(0,2).join(' | '));
+  ok('no crash in the game log', !(await p.evaluate(()=>LN.log.some(e=>e.code==='crash'))));
 }catch(e){ ok('scenario ran to the end', false, e.message.split('\n')[0]) }
   if(b) await b.close();
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.length);

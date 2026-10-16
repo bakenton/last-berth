@@ -1,58 +1,66 @@
-// v3.6.2 → v4.14: «Подтянуть тексты» на вкладке Земля, с подменённым опубликованным CSV.
-// Фикстуры (страница со ссылкой и CSV листа) сценарий создаёт сам. 01.10.2026: переписан на PASS/FAIL, добавлен oskip, aria-disabled.
+// v3.6.2 → v4.14 → v4.35: «Подтянуть тексты» в меню ≡, с подменённым опубликованным CSV.
+// Фикстуры (страница со ссылкой и CSV листа) сценарий создаёт сам. v4.35: кнопка — в меню ≡ (не на вкладке Земля); без ссылки — тост, не серая кнопка.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const fs=require('fs');
+const UI=require('./pw-ui.js');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,200):''));
-const DIR=(process.env.LB_WORK||require('path').resolve(__dirname,'..','work'))+'/', URL='https://sheet.test/pub?output=csv';
+const DIR=UI.WORK+'/', URL='https://sheet.test/pub?output=csv';
 (async()=>{ let b; try{
-  const page=fs.readFileSync(DIR+'long-night.html','utf8');
+  const page=fs.readFileSync(DIR+'page.html','utf8');
   if(!/id="lb-texts" data-url=""/.test(page)) throw new Error('lb-texts data-url not empty in the build');
   fs.writeFileSync(DIR+'long-night-url.html',page.replace('id="lb-texts" data-url=""','id="lb-texts" data-url="'+URL+'"'));
+  // v4.35 keys: u_year (верх, «YEAR»), u_yearsN (ночь, «{n} years»), u_tabEarth (вкладка); u_yearsN без {n} — отброшен, остаётся сборка
   const CSV=['table,key,en,ru,where,status,note',
-    'UI,day,Year-X,Год-X,header,live,changed in the sheet',
-    'UI,a_idle,Hulls idle at Earth.,Корпуса без дела.,advisor,live,lost its {n}: the build must keep its own line',
-    'UI,tabEarth,DRAFT,ЧЕРНОВИК,tab,draft,not live: must be ignored'].join('\n')+'\n';
+    'UI,u_year,Year-X,Год-X,header,live,changed in the sheet',
+    'UI,u_yearsN,years to the Night,лет до Ночи,header,live,lost its {n}: the build must keep its own line',
+    'UI,u_tabEarth,DRAFT,ЧЕРНОВИК,tab,draft,not live: must be ignored'].join('\n')+'\n';
   b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
-  const open=async(file,route)=>{
-    const p=await b.newPage({viewport:{width:1600,height:1000}});
-    p.errs=[]; p.on('pageerror',e=>p.errs.push(String(e)));
-    await p.route('**/fonts.googleapis.com/**',r=>r.fulfill({status:200,contentType:'text/css',body:''}));
+  // открыть страницу (file — сборка с ссылкой или без), язык EN, сид; route — подмена листа
+  const open=async(file,route,lang)=>{
+    const p=await UI.newPage(b,{file:file}); const U=UI.ui(p);
     if(route) await p.route('https://sheet.test/**',route);
-    await p.goto('file://'+DIR+file); await p.waitForTimeout(250);
-    p.tap=async sel=>{const L=p.locator(sel).first(); await L.scrollIntoViewIfNeeded({timeout:5000}); const bb=await L.boundingBox(); if(!bb) throw new Error('no '+sel); await p.mouse.click(bb.x+bb.width/2,bb.y+bb.height/2); await p.waitForTimeout(120)};
-    await p.tap('[data-lang="en"]'); await p.tap('[data-act="oskip"]'); await p.tap('[data-act="gskip"]'); await p.evaluate(()=>{LNU.shiftStop=false});
-    return p;
-  };
-  const block=p=>p.evaluate(()=>{const h=[...document.querySelectorAll('#railbody .blk h3')].find(x=>/^Texts|^Тексты/.test(x.textContent.trim())); if(!h) return null; const btn=h.parentElement.querySelector('[data-act="texts"]'); return {text:h.parentElement.textContent.replace(/\s+/g,' ').trim(),off:btn?btn.getAttribute('aria-disabled')==='true':null}});
-  const day=p=>p.textContent('[data-t="day"]');
-  // 1. опубликованная сборка: ссылки нет, ?dev нет → блока нет
-  let p=await open('long-night.html');
-  ok('release build: texts block hidden', (await block(p))===null);
-  ok('release build: no page errors', p.errs.length===0, p.errs[0]); await p.close();
-  // 2. ссылки нет, ?dev → блок есть, кнопка заблокирована
-  p=await open('long-night.html?dev'); const b2=await block(p);
-  ok('?dev: texts block shown', !!b2, b2&&b2.text);
-  ok('?dev without link: button aria-disabled', !!b2&&b2.off===true); await p.close();
+    await U.start(lang||'en'); await p.evaluate(()=>{ revealNight(window.LN); LNdraw() });
+    return {p:p,U:U} };
+  // меню ≡ открывается после закрытия большого окна (Ночь открыта сценарием)
+  const openMenu=async(U,p)=>{ await U.clear(); await U.tap('[data-act="pop"][data-v="menu"]'); return p.evaluate(()=>LNU.pop==='menu') };
+  const label=p=>p.evaluate(()=>(document.querySelector('#top .yr small')||{}).textContent||'');
+  const nightTxt=p=>p.evaluate(()=>(document.querySelector('#top .yr.night span')||{}).textContent||'');
+  const tabsTxt=p=>p.evaluate(()=>document.getElementById('tabs').textContent);
+  const toastTxt=p=>p.evaluate(()=>[...document.querySelectorAll('#toasts .toast')].map(t=>t.textContent.replace(/\s+/g,' ').trim()).join(' | '));
+  // 1. опубликованная сборка: ссылки нет, ?dev нет → кнопки в меню нет
+  let r=await open('page.html'); const m0=await openMenu(r.U,r.p);
+  ok('menu opens', m0);
+  ok('release build: texts button hidden', (await r.p.$('[data-act="texts"]'))===null);
+  ok('release build: no page errors', r.p.errs.length===0, r.p.errs[0]); await r.p.close();
+  // 2. ссылки нет, ?dev → кнопка есть, нажатие даёт тост «ссылки нет», тексты не меняются
+  r=await open('page.html?dev'); await openMenu(r.U,r.p);
+  ok('?dev: texts button shown', (await r.p.$('[data-act="texts"]'))!==null);
+  const labDev=await label(r.p);
+  await r.U.tap('[data-act="texts"]'); await r.p.waitForTimeout(200);
+  ok('?dev without link: press gives a toast, year label kept', (await toastTxt(r.p)).length>0&&(await label(r.p))===labDev, (await toastTxt(r.p))+' | '+(await label(r.p)));
+  await r.p.close();
   // 3. ссылка + лист отвечает → тексты заменены, битый плейсхолдер и черновик отброшены
-  p=await open('long-night-url.html', r=>r.fulfill({status:200,contentType:'text/csv; charset=utf-8',headers:{'access-control-allow-origin':'*'},body:CSV}));
-  const day0=await day(p); const b3=await block(p);
-  ok('link: button enabled', !!b3&&b3.off===false);
-  await p.tap('[data-act="texts"]'); await p.waitForTimeout(600);
-  const toastOk=(await p.textContent('#toast')||'').trim();
-  ok('sheet row applied (header year label)', (await day(p)).trim()==='Year-X', day0+' → '+(await day(p)));
-  ok('draft row ignored (Earth tab)', !/DRAFT/.test(await p.textContent('.tab[data-tab="earth"]')), await p.textContent('.tab[data-tab="earth"]'));
-  const adv=await p.textContent('#advisor');
-  ok('row that lost {n} falls back to the build', !/Hulls idle at Earth\./.test(await p.evaluate(()=>document.body.textContent)) && (!/idle at Earth/.test(adv)||/\d+ hull\(s\) idle at Earth/.test(adv)), (adv.match(/[^.]*idle at Earth[^.]*\./)||['(advisor has no idle line)'])[0]);
-  await p.tap('#b-lang'); await p.waitForTimeout(150);
-  ok('RU column applied', (await day(p)).trim()==='Год-X', await day(p));
-  ok('sheet case: no page errors', p.errs.length===0, p.errs[0]); await p.close();
+  r=await open('long-night-url.html', route=>route.fulfill({status:200,contentType:'text/csv; charset=utf-8',headers:{'access-control-allow-origin':'*'},body:CSV}));
+  const lab0=await label(r.p), night0=await nightTxt(r.p);
+  await openMenu(r.U,r.p);
+  ok('link: button shown', (await r.p.$('[data-act="texts"]'))!==null);
+  await r.U.tap('[data-act="texts"]'); await r.p.waitForTimeout(800);
+  const toastOk=await toastTxt(r.p);
+  ok('sheet row applied (header year label)', (await label(r.p)).trim()==='Year-X', lab0+' → '+(await label(r.p)));
+  ok('draft row ignored (Earth tab)', !/DRAFT/.test(await tabsTxt(r.p)), (await tabsTxt(r.p)).slice(0,80));
+  ok('row that lost {n} falls back to the build', /\d/.test(await nightTxt(r.p)), night0+' → '+(await nightTxt(r.p)));
+  if(await r.p.evaluate(()=>LNU.pop!=='menu')) await openMenu(r.U,r.p);
+  await r.U.tap('[data-act="lang"]'); await r.p.waitForTimeout(150);
+  ok('RU column applied', (await label(r.p)).trim()==='Год-X', await label(r.p));
+  ok('sheet case: no page errors', r.p.errs.length===0, r.p.errs[0]); await r.p.close();
   // 4. ссылка есть, лист недоступен → тост об ошибке, встроенные тексты на месте
-  p=await open('long-night-url.html', r=>r.abort());
-  await p.tap('[data-act="texts"]'); await p.waitForTimeout(700);
-  const toastFail=(await p.textContent('#toast')||'').trim();
-  ok('unreachable sheet: built-in texts stay', (await day(p)).trim()===day0.trim(), await day(p));
+  r=await open('long-night-url.html', route=>route.abort());
+  await openMenu(r.U,r.p);
+  await r.U.tap('[data-act="texts"]'); await r.p.waitForTimeout(900);
+  const toastFail=await toastTxt(r.p);
+  ok('unreachable sheet: built-in texts stay', (await label(r.p)).trim()===lab0.trim(), await label(r.p));
   ok('unreachable sheet: different message than success', toastFail.length>0&&toastFail!==toastOk, toastOk+' | '+toastFail);
-  ok('unreachable case: no page errors', p.errs.length===0, p.errs[0]); await p.close();
+  ok('unreachable case: no page errors', r.p.errs.length===0, r.p.errs[0]); await r.p.close();
 }catch(e){ ok('scenario ran to the end', false, e.message.split('\n')[0]) }
   if(b) await b.close();
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.length);
