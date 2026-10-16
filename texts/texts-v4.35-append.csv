@@ -1,0 +1,280 @@
+UI,u_year,Year,Год,v4.35 interface,live,new
+UI,u_night,Night,Ночь,v4.35 interface,live,new
+UI,u_yearsN,{n} {yr},{n} {yr},v4.35 interface,live,new
+UI,u_needs,Needs a decision,Нужно решение,v4.35 interface,live,new
+UI,u_paused,Paused,Пауза,v4.35 interface,live,new
+UI,u_skip,Skip,Пропуск,v4.35 interface,live,new
+UI,u_perYr,/yr,/год,v4.35 interface,live,new
+UI,u_ends,ends ≈ {y},кончится ≈ {y},v4.35 interface,live,new
+UI,u_fit,Fit,Вся,v4.35 interface,live,new
+UI,u_tabEarth,Earth,Земля,v4.35 interface,live,new
+UI,u_tabWorlds,Worlds,Миры,v4.35 interface,live,new
+UI,u_tabTech,Tech,Техника,v4.35 interface,live,new
+UI,u_tabYard,Yard,Верфь,v4.35 interface,live,new
+UI,u_tabFleet,Fleet,Флот,v4.35 interface,live,new
+UI,u_tabArk,Ark,Ковчег,v4.35 interface,live,new
+UI,u_freeHull,free hull,свободное,v4.35 interface,live,new
+UI,u_moreYard,+ {n} more in the yard,+ ещё {n} на верфи,v4.35 interface,live,new
+UI,u_timePaused,Time is paused,Время стоит,v4.35 interface,live,new
+UI,u_genPaused,Generation {g} · time is paused,Поколение {g} · время стоит,v4.35 interface,live,new
+UI,u_flHungry,Earth is starving,Земля голодает,v4.35 interface,live,new
+UI,u_flFoodNight,"Rations end ≈ {y}, before the Night","Рационы кончатся ≈ {y}, до Ночи",v4.35 interface,live,new
+UI,u_flFood,Rations end ≈ {y},Рационы кончатся ≈ {y},v4.35 interface,live,new
+UI,u_flMetal,Metal is running out,Металл кончается,v4.35 interface,live,new
+UI,u_flFuel,Fuel is low,Топлива мало,v4.35 interface,live,new
+UI,u_flYard,{n} being built,строится: {n},v4.35 interface,live,new
+UI,u_flCrew,Waiting for crews: {n},Ждут экипаж: {n},v4.35 interface,live,new
+UI,u_flIdle,Idle at the pier: {n},У причала без дела: {n},v4.35 interface,live,new
+UI,u_flMutiny,Crews refusing: {n},Отказ экипажей: {n},v4.35 interface,live,new
+UI,u_flArkNone,No ark level paid,Ни один уровень ковчега не оплачен,v4.35 interface,live,new
+UI,u_flArkDrive,The ark drive is not ready,Двигатель ковчега не готов,v4.35 interface,live,new
+UI,u_flConvoy,Convoy short: {n},Конвою не хватает: {n},v4.35 interface,live,new
+UI,u_flConvoyOk,Convoy ready,Конвой собран,v4.35 interface,live,new
+UI,u_flSurvey,Ring {n} can be charted,Можно нанести кольцо {n},v4.35 interface,live,new
+UI,u_flDrive,The drive programme can start,Можно запустить программу двигателя,v4.35 interface,live,new
+UI,u_home,Home,Дом,v4.35 interface,live,new
+UI,u_peopleW,people,человек,v4.35 interface,live,new
+UI,u_foodUntil,Rations last until,Рационов хватит до,v4.35 interface,live,new
+UI,u_foodLong,past the forecast,дальше прогноза,v4.35 interface,live,new
+UI,u_foodPastNight,past the Night,дольше Ночи,v4.35 interface,live,new
+UI,u_liveWorlds,Live worlds,Живых миров,v4.35 interface,live,new
+UI,u_crossings,Crossings,Переходы,v4.35 interface,live,new
+UI,u_onHulls,People on hulls,Людей на судах,v4.35 interface,live,new
+UI,u_onWorlds,People on the worlds,Людей на мирах,v4.35 interface,live,new
+UI,u_alHungry,Earth is out of rations — people are dying.,У Земли кончились рационы — люди умирают.,v4.35 interface,live,new
+UI,u_alFoodNight,Rations end {n} years before the Night.,Рационы кончатся за {n} лет до Ночи.,v4.35 interface,live,new
+UI,u_alFood,Rations end ≈ {y}.,Рационы кончатся ≈ {y}.,v4.35 interface,live,new
+UI,u_alCold,Earth is out of metal.,У Земли кончился металл.,v4.35 interface,live,new
+UI,u_alCrisis,Crisis: Earth burns twice its {r} — {n} years left.,Кризис: Земля жжёт вдвое больше ({r}) — ещё {n} лет.,v4.35 interface,live,new
+UI,u_burns,Earth burns each year,Земля сжигает за год,v4.35 interface,live,new
+UI,u_continue,Continue the saved run · year {y},Продолжить сохранённый забег · год {y},v4.35 interface,live,new
+UI,u_continueBtn,Continue,Дальше,v4.35 interface,live,new
+UI,u_nightDrive,No drive we have can outrun the collapse. The ark needs a <b>Generation {g}</b> drive — the Ark tab keeps count.,Ни один наш двигатель не уйдёт от схлопывания. Ковчегу нужен двигатель <b>поколения {g}</b> — счёт ведёт вкладка «Ковчег».,v4.35 interface,live,new
+UI,u_shiftCap,Shift report,Отчёт смены,v4.35 interface,live,new
+UI,u_open,Open,Открыть,v4.35 interface,live,new
+UI,u_noFreeBody,Every world on the charted rings is settled or spent. Chart the next ring in the Tech tab — without new worlds the colonies run dry and Earth starves.,"Все миры нанесённых колец заселены или выработаны. Нанесите следующее кольцо во вкладке «Техника» — без новых миров колонии иссякнут, а Земля оголодает.",v4.35 interface,live,new
+UI,u_ringBody,The next ring can be charted: Earth has the worlds and the stores for it. The order is in the Tech tab.,Следующее кольцо можно нанести: у Земли хватает миров и запасов. Приказ — во вкладке «Техника».,v4.35 interface,live,new
+UI,u_toTech,To Tech,К технике,v4.35 interface,live,new
+UI,u_alertFoodBody,Earth has {n} years of rations and no farm on a line. Settle a farm and put a hull on its line.,У Земли рационов на {n} лет и ни одной фермы на линии. Заселите ферму и поставьте судно на её линию.,v4.35 interface,live,new
+UI,u_worksBody,{p} makes parts. The drive programme runs in the Tech tab — {n} parts buy the next generation of hulls.,{p} делает детали. Программа двигателя — во вкладке «Техника»: {n} деталей дают следующее поколение судов.,v4.35 interface,live,new
+UI,u_stYard,in the yard · {n} {yr} → {p},на верфи · {n} {yr} → {p},v4.35 interface,live,new
+UI,u_stMissing,overdue · {n} {yr},опаздывает · {n} {yr},v4.35 interface,live,new
+UI,u_stMutiny,crew refuses to fly,экипаж отказывается лететь,v4.35 interface,live,new
+UI,u_stSettlers,{n} settlers → {p} · {t} {yrt},{n} поселенцев → {p} · {t} {yrt},v4.35 interface,live,new
+UI,u_stEvacHome,{n} people → Earth · {t} {yrt},{n} человек → Земля · {t} {yrt},v4.35 interface,live,new
+UI,u_stEvacOut,to lift {p} · {t} {yrt},за людьми на {p} · {t} {yrt},v4.35 interface,live,new
+UI,u_stSearch,searching near {p} · {t} {yrt},поиск у {p} · {t} {yrt},v4.35 interface,live,new
+UI,u_stKit,carries tier {k} machines · {t} {yrt},везёт технику яруса {k} · {t} {yrt},v4.35 interface,live,new
+UI,u_stHome,Earth · {t} {yrt},Земля · {t} {yrt},v4.35 interface,live,new
+UI,u_stOut,{p} · {t} {yrt},{p} · {t} {yrt},v4.35 interface,live,new
+UI,u_stCrew,waits for a crew,ждёт экипаж,v4.35 interface,live,new
+UI,u_stReserve,ark reserve,резерв ковчега,v4.35 interface,live,new
+UI,u_stAtEarth,unloading at Earth,разгрузка на Земле,v4.35 interface,live,new
+UI,u_stPend,takes the {p} line,встаёт на линию {p},v4.35 interface,live,new
+UI,u_stFree,free at the pier,свободно у причала,v4.35 interface,live,new
+UI,u_stLoading,loading at {p},погрузка на {p},v4.35 interface,live,new
+UI,u_stMoveTo,moves to {p} on docking,перейдёт на {p} у причала,v4.35 interface,live,new
+UI,u_ringN,ring {n},кольцо {n},v4.35 interface,live,new
+UI,u_kMine,Mine,Рудник,v4.35 interface,live,new
+UI,u_kFarm,Farm,Ферма,v4.35 interface,live,new
+UI,u_kWell,Well,Скважина,v4.35 interface,live,new
+UI,u_kWorks,Works,Завод,v4.35 interface,live,new
+UI,u_calm,calm,тихо,v4.35 interface,live,new
+UI,u_evacW_wait,Courier {n} is home in {l} {yrl}; or build one in the Yard.,Курьер {n} будет дома через {l} {yrl}; или заложите новый на верфи.,v4.35 interface,live,new
+UI,u_evacW_orderC,"Build a courier in the Yard, or take one off a line.",Заложите курьер на верфи или снимите один с линии.,v4.35 interface,live,new
+UI,u_evacLate,Evacuate · too late,Эвакуация · поздно,v4.35 interface,live,new
+UI,u_evacuate,Evacuate,Эвакуировать,v4.35 interface,live,new
+UI,u_evacWho,{h} · all {k} · {t} {yrt} out,{h} · все {k} · лететь {t} {yrt},v4.35 interface,live,new
+UI,u_evacShort,{h} holds {c} of {k} — {l} stay,{h} берёт {c} из {k} — {l} останутся,v4.35 interface,live,new
+UI,u_lastLift,Last lift,Последний рейс,v4.35 interface,live,new
+UI,u_liftCut,missed,упущен,v4.35 interface,live,new
+UI,u_liftNone,no courier makes it,ни один курьер не успеет,v4.35 interface,live,new
+UI,u_machines,Machines,Техника,v4.35 interface,live,new
+UI,u_tierRun,tier {t} · running,ярус {t} · работает,v4.35 interface,live,new
+UI,u_tierStand,tier {t} · standing,ярус {t} · стоит,v4.35 interface,live,new
+UI,u_tierNone,none,нет,v4.35 interface,live,new
+UI,u_fuelOnSite,Fuel on site,Топливо на месте,v4.35 interface,live,new
+UI,u_kitWaiting,Tier {t} kit ({w}) waits on the pier for the next hull of this line.,Комплект яруса {t} ({w}) ждёт на причале следующее судно этой линии.,v4.35 interface,live,new
+UI,u_kitTooBig,Tier {t} kit weighs {w}; the biggest hold on this line is {h}. Put a bigger hull on the line.,Комплект яруса {t} весит {w}; самый большой трюм на линии — {h}. Поставьте на линию судно крупнее.,v4.35 interface,live,new
+UI,u_kitGate,Machines open with Generation {g} hulls.,Техника открывается с судами поколения {g}.,v4.35 interface,live,new
+UI,u_kitGain,Tier {t}: {x} → {y} /yr · burns {f} fuel /yr,Ярус {t}: {x} → {y} /год · жжёт {f} топлива /год,v4.35 interface,live,new
+UI,u_kitOrder,Order tier {t},Заказать ярус {t},v4.35 interface,live,new
+UI,u_kitHold,Needs a hold of {w} on the line — the biggest is {h}.,Нужен трюм {w} на линии — самый большой {h}.,v4.35 interface,live,new
+UI,u_inTransit,in transit,в пути,v4.35 interface,live,new
+UI,u_settlersWay,Settlers on the way,Поселенцы в пути,v4.35 interface,live,new
+UI,u_peopleN,{n} people,{n} человек,v4.35 interface,live,new
+UI,u_landsIn,lands in {n} {yr},сядут через {n} {yr},v4.35 interface,live,new
+UI,u_world,World,Мир,v4.35 interface,live,new
+UI,u_makes,Makes,Делает,v4.35 interface,live,new
+UI,u_deposit,Deposit,Залежь,v4.35 interface,live,new
+UI,u_crossing,Crossing,Переход,v4.35 interface,live,new
+UI,u_oneWay,{n} {yr} one way,{n} {yr} в одну сторону,v4.35 interface,live,new
+UI,u_sector,Sector,Доля,v4.35 interface,live,new
+UI,u_found,Found a colony,Основать колонию,v4.35 interface,live,new
+UI,u_settlers,Settlers,Поселенцы,v4.35 interface,live,new
+UI,u_whoGoes,Who goes,Кто летит,v4.35 interface,live,new
+UI,u_whoLine,hold {c} · arrives in {n} {yr},трюм {c} · долетит за {n} {yr},v4.35 interface,live,new
+UI,u_noneReach,No free hull at Earth reaches ring {n}.,Ни одно свободное судно у Земли не долетит до кольца {n}.,v4.35 interface,live,new
+UI,u_noFree,No free hull at Earth.,У Земли нет свободных судов.,v4.35 interface,live,new
+UI,u_price,Price,Цена,v4.35 interface,live,new
+UI,u_sendSettlers,Send settlers,Отправить поселенцев,v4.35 interface,live,new
+UI,u_free,free,свободен,v4.35 interface,live,new
+UI,u_workedOut,worked out,выработан,v4.35 interface,live,new
+UI,u_seamDead,The seam is dead,Жила мертва,v4.35 interface,live,new
+UI,u_eats,This world eats,Этот мир ест,v4.35 interface,live,new
+UI,u_worksIdle,The works stand — no metal or rations on site.,Завод стоит — на месте нет металла или рационов.,v4.35 interface,live,new
+UI,u_worksLow,Metal or rations for {n} {yr} — then the works stop.,Металла или рационов на {n} {yr} — потом завод встанет.,v4.35 interface,live,new
+UI,u_onSurface,On the surface,На поверхности,v4.35 interface,live,new
+UI,u_lineCarries,Line carries,Линия увозит,v4.35 interface,live,new
+UI,u_worldGives,World gives,Мир даёт,v4.35 interface,live,new
+UI,u_dryShort,worked out,выработана,v4.35 interface,live,new
+UI,u_dryLead,"The seam is dead: {n} {r} still on the surface. Haul it home, then evacuate.","Жила мертва: на поверхности ещё {n} ({r}). Вывезите, потом эвакуируйте.",v4.35 interface,live,new
+UI,u_onLine,On this line,На этой линии,v4.35 interface,live,new
+UI,u_hullsN,hulls · {n},судов · {n},v4.35 interface,live,new
+UI,u_move,Move,Перевести,v4.35 interface,live,new
+UI,u_takeOff,Take off,Снять,v4.35 interface,live,new
+UI,u_noHulls,No hulls on this line — nothing comes home from here.,На линии нет судов — отсюда ничего не приходит.,v4.35 interface,live,new
+UI,u_addHull,Add a hull,Добавить судно,v4.35 interface,live,new
+UI,u_segFree,Free · {n},Свободные · {n},v4.35 interface,live,new
+UI,u_segOther,Other lines · {n},С других линий · {n},v4.35 interface,live,new
+UI,u_roundTrip,round trip {n} {yr},рейс туда-обратно {n} {yr},v4.35 interface,live,new
+UI,u_fromLine,from {p},с линии {p},v4.35 interface,live,new
+UI,u_tooShort,reaches ring {n} — too short,долетает до кольца {n} — мало,v4.35 interface,live,new
+UI,u_assign,Assign,Назначить,v4.35 interface,live,new
+UI,u_moveHere,Move here,Перевести сюда,v4.35 interface,live,new
+UI,u_noFreePier,No free hulls at the pier. Order one below or take one from another line.,У причала нет свободных судов. Закажите ниже или заберите с другой линии.,v4.35 interface,live,new
+UI,u_noOther,No hulls on other lines.,На других линиях судов нет.,v4.35 interface,live,new
+UI,u_orderNew,Or order a new one,Или заказать новое,v4.35 interface,live,new
+UI,u_yardGen,Yard · gen {g},Верфь · пок. {g},v4.35 interface,live,new
+UI,u_needLive,needs {n} live worlds,нужно живых миров: {n},v4.35 interface,live,new
+UI,u_buildYrs,Build · {n} {yr},Строить · {n} {yr},v4.35 interface,live,new
+UI,u_moveTo,Move {h} to,Перевести {h} на,v4.35 interface,live,new
+UI,u_sendTo,Send {h} to,Отправить {h} на,v4.35 interface,live,new
+UI,u_outReach,out of reach,не долетит,v4.35 interface,live,new
+UI,u_noWorlds,No live world to go to.,"Нет живого мира, куда отправить.",v4.35 interface,live,new
+UI,u_keep,Keep it where it is,Оставить как есть,v4.35 interface,live,new
+UI,u_inYards,In the yards,На верфях,v4.35 interface,live,new
+UI,u_lineOf,{p} line,линия {p},v4.35 interface,live,new
+UI,u_yardsIdle,The yards are idle.,Верфи стоят.,v4.35 interface,live,new
+UI,u_buildFree,Build a free hull,Построить свободное судно,v4.35 interface,live,new
+UI,u_atPier,At the pier,У причала,v4.35 interface,live,new
+UI,u_release,Release,Вернуть,v4.35 interface,live,new
+UI,u_reserve,Reserve for ark,В резерв ковчега,v4.35 interface,live,new
+UI,u_scrapSure,Confirm scrap,Точно в слом,v4.35 interface,live,new
+UI,u_scrap,Scrap,В слом,v4.35 interface,live,new
+UI,u_pierEmpty,Nobody free at the pier.,У причала свободных нет.,v4.35 interface,live,new
+UI,u_fl_all,All {n},Все {n},v4.35 interface,live,new
+UI,u_fl_free,Free {n},Свободные {n},v4.35 interface,live,new
+UI,u_fl_lines,On lines {n},На линиях {n},v4.35 interface,live,new
+UI,u_fl_yards,In yards {n},На верфях {n},v4.35 interface,live,new
+UI,u_fl_away,Other {n},Прочие {n},v4.35 interface,live,new
+UI,u_send,Send,Отправить,v4.35 interface,live,new
+UI,u_search,Search,Искать,v4.35 interface,live,new
+UI,u_none,None.,Нет.,v4.35 interface,live,new
+UI,u_ws_dead,evacuate,эвакуировать,v4.35 interface,live,new
+UI,u_ws_cut,cut off,отрезан,v4.35 interface,live,new
+UI,u_ws_starve,works stand,завод стоит,v4.35 interface,live,new
+UI,u_ws_noline,no hulls,нет судов,v4.35 interface,live,new
+UI,u_ws_half,line carries less,линия не успевает,v4.35 interface,live,new
+UI,u_ws_dry,seam dead,жила мертва,v4.35 interface,live,new
+UI,u_ws_ok,—,—,v4.35 interface,live,new
+UI,u_ws_settling,settlers on the way,поселенцы в пути,v4.35 interface,live,new
+UI,u_ws_free,free,свободен,v4.35 interface,live,new
+UI,u_liveFree,{l} live · {f} free,{l} живых · {f} свободных,v4.35 interface,live,new
+UI,u_thWorld,World,Мир,v4.35 interface,live,new
+UI,u_thRing,Ring,Кольцо,v4.35 interface,live,new
+UI,u_thLeft,Left,Осталось,v4.35 interface,live,new
+UI,u_thHulls,Hulls,Суда,v4.35 interface,live,new
+UI,u_thState,State,Состояние,v4.35 interface,live,new
+UI,u_cellIs,One cell = {k} worlds · {n} of {m},Одна клетка = {k} миров · {n} из {m},v4.35 interface,live,new
+UI,u_noWorks,No works world yet — parts come only from works.,Заводов пока нет — детали делают только заводы.,v4.35 interface,live,new
+UI,u_hullGen,Hull generation,Поколение судов,v4.35 interface,live,new
+UI,u_driveAt,programme at {p},программа на {p},v4.35 interface,live,new
+UI,u_step1,1 · Worlds ever settled · {n} of {m},1 · Заселено миров за всё время · {n} из {m},v4.35 interface,live,new
+UI,u_step2,2 · Parts for the programme · {n} of {m},2 · Деталей на программу · {n} из {m},v4.35 interface,live,new
+UI,u_runAt,Run the programme at,Где вести программу,v4.35 interface,live,new
+UI,u_start,Start the programme,Запустить программу,v4.35 interface,live,new
+UI,u_startMore,Start · settle {n} more,Запуск · заселить ещё {n},v4.35 interface,live,new
+UI,u_genGives,Generation {g} gives,Поколение {g} даёт,v4.35 interface,live,new
+UI,u_hold,Hold,Трюм,v4.35 interface,live,new
+UI,u_speedH,Speed,Скорость,v4.35 interface,live,new
+UI,u_reachH,Reach,Дальность,v4.35 interface,live,new
+UI,u_arkWakeNext,The ark: {a}% wake → {b}%,Ковчег: проснутся {a}% → {b}%,v4.35 interface,live,new
+UI,u_rings,Rings,Кольца,v4.35 interface,live,new
+UI,u_charted,{n} charted,нанесено {n},v4.35 interface,live,new
+UI,u_ringNext,Ring {s},Кольцо {s},v4.35 interface,live,new
+UI,u_settledOf,Worlds ever settled: {n} of {m},Заселено миров: {n} из {m},v4.35 interface,live,new
+UI,u_survey,Survey,Разведать,v4.35 interface,live,new
+UI,u_surveyMore,Survey · settle {n} more,Разведка · заселить ещё {n},v4.35 interface,live,new
+UI,u_beyond,Free worlds past ring {n}: {k} — generation {g} reaches them.,Свободных миров дальше кольца {n}: {k} — туда долетит поколение {g}.,v4.35 interface,live,new
+UI,u_tech,Technology,Технологии,v4.35 interface,live,new
+UI,u_arkReady,Gen {g} · ready,пок. {g} · готов,v4.35 interface,live,new
+UI,u_arkBy,Gen {g} · ≈ {y},пок. {g} · ≈ {y},v4.35 interface,live,new
+UI,u_arkNeedW,"Gen {g} · needs {n} worlds settled, {r} now","пок. {g} · нужно миров {n}, сейчас {r}",v4.35 interface,live,new
+UI,u_arkNoHost,Gen {g} · no works can host the programme,пок. {g} · нет завода для программы,v4.35 interface,live,new
+UI,u_arkStall,Gen {g} · no parts coming in,пок. {g} · детали не идут,v4.35 interface,live,new
+UI,u_noDate,The Night has no date yet,У Ночи ещё нет даты,v4.35 interface,live,new
+UI,u_noDateHint,The survey of ring {n} brings the readings — or year {y} comes regardless.,Даты ждут от разведки кольца {n} — или наступит {y} год.,v4.35 interface,live,new
+UI,u_theNight,The Night,Ночь,v4.35 interface,live,new
+UI,u_arkDrive,Ark drive,Двигатель ковчега,v4.35 interface,live,new
+UI,u_wake,Wake,Проснутся,v4.35 interface,live,new
+UI,u_withGen,With gen {g} · {y},С пок. {g} · {y},v4.35 interface,live,new
+UI,u_levels,Levels,Уровни,v4.35 interface,live,new
+UI,u_takesAlong,takes along,увезёт,v4.35 interface,live,new
+UI,u_paid,Paid,Оплачен,v4.35 interface,live,new
+UI,u_buyLv,Buy level {l},Купить уровень {l},v4.35 interface,live,new
+UI,u_convoy,Convoy · {a} · {b} · {c},Конвой · {a} · {b} · {c},v4.35 interface,live,new
+UI,u_genPlus,gen {g}+,пок. {g}+,v4.35 interface,live,new
+UI,u_empty,Empty,Пусто,v4.35 interface,live,new
+UI,u_convoyHint,"Hulls of generation {g} or newer, docked at Earth on the day. Hold them with «Reserve for ark» in the Yard.",Суда поколения {g} и новее у причала Земли в тот день. Придержите их кнопкой «В резерв ковчега» на верфи.,v4.35 interface,live,new
+UI,u_toYard,To the Yard,На верфь,v4.35 interface,live,new
+UI,u_ifToday,If the Night came today,Если бы Ночь пришла сегодня,v4.35 interface,live,new
+UI,u_arkStays,The ark stays,Ковчег остаётся,v4.35 interface,live,new
+UI,u_arkSails,The ark sails,Ковчег уходит,v4.35 interface,live,new
+UI,u_vNoLevel,No level of the ark is paid.,Ни один уровень ковчега не оплачен.,v4.35 interface,live,new
+UI,u_vNoDrive,The generation {g} drive is not ready.,Двигатель поколения {g} не готов.,v4.35 interface,live,new
+UI,u_vConvoy,The convoy is short: {s}.,Конвою не хватает: {s}.,v4.35 interface,live,new
+UI,u_vSails,{s} sail · {w} wake · {l} stay behind,{s} улетают · {w} проснутся · {l} остаются,v4.35 interface,live,new
+UI,u_vBoard,{s} aboard,{s} на борту,v4.35 interface,live,new
+UI,u_aDead,{w}: the seam is dead,{w}: жила мертва,v4.35 interface,live,new
+UI,u_aDeadC,{n} people are still there,Там ещё {n} человек,v4.35 interface,live,new
+UI,u_aCut,{w} is cut off,{w} отрезан,v4.35 interface,live,new
+UI,u_aCutC,{n} people stay — no courier gets home in time,{n} человек останутся — ни один курьер не успеет домой,v4.35 interface,live,new
+UI,u_aStarve,"{w}: the works stand, no {r}","{w}: завод стоит, нет: {r}",v4.35 interface,live,new
+UI,u_aStarveC,No parts come from here,Детали отсюда не идут,v4.35 interface,live,new
+UI,u_aLift,{w}: last lift in {n} years ({y}),{w}: последний рейс через {n} лет ({y}),v4.35 interface,live,new
+UI,u_aLiftC,Then {n} people stay for the Night,Потом {n} человек останутся в Ночь,v4.35 interface,live,new
+UI,u_aNoLine,{w}: no hulls on the line,{w}: на линии нет судов,v4.35 interface,live,new
+UI,u_aNoLineC,Nothing comes home from here,Отсюда ничего не приходит,v4.35 interface,live,new
+UI,u_aHalf,{w}: {c} of {m} {r} a year reach Earth,{w}: до Земли доходит {c} из {m} ({r}) в год,v4.35 interface,live,new
+UI,u_aHalfC,The rest piles up on the surface — {n} now,Остальное копится на поверхности — уже {n},v4.35 interface,live,new
+UI,u_aDry,"{w}: seam dead, {n} {r} on the surface","{w}: жила мертва, на поверхности {n} ({r})",v4.35 interface,live,new
+UI,u_aDryC,"Haul it home, then evacuate","Вывезите, потом эвакуируйте",v4.35 interface,live,new
+UI,u_aKit,"{w}: tier {t} machines weigh {n}, the line holds {h}","{w}: техника яруса {t} весит {n}, линия берёт {h}",v4.35 interface,live,new
+UI,u_aKitC,They wait until a bigger hull is on the line,"Ждёт, пока на линии не будет судна крупнее",v4.35 interface,live,new
+UI,u_aKitFuel,{w}: the machines stand — no fuel,{w}: техника стоит — нет топлива,v4.35 interface,live,new
+UI,u_aKitFuelC,The world digs by hand,Мир копает вручную,v4.35 interface,live,new
+UI,u_fixEvac,Evacuate,Эвакуировать,v4.35 interface,live,new
+UI,u_fixSee,See,Смотреть,v4.35 interface,live,new
+UI,u_fixAdd,Add a hull,Добавить судно,v4.35 interface,live,new
+UI,u_fixOrder,Order a hull,Заказать судно,v4.35 interface,live,new
+UI,u_advNone,No world needs a decision now.,Сейчас ни один мир не ждёт решения.,v4.35 interface,live,new
+UI,u_mLang,Language,Язык,v4.35 interface,live,new
+UI,u_mSound,Sound,Звук,v4.35 interface,live,new
+UI,u_on,on,вкл,v4.35 interface,live,new
+UI,u_off,off,выкл,v4.35 interface,live,new
+UI,u_mSave,Save the game to a file,Сохранить игру в файл,v4.35 interface,live,new
+UI,u_mLoad,Load a game from a file,Загрузить игру из файла,v4.35 interface,live,new
+UI,u_mExport,Export the run log,Выгрузить лог забега,v4.35 interface,live,new
+UI,u_skipped,Skipped {n} years — year {y}.,Пропущено лет: {n} — год {y}.,v4.35 interface,live,new
+MSG,ok_savegame,Game saved to a file.,Игра сохранена в файл.,v4.35 interface,live,new
+MSG,ok_loadgame,Game loaded — year {y}. Time is paused.,Игра загружена — год {y}. Время стоит.,v4.35 interface,live,new
+MSG,loadfail,That file is not a saved game.,Этот файл — не сохранённая игра.,v4.35 interface,live,new
+MSG,nohost,No works world with {n} people to host the programme.,"Нет завода с {n} людьми, где вести программу.",v4.35 interface,live,new
+MSG,ok_moveDock,Hull {n} moves to {p} when it docks at Earth.,"Судно {n} перейдёт на {p}, когда причалит к Земле.",v4.35 interface,live,new
+MSG,ok_search,A hull goes to look for hull {n}.,Судно ушло искать судно {n}.,v4.35 interface,live,new
+UI,u_newGenBody,Order them in the Yard or under a world's line.,Заказывайте их на верфи или под линию мира.,v4.35 interface,live,new
+UI,u_resLeft,Hull {n} left the ark reserve.,Судно {n} вышло из резерва ковчега.,v4.35 interface,live,new
+UI,u_evacW_line,Courier {n} is at the pier on a line — take it off the line.,"Курьер {n} у причала, но на линии — снимите его с линии.",v4.35 interface,live,new
+UI,u_yShort,{n} y,{n} л.,v4.35 interface,live,new
+MSG,ok_assignWait,Hull {n} is on the {p} line but waits at the pier: {w},"Судно {n} на линии {p}, но ждёт у причала: {w}",v4.35 interface,live,new
