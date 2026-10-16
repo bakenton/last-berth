@@ -467,7 +467,7 @@ UI	tut_m17	Space shifts by sector. What is on, and for how long — in this bar.
 UI	tut_m16	Ring 2 is charted. Generation I couriers reach it; each generation flies one ring farther.	Кольцо 2 нанесено. Курьеры I поколения туда долетают; каждое поколение летит на кольцо дальше.
 UI	tut_m18	The year of the Night stays up here. Big news stops time and comes one window at a time.	Год Ночи — здесь, наверху. Большие новости останавливают время и приходят по одному окну.
 UI	tut_m19	The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation {g} or newer, at the pier that day.	Ковчег уходит в Ночь с теми, кто на борту. Нужны оплаченные уровни и конвой — суда {g} поколения и новее у причала в тот день.
-UI	tut_m7	Time stops while Earth, the Yard or the Ark is open.	Пока открыты Земля, Верфь или Ковчег, время стоит.
+UI	tut_m7	Time stops while this tab is open.	Пока открыта эта вкладка, время стоит.
 UI	tut_m13	Machines make a world give more. They burn its fuel and ride out on the line's next hull.	Техника поднимает выработку мира. Жжёт его топливо и уходит со следующим судном линии.
 UI	tut_m20	Hold hulls for the convoy with RESERVE FOR ARK in the Yard.	Суда для конвоя придерживайте кнопкой «В резерв ковчега» во вкладке ВЕРФЬ.
 UI	tut_m21	Last lift: the year a courier must leave to bring everyone home before the Night.	Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.

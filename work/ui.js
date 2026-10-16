@@ -1130,7 +1130,7 @@ function winWorld(pid){
     var hs=assignable(pid), who=hs.filter(function(s){ return s.id===U.who[pid] })[0];
     if(!who&&hs.length){ who=hs.slice().sort(function(a,b){ return (a.reserve?1:0)-(b.reserve?1:0)||foundParty(G,b,pid)-foundParty(G,a,pid)||legDays(G,'earth',pid,a)-legDays(G,'earth',pid,b) })[0]; U.who[pid]=who.id }
     var party=who?foundParty(G,who,pid):0, fuel=sendFuel(p);
-    L0+=sec(esc(T('u_world')))+(p.kind==='works'?row(esc(T('u_makes')),esc(T('parts')),C.parts):row(esc(T('u_deposit')),resIc(dep,13)+num(G.reserves[pid]),KCOL[p.kind]));
+    L0+=sec(esc(T('u_world')))+(!can(dep)?'':p.kind==='works'?row(esc(T('u_makes')),esc(T('parts')),C.parts):row(esc(T('u_deposit')),resIc(dep,13)+num(G.reserves[pid]),KCOL[p.kind]));   // a resource the player has not met yet is not shown
     L0+=row(esc(T('u_crossing')),esc(fill(T('u_oneWay'),{n:legDays(G,'earth',pid,who||{hull:currentHull(G,'courier')})})))+row(esc(T('u_sector')),esc(lobeTxt(p)));
     L0+=sec(esc(T('u_found')))+row(resIc('people',13)+esc(T('u_settlers')),esc(fill(T('u_peopleN'),{n:party})),C.people)+'<div class="lab">'+esc(T('u_whoGoes'))+'</div>';
     if(hs.length) L0+=hs.map(function(s){ return '<button type="button" class="radio'+(who===s?' on':'')+'" data-act="who" data-p="'+pid+'" data-s="'+s.id+'"><i></i>'+shipIc(shipClass(s),26)+genB(hullGen(s))+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b><span>'+(s.reserve?'<em style="color:'+C.ark+';font-style:normal">'+esc(T('u_stReserve'))+'</em> · ':'')+esc(fill(T('u_whoLine'),{c:num(s.cap),n:legDays(G,'earth',pid,s)}))+'</span></button>' }).join('');
