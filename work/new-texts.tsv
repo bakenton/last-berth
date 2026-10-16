@@ -230,7 +230,7 @@ UI	u_stSettlers	{n} settlers → {p} · {t} {yrt}	{n} поселенцев → {
 UI	u_stEvacHome	{n} people → Earth · {t} {yrt}	{n} человек → Земля · {t} {yrt}
 UI	u_stEvacOut	to lift {p} · {t} {yrt}	за людьми на {p} · {t} {yrt}
 UI	u_stSearch	searching near {p} · {t} {yrt}	поиск у {p} · {t} {yrt}
-UI	u_stKit	carries tier {t} machines · {t} {yrt}	везёт технику яруса {t} · {t} {yrt}
+UI	u_stKit	carries tier {k} machines · {t} {yrt}	везёт технику яруса {k} · {t} {yrt}
 UI	u_stHome	Earth · {t} {yrt}	Земля · {t} {yrt}
 UI	u_stOut	{p} · {t} {yrt}	{p} · {t} {yrt}
 UI	u_stCrew	waits for a crew	ждёт экипаж

@@ -558,6 +558,7 @@ function drawMap(){
   var nearNight=G.night&&nightLeft(G)<=K.NIGHT_NEAR;
   s+='<g class="wd" data-act="tab" data-v="earth" transform="translate('+CX+' '+CY+') scale('+Z.toFixed(3)+')">'+(nearNight?'<circle r="21" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>':'')+'<circle r="15" fill="'+C.earth+'"/><path d="M-15 0H15M0-15C-7-8-7 8 0 15C7 8 7-8 0-15" stroke="#0B0B0C" stroke-width="1.4" fill="none"/></g>';
   el('map').innerHTML=s;
+  if(el('tip').className) drawTip(document.querySelector('#map .wd[data-p]:hover'));   // the node under the pointer was just replaced
 }
 function drawTip(g){ var tip=el('tip'); if(!g||!G){ tip.className=''; return }
   var pid=g.dataset.p, p=planet(pid); if(!p){ tip.className=''; return }
@@ -792,7 +793,7 @@ function hullSt(s){
     if(s.job==='colonize') return ['settlers',fill(T('u_stSettlers'),{n:num(s.cargo.people||0),p:pname(s.dest),t:s.t}),C.people];
     if(s.job==='evac') return s.dest==='earth'?['evac',fill(T('u_stEvacHome'),{n:num(s.cargo.people||0),t:s.t}),C.people]:['evac',fill(T('u_stEvacOut'),{p:pname(s.dest),t:s.t}),C.people];
     if(s.job==='search') return ['overdue',fill(T('u_stSearch'),{p:pname(s.dest==='earth'?s.origin:s.dest),t:s.t}),C.mid];
-    if(s.cargo&&s.cargo.kit) return ['kit',fill(T('u_stKit'),{t:roman(s.cargo.kit.tier-1),t:s.t}),C.people];
+    if(s.cargo&&s.cargo.kit) return ['kit',fill(T('u_stKit'),{k:roman(s.cargo.kit.tier-1),t:s.t}),C.people];
     if(s.dest==='earth') return ['toEarth',fill(T('u_stHome'),{t:s.t}),C.mid];
     return ['toWorld',fill(T('u_stOut'),{p:pname(s.dest),t:s.t}),C.mid];
   }
@@ -827,7 +828,7 @@ function lobeTxt(p){ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+
 function assignable(pid){ var p=planet(pid);
   return G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!s.mutiny&&!s.crewWait&&!(s.from&&s.to)&&!s.pend&&!s.job&&canReachSector(s,p.sec) }) }
 /* v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that would miss the Night */
-function pickCourier(pid){ var p=planet(pid), c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
+function pickCourier(pid){ var c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
   var list=assignable(pid).filter(function(s){ return shipClass(s)==='courier'&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });
   if(!list.length) return null;
   var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
