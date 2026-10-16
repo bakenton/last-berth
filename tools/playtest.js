@@ -203,6 +203,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
 
   /* ---------- старт: язык, зерно, ход ---------- */
   rec('start',{page:path.basename(page),viewport:VP.join('x'),seed:SEED,style:STYLE});
+  await p.evaluate(()=>window.LNtut&&LNtut.off());   // v4.36: обучение и нарратив выключены хуком «всё открыто» (сценарий обучения — pw41/pw42)
   if(!(await okTap('#noteL [data-lang="en"]'))) addIssue('crit','no-lang','окно выбора языка не нашлось или не нажалось');
   await wait(150); await audit('lang');
   if(await okTap('#top [data-act="pop"][data-v="menu"]')){ await wait(100);

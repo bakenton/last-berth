@@ -238,7 +238,7 @@ if os.path.exists('web/shell.html'):
     tm=re.search(r'<script type="application/json" id="lb-texts" data-url="[^"]*">.*?</script>',s,re.S).group(0)
     tools=re.search(r'<script type="application/octet-stream" id="lb-tools".*?</script>',s,re.S)
     s=('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-       '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
+       '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+(rd('web/art.css') if os.path.exists('web/art.css') else '')+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
        '<script>\n'+core+'</script><script>\n'+ui+'</script>'+(tools.group(0) if tools else '')+'\n</body></html>')
 wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.

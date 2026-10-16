@@ -48,7 +48,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('report at year 80', (await p.evaluate(()=>LNI.big()))==='shift', await p.evaluate(()=>LN.day+' open='+LN.shiftOpen+' paused='+LNU.paused));
   ok('clock stopped (LNI.halted while the report is open)', await p.evaluate(()=>LNI.halted()===true));
   const rep=await noteTxt();
-  ok('title Shift 2', /Shift 2 hands over the desk/.test(rep), rep.slice(0,80));
+  ok('v4.36 N-04: Shift 1 hands over the desk', /Shift 1 hands over the desk/.test(rep), rep.slice(0,80));
   ok('report rows', /Brought home these eighty years/.test(rep)&&/Live worlds/.test(rep)&&/Hands at home/.test(rep), rep.slice(0,400));
   ok('chronicle line inside', /(shift|Shift) 2/.test(rep));
   await p.screenshot({path:'shift-1.png'});
@@ -71,7 +71,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const q=await UI.newPage(b); const V=UI.ui(q); await V.start('ru',309573272);
   await q.evaluate(()=>{ LNU.shiftStop=true; for(let i=0;i<80;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
   const ru=await q.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' '));
-  ok('RU report', /Смена 2 сдаёт пульт/.test(ru)&&/Принять пульт/.test(ru), ru.slice(0,120));
+  ok('RU report', /Смена 1 сдаёт пульт/.test(ru)&&/Принять пульт/.test(ru), ru.slice(0,120));
   await q.screenshot({path:'shift-ru.png'});
   ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
   await b.close();

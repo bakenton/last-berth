@@ -444,3 +444,70 @@ UI	u_resLeft	Hull {n} left the ark reserve.	Судно {n} вышло из ре�
 UI	u_evacW_line	Courier {n} is at the pier on a line — take it off the line.	Курьер {n} у причала, но на линии — снимите его с линии.
 UI	u_yShort	{n} y	{n} л.
 MSG	ok_assignWait	Hull {n} is on the {p} line but waits at the pier: {w}	Судно {n} на линии {p}, но ждёт у причала: {w}
+UI	tut_name	ALEXANDRA	АЛЕКСАНДРА
+UI	tut_inst	INSTITUTE	ИНСТИТУТ
+UI	tut_gotIt	Got it	Понятно
+UI	tut_skipHelper	Skip the helper	Без помощника
+UI	tut_skip	Skip	Пропустить
+UI	u_mHelp	Helper	Помощник
+UI	tut_m0	Earth eats more every year. Rations run out in {y}.	Земля ест больше с каждым годом. Рационы кончатся в {y}-м.
+UI	tut_m1	Settle a world that grows food — {p}.	Заселите мир, где растёт еда, — {p}.
+UI	tut_m2	Settlers cost people and fuel. Every flight burns fuel.	Поселенцы стоят людей и топлива. Каждый рейс жжёт топливо.
+UI	tut_m3	Time is stopped. Start it. {p} takes no orders until the settlers land.	Время стоит. Запустите его. Пока поселенцы не сели, {p} приказов не принимает.
+UI	tut_m4	They've landed. Put a hull on the line — it brings {p}'s rations home.	Сели. Поставьте судно на линию — оно повезёт рационы {p} домой.
+UI	tut_m8	No free hull at the pier. Order one here — it goes straight to this line.	Свободных судов у причала нет. Закажите здесь — судно сразу пойдёт на эту линию.
+UI	tut_mM	Hulls are built from metal. {p} mines it.	Суда строят из металла. Его добывает {p}.
+UI	tut_m9	Being built — here, and all of it in the YARD.	Что строится — здесь, а всё целиком — во вкладке ВЕРФЬ.
+UI	tut_m10	Every hull and where it is. A hull you move changes lines when it docks.	Все суда и где они. Переведённое судно меняет линию, когда причалит.
+UI	tut_m11	{p} gives {m} a year, its line carries {c}. The rest waits on the surface — another hull carries more.	{p} даёт {m} в год, линия увозит {c}. Остальное ждёт на поверхности — ещё одно судно увезёт больше.
+UI	tut_m12	Parts are home. Works make them from metal and rations — without rations they stop.	Детали дома. Заводы делают их из металла и рационов — без рационов встают.
+UI	tut_m14	Each hull generation reaches one ring farther. The next needs settled worlds and parts from a works.	Каждое поколение судов летит на кольцо дальше. Следующему нужны заселённые миры и детали с завода.
+UI	tut_m15	When a world needs you, it shows here, worst first. The button takes you straight to the fix.	Когда миру нужно ваше решение, он здесь, худшее сверху. Кнопка ведёт прямо к делу.
+UI	tut_m17	Space shifts by sector. What is on, and for how long — in this bar.	Пространство меняется по долям. Что идёт и сколько ещё — на этой полосе.
+UI	tut_m16	Ring 2 is charted. Generation I couriers reach it; each generation flies one ring farther.	Кольцо 2 нанесено. Курьеры I поколения туда долетают; каждое поколение летит на кольцо дальше.
+UI	tut_m18	The year of the Night stays up here. Big news stops time and comes one window at a time.	Год Ночи — здесь, наверху. Большие новости останавливают время и приходят по одному окну.
+UI	tut_m19	The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation {g} or newer, at the pier that day.	Ковчег уходит в Ночь с теми, кто на борту. Нужны оплаченные уровни и конвой — суда {g} поколения и новее у причала в тот день.
+UI	tut_m7	Time stops while Earth, the Yard or the Ark is open.	Пока открыты Земля, Верфь или Ковчег, время стоит.
+UI	tut_m13	Machines make a world give more. They burn its fuel and ride out on the line's next hull.	Техника поднимает выработку мира. Жжёт его топливо и уходит со следующим судном линии.
+UI	tut_m20	Hold hulls for the convoy with RESERVE FOR ARK in the Yard.	Суда для конвоя придерживайте кнопкой «В резерв ковчега» во вкладке ВЕРФЬ.
+UI	tut_m21	Last lift: the year a courier must leave to bring everyone home before the Night.	Последний рейс: год, когда курьер должен вылететь, чтобы привезти всех домой до Ночи.
+UI	tut_m22	The seam is dead. Only evacuation is left — a courier takes everyone.	Жила мертва. Осталась только эвакуация — курьер забирает всех.
+UI	tut_m24	A hull is overdue. If it is lost, nothing replaces it — you order the next one.	Судно опаздывает. Если пропадёт, замены не будет — следующее заказываете вы.
+UI	tut_m23	Near the end, crews refuse runs. A hull that refused still sails with the convoy.	Под конец экипажи отказываются от рейсов. Отказавшее судно в конвой всё равно идёт.
+UI	nar_N01_1	Earth is worked out: no ore, dead soil, poisoned seas.	Земля выработана: руды нет, почва мертва, моря отравлены.
+UI	nar_N01_2	The nations gave all that was left to a single Institute.	Страны отдали всё, что осталось, одному Институту.
+UI	nar_N01_3	Its work: settle other worlds and bring home what Earth lacks.	Его дело — заселять миры и везти с них то, чего нет на Земле.
+UI	nar_N01_4	Shift 1 takes the desk. Shift adviser: the android Alexandra.	Смена 1 заступает. Советник смены — андроид Александра.
+UI	nar_N02	Report from {world}: {n} people landed. Ready to mine and ship.	Доклад с {world}: высадились {n} человек. К добыче и поставкам готовы.
+UI	nar_N03	The first cargo is home — rations now last until {year}. Earth breathes a little easier.	Первый груз дома — рационов теперь хватит до {year}. Земле стало чуть легче дышать.
+UI	nar_N04a	Shift 1 hands over the desk. Shift 2 takes it.	Смена 1 сдаёт пульт. Заступает смена 2.
+UI	nar_N04a_a	People change — I stay. Nice to meet you, shift 2.	Люди меняются — я остаюсь. Рада знакомству, смена 2.
+UI	nar_N04b	Shift {k} hands over the desk.	Смена {k} сдаёт пульт.
+UI	nar_N04b_a	I remember every shift before you. I'll remember this one too.	Я помню все смены до вас. Эту тоже запомню.
+UI	nar_N05_1	{ship} did not come back. {n} crew went with her.	Судно {ship} не вернулось. С ним {n} человек экипажа.
+UI	nar_N05_2	No one will remember them. I'll write them down.	Их никто не вспомнит. Я запишу.
+UI	nar_N06_1	{world} is worked out — a grey husk in the dark.	{world} выработан — серый объедок в космосе.
+UI	nar_N06_2	{n} people are still there, waiting for someone to come.	Там ещё {n} человек. Они ждут, что за ними прилетят.
+UI	nar_N07	Space over {sector} flows differently. The physicists can't say why yet.	Над {sector} пространство течёт иначе. Физики пока не знают почему.
+UI	nar_N08	We're going further. It's darker past the edge of the map — or it seems so to me.	Мы идём дальше. За краем карты стало темнее — или мне кажется.
+UI	nar_N09_1	The physicists have named the date: in {year} our galaxy collapses.	Физики назвали дату: в {year} наша галактика схлопнется.
+UI	nar_N09_2	The Institute's task changes: build an ark and take people to another galaxy.	Задача Института меняется: построить ковчег и увести людей в другую галактику.
+UI	nar_N09_3	Until then Earth must live: whoever starves will not fly.	До отлёта Земля должна жить: кто умрёт от голода, не полетит.
+UI	nar_N10_1	{world}: the last lift has left. {n} people will stay.	{world}: последний рейс ушёл. {n} человек останутся.
+UI	nar_N10_2	The Institute doesn't count them. I'll remember their names.	Институт их не считает. Я запомню их имена.
+UI	nar_N11	The crew of {ship} refused the run. People are afraid and want a place on the ark.	Экипаж судна {ship} отказался от рейса. Люди боятся и хотят на ковчег.
+UI	nar_N12a	Four hundred years. People start counting.	Четыреста лет. Люди начинают считать.
+UI	nar_N12b	One hundred years. Earth queues for the ark — the line is longer than the berths.	Сто лет. На Земле очередь на ковчег — длиннее, чем мест.
+UI	nar_N12c	Twenty-five years. The ark is packed, and people keep coming.	Двадцать пять лет. Ковчег забит под завязку, а люди всё идут.
+UI	nar_N13a	The ark has sailed with {n} aboard. The rest stay behind, without honours or names.	Ковчег ушёл. На борту {n} человек. Остальные остались без почестей и имён.
+UI	nar_N13a_a	Except the ones I remember.	Кроме тех, что помню я.
+UI	nar_N13b	The ark did not sail: {reason}.	Ковчег не ушёл: {reason}.
+UI	nar_N13b_a	Was it the Institute's mistake? Or did people not want to be saved?	Это просчёт Института? Или люди не хотели спасаться?
+UI	nar_N13c	Earth did not live to see the Night: hunger came first.	Земля не дожила до Ночи: голод пришёл раньше.
+UI	nar_N13c_a	We rushed so hard toward the ark that we forgot to feed the ones meant to fly.	Мы так спешили к ковчегу, что забыли накормить тех, кто должен был на нём лететь.
+UI	nar_rsConvoy	the convoy of generation {g} is short of {s}	конвою поколения {g} не хватает: {s}
+UI	nar_rsDrive	the generation {g} ark drive is not ready	двигатель ковчега поколения {g} не готов
+UI	nar_rsLevel	not one ark level was paid	ни один уровень ковчега не оплачен
+UI	nar_aboard	Aboard	На борту
+UI	nar_N13d	The rations ran out. Earth fell silent before the work was done.	Рационы кончились. Земля замолчала, не дождавшись конца работы.
+UI	nar_N13d_a	I will remember this shift. To wait, Earth has to eat.	Эту смену я запомню. Чтобы ждать, Земле нужно есть.

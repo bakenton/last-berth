@@ -87,7 +87,7 @@ const TMP=require('os').tmpdir();
   ok('drive ready, level paid, convoy short → grounded by convoy, 0 souls, chronicle line', end.over==='night'&&end.grounded&&end.why==='convoy'&&end.souls===0&&end.log===1, JSON.stringify(end));
   await p.waitForTimeout(200);
   const ov=await p.evaluate(()=>{ var e=document.getElementById('noteL'); return e?e.textContent.replace(/\s+/g,' '):'' });
-  ok('verdict: the convoy never gathered, convoy generation named', /convoy of Generation/.test(ov)&&/no convoy|never gathered/.test(ov), ov.slice(0,200));
+  ok('verdict: the convoy never gathered, convoy generation named (v4.36: N-13 b)', /convoy of generation [IVX]+ is short of/.test(ov)&&/no convoy/.test(ov), ov.slice(0,200));
   ok('no page errors (EN)', !p.errs.length, p.errs.join(' | '));
 
   // === RU strings (own desk)

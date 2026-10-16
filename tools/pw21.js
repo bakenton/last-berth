@@ -22,7 +22,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   let p=await open('en');
   await p.evaluate(()=>{ botRun(430); const G=window.LN; if(!G.night) revealNight(G); LNdraw(); });
   const modal=await p.big();
-  ok('A night modal: collapse lore, no spectra', /falling in on itself/.test(modal)&&/outrun the collapse/.test(modal)&&!/spectra/.test(modal), modal.slice(0,200));
+  ok('A night modal: collapse lore (v4.36: N-09), no spectra', /our galaxy collapses/.test(modal)&&/build an ark and take people to another galaxy/.test(modal)&&!/spectra/.test(modal), modal.slice(0,200));
   await p.screenshot({path:'x1-night.png'});
   await p.U.tap('[data-act="nightok"]'); await p.waitForTimeout(150);
   let f=await p.pf();
@@ -84,7 +84,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   p=await open('ru');
   await p.evaluate(()=>{ botRun(200); const G=window.LN; revealNight(G); LNdraw(); });
   const mru=await p.big();
-  ok('B RU modal: collapse', /падает само в себя/.test(mru)&&/уйдёт от (коллапса|схлопывания)/.test(mru), mru.slice(0,160));
+  ok('B RU modal: collapse (N-09)', /наша галактика схлопнется/.test(mru)&&/увести людей в другую галактику/.test(mru), mru.slice(0,160));
   await p.U.tap('[data-act="nightok"]'); await p.waitForTimeout(150);
   f=await p.pf();
   ok('B RU physicist', !!f&&/Физик Института/.test(f)&&/поколения IV/.test(f), f);
@@ -92,7 +92,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; window.LN.night=window.LN.day+2; LNdraw(); });
   await p.U.until(()=>p.evaluate(()=>!!window.LN.over),200,10); await p.U.pause();
   const ovB=await p.big();
-  ok('B RU ending: dark closed over', /Тьма сомкнулась/.test(ovB), ovB.slice(0,200));
+  ok('B RU ending: the ark did not sail (N-13)', /Ковчег не ушёл/.test(ovB)&&/АЛЕКСАНДРА/i.test(ovB), ovB.slice(0,200));
   ok('B no page errors', !p.errs.length, p.errs.join(' | '));
   await b.close();
   } catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }

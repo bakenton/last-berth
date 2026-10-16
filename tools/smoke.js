@@ -1,7 +1,7 @@
 // smoke — v4.35 interface, один сквозной прогон, реальная мышь:
 // язык → поселить ближайшую ферму через окно мира → дождаться посадки → второе судно на линию (assign) →
 // 200 лет на ×10 (смена / события / личные дела закрываются кнопками) → вкладки Worlds · Earth · Tech · Yard · Fleet · Ark → нет ошибок страницы.
-// Пролога и вступления в v4.35 нет. Без скриншотов. Запуск через tools/regress.sh smoke (пути переписывает regress.sh).
+// v4.36: экран запуска — SKIP, первая подсказка — SKIP THE HELPER (путь игрока, который обучение не хочет); голос Александры закрывается нажатием. Без скриншотов. Запуск через tools/regress.sh smoke (пути переписывает regress.sh).
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,200):''));
 const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
@@ -17,7 +17,8 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   // закрыть всё, что останавливает время: смена (с остановкой), событие, Ночь, личное дело
   const clear=async()=>{ for(let i=0;i<8;i++){ const k=await p.evaluate(()=>LNI.big());
       if(k==='shift') await tap('[data-act="shiftok"]'); else if(k==='night') await tap('[data-act="nightok"]'); else if(k==='note') await tap('[data-act="noteok"]'); else break }
-    if(await p.isVisible('#pfL [data-act="pfok"]')) await tap('#pfL [data-act="pfok"]') };
+    if(await p.isVisible('#pfL [data-act="pfok"]')) await tap('#pfL [data-act="pfok"]');
+    if(await p.isVisible('#voice.on')) await tap('#voice') };
   // идти на ×10, закрывая окна, пока cond() не станет истиной (или cap итераций)
   const until=async(cond,cap)=>{ for(let t=0;t<cap;t++){ if(await cond()) return true; await clear(); if(await p.evaluate(()=>LNU.paused)) await tap(SPD10); await p.waitForTimeout(250) } return !!(await cond()) };
   const day=()=>p.evaluate(()=>LN.day);
@@ -25,8 +26,16 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   // 1. язык (первое окно)
   await tap('[data-lang="en"]');
   ok('language picked', await p.evaluate(()=>LNU.langPicked&&LNI.big()===null));
+  // v4.36: the launch screen and the helper — skipped the way a player does it
+  ok('launch screen', await p.isVisible('#launch.on'));
+  await tap('#launch [data-act="launchskip"]'); await p.waitForTimeout(900);
+  ok('first rule of the helper', await p.isVisible('#helper.on [data-act="tutskip"]'));
+  await tap('#helper [data-act="tutskip"]');
+  ok('helper skipped: everything open', await p.evaluate(()=>!LNI.tut().lock&&!LNI.tut().msg&&document.querySelectorAll('#tabs [data-act="tab"]').length===6));
   // фиксированный сид — через меню ≡, как игрок
   await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin','309573272'); await tap('[data-act="new"]');
+  await p.waitForTimeout(200); if(await p.isVisible('#launch.on')){ await tap('#launch [data-act="launchskip"]'); await p.waitForTimeout(900) }
+  ok('the next game remembers: no helper', await p.evaluate(()=>!LNI.tut().help&&!LNI.tut().lock&&!LNI.tut().msg));
   ok('new game started', await day()===0 && await p.evaluate(()=>LNU.paused===true));
   // 2. поселить ближайшую ферму: клик по миру → окно мира → «Отправить поселенцев»
   // Ближайшая ферма должна быть доступна мыши: в центре её кружка стоит чужой мир (на сиде 309573272 — Solace поверх Brine).

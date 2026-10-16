@@ -24,7 +24,7 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   await p.evaluate(()=>{ botRun(430); const G=window.LN; if(!G.night) revealNight(G); LNdraw(); });
   const modal=await p.big();
   // v4.35: текст ночи назвал поколение двигателя, фраза про «два года» из нарратива ушла (срок — во вкладке Ark)
-  ok('A night modal names the ark drive', /Generation (IV|V|VI)/.test(modal), modal.match(/No drive we have[^.]*\.[^.]*\./)?.[0]);
+  ok('A night modal names the ark drive (v4.36: a row under N-09)', /Ark drive\s*gen (IV|V|VI)\+/.test(modal), modal.slice(0,240));
   await p.screenshot({path:'w1-night.png'});
   await p.U.tap('[data-act="nightok"]'); await p.pf();
   const hd=await p.evaluate(()=>({year:+((document.querySelector('#top .yr b')||{}).textContent||'NaN'),night:+((document.querySelector('#top .yr.night b')||{}).textContent||'NaN'),G:{day:LN.day,night:LN.night}}));

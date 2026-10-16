@@ -3,7 +3,9 @@
    main screen; six tabs on the left (Earth · Worlds · Tech · Yard · Fleet · Ark), each closed by its own button; a world
    window in the middle, closed by a press beside it, ‹ › to the next world; the strip of resources on top. Earth, the Yard
    and the Ark stop the clock while they are open. Hulls are put on lines by hand only (core v4.34). The prologue is gone:
-   the interface opens with everything unlocked; U.tut / can(key) is where the tutorial module plugs in (BRIEF, «Обучение»). */
+   the interface opens with everything unlocked; U.tut / can(key) is where the tutorial module plugs in (BRIEF, «Обучение»).
+   v4.36 (Nikita 16.10: «модуль tut с Александрой, нарратив и кадры вступления по ui-v7»): the tutorial and the story — see «the
+   tutorial and the story» below; a new game opens step by step with the helper, unless the player skipped her. */
 (function(){
 "use strict";
 
@@ -163,12 +165,12 @@ function wmark(kind,on,sz){ sz=sz||14; var m=WMARK[kind].replace('/>',on?' fill=
   return '<svg viewBox="-9 -9 18 18" width="'+sz+'" height="'+sz+'" style="color:'+(on?KCOL[kind]:C.mid)+';flex:none" aria-hidden="true">'+m+'</svg>' }
 
 /* ---------- state ---------- */
-/* U.tut / can(key): the tutorial module (next session) decides what the player may see; with it off everything is open.
+/* U.tut / can(key): the tutorial decides what the player may see; with its lock off everything is open.
    A resource is opened in the core (openRes) the moment the interface shows it — so the tutorial controls Earth's burn. */
-var U={tut:{on:false,open:{}}, hist:[], lang:'en', langPicked:false, speed:2, paused:false, acc:0, last:0, ff:false, shiftStop:true,
+var U={tut:tutBlank(), hist:[], lang:'en', langPicked:false, speed:2, paused:false, acc:0, last:0, ff:false, shiftStop:true,
   tab:null, win:null, pop:null, filter:'all', addTab:'free', who:{}, scrapArm:null, focus:null, notes:[], driveAt:null, ovlOff:false};
 var G=null;
-function can(k){ return !U.tut.on||!!U.tut.open[k] }
+function can(k){ return !U.tut.lock||!!U.tut.open[k] }
 function T(k,p){ var s=(L[U.lang][k]!==undefined?L[U.lang][k]:k); return fill(s,p) }
 var YRS={en:['year','years','years'],ru:['год','года','лет']};
 function yrs(n){ n=Math.abs(Math.round(+n||0)); var a=YRS[U.lang]||YRS.en;
@@ -445,15 +447,16 @@ function layoutPos(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; re
    stays the same size on screen however far out the chart runs. */
 var VIEW={x:0,y:0,w:1000,h:700}, VFIT=true, VSECS=-1, MAPDRAGGED=false;
 function viewFit(){
-  var R=secRadius(Math.max(0,SECTORS.length-1))+58;
-  var w=Math.max(1000, R*1.32*2, R*0.90*2*(1000/700));
+  var R=secRadius(Math.max(0,visRings()-1))+58;
+  var W0=visRings()<SECTORS.length?640:1000;   // v4.36: while the tutorial shows one ring, the chart comes closer (ui-v7)
+  var w=Math.max(W0, R*1.32*2, R*0.90*2*(1000/700));
   for(var it=0;it<4;it++){            // the pad is screen-sized, so it scales with the fit: iterate
     var Z=w/1000;
-    var w2=Math.max(1000, (R*1.32+128*Z)*2, (R*0.90+44*Z)*2*(1000/700));
+    var w2=Math.max(W0, (R*1.32+128*Z)*2, (R*0.90+44*Z)*2*(1000/700));
     if(Math.abs(w2-w)<1){ w=w2; break } w=w2;
   }
   VIEW={x:CX-w/2, y:CY-w*0.35, w:w, h:w*0.7};
-  VSECS=SECTORS.length;
+  VSECS=visRings();
 }
 function viewZoom(f,ax,ay){
   var w=Math.max(280,Math.min(9000,VIEW.w*f));
@@ -491,7 +494,7 @@ var BAD_ST={dead:1,cut:1,starve:1};
 /* ---------- the map ---------- */
 function drawMap(){
   var s='', i, p, xy;
-  if(VFIT&&VSECS!==SECTORS.length) viewFit();
+  if(VFIT&&VSECS!==visRings()) viewFit();
   var Z=VIEW.w/1000, F=function(n){ return (n*Z).toFixed(2) };
   el('map').setAttribute('viewBox',VIEW.x.toFixed(1)+' '+VIEW.y.toFixed(1)+' '+VIEW.w.toFixed(1)+' '+VIEW.h.toFixed(1));
   s+='<rect x="'+(VIEW.x-VIEW.w)+'" y="'+(VIEW.y-VIEW.h)+'" width="'+(VIEW.w*3)+'" height="'+(VIEW.h*3)+'" fill="none" pointer-events="all"/>';
@@ -499,14 +502,14 @@ function drawMap(){
   // v4.25 (Nikita, 07.10): labels must not sit on each other — world names pick a free corner, ring names slide along the arc
   var LBL={}, boxes=[], hit=function(a,b){ return a.x0<b.x1&&b.x0<a.x1&&a.y0<b.y1&&b.y0<a.y1 }, nHit=function(b){ var n=0; boxes.forEach(function(o){ if(hit(b,o)) n++ }); return n };
   boxes.push({x0:CX-30*Z,x1:CX+30*Z,y0:CY-30*Z,y1:CY+30*Z});
-  PLANETS.filter(function(q){ return sectorOpen(G,q.sec) }).sort(function(a,b){ return (G.colonies[b.id]?1:0)-(G.colonies[a.id]?1:0) }).forEach(function(q){
+  PLANETS.filter(function(q){ return secVis(q.sec) }).sort(function(a,b){ return (G.colonies[b.id]?1:0)-(G.colonies[a.id]?1:0) }).forEach(function(q){
     var c=pos(q), rr=8*Z, w=q.name.length*8*Z, best=null, bn=1e9;
     [[1,-10],[-1,-10],[1,16],[-1,16]].forEach(function(v){
       var lx=c.x+v[0]*(rr+4*Z), ly=c.y+v[1]*Z, bx=v[0]>0?lx:lx-w;
       var b={x0:bx-2*Z,x1:bx+w+2*Z,y0:ly-10*Z,y1:ly+3*Z,L:{x:lx,y:ly,a:v[0]<0?1:0}}, n=nHit(b);
       if(n<bn){ bn=n; best=b } });
     LBL[q.id]=best.L; boxes.push(best) });
-  for(i=0;i<SECTORS.length;i++){
+  for(i=0;i<visRings();i++){
     var rxN=SECTORS[i].r*1.32, ryN=SECTORS[i].r*0.90;
     s+='<ellipse cx="'+CX+'" cy="'+CY+'" rx="'+rxN+'" ry="'+ryN+'" fill="none" stroke="rgba(242,241,236,.28)" stroke-width="'+F(1)+'" stroke-dasharray="'+F(1)+' '+F(5)+'"/>';
     s+='<path id="rn'+i+'" d="M'+(CX-rxN)+' '+CY+' A'+rxN+' '+ryN+' 0 0 1 '+(CX+rxN)+' '+CY+'" fill="none" stroke="none"/>';
@@ -520,7 +523,7 @@ function drawMap(){
     for(tk=0;tk<=5;tk++){ var q3=atLen(bestF*tl+tw*tk/5); boxes.push({x0:q3.x-tw/10,x1:q3.x+tw/10,y0:q3.y-14*Z,y1:q3.y+2*Z}) }
     s+='<text fill="'+C.dim+'" font-size="'+F(9)+'" letter-spacing="'+F(1.6)+'" class="nm" dy="'+F(-4)+'" pointer-events="none"><textPath href="#rn'+i+'" startOffset="'+(bestF*100).toFixed(1)+'%">'+esc(SECTORS[i].name)+'</textPath></text>';
   }
-  var rO=secRadius(SECTORS.length-1)+44;
+  var rO=secRadius(visRings()-1)+44;
   // v4.21 (F-21): the six lobes, the sides of the world — a dotted edge each, a name at the rim
   if(can('sectors')) for(i=0;i<LOBES;i++){
     var e=lobeEdge(i), ca=Math.cos(e), sa=Math.sin(e);
@@ -554,7 +557,7 @@ function drawMap(){
   }
   // worlds
   for(i=0;i<PLANETS.length;i++){
-    p=PLANETS[i]; if(!sectorOpen(G,p.sec)) continue; xy=pos(p);
+    p=PLANETS[i]; if(!secVis(p.sec)) continue; xy=pos(p);
     var st=wst(p.id), on=!!G.colonies[p.id], LB=LBL[p.id];
     if(st==='ghost'){ s+='<g pointer-events="none"><text x="'+xy.x+'" y="'+(xy.y+4*Z)+'" fill="'+C.dim+'" font-size="'+F(13)+'" text-anchor="middle">×</text><text x="'+LB.x+'" y="'+LB.y+'" fill="'+C.dim+'" font-size="'+F(10)+'" letter-spacing="'+F(1)+'" class="nm"'+(LB.a?' text-anchor="end"':'')+'>'+esc(p.name.toUpperCase())+'</text></g>'; continue }
     s+='<g class="wd" data-p="'+p.id+'" transform="translate('+xy.x+' '+xy.y+')">';
@@ -600,7 +603,7 @@ function drawCards(){ var b=can('yard')?building():[], h='';
 function winPause(){ return U.win==='earth'||U.win==='yard'||U.win==='ark' }
 function bigKind(){ if(!U.langPicked) return 'lang'; if(G.over) return 'over'; if(G.night&&!G.nightSeen) return 'night'; if(G.shiftOpen) return 'shift'; if(U.notes.length) return 'note'; return null }
 function modal(){ return !!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
-function halted(){ return U.paused||winPause()||modal() }
+function halted(){ return U.paused||winPause()||modal()||tutHold() }
 var SPEEDS=[1,2,4,10];
 function drawTop(){
   var h='<div class="logo"><i></i>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
@@ -630,7 +633,7 @@ function drawRes(){ var E=G.earth, nd=G.need||earthNeed(G), h='';
     var t=trend(k), tt='';
     if(t!==null){ var up=t>=0.05, dn=t<=-0.05; tt='<span class="'+(up?'up':(dn?'dn':'fl'))+'">'+(up?'▲ +':(dn?'▼ −':'— '))+Math.abs(t).toFixed(1)+esc(T('u_perYr'))+'</span>' }
     var bad=(k==='food'&&(G.hungry||E.food/Math.max(0.1,nd.food)<25))||(k==='metal'&&(G.cold||E.metal/Math.max(0.1,nd.metal)<25))||(k==='fuel'&&E.fuel<30);
-    var ends=(k==='food'&&G.foodFc)?'<em>'+esc(fill(T('u_ends'),{y:G.foodFc.y}))+'</em>':'';
+    var fc=k==='food'?(G.foodFc||(G.day<200?foodForecast(G):null)):null, ends=fc?'<em>'+esc(fill(T('u_ends'),{y:fc.y}))+'</em>':'';   // v4.36: the core forecasts from year 200; the strip shows the end from year 0
     h+='<div class="rc'+(bad?' bad':'')+'" data-r="'+k+'"><small>'+resIc(k,13)+esc(T(k).toUpperCase())+ends+'</small><b style="color:'+C[k]+'">'+num(E[k])+'</b>'+tt+'</div>' });
   setHTML('res',h) }
 
@@ -662,7 +665,7 @@ function drawTabs(){ var F=flags(), h='';
   TABS.forEach(function(t){ var k=t[0];
     if(!can(k)){ h+='<div class="tab tlk"></div>'; return }
     var on=U.win===k||U.tab===k, f=F[k];
-    h+='<button class="tab'+(on?' on':'')+'" type="button" data-act="tab" data-v="'+k+'">'+ic(t[1],30,on?((k==='earth'||k==='ark')?t[3]:'#000'):t[3])+'<span>'+esc(T(t[2]).toUpperCase())+'</span>'+
+    h+='<button class="tab'+(on?' on':'')+'" type="button" data-act="tab" data-v="'+k+'">'+ic(t[1],30,on?((k==='earth'||k==='ark')?t[3]:'#000'):t[3])+'<span>'+esc(T(t[2]).toUpperCase())+'</span>'+(U.tut.fresh[k]&&!on?'<i class="new"></i>':'')+
       (f&&!U.win&&!U.tab&&!U.pop?'<em class="flag" style="color:'+f[1]+';border-color:'+f[1]+'">'+esc(f[0])+'</em>':'')+'</button>' });
   setHTML('tabs',h) }
 
@@ -705,21 +708,27 @@ function rw2(k,v,cls){ return '<div class="rw"><span>'+k+'</span><b class="'+(cl
 function bigHtml(kind){
   if(kind==='lang') return '<div class="nwin" id="lang"><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><p>Choose a language.<br>Выберите язык.</p><div class="langrow"><button class="b pri" type="button" data-lang="en">English</button><button class="b pri" type="button" data-lang="ru">Русский</button></div>'+
     (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(L[U.saveLang||'en'].u_continue||'',{y:U.saveDay}))+'</button>':'')+'</div>';
-  if(kind==='over'){
+  /* v4.36: the end, the Night and the shift speak in the Institute's voice, Alexandra's line under it (NAR N-13, N-09, N-04) */
+  if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
     if(G.over==='night'){ var sl=G.souls||0, lb=G.left||leftBehind(G), tier=sl<=0?0:(sl<300?1:(sl<1200?2:3)), behind=lb.home+lb.hulls+lb.colonies+lb.transit;
-      return '<div class="nwin '+(tier?'good':'bad')+'"><div class="icap">'+esc(T('noteArk'))+'<span>'+G.day+'</span></div><h2>'+esc(T(tier?'endNightT':'endNight0'))+'</h2>'+
-        '<p>'+(G.grounded?fill(T(G.groundedWhy==='convoy'?'endNightConvoy':'endNightDrive'),{b:arkSouls(G),g:roman(G.groundedWhy==='convoy'?convoyGen(G):G.arkMark)}):fill(T('endNightB'+tier),{s:sl}))+'</p><div class="rws">'+
+      var sailed=!G.grounded&&(G.boarded||0)>0, why='';
+      if(!sailed){ if(G.grounded&&G.groundedWhy==='convoy'){ var cv=arkConvoy(G), sh=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) sh.push(d+' × '+T(c)) }); why=fill(T('nar_rsConvoy'),{s:sh.join(', '),g:roman(convoyGen(G))}) }
+        else if(G.grounded) why=fill(T('nar_rsDrive'),{g:roman(G.arkMark)}); else why=T('nar_rsLevel') }
+      return '<div class="nwin '+(sailed&&tier?'good':'bad')+'">'+icap(T('u_year')+' '+G.day+' · '+T('u_theNight'))+
+        (sailed?'<div class="nbig" style="color:'+C.ark+'"><small>'+esc(T('nar_aboard'))+'</small><b>'+num(G.boarded)+'</b></div><p>'+esc(fill(T('nar_N13a'),{n:num(G.boarded)}))+'</p>'
+               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+'<div class="rws">'+
         rw2(esc(T('statSouls')),G.boarded||0,(G.boarded||0)?'good':'bad')+
         rw2(esc(T('statWoke')),G.grounded?esc(T(G.groundedWhy==='convoy'?'arkNoConvoy':'arkNoDrive')):sl+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+
         rw2(esc(T('statBerths')),arkLevel(G)+' / '+K.ARK_LEVELS.length)+(G.cargo?rw2(esc(T('statCargo')),price(G.cargo,null)):'')+
         rw2(esc(T('statLeft')),num(behind)+' · '+lb.hulls+' '+esc(T('lbHulls'))+' · '+lb.colonies+' '+esc(T('lbCol')),'warn')+
         rw2(esc(T('statDay')),G.day)+rw2(esc(T('statSec')),SECTORS.length)+rw2(esc(T('statPeak')),G.stats.peak)+rw2(esc(T('statDrive')),G.driveLvl||0)+(G.stats.mutinies?rw2(esc(T('statMutiny')),G.stats.mutinies,'warn'):'')+'</div>'+
-        chronLines(3)+'<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div></div>' }
-    return '<div class="nwin bad"><div class="icap">'+esc(T('noteEarth'))+'<span>'+G.day+'</span></div><h2>'+esc(T('endT'))+'</h2><p>'+T('endB')+'</p><div class="rws">'+
+        chronLines(3)+alx(T(sailed?'nar_N13a_a':'nar_N13b_a'))+btns+'</div>' }
+    return '<div class="nwin bad">'+icap(T('u_year')+' '+G.day)+'<div class="nbig" style="color:'+C.red+'"><small>'+esc(T('food'))+'</small><b>0</b></div><p>'+esc(T(G.night?'nar_N13c':'nar_N13d'))+'</p><div class="rws">'+
       rw2(esc(T('statDay')),G.day)+rw2(esc(T('statSec')),SECTORS.length)+rw2(esc(T('statCol')),G.stats.founded)+rw2(esc(T('statPeak')),G.stats.peak)+rw2(esc(T('statDrive')),G.driveLvl||0)+rw2(esc(T('statLost')),G.stats.lost)+'</div>'+
-      chronLines(3)+'<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div></div>' }
-  if(kind==='night') return '<div class="nwin bad"><div class="icap">'+esc(T('noteArk'))+'<span>'+G.day+'</span></div><div class="nbig" style="color:'+C.red+'"><small>'+esc(T('u_night'))+'</small><b>'+G.night+'</b></div>'+
-    '<h2>'+esc(T('nightT'))+'</h2><p>'+fill(T('nightB'),{y:G.night,n:K.NIGHT_YEARS})+'</p><p>'+fill(T('u_nightDrive'),{g:roman(G.arkMark)})+'</p><div class="nbtn">'+btn(esc(T('u_continueBtn')),'nightok',null,'pri')+'</div></div>';
+      chronLines(3)+alx(T(G.night?'nar_N13c_a':'nar_N13d_a'))+btns+'</div>' }
+  if(kind==='night') return '<div class="nwin bad">'+icap(T('u_year')+' '+G.day)+'<div class="nbig" style="color:'+C.red+'"><small>'+esc(T('u_night'))+'</small><b>'+G.night+'</b></div>'+
+    ['nar_N09_1','nar_N09_2','nar_N09_3'].map(function(k){ return '<p>'+esc(fill(T(k),{year:G.night}))+'</p>' }).join('')+
+    '<div class="rws">'+rw2(ic('drive',13,C.ark)+esc(T('u_arkDrive')),esc(fill(T('u_genPlus'),{g:roman(G.arkMark)})),'warn')+'</div>'+'<div class="nbtn">'+btn(esc(T('u_continueBtn')),'nightok',null,'pri')+'</div></div>';
   if(kind==='shift'){ var R=G.shiftReport||{}, sd=R.d||{}, rows='';
     var got=[]; ['metal','food','fuel','parts'].forEach(function(kk){ if(sd[kk]>0&&can(kk)) got.push('<span class="pr">'+resIc(kk,13)+num(sd[kk])+'</span>') });
     rows+=rw2(esc(T('shDelivered')),got.length?got.join(' '):esc(T('nothing')),got.length?'good':'bad');
@@ -735,8 +744,8 @@ function bigHtml(kind){
     if(R.mutinies>0) rows+=rw2(esc(T('shMutiny')),R.mutinies,'bad');
     rows+=rw2(esc(T('shHands')),num(R.hands)+(R.idle?' '+esc(fill(T('shIdle'),{n:R.idle})):''),R.hungry?'bad':'dim');
     if(R.left!==null&&R.left!==undefined) rows+=rw2(esc(T('shLeft')),esc(fill(T('shLeftN'),{n:R.left,b:R.berths})),R.left<=K.NIGHT_NEAR?'bad':'warn');
-    var tpl=LOG[U.lang][logKey({code:'shift',d:{k:R.k,n:R.no}})]||'', line=tpl?fill(tpl,{n:R.no,k:R.k,c:R.cols,h:R.hands,i:R.idle,n2:R.left||0,b:R.berths}):'';
-    return '<div class="nwin" id="shiftwin"><div class="icap">'+esc(T('u_shiftCap'))+'<span>'+G.day+'</span></div><h2>'+esc(fill(T('shiftT'),{n:R.no}))+'</h2><p>'+esc(line)+'</p><div class="rws">'+rows+'</div>'+
+    var k1=Math.max(1,(R.no||2)-1);   // the report at year 80 is the hand-over of shift 1
+    return '<div class="nwin" id="shiftwin">'+icap(T('u_shiftCap')+' · '+T('u_year')+' '+G.day)+'<p>'+esc(k1===1?T('nar_N04a'):fill(T('nar_N04b'),{k:k1}))+'</p><div class="rws">'+rows+'</div>'+alx(T(k1===1?'nar_N04a_a':'nar_N04b_a'))+
       '<div class="nbtn"><label><input type="checkbox" id="shstop" checked> '+esc(T('shiftStop'))+'</label>'+btn(esc(T('shiftGo')),'shiftok',null,'pri')+'</div></div>' }
   if(kind==='note'){ var n=U.notes[0];
     if(!n.shown){ n.shown=true; SFX.play(n.snd||'info') }
@@ -769,9 +778,241 @@ function watchRings(){
   if(U.ringNoted===undefined) U.ringNoted=SECTORS.length-1+(canSurvey(G)==='ok'?1:0);
   if(canSurvey(G)==='ok'&&U.ringNoted<SECTORS.length&&!U.ff){ U.ringNoted=SECTORS.length; note({k:T('noteRing'),title:fill(T('ringSignTitle'),{s:secName(SECTORS.length)}),body:T('u_ringBody'),cls:'good',snd:'evgood',go:'tech',goL:T('u_toTech')}) }
 }
-/* v4.34: Earth burns a resource only once the player has met it. The interface shows what can() allows, and opens it in the core
-   as it shows it — without the tutorial that is everything from year 0 (as the old interface did without the prologue). */
-function uiOpenRes(){ if(!G||!U.langPicked) return; ['metal','fuel','parts'].forEach(function(k){ if(can(k)) openRes(G,k) }) }
+/* ---------- the tutorial and the story (v4.36; design/ui-v7.html, BRIEF «Обучение» and «Нарратив в макете») ----------
+   A step opens by the state of the run, never by a timer, and a later step that is ready pulls the earlier ones with it —
+   nobody gets stuck. While Alexandra speaks a rule, time stops, the screen dims and only the lit thing is bright: 'do' — only
+   the lit thing can be pressed (a miss shakes the ring); 'see' — GOT IT or any press. A 'do' whose button is refused or gone
+   turns into a 'see'. A resource shows up the moment it is first needed, and the tutorial opens it in the core then (openRes):
+   no price and no burn uses a resource the player cannot see yet. The story (NAR) goes through the same queue — never at
+   once with a rule, the story first. E — the launch screen; V — her voice (no dim, time runs, 8 s or a press; Claude: time
+   stands while a rule waits right behind it); W — a big window (the shift, the Night, the end — bigHtml).
+   U.tut: lock — what is not open is hidden; help — the rules speak; the story speaks either way. The helper preference is
+   kept in this browser; an old save without U.tut has everything open and no helper. */
+var HELP_KEY='lb.help', TUTX={story:true,launch:true,off:false};   // TUTX: the scenarios' hook (LNtut.off) mutes the launch, the voices and the helper
+function helpPref(){ if(TUTX.off) return false; try{ return localStorage.getItem(HELP_KEY)!=='0' }catch(e){ return true } }
+function setHelpPref(on){ try{ localStorage.setItem(HELP_KEY,on?'1':'0') }catch(e){} }
+var OPEN_ALL=['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
+var TAB_KEYS={earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
+function tutBlank(){ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:null} }
+function secVis(sec){ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
+function visRings(){ return U.tut.lock&&!can('ring2')?Math.min(1,SECTORS.length):SECTORS.length }
+function ringFree(sec,kind){ return PLANETS.filter(function(p){ return p.sec===sec&&(!kind||p.kind===kind)&&!G.colonies[p.id]&&!(G.ghost&&G.ghost[p.id])&&!enRoute(G,p.id) }).sort(function(a,b){ return a.dist-b.dist }) }
+function firstCol(){ var t=U.tut; if(t.col&&G.colonies[t.col]) return t.col; return Object.keys(G.colonies)[0]||null }
+function builtHulls(){ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='building' }).length }
+function halfWorld(){ return Object.keys(G.colonies).filter(function(k){ return wst(k)==='half' })[0]||null }
+function lineless(){ var ks=Object.keys(G.colonies); if(!ks.length) return null;
+  return ks.slice().sort(function(a,b){ return onLine(G,a).length-onLine(G,b).length||(G.colonies[b].day||0)-(G.colonies[a].day||0) })[0] }
+function mineFor(){ var k=Object.keys(G.colonies).filter(function(x){ return planet(x).kind==='mine' })[0]; if(k) return k; var f=ringFree(0,'mine')[0]; return f?f.id:null }
+function fcYear(){ var f=G.foodFc||foodForecast(G); return f?f.y:'—' }
+function freeHullAtPier(){ return freeAtPier().some(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }) }
+/* a hull that is on no line: free at the pier, or flying home after it set settlers down */
+function offLine(){ return G.ships.some(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!(s.from&&s.to)&&!s.pend&&!s.lineFor&&!s.mutiny&&!s.crewWait }) }
+function closeAll(){ U.win=null; U.tab=null; U.pop=null; return {} }
+/* the rules: where she points, how, and what the press must be */
+var TMSG={
+ m0:{at:'#res [data-r="food"]',mode:'see',k:'tut_m0',pre:function(){ closeAll(); return {y:fcYear()} }},
+ m1:{at:function(){ return '#map .wd[data-p="'+U.tut.farm+'"]' },mode:'do',k:'tut_m1',hit:function(){ var f=U.tut.farm; openWorld(f); tutAct('world',f); draw() },
+   pre:function(){ closeAll(); var f=ringFree(0,'farm')[0]; U.tut.farm=f?f.id:null; return f?{p:pname(f.id)}:null }, done:function(a,v){ return a==='world'&&v===U.tut.farm }},
+ m2:{at:'#ovl [data-act="send"]',also:'#ovl .prow',mode:'do',k:'tut_m2',opens:['fuel'],
+   pre:function(){ var f=U.tut.farm; if(!f||G.colonies[f]||enRoute(G,f)) return null; if(U.win!==f) openWorld(f); return {} }, done:function(a,v,res){ return a==='send'&&res==='ok' }},
+ m3:{at:'#top .spd',mode:'do',k:'tut_m3',
+   pre:function(){ var s=G.ships.filter(function(x){ return x.job==='colonize'&&x.mode==='transit' })[0]; if(!s) return null; return {p:pname(s.dest)} }, done:function(a,v){ return a==='spd'&&v!=='0' }},
+ m4:{at:'#ovl [data-act="assign"]',mode:'do',k:'tut_m4',
+   pre:function(){ var pid=firstCol(); if(!pid) return null; openWorld(pid); return {p:pname(pid)} }, done:function(a,v,res){ return (a==='assign'||a==='pickgo')&&res==='ok' }},
+ m8:{at:'#ordblk',mode:'do',k:'tut_m8',pre:function(){ var pid=lineless(); if(!pid||freeHullAtPier()) return null; openWorld(pid); return {} }, done:function(a,v,res){ return a==='order'&&res==='ok' }},
+ mM:{at:'#res [data-r="metal"]',mode:'see',k:'tut_mM',pre:function(){ closeAll(); var m=mineFor(); return {p:m?pname(m):'—'} }},
+ m9:{at:'#cards',mode:'see',k:'tut_m9',pre:function(){ closeAll(); return building().length?{}:null }},
+ m10:{at:'#tabs [data-v="fleet"]',mode:'see',k:'tut_m10',pre:closeAll},
+ m11:{at:'#rw-carries',mode:'see',k:'tut_m11',pre:function(){ var pid=halfWorld(); if(!pid) return null; openWorld(pid); var lr=lineRate(G,pid); return {p:pname(pid),m:dec(lr.makes),c:dec(lr.carries)} }},
+ m12:{at:'#res [data-r="parts"]',mode:'see',k:'tut_m12',pre:function(){ if(!partsHome()) return null; return closeAll() }},
+ m14:{at:'#tabs [data-v="tech"]',mode:'see',k:'tut_m14',pre:closeAll},
+ m15:{at:'#top .adv',mode:'see',k:'tut_m15',pre:closeAll},
+ m17:{at:'#evbar',mode:'see',k:'tut_m17',pre:closeAll},
+ m16:{at:function(){ return '#map .wd[data-p="'+U.tut.r2+'"]' },mode:'see',k:'tut_m16',
+   pre:function(){ closeAll(); var w=PLANETS.filter(function(p){ return p.sec===1&&!(G.ghost&&G.ghost[p.id]) }).sort(function(a,b){ return a.dist-b.dist })[0]; U.tut.r2=w?w.id:null; VFIT=true; VSECS=-1; return {} }},
+ m18:{at:'#top .night',mode:'see',k:'tut_m18',pre:closeAll},
+ m19:{at:'#tabs [data-v="ark"]',mode:'see',k:'tut_m19',pre:function(){ closeAll(); return {g:roman(convoyGen(G))} }},
+ /* by occasion: once each, when the thing first happens */
+ m7:{at:'#ovl .wh small',mode:'see',k:'tut_m7'},
+ m13:{at:'#mach',mode:'see',k:'tut_m13'},
+ m20:{at:'#convoy',mode:'see',k:'tut_m20'},
+ m21:{at:'#rw-lift',mode:'see',k:'tut_m21'},
+ m22:{at:'#ovl [data-act="evac"]',mode:'see',k:'tut_m22',pre:function(){ var d=U.tut.dead; if(d&&G.colonies[d]) openWorld(d); return {} }},
+ m24:{at:function(){ return '#hr-'+U.tut.late },mode:'see',k:'tut_m24',pre:function(){ hullWorld(U.tut.late); return {} }},
+ m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }}
+};
+function hullWorld(sid){ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s.dest&&s.dest!=='earth'?s.dest:s.origin); if(w&&G.colonies[w]) openWorld(w); else closeAll() }
+/* the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; E — launch, V — her voice */
+var NAR={
+ N01:{f:'E',k:['nar_N01_1','nar_N01_2','nar_N01_3','nar_N01_4']},
+ N02:{f:'V',k:['nar_N02'],pre:function(){ var pid=firstCol(); return pid?{world:pname(pid),n:num(G.colonies[pid].pop)}:null }},
+ N03:{f:'V',k:['nar_N03'],pre:function(){ return {year:fcYear()} }},
+ N05:{f:'V',k:['nar_N05_1','nar_N05_2']}, N06:{f:'V',k:['nar_N06_1','nar_N06_2']},
+ N07:{f:'V',k:['nar_N07'],pre:function(){ var ev=(G.dir&&G.dir.ev||[])[0]; return {sector:ev?(ev.lobe!==undefined?T('lobe'+ev.lobe):T('earthNode')).toUpperCase():''} }},
+ N08:{f:'V',k:['nar_N08']}, N10:{f:'V',k:['nar_N10_1','nar_N10_2']}, N11:{f:'V',k:['nar_N11']},
+ N12a:{f:'V',k:['nar_N12a']}, N12b:{f:'V',k:['nar_N12b']}, N12c:{f:'V',k:['nar_N12c']}
+};
+/* twelve steps, one after another; the windows and the numbers a rule needs are taken when it is shown (pre), not when the step
+   opens. Each step also opens by a year (Claude — awaits review), so nobody waits forever for a thing that will not happen;
+   a soft step is passed when the next one is ready (it has nothing that the next one needs). */
+var STEPS=[
+ {t:'hunger',opens:['people','food','line'],q:['N01','m0','m1','m2']},
+ {t:'time',opens:['speed'],q:['m3'],when:function(){ return reach(G)>0||G.ships.some(function(s){ return s.job==='colonize' })||G.day>0 }},
+ {t:'line',opens:['fuel'],q:['N02','m4'],when:function(){ return reach(G)>0||G.day>=40 },go:function(){ U.tut.col=Object.keys(G.colonies)[0] }},
+ {t:'home',opens:['earth','skip'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
+ {t:'yard',opens:['metal','order','yard'],q:['m8','mM','m9'],when:function(){ return (reach(G)>=2&&Object.keys(G.colonies).some(function(k){ return !onLine(G,k).length })&&!freeHullAtPier())||(reach(G)>0&&!offLine())||G.day>=150 }},
+ {t:'fleet',opens:['fleet'],q:['m10'],soft:1,when:function(){ return builtHulls()>=4||G.day>=300 }},
+ {t:'slow',opens:[],q:['m11'],soft:1,when:function(){ return !!halfWorld()||G.day>=400 }},
+ {t:'parts',opens:['parts','machines','tech'],q:['m12','m14'],when:function(){ var h=currentHull(G,'hauler'); return (G.delivered.parts||0)>0||G.earth.parts>0||(h!==null&&reach(G)>=HULLS[h].reach)||G.day>=450 }},
+ {t:'advisor',opens:['advisor','worlds'],q:['m15'],soft:1,when:function(){ return reach(G)>=5||advRows().length>0||G.day>=500 }},
+ {t:'events',opens:['sectors','events'],q:['N07','m17'],soft:1,when:function(){ return !!(G.dir&&G.dir.ev&&G.dir.ev.length)||G.day>=700 }},
+ {t:'ring2',opens:['ring2','zoom'],q:['N08','m16'],when:function(){ return !ringFree(0).length||settledCount(G)>=5||G.day>=700||!!G.night }},
+ {t:'night',opens:['ring3','night','ark','reserve','lift','evac'],q:['m18','m19'],when:function(){ return !!G.night&&!!G.nightSeen }}
+];
+function stepReady(i){ var s=STEPS[i]; if(!s) return false; return s.when()||(!!s.soft&&stepReady(i+1)) }
+var STEP_SAFE=8;   // HANDOFF: no hull is lost before the advisor step (G.safe)
+function tutOpen(keys){ var t=U.tut; if(!t.lock) return;
+  keys.forEach(function(k){ if(t.open[k]) return; t.open[k]=1; if(TAB_KEYS[k]) t.fresh[k]=1;
+    if(k==='metal'||k==='fuel'||k==='parts') openRes(G,k) }) }
+function tutOpenAll(){ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','parts'].forEach(function(k){ openRes(G,k) }) }
+function tutPush(id,p){ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return; if(id==='N01'&&!TUTX.launch) return;
+  if(t.seen[id]) return; t.seen[id]=1; t.q.push({id:id,p:p||null}) }
+function tutStep(i){ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function(id){ if(id==='N03'&&!(G.delivered.food>0)) return; if(id==='m12'&&!partsHome()) return; tutPush(id) }) }
+function partsHome(){ return (G.delivered.parts||0)>0||G.earth.parts>0 }
+/* a new game: the launch screen, then step 1 */
+function tutNew(){ var on=helpPref(); U.tut=tutBlank(); var t=U.tut; t.lock=on; t.help=on;
+  if(!on) tutOpenAll(); tutStep(0); t.seq=G.log.length?G.log[G.log.length-1].seq||0:0 }
+/* a run already under way (an old save, or the helper turned on in the middle): what has happened is not told again */
+function tutQuiet(){ var t=U.tut, i;
+  i=Math.max(0,t.step); while(i+1<STEPS.length&&stepReady(i+1)) i++; t.step=i;
+  for(var k=0;k<=t.step;k++) STEPS[k].q.forEach(function(id){ t.seen[id]=1 });
+  if(Object.keys(G.colonies).some(isDead)){ t.seen.N06=1; t.seen.m22=1 }
+  if(G.ships.some(function(s){ return s.mode==='missing' })){ t.seen.m24=1 }
+  t.seq=G.log.length?G.log[G.log.length-1].seq||0:0 }
+function tutLog(){ var t=U.tut, mx=t.seq;
+  for(var i=0;i<G.log.length;i++){ var e=G.log[i], d=e.d||{}; if((e.seq||0)<=t.seq) continue; if(e.seq>mx) mx=e.seq;
+    if(e.code==='ship_written_off'){ var s=shipById(G,d.n); tutPush('N05',{ship:s?hname(s):fill(T('hullNo'),{n:d.n}),n:num(d.c||0)}) }
+    else if(e.code==='world_cut') tutPush('N10',{world:pname(d.p),n:num(d.n||0)});
+    else if(e.code==='mutiny'&&!t.seen.N11){ t.mut=d.n; var sm=shipById(G,d.n); tutPush('N11',{ship:sm?hname(sm):fill(T('hullNo'),{n:d.n})}); tutPush('m23') }
+    else if(e.code==='night_near'){ var nn={400:'N12a',100:'N12b',25:'N12c'}[d.n]; if(nn) tutPush(nn) } }
+  t.seq=mx }
+function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
+  if(!t.seen.N06||!t.seen.m22){ var dk=Object.keys(G.colonies).filter(isDead)[0]; if(dk){ t.dead=dk; tutPush('N06',{world:pname(dk),n:num(G.colonies[dk].pop)}); tutPush('m22') } }
+  if(!t.seen.m24){ var ms=G.ships.filter(function(s){ return s.mode==='missing' })[0]; if(ms){ t.late=ms.id; tutPush('m24') } }
+  if(quiet&&t.step>=3&&!t.seen.N03&&G.delivered.food>0) tutPush('N03');   // the step opened by its year: the first cargo is told when it comes
+  if(quiet&&t.help&&t.step>=7&&!t.seen.m12&&partsHome()) tutPush('m12');
+  if(!t.help||!quiet||!w) return;   // the window ones speak only while that window is up
+  var c=planet(w)&&G.colonies[w], ll=c&&lastLift(G,w);
+  if(w==='earth'||w==='yard'||w==='ark') tutPush('m7');
+  if(w==='ark'&&G.night&&can('ark')) tutPush('m20');
+  if(c&&can('machines')&&(kitOpen(G)||kitTier(c))) tutPush('m13');
+  if(c&&can('lift')&&ll&&ll.st!=='going') tutPush('m21') }
+function tutBusy(){ return modal() }
+function tutNext(){ var t=U.tut; if(t.msg||t.nar||!U.langPicked||G.over) return;
+  while(t.q.length&&!tutBusy()){ var it=t.q.shift();
+    if(NAR[it.id]){ if(narShow(it)) return; continue }
+    if(msgShow(it)) return } }
+function msgShow(it){ var t=U.tut, m=TMSG[it.id]; U.pop=null; var p=m.pre?m.pre():{}; if(p===null) return false;
+  if(m.opens) tutOpen(m.opens);
+  t.msg={id:it.id,p:p,mode:m.mode,first:it.id==='m0',at:Date.now()}; return true }
+function msgDone(){ var t=U.tut; if(!t.msg) return; t.msg=null; draw() }
+var NART=null;
+function narShow(it){ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(p===null) return false;
+  clearTimeout(NART); t.nar={id:it.id,p:p,f:N.f,k:String(Math.random()),i:0,hold:false};
+  if(N.f==='V'){ t.nar.hold=!!(t.help&&t.q.length&&TMSG[t.q[0].id]); SFX.play('voice'); NART=setTimeout(narDone,8000) }
+  if(N.f==='E') NART=setTimeout(launchStep,5200);
+  return true }
+function narDone(){ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
+function launchFrame(i){ var L0=el('launch'); L0.querySelectorAll('.lfr').forEach(function(f,j){ f.classList.toggle('on',j===i) }); L0.querySelectorAll('.ldots i').forEach(function(d,j){ d.classList.toggle('on',j<=i) }) }
+function launchStep(){ var n=U.tut.nar; if(!n||n.f!=='E'||el('launch').classList.contains('out')) return; clearTimeout(NART); n.i++;   // a press while the last frame dives in must not stop it
+  if(n.i>=NAR[n.id].k.length){ launchEnd(); return } launchFrame(n.i); NART=setTimeout(launchStep,5200) }
+function launchEnd(){ var L0=el('launch'); if(!U.tut.nar||L0.classList.contains('out')) return; clearTimeout(NART); L0.classList.add('out'); NART=setTimeout(narDone,600) }
+/* SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on */
+function tutOff(){ var t=U.tut; setHelpPref(false); if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false;
+  t.q=t.q.filter(function(x){ return !TMSG[x.id] }); t.msg=null; act(G,'helper',{on:false}) }
+function tutOn(){ var t=U.tut; setHelpPref(true); if(t.help) return; t.help=true; tutQuiet(); act(G,'helper',{on:true}) }
+function tutTick(){ var t=U.tut; if(!U.langPicked||G.over) return;
+  tutLog();
+  if(t.step>=0&&stepReady(t.step+1)) tutStep(t.step+1);
+  if(t.lock&&t.step===0&&!t.msg&&!t.q.length&&!t.open.speed&&!G.ships.some(function(s){ return s.job==='colonize' })) tutOpen(['speed']);   // never stuck on a stopped clock
+  tutJit();
+  if(t.lock) G.safe=t.step<STEP_SAFE;
+  tutNext() }
+/* is there something she wants to say before the clock runs on (SKIP stops there) */
+function tutWants(){ var t=U.tut; return !!t.q.length||(t.step>=0&&stepReady(t.step+1)) }
+function tutHold(){ var t=U.tut; return !!t.msg||!!(t.nar&&(t.nar.f==='E'||t.nar.hold)) }
+/* the press: the launch takes it; a rule lets through only its lit thing; her voice closes on any press */
+function tutTarget(m){ var s=typeof m.at==='function'?m.at():m.at, e=s?document.querySelector(s):null; return e&&e.getClientRects().length?e:null }
+function tutClick(ev){ var t=U.tut, x=ev.target;
+  if(t.nar&&t.nar.f==='E'){ if(x.closest('[data-act="launchskip"]')) launchEnd(); else launchStep(); return true }
+  if(t.msg){ var b=x.closest('#helper [data-act]');
+    if(b){ if(b.dataset.act==='tutok'){ if(Date.now()-t.msg.at>300) msgDone() } else if(b.dataset.act==='tutskip'){ tutOff(); draw() } return true }
+    if(x.closest('#helper')) return true;
+    var m=TMSG[t.msg.id], tg=tutTarget(m), t2=m.also&&document.querySelector(m.also);
+    if((tg&&tg.contains(x))||(t2&&t2.contains(x))) return false;
+    if(t.msg.mode==='see'){ if(Date.now()-t.msg.at>300) msgDone(); return true }   // a double press does not skip the next rule
+    var rr=el('tutRing').getBoundingClientRect(); if(m.hit&&ev.clientX>=rr.left&&ev.clientX<=rr.right&&ev.clientY>=rr.top&&ev.clientY<=rr.bottom){ m.hit(); return true }
+    var r=el('tutRing'), r2=el('tutRing2'); [r,r2].forEach(function(q){ q.classList.remove('shk'); void q.offsetWidth; q.classList.add('shk') }); SFX.play('deny'); return true }
+  if(t.nar&&t.nar.f==='V'){ var onV=!!x.closest('#voice'); narDone(); return onV||!!t.msg }
+  return false }
+function tutKey(e){ var t=U.tut;
+  var mine=e.code==='Space'||e.key==='Enter'||e.key==='Escape'||/^[1-4]$/.test(e.key);
+  if(t.nar&&t.nar.f==='E'){ if(mine) e.preventDefault(); if(e.repeat) return true; if(e.key==='Escape') launchEnd(); else if(e.code==='Space'||e.key==='Enter') launchStep(); return true }
+  if(t.msg){ if(mine) e.preventDefault(); if(!e.repeat&&t.msg.mode==='see'&&mine&&!/^[1-4]$/.test(e.key)&&Date.now()-t.msg.at>300) msgDone(); return true }
+  if(t.lock&&!can('speed')&&(e.code==='Space'||/^[1-4]$/.test(e.key))) return true;
+  return false }
+/* after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot */
+function tutAct(a,v,res){ var t=U.tut; if(a==='tab'&&t.fresh[v]) delete t.fresh[v];
+  if(!t.msg) return; var m=TMSG[t.msg.id];
+  if(t.msg.mode==='do'?m.done(a,v,res):true){ t.msg=null } }
+/* the dark with a cut-out (+6 px, one or two pieces), the yellow ring, the helper over the map — or over the target */
+function tutPlace(){ var t=U.tut, Lr=el('tutL'), Rg=el('tutRing'), Rg2=el('tutRing2'), hp=el('helper');
+  narPlace(); el('toasts').style.visibility=t.msg?'hidden':'';   // the toasts wait while she speaks: they sat on the lit thing
+  if(!t.msg){ if(hp._k){ hp._k=''; hp.innerHTML='' } Lr.className=''; Rg.style.display='none'; Rg2.style.display='none'; hp.className=''; return }
+  var m=TMSG[t.msg.id], tg=tutTarget(m), t2=m.also?tutTarget({at:m.also}):null;
+  if(t.msg.mode==='do'&&(!tg||!tutLive(tg))) t.msg.mode='see';   // its button is refused or gone: she only shows it
+  var key=t.msg.id+'|'+U.lang+'|'+t.msg.mode;
+  if(hp._k!==key){ hp._k=key; hp.innerHTML='<div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="htx">'+esc(fill(T(m.k),t.msg.p))+'</div><div class="hbt">'+
+    (t.msg.first?btn(esc(T('tut_skipHelper')),'tutskip'):'')+(t.msg.mode==='see'?btn(esc(T('tut_gotIt')),'tutok',null,'pri'):'')+'</div></div>' }
+  hp.className='on'; Lr.className='on';
+  var ar=el('app').getBoundingClientRect(), z=appZoom(), W=ar.width/z, H=ar.height/z, hh=hp.offsetHeight, top=H-hh-16, left=82+Math.max(0,(W-82-640)/2), P=6;
+  var box=function(e){ var r=e.getBoundingClientRect(); return {x0:Math.max(0,(r.left-ar.left)/z-P),y0:Math.max(0,(r.top-ar.top)/z-P),x1:Math.min(W,(r.right-ar.left)/z+P),y1:Math.min(H,(r.bottom-ar.top)/z+P)} };
+  var ring=function(R,b){ if(!b){ R.style.display='none'; return } R.style.display='block'; R.style.left=b.x0+'px'; R.style.top=b.y0+'px'; R.style.width=(b.x1-b.x0)+'px'; R.style.height=(b.y1-b.y0)+'px' };
+  var rect=function(b){ return ','+b.x0+'px '+b.y0+'px,'+b.x1+'px '+b.y0+'px,'+b.x1+'px '+b.y1+'px,'+b.x0+'px '+b.y1+'px,'+b.x0+'px '+b.y0+'px' };
+  if(tg){ var a=box(tg), b=t2?box(t2):null;
+    if(b&&a.x0<b.x1&&b.x0<a.x1&&a.y0<b.y1&&b.y0<a.y1){ a={x0:Math.min(a.x0,b.x0),y0:Math.min(a.y0,b.y0),x1:Math.max(a.x1,b.x1),y1:Math.max(a.y1,b.y1)}; b=null }
+    Lr.style.clipPath='polygon(evenodd,0 0,'+W+'px 0,'+W+'px '+H+'px,0 '+H+'px,0 0'+rect(a)+(b?',0 0'+rect(b):'')+')';
+    ring(Rg,a); ring(Rg2,b);
+    var lo=Math.min(a.y0,b?b.y0:1e9), hi=Math.max(a.y1,b?b.y1:0);
+    if(hi>top-10) top=Math.max(104,lo-hh-16) }
+  else { Lr.style.clipPath='none'; ring(Rg,null); ring(Rg2,null) }
+  hp.style.left=left+'px'; hp.style.top=top+'px' }
+function tutLive(e){ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]')) return true; return !!e.querySelector('[data-act]:not([aria-disabled="true"])') }
+function narPlace(){ var n=U.tut.nar, L0=el('launch'), V=el('voice');
+  if(n&&n.f==='E'){ if(L0._k!==n.k){ L0._k=n.k; var N=NAR[n.id];
+      L0.innerHTML='<div class="lcap">'+esc(T('tut_inst'))+'</div><button class="lskip" type="button" data-act="launchskip">'+esc(T('tut_skip'))+'</button>'+
+        N.k.map(function(k,i){ return '<div class="lfr"><div class="limg"><i class="lf'+(i+1)+'"></i></div><div class="lln">'+esc(T(k))+'</div></div>' }).join('')+'<div class="ldots">'+N.k.map(function(){ return '<i></i>' }).join('')+'</div>';
+      L0.className='on'; requestAnimationFrame(function(){ launchFrame(n.i) }) } }
+  else if(L0._k){ L0._k=''; L0.className=''; L0.innerHTML='' }
+  if(n&&n.f==='V'){ if(V._k!==n.k+U.lang){ V._k=n.k+U.lang; var N2=NAR[n.id];
+      V.innerHTML='<div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="vtx">'+N2.k.map(function(k){ return esc(fill(T(k),n.p)) }).join('<br>')+'</div></div><i class="vbar"></i>';
+      V.className=''; void V.offsetWidth; V.className='on' }
+    V.classList.toggle('side',!!U.tab); var pf=el('pfL'); V.style.bottom=pf.classList.contains('low')?(pf.offsetHeight+24)+'px':'' }   // a crew card at the foot of the map: her voice stands above it
+  else if(V._k){ V._k=''; V.className=''; V.innerHTML='' } }
+/* Alexandra's line under the Institute's in a big window */
+function alx(s){ return '<div class="alx"><div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><p>'+esc(s)+'</p></div></div>' }
+function icap(right){ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
+/* in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is said again */
+var TUT_KEEP=['lock','help','open','fresh','seen','step','seq','farm','col','dead','late','mut','r2'];
+function tutSave(){ var t=U.tut, o={}; TUT_KEEP.forEach(function(k){ if(t[k]!==undefined) o[k]=t[k] });
+  var sn={}; for(var k in t.seen) sn[k]=1; t.q.forEach(function(x){ delete sn[x.id] }); if(t.msg) delete sn[t.msg.id]; if(t.nar) delete sn[t.nar.id];
+  o.seen=sn; return o }
+function tutLoad(o){ clearTimeout(NART); U.tut=tutBlank(); var t=U.tut;
+  if(!o){ tutOpenAll(); t.step=0; tutQuiet(); return }   // a save from before v4.36: everything open, no helper, the story goes on from here
+  TUT_KEEP.forEach(function(k){ if(o[k]!==undefined) t[k]=o[k] });
+  if(!t.lock) tutOpenAll();
+  t.seen.N01=1; var st=STEPS[t.step]; if(st) st.q.forEach(function(id){ tutPush(id) }) }
+function tutState(){ var t=U.tut; return {lock:t.lock,help:t.help,step:t.step,msg:t.msg&&t.msg.id,mode:t.msg&&t.msg.mode,nar:t.nar&&t.nar.id,q:t.q.map(function(x){ return x.id }),open:Object.keys(t.open),fresh:Object.keys(t.fresh)} }
 
 /* ---------- render ---------- */
 function appZoom(){ return +(el('app').dataset.z||1) }
@@ -791,8 +1032,8 @@ function focusFix(){ var now=Date.now();
   var e=document.querySelector(U.focusK); if(e&&!e.classList.contains('focus')){ e.style.animationDelay=-(now-U.focusT)+'ms'; e.classList.add('focus') } }
 function draw(){
   if(!G) return;
-  uiOpenRes(); voiceWatch(); watchRings();
-  drawTop(); drawRes(); drawTabs(); drawMap(); drawEvBar(); drawCards(); drawSide(); drawWin(); drawPop(); drawBig(); drawPF(); focusFix();
+  voiceWatch(); watchRings(); tutTick();
+  drawTop(); drawRes(); drawTabs(); drawMap(); drawEvBar(); drawCards(); drawSide(); drawWin(); drawPop(); drawBig(); drawPF(); focusFix(); tutPlace();
   var m=el('map'); if(m.pauseAnimations){ if(halted()) m.pauseAnimations(); else m.unpauseAnimations() }
 }
 
@@ -827,10 +1068,11 @@ function hullRow(s,acts,id){ var g=hullGen(s);
 function speedTxt(hl){ return (hl.speed*driveSpeed(G)).toFixed(2) }
 function specIcons(h){ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedTxt(h)+'</span><span>'+ic('range',15,C.mid)+esc(fill(T('u_ringN'),{n:hullRange(h)+1}))+'</span>' }
 function hullCost(h){ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
+function clsSeen(cls){ return cls==='courier'||can('parts') }   // v4.36: a hull that costs parts shows up once parts are open
 
 /* ---------- the world window ---------- */
 function stepOrder(pid){ var col=!!G.colonies[pid];
-  return PLANETS.filter(function(p){ return sectorOpen(G,p.sec)&&!(G.ghost&&G.ghost[p.id])&&(!!G.colonies[p.id])===col })
+  return PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id])&&(!!G.colonies[p.id])===col })
     .sort(function(a,b){ return a.sec-b.sec||a.ang-b.ang }).map(function(p){ return p.id }) }
 function openWorld(pid,focus){ U.pop=null; U.win=pid; U.scrapArm=null; U.focus=focus?FOCUS[focus]:null }
 var FOCUS={evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
@@ -898,7 +1140,7 @@ function winWorld(pid){
     L0+='<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price({fuel:fuel,people:party},G.earth)+'</div>'+btn(esc(T('u_sendSettlers')),'send',{p:pid},'pri full','send',offW(w==='ok'||(w[0]==='ok')?'ok':w));
     return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_free')),wmark(p.kind,false,16))+'<div class="bd">'+L0+'</div>'+nav+'</div>' }
   if(st==='dead') return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_workedOut')),wmark(p.kind,true,16))+'<div class="bd"><div class="big mid">'+ic('workedout',22,C.mid)+esc(T('u_seamDead'))+'</div>'+
-    row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p)+(can('evac')?evacBlock(p):'')+'</div>'+nav+'</div>';
+    row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p)+evacBlock(p)+'</div>'+nav+'</div>';
   var lr=lineRate(G,pid);
   L0+=sec(esc(T('u_world')));
   if(p.kind==='works'){ var wh=worksHungry(pid), fr=feedRates(G,pid);
@@ -933,7 +1175,7 @@ function winWorld(pid){
   R+='</div></div>';
   if(can('order')){
     R+='<div id="ordblk">'+sec(esc(T('u_orderNew')),esc(fill(T('u_yardGen'),{g:roman(G.gen||0)})))+'<div class="ord">';
-    CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null) return; var h=HULLS[hi];
+    CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null||!clsSeen(cls)) return; var h=HULLS[hi];
       if(reach(G)<h.reach){ R+='<div class="oc dis">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="why dim">'+esc(fill(T('u_needLive'),{n:h.reach}))+'</div></div>'; return }
       var w=orderCheck(G,pid,cls); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth);
       var okb=(typeof w==='string'?w:w[0])==='ok';
@@ -960,7 +1202,7 @@ function winYard(){ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
   h+=sec(esc(T('u_inYards')),b.length);
   h+=b.length?b.map(function(s){ var w=forWorld(s); return '<div class="yr2">'+shipIc(shipClass(s),30)+'<b>'+esc(T(shipClass(s))+' '+roman(hullGen(s))+' '+fill(T('hullNo'),{n:s.id}))+'</b><span>→ '+esc(w?fill(T('u_lineOf'),{p:pname(w)}):T('u_freeHull'))+'</span><div class="bar"><u style="width:'+Math.round(hullProgress(s)*100)+'%"></u></div><i>'+esc(fill(T('u_yearsN'),{n:s.t}))+'</i></div>' }).join(''):hint(esc(T('u_yardsIdle')));
   h+=sec(esc(T('u_buildFree')))+'<div class="ord big">';
-  CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null) return; var hl=HULLS[hi], c=hullCost(hl);
+  CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null||!clsSeen(cls)) return; var hl=HULLS[hi], c=hullCost(hl);
     var w=reach(G)<hl.reach?['needreach',{n:hl.reach,r:reach(G)}]:shortWhy(c,G.earth), okb=w[0]==='ok';
     h+='<div class="oc'+(okb?'':' dis')+'">'+shipIc(cls,64)+'<b>'+esc(T(cls)+' '+roman(hl.gen))+'</b><div class="ico3">'+specIcons(hl)+'</div><div class="prow">'+price(c,G.earth)+'</div>'+
       (reach(G)<hl.reach?'<div class="why dim">'+esc(fill(T('u_needLive'),{n:hl.reach}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:hl.days})),'build',{h:hi},'pri','build',offW(w)))+'</div>' });
@@ -991,7 +1233,7 @@ function bestSearch(m){ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.o
 
 /* ---------- Worlds: the list, worst first ---------- */
 var SEV={dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
-function sideWorlds(){ var list=PLANETS.filter(function(p){ return sectorOpen(G,p.sec)&&!(G.ghost&&G.ghost[p.id]) }).map(function(p){ return {p:p,st:wst(p.id)} });
+function sideWorlds(){ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).map(function(p){ return {p:p,st:wst(p.id)} });
   list.sort(function(a,b){ return SEV[a.st]-SEV[b.st]||a.p.sec-b.p.sec||a.p.ang-b.p.ang });
   var live=Object.keys(G.colonies).length, fr=list.filter(function(x){ return x.st==='free' }).length;
   var rows=list.map(function(x){ var p=x.p, c=G.colonies[p.id], n=c?onLine(G,p.id).length:0, st=x.st, red=SEV[st]<=2, col=red?C.red:((st==='noline'||st==='half'||st==='settling')?C.people:C.mid);
@@ -1097,7 +1339,8 @@ function popAdv(){ var a=advRows();
   return '<div class="advl">'+(a.length?a.map(function(r){ return '<button type="button" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+r[0]+'"></i><b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join(''):'<div class="none">'+esc(T('u_advNone'))+'</div>')+'</div>' }
 function popMenu(){
   return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('u_mLang'))+' <b>'+(U.lang==='en'?'EN':'RU')+'</b> · '+(U.lang==='en'?'RU':'EN')+'</button>'+
-    '<button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button><hr>'+
+    '<button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
+    '<button type="button" data-act="help">'+ic('peopleA',15)+esc(T('u_mHelp'))+' <b>'+esc(T(U.tut.help?'u_on':'u_off'))+'</b></button><hr>'+
     '<button type="button" data-act="save">'+ic('unloading',15)+esc(T('u_mSave'))+'</button><button type="button" data-act="load">'+ic('loading',15)+esc(T('u_mLoad'))+'</button>'+
     '<button type="button" data-act="export">'+ic('unloading',15)+esc(T('u_mExport'))+'</button>'+
     (textsVisible()?'<button type="button" data-act="texts">'+ic('loading',15)+esc(T('textsReload'))+'</button>':'')+'<hr>'+
@@ -1105,13 +1348,14 @@ function popMenu(){
 
 /* ---------- save and load: a file, and the last autosave in this browser ---------- */
 var SAVE_KEY='lb.save';
-function dump(){ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,voiceSeq:U.voiceSeq,voiceLast:U.voiceLast,voy:U.voy,capt:U.capt,founded:U.founded,shiftStop:U.shiftStop,speed:U.speed,lang:U.lang}},
+function dump(){ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,voiceSeq:U.voiceSeq,voiceLast:U.voiceLast,voy:U.voy,capt:U.capt,founded:U.founded,shiftStop:U.shiftStop,speed:U.speed,lang:U.lang,tut:tutSave()}},
   function(k,v){ if(k==='rnd') return undefined; if(v===Infinity) return '__inf'; if(v===-Infinity) return '__-inf'; return v }) }
 function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) });
   if(!o||!o.G||!o.SECTORS) throw new Error('not a save');
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
   G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
   var u=o.U||{}; if(!U.langPicked&&u.lang) U.lang=u.lang; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] });
+  tutLoad(u.tut);
   U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; lineWhy={}; U.langPicked=true; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; window.LN=G; draw() }
 function autosave(){ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
@@ -1133,11 +1377,12 @@ function copyLog(){ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false
   if(!done){ try{ done=document.execCommand('copy') }catch(e){} say(done?'copied':'copyfail') } }
 
 /* ---------- skip: the clock runs on until something wants the desk ---------- */
-function skipAhead(){ if(modal()||G.over) return; if(winPause()) U.win=null; var t0=performance.now(), d0=G.day;
+function skipAhead(){ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now(), d0=G.day;
   for(var i=0;i<500&&!G.over;i++){ tick(G);
     if(G.shiftOpen){ if(!U.shiftStop) G.shiftOpen=false; else break }
     if(G.night&&!G.nightSeen) break;
     if(G.pauseNow){ G.pauseNow=false; toastLast(); break }
+    if(tutWants()) break;   // v4.36: she has something to say
     if(performance.now()-t0>1500) break }
   act(G,'skip',{from:d0,to:G.day}); U.paused=true; toast(esc(fill(T('u_skipped'),{n:G.day-d0,y:G.day})),'',4000); autosave(); draw() }
 
@@ -1192,16 +1437,18 @@ function doAct(a,b){
   else if(a==='closelog'){ el('logbox').hidden=true }
   else if(a==='lang'){ U.lang=U.lang==='en'?'ru':'en' }
   else if(a==='sfx'){ SFX.set(!SFX.isOn()); if(SFX.isOn()) SFX.play('ok') }
+  else if(a==='help'){ if(U.tut.help) tutOff(); else tutOn() }
   else if(a==='save'){ U.pop=null; autosave(); saveFile() }
   else if(a==='load'){ U.pop=null; el('loadin').click() }
   else if(a==='loadauto'){ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(t0){ try{ undump(t0); U.lang=U.lang||'en'; say('ok_loadgame',{y:G.day}) }catch(e){ say('loadfail') } } return }
   else if(a==='texts'){ reloadTexts(); return }
   else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); return }
   if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:null);
-  draw() }
+  tutAct(a,v,res); draw() }
 document.addEventListener('click',function(ev){
   if(MAPDRAGGED){ MAPDRAGGED=false; return }
   var t=ev.target; if(!t.closest) return;
+  if(G&&tutClick(ev)) return;
   var hitb=t.closest('button,[data-act],#map .wd');
   if(hitb&&hitb.getAttribute('aria-disabled')==='true'){
     var wp=null; try{ wp=hitb.dataset.whyp?JSON.parse(hitb.dataset.whyp):null }catch(e){}
@@ -1209,7 +1456,7 @@ document.addEventListener('click',function(ev){
   if(hitb&&hitb.tagName==='BUTTON'){ if(!hitb.classList.contains('tab')) SFX.play('click'); pressFx(ev.clientX,ev.clientY) }
   var lb=t.closest('[data-lang]');
   if(lb){ U.lang=lb.dataset.lang; U.langPicked=true; draw(); return }
-  var g=t.closest('#map .wd[data-p]'); if(g){ try{ window.getSelection().removeAllRanges() }catch(e){} openWorld(g.dataset.p); SFX.play('click'); draw(); return }
+  var g=t.closest('#map .wd[data-p]'); if(g){ try{ window.getSelection().removeAllRanges() }catch(e){} openWorld(g.dataset.p); SFX.play('click'); tutAct('world',g.dataset.p); draw(); return }
   var b=t.closest('[data-act]');
   if(b&&b.dataset.act!=='pop'&&U.pop&&!b.closest('#pop')&&b.dataset.act!=='tab'&&b.dataset.act!=='world'){ U.pop=null }
   if(!b){
@@ -1220,6 +1467,7 @@ document.addEventListener('click',function(ev){
   doAct(b.dataset.act,b) });
 document.addEventListener('keydown',function(e){
   if(!G||e.target.tagName==='INPUT') return;
+  if(tutKey(e)) return;
   var k=bigKind();
   if(k==='shift'&&(e.code==='Space'||e.key==='Enter')){ e.preventDefault(); var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; draw(); return }
   if(k==='note'&&e.key==='Enter'){ e.preventDefault(); U.notes.shift(); draw(); return }
@@ -1233,21 +1481,21 @@ document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.tar
 /* ---------- the map is pannable and zoomable ---------- */
 (function(){
   var m=el('map');
-  m.addEventListener('wheel',function(e){ e.preventDefault(); var pt=viewPt(e); viewZoom(e.deltaY>0?1.12:0.89,pt.x,pt.y); drawMap() },{passive:false});
+  m.addEventListener('wheel',function(e){ e.preventDefault(); var pt=viewPt(e); viewZoom(e.deltaY>0?1.12:0.89,pt.x,pt.y); drawMap(); tutPlace() },{passive:false});
   /* No setPointerCapture: capturing on the <svg> retargets the following click to the <svg> itself and worlds stop being
      clickable (Nikita, 22.09: «не могу играть»). Move and up live on window, so a drag that leaves the map ends cleanly. */
   var drag=null;
   m.addEventListener('pointerdown',function(e){ if(e.button!==0) return; drag={x:e.clientX,y:e.clientY,vx:VIEW.x,vy:VIEW.y,moved:false,sc:viewPt(e).sc} });
   window.addEventListener('pointermove',function(e){ if(!drag) return; var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
     if(!drag.moved&&Math.abs(dx)+Math.abs(dy)<5) return; drag.moved=true; m.classList.add('drag'); VFIT=false;
-    VIEW.x=drag.vx-dx/drag.sc; VIEW.y=drag.vy-dy/drag.sc; drawMap() });
+    VIEW.x=drag.vx-dx/drag.sc; VIEW.y=drag.vy-dy/drag.sc; drawMap(); tutPlace() });
   function end(){ if(!drag) return; if(drag.moved) MAPDRAGGED=true; drag=null; m.classList.remove('drag') }
   window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
 })();
 /* desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows */
 function fit(){ var a=el('app'), w=window.innerWidth, h=window.innerHeight, z=Math.min(1,w/1180,h/700);
   a.dataset.z=z; a.style.transform=z<1?'scale('+z+')':''; a.style.width=(w/z)+'px'; a.style.height=(h/z)+'px' }
-window.addEventListener('resize',function(){ fit(); if(G) drawMap() });
+window.addEventListener('resize',function(){ fit(); if(G){ drawMap(); tutPlace() } });
 
 /* ---------- loop ---------- */
 /* v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year */
@@ -1277,11 +1525,12 @@ function frame(ts){
   requestAnimationFrame(frame);
 }
 function start(seed){
-  G=newGame(seed||undefined);
+  G=newGame(seed||undefined); tutNew();
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
-  window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags};   // v4.35: what the interface derives, for the scenarios and the bot player
+  window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState};   // v4.35: what the interface derives, for the scenarios and the bot player
+  window.LNtut={off:function(){ TUTX.off=true; TUTX.story=false; TUTX.launch=false; clearTimeout(NART); var t=U.tut; t.nar=null; t.q=[]; t.msg=null; if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false; draw() }};   // v4.36: the scenarios' hook «всё открыто»: no launch, no voices, no helper
   draw();
 }
 (function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en' } }catch(e){} })();

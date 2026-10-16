@@ -35,7 +35,7 @@ const UI=require('./pw-ui.js');
   await U.until(()=>p.evaluate(()=>!!window.LN.over),200,10);
   await U.pause();
   console.log('over:', await p.evaluate(()=>window.LN.over), '| souls:', await p.evaluate(()=>window.LN.souls));
-  console.log('end title:', await p.textContent('#noteL h2').catch(()=>''));
+  console.log('end title:', await p.textContent('#noteL .nwin p').catch(()=>''));   // v4.36: the end speaks in the Institute's line (N-13)
   await p.screenshot({path:'v6-end.png'});
   console.log('errors:', p.errs.length?p.errs:'none');
   await b.close();

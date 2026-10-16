@@ -83,7 +83,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // 7. 0 berths at the Night: no "ark left on schedule" chronicle line
   await p.evaluate(()=>{ LN.driveLvl=LN.arkMark; LN.gen=LN.arkMark; ensureGen(LN.gen); LN.ark.berths=0; LN.ark.blocks=0; LN.night=LN.day+2; for(let i=0;i<3;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
   const N=await p.evaluate(()=>({over:LN.over, sailed:LN.log.some(l=>l.code==='ark_sailed'), woke:LN.log.some(l=>l.code==='ark_woke'), night:LN.log.some(l=>l.code==='night'), title:document.getElementById('noteL').textContent.slice(0,120)}));
-  ok('0 berths: ending is Night without ark_sailed / ark_woke lines', N.over==='night'&&!N.sailed&&!N.woke&&N.night&&/THE NIGHT CAME/i.test(N.title), JSON.stringify(N));
+  ok('0 berths: ending is Night without ark_sailed / ark_woke lines', N.over==='night'&&!N.sailed&&!N.woke&&N.night&&/The ark did not sail: not one ark level was paid/i.test(N.title), JSON.stringify(N));   // v4.36: N-13 (b)
 
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await b.close();
