@@ -727,7 +727,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.34', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.35', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),convoy:arkConvoy(G),arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -2104,8 +2104,8 @@ function drawMap(){
     var e=lobeEdge(i), ca=Math.cos(e), sa=Math.sin(e);
     s+='<line x1="'+(CX+ca*34*Z)+'" y1="'+(CY+sa*34*Z)+'" x2="'+(CX+ca*rO*1.32)+'" y2="'+(CY+sa*rO*0.90)+'" stroke="'+C.dim+'" stroke-width="'+F(1.2)+'" stroke-dasharray="'+F(1.5)+' '+F(5)+'" pointer-events="none"/>';
     var me=lobeMid(i); ca=Math.cos(me); sa=Math.sin(me);
-    var lit=lobeEvents(G,i).length>0;
-    s+='<text x="'+(CX+ca*rO*1.32+ca*24*Z)+'" y="'+(CY+sa*rO*0.90+sa*24*Z+(sa>0.9?6*Z:0))+'" fill="'+(lit?C.food:C.mid)+'" font-size="'+F(12)+'" letter-spacing="'+F(2.4)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
+    var le=lobeEvents(G,i), lit=le.length?'rgb('+(EVCOL[le[0].type]||'255,42,26')+')':null;
+    s+='<text x="'+(CX+ca*rO*1.32+ca*24*Z)+'" y="'+(CY+sa*rO*0.90+sa*24*Z+(sa>0.9?6*Z:0))+'" fill="'+(lit||C.mid)+'" font-size="'+F(12)+'" letter-spacing="'+F(2.4)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
   }
   // v4.21 (F-21): an event lights its lobe — a dashed outline while it is announced, a translucent wedge while it runs; Earth blinks for a crisis
   if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){

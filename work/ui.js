@@ -515,8 +515,8 @@ function drawMap(){
     var e=lobeEdge(i), ca=Math.cos(e), sa=Math.sin(e);
     s+='<line x1="'+(CX+ca*34*Z)+'" y1="'+(CY+sa*34*Z)+'" x2="'+(CX+ca*rO*1.32)+'" y2="'+(CY+sa*rO*0.90)+'" stroke="'+C.dim+'" stroke-width="'+F(1.2)+'" stroke-dasharray="'+F(1.5)+' '+F(5)+'" pointer-events="none"/>';
     var me=lobeMid(i); ca=Math.cos(me); sa=Math.sin(me);
-    var lit=lobeEvents(G,i).length>0;
-    s+='<text x="'+(CX+ca*rO*1.32+ca*24*Z)+'" y="'+(CY+sa*rO*0.90+sa*24*Z+(sa>0.9?6*Z:0))+'" fill="'+(lit?C.food:C.mid)+'" font-size="'+F(12)+'" letter-spacing="'+F(2.4)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
+    var le=lobeEvents(G,i), lit=le.length?'rgb('+(EVCOL[le[0].type]||'255,42,26')+')':null;
+    s+='<text x="'+(CX+ca*rO*1.32+ca*24*Z)+'" y="'+(CY+sa*rO*0.90+sa*24*Z+(sa>0.9?6*Z:0))+'" fill="'+(lit||C.mid)+'" font-size="'+F(12)+'" letter-spacing="'+F(2.4)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
   }
   // v4.21 (F-21): an event lights its lobe — a dashed outline while it is announced, a translucent wedge while it runs; Earth blinks for a crisis
   if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){
