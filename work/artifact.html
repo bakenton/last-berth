@@ -1937,6 +1937,8 @@ function voiceWatch(){
       /* v4.30 (Nikita, 11.10): the warning stops the desk on the whole screen; while the event runs, the bar on the chart blinks */
       if(/_warn$/.test(e.code)&&!U.ff) note({k:T('noteEvent'),title:evName(evt)+' · '+(d.lobe!==undefined?T('lobe'+d.lobe):T('earthNode')),body:evtxt,cls:evg?'good':'bad',snd:evg?'evgood':'evbad'});
       else toast(esc(evtxt), evg?'':'bad', 9000, evg?'evgood':'evbad') }
+    else if(e.code==='night_near'&&d.n===100){ var big=null; for(var kk in G.colonies){ if((!big||G.colonies[kk].pop>G.colonies[big].pop)) big=kk } if(big) voice('left_behind','role_head',{p:big},{force:true,seed:hash32(0x53,(+big.slice(1)||0)),day:e.day,seq:e.seq}) }
+    else if(e.code==='night_near'&&d.n===25){ var lb=leftBehind(G); voice('ark_closed','role_chief',{left:lb.home+lb.hulls+lb.colonies+lb.transit},{force:true,day:e.day,seq:e.seq}) }
     else if(NOTE_CODES[e.code]&&!U.ff){ var nd={}; for(var nq in d) nd[nq]=d[nq]; if(nd.p&&planet(nd.p)) nd.p=pname(nd.p);
       note(e.code==='drive_mark' ? {k:T('noteDrive'),title:fill(T('newGenTitle'),{g:roman(G.gen||0)}),body:fill(LOG[U.lang][e.code],nd)+' '+T('u_newGenBody'),cls:'good',snd:'evgood'}
                                  : {k:T('noteWarn'),title:T(NOTE_CODES[e.code]),body:fill(LOG[U.lang][e.code],nd),cls:'bad',snd:'crit'}) }
@@ -1946,8 +1948,6 @@ function voiceWatch(){
     else if(e.code==='colony_founded'){ U.founded++; voice('colony_founded','role_head',{pop:d.pop,p:d.p},{seed:hash32(0x51,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq}) }
     else if(e.code==='ship_missing'){ var sm=shipById(G,d.n); voice('ship_missing','role_duty',{hull:d.n,crew:sm?sm.crew:0},{day:e.day,seq:e.seq}) }
     else if(e.code==='evacuated'||e.code==='evac_partial') voice('evacuated','role_head',{pop:d.pop,p:d.p},{seed:hash32(0x52,(+String(d.p).slice(1)||0)),day:e.day,seq:e.seq});
-    else if(e.code==='night_near'&&d.n===100){ var big=null; for(var kk in G.colonies){ if((!big||G.colonies[kk].pop>G.colonies[big].pop)) big=kk } if(big) voice('left_behind','role_head',{p:big},{force:true,seed:hash32(0x53,(+big.slice(1)||0)),day:e.day,seq:e.seq}) }
-    else if(e.code==='night_near'&&d.n===25){ var lb=leftBehind(G); voice('ark_closed','role_chief',{left:lb.home+lb.hulls+lb.colonies+lb.transit},{force:true,day:e.day,seq:e.seq}) }
     else if((e.code==='launch_colony'||e.code==='launch_evac')&&G.night){ var sh=shipById(G,d.n); if(sh&&sh.total*2>nightLeft(G)) voice('last_flight','role_captain',{hull:d.n},{force:true,seed:hash32(0x54,d.n),day:e.day,seq:e.seq,sub:fill(T('pfHull'),{n:d.n,k:U.capt[d.n]||1})}) }
   }
   U.voiceSeq=maxSeq;
@@ -2014,10 +2014,16 @@ function starfield(){
 }
 var CX=500, CY=350;
 function nodeXY(n){ if(!n) return null; if(n==='earth') return {x:CX,y:CY}; var pp=planet(n); return pp?pos(pp):null }
-function pos(p){
-  var R=SECTORS[p.sec].r;
-  return {x:CX+Math.cos(p.ang)*R*1.32, y:CY+Math.sin(p.ang)*R*0.90};
-}
+/* v4.35 (regress, seed 309573272: BRINE sat under SOLACE — a world stands on its ring at its angle, and two worlds of one ring
+   can share an angle): worlds closer than POS_GAP are pushed apart, once per chart */
+var POSC={}, POSN=-1, POS_GAP=28;
+function pos(p){ if(POSN!==PLANETS.length||!POSC[p.id]) layoutPos(); return POSC[p.id] }
+function layoutPos(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; return {id:q.id,x:CX+Math.cos(q.ang)*R*1.32,y:CY+Math.sin(q.ang)*R*0.90} });
+  for(var it=0;it<40;it++){ var moved=false;
+    for(var i=0;i<Ls.length;i++) for(var j=i+1;j<Ls.length;j++){ var a=Ls[i], b=Ls[j], dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||0.01;
+      if(d<POS_GAP){ var k=(POS_GAP-d)/2/d; a.x-=dx*k; a.y-=dy*k; b.x+=dx*k; b.y+=dy*k; moved=true } }
+    if(!moved) break }
+  POSC={}; Ls.forEach(function(o){ POSC[o.id]={x:o.x,y:o.y} }); POSN=PLANETS.length }
 
 /* ---------- the viewport ----------
    The chart grows without end but the viewBox used to be a fixed 1000x700, so
@@ -2144,7 +2150,7 @@ function drawMap(){
     if(BAD_ST[st]) s+='<circle r="'+F(15)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(2)+'" class="alarm"/>';
     else if(st==='noline'||st==='half') s+='<circle r="'+F(15)+'" fill="none" stroke="'+C.people+'" stroke-width="'+F(1.6)+'" class="alarm"/>';
     if(U.win===p.id) s+='<circle r="'+F(19)+'" fill="none" stroke="'+C.ink+'" stroke-width="'+F(2)+'"/>';
-    s+='<circle r="'+F(18)+'" fill="transparent"/>';
+    s+='<circle r="'+F(13)+'" fill="transparent"/>';
     s+='<g transform="scale('+Z.toFixed(3)+')" '+(on?'fill="'+KCOL[p.kind]+'"':'fill="'+C.bg+'" stroke="'+(st==='settling'?C.people:C.mid)+'" stroke-width="1.6" stroke-dasharray="3 2.5"')+'>'+({mine:'<circle r="7"/>',farm:'<rect x="-6.5" y="-6.5" width="13" height="13"/>',well:'<path d="M0-8L8 0L0 8L-8 0Z"/>',works:'<path d="M0-8L8 6.5H-8Z"/>'}[p.kind])+'</g>';
     s+='<text x="'+(LB.x-xy.x)+'" y="'+(LB.y-xy.y)+'" fill="'+(on?C.ink:C.mid)+'" font-size="'+F(10.5)+'" letter-spacing="'+F(1)+'" class="nm"'+(LB.a?' text-anchor="end"':'')+'>'+esc(p.name.toUpperCase())+'</text></g>';
   }
@@ -2696,7 +2702,7 @@ function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinit
   G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
   var u=o.U||{}; if(!U.langPicked&&u.lang) U.lang=u.lang; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] });
   U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; lineWhy={}; U.langPicked=true; HTMLCACHE={};
-  VFIT=true; VSECS=-1; window.LN=G; draw() }
+  VFIT=true; VSECS=-1; POSN=-1; window.LN=G; draw() }
 function autosave(){ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
 function saveFile(){ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
   try{ var b=new Blob([data],{type:'application/json'}), u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(u) },500); say('ok_savegame') }catch(e){ say('savefail') } }
@@ -2862,7 +2868,7 @@ function frame(ts){
 function start(seed){
   G=newGame(seed||undefined);
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
-  VFIT=true; VSECS=-1; viewFit();
+  VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags};   // v4.35: what the interface derives, for the scenarios and the bot player
   draw();
