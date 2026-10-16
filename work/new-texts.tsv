@@ -164,3 +164,279 @@ UI	liftNone	No courier in the fleet can get there and be home before the Night. 
 UI	liftRowNone	no courier makes it	ни один курьер не успеет
 MSG	ok_order	{p}: the yards lay down a {c} for this line, ready in about {y} years.	{p}: верфи закладывают {c} для этой линии, готово примерно через {y} лет.
 MSG	orderNight	No crew will sign for this line so close to the Night.	Ни один экипаж не подпишется на эту линию так близко к Ночи.
+UI	u_year	Year	Год
+UI	u_night	Night	Ночь
+UI	u_yearsN	{n} years	{n} лет
+UI	u_needs	Needs a decision	Нужно решение
+UI	u_paused	Paused	Пауза
+UI	u_skip	Skip	Пропуск
+UI	u_perYr	/yr	/год
+UI	u_ends	ends ≈ {y}	кончится ≈ {y}
+UI	u_fit	Fit	Вся
+UI	u_tabEarth	Earth	Земля
+UI	u_tabWorlds	Worlds	Миры
+UI	u_tabTech	Tech	Техника
+UI	u_tabYard	Yard	Верфь
+UI	u_tabFleet	Fleet	Флот
+UI	u_tabArk	Ark	Ковчег
+UI	u_freeHull	free hull	свободное
+UI	u_moreYard	+ {n} more in the yard	+ ещё {n} на верфи
+UI	u_timePaused	Time is paused	Время стоит
+UI	u_genPaused	Generation {g} · time is paused	Поколение {g} · время стоит
+UI	u_flHungry	Earth is starving	Земля голодает
+UI	u_flFoodNight	Rations end ≈ {y}, before the Night	Рационы кончатся ≈ {y}, до Ночи
+UI	u_flFood	Rations end ≈ {y}	Рационы кончатся ≈ {y}
+UI	u_flMetal	Metal is running out	Металл кончается
+UI	u_flFuel	Fuel is low	Топлива мало
+UI	u_flYard	{n} being built	строится: {n}
+UI	u_flCrew	{n} hulls wait for crews	без экипажа: {n}
+UI	u_flIdle	{n} hulls idle at the pier	у причала без дела: {n}
+UI	u_flMutiny	{n} crews refuse to fly	отказ экипажей: {n}
+UI	u_flArkNone	No ark level paid	Ни один уровень ковчега не оплачен
+UI	u_flArkDrive	The ark drive is not ready	Двигатель ковчега не готов
+UI	u_flConvoy	Convoy {n} hulls short	Конвою не хватает судов: {n}
+UI	u_flConvoyOk	Convoy ready	Конвой собран
+UI	u_flSurvey	Ring {n} can be charted	Можно нанести кольцо {n}
+UI	u_flDrive	The drive programme can start	Можно запустить программу двигателя
+UI	u_home	Home	Дом
+UI	u_peopleW	people	человек
+UI	u_foodUntil	Rations last until	Рационов хватит до
+UI	u_foodLong	past the forecast	дальше прогноза
+UI	u_foodPastNight	past the Night	дольше Ночи
+UI	u_liveWorlds	Live worlds	Живых миров
+UI	u_crossings	Crossings	Переходы
+UI	u_onHulls	People on hulls	Людей на судах
+UI	u_onWorlds	People on the worlds	Людей на мирах
+UI	u_alHungry	Earth is out of rations — people are dying.	У Земли кончились рационы — люди умирают.
+UI	u_alFoodNight	Rations end {n} years before the Night.	Рационы кончатся за {n} лет до Ночи.
+UI	u_alFood	Rations end ≈ {y}.	Рационы кончатся ≈ {y}.
+UI	u_alCold	Earth is out of metal.	У Земли кончился металл.
+UI	u_alCrisis	Crisis: Earth burns twice its {r} — {n} years left.	Кризис: Земля жжёт вдвое больше ({r}) — ещё {n} лет.
+UI	u_burns	Earth burns each year	Земля сжигает за год
+UI	u_continue	Continue the saved run · year {y}	Продолжить сохранённый забег · год {y}
+UI	u_continueBtn	Continue	Дальше
+UI	u_nightDrive	No drive we have can outrun the collapse. The ark needs a <b>Generation {g}</b> drive — the Ark tab keeps count.	Ни один наш двигатель не уйдёт от схлопывания. Ковчегу нужен двигатель <b>поколения {g}</b> — счёт ведёт вкладка «Ковчег».
+UI	u_shiftCap	Shift report	Отчёт смены
+UI	u_open	Open	Открыть
+UI	u_noFreeBody	Every world on the charted rings is settled or spent. Chart the next ring in the Tech tab — without new worlds the colonies run dry and Earth starves.	Все миры нанесённых колец заселены или выработаны. Нанесите следующее кольцо во вкладке «Техника» — без новых миров колонии иссякнут, а Земля оголодает.
+UI	u_ringBody	The next ring can be charted: Earth has the worlds and the stores for it. The order is in the Tech tab.	Следующее кольцо можно нанести: у Земли хватает миров и запасов. Приказ — во вкладке «Техника».
+UI	u_toTech	To Tech	К технике
+UI	u_alertFoodBody	Earth has {n} years of rations and no farm on a line. Settle a farm and put a hull on its line.	У Земли рационов на {n} лет и ни одной фермы на линии. Заселите ферму и поставьте судно на её линию.
+UI	u_worksBody	{p} makes parts. The drive programme runs in the Tech tab — {n} parts buy the next generation of hulls.	{p} делает детали. Программа двигателя — во вкладке «Техника»: {n} деталей дают следующее поколение судов.
+UI	u_stYard	in the yard · {n} yrs → {p}	на верфи · {n} лет → {p}
+UI	u_stMissing	overdue · {n} yrs	опаздывает · {n} лет
+UI	u_stMutiny	crew refuses to fly	экипаж отказывается лететь
+UI	u_stSettlers	{n} settlers → {p} · {y} yrs	{n} поселенцев → {p} · {y} лет
+UI	u_stEvacHome	{n} people → Earth · {y} yrs	{n} человек → Земля · {y} лет
+UI	u_stEvacOut	to lift {p} · {y} yrs	за людьми на {p} · {y} лет
+UI	u_stSearch	searching near {p} · {y} yrs	поиск у {p} · {y} лет
+UI	u_stKit	carries tier {t} machines · {y} yrs	везёт технику яруса {t} · {y} лет
+UI	u_stHome	Earth · {y} yrs	Земля · {y} лет
+UI	u_stOut	{p} · {y} yrs	{p} · {y} лет
+UI	u_stCrew	waits for a crew	ждёт экипаж
+UI	u_stReserve	ark reserve	резерв ковчега
+UI	u_stAtEarth	unloading at Earth	разгрузка на Земле
+UI	u_stPend	takes the {p} line	встаёт на линию {p}
+UI	u_stFree	free at the pier	свободно у причала
+UI	u_stLoading	loading at {p}	погрузка на {p}
+UI	u_stMoveTo	moves to {p} on docking	перейдёт на {p} у причала
+UI	u_ringN	ring {n}	кольцо {n}
+UI	u_kMine	Mine	Рудник
+UI	u_kFarm	Farm	Ферма
+UI	u_kWell	Well	Скважина
+UI	u_kWorks	Works	Завод
+UI	u_calm	calm	тихо
+UI	u_evacW_wait	Courier {n} is home in {l} {yrl}; or build one in the Yard.	Курьер {n} будет дома через {l} {yrl}; или заложите новый на верфи.
+UI	u_evacW_orderC	Build a courier in the Yard, or take one off a line.	Заложите курьер на верфи или снимите один с линии.
+UI	u_evacLate	Evacuate · too late	Эвакуация · поздно
+UI	u_evacuate	Evacuate	Эвакуировать
+UI	u_evacWho	{h} · all {k} · {y} yrs out	{h} · все {k} · лететь {y} лет
+UI	u_evacShort	{h} holds {c} of {k} — {l} stay	{h} берёт {c} из {k} — {l} останутся
+UI	u_lastLift	Last lift	Последний рейс
+UI	u_liftCut	missed	упущен
+UI	u_liftNone	no courier makes it	ни один курьер не успеет
+UI	u_machines	Machines	Техника
+UI	u_tierRun	tier {t} · running	ярус {t} · работает
+UI	u_tierStand	tier {t} · standing	ярус {t} · стоит
+UI	u_tierNone	none	нет
+UI	u_fuelOnSite	Fuel on site	Топливо на месте
+UI	u_kitWaiting	Tier {t} kit ({w}) waits on the pier for the next hull of this line.	Комплект яруса {t} ({w}) ждёт на причале следующее судно этой линии.
+UI	u_kitTooBig	Tier {t} kit weighs {w}; the biggest hold on this line is {h}. Put a bigger hull on the line.	Комплект яруса {t} весит {w}; самый большой трюм на линии — {h}. Поставьте на линию судно крупнее.
+UI	u_kitGate	Machines open with Generation {g} hulls.	Техника открывается с судами поколения {g}.
+UI	u_kitGain	Tier {t}: {x} → {y} /yr · burns {f} fuel /yr	Ярус {t}: {x} → {y} /год · жжёт {f} топлива /год
+UI	u_kitOrder	Order tier {t}	Заказать ярус {t}
+UI	u_kitHold	Needs a hold of {w} on the line — the biggest is {h}.	Нужен трюм {w} на линии — самый большой {h}.
+UI	u_inTransit	in transit	в пути
+UI	u_settlersWay	Settlers on the way	Поселенцы в пути
+UI	u_peopleN	{n} people	{n} человек
+UI	u_landsIn	lands in {n} yrs	сядут через {n} лет
+UI	u_world	World	Мир
+UI	u_makes	Makes	Делает
+UI	u_deposit	Deposit	Залежь
+UI	u_crossing	Crossing	Переход
+UI	u_oneWay	{n} yrs one way	{n} лет в одну сторону
+UI	u_sector	Sector	Доля
+UI	u_found	Found a colony	Основать колонию
+UI	u_settlers	Settlers	Поселенцы
+UI	u_whoGoes	Who goes	Кто летит
+UI	u_whoLine	hold {c} · arrives in {n} yrs	трюм {c} · долетит за {n} лет
+UI	u_noneReach	No free hull at Earth reaches ring {n}.	Ни одно свободное судно у Земли не долетит до кольца {n}.
+UI	u_noFree	No free hull at Earth.	У Земли нет свободных судов.
+UI	u_price	Price	Цена
+UI	u_sendSettlers	Send settlers	Отправить поселенцев
+UI	u_free	free	свободен
+UI	u_workedOut	worked out	выработан
+UI	u_seamDead	The seam is dead	Жила мертва
+UI	u_eats	This world eats	Этот мир ест
+UI	u_worksIdle	The works stand — no metal or rations on site.	Завод стоит — на месте нет металла или рационов.
+UI	u_worksLow	Metal or rations for {n} years — then the works stop.	Металла или рационов на {n} лет — потом завод встанет.
+UI	u_onSurface	On the surface	На поверхности
+UI	u_lineCarries	Line carries	Линия увозит
+UI	u_worldGives	World gives	Мир даёт
+UI	u_dryShort	worked out	выработана
+UI	u_dryLead	The seam is dead: {n} {r} still on the surface. Haul it home, then evacuate.	Жила мертва: на поверхности ещё {n} ({r}). Вывезите, потом эвакуируйте.
+UI	u_onLine	On this line	На этой линии
+UI	u_hullsN	hulls · {n}	судов · {n}
+UI	u_move	Move	Перевести
+UI	u_takeOff	Take off	Снять
+UI	u_noHulls	No hulls on this line — nothing comes home from here.	На линии нет судов — отсюда ничего не приходит.
+UI	u_addHull	Add a hull	Добавить судно
+UI	u_segFree	Free · {n}	Свободные · {n}
+UI	u_segOther	Other lines · {n}	С других линий · {n}
+UI	u_roundTrip	round trip {n} yrs	рейс туда-обратно {n} лет
+UI	u_fromLine	from {p}	с линии {p}
+UI	u_tooShort	reaches ring {n} — too short	долетает до кольца {n} — мало
+UI	u_assign	Assign	Назначить
+UI	u_moveHere	Move here	Перевести сюда
+UI	u_noFreePier	No free hulls at the pier. Order one below or take one from another line.	У причала нет свободных судов. Закажите ниже или заберите с другой линии.
+UI	u_noOther	No hulls on other lines.	На других линиях судов нет.
+UI	u_orderNew	Or order a new one	Или заказать новое
+UI	u_yardGen	Yard · gen {g}	Верфь · пок. {g}
+UI	u_needLive	needs {n} live worlds	нужно живых миров: {n}
+UI	u_buildYrs	Build · {n} yrs	Строить · {n} лет
+UI	u_moveTo	Move {h} to	Перевести {h} на
+UI	u_sendTo	Send {h} to	Отправить {h} на
+UI	u_outReach	out of reach	не долетит
+UI	u_noWorlds	No live world to go to.	Нет живого мира, куда отправить.
+UI	u_keep	Keep it where it is	Оставить как есть
+UI	u_inYards	In the yards	На верфях
+UI	u_lineOf	{p} line	линия {p}
+UI	u_yardsIdle	The yards are idle.	Верфи стоят.
+UI	u_buildFree	Build a free hull	Построить свободное судно
+UI	u_atPier	At the pier	У причала
+UI	u_release	Release	Вернуть
+UI	u_reserve	Reserve for ark	В резерв ковчега
+UI	u_scrapSure	Confirm scrap · +{m} metal	Точно в слом · +{m} металла
+UI	u_scrap	Scrap	В слом
+UI	u_pierEmpty	Nobody free at the pier.	У причала свободных нет.
+UI	u_fl_all	All {n}	Все {n}
+UI	u_fl_free	Free {n}	Свободные {n}
+UI	u_fl_lines	On lines {n}	На линиях {n}
+UI	u_fl_yards	In yards {n}	На верфях {n}
+UI	u_fl_away	Other {n}	Прочие {n}
+UI	u_send	Send	Отправить
+UI	u_search	Search	Искать
+UI	u_none	None.	Нет.
+UI	u_ws_dead	evacuate	эвакуировать
+UI	u_ws_cut	cut off	отрезан
+UI	u_ws_starve	works stand	завод стоит
+UI	u_ws_noline	no hulls	нет судов
+UI	u_ws_half	line carries less	линия не успевает
+UI	u_ws_dry	seam dead	жила мертва
+UI	u_ws_ok	—	—
+UI	u_ws_settling	settlers on the way	поселенцы в пути
+UI	u_ws_free	free	свободен
+UI	u_liveFree	{l} live · {f} free	{l} живых · {f} свободных
+UI	u_thWorld	World	Мир
+UI	u_thRing	Ring	Кольцо
+UI	u_thLeft	Left	Осталось
+UI	u_thHulls	Hulls	Суда
+UI	u_thState	State	Состояние
+UI	u_cellIs	One cell = {k} worlds · {n} of {m}	Одна клетка = {k} миров · {n} из {m}
+UI	u_noWorks	No works world yet — parts come only from works.	Заводов пока нет — детали делают только заводы.
+UI	u_hullGen	Hull generation	Поколение судов
+UI	u_driveAt	programme at {p}	программа на {p}
+UI	u_step1	1 · Worlds ever settled · {n} of {m}	1 · Заселено миров за всё время · {n} из {m}
+UI	u_step2	2 · Parts for the programme · {n} of {m}	2 · Деталей на программу · {n} из {m}
+UI	u_runAt	Run the programme at	Где вести программу
+UI	u_start	Start the programme	Запустить программу
+UI	u_startMore	Start · {n} more worlds	Запуск · ещё {n} миров
+UI	u_genGives	Generation {g} gives	Поколение {g} даёт
+UI	u_hold	Hold	Трюм
+UI	u_speedH	Speed	Скорость
+UI	u_reachH	Reach	Дальность
+UI	u_arkWakeNext	The ark: {a}% wake → {b}%	Ковчег: проснутся {a}% → {b}%
+UI	u_rings	Rings	Кольца
+UI	u_charted	{n} charted	нанесено {n}
+UI	u_ringNext	Ring {s}	Кольцо {s}
+UI	u_settledOf	Worlds ever settled: {n} of {m}	Заселено миров: {n} из {m}
+UI	u_survey	Survey	Разведать
+UI	u_surveyMore	Survey · {n} more worlds	Разведка · ещё {n} миров
+UI	u_beyond	{k} free worlds lie past ring {n} — generation {g} reaches them.	{k} свободных миров дальше кольца {n} — туда долетит поколение {g}.
+UI	u_tech	Technology	Технологии
+UI	u_arkReady	Gen {g} · ready	пок. {g} · готов
+UI	u_arkBy	Gen {g} · ≈ {y}	пок. {g} · ≈ {y}
+UI	u_arkNeedW	Gen {g} · needs {n} worlds settled, {r} now	пок. {g} · нужно миров {n}, сейчас {r}
+UI	u_arkNoHost	Gen {g} · no works can host the programme	пок. {g} · нет завода для программы
+UI	u_arkStall	Gen {g} · no parts coming in	пок. {g} · детали не идут
+UI	u_noDate	The Night has no date yet	У Ночи ещё нет даты
+UI	u_noDateHint	The survey of ring {n} brings the readings — or year {y} comes regardless.	Даты ждут от разведки кольца {n} — или наступит {y} год.
+UI	u_theNight	The Night	Ночь
+UI	u_arkDrive	Ark drive	Двигатель ковчега
+UI	u_wake	Wake	Проснутся
+UI	u_withGen	With gen {g} · {y}	С пок. {g} · {y}
+UI	u_levels	Levels	Уровни
+UI	u_takesAlong	takes along	увезёт
+UI	u_paid	Paid	Оплачен
+UI	u_buyLv	Buy level {l}	Купить уровень {l}
+UI	u_convoy	Convoy · {a} · {b} · {c}	Конвой · {a} · {b} · {c}
+UI	u_genPlus	gen {g}+	пок. {g}+
+UI	u_empty	Empty	Пусто
+UI	u_convoyHint	Hulls of generation {g} or newer, docked at Earth on the day. Hold them with «Reserve for ark» in the Yard.	Суда поколения {g} и новее у причала Земли в тот день. Придержите их кнопкой «В резерв ковчега» на верфи.
+UI	u_toYard	To the Yard	На верфь
+UI	u_ifToday	If the Night came today	Если бы Ночь пришла сегодня
+UI	u_arkStays	The ark stays	Ковчег остаётся
+UI	u_arkSails	The ark sails	Ковчег уходит
+UI	u_vNoLevel	No level of the ark is paid.	Ни один уровень ковчега не оплачен.
+UI	u_vNoDrive	The generation {g} drive is not ready.	Двигатель поколения {g} не готов.
+UI	u_vConvoy	The convoy is short: {s}.	Конвою не хватает: {s}.
+UI	u_vSails	{s} sail · {w} wake · {l} stay behind	{s} улетают · {w} проснутся · {l} остаются
+UI	u_vBoard	{s} aboard	{s} на борту
+UI	u_aDead	{w}: the seam is dead	{w}: жила мертва
+UI	u_aDeadC	{n} people are still there	Там ещё {n} человек
+UI	u_aCut	{w} is cut off	{w} отрезан
+UI	u_aCutC	{n} people stay — no courier gets home in time	{n} человек останутся — ни один курьер не успеет домой
+UI	u_aStarve	{w}: the works stand, no {r}	{w}: завод стоит, нет: {r}
+UI	u_aStarveC	No parts come from here	Детали отсюда не идут
+UI	u_aLift	{w}: last lift in {n} years ({y})	{w}: последний рейс через {n} лет ({y})
+UI	u_aLiftC	Then {n} people stay for the Night	Потом {n} человек останутся в Ночь
+UI	u_aNoLine	{w}: no hulls on the line	{w}: на линии нет судов
+UI	u_aNoLineC	Nothing comes home from here	Отсюда ничего не приходит
+UI	u_aHalf	{w}: {c} of {m} {r} a year reach Earth	{w}: до Земли доходит {c} из {m} ({r}) в год
+UI	u_aHalfC	The rest piles up on the surface — {n} now	Остальное копится на поверхности — уже {n}
+UI	u_aDry	{w}: seam dead, {n} {r} on the surface	{w}: жила мертва, на поверхности {n} ({r})
+UI	u_aDryC	Haul it home, then evacuate	Вывезите, потом эвакуируйте
+UI	u_aKit	{w}: tier {t} machines weigh {n}, the line holds {h}	{w}: техника яруса {t} весит {n}, линия берёт {h}
+UI	u_aKitC	They wait until a bigger hull is on the line	Ждёт, пока на линии не будет судна крупнее
+UI	u_aKitFuel	{w}: the machines stand — no fuel	{w}: техника стоит — нет топлива
+UI	u_aKitFuelC	The world digs by hand	Мир копает вручную
+UI	u_fixEvac	Evacuate	Эвакуировать
+UI	u_fixSee	See	Смотреть
+UI	u_fixAdd	Add a hull	Добавить судно
+UI	u_fixOrder	Order a hull	Заказать судно
+UI	u_advNone	No world needs a decision now.	Сейчас ни один мир не ждёт решения.
+UI	u_mLang	Language	Язык
+UI	u_mSound	Sound	Звук
+UI	u_on	on	вкл
+UI	u_off	off	выкл
+UI	u_mSave	Save the game to a file	Сохранить игру в файл
+UI	u_mLoad	Load a game from a file	Загрузить игру из файла
+UI	u_mExport	Export the run log	Выгрузить лог забега
+UI	u_skipped	Skipped {n} years — year {y}.	Пропущено лет: {n} — год {y}.
+MSG	ok_savegame	Game saved to a file.	Игра сохранена в файл.
+MSG	ok_loadgame	Game loaded — year {y}. Time is paused.	Игра загружена — год {y}. Время стоит.
+MSG	loadfail	That file is not a saved game.	Этот файл — не сохранённая игра.
+MSG	nohost	No works world with {n} people to host the programme.	Нет завода с {n} людьми, где вести программу.
+MSG	ok_moveDock	Hull {n} moves to {p} when it docks at Earth.	Судно {n} перейдёт на {p}, когда причалит к Земле.
+MSG	ok_search	A hull goes to look for hull {n}.	Судно ушло искать судно {n}.
+UI	u_newGenBody	Order them in the Yard or under a world's line.	Заказывайте их на верфи или под линию мира.

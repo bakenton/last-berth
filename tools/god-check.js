@@ -8,8 +8,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
   await p.goto(url.pathToFileURL(path.resolve(__dirname,'..','work','LAST-BERTH-god.html')).href); await p.waitForTimeout(300);
-  await p.evaluate(()=>{ document.getElementById('seedin').value='309573272'; document.querySelector('[data-act="new"]').click() });
-  await p.click('[data-lang="en"]'); await p.click('[data-act="oskip"]'); await p.click('[data-act="prologue"]').catch(()=>{});
+  // v4.35: the seed lives in the ≡ menu; there is no prologue
+  await p.click('[data-lang="en"]'); await p.click('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin','309573272'); await p.click('[data-act="new"]');
   ok('GOD tab present', await p.isVisible('#god-tab'));
   await p.click('#god-tab'); ok('panel opens', await p.isVisible('#god'));
   const btn=t=>p.click('#god [data-g="'+t+'"]',{timeout:4000});

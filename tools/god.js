@@ -29,14 +29,14 @@ var A={
     var s={id:g.nextShip++,hull:i,cap:h.cap,crew:h.crew,mode:'idle',t:0,at:'earth',target:null,route:null,auto:true,
       cargo:{metal:0,food:0,fuel:0,parts:0,people:0},out:{metal:0,food:0,parts:0,people:0},take:{metal:0,food:0,fuel:0,parts:0},missDays:0,bearing:null,job:null};
     g.ships.push(s); mark('free hull '+h.key+' #'+s.id); draw(); return s },
-  settle:function(){ var g=G(), pid=U().sel; if(!pid||!planet(pid)){ say('выбери мир на карте'); return }
+  settle:function(){ var g=G(), pid=U().win; if(!pid||!planet(pid)){ say('открой мир на карте'); return }
     if(g.colonies[pid]){ say('уже заселён'); return }
     var gen=g.gen||0, i=HULLS.map(function(h,j){return j}).filter(function(j){return HULLS[j].gen===gen&&HULLS[j].key==='courier'})[0]; if(i===undefined) i=0;
     var s=A.hull(i); var r=colonize(g,s.id,pid,26,0); mark('settle '+pid+' → '+r); say('settle '+pid+': '+r+' (дальше — промотай время)'); draw() },
-  fill:function(){ var g=G(), pid=U().sel; if(!pid||!g.colonies[pid]){ say('выбери заселённый мир'); return }
+  fill:function(){ var g=G(), pid=U().win; if(!pid||!g.colonies[pid]){ say('открой заселённый мир'); return }
     g.reserves[pid]=1e7; g.colonies[pid].dry=false; mark('fill reserve '+pid); draw() },
   event:function(){ var g=G(); if(!g.dir) g.dir={next:0,ev:[],n:0,seq:1}; g.dir.next=g.day; mark('director now'); say('режиссёр: событие со следующего года'); },
-  noPro:function(){ var u=U(), g=G(); u.pro.on=false; u.pro.stage=6; g.safe=false; u.pro.calls=['cAdvisor']; u.voiceSeq=Math.max.apply(null,[0].concat(g.log.map(function(e){return e.seq||0}))); u.shiftStop=false; draw(); say('пролог пропущен') },
+  noPro:function(){ var u=U(), g=G(); u.voiceSeq=g.logSeq||0; u.notes=[]; u.shiftStop=false; draw(); say('окна событий сброшены, смены без остановки') },   // v4.35: the prologue is gone; kept for old callers
   inf:null,
   infToggle:function(){ if(A.inf){ clearInterval(A.inf); A.inf=null; say('∞ Земля: выкл') } else { A.inf=setInterval(function(){ var E=G().earth; ['metal','food','fuel','parts'].forEach(function(k){ if(E[k]<20000) E[k]=20000 }) },200); say('∞ Земля: вкл (ресурсы ≥20000)') } },
   save:function(slot){ try{ localStorage.setItem(KEY+slot,A.dump()); say('слот '+slot+' записан') }catch(e){ say('не влезло в localStorage — используй «в файл»') } },
