@@ -789,12 +789,12 @@ function hullSt(s){
   if(s.mode==='missing') return ['overdue',fill(T('u_stMissing'),{n:s.missDays||0}),C.red];
   if(s.mutiny) return ['mutiny',T('u_stMutiny'),C.red];
   if(s.mode==='transit'){
-    if(s.job==='colonize') return ['settlers',fill(T('u_stSettlers'),{n:num(s.cargo.people||0),p:pname(s.dest),y:s.t}),C.people];
-    if(s.job==='evac') return s.dest==='earth'?['evac',fill(T('u_stEvacHome'),{n:num(s.cargo.people||0),y:s.t}),C.people]:['evac',fill(T('u_stEvacOut'),{p:pname(s.dest),y:s.t}),C.people];
-    if(s.job==='search') return ['overdue',fill(T('u_stSearch'),{p:pname(s.dest==='earth'?s.origin:s.dest),y:s.t}),C.mid];
-    if(s.cargo&&s.cargo.kit) return ['kit',fill(T('u_stKit'),{t:roman(s.cargo.kit.tier-1),y:s.t}),C.people];
-    if(s.dest==='earth') return ['toEarth',fill(T('u_stHome'),{y:s.t}),C.mid];
-    return ['toWorld',fill(T('u_stOut'),{p:pname(s.dest),y:s.t}),C.mid];
+    if(s.job==='colonize') return ['settlers',fill(T('u_stSettlers'),{n:num(s.cargo.people||0),p:pname(s.dest),t:s.t}),C.people];
+    if(s.job==='evac') return s.dest==='earth'?['evac',fill(T('u_stEvacHome'),{n:num(s.cargo.people||0),t:s.t}),C.people]:['evac',fill(T('u_stEvacOut'),{p:pname(s.dest),t:s.t}),C.people];
+    if(s.job==='search') return ['overdue',fill(T('u_stSearch'),{p:pname(s.dest==='earth'?s.origin:s.dest),t:s.t}),C.mid];
+    if(s.cargo&&s.cargo.kit) return ['kit',fill(T('u_stKit'),{t:roman(s.cargo.kit.tier-1),t:s.t}),C.people];
+    if(s.dest==='earth') return ['toEarth',fill(T('u_stHome'),{t:s.t}),C.mid];
+    return ['toWorld',fill(T('u_stOut'),{p:pname(s.dest),t:s.t}),C.mid];
   }
   if(s.at==='earth'||!s.at){
     if(s.crewWait) return ['mutiny',T('u_stCrew'),C.red];
@@ -841,7 +841,7 @@ function evacBlock(p){ var c=G.colonies[p.id];
   if(ll&&ll.st==='cut') return alertBox('cutoff',esc(fill(T('liftCut'),{k:num(ll.pop)})))+btn(esc(T('u_evacLate')),'evac',{p:p.id},'full','evac',off('evacLate',{p:pname(p.id)}));
   var s=pickCourier(p.id), pop=Math.floor(c.pop);
   if(!s) return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac',off('evacNoCourier',{p:pname(p.id),w:evacW(p.id)}));
-  return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac')+hint(esc(fill(T(s.cap<pop?'u_evacShort':'u_evacWho'),{h:T('courier')+' '+fill(T('hullNo'),{n:s.id}),c:s.cap,k:pop,l:pop-s.cap,y:legDays(G,p.id,'earth',s)})),'c') }
+  return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac')+hint(esc(fill(T(s.cap<pop?'u_evacShort':'u_evacWho'),{h:T('courier')+' '+fill(T('hullNo'),{n:s.id}),c:s.cap,k:pop,l:pop-s.cap,t:legDays(G,p.id,'earth',s)})),'c') }
 function liftRow(p){ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
   var v=ll.st==='cut'?T('u_liftCut'):(ll.st==='none'?T('u_liftNone'):ll.y+' · '+fill(T('u_yearsN'),{n:ll.n}));
   return row(ic('lift',13,C.people)+esc(T('u_lastLift')),esc(v),ll.st==='cut'?C.red:(ll.st==='none'||ll.n<=25?C.red:(ll.n<=K.LIFT_WARN?C.people:null)),'rw-lift') }
@@ -1045,7 +1045,7 @@ function winArk(){
     h+='<div class="lc '+cls+'"><b>'+roman(l-1)+'</b><span>'+esc(T('u_takesAlong'))+'</span><div class="prow">'+price(cap,null,11)+'</div>';
     if(l<=lv) h+='<em>'+esc(T('u_paid'))+'</em>';
     else { var owed=arkOwed(G,l), w=arkCheck(G,l); if(w==='ok') w=shortWhy(owed,G.earth);
-      h+='<div class="prow">'+price(owed,G.earth,11)+'</div>'+(l===lv+1||(typeof w!=='string'&&w[0]==='ok')?btn(esc(fill(T('u_buyLv'),{l:roman(l-1)})),'arkbuy',{l:l},(typeof w!=='string'&&w[0]==='ok')?'pri':'',null,offW(w)):'') }
+      h+='<span>'+esc(T('u_price'))+'</span><div class="prow">'+price(owed,G.earth,11)+'</div>'+(l===lv+1||(typeof w!=='string'&&w[0]==='ok')?btn(esc(fill(T('u_buyLv'),{l:roman(l-1)})),'arkbuy',{l:l},(typeof w!=='string'&&w[0]==='ok')?'pri':'',null,offW(w)):'') }
     h+='</div>' }
   h+='</div></div></div>';
   var cv=arkConvoy(G), pier=G.ships.filter(function(s){ return convoyHull(G,s) }).sort(function(a,b){ return (b.reserve?1:0)-(a.reserve?1:0)||hullGen(b)-hullGen(a) });
