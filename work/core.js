@@ -711,7 +711,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.37', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:'4.38', constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),convoy:arkConvoy(G),arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -1177,6 +1177,59 @@ function lineRate(G,pid){
   return {makes:makes, carries:carries, hulls:hulls, trip:trip, dep:dep,
           sitting:sitting, dry:(G.reserves[pid]!==Infinity&&G.reserves[pid]<=0),
           short: makes-carries, piling: makes>carries+0.01};
+}
+
+/* ---------- v4.38 (Nikita, 19.10): the line's fit — which hull to add, which one runs half empty ----------
+   «игра предлагает, какое судно построить, если линия не справляется; предупреждает, что судов больше, чем вывоз;
+   предлагает перенести с другой линии или взять судно, которое стоит без дела». Option A: one action, in this order —
+   a free hull at Earth, a spare hull off another line, the smallest new hull that closes the gap. Pure; the advisor reads it. */
+var FIT_PILE=120,   // a surface pile this big is the line falling behind, and spare hulls are still clearing it
+    FIT_SPARE=1.2;  // a hull is spare when the line carries this many times what it must without her
+/* what one hull carries a year on this world's line, at her speed; a hull number or {hull:i} for one not yet built */
+function hullYield(G,pid,s){ var h=HULLS[s.hull]; return (s.cap!=null?s.cap:(h?h.cap:0))/Math.max(1,legDays(G,pid,'earth',s)*2) }
+/* what the line must carry a year (the world's output, or what a works or a kit burns if that is more) against what its
+   hulls carry — the ones in the yards or on their way to the line counted, they are coming; a hull told to move (s.moveTo,
+   she changes line when she docks) counts for the line she is going to */
+function lineFit(G,pid){
+  var lr=lineRate(G,pid); if(!lr) return null;
+  var fr=feedRates(G,pid), need=Math.max(lr.makes,(fr.metal||0)+(fr.food||0)+(fr.fuel||0));
+  var hs=onLine(G,pid).filter(function(s){ return s.mode!=='missing'&&(!s.moveTo||s.moveTo===pid) }), carries=0;   // a missing hull carries nothing (reviewer v4.38)
+  G.ships.forEach(function(s){ if(s.moveTo===pid&&s.mode!=='dead'&&s.mode!=='missing'&&hs.indexOf(s)<0) hs.push(s) });
+  for(var i=0;i<hs.length;i++) carries+=hullYield(G,pid,hs[i]);
+  return {need:need, carries:carries, gap:need-carries, hulls:hs, sitting:lr.sitting, dep:lr.dep};
+}
+/* the hulls this line can lose and still carry FIT_SPARE times what it must, the biggest first. None while the world still
+   takes settlers, waits for a kit, has a pile to clear or a dead seam — the extra hold is working there */
+function lineSpare(G,pid){
+  var c=G.colonies[pid], p=planet(pid), f=lineFit(G,pid); if(!c||!f) return [];
+  if(c.kit||c.pop<popWant(p)*0.95||f.sitting>FIT_PILE) return [];
+  if(p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0) return [];
+  var left=f.carries, out=[];
+  f.hulls.filter(function(s){ return s.mode!=='building'&&s.mode!=='missing'&&!s.mutiny&&!s.job&&!s.moveTo })
+    .sort(function(a,b){ return hullYield(G,pid,b)-hullYield(G,pid,a)||hullGen(a)-hullGen(b) })
+    .forEach(function(s){ var y=hullYield(G,pid,s); if(left-y>=f.need*FIT_SPARE){ left-=y; out.push(s) } });
+  return out;
+}
+/* what to do about a line that falls behind: {kind:'free'|'move'|'build', sid|cls, add, gap}, or null when the hulls
+   coming close it. opt.noMove — the player cannot move hulls yet; opt.cls(cls) — the classes the player can order;
+   opt.used — hull ids already named for another line. In the Night no hull whose crew would refuse the round trip */
+function lineHelp(G,pid,opt){
+  opt=opt||{};
+  var f=lineFit(G,pid), p=planet(pid); if(!f||f.gap<=0.01) return null;
+  var gap=f.gap, y=function(s){ return hullYield(G,pid,s) }, used=opt.used||[];
+  var sails=function(s){ return used.indexOf(s.id)<0&&!(G.night&&nightLeft(G)<K.MUTINY_MIN*legDays(G,pid,'earth',s)*2) };
+  // the smallest that closes the gap, else the biggest there is
+  function best(list){ var fit=list.filter(function(o){ return y(o)>=gap }).sort(function(a,b){ return y(a)-y(b) });
+    return fit[0]||list.sort(function(a,b){ return y(b)-y(a) })[0]||null }
+  var b=best(G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.job&&!s.mutiny&&!s.crewWait&&!s.reserve&&canReachSector(s,p.sec)&&sails(s) }));
+  if(b) return {kind:'free', sid:b.id, add:y(b), gap:gap};
+  if(!opt.noMove){ var spare=[];
+    for(var k in G.colonies){ if(k!==pid) lineSpare(G,k).forEach(function(s){ if(canReachSector(s,p.sec)&&sails(s)) spare.push(s) }) }
+    b=best(spare); if(b) return {kind:'move', sid:b.id, from:b.from||(b.pend&&b.pend.from), add:y(b), gap:gap} }
+  var hs=[]; CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null||(opt.cls&&!opt.cls(cls))) return;
+    if(reach(G)<HULLS[hi].reach||!canReachSector({hull:hi},p.sec)||orderCheck(G,pid,cls)==='orderNight') return; hs.push({hull:hi,cls:cls}) });
+  b=best(hs); if(b) return {kind:'build', cls:b.cls, hull:b.hull, add:y(b), gap:gap};
+  return null;
 }
 
 function tick(G){

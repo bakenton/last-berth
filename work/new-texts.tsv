@@ -511,3 +511,11 @@ UI	nar_rsLevel	not one ark level was paid	ни один уровень ковч�
 UI	nar_aboard	Aboard	На борту
 UI	nar_N13d	The rations ran out. Earth fell silent before the work was done.	Рационы кончились. Земля замолчала, не дождавшись конца работы.
 UI	nar_N13d_a	I will remember this shift. To wait, Earth has to eat.	Эту смену я запомню. Чтобы ждать, Земле нужно есть.
+UI	u_lineAdds	+{n}/yr on this line	+{n}/год на этой линии
+UI	u_aFixFree	{h} stands idle at Earth: +{a} a year, the line is {g} short	{h} стоит у Земли без дела: +{a} в год, линии не хватает {g}
+UI	u_aFixMove	{h} runs half empty on {p}: +{a} a year here, the line is {g} short	{h} ходит полупустым на {p}: здесь +{a} в год, линии не хватает {g}
+UI	u_aFixBuild	Order a {h}: +{a} a year, the line is {g} short	Закажите {h}: +{a} в год, линии не хватает {g}
+UI	u_aSpare	{w}: the line can carry {c} {r} a year, it needs {m}	{w}: линия может увезти {c} ({r}) в год, нужно {m}
+UI	u_aSpareC	{h} runs half empty — move her where a line falls behind, or take her off	{h} ходит полупустым — переведите туда, где линия не справляется, или снимите
+UI	u_aSpareN	{n} hulls too many. First: {h} — move her, or take her off	Лишних судов: {n}. Первое — {h}: переведите или снимите
+UI	u_fixHull	Show the hull	Показать судно

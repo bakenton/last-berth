@@ -487,7 +487,7 @@ function wst(pid){ var c=G.colonies[pid];
   var wh=worksHungry(pid); if(wh&&wh.idle>5) return 'starve';
   if(!onLine(G,pid).length) return 'noline';
   if(isDry(pid)) return 'dry';
-  var lr=lineRate(G,pid); if(lr&&lr.piling&&lr.sitting>120) return 'half';
+  var lr=lineRate(G,pid); if(lr&&lr.piling&&lr.sitting>FIT_PILE&&lineFit(G,pid).gap>0.01) return 'half';   // v4.38: a hull in the yards for the line counts
   return 'ok' }
 var BAD_ST={dead:1,cut:1,starve:1};
 
@@ -608,7 +608,7 @@ var SPEEDS=[1,2,4,10];
 function drawTop(){
   var h='<div class="logo"><i></i>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
-  if(can('advisor')){ var n=advRows().length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
+  if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
   if(can('speed')){ h+='<button type="button" data-act="spd" data-v="0" class="'+(hz?'on pzb':'')+'" title="Space">❚❚</button>';
@@ -1074,7 +1074,9 @@ function clsSeen(cls){ return cls==='courier'||can('parts') }   // v4.36: a hull
 function stepOrder(pid){ var col=!!G.colonies[pid];
   return PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id])&&(!!G.colonies[p.id])===col })
     .sort(function(a,b){ return a.sec-b.sec||a.ang-b.ang }).map(function(p){ return p.id }) }
-function openWorld(pid,focus){ U.pop=null; U.win=pid; U.scrapArm=null; U.focus=focus?FOCUS[focus]:null }
+function openWorld(pid,focus){ U.pop=null; U.win=pid; U.scrapArm=null; var f=(focus||'').split(':');
+  if(f[1]&&(f[0]==='free'||f[0]==='other')) U.addTab=f[0];   // v4.38: the advisor names a hull — open the tab she is on and light her
+  U.focus=!focus?null:f[1]?'#'+{free:'ah',other:'ah',oc:'oc',hr:'hr'}[f[0]]+'-'+f[1]:FOCUS[focus] }
 var FOCUS={evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
 var KW={mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
 function wsub(p,extra){ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toUpperCase()) }
@@ -1167,7 +1169,7 @@ function winWorld(pid){
   var tab=U.addTab==='other'&&can('fleet')?'other':'free', pool=tab==='free'?free:other;
   R+='<div id="addblk"><div class="sec"><span>'+esc(T('u_addHull'))+'</span><span class="seg"><button type="button" data-act="addtab" data-v="free" class="'+(tab==='free'?'on':'')+'">'+esc(fill(T('u_segFree'),{n:free.length}))+'</button>'+(can('fleet')?'<button type="button" data-act="addtab" data-v="other" class="'+(tab==='other'?'on':'')+'">'+esc(fill(T('u_segOther'),{n:other.length}))+'</button>':'')+'</span></div><div class="lst">';
   R+=pool.length?pool.sort(function(a,b){ return hullGen(b)-hullGen(a)||b.cap-a.cap }).map(function(s){ var ok=canReachSector(s,p.sec), wl=s.from||(s.pend&&s.pend.from);
-    return '<div class="hr'+(ok?'':' dis')+'">'+shipIc(shipClass(s),30)+genB(hullGen(s),hullGen(s)<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+
+    return '<div class="hr'+(ok?'':' dis')+'" id="ah-'+s.id+'">'+shipIc(shipClass(s),30)+genB(hullGen(s),hullGen(s)<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+
       (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+' · '+ic('speed',15,C.mid)+esc(fill(T('u_roundTrip'),{n:legDays(G,pid,'earth',s)*2}))+'</span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
          :'<span class="hst" style="color:'+C.red+'">'+ic('range',15,C.red)+esc(fill(T('u_tooShort'),{n:shipRange(s)+1}))+'</span>')+
       '</span><span class="ha">'+(ok?btn(esc(T(tab==='free'?'u_assign':'u_moveHere')),tab==='free'?'assign':'move',{s:s.id,p:pid},'pri','assign'):'')+'</span></div>' }).join('')
@@ -1179,7 +1181,8 @@ function winWorld(pid){
       if(reach(G)<h.reach){ R+='<div class="oc dis">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="why dim">'+esc(fill(T('u_needLive'),{n:h.reach}))+'</div></div>'; return }
       var w=orderCheck(G,pid,cls); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth);
       var okb=(typeof w==='string'?w:w[0])==='ok';
-      R+='<div class="oc'+(okb?'':' dis')+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
+      R+='<div class="oc'+(okb?'':' dis')+'" id="oc-'+cls+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b>'+
+        (w==='range'?'':'<div class="oy">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,{hull:hi}))}))+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
         (w==='range'?'<div class="why">'+esc(fill(T('u_tooShort'),{n:hullRange(h)+1}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:h.days})),'order',{p:pid,c:cls},'pri','build',offW(w)))+'</div>' });
     R+='</div></div>' }
   return '<div class="win">'+head(esc(pname(pid)),wsub(p),wmark(p.kind,true,16))+'<div class="bd two"><div>'+L0+'</div><div>'+R+'</div></div>'+nav+'</div>' }
@@ -1321,7 +1324,7 @@ function winArk(){
 /* ---------- the advisor: worlds only, worst first (Nikita 15.10: «не понимаю, что делать») ----------
    A row says the problem in numbers, what follows, and a button that names the fix; the button opens the world with the
    place of the fix lit (a yellow ring that fades in ~3 s). */
-function advRows(){ if(!G) return []; var out=[];
+function advRows(){ if(!G) return []; var out=[], used=[];   // v4.38: a hull named for one line is not offered to the next
   Object.keys(G.colonies).forEach(function(pid){ var p=planet(pid), c=G.colonies[pid], st=wst(pid), w=pname(pid), dep=p.kind==='works'?'parts':p.dep, going=evacGoing(pid);
     if(going) return;
     if(st==='dead') out.push([C.red,fill(T('u_aDead'),{w:w}),fill(T('u_aDeadC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac']);
@@ -1329,12 +1332,23 @@ function advRows(){ if(!G) return []; var out=[];
     else if(st==='starve'){ var wh=worksHungry(pid); out.push([C.red,fill(T('u_aStarve'),{w:w,r:T(wh.food<wh.metal?'food':'metal').toLowerCase()}),T('u_aStarveC'),pid,T('u_fixAdd'),'add']) }
     var ll=lastLift(G,pid); if(can('lift')&&ll&&ll.st==='open'&&ll.n<=K.LIFT_WARN) out.push([ll.n<=25?C.red:C.people,fill(T('u_aLift'),{w:w,n:ll.n,y:ll.y}),fill(T('u_aLiftC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac']);
     if(st==='noline') out.push([C.people,fill(T('u_aNoLine'),{w:w}),T('u_aNoLineC'),pid,T('u_fixAdd'),'add']);
-    else if(st==='half'){ var lr=lineRate(G,pid); out.push([C.people,fill(T('u_aHalf'),{w:w,c:dec(lr.carries),m:dec(lr.makes),r:T(dep).toLowerCase()}),fill(T('u_aHalfC'),{n:num(lr.sitting)}),pid,T('u_fixAdd'),'add']) }
+    else if(st==='half'){ var lr=lineRate(G,pid), hp=lineFix(pid,used);
+      out.push([C.people,fill(T('u_aHalf'),{w:w,c:dec(lr.carries),m:dec(lr.makes),r:T(dep).toLowerCase()}),hp?hp[0]:fill(T('u_aHalfC'),{n:num(lr.sitting)}),pid,hp?hp[1]:T('u_fixAdd'),hp?hp[2]:'add']) }
+    else if(st==='ok'&&can('fleet')){ var sp=lineSpare(G,pid);   // v4.38: a hull too many — last in the list, grey
+      if(sp.length){ var sf=lineFit(G,pid); out.push([C.mid,fill(T('u_aSpare'),{w:w,c:dec(sf.carries),m:dec(sf.need),r:T(dep).toLowerCase()}),sp.length>1?fill(T('u_aSpareN'),{n:sp.length,h:hname(sp[0])}):fill(T('u_aSpareC'),{h:hname(sp[0])}),pid,T('u_fixHull'),'hr:'+sp[0].id]) } }
     else if(st==='dry') out.push([C.people,fill(T('u_aDry'),{w:w,n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()}),T('u_aDryC'),pid,T('u_fixSee'),'add']);
     if(can('machines')&&c.kit&&lineHold(G,pid)<c.kit.w) out.push([C.people,fill(T('u_aKit'),{w:w,t:roman(c.kit.tier-1),n:num(c.kit.w),h:num(lineHold(G,pid))}),T('u_aKitC'),pid,T('u_fixOrder'),'ord']);
     if(can('machines')&&kitTier(c)>0&&!kitLive(c)) out.push([C.people,fill(T('u_aKitFuel'),{w:w}),T('u_aKitFuelC'),pid,T('u_fixSee'),'mach']);
   });
-  return out.sort(function(a,b){ return (a[0]===C.red?0:1)-(b[0]===C.red?0:1) }) }
+  var rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
+  return out.sort(function(a,b){ return rk(a)-rk(b) }) }
+/* v4.38 (Nikita, 19.10, option A): the one fix for a line that falls behind — a free hull, a spare one off another line,
+   or the smallest new hull that closes the gap: [what to do, button, focus], or null when the hulls coming close it */
+function lineFix(pid,used){ var h=lineHelp(G,pid,{noMove:!can('fleet'),cls:clsSeen,used:used}); if(!h) return null; if(h.sid!=null) used.push(h.sid);
+  var d={a:dec(h.add),g:dec(h.gap)}, s=h.sid!=null?shipById(G,h.sid):null;
+  if(h.kind==='free'){ d.h=hname(s); return [fill(T('u_aFixFree'),d),T('u_assign'),'free:'+s.id] }
+  if(h.kind==='move'){ d.h=hname(s); d.p=pname(h.from); return [fill(T('u_aFixMove'),d),T('u_moveHere'),'other:'+s.id] }
+  d.h=T(h.cls)+' '+roman(HULLS[h.hull].gen); return [fill(T('u_aFixBuild'),d),T('u_fixOrder'),can('order')?'oc:'+h.cls:'add'] }
 function popAdv(){ var a=advRows();
   return '<div class="advl">'+(a.length?a.map(function(r){ return '<button type="button" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+r[0]+'"></i><b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join(''):'<div class="none">'+esc(T('u_advNone'))+'</div>')+'</div>' }
 function popMenu(){
@@ -1529,7 +1543,7 @@ function start(seed){
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
-  window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState};   // v4.35: what the interface derives, for the scenarios and the bot player
+  window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
   window.LNtut={off:function(){ TUTX.off=true; TUTX.story=false; TUTX.launch=false; clearTimeout(NART); var t=U.tut; t.nar=null; t.q=[]; t.msg=null; if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false; draw() }};   // v4.36: the scenarios' hook «всё открыто»: no launch, no voices, no helper
   draw();
 }

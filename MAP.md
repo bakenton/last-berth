@@ -4,7 +4,7 @@
 Навигация: `grep -n <имя> MAP.md` → `sed -n "<строка-40>,<строка+40>p" work/<файл>`. Код целиком не открывать.
 Формат: `строка  имя(аргументы) [длина]  назначение`. «≈ …» = комментария нет, показано начало кода.
 
-## core.js (1573 строк)
+## core.js (1626 строк)
 
 ```
     3  mulberry32(a) [1]  LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators.
@@ -178,15 +178,22 @@
 
  1156  ## TICK
  1158  lineRate(G,pid) [23]  ≈ var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
- 1182  tick(G) [253]  ≈ if(G.over) return;
 
- 1436  ## THE ADVISOR: THE GAME DOES THE ARITHMETIC AND SAYS WHAT WANTS A DECISION
- 1438  advice(G) [132]  ≈ var out=[], E=G.earth, i, k;
- 1571  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
- 1572  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
+ 1182  ## V4.38 (NIKITA, 19.10): THE LINE'S FIT — WHICH HULL TO ADD, WHICH ONE RUNS HALF EMPTY
+ 1186  var FIT_PILE  ≈ 120, // a surface pile this big is the line falling behind, and spare hulls are still clea
+ 1189  hullYield(G,pid,s) [1]  what one hull carries a year on this world's line, at her speed; a hull number or {hull:i} for one not yet bui
+ 1193  lineFit(G,pid) [8]  what the line must carry a year (the world's output, or what a works or a kit burns if that is more) against w
+ 1203  lineSpare(G,pid) [10]  the hulls this line can lose and still carry FIT_SPARE times what it must, the biggest first. None while the w
+ 1216  lineHelp(G,pid,opt) [18]  what to do about a line that falls behind: {kind:'free'|'move'|'build', sid|cls, add, gap}, or null when the h
+ 1235  tick(G) [253]  ≈ if(G.over) return;
+
+ 1489  ## THE ADVISOR: THE GAME DOES THE ARITHMETIC AND SAYS WHAT WANTS A DECISION
+ 1491  advice(G) [132]  ≈ var out=[], E=G.earth, i, k;
+ 1624  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
+ 1625  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
-## ui.js (1541 строк)
+## ui.js (1555 строк)
 
 ```
 
@@ -430,80 +437,81 @@
 
  1073  ## THE WORLD WINDOW
  1074  stepOrder(pid) [3]  ≈ var col=!!G.colonies[pid];
- 1077  openWorld(pid,focus) [1]  ≈ U.pop=null; U.win=pid; U.scrapArm=null; U.focus=focus?FOCUS[focus]:null }
- 1078  var FOCUS  ≈ {evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
- 1079  var KW  ≈ {mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
- 1080  wsub(p,extra) [1]  ≈ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toU
- 1081  sendFuel(p) [1]  ≈ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
- 1082  lobeTxt(p) [1]  ≈ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.len
- 1083  assignable(pid) [2]  ≈ var p=planet(pid);
- 1086  pickCourier(pid) [6]  v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that wo
- 1092  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
- 1093  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
- 1094  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
- 1102  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
- 1105  machines(p,c) [15]  before the Gen III yards the block is only noise
- 1120  winWorld(pid) [66]  ≈ var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
- 1187  seamShort(pid) [1]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace
- 1188  seamLeft(pid) [3]  ≈ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
- 1192  picker() [7]  the hull picker: send a free hull, or move one off its line; closed by «keep it where it is» or a press beside
+ 1077  openWorld(pid,focus) [3]  v4.38: the advisor names a hull — open the tab she is on and light her
+ 1080  var FOCUS  ≈ {evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
+ 1081  var KW  ≈ {mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
+ 1082  wsub(p,extra) [1]  ≈ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toU
+ 1083  sendFuel(p) [1]  ≈ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
+ 1084  lobeTxt(p) [1]  ≈ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.len
+ 1085  assignable(pid) [2]  ≈ var p=planet(pid);
+ 1088  pickCourier(pid) [6]  v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that wo
+ 1094  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
+ 1095  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
+ 1096  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
+ 1104  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
+ 1107  machines(p,c) [15]  before the Gen III yards the block is only noise
+ 1122  winWorld(pid) [67]  ≈ var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
+ 1190  seamShort(pid) [1]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace
+ 1191  seamLeft(pid) [3]  ≈ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
+ 1195  picker() [7]  the hull picker: send a free hull, or move one off its line; closed by «keep it where it is» or a press beside
 
- 1200  ## YARD: WHAT IS BEING BUILT, A FREE HULL OF THE CURRENT GENERATION, THE PIER
- 1201  winYard() [15]  ≈ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
+ 1203  ## YARD: WHAT IS BEING BUILT, A FREE HULL OF THE CURRENT GENERATION, THE PIER
+ 1204  winYard() [15]  ≈ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
 
- 1217  ## FLEET: EVERY HULL AND WHERE IT IS (NO PAUSE)
- 1218  sideFleet() [12]  ≈ var all=G.ships.filter(function(s){ return s.mode!=='dead' });
- 1230  searchFuel(m) [1]  ≈ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=
- 1231  bestSearch(m) [2]  ≈ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target)
+ 1220  ## FLEET: EVERY HULL AND WHERE IT IS (NO PAUSE)
+ 1221  sideFleet() [12]  ≈ var all=G.ships.filter(function(s){ return s.mode!=='dead' });
+ 1233  searchFuel(m) [1]  ≈ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=
+ 1234  bestSearch(m) [2]  ≈ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target)
 
- 1234  ## WORLDS: THE LIST, WORST FIRST
- 1235  var SEV  ≈ {dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
- 1236  sideWorlds() [8]  ≈ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).ma
+ 1237  ## WORLDS: THE LIST, WORST FIRST
+ 1238  var SEV  ≈ {dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
+ 1239  sideWorlds() [8]  ≈ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).ma
 
- 1245  ## TECH: THE HULL GENERATION (THE DRIVE PROGRAMME), THE NEXT GENERATION'S SPECS, THE RINGS
- 1248  steps(n,of,col) [3]  BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs a
- 1251  worksList() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return planet(k).kind==='works' }) }
- 1252  driveHost() [3]  ≈ var ws=worksList(), u=U.driveAt;
- 1255  startDriveWhy(pid) [4]  ≈ if(G.drive) return 'running';
- 1259  sideTech() [29]  ≈ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWor
+ 1248  ## TECH: THE HULL GENERATION (THE DRIVE PROGRAMME), THE NEXT GENERATION'S SPECS, THE RINGS
+ 1251  steps(n,of,col) [3]  BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs a
+ 1254  worksList() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return planet(k).kind==='works' }) }
+ 1255  driveHost() [3]  ≈ var ws=worksList(), u=U.driveAt;
+ 1258  startDriveWhy(pid) [4]  ≈ if(G.drive) return 'running';
+ 1262  sideTech() [29]  ≈ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWor
 
- 1289  ## ARK: THE NIGHT, THE LEVELS, THE CONVOY, THE VERDICT
- 1290  arkDriveTxt() [6]  ≈ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
- 1296  winArk() [24]  ≈ if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_
+ 1292  ## ARK: THE NIGHT, THE LEVELS, THE CONVOY, THE VERDICT
+ 1293  arkDriveTxt() [6]  ≈ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
+ 1299  winArk() [24]  ≈ if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_
 
- 1321  ## THE ADVISOR: WORLDS ONLY, WORST FIRST (NIKITA 15.10: «НЕ ПОНИМАЮ, ЧТО ДЕЛАТЬ»)
- 1324  advRows() [14]  ≈ if(!G) return []; var out=[];
- 1338  popAdv() [2]  ≈ var a=advRows();
- 1340  popMenu() [8]  ≈ return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('
+ 1324  ## THE ADVISOR: WORLDS ONLY, WORST FIRST (NIKITA 15.10: «НЕ ПОНИМАЮ, ЧТО ДЕЛАТЬ»)
+ 1327  advRows() [18]  v4.38: a hull named for one line is not offered to the next
+ 1347  lineFix(pid,used) [5]  v4.38 (Nikita, 19.10, option A): the one fix for a line that falls behind — a free hull, a spare one off anoth
+ 1352  popAdv() [2]  ≈ var a=advRows();
+ 1354  popMenu() [8]  ≈ return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('
 
- 1349  ## SAVE AND LOAD: A FILE, AND THE LAST AUTOSAVE IN THIS BROWSER
- 1350  var SAVE_KEY  ≈ 'lb.save';
- 1351  dump() [2]  ≈ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,
- 1353  undump(t) [8]  ≈ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) }
- 1361  autosave() [1]  ≈ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
- 1362  saveFile() [2]  ≈ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
+ 1363  ## SAVE AND LOAD: A FILE, AND THE LAST AUTOSAVE IN THIS BROWSER
+ 1364  var SAVE_KEY  ≈ 'lb.save';
+ 1365  dump() [2]  ≈ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,
+ 1367  undump(t) [8]  ≈ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) }
+ 1375  autosave() [1]  ≈ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
+ 1376  saveFile() [2]  ≈ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
 
- 1367  ## RUN LOG
- 1368  showLog() [1]  ≈ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog')
- 1370  saveLog() [5]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
- 1375  copyLog() [3]  ≈ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false;
+ 1381  ## RUN LOG
+ 1382  showLog() [1]  ≈ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog')
+ 1384  saveLog() [5]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
+ 1389  copyLog() [3]  ≈ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false;
 
- 1379  ## SKIP: THE CLOCK RUNS ON UNTIL SOMETHING WANTS THE DESK
- 1380  skipAhead() [8]  ≈ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now()
+ 1393  ## SKIP: THE CLOCK RUNS ON UNTIL SOMETHING WANTS THE DESK
+ 1394  skipAhead() [8]  ≈ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now()
 
- 1389  ## PRESSES
- 1391  var lineWhy  v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier 
- 1392  lineRes(res,sid,pid) [1]  ≈ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res
- 1393  lineWait(sid) [1]  ≈ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
- 1394  resLeft(sid) [1]  ≈ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
- 1395  doAct(a,b) [53]  ≈ var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
+ 1403  ## PRESSES
+ 1405  var lineWhy  v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier 
+ 1406  lineRes(res,sid,pid) [1]  ≈ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res
+ 1407  lineWait(sid) [1]  ≈ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
+ 1408  resLeft(sid) [1]  ≈ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
+ 1409  doAct(a,b) [53]  ≈ var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
 
- 1481  ## THE MAP IS PANNABLE AND ZOOMABLE
- 1496  fit() [2]  desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows
+ 1495  ## THE MAP IS PANNABLE AND ZOOMABLE
+ 1510  fit() [2]  desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows
 
- 1500  ## LOOP
- 1502  var MS  v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year
- 1503  frame(ts) [24]  ≈ if(!U.last) U.last=ts;
- 1527  start(seed) [9]  ≈ G=newGame(seed||undefined); tutNew();
+ 1514  ## LOOP
+ 1516  var MS  v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year
+ 1517  frame(ts) [24]  ≈ if(!U.last) U.last=ts;
+ 1541  start(seed) [9]  ≈ G=newGame(seed||undefined); tutNew();
 ```
 
