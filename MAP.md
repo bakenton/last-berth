@@ -319,7 +319,7 @@
   605  modal() [1]  ≈ return !!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
   606  halted() [1]  ≈ return U.paused||winPause()||modal()||tutHold() }
   607  var SPEEDS  ≈ [1,2,4,10];
-  608  drawTop() [12]  ≈ var h='<div class="logo"><i></i>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+
+  608  drawTop() [12]  ≈ var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use hre
   622  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so. The trend is the rea
   623  trendTick() [5]  ≈ var E=G.earth, h=U.hist;
   628  trend(k) [1]  ≈ var h=U.hist; if(h.length<6) return null; var a=h[Math.max(0,h.length-1-TREND_YEARS)], b=h
@@ -347,7 +347,7 @@
   702  note(o) [1]  ≈ U.notes.push(o) }
   703  chronLines(k) [4]  ≈ var out='', n=0;
   707  rw2(k,v,cls) [1]  ≈ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
-  708  bigHtml(kind) [47]  ≈ if(kind==='lang') return '<div class="nwin" id="lang"><div class="icap">LAST BERTH<span>'+
+  708  bigHtml(kind) [47]  ≈ if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120
   755  drawBig() [3]  the shift window is built once: its checkbox keeps its state
 
   759  ## PERSONAL FILES: A FACE FOR A CREW, AT THE FOOT OF THE MAP, OR THE WHOLE SCREEN FOR THE MOMENTS THAT MATTER

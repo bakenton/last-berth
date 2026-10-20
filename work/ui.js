@@ -606,7 +606,7 @@ function modal(){ return !!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden 
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
 var SPEEDS=[1,2,4,10];
 function drawTop(){
-  var h='<div class="logo"><i></i>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
+  var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
   if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
@@ -706,7 +706,7 @@ function chronLines(k){ var out='', n=0;
   return out?'<div class="chron">'+out+'</div>':'' }
 function rw2(k,v,cls){ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
 function bigHtml(kind){
-  if(kind==='lang') return '<div class="nwin" id="lang"><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><p>Choose a language.<br>Выберите язык.</p><div class="langrow"><button class="b pri" type="button" data-lang="en">English</button><button class="b pri" type="button" data-lang="ru">Русский</button></div>'+
+  if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-markf"/></svg><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><p>Choose a language.<br>Выберите язык.</p><div class="langrow"><button class="b pri" type="button" data-lang="en">English</button><button class="b pri" type="button" data-lang="ru">Русский</button></div>'+
     (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(L[U.saveLang||'en'].u_continue||'',{y:U.saveDay}))+'</button>':'')+'</div>';
   /* v4.36: the end, the Night and the shift speak in the Institute's voice, Alexandra's line under it (NAR N-13, N-09, N-04) */
   if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
@@ -990,7 +990,7 @@ function tutPlace(){ var t=U.tut, Lr=el('tutL'), Rg=el('tutRing'), Rg2=el('tutRi
 function tutLive(e){ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]')) return true; return !!e.querySelector('[data-act]:not([aria-disabled="true"])') }
 function narPlace(){ var n=U.tut.nar, L0=el('launch'), V=el('voice');
   if(n&&n.f==='E'){ if(L0._k!==n.k){ L0._k=n.k; var N=NAR[n.id];
-      L0.innerHTML='<div class="lcap">'+esc(T('tut_inst'))+'</div><button class="lskip" type="button" data-act="launchskip">'+esc(T('tut_skip'))+'</button>'+
+      L0.innerHTML='<svg class="lmark" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-markf"/></svg><div class="lcap">'+esc(T('tut_inst'))+'</div><button class="lskip" type="button" data-act="launchskip">'+esc(T('tut_skip'))+'</button>'+
         N.k.map(function(k,i){ return '<div class="lfr"><div class="limg"><i class="lf'+(i+1)+'"></i></div><div class="lln">'+esc(T(k))+'</div></div>' }).join('')+'<div class="ldots">'+N.k.map(function(){ return '<i></i>' }).join('')+'</div>';
       L0.className='on'; requestAnimationFrame(function(){ launchFrame(n.i) }) } }
   else if(L0._k){ L0._k=''; L0.className=''; L0.innerHTML='' }
