@@ -1,0 +1,136 @@
+{
+ "1": {
+  "class_type": "UNETLoader",
+  "inputs": {
+   "unet_name": "flux-2-klein-4b.safetensors",
+   "weight_dtype": "default"
+  }
+ },
+ "2": {
+  "class_type": "CLIPLoader",
+  "inputs": {
+   "clip_name": "qwen_3_4b.safetensors",
+   "type": "flux2",
+   "device": "default"
+  }
+ },
+ "3": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "flux2-vae.safetensors"
+  }
+ },
+ "4": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "text": "Wide cinematic film still, ultra-wide 2.4:1, dark circular command hall of a vast starship seen from the back of the room. A giant curved wall of tall screens with amber and blue columns of data surrounds the room. Rows of dark consoles with thin amber light lines curve across the room; the operators in matching grey-olive coveralls with a yellow stripe on the shoulders are dark silhouettes in shadow seen from behind. In the central aisle, seen from behind, stand a slender woman with short slicked-back blonde hair in a light grey uniform with yellow stripes on the shoulders and a tall man in a long dark coat. Volumetric haze, glossy dark floor reflecting the light, teal and amber colour grade, anamorphic lens, shallow depth of field, moody, strictly no visible faces, no text, no logos. In the middle of the hall stands the Helm: a tall black glossy cylindrical machine with a large vertical window of translucent deep red tinted glass, inside the window a glowing platform that moves up and down along a vertical rail with a white light core, light spilling through the red glass onto the floor.",
+   "clip": [
+    "2",
+    0
+   ]
+  }
+ },
+ "5": {
+  "class_type": "ConditioningZeroOut",
+  "inputs": {
+   "conditioning": [
+    "4",
+    0
+   ]
+  }
+ },
+ "6": {
+  "class_type": "EmptyFlux2LatentImage",
+  "inputs": {
+   "width": 1536,
+   "height": 640,
+   "batch_size": 2
+  }
+ },
+ "7": {
+  "class_type": "Flux2Scheduler",
+  "inputs": {
+   "steps": 4,
+   "width": 1536,
+   "height": 640
+  }
+ },
+ "8": {
+  "class_type": "KSamplerSelect",
+  "inputs": {
+   "sampler_name": "euler"
+  }
+ },
+ "9": {
+  "class_type": "CFGGuider",
+  "inputs": {
+   "model": [
+    "1",
+    0
+   ],
+   "positive": [
+    "4",
+    0
+   ],
+   "negative": [
+    "5",
+    0
+   ],
+   "cfg": 1
+  }
+ },
+ "10": {
+  "class_type": "RandomNoise",
+  "inputs": {
+   "noise_seed": 9919
+  }
+ },
+ "11": {
+  "class_type": "SamplerCustomAdvanced",
+  "inputs": {
+   "noise": [
+    "10",
+    0
+   ],
+   "guider": [
+    "9",
+    0
+   ],
+   "sampler": [
+    "8",
+    0
+   ],
+   "sigmas": [
+    "7",
+    0
+   ],
+   "latent_image": [
+    "6",
+    0
+   ]
+  }
+ },
+ "12": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "11",
+    0
+   ],
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "13": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "filename_prefix": "lastberth/intro1_F2",
+   "images": [
+    "12",
+    0
+   ]
+  }
+ }
+}
