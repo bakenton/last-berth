@@ -63,3 +63,6 @@ const c7 = [
   'In the middle of the hall stands the Helm: a tall black cylindrical supercomputer tower of stacked server blades with thousands of tiny amber and cyan LEDs and glowing liquid-cooling pipes spiralling around it, enclosed in a transparent dome of dark-red tinted glass, with a column of white light running through its axis up into the ceiling.'
 ];
 c7.forEach((c, i) => { module.exports[23 + i] = { name: 'intro1_G' + (i + 1), seed: 11100 + i * 23, prompt: R7 + c } });
+
+// round 8 (23.10): 50 readings of the Pult from references, see pult50.js
+Object.assign(module.exports, require('./pult50.js'));
