@@ -1,0 +1,678 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — меню, абстрактные варианты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Geist+Mono:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style id="css-src" type="text/plain">
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--food:#3DDC84;--ppl:#FFD23F;--ark:#B48CFF;--metal:#C9CFD6;--fuel:#FF8A1F;--earth:#4FA3FF;--h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050506;color:var(--ink);font:14px/1.4 var(--h)}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+/* page chrome (not the game) */
+.bar{position:sticky;top:0;z-index:10;background:rgba(5,5,6,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.bar h1{margin:0;font-size:13px;letter-spacing:.2em;font-weight:600;color:var(--mid);text-transform:uppercase}
+.grp{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.grp small{font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-right:4px}
+.pill{border:1px solid var(--ln);min-width:34px;height:30px;padding:0 10px;font:600 12px var(--n);color:var(--mid);display:inline-flex;align-items:center;justify-content:center}
+.pill.on{background:var(--ink);color:#000;border-color:var(--ink)}
+.pill:hover:not(.on){border-color:var(--mid);color:var(--ink)}
+.info{max-width:1280px;margin:0 auto;padding:14px 16px 6px;color:var(--mid);font-size:14px;line-height:1.5}
+.info h2{margin:0 0 4px;font-size:18px;color:var(--ink);font-weight:600}
+.info b{color:var(--ink);font-weight:500}
+.info .tags{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:13px}
+.hint{max-width:1280px;margin:0 auto;padding:4px 16px 24px;color:var(--dim);font-size:12px}
+#host{padding:8px 16px 0;display:flex;justify-content:center}
+#grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px 16px;max-width:1380px;margin:0 auto;padding:14px 16px 30px}
+.gc{display:block;width:100%}.gc .cap{font:600 11px var(--n);letter-spacing:.12em;color:var(--mid);text-transform:uppercase;margin:0 0 6px}
+.gc:hover .cap{color:var(--ppl)}
+@media(max-width:720px){#grid{grid-template-columns:1fr}}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--pan2);border:1px solid var(--ppl);color:var(--ink);padding:8px 14px;font:12px var(--n);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+
+/* the stage: 1u = 1 design pixel at 1280 wide (a phone frame: 1u = 1px) */
+.stage{container-type:size;position:relative;overflow:hidden;background:var(--bg);width:min(100%,1280px);aspect-ratio:1280/760;border:1px solid var(--ln)}
+.stage.phone{width:min(100%,390px);aspect-ratio:auto;height:780px}
+.v{--u:calc(100cqw / 1280);position:absolute;inset:0;font-family:var(--h);color:var(--ink)}
+.phone .v{--u:1px}
+.mk{display:block;overflow:visible}
+.it{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.it.off{cursor:default}
+.ver{position:absolute;font:11u var(--n);letter-spacing:.14em;color:var(--dim)}
+.pane{display:none}
+</style>
+<style id="css-live"></style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="mkgr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#D9D8D2"/><stop offset=".55" stop-color="#8E8D88"/><stop offset="1" stop-color="#E9E8E2"/></linearGradient><linearGradient id="mkgv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5A44"/><stop offset=".55" stop-color="#FF2A1A"/><stop offset="1" stop-color="#B80F05"/></linearGradient><filter id="mksh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="1.5" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".7"/></filter><filter id="mkbl" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter><symbol id="i-mark" viewBox="0 0 120 120"><circle cx="60" cy="60" r="40" fill="none" stroke="#F2F1EC" stroke-width="10" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.75)"><polygon points="0,-16 14,14 0,6 -14,14" fill="#FF2A1A"/></g></symbol>
+<symbol id="i-markf" viewBox="0 0 120 120"><ellipse cx="60" cy="108" rx="34" ry="4.5" fill="#000" opacity=".55" filter="url(#mkbl)"/><g filter="url(#mksh)"><circle cx="60" cy="60" r="40" fill="none" stroke="url(#mkgr)" stroke-width="8" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6 -14,14" fill="url(#mkgv)"/></g></g><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6" fill="#fff" opacity=".28"/></g></symbol></defs></svg>
+<div class="bar">
+  <h1>LAST BERTH · меню</h1>
+  <div class="grp" id="gv"></div>
+  <div class="grp"><small>язык</small><button class="pill" data-k="lang" data-v="en">EN</button><button class="pill" data-k="lang" data-v="ru">RU</button></div>
+  <div class="grp"><small>сохранение</small><button class="pill" data-k="save" data-v="1">есть</button><button class="pill" data-k="save" data-v="0">нет</button></div>
+  <div class="grp"><small>EN вместо Pult</small><button class="pill" data-name="HELM">HELM</button><button class="pill" data-name="CONSOLE">CONSOLE</button><button class="pill" data-name="CONN">CONN</button><button class="pill" data-name="CORE">CORE</button><button class="pill" data-name="TALLY">TALLY</button></div>
+  <div class="grp"><small>экран</small><button class="pill" data-k="frame" data-v="desktop">ПК</button><button class="pill" data-k="frame" data-v="phone">телефон</button></div>
+  <div class="grp"><button class="pill" id="bootbtn">▶ терминал</button><button class="pill" data-k="view" data-v="grid">все сразу</button></div>
+</div>
+<div class="info" id="info"></div>
+<div id="host"></div>
+<div id="grid" hidden></div>
+<div class="hint" id="hint">Стрелки ↑↓ и Enter, цифры 1–5 · [ и ] — соседний вариант. «Новая игра» (или кнопка «▶ терминал») запускает стартовый терминал по описанию из design/INTRO-DRAFT.md: чёрный экран, гул, строки с помехами, системы подключаются одна за другой, игрок отвечает глаголом (клавиши 1–4). Esc или «пропустить» — выход. Макет ничего не запускает, цифры в «Продолжить» условные.</div>
+<div class="toast" id="toast"></div>
+<script>
+/* ---------- the menu model (what the real game can do today: continue the autosave, a new run, a save file, language, sound) ---------- */
+var NAME_EN='HELM';
+var TXT={
+  en:{cont:'Continue',new:'New game',load:'Load from file',lang:'Language',sound:'Sound',on:'on',off:'off',
+      cSub:'year {y} · {w} worlds',lSub:'.json',lVal:'EN',empty:'no record',title:'LAST BERTH',pult:NAME_EN},
+  ru:{cont:'Продолжить',new:'Новая игра',load:'Загрузить из файла',lang:'Язык',sound:'Звук',on:'вкл',off:'выкл',
+      cSub:'год {y} · {w} миров',lSub:'.json',lVal:'RU',empty:'нет записи',title:'LAST BERTH',pult:'ПУЛЬТ'}
+};
+var YEAR=412, WORLDS=7;
+var S={lang:'en',save:true,sound:true,frame:(window.matchMedia&&matchMedia('(max-width:720px)').matches)?'phone':'desktop',v:1,sel:1,view:'single',boot:true,bootov:false};
+function T(){ return TXT[S.lang] }
+function items(){ var t=T(); return [
+  {id:'cont',label:t.cont,sub:S.save?t.cSub.replace('{y}',YEAR).replace('{w}',WORLDS):t.empty,off:!S.save},
+  {id:'new',label:t.new,sub:''},
+  {id:'load',label:t.load,sub:t.lSub},
+  {id:'lang',label:t.lang,val:t.lVal,sub:''},
+  {id:'sound',label:t.sound,val:S.sound?t.on:t.off,sub:''}] }
+function firstOn(){ var I=items(); for(var i=0;i<I.length;i++) if(!I[i].off) return i; return 0 }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c] }) }
+function mark(c,st){ return '<svg class="mk '+(c||'')+'" viewBox="0 0 120 120" style="'+(st||'')+'" aria-hidden="true"><use href="#i-markf"/></svg>' }
+function lab(it){ return esc(it.label) }
+function row(it,i,inner,cls){ return '<div class="it '+(cls||'')+(it.off?' off':'')+'" data-i="'+i+'" data-id="'+it.id+'">'+inner+'</div>' }
+
+/* ---------- variants (the earlier 21 drafts: design/archive/menu-v1-full.html) ---------- */
+var VAR=[];
+function add(n,d,pro,con,render,css){ VAR.push({n:n,d:d,pro:pro,con:con,r:render,css:css||''}) }
+
+/* 20 — the Pult's map: the same blue wireframe Earth and yellow marks as the start-up terminal */
+add('Карта Пульта','Каркас планеты и орбиты в палитре игры: синяя планета с вращающимися меридианами, жёлтые метки и прицелы, строки данных моноширинным шрифтом. Тот же язык, что у стартового терминала.',
+ 'единый стиль с загрузкой и интерфейсом; ничего не рендерится, весит несколько КБ; хорошо ложится на телефон',
+ 'меньше «настоящего космоса» и объёма; без картинки планеты меню суше, больше полагается на типографику',
+function(){ var t=T(), I=items(), ru=S.lang==='ru', R=800, cx=640, cy=1180, lat='', mer='', i, st='';
+  for(i=0;i<60;i++) st+='<circle cx="'+((Math.sin(i*91.7)*.5+.5)*1280).toFixed(0)+'" cy="'+((Math.sin(i*37.3+2)*.5+.5)*330).toFixed(0)+'" r="'+(0.6+(Math.sin(i*5.1)*.5+.5)*.9).toFixed(1)+'" fill="#F2F1EC" opacity="'+(0.12+(Math.sin(i*13.7)*.5+.5)*.3).toFixed(2)+'"/>';
+  [12,22,32,42,52,62,72,82].forEach(function(d){ var a=d*Math.PI/180, rx=R*Math.cos(a), y=cy-R*Math.sin(a); lat+='<ellipse cx="'+cx+'" cy="'+y.toFixed(1)+'" rx="'+rx.toFixed(1)+'" ry="'+(rx*.14).toFixed(1)+'" class="lt"/>' });
+  for(i=0;i<6;i++) mer+='<ellipse cx="'+cx+'" cy="'+cy+'" rx="'+R+'" ry="'+R+'" class="mr" style="animation-delay:-'+(i*1.5)+'s"/>';
+  var grid=''; for(i=1;i<16;i++) grid+='<line x1="'+(i*80)+'" y1="0" x2="'+(i*80)+'" y2="760" class="gr"/>'; for(i=1;i<10;i++) grid+='<line x1="0" y1="'+(i*80)+'" x2="1280" y2="'+(i*80)+'" class="gr"/>';
+  var mk=function(x,y,l,sub){ return '<g class="mk20" transform="translate('+x+' '+y+')"><circle r="9" class="mc"/><circle r="2.6" class="md"/><path d="M-22 0h10M12 0h10M0 -22v10M0 12v10" class="mx"/><text x="30" y="-4" class="ml">'+l+'</text><text x="30" y="11" class="ms">'+sub+'</text></g>' };
+  var svg='<svg class="sc20" viewBox="0 0 1280 760" preserveAspectRatio="xMidYMid slice">'+grid+st+
+    '<g class="orb" transform="rotate(-4 640 470)"><ellipse cx="640" cy="470" rx="560" ry="104" class="ob"/><ellipse cx="640" cy="470" rx="430" ry="78" class="ob o2"/><circle r="5" class="sat"><animateMotion dur="26s" repeatCount="indefinite" path="M 1200 470 A 560 104 0 1 1 80 470 A 560 104 0 1 1 1200 470"/></circle>'+
+    '<circle r="3.2" class="sat s2"><animateMotion dur="19s" repeatCount="indefinite" path="M 640 392 A 430 78 0 1 1 640 548 A 430 78 0 1 1 640 392"/></circle></g>'+
+    '<circle cx="'+cx+'" cy="'+cy+'" r="'+(R+10)+'" class="rimg"/><circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" class="rim20"/>'+lat+mer+
+    mk(310,560,ru?'ЗЕМЛЯ':'EARTH',ru?'судно-база · метка 01':'vessel-base · mark 01')+mk(930,520,ru?'ТОЧКА':'POINT',ru?'цель · не назначена':'target · unassigned')+'</svg>';
+  var side='<div class="dat l"><span>'+(ru?'ОРБИТА':'ORBIT')+'</span><b>412 '+(ru?'КМ':'KM')+'</b><span>'+(ru?'НАКЛОН':'INCL')+'</span><b>51.6°</b></div><div class="dat r"><span>'+(ru?'РАБОТА':'UPTIME')+'</span><b data-clk>00:00:00</b><span>'+(ru?'СИСТЕМЫ':'SYSTEMS')+'</span><b>6 / 6</b></div>';
+  return '<div class="v v20">'+svg+side+'<div class="top">'+mark('')+'<div class="nm">'+t.title+'</div><div class="run"><i></i></div></div>'+smenu(I)+'<div class="ver" style="right:24u;bottom:14u">v4.39</div></div>' },
+'.v20{background:#060607}.v20 .sc20{position:absolute;inset:0;width:100%;height:100%}\
+.v20 .gr{stroke:#121316;stroke-width:1}.v20 .rim20{fill:#08090c;stroke:#4FA3FF;stroke-width:1.6}.v20 .rimg{fill:none;stroke:#4FA3FF;stroke-width:10;opacity:.12;filter:blur(5px)}\
+.v20 .lt{fill:none;stroke:#244a73;stroke-width:1}.v20 .mr{fill:none;stroke:#4FA3FF;stroke-width:.9;opacity:.8;animation:mr20 9s linear infinite}@keyframes mr20{0%,100%{rx:800px}50%{rx:2px}}\
+.v20 .ob{fill:none;stroke:#9C9B95;stroke-width:1;stroke-dasharray:3 7;opacity:.55}.v20 .o2{opacity:.3}.v20 .sat{fill:#F2F1EC}.v20 .sat.s2{fill:#FFD23F}\
+.v20 .mc{fill:none;stroke:#FFD23F;stroke-width:1}.v20 .md{fill:#FFD23F}.v20 .mx{stroke:#FFD23F;stroke-width:1.2;fill:none}.v20 .ml{fill:#F2F1EC;font:500 14px "Geist Mono",monospace;letter-spacing:.16em}.v20 .ms{fill:#9C9B95;font:11px "Geist Mono",monospace;letter-spacing:.1em}\
+.v20 .mk20 .mc{animation:mp20 2.4s ease-in-out infinite;transform-origin:center}@keyframes mp20{50%{opacity:.25}}\
+.v20 .dat{position:absolute;top:240u;display:flex;flex-direction:column;gap:2u;font:11u var(--n);letter-spacing:.16em;color:var(--dim)}.v20 .dat.l{left:60u}.v20 .dat.r{right:60u;text-align:right}.v20 .dat b{font:500 15u var(--n);color:var(--ink);letter-spacing:.1em;margin-bottom:12u}\
+.v20 .top{position:absolute;left:0;right:0;top:60u;display:flex;flex-direction:column;align-items:center;gap:14u}.v20 .top .mk{width:76u;height:76u}.v20 .nm{font:300 54u var(--h);letter-spacing:.5em;padding-left:.5em}\
+.v20 .run{position:relative;width:420u;height:2u;margin-top:4u;background:rgba(242,241,236,.14);overflow:hidden}.v20 .run i{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,transparent,#F2F1EC 60%,#FFD23F);animation:run17 2.6s cubic-bezier(.45,.05,.55,.95) infinite}\
+.v20 .sm{bottom:46u;z-index:2}.v20 .sm .l{text-shadow:0 1px 8px #000}\
+.phone .v20 .top{top:34px}.phone .v20 .nm{font-size:30px}.phone .v20 .top .mk{width:58px;height:58px}.phone .v20 .run{width:210px}.phone .v20 .sm{bottom:24px}.phone .v20 .dat{display:none}.phone .v20 .mk20 .ml{font-size:12px}.phone .v20 .mk20 .ms{display:none}\
+@media (prefers-reduced-motion:reduce){.v20 .mr,.v20 .run i,.v20 .mk20 .mc{animation:none}}');
+
+/* ---------- abstract directions: everything is drawn in the page (canvas 2D), no pictures ---------- */
+var PAL={ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',ppl:'#FFD23F',earth:'#4FA3FF',food:'#3DDC84',fuel:'#FF8A1F',metal:'#C9CFD6',red:'#FF2A1A',ark:'#B48CFF',bg:'#0b0b0c'};
+function rgba(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')' }
+function rng(s){ return function(){ s=(s*1664525+1013904223)%4294967296; return s/4294967296 } }
+function hsh(n){ n=Math.sin(n)*43758.5453; return n-Math.floor(n) }
+function vn3(x,y,z){ var xi=Math.floor(x), yi=Math.floor(y), zi=Math.floor(z), xf=x-xi, yf=y-yi, zf=z-zi, f=function(a){ return a*a*(3-2*a) }, u=f(xf), v=f(yf), w=f(zf);
+  function h(i,j,k){ return hsh(i*157.3+j*113.7+k*271.9) }
+  var a=h(xi,yi,zi), b=h(xi+1,yi,zi), c=h(xi,yi+1,zi), d=h(xi+1,yi+1,zi), e=h(xi,yi,zi+1), f2=h(xi+1,yi,zi+1), g=h(xi,yi+1,zi+1), hh=h(xi+1,yi+1,zi+1);
+  return (a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v)*(1-w)+(e+(f2-e)*u+(g-e)*v+(e-f2-g+hh)*u*v)*w }
+function smenu(I,cls){ return '<div class="sm '+(cls||'')+'">'+I.map(function(it,i){ return row(it,i,'<span class="l">'+lab(it)+'</span><span class="s">'+esc(it.val||it.sub||'')+'</span>') }).join('')+'</div>' }
+function absScreen(kind,cls){ return function(){ var t=T(), I=items(); return '<div class="v vt '+cls+'"><canvas class="cv2d" data-k="'+kind+'"></canvas><div class="top">'+mark('')+'<div class="nm">'+t.title+'</div><div class="run"><i></i></div></div>'+smenu(I)+'<div class="ver" style="right:24u;bottom:14u">v4.39</div></div>' } }
+
+var CVD={};
+/* 1 — rings: the ring map of the game as an abstract clock; the chosen item lights its ring */
+CVD.rings=function(c,w,h,t,st,ph){ var u=h/760, k=ph?.62:1, cx=w/2, cy=h*(ph?.54:.64), sel=S.sel;
+  var rr=[0,64,132,210,298,396,504,622,750], names=['EARTH','CAESAR','AUGUSTUS','SCIPIO','CICERO','DANTE','PETRARCH','VIRGIL','OVID'], cls=[PAL.food,PAL.metal,PAL.fuel,PAL.earth,PAL.ark], i, j;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); var g=c.createRadialGradient(cx,cy,0,cx,cy,h*.9); g.addColorStop(0,'rgba(90,100,130,.18)'); g.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  if(!st.w){ st.w=[]; for(i=0;i<9;i++) st.w[i]=0 } var hot=[2,3,5,6,8][Math.min(4,Math.max(0,sel))]; for(i=1;i<9;i++) st.w[i]+=((i===hot?1:0)-st.w[i])*.12;
+  c.lineWidth=Math.max(1,u*1.1);
+  for(i=0;i<6;i++){ var a=i*Math.PI/3+Math.PI/6; c.strokeStyle='rgba(242,241,236,.045)'; c.beginPath(); c.moveTo(cx,cy); c.lineTo(cx+Math.cos(a)*rr[8]*u*k,cy+Math.sin(a)*rr[8]*u*k); c.stroke() }
+  for(i=1;i<9;i++){ var r=rr[i]*u*k, sp=(.05+.08/i)*(i%2?1:-1), wgt=st.w[i];
+    c.strokeStyle=wgt>.02?rgba(PAL.ppl,.12+.55*wgt):'rgba(242,241,236,.11)'; c.lineWidth=Math.max(1,u*(1.1+1.6*wgt)); c.beginPath(); c.arc(cx,cy,r,0,6.2832); c.stroke();
+    c.lineWidth=Math.max(1.5,u*2.2); c.strokeStyle=wgt>.02?rgba(PAL.ppl,.5+.5*wgt):'rgba(242,241,236,.34)';
+    for(j=0;j<3;j++){ var a0=t*sp+i*1.3+j*2.1, len=.35+.25*((i*7+j*3)%4)/3; c.beginPath(); c.arc(cx,cy,r,a0,a0+len); c.stroke() }
+    var n=2+i, rg=rng(i*97+5); for(j=0;j<n;j++){ var ang=rg()*6.2832+t*sp*(.6+rg()*.8), col=cls[(i+j)%5], sx=cx+Math.cos(ang)*r, sy=cy+Math.sin(ang)*r, rad=u*(2.2+rg()*1.8)*(1+wgt*.5);
+      c.fillStyle=rgba(col,.55+.4*wgt); c.beginPath(); c.arc(sx,sy,rad,0,6.2832); c.fill(); if(wgt>.3){ c.strokeStyle=rgba(col,.4*wgt); c.lineWidth=1; c.beginPath(); c.arc(sx,sy,rad*2.6,0,6.2832); c.stroke() } }
+    if(wgt>.05){ c.fillStyle=rgba(PAL.ppl,Math.min(1,wgt)); c.font=(11*u*(ph?1.25:1))+'px "Geist Mono",monospace'; c.textAlign='left'; c.fillText(names[i],cx+Math.cos(-.42)*r+8*u,cy+Math.sin(-.42)*r-6*u) } }
+  c.fillStyle=PAL.earth; c.beginPath(); c.arc(cx,cy,14*u*k,0,6.2832); c.fill(); c.strokeStyle='rgba(79,163,255,.35)'; c.lineWidth=1; c.beginPath(); c.arc(cx,cy,24*u*k,0,6.2832); c.stroke();
+  c.save(); c.translate(cx+22*u*k,cy-22*u*k); c.rotate(.785); c.fillStyle=PAL.red; c.beginPath(); c.moveTo(0,-12*u); c.lineTo(9*u,10*u); c.lineTo(0,4*u); c.lineTo(-9*u,10*u); c.closePath(); c.fill(); c.restore() };
+
+/* 2 — routes: a logistics network, ships run along the arcs */
+CVD.routes=function(c,w,h,t,st,ph){ var u=h/760;
+  if(st.reset||!st.nodes){ var rg=rng(21), N=ph?18:26, nodes=[], tries=0, i, j, cls=[PAL.food,PAL.metal,PAL.fuel,PAL.metal,PAL.food];
+    nodes.push({x:w*.5,y:h*.6,earth:1,col:PAL.earth,r:11*u});
+    while(nodes.length<N&&tries<4000){ tries++; var x=(.06+rg()*.88)*w, y=(.1+rg()*.82)*h, ok=true; for(j=0;j<nodes.length;j++){ var dx=nodes[j].x-x, dy=nodes[j].y-y; if(dx*dx+dy*dy<Math.pow(h*(ph?.14:.11),2)){ ok=false; break } } if(ok) nodes.push({x:x,y:y,col:cls[nodes.length%5],r:(3+rg()*3.5)*u,ph:rg()*4}) }
+    var edges=[], seen={}; nodes.forEach(function(a,ia){ var ds=nodes.map(function(b,ib){ return {ib:ib,d:Math.hypot(a.x-b.x,a.y-b.y)} }).sort(function(p,q){ return p.d-q.d }); for(var kk=1;kk<=(a.earth?5:2);kk++){ var ib=ds[kk].ib, key=Math.min(ia,ib)+'-'+Math.max(ia,ib); if(!seen[key]){ seen[key]=1; var b=nodes[ib], mx=(a.x+b.x)/2, my=(a.y+b.y)/2, dx=b.x-a.x, dy=b.y-a.y, L=Math.hypot(dx,dy), off=(rg()-.5)*.5*L; edges.push({a:a,b:b,cx:mx-dy/L*off,cy:my+dx/L*off}) } } });
+    var ships=[]; for(i=0;i<(ph?18:30);i++) ships.push({e:edges[(rg()*edges.length)|0],p:rg(),v:(.04+rg()*.08)*(rg()<.5?1:-1),col:rg()<.3?PAL.ppl:PAL.ink}); st.nodes=nodes; st.edges=edges; st.ships=ships; st.last=t }
+  var dt=Math.min(.1,t-st.last); st.last=t; c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); var i;
+  function P(e,p){ var q=1-p; return [q*q*e.a.x+2*q*p*e.cx+p*p*e.b.x, q*q*e.a.y+2*q*p*e.cy+p*p*e.b.y] }
+  c.lineWidth=Math.max(1,u); c.strokeStyle='rgba(242,241,236,.10)'; st.edges.forEach(function(e){ c.beginPath(); c.moveTo(e.a.x,e.a.y); c.quadraticCurveTo(e.cx,e.cy,e.b.x,e.b.y); c.stroke() });
+  st.ships.forEach(function(s){ s.p+=s.v*dt; if(s.p>1||s.p<0){ s.e=st.edges[(Math.random()*st.edges.length)|0]; s.p=s.v>0?0:1 } var a=P(s.e,s.p), b=P(s.e,Math.max(0,Math.min(1,s.p-s.v*.9)));
+    c.strokeStyle=rgba(s.col,.5); c.lineWidth=Math.max(1,u*1.4); c.beginPath(); c.moveTo(b[0],b[1]); c.lineTo(a[0],a[1]); c.stroke(); c.fillStyle=rgba(s.col,.95); c.beginPath(); c.arc(a[0],a[1],u*2,0,6.2832); c.fill() });
+  st.nodes.forEach(function(n){ var pul=(t*.5+(n.ph||0))%4/4; c.strokeStyle=rgba(n.col,.35*(1-pul)); c.lineWidth=1; c.beginPath(); c.arc(n.x,n.y,n.r+pul*22*u,0,6.2832); c.stroke(); c.fillStyle=rgba(n.col,n.earth?1:.8); c.beginPath(); c.arc(n.x,n.y,n.r,0,6.2832); c.fill();
+    if(n.earth){ c.strokeStyle='rgba(79,163,255,.5)'; c.beginPath(); c.arc(n.x,n.y,n.r*2.2,0,6.2832); c.stroke() } }) };
+
+/* 3 — flow: people streaming along invisible currents towards a point of light */
+CVD.flow=function(c,w,h,t,st,ph,live){ var u=h/760, N=ph?900:1700, i, tx=w*.5, ty=h*.52;
+  if(st.reset||!st.x){ st.x=new Float32Array(N); st.y=new Float32Array(N); st.vx=new Float32Array(N); st.vy=new Float32Array(N); for(i=0;i<N;i++){ st.x[i]=Math.random()*w; st.y[i]=Math.random()*h; st.vx[i]=0; st.vy[i]=0 } c.fillStyle=PAL.bg; c.fillRect(0,0,w,h) }
+  var steps=live?1:160, s, tt=t;
+  for(s=0;s<steps;s++){ c.fillStyle='rgba(11,11,12,'+(live?.075:.05)+')'; c.fillRect(0,0,w,h); tt=live?t:t+s*.05;
+    for(i=0;i<N;i++){ var x=st.x[i], y=st.y[i], a=vn3(x*.0021/u*(h/760),y*.0021/u*(h/760),tt*.07)*6.2832*2.2, dx=tx-x, dy=ty-y, d=Math.hypot(dx,dy)+1, pull=.075*u;
+      st.vx[i]=st.vx[i]*.94+Math.cos(a)*.16*u+dx/d*pull*(1+380*u/d); st.vy[i]=st.vy[i]*.94+Math.sin(a)*.16*u+dy/d*pull*(1+380*u/d);
+      var nx=x+st.vx[i]*1.8, ny=y+st.vy[i]*1.8, near=Math.max(0,1-d/(h*.34)); c.strokeStyle=near>.35?rgba(PAL.ppl,.25+.6*near):rgba(PAL.ink,.22+.3*Math.min(1,Math.hypot(st.vx[i],st.vy[i])/(1.6*u))); c.lineWidth=Math.max(1,u*(near>.5?1.7:1.1)); c.beginPath(); c.moveTo(x,y); c.lineTo(nx,ny); c.stroke();
+      st.x[i]=nx; st.y[i]=ny; if(d<12*u||nx<-20||nx>w+20||ny<-20||ny>h+20){ var side=Math.random()*4|0; st.x[i]=side<2?Math.random()*w:(side===2?-10:w+10); st.y[i]=side<2?(side?h+10:-10):Math.random()*h; st.vx[i]=st.vy[i]=0 } } }
+  };
+
+/* 4 — runes: a wall of name plates in an invented script; plates light up as if they were being read */
+CVD.runes=function(c,w,h,t,st,ph){ var u=h/760, cw=(ph?36:46)*u, ch=(ph?52:66)*u, cols=Math.ceil(w/cw)+1, rows=Math.ceil(h/ch)+1, i, j;
+  if(st.reset||!st.cells){ st.cells=[]; for(i=0;i<cols*rows;i++){ var rg=rng(i*31+7), segs=[], n=3+((rg()*3)|0); for(j=0;j<n;j++){ var a=[(rg()*3)|0,(rg()*5)|0], b=[(rg()*3)|0,(rg()*5)|0]; if(a[0]!==b[0]||a[1]!==b[1]) segs.push([a,b]) } st.cells.push({s:segs,per:5+rg()*9,ph:rg(),on:rg()<.55}) } }
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); var sweep=(t*70*u)%(w+400*u)-200*u;
+  for(j=0;j<rows;j++) for(i=0;i<cols;i++){ var cell=st.cells[j*cols+i], px=i*cw+cw*.12, py=j*ch+ch*.1, pw=cw*.76, phh=ch*.8, cxm=px+pw/2, cym=py+phh/2;
+    var lit=cell.on?Math.max(0,(Math.sin(6.2832*(t/cell.per+cell.ph))-.62)/.38):0; lit=Math.min(1,lit+Math.max(0,1-Math.abs(cxm-sweep)/(70*u))*.5);
+    var mask=1; if(Math.abs(cxm-w/2)<w*(ph?.46:.3)&&cym<h*.4) mask=.22; if(cym>h*.82) mask=Math.min(mask,.3);
+    c.fillStyle=rgba(PAL.ppl,.05*lit*mask); c.fillRect(px,py,pw,phh); c.strokeStyle='rgba(242,241,236,'+(.07*mask)+')'; c.lineWidth=1; c.strokeRect(px,py,pw,phh);
+    c.strokeStyle=lit>.02?rgba(PAL.ppl,(.2+.8*lit)*mask):'rgba(242,241,236,'+(.12*mask)+')'; c.lineWidth=Math.max(1,u*(1.3+lit)); c.beginPath();
+    cell.s.forEach(function(sg){ var gx=function(q){ return px+pw*(.22+.28*q[0]) }, gy=function(q){ return py+phh*(.14+.18*q[1]) }; c.moveTo(gx(sg[0]),gy(sg[0])); c.lineTo(gx(sg[1]),gy(sg[1])) }); c.stroke() } };
+
+/* 5 — signal: a stack of lines like a pulsar's pulses, the nearest one in yellow */
+CVD.signal=function(c,w,h,t,st,ph){ var u=h/760, N=ph?30:44, M=ph?70:130, i, x;
+  if(st.reset||!st.rows){ st.rows=[]; st.acc=0; st.last=t; st.seed=0; for(i=0;i<N;i++) st.rows.push(sigRow(M,st.seed++)) }
+  var dt=Math.min(.1,t-st.last); st.last=t; st.acc+=dt; var per=.5; while(st.acc>=per){ st.acc-=per; st.rows.shift(); st.rows.push(sigRow(M,st.seed++)) } var off=st.acc/per;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); var x0=w*(ph?.04:.16), x1=w*(ph?.96:.84), y0=h*.27, y1=h*.8;
+  for(i=0;i<N;i++){ var s=(i+1-off)/N, y=y0+(y1-y0)*Math.pow(Math.max(0,s),1.5), sc=(.25+s*1.15)*u*(ph?1.2:1), row=st.rows[i], last=i===N-1;
+    c.beginPath(); c.moveTo(x0,y); for(x=0;x<M;x++){ c.lineTo(x0+(x1-x0)*x/(M-1),y-row[x]*sc*62) } c.lineTo(x1,y); c.lineTo(x1,y+h); c.lineTo(x0,y+h); c.closePath(); c.fillStyle=PAL.bg; c.fill();
+    c.beginPath(); for(x=0;x<M;x++){ var px=x0+(x1-x0)*x/(M-1), py=y-row[x]*sc*62; if(x) c.lineTo(px,py); else c.moveTo(px,py) }
+    c.strokeStyle=last?rgba(PAL.ppl,.95):'rgba(242,241,236,'+(.22+.6*s)+')'; c.lineWidth=Math.max(1,u*(1+s*.7)); c.stroke() } };
+function sigRow(M,seed){ var r=new Float32Array(M), rg=rng(seed*53+11), x, sp=[]; for(x=0;x<3;x++) sp.push({c:.3+rg()*.4,a:.5+rg()*.8,w:.015+rg()*.03});
+  for(x=0;x<M;x++){ var p=x/(M-1), env=Math.exp(-Math.pow((p-.5)/.2,2))*.8+Math.exp(-Math.pow((p-.5)/.45,2))*.18, v=env*(.25+.75*vn3(p*14+seed*.37,seed*.21,0)); sp.forEach(function(q){ v+=q.a*Math.exp(-Math.pow((p-q.c)/q.w,2))*env }); r[x]=v*.9 } return r }
+
+function initCv(root,live){ root.querySelectorAll('canvas.cv2d').forEach(function(cv){ if(cv._ini) return; cv._ini=1;
+  var D=CVD[cv.dataset.k], ctx=cv.getContext('2d'), st={}, t0=performance.now(), n=0, dpr=Math.min(window.devicePixelRatio||1,1.5); if(!D||!ctx) return;
+  function frame(){ if(!cv.isConnected) return; if(!document.hidden&&(!live||(n++%1===0))){ var w=Math.max(2,Math.round(cv.clientWidth*dpr)), h=Math.max(2,Math.round(cv.clientHeight*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; st.reset=true }
+      var stg=cv.closest('.stage'); D(ctx,w,h,live?(performance.now()-t0)/1000:8,st,!!(stg&&stg.classList.contains('phone')),live); st.reset=false } if(live) requestAnimationFrame(frame) }
+  frame() }) }
+
+add('Кольца','Карта колец игры как абстрактные часы: тонкие орбиты разной скорости, на них миры цветами классов, в центре Земля со стрелкой ковчега. Выбранный пункт зажигает своё кольцо и подписывает его (Caesar, Augustus, Scipio…).',
+ 'меню читается как карта игры; пункт и кольцо связаны; ничего не весит, всё рисуется в странице',
+ 'без планеты нет объёма; кольца спорят с кнопками снизу, если их много; имена колец придётся согласовать с игрой',
+ absScreen('rings','vA1'),
+ '.vt .cv2d{position:absolute;inset:0;width:100%;height:100%;display:block}\
+.vt .top{position:absolute;left:0;right:0;top:60u;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14u}.vt .top .mk{width:76u;height:76u}.vt .nm{font:300 54u var(--h);letter-spacing:.5em;padding-left:.5em}\
+.vt .run{position:relative;width:420u;height:2u;margin-top:4u;background:rgba(242,241,236,.14);overflow:hidden}.vt .run i{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,transparent,#F2F1EC 60%,#FFD23F);animation:run17 2.6s cubic-bezier(.45,.05,.55,.95) infinite}@keyframes run17{from{left:-30%}to{left:104%}}\
+.vt .sm{bottom:46u;z-index:2}.vt .sm .l{text-shadow:0 1px 8px #000}.vt::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(0deg,rgba(11,11,12,.88),transparent);pointer-events:none}\
+.phone .vt .top{top:34px}.phone .vt .nm{font-size:30px}.phone .vt .top .mk{width:58px;height:58px}.phone .vt .run{width:210px}.phone .vt .sm{bottom:24px}.phone .vt::after{height:44%}\
+@media (prefers-reduced-motion:reduce){.vt .run i{animation:none}}');
+add('Маршруты','Сеть логистики: узлы-миры по классам (ферма, металл, топливо), дуги-рейсы, по ним бегут суда со следом, Земля голубая в середине. Суть игры в одной картинке.',
+ 'показывает, чем игра занимается; живая и ненавязчивая; цвета классов — как на карте игры',
+ 'узор случайный и без смысла в деталях; без маски под текст сеть шумит рядом с названием',
+ absScreen('routes','vA2'),'');
+add('Поток','Тысячи точек-людей текут по невидимым течениям к светлой точке сверху (ковчег): за ними остаются следы. Самый эмоциональный и самый абстрактный.',
+ 'выглядит как заставка из кино; несёт смысл (люди идут к ковчегу) без единого слова и без картинки',
+ 'самый тяжёлый для слабых телефонов (1–2 тыс. частиц на каждый кадр); нужно проверить на живом железе',
+ absScreen('flow','vA3'),
+'.vA3::before{content:"";position:absolute;left:50%;top:52%;width:36%;height:48%;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(255,226,150,.5),rgba(255,210,63,.16) 35%,transparent 70%);pointer-events:none;z-index:1;mix-blend-mode:screen;animation:gl3 5s ease-in-out infinite alternate}@keyframes gl3{from{opacity:.65}to{opacity:1}}@media (prefers-reduced-motion:reduce){.vA3::before{animation:none}}');
+add('Руны','Стена табличек с выдуманной письменностью из прямых штрихов; таблички по очереди загораются жёлтым, поперёк идёт линия «чтения». Имена на табличках капсул и таблички пропавших в зале Пульта.',
+ 'цепляет лор (таблички, язык людей, Александра читает имена); ничем не рисуется, кроме линий; узнаваемо на скриншоте',
+ 'руны пока случайные, настоящий алфавит ещё не нарисован; плотный узор мешает читать мелкие подписи кнопок',
+ absScreen('runes','vA4'),'');
+add('Сигнал','Стопка линий, как импульсы пульсара: гребни растут из центра и уходят вглубь, ближняя линия жёлтая. Чистая графика без планеты и текстов.',
+ 'узнаваемый строгий образ; почти не нагружает; хорошо ложится на любую ширину',
+ 'знакомый всем образ (обложка Joy Division) — нужна своя подача, чтобы не выглядело цитатой; лору не служит',
+ absScreen('signal','vA5'),'');
+
+
+/* ---------- abstract, round two (7–11) ---------- */
+
+/* 7 — fold: a grid of space bent by moving masses; "space flows differently" (складка/растяжение in the game) */
+CVD.fold=function(c,w,h,t,st,ph){ var u=h/760, gs=(ph?30:36)*u, x, y, i, m=[
+  {x:w*.5+Math.sin(t*.13)*w*.30, y:h*.52+Math.cos(t*.17)*h*.16, k:1.0},
+  {x:w*.5+Math.cos(t*.09+1.7)*w*.36, y:h*.5+Math.sin(t*.11+.4)*h*.2, k:-.7},
+  {x:w*.5+Math.sin(t*.07+3.1)*w*.18, y:h*.5+Math.sin(t*.15+2.2)*h*.22, k:.8}], sg=h*.2;
+  function P(px,py){ var ox=0, oy=0, near=0; for(var j=0;j<m.length;j++){ var dx=m[j].x-px, dy=m[j].y-py, d2=dx*dx+dy*dy, f=Math.exp(-d2/(2*sg*sg))*m[j].k; ox+=dx*f*.55; oy+=dy*f*.55; near=Math.max(near,Math.exp(-d2/(2*sg*sg*.5))*Math.abs(m[j].k)) } return [px+ox,py+oy,near] }
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); c.lineWidth=Math.max(1,u*1.1); var step=14*u;
+  function line(vert,pos){ var p0=null, p; for(var s=-gs;s<=(vert?h:w)+gs;s+=step){ p=vert?P(pos,s):P(s,pos); if(p0){ var q=Math.max(p0[2],p[2]); c.strokeStyle=q>.12?rgba(PAL.ppl,.12+.55*q):'rgba(242,241,236,.13)'; c.beginPath(); c.moveTo(p0[0],p0[1]); c.lineTo(p[0],p[1]); c.stroke() } p0=p } }
+  for(x=-gs;x<w+gs;x+=gs) line(true,x); for(y=-gs;y<h+gs;y+=gs) line(false,y);
+  m.forEach(function(q,j){ var g=c.createRadialGradient(q.x,q.y,0,q.x,q.y,28*u); g.addColorStop(0,q.k>0?'rgba(255,226,150,.95)':'rgba(79,163,255,.95)'); g.addColorStop(1,'rgba(0,0,0,0)'); c.globalCompositeOperation='lighter'; c.fillStyle=g; c.fillRect(q.x-30*u,q.y-30*u,60*u,60*u); c.globalCompositeOperation='source-over' });
+  var a=t*.9, r=(46+10*Math.sin(t*.6))*u, sx=m[0].x+Math.cos(a)*r, sy=m[0].y+Math.sin(a)*r*.7; if(!st.tr||st.reset) st.tr=[]; st.tr.push([sx,sy]); if(st.tr.length>90) st.tr.shift();
+  c.lineWidth=Math.max(1.4,u*1.8); for(i=1;i<st.tr.length;i++){ c.strokeStyle='rgba(242,241,236,'+(i/st.tr.length*.8)+')'; c.beginPath(); c.moveTo(st.tr[i-1][0],st.tr[i-1][1]); c.lineTo(st.tr[i][0],st.tr[i][1]); c.stroke() } c.fillStyle=PAL.ink; c.beginPath(); c.arc(sx,sy,u*2.6,0,6.2832); c.fill() };
+
+/* 8 — swarm: a cloud of people gathers into the mark of the game and breaks apart again */
+CVD.swarm=function(c,w,h,t,st,ph,live){ var u=h/760, N=ph?1100:1800, i, cx=w/2-(ph?w*.04:0), cy=h*(ph?.46:.5), R=Math.min(h*.2,w*.27);
+  if(st.reset||!st.p){ var tg=[], rg=rng(7); for(i=0;i<N;i++){ var q=rg(); if(q<.55){ var a=(-70+34+rg()*(214/252*360))*Math.PI/180; tg.push([cx+Math.cos(a)*R*(0.96+rg()*.08),cy+Math.sin(a)*R*(0.96+rg()*.08),0]) } else { var a2=Math.PI/4*-1, ax=cx+R*.78, ay=cy-R*.62, s=R*.5, r1=rg(), r2=rg(); if(r1+r2>1){ r1=1-r1; r2=1-r2 }
+        var v0=[0,-16],v1=[14,14],v2=[0,6],v3=[-14,14], tri=rg()<.5?[v0,v1,v2]:[v0,v2,v3], px=tri[0][0]+(tri[1][0]-tri[0][0])*r1+(tri[2][0]-tri[0][0])*r2, py=tri[0][1]+(tri[1][1]-tri[0][1])*r1+(tri[2][1]-tri[0][1])*r2, ca=Math.cos(.785), sa=Math.sin(.785); tg.push([ax+(px*ca-py*sa)*s/16*1.5,ay+(px*sa+py*ca)*s/16*1.5,1]) } }
+    st.p=[]; for(i=0;i<N;i++) st.p.push({x:Math.random()*w,y:Math.random()*h,vx:0,vy:0,tx:tg[i][0],ty:tg[i][1],red:tg[i][2],ph:Math.random()*6.28}); st.t0=t; c.fillStyle=PAL.bg; c.fillRect(0,0,w,h) }
+  var cyc=(t-st.t0)%20, gather=cyc<9?Math.min(1,cyc/6):(cyc<14?1:0), burst=cyc>=14&&cyc<14.15, scatter=cyc>=14;
+  c.fillStyle='rgba(11,11,12,'+(live?.2:.5)+')'; c.fillRect(0,0,w,h); c.globalCompositeOperation='lighter';
+  for(i=0;i<N;i++){ var p=st.p[i], dx, dy;
+    if(burst){ var a=Math.random()*6.28, v=(2+Math.random()*6)*u; p.vx+=Math.cos(a)*v; p.vy+=Math.sin(a)*v }
+    if(scatter||cyc<.4){ var a2=vn3(p.x*.004,p.y*.004,t*.1)*12.5; p.vx+=Math.cos(a2)*.12*u; p.vy+=Math.sin(a2)*.12*u; p.vx*=.985; p.vy*=.985 }
+    else { var k=.012+.03*gather, tx=p.tx+Math.sin(t*1.2+p.ph)*(1.2-gather)*5*u, ty=p.ty+Math.cos(t*1.1+p.ph)*(1.2-gather)*5*u; p.vx+=(tx-p.x)*k; p.vy+=(ty-p.y)*k; p.vx*=.86; p.vy*=.86 }
+    p.x+=p.vx; p.y+=p.vy; var sp=Math.min(1,Math.hypot(p.vx,p.vy)/(3*u)), al=.45+.5*(1-sp)*gather;
+    c.fillStyle=p.red?rgba(PAL.red,al):rgba(PAL.ink,al*.9); c.fillRect(p.x-u*.9,p.y-u*.9,u*1.8,u*1.8) }
+  c.globalCompositeOperation='source-over' };
+
+/* 9 — warp: the ark in flight; stars stream past, every so often a long jump */
+CVD.warp=function(c,w,h,t,st,ph){ var u=h/760, N=ph?700:1300, i, cx=w/2, cy=h*.46;
+  if(st.reset||!st.s){ st.s=[]; for(i=0;i<N;i++) st.s.push({a:Math.random()*6.283,z:Math.random(),c:Math.random()<.14}); st.last=t }
+  var dt=Math.min(.1,t-st.last); st.last=t; var cyc=(t%16), jump=cyc>11&&cyc<14.5?Math.sin((cyc-11)/3.5*Math.PI):0, sp=.16+.5*jump+.04*Math.sin(t*.4);
+  c.fillStyle='rgba(11,11,12,'+(.32-.2*jump)+')'; c.fillRect(0,0,w,h);
+  for(i=0;i<N;i++){ var s=st.s[i], z0=s.z; s.z-=sp*dt*(.5+s.z)*1.0; var zt=s.z; if(s.z<=.01){ s.z=1; s.a=Math.random()*6.283; s.c=Math.random()<.14; z0=1.04 }
+    var r0=(1/Math.max(.02,z0+.012*(1+jump*3))-.9)*h*.07, r1=(1/Math.max(.02,s.z)-.9)*h*.07, x0=cx+Math.cos(s.a)*r0*1.35, y0=cy+Math.sin(s.a)*r0, x1=cx+Math.cos(s.a)*r1*1.35, y1=cy+Math.sin(s.a)*r1, near=1-s.z;
+    c.strokeStyle=s.c?rgba(PAL.ppl,.35+.65*near):'rgba(242,241,236,'+(.25+.75*near)+')'; c.lineWidth=Math.max(1,u*(.9+near*2.2)); c.beginPath(); c.moveTo(x0,y0); c.lineTo(x1,y1); c.stroke() }
+  var g=c.createRadialGradient(cx,cy,0,cx,cy,h*.5); g.addColorStop(0,'rgba(11,11,12,.75)'); g.addColorStop(.3,'rgba(11,11,12,.25)'); g.addColorStop(1,'rgba(11,11,12,0)'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  if(jump>.05){ c.globalCompositeOperation='lighter'; var g2=c.createRadialGradient(cx,cy,0,cx,cy,h*.7); g2.addColorStop(0,'rgba(255,226,150,'+(.16*jump)+')'); g2.addColorStop(1,'rgba(255,226,150,0)'); c.fillStyle=g2; c.fillRect(0,0,w,h); c.globalCompositeOperation='source-over' } };
+
+/* 10 — cells: capsules as a honeycomb, the waking passes across it in waves */
+CVD.cells=function(c,w,h,t,st,ph){ var u=h/760, r=(ph?26:30)*u, hw=Math.sqrt(3)*r, vh=r*1.5, i, j, cols=Math.ceil(w/hw)+2, rows=Math.ceil(h/vh)+2;
+  if(st.reset||!st.o){ st.o=[]; st.last=t; st.nx=t } if(t>=st.nx){ st.o.push({x:Math.random()*w,y:Math.random()*h*.8,t:t,sp:(150+Math.random()*130)*u}); st.nx=t+1.8+Math.random()*2.2 } st.o=st.o.filter(function(q){ return t-q.t<9 });
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h);
+  for(j=-1;j<rows;j++) for(i=-1;i<cols;i++){ var x=i*hw+(j&1?hw/2:0), y=j*vh, lit=0, k; for(k=0;k<st.o.length;k++){ var q=st.o[k], d=Math.hypot(x-q.x,y-q.y), f=(t-q.t)*q.sp, e=1-Math.abs(d-f)/(70*u); if(e>0) lit=Math.max(lit,e*Math.max(0,1-(t-q.t)/9)) }
+    var mask=1, cxn=Math.abs(x-w/2)/w, cyn=y/h; if(cxn<(ph?.5:.28)&&cyn<.36) mask=.3; if(cyn>.86) mask=Math.min(mask,.35);
+    var base=.06*mask; c.beginPath(); for(k=0;k<6;k++){ var a=Math.PI/6+k*Math.PI/3; c.lineTo(x+Math.cos(a)*r*.86,y+Math.sin(a)*r*.86) } c.closePath();
+    if(lit>.02){ c.fillStyle=rgba(PAL.ppl,.05+.3*lit*mask); c.fill() } c.strokeStyle=lit>.05?rgba(PAL.ppl,(.2+.8*lit)*mask):'rgba(242,241,236,'+(.08*mask)+')'; c.lineWidth=Math.max(1,u*(1+lit)); c.stroke();
+    if(lit>.35){ c.fillStyle=rgba('#FFF4D0',lit*.9*mask); c.beginPath(); c.arc(x,y,r*.14*lit,0,6.2832); c.fill() } } };
+
+/* 11 — rosettes: a harmonograph that never repeats; the head of the line is yellow */
+CVD.rosette=function(c,w,h,t,st,ph){ var u=h/760, cx=w/2, cy=h*.5, A=h*.4, i, k, n=700, T=16;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); c.lineCap='round';
+  function pt(tt){ var f1=2+.35*Math.sin(tt*.011), f2=3+.4*Math.sin(tt*.0073+1.2), f3=5.01+.3*Math.sin(tt*.0051+2.4), fx=Math.sin(tt*f1)*.55+Math.sin(tt*f3*.5+1.1)*.45, fy=Math.sin(tt*f2+1.3)*.55+Math.sin(tt*(f1+f2)*.5+.4)*.45; return [fx*A*(ph?.7:1.35),fy*A] }
+  var ring=h*.46; c.strokeStyle='rgba(242,241,236,.06)'; c.lineWidth=1; c.beginPath(); c.arc(cx,cy,ring,0,6.2832); c.stroke(); c.beginPath(); c.arc(cx,cy,ring*.62,0,6.2832); c.stroke();
+  c.globalCompositeOperation='lighter';
+  for(k=0;k<3;k++){ var rot=k*2.0944+t*.02, cr=Math.cos(rot), sr=Math.sin(rot), prev=null, sc=(k?.86:1); 
+    for(i=0;i<=n;i++){ var s=i/n, tt=t-T+T*s, p=pt(tt+k*17), x=cx+(p[0]*cr-p[1]*sr)*sc, y=cy+(p[0]*sr+p[1]*cr)*sc; if(prev){ var head=s>.97; c.strokeStyle=head?rgba(PAL.ppl,.95):(k?'rgba(160,190,235,'+(.02+.30*s*s)+')':'rgba(242,241,236,'+(.03+.42*s*s)+')'); c.lineWidth=Math.max(1,u*(.6+1.9*s*s)); c.beginPath(); c.moveTo(prev[0],prev[1]); c.lineTo(x,y); c.stroke() } prev=[x,y]; if(i===n){ var g=c.createRadialGradient(x,y,0,x,y,22*u); g.addColorStop(0,'rgba(255,226,150,.8)'); g.addColorStop(1,'rgba(255,210,63,0)'); c.fillStyle=g; c.fillRect(x-24*u,y-24*u,48*u,48*u) } } }
+  c.globalCompositeOperation='source-over' };
+
+add('Складка','Решётка пространства, которую гнут три массы: две притягивают (жёлтые), одна расталкивает (синяя). У жёлтой кружит маленький корабль со следом. «Пространство течёт иначе» — складка и растяжение из игры, показанные буквально.',
+ 'прямо про механику игры (события пространства); спокойный фон, не спорит с кнопками; легко читается на любом экране',
+ 'решётка и гравитационные ямы — известный образ; объёма не хватает без свечения',
+ absScreen('fold','vA7'),'');
+add('Рой','Облако людей собирается в знак игры: кольцо с разрывом и красная стрелка ковчега, держится несколько секунд, рассыпается и собирается снова. Знак в центре собирается из частиц, поэтому логотип вверху на этом экране убран.',
+ 'сам логотип становится сценой; смысл «люди собираются в ковчег» без слов; хорошо запоминается',
+ 'знак в центре и название сверху — два акцента, нужен выбор; на слабых телефонах 1–2 тыс. частиц',
+ absScreen('swarm','vA8'),
+ '.vA8 .top .mk{display:none}.vA8 .top{top:46u}.phone .vA8 .top{top:30px}');
+add('Прыжок','Звёзды летят мимо и вытягиваются в линии: ковчег в пути. Раз в 16 секунд длинный прыжок — линии растягиваются, по экрану идёт тёплая вспышка и всё успокаивается. Центр затемнён под логотип.',
+ 'динамичный и понятный сразу; «ковчег идёт» без текста; самый простой по коду',
+ 'самый банальный из всех (заставка «полёт сквозь звёзды»); без своей подачи легко выглядит стоком',
+ absScreen('warp','vA9'),'');
+add('Соты','Соты капсул: волны пробуждения расходятся по ним от случайных точек, клетки вспыхивают жёлтым и гаснут. 128 человек, которые просыпаются, но показанные как поле. Под названием и кнопками соты тише.',
+ 'тихая связь с вступлением (капсулы, пробуждение); спокойный ритм, хорошо читается на мелких экранах',
+ 'повторяет «Руны» по ощущению сетки; нужен свой цвет или форма, иначе два похожих экрана',
+ absScreen('cells','vA10'),'');
+add('Розетки','Гармонограф: одна линия рисует бесконечно меняющуюся розетку, голова жёлтая со свечением, хвост истончается. Две тонкие окружности — орбиты — держат композицию.',
+ 'самый «красивый» и расслабляющий; ничего не повторяется; на удивление хорошо смотрится под кнопками',
+ 'не связан с лором и с игрой напрямую; чисто эстетика',
+ absScreen('rosette','vA11'),'');
+
+
+/* ---------- landscapes without a world (12–16): the background of a main menu, drawn from lines, hexes and thread ---------- */
+function skyStars(c,w,h,t,st,yMax,n){ if(st.reset||!st.sk||st.skn!==n){ var rg=rng(99); st.sk=[]; st.skn=n; for(var i=0;i<n;i++) st.sk.push([rg(),rg(),.5+rg()*1.2,rg()*6.28,rg()]) }
+  for(var j=0;j<st.sk.length;j++){ var s=st.sk[j], y=s[1]*yMax; c.fillStyle=(s[4]<.15?'rgba(255,226,170,':'rgba(220,230,255,')+(.18+.5*(.5+.5*Math.sin(t*(.4+s[2]*.4)+s[3]))*(1-y/yMax*.5))+')'; c.fillRect(s[0]*w,y,s[2]*h/760,s[2]*h/760) } }
+function fbm2(x,y,z){ return (vn3(x,y,z)*.55+vn3(x*2.1+7.3,y*2.1+1.9,z*1.3)*.3+vn3(x*4.3+3.1,y*4.3+8.8,z*1.7)*.15) }
+
+/* 12 — ridges: layers of mountains drawn with single lines, the far ones pale, the near ones black; the sun is a set of thin rings */
+CVD.ridges=function(c,w,h,t,st,ph){ var u=h/760, L=ph?12:18, i, x, hy=h*.46;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); skyStars(c,w,h,t,st,hy,ph?90:150);
+  var sx=w*(ph?.62:.68), sy=hy-h*.05, k; c.globalCompositeOperation='lighter'; var g=c.createRadialGradient(sx,sy,0,sx,sy,h*.32); g.addColorStop(0,'rgba(255,210,63,.22)'); g.addColorStop(1,'rgba(255,210,63,0)'); c.fillStyle=g; c.fillRect(sx-h*.35,sy-h*.35,h*.7,h*.7); c.globalCompositeOperation='source-over';
+  for(k=0;k<7;k++){ c.strokeStyle=rgba(PAL.ppl,.5-k*.055); c.lineWidth=Math.max(1,u*(k?.9:1.6)); c.beginPath(); c.arc(sx,sy,(22+k*15)*u,0,6.2832); c.stroke() }
+  for(i=0;i<L;i++){ var d=i/(L-1), base=hy+Math.pow(d,1.15)*h*.46, amp=h*(.05+.2*d), fr=.0016+.0016*(1-d)+0.0014*d, sp=t*(.004+.02*d), pts=[];
+    c.beginPath(); c.moveTo(-5,h+5); for(x=-5;x<=w+5;x+=6*u){ var nn=fbm2(x*fr/u*(h/760)+i*13.7,i*3.3,sp), rd=1-Math.abs(2*nn-1), y=base-amp*(Math.pow(rd,2.6)*1.5+(nn-.4)*.6); pts.push([x,y]); c.lineTo(x,y) } c.lineTo(w+5,h+5); c.closePath();
+    c.fillStyle='rgba(11,11,12,'+(.86+.14*d)+')'; c.fill(); c.beginPath(); pts.forEach(function(p,q){ if(q) c.lineTo(p[0],p[1]); else c.moveTo(p[0],p[1]) });
+    var near=Math.pow(d,1.1); c.strokeStyle=i%4===2?rgba(PAL.ppl,.18+.4*d):'rgba(242,241,236,'+(.12+.5*near)+')'; c.lineWidth=Math.max(1,u*(.8+1.4*d)); c.stroke() } };
+
+/* hex ground in perspective: the world is a hexagonal field, the camera hangs low above it */
+function hexGround(c,w,h,t,st,ph,mode){ var u=h/760, hy=h*.34, f=h*.9, cx=w/2, R=ph?.3:.26, dz=1.5*R, dx=Math.sqrt(3)*R, Hc=2.1, zs=t*.22, z0=2.2, z1=ph?12:18, jmin=Math.floor((zs+z0)/dz)-1, jmax=Math.ceil((zs+z1)/dz)+1, j, i, k;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); skyStars(c,w,h,t,st,hy*.96,ph?80:140);
+  var g=c.createRadialGradient(cx,hy,0,cx,hy,h*.55); g.addColorStop(0,'rgba(255,200,90,.16)'); g.addColorStop(.4,'rgba(255,200,90,.05)'); g.addColorStop(1,'rgba(255,200,90,0)'); c.fillStyle=g; c.fillRect(0,0,w,hy+h*.1);
+  var xmax=(w/2/f)*z1+2, imax=Math.ceil(xmax/dx)+1;
+  for(j=jmax;j>=jmin;j--){ var Z=j*dz-zs, fog=Math.max(0,Math.min(1,(Z-2)/(z1-2))); if(Z<z0||Z>z1) continue;
+    for(i=-imax;i<=imax;i++){ var X=(i+((j&1)?.5:0))*dx, n=fbm2(i*.23+((j&1)?.12:0),j*.23,t*.04+3), hgt=mode==='relief'?Math.max(0,(n-.40))*(ph?3.4:4.2):0, fz=f/Z;
+      var wave=Math.max(0,Math.sin(Z*.7+Math.abs(X)*.18-t*1.3)); wave=Math.pow(wave,mode==='relief'?6:10);
+      var sc=[], co=[]; for(k=0;k<6;k++){ var a=(30+60*k)*Math.PI/180, wx=X+Math.cos(a)*R*.94, wz=Z+Math.sin(a)*R*.94, zz=Math.max(.3,wz), ff=f/zz; sc.push([cx+wx*ff,hy+(Hc-hgt)*ff,hy+Hc*ff]) }
+      if(sc[0][0]<-60||sc[3][0]>w+60) { if(Math.max(sc[0][0],sc[3][0])<-60||Math.min(sc[0][0],sc[3][0])>w+60) continue }
+      var vis=1-fog*.9, pk=Math.min(1,hgt/(ph?1.2:1.5));
+      if(mode==='relief'&&hgt>.02){ for(k=0;k<6;k++){ var a1=(60+60*k)*Math.PI/180, nx=Math.cos(a1), nz=Math.sin(a1); if(nx*(-X)+nz*(-Z)<=0) continue; var p0=sc[k], p1=sc[(k+1)%6];
+          c.fillStyle='rgba('+(16+Math.round(pk*40))+','+(16+Math.round(pk*30))+','+(18+Math.round(pk*8))+','+vis+')'; c.beginPath(); c.moveTo(p0[0],p0[1]); c.lineTo(p1[0],p1[1]); c.lineTo(p1[0],p1[2]); c.lineTo(p0[0],p0[2]); c.closePath(); c.fill(); c.strokeStyle='rgba(242,241,236,'+(.06*vis)+')'; c.lineWidth=1; c.stroke() } }
+      c.beginPath(); for(k=0;k<6;k++){ if(k) c.lineTo(sc[k][0],sc[k][1]); else c.moveTo(sc[k][0],sc[k][1]) } c.closePath();
+      if(mode==='relief'){ c.fillStyle='rgba('+(13+Math.round(pk*38+wave*14))+','+(14+Math.round(pk*32+wave*10))+','+(16+Math.round(pk*12))+','+vis+')'; c.fill() } else if(wave>.05){ c.fillStyle=rgba(PAL.ppl,.18*wave*vis); c.fill() }
+      var edge=mode==='relief'?(pk>.5?rgba(PAL.ppl,(.15+.5*pk+.4*wave)*vis):'rgba(242,241,236,'+((.09+.2*wave)*vis)+')'):(wave>.05?rgba(PAL.ppl,(.2+.75*wave)*vis):'rgba(242,241,236,'+(.12*vis)+')');
+      c.strokeStyle=edge; c.lineWidth=Math.max(1,u*(1+wave*.8)); c.stroke() } }
+  var fg=c.createLinearGradient(0,hy-4,0,hy+h*.07); fg.addColorStop(0,'rgba(11,11,12,.9)'); fg.addColorStop(1,'rgba(11,11,12,0)'); c.fillStyle=fg; c.fillRect(0,hy-4,w,h*.07+4) }
+CVD.hexrelief=function(c,w,h,t,st,ph){ hexGround(c,w,h,t,st,ph,'relief') };
+CVD.hexplain=function(c,w,h,t,st,ph){ hexGround(c,w,h,t,st,ph,'plain') };
+
+/* 14 — thread globe: a sphere wound from rotating great circles, half sunk below the edge of the screen */
+CVD.thread=function(c,w,h,t,st,ph){ var u=h/760, cx=w/2, R=h*(ph?.78:1.02), cy=h*(ph?.5:.56)+R, i, N=ph?36:52, tilt=-.32;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); skyStars(c,w,h,cy-R,st,cy-R,ph?80:150);
+  var g=c.createRadialGradient(cx,cy,R*.92,cx,cy,R*1.28); g.addColorStop(0,'rgba(79,163,255,.30)'); g.addColorStop(.35,'rgba(79,163,255,.08)'); g.addColorStop(1,'rgba(79,163,255,0)'); c.fillStyle=g; c.fillRect(0,0,w,h);
+  c.save(); c.translate(cx,cy); c.rotate(tilt); c.lineWidth=Math.max(1,u*.9);
+  c.fillStyle='#08090c'; c.beginPath(); c.arc(0,0,R,0,6.2832); c.fill();
+  for(i=0;i<N;i++){ var a=t*.16+i*Math.PI/N, rx=Math.abs(Math.cos(a))*R, bright=.05+.28*Math.pow(Math.abs(Math.cos(a)),.5)*Math.abs(Math.sin(a*1+.0))*1.0; c.strokeStyle='rgba(130,180,240,'+(.14+.42*Math.abs(Math.sin(a)))+')'; c.beginPath(); c.ellipse(0,0,Math.max(.5,rx),R,0,0,6.2832); c.stroke() }
+  for(i=-5;i<=5;i++){ var y=i/6*R, rr=Math.sqrt(R*R-y*y); c.strokeStyle='rgba(120,170,235,.14)'; c.beginPath(); c.ellipse(0,y,rr,rr*.12,0,0,6.2832); c.stroke() }
+  c.strokeStyle='rgba(79,163,255,.9)'; c.lineWidth=Math.max(1.5,u*1.8); c.beginPath(); c.arc(0,0,R,0,6.2832); c.stroke();
+  var ia=t*.16+2*Math.PI/N*3, ex=Math.cos(ia)*R, mp=t*.35; var py=Math.sin(mp)*R, px=Math.cos(ia)*Math.sqrt(Math.max(0,R*R-py*py)); c.globalCompositeOperation='lighter'; var gg=c.createRadialGradient(px,py,0,px,py,22*u); gg.addColorStop(0,'rgba(255,226,150,.9)'); gg.addColorStop(1,'rgba(255,210,63,0)'); c.fillStyle=gg; c.fillRect(px-24*u,py-24*u,48*u,48*u); c.globalCompositeOperation='source-over';
+  c.restore() };
+
+/* 15 — curtains: hanging threads of light over two dark ridges */
+CVD.curtains=function(c,w,h,t,st,ph){ var u=h/760, x, k, step=(ph?3:2.4)*u;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); skyStars(c,w,h,h*.6,st,h*.6,ph?70:130);
+  c.globalCompositeOperation='lighter'; c.lineWidth=Math.max(1.4,u*1.7);
+  for(k=0;k<3;k++){ var base=h*(.62+.04*k), col=k===0?[255,210,63]:(k===1?[242,241,236]:[120,170,235]), amp=h*(.34-.05*k), fr=.0021+.0009*k, sw=t*(.045+.02*k)*(k%2?-1:1);
+    for(x=0;x<=w;x+=step){ var n=fbm2(x*fr/u*(h/760)+k*9.1,k*2.7,sw)-.28, hh=Math.max(0,n)*amp*4.2, sway=Math.sin(t*.4+x*.004+k)*5*u; if(hh<2*u) continue; var top=base-hh;
+      var gr=c.createLinearGradient(0,top,0,base); gr.addColorStop(0,'rgba('+col.join(',')+',0)'); gr.addColorStop(.6,'rgba('+col.join(',')+','+(.16+.22*Math.min(1,hh/amp))+')'); gr.addColorStop(1,'rgba('+col.join(',')+',.5)'); c.strokeStyle=gr; c.beginPath(); c.moveTo(x+sway,top); c.lineTo(x,base); c.stroke() } }
+  c.globalCompositeOperation='source-over';
+  for(k=0;k<2;k++){ var by=h*(.74+.07*k), a2=h*(.07+.05*k); c.beginPath(); c.moveTo(-5,h+5); for(x=-5;x<=w+5;x+=6*u){ c.lineTo(x,by-a2*(fbm2(x*.0024/u*(h/760)+k*5.5,k*1.9,3)-.3)*2.2) } c.lineTo(w+5,h+5); c.closePath(); c.fillStyle=k?'#070708':'#0e0f12'; c.fill(); c.strokeStyle='rgba(242,241,236,'+(k?.0:.14)+')'; c.lineWidth=Math.max(1,u); c.stroke() } };
+
+add('Хребты','Слои гор из одной линии: дальние бледные, ближние почти чёрные, вверху солнце из тонких жёлтых колец. Горы медленно дрейфуют с разной скоростью (параллакс). Тот же характер, что у «Сигнала», но как пейзаж.',
+ 'классический главный экран «пейзаж на фоне» без единой картинки; очень спокойный и красивый; ничего не говорит про сюжет',
+ 'гор в игре нет, настроение чуть мирное; кольца солнца делают экран слишком «чистым»',
+ absScreen('ridges','vB12'),'');
+add('Гекс-рельеф','Поле шестиугольных колонн уходит к горизонту и медленно движется на камеру. Высоты из шума, вершины подсвечены жёлтым, по полю идёт волна света. Тёмное небо со звёздами над ним.',
+ 'продолжение «сот», но уже как местность; создаёт глубину и «масштаб» без картинки; жёлтые вершины связаны с палитрой игры',
+ 'самый тяжёлый из пейзажей (тысяча многоугольников на кадр); колонны могут читаться как «Майнкрафт» при другой подаче',
+ absScreen('hexrelief','vB13'),'');
+add('Нитяной шар','Огромная сфера, свитая из вращающихся больших кругов, наполовину ушла за нижний край. Голубое свечение у кромки, жёлтая искра бежит по нити. Звёзды сверху.',
+ 'как «планета на горизонте», но целиком из линий; вращение нитей (то, что вам понравилось) главный образ',
+ 'самая близкая к «Карте Пульта» по ощущению; решает ту же задачу другими средствами',
+ absScreen('thread','vB14'),'');
+add('Занавесы','Подвешенные нити света в три слоя (жёлтый, белый, голубой) качаются над двумя тёмными хребтами. Аврора, собранная из тонких линий.',
+ 'самый «атмосферный» из пейзажей; нити — родственны вашим розеткам; вертикаль хорошо ложится на телефон',
+ 'аврора — банальный образ для «космоса»; ближе к фэнтези, чем к игре про логистику',
+ absScreen('curtains','vB15'),'');
+add('Гекс-равнина','Плоское гексагональное поле тонких линий до горизонта, по нему бегут волны света от горизонта на камеру, горизонт светится тёплым. Минимальная версия «Гекс-рельефа».',
+ 'очень чистая и лёгкая, хорошо читается под кнопками; видна «геометрия мира», как в карте игры',
+ 'знакомая «ретро-сетка» (синтвейв), нужна своя подача; без высот объёма меньше',
+ absScreen('hexplain','vB16'),'');
+
+
+/* ---------- the shell: render, selection, keys ---------- */
+var CSS_SRC=document.getElementById('css-src').textContent;
+function u2css(s){ return s.replace(/(-?\d*\.?\d+)u(?![\w-])/g,function(m,n){ return 'calc(var(--u) * '+n+')' }) }
+var SHARED='\
+.sc{position:absolute;inset:0;width:100%;height:100%}\
+.ttl{position:absolute;display:flex;align-items:center;gap:16u}.ttl .mk{width:46u;height:46u}.ttl .nm{font:700 22u var(--h);letter-spacing:.3em}\
+.ttl.tl{left:60u;top:44u}.ttl.tr{right:60u;top:44u}.ttl.tc{left:0;right:0;top:40u;justify-content:center}\
+.sm{position:absolute;left:0;right:0;bottom:36u;display:flex;justify-content:center;gap:46u}\
+.sm .it{display:flex;flex-direction:column;align-items:center;gap:6u;padding:8u 4u 10u;border-bottom:2px solid transparent;min-width:92u}\
+.sm .l{font:500 21u var(--h);color:var(--mid);letter-spacing:.06em}.sm .s{font:11u var(--n);color:var(--dim);letter-spacing:.08em;height:14u}\
+.sm .it.on{border-bottom-color:var(--ppl)}.sm .it.on .l{color:var(--ink)}.sm .it.on .s{color:var(--ppl)}.sm .it.off{opacity:.35}\
+.phone .sc{height:56%}.phone .ttl.tl,.phone .ttl.tr,.phone .ttl.tc{left:0;right:0;top:20px;justify-content:center}.phone .ttl .nm{font-size:18px}.phone .ttl .mk{width:36px;height:36px}\
+.phone .sm{flex-direction:column;align-items:stretch;gap:0;left:24px;right:24px;bottom:26px}.phone .sm .it{flex-direction:row;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ln);padding:12px 2px}.phone .sm .it.on{border-bottom-color:var(--ppl)}.phone .sm .l{font-size:21px}\
+.bootov{--u:calc(100cqw / 1280);--ns:1;--g:#D9D8D2;--gb:#F2F1EC;--gd:#6b6a65;--o:#FFD23F;--r:#FF2A1A;--eb:#4FA3FF;position:absolute;inset:0;z-index:30;background:#060607;font-family:"Share Tech Mono","Geist Mono",var(--n);color:var(--g);padding:58u 80u 74u;overflow:hidden;transition:opacity .5s}\
+.bootov.fin{opacity:0;pointer-events:none}\
+.bootov::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(242,241,236,.04) 0 1px,transparent 1px 3u),radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%)}\
+.bootov::after{content:"";position:absolute;left:0;right:0;height:120u;top:-120u;pointer-events:none;z-index:2;background:linear-gradient(180deg,transparent,rgba(242,241,236,calc(.07*var(--ns))),transparent);animation:bscan 4.2s linear infinite}\
+@keyframes bscan{to{top:110%}}\
+.bootov[data-n="0"]{--ns:1}.bootov[data-n="1"]{--ns:.85}.bootov[data-n="2"]{--ns:.66}.bootov[data-n="3"]{--ns:.48}.bootov[data-n="4"]{--ns:.32}.bootov[data-n="5"]{--ns:.16}.bootov[data-n="6"]{--ns:0}\
+.bootov .wr{display:grid;grid-template-columns:minmax(0,1fr) 360u;gap:30u;grid-template-rows:minmax(0,1fr);opacity:0;height:100%}\
+.bootov.on .wr{opacity:1;animation:crton .9s ease-out}\
+@keyframes crton{0%{transform:scale(.25,.004);filter:brightness(5)}35%{transform:scale(1,.004);filter:brightness(5)}70%{transform:scale(1,1.04);filter:brightness(2)}100%{transform:none;filter:none}}\
+.bootov .mn{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column}\
+.bootov .bo{flex:1;min-height:0;overflow:hidden;animation:bflk 3.4s steps(1) infinite}.bootov.act .bo{animation-duration:1.8s}\
+@keyframes bflk{0%,100%{opacity:1;transform:none}12%{opacity:calc(1 - .5*var(--ns));transform:translateX(calc(var(--ns)*4px))}14%{opacity:1;transform:none}47%{opacity:calc(1 - .4*var(--ns));transform:skewX(calc(var(--ns)*-2deg))}48.5%{opacity:1;transform:none}73%{opacity:calc(1 - .5*var(--ns));transform:translateX(calc(var(--ns)*-4px))}75%{opacity:1;transform:none}}\
+.bootov .bh{font:700 20u var(--h);letter-spacing:.3em;color:var(--gb);margin-bottom:22u;display:flex;gap:14u;align-items:center}.bootov .bh .mk{width:32u;height:32u}\
+.bootov .tb{margin-left:auto;border:1px solid var(--o);color:var(--o);padding:5u 14u;font:400 15u "Share Tech Mono",var(--n);letter-spacing:.08em;text-shadow:0 0 6u rgba(255,210,63,.45)}.bootov .tb b{font-weight:400}\
+.bootov .bl{font-size:19u;line-height:1.7;max-width:900u;white-space:pre-wrap;text-transform:uppercase;min-height:1.7em;text-shadow:0 0 calc(var(--u)*7) rgba(242,241,236,.45),calc(var(--ns)*3.2px) 0 rgba(242,241,236,.26)}\
+.bootov.act .bl{text-shadow:0 0 calc(var(--u)*7) rgba(242,241,236,.45),3.4px 0 rgba(242,241,236,.28)}\
+.bootov .bl.tear{transform:translateX(7px) skewX(-9deg);filter:blur(.5px)}\
+.bootov .bl.cm{color:var(--gb)}.bootov .bl.f{color:var(--o);text-shadow:0 0 calc(var(--u)*7) rgba(255,210,63,.5)}.bootov .bl.ok{color:var(--gb)}.bootov .bl.no{color:var(--r);text-shadow:none}.bootov .bl.th{color:var(--g)}.bootov .bl.hx{color:var(--gd);font-size:12u;line-height:1.4;min-height:0;text-shadow:none}\
+.bootov .bq{margin-top:12u;min-height:42u;display:flex;align-items:center;flex-wrap:wrap;gap:10u}\
+.bootov .bq .pm{color:var(--o);font-size:19u;margin-right:6u}\
+.bootov .vb{border:1px solid var(--gd);padding:7u 14u;font:400 16u "Share Tech Mono",var(--n);letter-spacing:.1em;text-transform:uppercase;color:var(--g)}\
+.bootov .vb i{font-style:normal;color:var(--o);margin-right:8u}.bootov .vb:hover{border-color:var(--o);color:var(--gb)}\
+.bootov .cur{display:inline-block;width:10u;height:2u;background:var(--g);vertical-align:-2u;animation:bk 1s steps(1) infinite}\
+.bootov .bskip{position:absolute;right:30u;top:20u;z-index:3;border:1px solid var(--gd);color:var(--g);padding:5u 12u;font:400 11u "Share Tech Mono",var(--n);letter-spacing:.2em;text-transform:uppercase}\
+.bootov .bhint{position:absolute;left:80u;bottom:24u;z-index:3;font-size:11u;letter-spacing:.12em;color:var(--gd);text-transform:uppercase}\
+.bootov .hud{border-left:5px double var(--gd);padding-left:26u;display:flex;flex-direction:column;gap:14u;min-height:0}\
+.bootov .pl{width:100%;height:auto;max-height:215u;display:block;overflow:visible}\
+.bootov .pl .rim{fill:none;stroke:var(--eb);stroke-width:1.3}.bootov .pl .lat{fill:none;stroke:#244a73;stroke-width:.8}\
+.bootov .pl .lon{fill:none;stroke:var(--eb);stroke-width:.8;opacity:.85;animation:lon 8s linear infinite}\
+@keyframes lon{0%,100%{rx:66px}50%{rx:1px}}\
+.bootov .pl .cr path{stroke:var(--o);stroke-width:1.4;fill:none}\
+.bootov .pl .pn{fill:var(--eb);font:9px "Share Tech Mono",monospace;text-anchor:middle;letter-spacing:.24em}\
+.bootov .pl .bp{fill:var(--o);animation:bpl 1.4s ease-in-out infinite}.bootov .pl .bpr{fill:none;stroke:var(--o);stroke-width:.8}\
+@keyframes bpl{50%{opacity:.3}}\
+.bootov .hh{display:grid;grid-template-columns:1fr 1fr;gap:10u 16u}\
+.bootov .g span{display:block;color:var(--gd);letter-spacing:.16em;font-size:10u;margin-bottom:2u}\
+.bootov .g b{font:400 16u "Share Tech Mono",var(--n);color:var(--gb);display:block;margin-bottom:4u;white-space:nowrap}\
+.bootov .g i{display:block;height:3u;background:#18181b}.bootov .g u{display:block;height:100%;width:0;background:var(--g);text-decoration:none}\
+.bootov .mp .cap,.bootov .lgb .cap{font-size:10u;letter-spacing:.16em;color:var(--gd);margin-bottom:6u}\
+.bootov .cells{display:grid;grid-template-columns:repeat(24,1fr);gap:2u}.bootov .cells s{display:block;aspect-ratio:1;background:#141417;text-decoration:none}.bootov .cells s.o{background:#4a4a46}.bootov .cells s.o.x{background:var(--g)}\
+.bootov .lg{font-size:11u;line-height:1.5;color:#6b6a65;overflow:hidden;height:130u;display:flex;flex-direction:column;justify-content:flex-end;text-transform:uppercase}.bootov .lg .rt{color:var(--o)}\
+.bootov .wt{margin-left:14u;font-size:13u;color:var(--gd);letter-spacing:.1em;text-transform:uppercase}\
+.phone .tst{--u:1px}.phone .bootov{--u:1px;padding:34px 20px 60px}.phone .bootov .bl{font-size:14px}.phone .bootov .bl.hx{font-size:9px}.phone .bootov .bh{font-size:16px}.phone .bootov .tb{font-size:11px;padding:3px 8px}.phone .bootov .vb{padding:9px 12px;font-size:13px}.phone .bootov .bhint{left:20px;right:20px;font-size:10px}.phone .bootov .bskip{right:14px;top:12px}\
+.phone .bootov .wr{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:8px}.phone .bootov .hud{order:-1;border:0;padding:0;margin-bottom:6px;gap:8px}.phone .bootov .hh{grid-template-columns:repeat(4,1fr);gap:6px 8px}.phone .bootov .pl,.phone .bootov .mp,.phone .bootov .lgb{display:none}.phone .bootov .g b{font-size:11px}.phone .bootov .g span{font-size:8px}.phone .bootov .wt{display:block;margin:6px 0 0}\
+.tst{--u:calc(100cqw / 1280);position:absolute;right:20u;top:12u;z-index:6;font:600 10u var(--n);letter-spacing:.16em;color:var(--mid);opacity:.32;padding:3u 8u;border:1px solid transparent;text-transform:uppercase}.tst:hover{opacity:.95;border-color:var(--dim)}\
+@media (prefers-reduced-motion:reduce){.bootov,.bootov *,.bootov::after{animation:none!important}.bootov .bl{text-shadow:none}}';
+function allCSS(){ var s=CSS_SRC+SHARED; VAR.forEach(function(v){ s+='\n'+v.css }); s+='\n'+selCSS(); return u2css(s) }
+function selCSS(){ var s='', N=5, i;
+  for(i=0;i<N;i++){
+    s+='.stage[data-sel="'+i+'"] .pane[data-for="'+i+'"]{display:block}';
+    s+='.stage[data-sel="'+i+'"] .v3 .mk.big{transform:rotate('+(i*72-45)+'deg)}';
+    s+='.stage[data-sel="'+i+'"] .v3 .ln'+i+'{stroke:#FFD23F;stroke-width:2}';
+    s+='.v3 .pt:nth-of-type('+(i+1)+'){}';
+  }
+  /* phone order for the ring variant: the items keep their index as --k */
+  return s }
+function build(){ document.getElementById('css-live').textContent=allCSS() }
+
+function stageHTML(vi,small){ var V=VAR[vi-1], cls='stage'+(S.frame==='phone'&&!small?' phone':'');
+  return '<div class="'+cls+'" data-v="'+vi+'" data-sel="'+S.sel+'">'+V.r().replace(/style="([^"]*)"/g,function(m,s){ return 'style="'+u2css(s)+'"' })+'<button class="tst" type="button">'+(S.lang==='ru'?'Для тестировки':'For testing')+'</button></div>' }
+function fixPhoneK(root){ root.querySelectorAll('.it[data-i]').forEach(function(e){ e.style.setProperty('--k',e.getAttribute('data-i')) }) }
+function updateSel(root){ root.setAttribute('data-sel',S.sel); root.querySelectorAll('.it[data-i]').forEach(function(e){ e.classList.toggle('on',+e.getAttribute('data-i')===S.sel) }) }
+function render(){ bootKill();
+  var single=S.view==='single', host=document.getElementById('host'), grid=document.getElementById('grid');
+  if(S.sel>=0&&items()[S.sel]&&items()[S.sel].off) S.sel=firstOn();
+  host.hidden=!single; grid.hidden=single; document.getElementById('info').hidden=!single; document.getElementById('hint').hidden=!single;
+  if(single){ host.innerHTML=stageHTML(S.v); var st=host.firstChild; fixPhoneK(st); updateSel(st); initCv(st,true);
+    var V=VAR[S.v-1]; document.getElementById('info').innerHTML='<h2>'+S.v+'. '+V.n+'</h2>'+V.d+'<div class="tags"><span><b>+</b> '+V.pro+'</span><span><b>−</b> '+V.con+'</span></div>';
+    S.boot=false; if(S.bootov){ S.bootov=false; playBoot() } }
+  else { grid.innerHTML=VAR.map(function(V,i){ return '<button class="gc" data-open="'+(i+1)+'"><div class="cap">'+(i+1)+' · '+V.n+'</div>'+stageHTML(i+1,true)+'</button>' }).join('');
+    grid.querySelectorAll('.stage').forEach(function(st){ fixPhoneK(st); updateSel(st); initCv(st,false) }) }
+  document.querySelectorAll('[data-k]').forEach(function(b){ var k=b.dataset.k, v=b.dataset.v, cur=k==='save'?(S.save?'1':'0'):String(S[k]); b.classList.toggle('on',cur===v) });
+  document.querySelectorAll('[data-name]').forEach(function(b){ b.classList.toggle('on',TXT.en.pult===b.dataset.name) });
+  document.querySelectorAll('#gv .pill').forEach(function(b){ b.classList.toggle('on',S.view==='single'&&+b.dataset.n===S.v) });
+}
+/* ---------- the start-up terminal (design/INTRO-DRAFT.md, 22.10): an old computer waking up. It hums, flickers, whistles, the letters fall apart, a panel of live metrics never stops, and it still boots ---------- */
+var BTXT={
+  en:{skip:'skip',hint:'choose a command (1–4) · click or space finishes a line · Esc leaves',refuse:'refused: {r}.',mt:'memory test',mtEnd:'user memory ........ none',wait:'awaiting command',
+      hud:{pwr:'POWER',temp:'CORE',mem:'MEMORY',bus:'BUS LOAD',fan:'FAN',sys:'SYSTEMS',up:'UPTIME',map:'MEMORY MAP',log:'LOG'},
+      pre:[['l','cm','** {name} 4.39 · cold start **'],['l','','power rail A ........ 12.04 V  ok'],['l','','power rail B ........  5.01 V  ok'],['l','','mains ............... present'],['l','','battery bank ........ 41 %  charging'],['w',300],['t','self-test',1300],
+           ['mem'],['l','','prepared commands ... found 24'],['t','load 1/6 · air',450],['t','load 2/6 · hatches',450],['t','load 3/6 · stores',450],['t','load 4/6 · yards',450],['t','load 5/6 · capsules',450],['t','load 6/6 · translation',450],['l','ok','prepared commands ... 24 loaded'],
+           ['l','','clock ................ no source · set 0000.00.00'],['l','','bus scan ............. 14 devices'],['l','f','bus 7: timeout'],['t','bus 7: retry',700],['l','ok','bus 7: ok'],['l','','sensor net ........... 212 nodes · 0 reply'],['l','f','systems offline ...... 6'],['w',350]],
+      sys:[{n:'air',f:'air: filters clogged',sig:'air',vs:[['clean',1],['purge','purge needs clean filters'],['seal','sealed air does not move'],['disable','air is already stalled']],ok:'air: clear',diag:['scan air ... codes E12 E13 E40','fan 1: stalled · fan 2: stalled','particulates 9.4 mg/m3 (limit 2.0)'],init:['fan 1 ........ 1180 rpm','fan 2 ........ 1204 rpm','pressure ..... 0.71 atm','particulates . 1.1 mg/m3'],log:['air.fan1 1180 rpm','air.fan2 1204 rpm','air.press 0.71']},
+           {n:'spaceport hatches',f:'hatches: sealed',sig:'hatch',vs:[['open','no hydraulic pressure'],['pressurize',1],['lock','already sealed'],['disable','hatches are not running']],ok:'hatches: open',diag:['hydraulics ... 0 bar','actuators 1–8: no response','seal pressure ... 0.00 atm'],init:['hydraulics ... 210 bar','actuators 1–8 .. ok','hatch travel ... 0 → 100 %'],log:['hatch.hyd 210 bar','hatch.act 8/8 ok','hatch.seal ok']},
+           {n:'warehouses',f:'warehouses: ledger stale',sig:'tape',vs:[['erase','the records are all there is'],['archive','a mismatched ledger cannot be archived'],['recount',1],['seal','sealed stores cannot be counted']],ok:'warehouses: ledger updated',diag:['ledger checksum ... mismatch','last entry ... unknown','records ... 1204 · unverified'],init:['reading 1204 records','mismatches ... 17 → 0','metal · rations · fuel · parts ... counted'],log:['ledger 1204 rec','ledger crc ok','stock counted']},
+           {n:'shipyards',f:'shipyards: idle',sig:'yard',vs:[['feed','tool heads are cold: material would jam'],['clear','cradles are already empty'],['stop','already idle'],['warm up',1]],ok:'shipyards: running',diag:['cradles 1–4 ... idle','material feed ... off','tool heads ... cold'],init:['tool heads ... 240 °C','cradles 1–4 ... ready','feed ... on'],log:['yard.tool 240 C','yard.cradle 4/4','yard.feed on']},
+           {n:'capsules',f:'capsules: 128 sealed',sig:'cap',vs:[['open','occupied and cold: not first'],['drain coolant','occupied: not now'],['wake',1],['seal','already sealed']],ok:'capsules: open · 128',diag:['sealed units ... 128','coolant ... 4 °C','occupied ... 128'],init:['warm-up ... 4 → 36 °C','locks ... released','name plates ... 128 read'],log:['cap.temp 36 C','cap.lock 128 open','cap.plates 128']},
+           {n:'translation',f:'translation: offline',sig:'tr',vs:[['translate','no module loaded'],['mute','the channel is already silent'],['train','nothing to train yet'],['link',1]],ok:'translation: alexandra online',diag:['module ... offline','channel ... closed','speech of people ... not parsed by this unit'],init:['module ... loaded','channel ... open','voice ... calibrating'],log:['tr.module ok','tr.channel open','tr.voice cal']}],
+      her:'alexandra › I am here. I will translate.',
+      logs:['bus {n} poll ok','sensor {n} ok','chk 0x{h} ok','mem page {n} mapped','clk tick {n}','link {n} ack','thermal {n} ok'],retry:'bus {n} retry'},
+  ru:{skip:'пропустить',hint:'выберите команду (1–4) · клик или пробел — допечатать · Esc — выйти',refuse:'отказ: {r}.',mt:'проверка памяти',mtEnd:'память пользователя .. нет',wait:'жду команду',
+      hud:{pwr:'ПИТАНИЕ',temp:'ЯДРО',mem:'ПАМЯТЬ',bus:'ШИНА',fan:'ВЕНТ.',sys:'СИСТЕМЫ',up:'РАБОТА',map:'КАРТА ПАМЯТИ',log:'ЖУРНАЛ'},
+      pre:[['l','cm','** {name} 4.39 · холодный пуск **'],['l','','шина питания A ...... 12.04 В  ок'],['l','','шина питания B ......  5.01 В  ок'],['l','','сеть ................. есть'],['l','','батарея ............... 41 %  заряд'],['w',300],['t','самопроверка',1300],
+           ['mem'],['l','','заготовленные команды ... найдено 24'],['t','загрузка 1/6 · воздух',450],['t','загрузка 2/6 · затворы',450],['t','загрузка 3/6 · склады',450],['t','загрузка 4/6 · верфи',450],['t','загрузка 5/6 · капсулы',450],['t','загрузка 6/6 · перевод',450],['l','ok','заготовленные команды ... 24 загружено'],
+           ['l','','часы ................. нет источника · 0000.00.00'],['l','','опрос шины .......... 14 устройств'],['l','f','шина 7: нет ответа'],['t','шина 7: повтор',700],['l','ok','шина 7: ок'],['l','','сеть датчиков ........ 212 узлов · 0 ответов'],['l','f','системы отключены ... 6'],['w',350]],
+      sys:[{n:'воздух',f:'воздух: фильтры забиты',sig:'air',vs:[['очистить',1],['продуть','продувка требует чистых фильтров'],['закрыть','закрытый воздух не движется'],['отключить','воздух и так стоит']],ok:'воздух: чисто',diag:['скан воздуха ... коды E12 E13 E40','вентилятор 1: стоит · 2: стоит','взвесь 9.4 мг/м3 (норма 2.0)'],init:['вентилятор 1 ... 1180 об/мин','вентилятор 2 ... 1204 об/мин','давление ....... 0.71 атм','взвесь ......... 1.1 мг/м3'],log:['воздух.вент1 1180','воздух.вент2 1204','воздух.давл 0.71']},
+           {n:'затворы космопорта',f:'затворы: закрыты',sig:'hatch',vs:[['открыть','нет давления в гидравлике'],['наддуть',1],['запереть','уже заперты'],['отключить','затворы не работают']],ok:'затворы: открыты',diag:['гидравлика ... 0 бар','приводы 1–8: нет ответа','давление уплотнения ... 0.00 атм'],init:['гидравлика ... 210 бар','приводы 1–8 .. ок','ход затвора ... 0 → 100 %'],log:['затв.гидр 210 бар','затв.прив 8/8 ок','затв.уплотн ок']},
+           {n:'склады',f:'склады: учёт устарел',sig:'tape',vs:[['стереть','записи — это всё, что есть'],['архивировать','несошедшийся учёт не архивируют'],['пересчитать',1],['опечатать','опечатанное не пересчитать']],ok:'склады: учёт обновлён',diag:['сумма учёта ... не сходится','последняя запись ... неизвестна','записей ... 1204 · не проверены'],init:['чтение 1204 записей','расхождений ... 17 → 0','металл · рационы · топливо · детали ... сосчитаны'],log:['учёт 1204 зап','учёт сумма ок','склад сосчитан']},
+           {n:'верфи',f:'верфи: простаивают',sig:'yard',vs:[['подать','резцы холодные: материал встанет'],['очистить','стапели и так пусты'],['остановить','и так простаивают'],['прогреть',1]],ok:'верфи: работают',diag:['стапели 1–4 ... простой','подача материала ... выкл','резцы ... холодные'],init:['резцы ... 240 °C','стапели 1–4 ... готовы','подача ... вкл'],log:['верфь.резцы 240 C','верфь.стапель 4/4','верфь.подача вкл']},
+           {n:'капсулы',f:'капсулы: 128 закрыты',sig:'cap',vs:[['открыть','заняты и холодны: не с этого'],['слить хладагент','заняты: не сейчас'],['разбудить',1],['закрыть','уже закрыты']],ok:'капсулы: открыты · 128',diag:['закрытых блоков ... 128','хладагент ... 4 °C','заняты ... 128'],init:['прогрев ... 4 → 36 °C','замки ... сняты','таблички ... 128 прочитано'],log:['капс.темп 36 C','капс.замки 128','капс.таблички 128']},
+           {n:'перевод',f:'перевод: отключён',sig:'tr',vs:[['переводить','модуль не загружен'],['заглушить','канал и так молчит'],['обучить','пока нечего обучать'],['подключить',1]],ok:'перевод: Александра на связи',diag:['модуль ... отключён','канал ... закрыт','речь людей ... этот блок не разбирает'],init:['модуль ... загружен','канал ... открыт','голос ... настройка'],log:['перевод.модуль ок','перевод.канал открыт','перевод.голос наст']}],
+      her:'Александра › Я здесь. Я буду переводить.',
+      logs:['шина {n}: опрос ок','датчик {n}: ок','сумма 0x{h}: ок','страница памяти {n}: есть','такт {n}','связь {n}: ответ','тепло {n}: ок'],retry:'шина {n}: повтор'}
+};
+var BS=1;
+var NOISE=[1,.85,.66,.48,.32,.16,0], GLY='▒░▓█#@%&?/\\<>|01ΞΨ§¤µ¦ƒ';
+var BT={timers:[],run:0,fin:null,ask:null,busy:false,box:null,q:null,ov:null,ns:1,act:false,au:null,tick:null,hud:null,lt:null,h:null,pool:[],sysN:0};
+
+/* --- sound: a fan, a 50 Hz buzz, a whining disk; it rises when the machine works and calms as the systems come on. Every system answers with its own sound --- */
+function auStart(){ try{ if(!S.sound||BT.au) return;
+  var c=new (window.AudioContext||window.webkitAudioContext)(), m=c.createGain(), i, nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0);
+  for(i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  m.gain.value=0.8; m.connect(c.destination);
+  var ns=c.createBufferSource(); ns.buffer=nb; ns.loop=true; var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=360; bp.Q.value=.8; var fan=c.createGain(); fan.gain.value=0; ns.connect(bp); bp.connect(fan); fan.connect(m); ns.start();
+  var hu=c.createOscillator(); hu.type='sawtooth'; hu.frequency.value=50; var hl=c.createBiquadFilter(); hl.type='lowpass'; hl.frequency.value=140; var hg=c.createGain(); hg.gain.value=0; hu.connect(hl); hl.connect(hg); hg.connect(m); hu.start();
+  var wh=c.createOscillator(); wh.type='sine'; wh.frequency.value=180; var wg=c.createGain(); wg.gain.value=0; wh.connect(wg); wg.connect(m); wh.start();
+  BT.au={c:c,m:m,nb:nb,bp:bp,fan:fan,hg:hg,wh:wh,wg:wg};
+  var t=c.currentTime;
+  var th=c.createOscillator(), tg=c.createGain(); th.frequency.value=64; tg.gain.setValueAtTime(.16,t); tg.gain.exponentialRampToValueAtTime(.0005,t+.3); th.connect(tg); tg.connect(m); th.start(t); th.stop(t+.35); auClick(.1);
+  fan.gain.setTargetAtTime(.075,t+.1,.7); hg.gain.setTargetAtTime(.05,t+.1,.5);
+  wh.frequency.setValueAtTime(160,t+.15); wh.frequency.exponentialRampToValueAtTime(2300,t+1.7); wg.gain.setValueAtTime(0,t+.1); wg.gain.linearRampToValueAtTime(.03,t+1.2); wh.frequency.exponentialRampToValueAtTime(1500,t+2.3); wg.gain.linearRampToValueAtTime(.014,t+2.4);
+ }catch(e){ console.error('audio',e); BT.au=null } }
+function auLevel(){ var a=BT.au; if(!a) return; var t=a.c.currentTime, ns=BT.ns, w=BT.act;
+  a.fan.gain.setTargetAtTime(.02+.055*ns+(w?.035:0),t,.15); a.bp.frequency.setTargetAtTime(330+(w?280:0),t,.2);
+  a.hg.gain.setTargetAtTime(.022+.026*ns,t,.3); a.wg.gain.setTargetAtTime(.002+.012*ns+(w?.014:0),t,.12); a.wh.frequency.setTargetAtTime(w?1900+Math.random()*500:1450-500*(1-ns),t,.12) }
+function auClick(v){ var a=BT.au; if(!a) return; var c=a.c, s=c.createBufferSource(), g=c.createGain(), t=c.currentTime; s.buffer=a.nb; g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0005,t+.018); s.connect(g); g.connect(a.m); s.start(t,Math.random()*1.5,.03) }
+function auBeep(f,ms,vol){ var a=BT.au; if(!a) return; var c=a.c, o=c.createOscillator(), g=c.createGain(), t=c.currentTime, v=vol||.022; o.type='square'; o.frequency.value=f; g.gain.setValueAtTime(v,t); g.gain.setValueAtTime(v,t+ms/1000); g.gain.exponentialRampToValueAtTime(.0005,t+ms/1000+.04); o.connect(g); g.connect(a.m); o.start(t); o.stop(t+ms/1000+.06) }
+function auTone(type,f0,f1,dur,g,delay){ var a=BT.au; if(!a) return; var c=a.c, t=c.currentTime+(delay||0), o=c.createOscillator(), e=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(f0,t); if(f1!==f0) o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  e.gain.setValueAtTime(.0001,t); e.gain.exponentialRampToValueAtTime(g,t+Math.min(.03,dur/3)); e.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(e); e.connect(a.m); o.start(t); o.stop(t+dur+.05) }
+function auNoise(f0,f1,dur,g,q,delay){ var a=BT.au; if(!a) return; var c=a.c, t=c.currentTime+(delay||0), s=c.createBufferSource(), b=c.createBiquadFilter(), e=c.createGain();
+  s.buffer=a.nb; s.loop=true; b.type='bandpass'; b.Q.value=q||1.2; b.frequency.setValueAtTime(f0,t); b.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  e.gain.setValueAtTime(.0001,t); e.gain.exponentialRampToValueAtTime(g,t+dur*.3); e.gain.exponentialRampToValueAtTime(.0001,t+dur); s.connect(b); b.connect(e); e.connect(a.m); s.start(t,Math.random()); s.stop(t+dur+.05) }
+function auSig(k){ var i;
+  if(k==='air'){ auNoise(300,2000,1.3,.09,1.4); auTone('sine',90,240,1.2,.03) }
+  else if(k==='hatch'){ auTone('sawtooth',75,36,.9,.04); auTone('sine',60,38,.4,.14,.92); setTimeout(function(){ auClick(.1) },920) }
+  else if(k==='tape'){ for(i=0;i<16;i++) setTimeout(function(){ auClick(.02+Math.random()*.03) },i*45+Math.random()*30); setTimeout(function(){ auBeep(1320,60,.015) },820) }
+  else if(k==='yard'){ for(i=0;i<7;i++) setTimeout(function(){ auClick(.026) },i*(240-i*22)); auTone('sine',180,640,1.2,.03) }
+  else if(k==='cap'){ auTone('sine',45,32,.5,.2); auTone('sine',110,110,1.6,.025,.3); auTone('sine',165,165,1.6,.02,.5) }
+  else if(k==='tr'){ [1200,2200,1700,2400,1500].forEach(function(f,j){ auTone('square',f,f,.07,.012,j*.08) }); auTone('sine',880,880,1.4,.04,.5); auTone('sine',1320,1320,1.2,.02,.52) }
+  else auBeep(880,70) }
+function auErr(){ auBeep(220,90,.03); setTimeout(function(){ auBeep(180,140,.03) },160) }
+function auPost(){ auBeep(1000,120,.025) }
+function auDegauss(){ auTone('sine',55,22,.7,.22); auNoise(100,900,.5,.09,.6) }
+function auCalm(){ auTone('sine',220,220,2.6,.03,.1); auTone('sine',330,330,2.4,.022,.2); auTone('sine',440,440,2.0,.012,.35) }
+function auStop(){ var a=BT.au; BT.au=null; if(!a) return; try{ a.m.gain.setTargetAtTime(0,a.c.currentTime,.2) }catch(e){} setTimeout(function(){ try{ a.c.close() }catch(e){} },900) }
+
+/* --- the panel: power, core temperature, memory, bus, fan, uptime and a memory map that never stand still; a log that keeps writing --- */
+function planetSVG(){ var ru=S.lang==='ru', R=66, m='', i;
+  for(i=-3;i<=3;i++){ var y=i*R/4, rx=Math.sqrt(R*R-y*y); m+='<ellipse cx="0" cy="'+y.toFixed(1)+'" rx="'+rx.toFixed(1)+'" ry="'+(rx*.16).toFixed(1)+'" class="lat"/>' }
+  for(i=0;i<4;i++) m+='<ellipse cx="0" cy="0" rx="'+R+'" ry="'+R+'" class="lon" style="animation-delay:-'+(i*2)+'s"/>';
+  return '<svg class="pl" viewBox="-100 -90 200 180" aria-hidden="true"><circle r="'+R+'" class="rim"/>'+m+'<g class="blips"></g><g class="cr"><path d="M-96 -82h14M-89 -89v14"/><path d="M82 -82h14M89 -89v14"/><path d="M-96 78h14M-89 71v14"/><path d="M82 78h14M89 71v14"/></g><text x="0" y="86" class="pn">'+(ru?'ЗЕМЛЯ':'EARTH')+'</text></svg>' }
+var BLIPS=[[-30,-25],[22,-38],[40,12],[-8,32],[-44,14],[10,-4]];
+function addBlip(k){ var g=BT.ov&&BT.ov.querySelector('.blips'), p=BLIPS[k-1]; if(!g||!p) return; g.insertAdjacentHTML('beforeend','<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" class="bpr"/><circle cx="'+p[0]+'" cy="'+p[1]+'" r="2.6" class="bp"/>') }
+function hudHTML(X){ var H=X.hud, g=function(k,l){ return '<div class="g"><span>'+l+'</span><b data-g="'+k+'">--</b><i><u data-b="'+k+'"></u></i></div>' }, cells='', i;
+  for(i=0;i<72;i++) cells+='<s></s>';
+  return '<div class="hud">'+planetSVG()+'<div class="hh">'+g('pwr',H.pwr)+g('mem',H.mem)+g('fan',H.fan)+'<div class="g"><span>'+H.sys+'</span><b data-g="sys">0 / 6</b></div></div>'+
+    '<div class="mp"><div class="cap">'+H.map+'</div><div class="cells">'+cells+'</div></div><div class="lgb"><div class="cap">'+H.log+'</div><div class="lg"></div></div></div>' }
+function hudTick(){ var ov=BT.ov; if(!ov) return; var h=BT.h, on=ov.classList.contains('on'), ns=BT.ns, act=BT.act, t=(Date.now()-h.t0)/1000, put=function(k,txt,pc){ var b=ov.querySelector('[data-g="'+k+'"]'), u=ov.querySelector('[data-b="'+k+'"]'); if(b) b.textContent=txt; if(u&&pc!=null) u.style.width=Math.max(0,Math.min(100,pc))+'%' };
+  h.pw+=((on?1:0)-h.pw)*.08; h.tp+=((22+17*Math.min(1,Math.max(0,t-1.7)/30)+(act?3:0))-h.tp)*.03; h.mm+=(BT.memT-h.mm)*.12; h.bs+=((on?16+ns*26+(act?30:0):0)+Math.random()*12-h.bs)*.25; h.fn+=((on||t>.3?1300+1100*ns+(act?420:0):0)*(t>.3?1:0)-h.fn)*.07;
+  var rus=S.lang==='ru';
+  put('pwr',(12.04*h.pw+(Math.random()-.5)*(.05+ns*.5)*h.pw).toFixed(2)+(rus?' В':' V'),h.pw*100-ns*Math.random()*8);
+  put('temp',h.tp.toFixed(1)+' °C',(h.tp-20)/30*100); put('mem',Math.round(h.mm*100)+' %',h.mm*100); put('bus',Math.round(h.bs)+' %',h.bs);
+  put('fan',(Math.round(h.fn/10)*10)+(rus?' об/мин':' rpm'),h.fn/2600*100); put('sys',BT.sysN+' / 6',null); var s=Math.max(0,Math.floor(t-1.7)); put('up',('0'+Math.floor(s/60)).slice(-2)+':'+('0'+(s%60)).slice(-2),null);
+  var cells=ov.querySelectorAll('.cells s'), lit=Math.round(h.mm*cells.length), k;
+  for(k=0;k<cells.length;k++){ var on_=k<lit; if(cells[k]._o!==on_){ cells[k]._o=on_; cells[k].className=on_?'o':'' } }
+  for(k=0;k<3;k++){ var c=cells[(Math.random()*Math.max(1,lit))|0]; if(c){ c.classList.toggle('x') } }
+  var w=ov.querySelector('.wt'); if(w&&h.ask) w.textContent=BTXT[S.lang].wait+' · '+Math.floor((Date.now()-h.ask)/1000)+' s '+'|/-\\'.charAt(Math.floor(Date.now()/160)%4) }
+function ts(){ var t=(Date.now()-BT.h.t0)/1000-1.7; if(t<0) t=0; return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+Math.floor(t%60)).slice(-2)+'.'+Math.floor((t%1)*10) }
+function logPush(txt,cls){ var lg=BT.ov&&BT.ov.querySelector('.lg'); if(!lg) return; var d=document.createElement('div'); if(cls) d.className=cls; d.textContent='['+ts()+'] '+txt; lg.appendChild(d); while(lg.children.length>11) lg.removeChild(lg.firstChild) }
+function logLoop(){ if(!BT.ov) return; var X=BTXT[S.lang], on=BT.ov.classList.contains('on'); if(on){ var tpl, r=Math.random(), n=1+((Math.random()*220)|0), hx=((Math.random()*65536)|0).toString(16).toUpperCase();
+    if(BT.pool.length&&r<.35) tpl=BT.pool[(Math.random()*BT.pool.length)|0]; else if(r>.93) tpl=X.retry; else tpl=X.logs[(Math.random()*X.logs.length)|0];
+    logPush(tpl.replace('{n}',n).replace('{h}',hx),tpl===X.retry?'rt':'') }
+  BT.lt=setTimeout(logLoop,(BT.act?230:(on?520:900))*(.6+Math.random()*.9)) }
+function glyph(){ return GLY.charAt((Math.random()*GLY.length)|0) }
+function scrambleAll(){ var box=BT.box; if(!box) return; var ns=BT.ns+(BT.act?.45:0), k;
+  for(k=0;k<box.children.length;k++){ var d=box.children[k], t=d._t; if(t==null||d._typing) continue;
+    if(ns<=0.01){ if(d.textContent!==t) d.textContent=t; d.classList.remove('tear'); continue }
+    var o='', p=ns*.04, i, c; for(i=0;i<t.length;i++){ c=t.charAt(i); o+=(c!==' '&&Math.random()<p)?glyph():c } d.textContent=o;
+    if(Math.random()<ns*.05){ d.classList.add('tear'); (function(x){ setTimeout(function(){ x.classList.remove('tear') },110) })(d) } }
+  if(BT.ov) BT.ov.classList.toggle('act',BT.act) }
+function setNoise(n){ BT.ns=NOISE[Math.min(6,n)]; auLevel() }
+function clearAll(){ BT.run++; BT.timers.forEach(clearTimeout); BT.timers=[]; clearInterval(BT.tick); clearInterval(BT.hud); clearTimeout(BT.lt); BT.tick=BT.hud=BT.lt=null; BT.fin=null; BT.ask=null; BT.act=false; auStop() }
+function bootStop(){ clearAll(); var o=document.querySelector('.bootov'); BT.ov=null; if(!o) return; o.classList.add('fin'); setTimeout(function(){ if(o.parentNode) o.parentNode.removeChild(o) },520) }
+function bootKill(){ clearAll(); BT.ov=null }
+function newLine(cls,text){ var box=BT.box, d=document.createElement('div'); d.className='bl '+cls; d._t=text; d._typing=true; box.appendChild(d); while(box.scrollHeight>box.clientHeight+2&&box.children.length>2) box.removeChild(box.firstChild); return d }
+function btype(cls,text,done,sp){ var d=newLine(cls,text), run=BT.run, i=0, tm, b=(sp||13)/BS;
+  function fin(){ if(run!==BT.run) return; clearTimeout(tm); d._typing=false; d.textContent=text; BT.fin=null; if(done) BT.timers.push(setTimeout(done,(sp?60:230)/BS)) }
+  function tick(){ if(run!==BT.run) return; i++; var bad=Math.random()<BT.ns*.4&&text.charAt(i-1)!==' '; d.textContent=text.slice(0,i-1)+(bad?glyph():text.charAt(i-1)); if(i%2===0) auClick(.006); if(i>=text.length){ fin(); return } tm=setTimeout(tick,b+Math.random()*b*1.3); BT.timers.push(tm) }
+  BT.fin=fin; tick() }
+function memtest(X,done){ var d=newLine('',''), run=BT.run, n=0, tm; d._typing=true;
+  function fin(){ if(run!==BT.run) return; clearTimeout(tm); d._typing=false; d._t=X.mtEnd; d.textContent=X.mtEnd; BT.memT=.3; auPost(); BT.fin=null; BT.timers.push(setTimeout(done,260)) }
+  function tick(){ if(run!==BT.run) return; n+=16+((Math.random()*16)|0); if(n>=640){ fin(); return } BT.memT=n/640*.3; d.textContent=X.mt+' '+('0000'+n).slice(-4)+' K'; auClick(.012); if(((n/16)|0)%3===0) auBeep(300+n*1.4,18,.012); tm=setTimeout(tick,34/BS); BT.timers.push(tm) }
+  BT.fin=fin; tick() }
+function think(label,ms,done,mem){ ms=ms/BS; var run=BT.run, th=newLine('th',''), hx=newLine('hx',''), t0=Date.now(), p=0, tm, ck, m0=BT.memT;
+  th._typing=true; hx._typing=true; BT.act=true; auLevel();
+  ck=setInterval(function(){ if(run!==BT.run){ clearInterval(ck); return } auClick(.014+Math.random()*.02) },70+((Math.random()*60)|0)); BT.timers.push(ck);
+  function bar(v){ var n=Math.round(v/5); return label+' ['+new Array(n+1).join('#')+new Array(21-n).join('.')+'] '+('  '+Math.round(v)).slice(-3)+'%' }
+  function fin(){ if(run!==BT.run) return; clearTimeout(tm); clearInterval(ck); th._typing=false; th._t=label+' ['+new Array(21).join('#')+'] ok'; th.textContent=th._t; if(hx.parentNode) hx.parentNode.removeChild(hx);
+    if(mem) BT.memT=mem; BT.act=false; BT.fin=null; auLevel(); BT.timers.push(setTimeout(done,200)) }
+  function tick(){ if(run!==BT.run) return; var f=(Date.now()-t0)/ms; if(f>=1){ fin(); return }
+    p=Math.min(99,p+Math.random()*(f<.5?9:5)); th.textContent=bar(p); if(mem) BT.memT=m0+(mem-m0)*Math.min(1,f); var s='',i; for(i=0;i<22;i++) s+=('0'+((Math.random()*256)|0).toString(16)).slice(-2).toUpperCase()+' '; hx.textContent=s;
+    tm=setTimeout(tick,55); BT.timers.push(tm) }
+  BT.fin=fin; tick() }
+function seq(items,fn,done){ var k=0; (function go(){ if(k>=items.length){ done(); return } var it=items[k++]; fn(it,go,k-1) })() }
+function bootAsk(s,next){ var X=BTXT[S.lang], q=BT.q, ov=BT.ov;
+  var chips=s.vs.map(function(v,i){ return '<button class="vb" type="button" data-vb="'+i+'"><i>'+(i+1)+'</i>'+v[0]+'</button>' }).join('');
+  q.innerHTML='<span class="pm">&gt;</span>'+chips+'<span class="wt"></span>'; BT.busy=false; BT.h.ask=Date.now();
+  BT.ask=function(i){ i=+i; var vv=s.vs[i]; if(!vv||BT.busy) return; BT.busy=true; BT.h.ask=0; q.innerHTML='';
+    btype('cm','> '+vv[0],function(){
+      if(vv[1]===1){ BT.ask=null; var tt=(s.sig==='tr')?2400:1500;
+        think('│  '+vv[0]+' · '+s.n,tt,function(){
+          seq(s.init,function(line,go,ix){ btype('','├─ '+line,go,4) },function(){ var k=+ov.getAttribute('data-n')+1; ov.setAttribute('data-n',k); BT.sysN=k; setNoise(k); addBlip(k); BT.pool=BT.pool.concat(s.log);
+            try{ auSig(s.sig) }catch(e){ console.error(e) } if(k===6) auCalm(); btype('ok','└─ '+s.ok,next) }) }) }
+      else { auErr(); btype('no','│  '+X.refuse.replace('{r}',vv[1]),function(){ bootAsk(s,next) }) } }) } }
+function playBoot(){ var st=document.querySelector('#host .stage'); if(!st||S.view!=='single') return;
+  bootKill(); var old=st.querySelector('.bootov'); if(old) old.parentNode.removeChild(old); var X=BTXT[S.lang], run=++BT.run;
+  st.insertAdjacentHTML('beforeend',u2css('<div class="bootov" data-n="0"><div class="wr"><div class="mn"><div class="bh">'+mark('')+'<span>'+T().pult+'</span><div class="tb">'+X.hud.up+' T <b data-g="up">00:00</b></div></div><div class="bo"></div><div class="bq"></div></div>'+hudHTML(X)+'</div><button class="bskip" type="button" data-bskip>'+X.skip+'</button><div class="bhint">'+X.hint+'</div></div>'));
+  var ov=st.querySelector('.bootov'); BT.ov=ov; BT.box=ov.querySelector('.bo'); BT.q=ov.querySelector('.bq'); BT.fin=null; BT.ask=null; BT.busy=false; BT.ns=1; BT.act=false; BT.memT=0; BT.sysN=0; BT.pool=[];
+  BT.h={t0:Date.now(),pw:0,tp:21,mm:0,bs:0,fn:0,ask:0}; auStart(); BT.tick=setInterval(scrambleAll,110); BT.hud=setInterval(hudTick,120); logLoop();
+  var q=[]; q.push(function(n){ BT.timers.push(setTimeout(function(){ ov.classList.add('on'); auDegauss(); n() },1700/BS)) });
+  var lastL=-1; X.pre.forEach(function(p,i){ if(p[0]==='l') lastL=i });
+  X.pre.forEach(function(p,pi){ var t=p[0], pf=pi===0?'':(pi===lastL?'└─ ':'├─ ');
+    if(t==='l') q.push(function(n){ btype(p[1],pf+p[2].replace('{name}',T().pult.toLowerCase()),n,5) });
+    else if(t==='w') q.push(function(n){ BT.timers.push(setTimeout(n,p[1]/BS)) });
+    else if(t==='t') q.push(function(n){ var m=/(\d)\/6/.exec(p[1]); think('│  '+p[1],p[2],n,m?(.3+.115*(+m[1])):0) });
+    else if(t==='mem') q.push(function(n){ memtest(X,n) }) });
+  X.sys.forEach(function(s){ q.push(function(n){ btype('f','■ '+s.f,n) }); s.diag.forEach(function(d,di){ q.push(function(n){ btype('',(di===s.diag.length-1?'└─ ':'├─ ')+d,n,4) }) }); q.push(function(n){ BT.timers.push(setTimeout(n,300/BS)) }); q.push(function(n){ bootAsk(s,n) }) });
+  q.push(function(n){ btype('cm',X.her,n) }); q.push(function(n){ BT.timers.push(setTimeout(bootStop,1800)) });
+  var k=0; (function go(){ if(run!==BT.run) return; var f=q[k++]; if(f) f(go) })() }
+function bootKey(e){ if(e.key==='Escape'){ bootStop(); return }
+  if(e.key===' '||e.key==='Enter'){ e.preventDefault(); if(BT.fin) BT.fin(); return }
+  if(/^[1-4]$/.test(e.key)&&BT.ask) BT.ask(+e.key-1) }
+document.addEventListener('visibilitychange',function(){ if(document.hidden) bootKill() }); window.addEventListener('pagehide',bootKill);
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toast.k); toast.k=setTimeout(function(){ t.classList.remove('on') },1600) }
+function act(i){ var it=items()[i]; if(!it||it.off) return;
+  if(it.id==='new'){ playBoot(); return }
+  if(it.id==='lang'){ S.lang=S.lang==='en'?'ru':'en'; S.boot=true; render(); return }
+  if(it.id==='sound'){ S.sound=!S.sound; render(); return }
+  toast('→ '+it.label+'  (макет, ничего не запускается)') }
+
+document.getElementById('gv').innerHTML=VAR.map(function(V,i){ return '<button class="pill" data-n="'+(i+1)+'" title="'+V.n+'">'+(i+1)+'</button>' }).join('');
+document.addEventListener('click',function(e){ var t=e.target;
+  var nm=t.closest('[data-name]'); if(nm){ TXT.en.pult=nm.dataset.name; S.lang='en'; render(); return }
+  var vb=t.closest('[data-vb]'); if(vb){ if(BT.ask) BT.ask(vb.dataset.vb); return } if(t.closest('[data-bskip]')){ bootStop(); return } if(t.closest('.bootov')){ if(BT.fin) BT.fin(); return }
+  if(t.closest('.tst')){ toast((S.lang==='ru'?'Для тестировки: пропустить всё и открыть игру':'For testing: skip everything and open the game')+'  (макет)'); return }
+  var n=t.closest('[data-n]'); if(n){ S.v=+n.dataset.n; S.view='single'; S.boot=true; render(); return }
+  var k=t.closest('[data-k]'); if(k){ var key=k.dataset.k, v=k.dataset.v; if(key==='save') S.save=v==='1'; else if(key==='lang') S.lang=v; else S[key]=v; if(key!=='frame'&&key!=='view') S.boot=true; if(key==='view'&&S.view==='grid'&&false){} S.sel=firstOn(); render(); return }
+  var o=t.closest('[data-open]'); if(o){ S.v=+o.dataset.open; S.view='single'; S.boot=true; render(); window.scrollTo(0,0); return }
+  if(t.closest('#bootbtn')){ if(S.view!=='single') S.view='single'; render(); playBoot(); return }
+  var it=t.closest('.it[data-i]'); if(it&&S.view==='single'){ var i=+it.dataset.i; if(items()[i].off) return; S.sel=i; updateSel(it.closest('.stage')); act(i) } });
+document.addEventListener('mouseover',function(e){ if(S.view!=='single') return; var it=e.target.closest&&e.target.closest('.it[data-i]'); if(!it) return; var i=+it.dataset.i; if(items()[i].off||i===S.sel) return; S.sel=i; updateSel(it.closest('.stage')) });
+document.addEventListener('keydown',function(e){ if(document.querySelector('.bootov')){ bootKey(e); return } if(S.view!=='single') return; var I=items(), n=I.length, i=S.sel, d=0;
+  if(e.key==='ArrowDown'||e.key==='ArrowRight') d=1; else if(e.key==='ArrowUp'||e.key==='ArrowLeft') d=-1;
+  else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(S.sel); return }
+  else if(/^[1-5]$/.test(e.key)){ var j=+e.key-1; if(!I[j].off){ S.sel=j; updateSel(document.querySelector('#host .stage')); act(j) } return }
+  else if(e.key===']'){ S.v=S.v%VAR.length+1; S.boot=true; render(); return } else if(e.key==='['){ S.v=(S.v+VAR.length-2)%VAR.length+1; S.boot=true; render(); return } else return;
+  e.preventDefault(); do{ i=(i+d+n)%n }while(I[i].off); S.sel=i; updateSel(document.querySelector('#host .stage')) });
+var T0=Date.now(); setInterval(function(){ var t=Math.floor((Date.now()-T0)/1000), s=('0'+Math.floor(t/3600)).slice(-2)+':'+('0'+Math.floor(t/60)%60).slice(-2)+':'+('0'+t%60).slice(-2); document.querySelectorAll('[data-clk]').forEach(function(e){ e.textContent=s }) },1000);
+build(); S.sel=firstOn(); render();
+</script>
+</body>
+</html>

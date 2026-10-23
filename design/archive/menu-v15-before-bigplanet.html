@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — меню, финалисты</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Geist+Mono:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style id="css-src" type="text/plain">
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--food:#3DDC84;--ppl:#FFD23F;--ark:#B48CFF;--metal:#C9CFD6;--fuel:#FF8A1F;--earth:#4FA3FF;--h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:#050506;color:var(--ink);font:14px/1.4 var(--h)}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer;text-align:inherit}
+/* page chrome (not the game) */
+.bar{position:sticky;top:0;z-index:10;background:rgba(5,5,6,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--ln);padding:10px 16px;display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center}
+.bar h1{margin:0;font-size:13px;letter-spacing:.2em;font-weight:600;color:var(--mid);text-transform:uppercase}
+.grp{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.grp small{font-size:10px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-right:4px}
+.pill{border:1px solid var(--ln);min-width:34px;height:30px;padding:0 10px;font:600 12px var(--n);color:var(--mid);display:inline-flex;align-items:center;justify-content:center}
+.pill.on{background:var(--ink);color:#000;border-color:var(--ink)}
+.pill:hover:not(.on){border-color:var(--mid);color:var(--ink)}
+.info{max-width:1280px;margin:0 auto;padding:14px 16px 6px;color:var(--mid);font-size:14px;line-height:1.5}
+.info h2{margin:0 0 4px;font-size:18px;color:var(--ink);font-weight:600}
+.info b{color:var(--ink);font-weight:500}
+.info .tags{display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;font-size:13px}
+.hint{max-width:1280px;margin:0 auto;padding:4px 16px 24px;color:var(--dim);font-size:12px}
+#host{padding:8px 16px 0;display:flex;justify-content:center}
+#grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px 16px;max-width:1380px;margin:0 auto;padding:14px 16px 30px}
+.gc{display:block;width:100%}.gc .cap{font:600 11px var(--n);letter-spacing:.12em;color:var(--mid);text-transform:uppercase;margin:0 0 6px}
+.gc:hover .cap{color:var(--ppl)}
+@media(max-width:720px){#grid{grid-template-columns:1fr}}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--pan2);border:1px solid var(--ppl);color:var(--ink);padding:8px 14px;font:12px var(--n);z-index:20;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.on{opacity:1}
+
+/* the stage: 1u = 1 design pixel at 1280 wide (a phone frame: 1u = 1px) */
+.stage{container-type:size;position:relative;overflow:hidden;background:var(--bg);width:min(100%,1280px);aspect-ratio:1280/760;border:1px solid var(--ln)}
+.stage.phone{width:min(100%,390px);aspect-ratio:auto;height:780px}
+.v{--u:calc(100cqw / 1280);position:absolute;inset:0;font-family:var(--h);color:var(--ink)}
+.phone .v{--u:1px}
+.mk{display:block;overflow:visible}
+.it{cursor:pointer;-webkit-tap-highlight-color:transparent}
+.it.off{cursor:default}
+.ver{position:absolute;font:11u var(--n);letter-spacing:.14em;color:var(--dim)}
+.pane{display:none}
+.stage[data-lay]:not(.phone) .vt.vW .sm{left:0;right:0;top:auto;bottom:46u;flex-direction:row;align-items:stretch;justify-content:center;gap:46u}
+.stage[data-lay]:not(.phone) .vt.vW .sm .it{flex-direction:column;align-items:center;justify-content:flex-start;gap:6u;min-width:92u;padding:8u 4u 10u}
+.stage[data-lay]:not(.phone) .vt.vW .sm .l{font-size:21u}.stage[data-lay]:not(.phone) .vt.vW .sm .s{height:14u}
+.stage[data-lay]:not(.phone) .vt.vW .sm::before{content:"";position:absolute;left:50%;top:50%;width:900u;height:180u;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(11,11,12,.78),rgba(11,11,12,0) 72%);z-index:-1;pointer-events:none}
+.stage[data-lay="center"]:not(.phone) .vt .sm{left:0;right:0;top:40%;bottom:auto;flex-direction:column;align-items:center;gap:2u}
+.stage[data-lay="center"]:not(.phone) .vt .sm .it{flex-direction:row;align-items:baseline;justify-content:center;gap:16u;min-width:340u;padding:9u 20u 9u}
+.stage[data-lay="center"]:not(.phone) .vt .sm .l{font-size:27u}.stage[data-lay="center"]:not(.phone) .vt .sm .s{height:auto}
+.stage[data-lay="center"]:not(.phone) .vt .sm::before{content:"";position:absolute;left:50%;top:50%;width:900u;height:560u;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(8,8,10,.82),rgba(8,8,10,.5) 45%,rgba(8,8,10,0) 72%);z-index:-1;pointer-events:none}
+.stage[data-lay="left"]:not(.phone) .vt .sm{left:84u;right:auto;top:auto;bottom:84u;flex-direction:column;align-items:flex-start;gap:0;justify-content:flex-start}
+.stage[data-lay="left"]:not(.phone) .vt .sm .it{flex-direction:row;align-items:baseline;gap:16u;min-width:380u;padding:9u 6u 9u;justify-content:space-between}
+.stage[data-lay="left"]:not(.phone) .vt .sm .l{font-size:25u}.stage[data-lay="left"]:not(.phone) .vt .sm .s{height:auto}
+.stage[data-lay="left"]:not(.phone) .vt .sm::before{content:"";position:absolute;left:-60u;bottom:-70u;width:720u;height:520u;background:radial-gradient(ellipse at 20% 80%,rgba(11,11,12,.72),rgba(11,11,12,0) 70%);z-index:-1;pointer-events:none}
+</style>
+<style id="css-live"></style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="mkgr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#D9D8D2"/><stop offset=".55" stop-color="#8E8D88"/><stop offset="1" stop-color="#E9E8E2"/></linearGradient><linearGradient id="mkgv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5A44"/><stop offset=".55" stop-color="#FF2A1A"/><stop offset="1" stop-color="#B80F05"/></linearGradient><filter id="mksh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="1.5" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".7"/></filter><filter id="mkbl" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter><symbol id="i-mark" viewBox="0 0 120 120"><circle cx="60" cy="60" r="40" fill="none" stroke="#F2F1EC" stroke-width="10" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.75)"><polygon points="0,-16 14,14 0,6 -14,14" fill="#FF2A1A"/></g></symbol>
+<symbol id="i-markf" viewBox="0 0 120 120"><ellipse cx="60" cy="108" rx="34" ry="4.5" fill="#000" opacity=".55" filter="url(#mkbl)"/><g filter="url(#mksh)"><circle cx="60" cy="60" r="40" fill="none" stroke="url(#mkgr)" stroke-width="8" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6 -14,14" fill="url(#mkgv)"/></g></g><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6" fill="#fff" opacity=".28"/></g></symbol></defs></svg>
+<div class="bar">
+  <h1>LAST BERTH · меню</h1>
+  <div class="grp" id="gv"></div>
+  <div class="grp"><small>язык</small><button class="pill" data-k="lang" data-v="en">EN</button><button class="pill" data-k="lang" data-v="ru">RU</button></div>
+  <div class="grp"><small>сохранение</small><button class="pill" data-k="save" data-v="1">есть</button><button class="pill" data-k="save" data-v="0">нет</button></div>
+  <div class="grp"><small>EN вместо Pult</small><button class="pill" data-name="HELM">HELM</button><button class="pill" data-name="CONSOLE">CONSOLE</button><button class="pill" data-name="CONN">CONN</button><button class="pill" data-name="CORE">CORE</button><button class="pill" data-name="TALLY">TALLY</button></div>
+  <div class="grp"><small>кнопки</small><button class="pill" data-k="lay" data-v="low">снизу</button><button class="pill" data-k="lay" data-v="center">по центру</button><button class="pill" data-k="lay" data-v="left">слева</button></div>
+  <div class="grp"><small>экран</small><button class="pill" data-k="frame" data-v="desktop">ПК</button><button class="pill" data-k="frame" data-v="phone">телефон</button></div>
+  <div class="grp"><button class="pill" id="bootbtn">▶ терминал</button><button class="pill" data-k="view" data-v="grid">все сразу</button></div>
+</div>
+<div class="info" id="info"></div>
+<div id="host"></div>
+<div id="grid" hidden></div>
+<div class="hint" id="hint">Стрелки ↑↓ и Enter, цифры 1–5 · [ и ] — соседний вариант. «Новая игра» (или кнопка «▶ терминал») запускает стартовый терминал по описанию из design/INTRO-DRAFT.md: чёрный экран, гул, строки с помехами, системы подключаются одна за другой, игрок отвечает глаголом (клавиши 1–4). Esc или «пропустить» — выход. Макет ничего не запускает, цифры в «Продолжить» условные.</div>
+<div class="toast" id="toast"></div>
+<script>
+/* ---------- the menu model (what the real game can do today: continue the autosave, a new run, a save file, language, sound) ---------- */
+var NAME_EN='HELM';
+var TXT={
+  en:{cont:'Continue',new:'New game',load:'Load from file',lang:'Language',sound:'Sound',on:'on',off:'off',
+      cSub:'year {y} · {w} worlds',lSub:'.json',lVal:'EN',empty:'no record',title:'LAST BERTH',pult:NAME_EN},
+  ru:{cont:'Продолжить',new:'Новая игра',load:'Загрузить из файла',lang:'Язык',sound:'Звук',on:'вкл',off:'выкл',
+      cSub:'год {y} · {w} миров',lSub:'.json',lVal:'RU',empty:'нет записи',title:'LAST BERTH',pult:'ПУЛЬТ'}
+};
+var YEAR=412, WORLDS=7;
+var S={lang:'en',save:true,sound:true,frame:(window.matchMedia&&matchMedia('(max-width:720px)').matches)?'phone':'desktop',v:5,sel:1,lay:'center',view:'single',boot:true,bootov:false};
+function T(){ return TXT[S.lang] }
+function items(){ var t=T(); return [
+  {id:'cont',label:t.cont,sub:S.save?t.cSub.replace('{y}',YEAR).replace('{w}',WORLDS):t.empty,off:!S.save},
+  {id:'new',label:t.new,sub:''},
+  {id:'load',label:t.load,sub:t.lSub},
+  {id:'lang',label:t.lang,val:t.lVal,sub:''},
+  {id:'sound',label:t.sound,val:S.sound?t.on:t.off,sub:''}] }
+function firstOn(){ var I=items(); for(var i=0;i<I.length;i++) if(!I[i].off) return i; return 0 }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c] }) }
+function mark(c,st){ return '<svg class="mk '+(c||'')+'" viewBox="0 0 120 120" style="'+(st||'')+'" aria-hidden="true"><use href="#i-markf"/></svg>' }
+function lab(it){ return esc(it.label) }
+function row(it,i,inner,cls){ return '<div class="it '+(cls||'')+(it.off?' off':'')+'" data-i="'+i+'" data-id="'+it.id+'">'+inner+'</div>' }
+
+/* ---------- variants (the earlier 21 drafts: design/archive/menu-v1-full.html) ---------- */
+var VAR=[];
+function add(n,d,pro,con,render,css){ VAR.push({n:n,d:d,pro:pro,con:con,r:render,css:css||''}) }
+
+/* 20 — the Pult's map: the same blue wireframe Earth and yellow marks as the start-up terminal */
+/* ---------- abstract directions: everything is drawn in the page (canvas 2D), no pictures ---------- */
+var PAL={ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',ppl:'#FFD23F',earth:'#4FA3FF',food:'#3DDC84',fuel:'#FF8A1F',metal:'#C9CFD6',red:'#FF2A1A',ark:'#B48CFF',bg:'#0b0b0c'};
+function rgba(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')' }
+function rng(s){ return function(){ s=(s*1664525+1013904223)%4294967296; return s/4294967296 } }
+function hsh(n){ n=Math.sin(n)*43758.5453; return n-Math.floor(n) }
+function vn3(x,y,z){ var xi=Math.floor(x), yi=Math.floor(y), zi=Math.floor(z), xf=x-xi, yf=y-yi, zf=z-zi, f=function(a){ return a*a*(3-2*a) }, u=f(xf), v=f(yf), w=f(zf);
+  function h(i,j,k){ return hsh(i*157.3+j*113.7+k*271.9) }
+  var a=h(xi,yi,zi), b=h(xi+1,yi,zi), c=h(xi,yi+1,zi), d=h(xi+1,yi+1,zi), e=h(xi,yi,zi+1), f2=h(xi+1,yi,zi+1), g=h(xi,yi+1,zi+1), hh=h(xi+1,yi+1,zi+1);
+  return (a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v)*(1-w)+(e+(f2-e)*u+(g-e)*v+(e-f2-g+hh)*u*v)*w }
+function smenu(I,cls){ return '<div class="sm '+(cls||'')+'">'+I.map(function(it,i){ return row(it,i,'<span class="l">'+lab(it)+'</span><span class="s">'+esc(it.val||it.sub||'')+'</span>') }).join('')+'</div>' }
+function absScreen(kind,cls){ return function(){ var t=T(), I=items(); return '<div class="v vt '+cls+'"><canvas class="cv2d" data-k="'+kind+'"></canvas><div class="top">'+mark('')+'<div class="nm">'+t.title+'</div><div class="run"><i></i></div></div>'+smenu(I)+'<div class="ver" style="right:24u;bottom:14u">v4.39</div></div>' } }
+
+var CVD={};
+/* 1 — rings: the ring map of the game as an abstract clock; the chosen item lights its ring */
+/* 2 — routes: a logistics network, ships run along the arcs */
+/* 3 — flow: people streaming along invisible currents towards a point of light */
+/* 4 — runes: a wall of name plates in an invented script; plates light up as if they were being read */
+CVD.runes=function(c,w,h,t,st,ph){ var u=h/760, cw=(ph?36:46)*u, ch=(ph?52:66)*u, cols=Math.ceil(w/cw)+1, rows=Math.ceil(h/ch)+1, i, j;
+  if(st.reset||!st.cells){ st.cells=[]; for(i=0;i<cols*rows;i++){ var rg=rng(i*31+7), segs=[], n=3+((rg()*3)|0); for(j=0;j<n;j++){ var a=[(rg()*3)|0,(rg()*5)|0], b=[(rg()*3)|0,(rg()*5)|0]; if(a[0]!==b[0]||a[1]!==b[1]) segs.push([a,b]) } st.cells.push({s:segs,per:5+rg()*9,ph:rg(),on:rg()<.55}) } }
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); var sweep=(t*70*u)%(w+400*u)-200*u;
+  for(j=0;j<rows;j++) for(i=0;i<cols;i++){ var cell=st.cells[j*cols+i], px=i*cw+cw*.12, py=j*ch+ch*.1, pw=cw*.76, phh=ch*.8, cxm=px+pw/2, cym=py+phh/2;
+    var lit=cell.on?Math.max(0,(Math.sin(6.2832*(t/cell.per+cell.ph))-.62)/.38):0; lit=Math.min(1,lit+Math.max(0,1-Math.abs(cxm-sweep)/(70*u))*.5);
+    var mask=1; if(Math.abs(cxm-w/2)<w*(ph?.46:.3)&&cym<h*.4) mask=.22; if(cym>h*.82) mask=Math.min(mask,.3);
+    c.fillStyle=rgba(PAL.ppl,.05*lit*mask); c.fillRect(px,py,pw,phh); c.strokeStyle='rgba(242,241,236,'+(.07*mask)+')'; c.lineWidth=1; c.strokeRect(px,py,pw,phh);
+    c.strokeStyle=lit>.02?rgba(PAL.ppl,(.2+.8*lit)*mask):'rgba(242,241,236,'+(.12*mask)+')'; c.lineWidth=Math.max(1,u*(1.3+lit)); c.beginPath();
+    cell.s.forEach(function(sg){ var gx=function(q){ return px+pw*(.22+.28*q[0]) }, gy=function(q){ return py+phh*(.14+.18*q[1]) }; c.moveTo(gx(sg[0]),gy(sg[0])); c.lineTo(gx(sg[1]),gy(sg[1])) }); c.stroke() } };
+
+/* 5 — signal: a stack of lines like a pulsar's pulses, the nearest one in yellow */
+function initCv(root,live){ root.querySelectorAll('canvas.cv2d').forEach(function(cv){ if(cv._ini) return; cv._ini=1;
+  var D=CVD[cv.dataset.k]; if(D&&D.gl){ initGLScene(cv,live,D); return } var ctx=cv.getContext('2d'), st={}, t0=performance.now(), n=0, heavy=/^hex/.test(cv.dataset.k), gap=heavy?32:0, lastF=0, dpr=Math.min(window.devicePixelRatio||1,heavy?1.25:1.5); if(!D||!ctx) return;
+  function frame(){ if(!cv.isConnected) return; var nowF=performance.now(); if(live&&nowF-lastF<gap){ requestAnimationFrame(frame); return } lastF=nowF; if(!document.hidden&&(!live||(n++%1===0))){ var w=Math.max(2,Math.round(cv.clientWidth*dpr)), h=Math.max(2,Math.round(cv.clientHeight*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; st.reset=true }
+      var stg=cv.closest('.stage'); D(ctx,w,h,live?(performance.now()-t0)/1000:8,st,!!(stg&&stg.classList.contains('phone')),live); st.reset=false } if(live) requestAnimationFrame(frame) }
+  frame() }) }
+
+add('Руны','Стена табличек с выдуманной письменностью из прямых штрихов; таблички по очереди загораются жёлтым, поперёк идёт линия «чтения». Имена на табличках капсул и таблички пропавших в зале Пульта.',
+ 'цепляет лор (таблички, язык людей, Александра читает имена); ничем не рисуется, кроме линий; узнаваемо на скриншоте',
+ 'руны пока случайные, настоящий алфавит ещё не нарисован; плотный узор мешает читать мелкие подписи кнопок',
+ absScreen('runes','vA4'),'.vt .cv2d{position:absolute;inset:0;width:100%;height:100%;display:block}\
+.vt .top{position:absolute;left:0;right:0;top:60u;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14u}.vt .top .mk{width:76u;height:76u}.vt .nm{font:300 54u var(--h);letter-spacing:.5em;padding-left:.5em}\
+.vt .run{position:relative;width:420u;height:2u;margin-top:4u;background:rgba(242,241,236,.14);overflow:hidden}.vt .run i{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,transparent,#F2F1EC 60%,#FFD23F);animation:run17 2.6s cubic-bezier(.45,.05,.55,.95) infinite}@keyframes run17{from{left:-30%}to{left:104%}}\
+.vt .sm{bottom:46u;z-index:2}.vt .sm .l{text-shadow:0 1px 8px #000}.vt::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(0deg,rgba(11,11,12,.88),transparent);pointer-events:none}\
+.phone .vt .top{top:34px}.phone .vt .nm{font-size:30px}.phone .vt .top .mk{width:58px;height:58px}.phone .vt .run{width:210px}.phone .vt .sm{bottom:24px}.phone .vt::after{height:44%}\
+@media (prefers-reduced-motion:reduce){.vt .run i{animation:none}}');
+/* ---------- abstract, round two (7–11) ---------- */
+
+/* 7 — fold: a grid of space bent by moving masses; "space flows differently" (складка/растяжение in the game) */
+/* 8 — swarm: a cloud of people gathers into the mark of the game and breaks apart again */
+/* 9 — warp: the ark in flight; stars stream past, every so often a long jump */
+/* 10 — cells: capsules as a honeycomb, the waking passes across it in waves */
+/* 11 — rosettes: a harmonograph that never repeats; the head of the line is yellow */
+/* ---------- landscapes without a world (12–16): the background of a main menu, drawn from lines, hexes and thread ---------- */
+function skyStars(c,w,h,t,st,yMax,n){ if(st.reset||!st.sk||st.skn!==n){ var rg=rng(99); st.sk=[]; st.skn=n; for(var i=0;i<n;i++) st.sk.push([rg(),rg(),.5+rg()*1.2,rg()*6.28,rg()]) }
+  for(var j=0;j<st.sk.length;j++){ var s=st.sk[j], y=s[1]*yMax; c.fillStyle=(s[4]<.15?'rgba(255,226,170,':'rgba(220,230,255,')+(.18+.5*(.5+.5*Math.sin(t*(.4+s[2]*.4)+s[3]))*(1-y/yMax*.5))+')'; c.fillRect(s[0]*w,y,s[2]*h/760,s[2]*h/760) } }
+function fbm2(x,y,z){ return (vn3(x,y,z)*.55+vn3(x*2.1+7.3,y*2.1+1.9,z*1.3)*.3+vn3(x*4.3+3.1,y*4.3+8.8,z*1.7)*.15) }
+
+/* 12 — ridges: layers of mountains drawn with single lines, the far ones pale, the near ones black; the sun is a set of thin rings */
+/* hex ground in perspective: the world is a hexagonal field, the camera hangs low above it */
+function hexGround(c,w,h,t,st,ph,mode){ var u=h/760, hy=h*.34+PTR.y*h*.012, f=h*.9, cx=w/2+PTR.x*h*.035, R=ph?.32:.29, dz=1.5*R, dx=Math.sqrt(3)*R, Hc=2.1, zs=t*.22, z0=2.2, z1=ph?14:22, jmin=Math.floor((zs+z0)/dz)-1, jmax=Math.ceil((zs+z1)/dz)+1, j, i, k;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); skyStars(c,w,h,t,st,hy*1.03,ph?80:140);
+  var g=c.createRadialGradient(cx,hy,0,cx,hy,h*.55); g.addColorStop(0,'rgba(255,200,90,.16)'); g.addColorStop(.4,'rgba(255,200,90,.05)'); g.addColorStop(1,'rgba(255,200,90,0)'); c.fillStyle=g; c.fillRect(0,0,w,hy+h*.1);
+  var hz=c.createLinearGradient(0,hy-h*.2,0,hy+h*.2); hz.addColorStop(0,'rgba(255,200,90,0)'); hz.addColorStop(.5,'rgba(255,200,90,.075)'); hz.addColorStop(1,'rgba(255,200,90,0)'); c.fillStyle=hz; c.fillRect(0,hy-h*.2,w,h*.4);
+  var xmax=(w/2/f)*z1+2, imax=Math.ceil(xmax/dx)+1;
+  for(j=jmax;j>=jmin;j--){ var Z=j*dz-zs, fog=Math.max(0,Math.min(1,(Z-2)/(z1-2))); if(Z<z0||Z>z1) continue;
+    for(i=-imax;i<=imax;i++){ var X=(i+((j&1)?.5:0))*dx, n=fbm2(i*.23+((j&1)?.12:0),j*.23,t*.04+3), hgt=mode==='plain'?0:Math.max(0,(n-.40))*(ph?3.4:4.2)*(mode==='mix'?Math.max(0,Math.min(1,(Z-(ph?5:7))/(ph?3:4))):1), rel=hgt>.03||mode==='relief', fz=f/Z;
+      var wave=Math.max(0,Math.sin(Z*.7+Math.abs(X)*.18-t*1.3)); wave=Math.pow(wave,mode==='relief'?6:10);
+      var sc=[], co=[]; for(k=0;k<6;k++){ var a=(30+60*k)*Math.PI/180, wx=X+Math.cos(a)*R*.94, wz=Z+Math.sin(a)*R*.94, zz=Math.max(.3,wz), ff=f/zz; sc.push([cx+wx*ff,hy+(Hc-hgt)*ff,hy+Hc*ff]) }
+      if(sc[0][0]<-60||sc[3][0]>w+60) { if(Math.max(sc[0][0],sc[3][0])<-60||Math.min(sc[0][0],sc[3][0])>w+60) continue }
+      var vis=Math.max(0,1-Math.pow(fog,.8)), pk=Math.min(1,hgt/(ph?1.2:1.5)); if(vis<.03) continue;
+      if(rel&&hgt>.02&&vis>.3){ for(k=0;k<6;k++){ var a1=(60+60*k)*Math.PI/180, nx=Math.cos(a1), nz=Math.sin(a1); if(nx*(-X)+nz*(-Z)<=0) continue; var p0=sc[k], p1=sc[(k+1)%6];
+          c.fillStyle='rgba('+(16+Math.round(pk*40))+','+(16+Math.round(pk*30))+','+(18+Math.round(pk*8))+','+vis+')'; c.beginPath(); c.moveTo(p0[0],p0[1]); c.lineTo(p1[0],p1[1]); c.lineTo(p1[0],p1[2]); c.lineTo(p0[0],p0[2]); c.closePath(); c.fill(); c.strokeStyle='rgba(242,241,236,'+(.06*vis)+')'; c.lineWidth=1; c.stroke() } }
+      c.beginPath(); for(k=0;k<6;k++){ if(k) c.lineTo(sc[k][0],sc[k][1]); else c.moveTo(sc[k][0],sc[k][1]) } c.closePath();
+      if(rel){ c.fillStyle='rgba('+(13+Math.round(pk*38+wave*14))+','+(14+Math.round(pk*32+wave*10))+','+(16+Math.round(pk*12))+','+vis+')'; c.fill() } else if(wave>.05){ c.fillStyle=rgba(PAL.ppl,.18*wave*vis); c.fill() }
+      var edge=rel?(pk>.5?rgba(PAL.ppl,(.15+.5*pk+.4*wave)*vis):'rgba(242,241,236,'+((.09+.2*wave)*vis)+')'):(wave>.05?rgba(PAL.ppl,(.2+.75*wave)*vis):'rgba(242,241,236,'+(.12*vis)+')');
+      c.strokeStyle=edge; c.lineWidth=Math.max(1,u*(1+wave*.8)); c.stroke() } }
+ }
+CVD.hexrelief=function(c,w,h,t,st,ph){ hexGround(c,w,h,t,st,ph,'relief') };
+/* 14 — thread globe: a sphere wound from rotating great circles, half sunk below the edge of the screen */
+/* 15 — curtains: hanging threads of light over two dark ridges */
+add('Гекс-рельеф','Поле шестиугольных колонн уходит к горизонту и медленно движется на камеру. Высоты из шума, вершины подсвечены жёлтым, по полю идёт волна света. Тёмное небо со звёздами над ним.',
+ 'продолжение «сот», но уже как местность; создаёт глубину и «масштаб» без картинки; жёлтые вершины связаны с палитрой игры',
+ 'самый тяжёлый из пейзажей (тысяча многоугольников на кадр); колонны могут читаться как «Майнкрафт» при другой подаче',
+ absScreen('hexrelief','vB13'),'');
+/* ---------- the people's script, round two (17–21): the glyph wall tied to the game — names on plates, translation, the registry of worlds, the chronicle, the seal ---------- */
+var GL={};
+function glyphOf(ch){ var code=(ch||'a').toLowerCase().charCodeAt(0)||97; if(GL[code]) return GL[code]; var rg=rng(code*131+17), strokes=[], ns=1+(rg()<.55?1:0), s, i, total=0;
+  for(s=0;s<ns;s++){ var n=2+((rg()*3)|0), x=(rg()*3)|0, y=(rg()*5)|0, pts=[[x,y]]; for(i=1;i<n;i++){ var nx, ny, tries=0; do{ nx=(rg()*3)|0; ny=(rg()*5)|0; tries++ }while(tries<14&&((nx===x&&ny===y)||Math.abs(nx-x)+Math.abs(ny-y)<2)); pts.push([nx,ny]); x=nx; y=ny } strokes.push(pts) }
+  return GL[code]=strokes }
+function drawG(c,ch,x,y,w,h,p,col,lw){ var st=glyphOf(ch), segs=[], total=0, s, i; for(s=0;s<st.length;s++) for(i=1;i<st[s].length;i++){ var a=st[s][i-1], b=st[s][i], L=Math.hypot((b[0]-a[0])*w/2,(b[1]-a[1])*h/4); segs.push([s,i,a,b,L]); total+=L }
+  var budget=p*total, tip=null, started=-1; c.strokeStyle=col; c.lineWidth=lw; c.lineCap='round'; c.beginPath();
+  for(i=0;i<segs.length;i++){ var sg=segs[i]; if(budget<=0) break; var f=Math.min(1,budget/sg[4]), ax=x+sg[2][0]/2*w, ay=y+sg[2][1]/4*h, bx=x+sg[3][0]/2*w, by=y+sg[3][1]/4*h; if(started!==sg[0]){ c.moveTo(ax,ay); started=sg[0] } tip=[ax+(bx-ax)*f,ay+(by-ay)*f]; c.lineTo(tip[0],tip[1]); budget-=sg[4] }
+  c.stroke(); return p>0&&p<1?tip:null }
+function maskAt(x,y,w,h,ph){ var m=1, cxn=Math.abs(x-w/2)/w, cyn=y/h; if(cxn<(ph?.5:.3)&&cyn<.36) m=.3; if(cyn>.86) m=Math.min(m,.3); return m }
+var WN=['Tallow','Brine','Cinder','Marrow','Solace','Vesper','Gallows','Ferrous','Hollow','Threnody','Kiln','Lantern','Tinder','Ossuary','Harrow','Wick','Pale','Grist','Anvil','Vigil','Loam','Sallow','Cairn','Ember','Mire','Rook','Dross','Chaff'];
+var TR={en:['Hermes is back. 12 crew.','Rations will last 41 years.','Cinder is empty. Come for us.','Storm over Eos. Wait.','Who counts the ones left?','Atlas carries metal to Tallow.','They ask for a berth.','Alexandra, write it down.','Sisyphus did not return.','Ten more hands for the yard.'],
+        ru:['«Гермес» вернулся. Экипаж 12.','Рационов хватит на 41 год.','Cinder пуст. Заберите нас.','Буря над Эос. Ждите.','Кто считает оставшихся?','«Атлант» везёт металл на Tallow.','Они просят койку.','Александра, запишите.','«Сизиф» не вернулся.','Ещё десять рук на верфь.']};
+function mono(u,s){ return (s*u)+'px "Geist Mono",monospace' }
+
+/* 17 — plates: names are written onto plates by a stylus, stroke by stroke; the wall of the lost in the Pult's hall */
+/* 18 — translation: the people's lines on the left, Alexandra's translation settling on the right */
+/* 19 — registry: tablets of worlds; the name in the people's glyphs, the Pult's name beneath, a class dot, a deposit that runs out */
+/* 20 — chronicle: scrolls of glyph lines rise at three speeds, the years in the margin; a seal sometimes stands out in yellow */
+/* 21 — seal: one name written large, stroke by stroke, inside a turning ring; then the Pult's name appears beneath it */
+/* ---------- hex script (22–24): the same wall of names, but in a cleaner, technical script cut from the hexagon lattice ---------- */
+var HGL={}, HN=[[0,0]]; (function(){ for(var k=0;k<6;k++){ var a=(30+60*k)*Math.PI/180; HN.push([Math.cos(a)*.78,Math.sin(a)*.78]) } })();
+function hglyph(ch){ var code=(ch||'a').toLowerCase().charCodeAt(0)||97; if(HGL[code]) return HGL[code]; var rg=rng(code*97+13), out=[], ns=1+(rg()<.55?1:0), s, i;
+  for(s=0;s<ns;s++){ var n=2+((rg()*3)|0), cur=(rg()*7)|0, pts=[HN[cur]]; for(i=1;i<n;i++){ var nx=cur, g=0; while(nx===cur&&g++<9) nx=(rg()*7)|0; pts.push(HN[nx]); cur=nx } out.push(pts) }
+  return HGL[code]=out }
+function drawHG(c,ch,cx,cy,r,p,col,lw,glow){ var st=hglyph(ch), segs=[], total=0, s, i; for(s=0;s<st.length;s++) for(i=1;i<st[s].length;i++){ var a=st[s][i-1], b=st[s][i], L=Math.hypot((b[0]-a[0])*r,(b[1]-a[1])*r); segs.push([s,a,b,L]); total+=L }
+  function path(bd){ var started=-1, tip=null; c.beginPath(); for(var q=0;q<segs.length;q++){ if(bd<=0) break; var sg=segs[q], f=Math.min(1,bd/sg[3]), ax=cx+sg[1][0]*r, ay=cy+sg[1][1]*r, bx=cx+sg[2][0]*r, by=cy+sg[2][1]*r; if(started!==sg[0]){ c.moveTo(ax,ay); started=sg[0] } tip=[ax+(bx-ax)*f,ay+(by-ay)*f]; c.lineTo(tip[0],tip[1]); bd-=sg[3] } return tip }
+  c.lineJoin='miter'; c.lineCap='butt'; var tip;
+  if(glow){ c.strokeStyle=col; c.globalAlpha=.22; c.lineWidth=lw*4; path(p*total); c.stroke(); c.globalAlpha=1 }
+  c.strokeStyle=col; c.lineWidth=lw; tip=path(p*total); c.stroke(); return p>0&&p<1?tip:null }
+function hexP(c,cx,cy,r,flat){ c.beginPath(); for(var k=0;k<6;k++){ var a=((flat?0:30)+60*k)*Math.PI/180; if(k) c.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); else c.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r) } c.closePath() }
+function lerpCol(a,b,f,al){ return 'rgba('+Math.round(a[0]+(b[0]-a[0])*f)+','+Math.round(a[1]+(b[1]-a[1])*f)+','+Math.round(a[2]+(b[2]-a[2])*f)+','+al+')' }
+
+/* 22 — hex plates: honeycomb of plates; each plate is three small hex cells, the name is traced into them by a laser */
+/* 23 — hex stream: strips of honeycomb cells with hex glyphs rise at different speeds; a read-head sweeps across and the years run in the margin */
+/* 24 — hex field with script: the perspective hex plain, every other cell carries a glyph that lights as the wave passes */
+/* ---------- script without hexagons (25–29): the same technical glyphs, other compositions ---------- */
+function drawHGp(c,ch,proj,p,col,lw,glow){ var st=hglyph(ch), segs=[], total=0, s, i; for(s=0;s<st.length;s++) for(i=1;i<st[s].length;i++){ var a=st[s][i-1], b=st[s][i], L=Math.hypot(b[0]-a[0],b[1]-a[1]); segs.push([s,a,b,L]); total+=L }
+  function path(bd){ var started=-1, tip=null; c.beginPath(); for(var q=0;q<segs.length;q++){ if(bd<=0) break; var sg=segs[q], f=Math.min(1,bd/sg[3]), A=proj(sg[1][0],sg[1][1]), B=proj(sg[2][0],sg[2][1]); if(started!==sg[0]){ c.moveTo(A[0],A[1]); started=sg[0] } tip=[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f]; c.lineTo(tip[0],tip[1]); bd-=sg[3] } return tip }
+  c.lineJoin='miter'; c.lineCap='butt'; var tip; if(glow){ c.strokeStyle=col; c.globalAlpha=.2; c.lineWidth=lw*4; path(p*total); c.stroke(); c.globalAlpha=1 }
+  c.strokeStyle=col; c.lineWidth=lw; tip=path(p*total); c.stroke(); return p>0&&p<1?tip:null }
+function nodesOf(ch){ var st=hglyph(ch), seen={}, out=[]; st.forEach(function(s){ s.forEach(function(pt){ var k=pt[0].toFixed(2)+','+pt[1].toFixed(2); if(!seen[k]){ seen[k]=1; out.push(pt) } }) }); return out }
+
+/* 25 — stream: columns of script fall at three depths; a bright head leaves a fading trail; no cells, just the script */
+CVD.gstream=function(c,w,h,t,st,ph){ var u=h/760, K=ph?13:30, k, j, SZ=[10,16,26], VY=[50,85,130], TR=[320,460,620], TA=[.5,.75,1];
+  if(st.reset||!st.cols){ st.cols=[]; var rg=rng(23); for(k=0;k<K;k++){ var tier=k%3; st.cols.push({x:(k+.5)/K*w+(rg()-.5)*w/K*.5,tier:tier,ph0:rg(),sz:SZ[tier]*u*(ph?1.25:1),vy:VY[tier]*u,tr:TR[tier]*u}) } }
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h);
+  st.cols.forEach(function(cl,idx){ var sp=cl.sz*2.4, cyc=h*1.25, head=((t*cl.vy+cl.ph0*cyc)%cyc)-h*.12, n=Math.ceil(h/sp)+1, ta=TA[cl.tier];
+    for(j=0;j<n;j++){ var y=j*sp+sp*.5, d=head-y, lit=d<0?0:Math.exp(-d/cl.tr), al=Math.max(.11,lit)*ta, m=maskAt(cl.x,y,w,h,ph); if(m*al<.03) continue; var ch=String.fromCharCode(97+Math.floor(hsh(idx*131+j*7.7+Math.floor(t*.35+hsh(j)*4))*26)), isHead=d>=0&&d<sp*1.1;
+      drawHG(c,ch,cl.x,y,cl.sz*.5,1,isHead?'rgba(255,226,150,'+(.95*m)+')':'rgba(242,241,236,'+(al*.9*m)+')',Math.max(1,u*(cl.tier+1)*.55),isHead) } }) };
+
+/* 26 — sky glyphs: constellations in the shape of the people's script are lit star by star, drawn, held and dimmed */
+/* 27 — hologram: one glyph as a lit stack of layers turning in space, a scanning ring running through it */
+/* 28 — ribbons: horizontal lines of script slide at different speeds; where a glyph crosses the reading line it lights up */
+/* 29 — sphere of script: bands of glyphs wrap a turning globe, the back dim, the front bright, one glyph lit travels along the equator */
+add('Поток знаков','То же, что «Гекс-поток», но без сот: колонны знаков падают на трёх глубинах (мелкие и тусклые вдали, крупные и яркие ближе), у каждой колонны яркая жёлтая «голова» и тающий след. Только письмо и пустота.',
+ 'самый чистый и техничный; глубина без картинки; ничего лишнего, знаки читаются как поток данных корабля',
+ 'самый знакомый образ (цифровой дождь), нужна своя подача; без смысла в деталях',
+ absScreen('gstream','vE25 vW'),'');
+/* ---------- more of the same family (30–34): script as instrument — manifest, carrier wave, corridor, orbit text, coverage scope ---------- */
+
+/* 30 — manifest: a list of worlds slides through a reading frame; each row is the name in script, the Pult's name, a deposit bar and a number */
+/* 31 — carrier: a wave runs across the screen and the script rides it; bursts of "transmission" light the glyphs yellow */
+/* 32 — corridor: a tunnel whose walls are lines of script; the script rushes towards you, a yellow pulse runs along the walls */
+CVD.corridor=function(c,w,h,t,st,ph){ var u=h/760, f=h*(ph?.78:.62), cx=w/2, cy=h*(ph?.4:.47), Wd=ph?1.8:2.5, Hh=ph?1.9:1.4, zn=1.5, zf=17, dz=.95, sp=1.5, adv=t*sp, kk=Math.floor(adv/dz), zo=adv%dz, N=Math.ceil((zf-zn)/dz)+1, zi, r, wl;
+  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h);
+  function P(X,Y,Z){ return [cx+X*f/Z,cy+Y*f/Z] }
+  var zw=zf-((t*5)%(zf+6));
+  c.strokeStyle='rgba(242,241,236,.09)'; c.lineWidth=Math.max(1,u); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){ var a=P(q[0]*Wd,q[1]*Hh,zn), b=P(q[0]*Wd,q[1]*Hh,zf); c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke() });
+  for(zi=0;zi<N;zi++){ var Zc=zn+zi*dz-zo; if(Zc<zn) continue; var fog=Math.pow(Math.max(0,1-(Zc-zn)/(zf-zn)),.9), near=Math.min(1,Math.max(0,(Zc-zn-.4)/2.4)), lit=Math.max(0,1-Math.abs(Zc-zw)/1.2), al=fog*near, kz=kk+zi;
+    if((kz%4)===0){ var q1=P(-Wd,-Hh,Zc), q2=P(Wd,-Hh,Zc), q3=P(Wd,Hh,Zc), q4=P(-Wd,Hh,Zc); c.strokeStyle=lit>.1?rgba(PAL.ppl,.2+.5*lit):'rgba(242,241,236,'+(.1*al)+')'; c.lineWidth=Math.max(1,u*(1+lit)); c.beginPath(); c.moveTo(q1[0],q1[1]); c.lineTo(q2[0],q2[1]); c.lineTo(q3[0],q3[1]); c.lineTo(q4[0],q4[1]); c.closePath(); c.stroke() }
+    if(al<.03) continue;
+    var gs=.27, rowsY=[-.78,-.26,.26,.78], colsX=[-.72,-.24,.24,.72];
+    for(wl=0;wl<4;wl++) for(r=0;r<4;r++){ var id=kz*53+wl*13+r*5.3, ch=String.fromCharCode(97+Math.floor(hsh(id)*26)); if(hsh(id*1.7)<.18) continue; var proj, pc;
+      if(wl<2){ var sx=wl?1:-1, Y=rowsY[r]*Hh; proj=(function(sx,Y,Zc){ return function(gx,gy){ return P(sx*Wd,Y+gy*gs,Zc+gx*gs) } })(sx,Y,Zc); pc=P(sx*Wd,Y,Zc) } else { var sy=wl===2?-1:1, X=colsX[r]*Wd; proj=(function(sy,X,Zc){ return function(gx,gy){ return P(X+gx*gs,sy*Hh,Zc+gy*gs) } })(sy,X,Zc); pc=P(X,sy*Hh,Zc) }
+      var m=maskAt(pc[0],pc[1],w,h,ph); if(m<.05||pc[0]<-80||pc[0]>w+80||pc[1]<-80||pc[1]>h+80) continue; var a2=Math.min(1,al*1.2)*m, ll=lit;
+      drawHGp(c,ch,proj,1,ll>.15?rgba(PAL.ppl,Math.min(1,.4+ll)*Math.min(1,al*1.5)*m):'rgba(242,241,236,'+(.7*a2)+')',Math.max(1,u*(1+2*Math.max(0,1-(Zc-zn)/6))),ll>.5) } } };
+
+/* 33 — orbit text: lines of script run around tilted orbits, rings turn at different speeds; one glyph on each ring is lit */
+/* 34 — coverage: a half-scope with a sweeping line; contacts carry a glyph and coordinates and glow only when the sweep passes over them */
+add('Коридор','Тоннель, стены которого составлены из строк знаков; письмо несётся на тебя, дальше всё тоньше и бледнее; по стенам бежит жёлтый импульс и подсвечивает сегменты. Перелёт по коридору корабля.',
+ 'самый «летящий» из всех: ощущение движения и масштаба без планеты; глубина из чистых линий',
+ 'самый сложный по коду; в центре тоннеля тёмно, под заголовок нужно место; на узком экране коридор кажется плотным',
+ absScreen('corridor','vF32 vW'),'');
+/* ---------- round 3 (6–10 in this page): depth, scale and a scene that answers the cursor and the menu ---------- */
+var PTR={x:0,y:0,tx:0,ty:0}, PULSE={at:-1e9};
+document.addEventListener('mousemove',function(e){ PTR.tx=(e.clientX/innerWidth-.5)*2; PTR.ty=(e.clientY/innerHeight-.5)*2 });
+(function ptrLoop(){ PTR.x+=(PTR.tx-PTR.x)*.05; PTR.y+=(PTR.ty-PTR.y)*.05; requestAnimationFrame(ptrLoop) })();
+function pulseAge(){ return (performance.now()-PULSE.at)/1000 }
+
+/* 6 — stelae: the hex plain, and on it monoliths carrying the names of worlds in script; a wave of light runs through them and a press on a menu item flashes them */
+/* 7 — galaxy: a spiral made of the stars of the game and the people's script; the nearer glyphs are readable, the core is warm, the far arms are blue */
+/* 8 — gates: you fly through time; a frame every ten years, a big gold one every eighty (a shift) with the name in script; years in the margin of each */
+/* 9 — map: the rings of the game in space; worlds on the orbits, routes between neighbouring rings, a few ships on them; the nearer worlds carry a name in script */
+/* 10 — deep sky: stars at different depths drift past slowly and shift with the cursor, faint dust, constellations in script light up, a convoy of ships crosses the sky now and then */
+/* ---------- a different approach: real 3D (WebGL2) for the hex relief, with lighting, fog and glowing edges, sound, and a camera dive into the terminal ---------- */
+var DIVE={at:Infinity};
+var HEX_VS=`#version 300 es
+precision highp float;
+layout(location=0) in vec3 aPos;
+layout(location=1) in vec3 aNrm;
+layout(location=2) in vec2 aCell;
+uniform float uT, uScroll, uAsp, uCamX, uCamH, uDive, uK, uFov;
+uniform vec2 uGrid;
+out vec3 vP; out vec2 vL; out float vH; out float vTop; out float vZ; out float vNear; out float vSide; out float vY;
+float h13(vec3 p){ p=fract(p*.1031); p+=dot(p,p.zyx+31.32); return fract((p.x+p.y)*p.z); }
+float vn(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.-2.*f);
+  return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),
+             mix(mix(h13(i+vec3(0,0,1)),h13(i+vec3(1,0,1)),f.x),mix(h13(i+vec3(0,1,1)),h13(i+vec3(1,1,1)),f.x),f.y),f.z); }
+float fbm(vec3 p){ return vn(p)*.55+vn(p*2.1+vec3(7.3,1.9,3.3))*.3+vn(p*4.3+vec3(3.1,8.8,5.5))*.15; }
+void main(){
+  float R=uGrid.x, dz=uGrid.y, dx=1.7320508*R, z0=2.0;
+  float rowF=uScroll/dz, rowAbs=aCell.y+floor(rowF), par=mod(rowAbs,2.0);
+  float zf=z0+aCell.y*dz-fract(rowF)*dz;
+  float X=(aCell.x+.5*par)*dx;
+  float n=fbm(vec3(aCell.x*.23+par*.12, rowAbs*.23, uT*.04+3.));
+  float hgt=max(0.,n-.40)*uK*smoothstep(2.6,7.5,zf);
+  vec3 P=vec3(X+aPos.x*R, aPos.y*hgt, zf+aPos.z*R);
+  vP=P; vL=aPos.xz/.94; vH=hgt; vTop=aNrm.y; vZ=P.z; vNear=smoothstep(z0-.3,z0+1.8,zf); vSide=aNrm.x; vY=aPos.y;
+  float vx=P.x-uCamX, vy=P.y-uCamH, vz=-P.z, f=1./tan(uFov*.5);
+  float near=.1, far=80.;
+  vec4 cp=vec4(f/uAsp*vx, f*vy, (far+near)/(near-far)*vz+2.*far*near/(near-far), -vz);
+  cp.y+=.32*cp.w;
+  gl_Position=cp;
+}`;
+var HEX_FS=`#version 300 es
+precision highp float;
+in vec3 vP; in vec2 vL; in float vH; in float vTop; in float vZ; in float vNear; in float vSide; in float vY;
+uniform float uT, uPulse, uFade;
+out vec4 oC;
+float hexd(vec2 p){ return max(abs(p.x),max(abs(p.x*.5+p.y*.8660254),abs(p.x*.5-p.y*.8660254)))/.8660254; }
+void main(){
+  float z=vZ, fog=clamp((z-2.)/20.,0.,1.), vis=1.-pow(fog,.8);
+  float pk=clamp(vH/1.55,0.,1.);
+  float wave=pow(max(0.,sin(z*.65+abs(vP.x)*.16-uT*1.1)),9.);
+  vec3 gold=vec3(1.,.8,.28), col;
+  if(vTop>.5){
+    float d=hexd(vL), edge=smoothstep(.78,.97,d), inner=1.-smoothstep(0.,.95,d);
+    col=vec3(.040,.041,.047)+gold*(.06*pk+.10*wave+.06*uPulse)*(.6+.8*inner);
+    col+=gold*edge*(.16+.95*pk+.9*wave+.7*uPulse)+vec3(.9)*edge*.07;
+    col+=gold*pk*pk*.10*inner;
+  } else {
+    float g=clamp(vY,0.,1.);
+    float facing=.55+.45*abs(vSide);
+    col=mix(vec3(.012,.012,.015), gold*(.10+.55*pk+.45*wave+.35*uPulse), pow(g,2.4))*facing;
+    col+=vec3(.9)*smoothstep(.93,1.,g)*.05;
+  }
+  vec3 fogc=vec3(.082,.062,.033);
+  col=mix(fogc,col,vis);
+  col*=vNear*(1.-uFade); col*=mix(1.,.55,smoothstep(.0,.8,1.-vZ/9.)*step(vZ,9.));
+  oC=vec4(col,1.);
+}`;
+var SKY_VS=`#version 300 es
+void main(){ vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2)); gl_Position=vec4(p*2.-1.,0.,1.); }`;
+var SKY_FS=`#version 300 es
+precision highp float;
+uniform vec2 uRes; uniform float uT,uFade,uHor,uPulse; out vec4 oC;
+vec3 h33(vec3 p3){ p3=fract(p3*vec3(.1031,.1030,.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yxx)*p3.zyx); }
+void main(){
+  vec2 uv=gl_FragCoord.xy/uRes; float asp=uRes.x/uRes.y, dy=uv.y-uHor; vec3 Hc=vec3(.082,.062,.033);
+  vec3 col=vec3(.043,.043,.047);
+  col+=vec3(1.,.78,.35)*(.045+.02*uPulse)*exp(-dy*dy*16.)*(.55+.45*exp(-pow((uv.x-.5)*asp*1.2,2.)));
+  col=mix(col,Hc,exp(-abs(dy)*13.)*.92);
+  if(dy<0.){ col=mix(col,Hc,smoothstep(0.,-.03,dy)); col*=mix(1.,.3,smoothstep(0.,-.4,dy)); }
+  if(dy>0.){
+    for(int L=0;L<3;L++){ float s=(L==0)?34.:(L==1)?80.:160.; float th=(L==0)?.93:(L==1)?.95:.965; vec2 p=vec2(uv.x*asp,uv.y)*s+vec2(uT*.01*float(L+1),0.); vec2 g=floor(p), f=fract(p)-.5; vec3 hh=h33(vec3(g,float(L)*7.3));
+      if(hh.x>th){ vec2 off=(hh.yz-.5)*.7; float d=length(f-off); float mag=(hh.x-th)/(1.-th); float rr=(L==0)?.07:(L==1)?.05:.035; float b=smoothstep(rr,0.,d)*(.35+.9*mag); b*=.65+.35*sin(uT*(.6+hh.y*2.)+hh.z*40.); col+=b*mix(vec3(.75,.85,1.),vec3(1.,.9,.75),hh.z)*((L==0)?1.1:.65)*smoothstep(0.,.14,dy); } }
+  }
+  col*=1.-.35*pow(length((uv-.5)*vec2(1.,.9)),2.);
+  col*=1.-uFade;
+  oC=vec4(col,1.);
+}`;
+function glProg(gl,vs,fs){ function sh(t,s){ var o=gl.createShader(t); gl.shaderSource(o,s); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)){ console.error('shader: '+gl.getShaderInfoLog(o)); return null } return o }
+  var a=sh(gl.VERTEX_SHADER,vs), b=sh(gl.FRAGMENT_SHADER,fs); if(!a||!b) return null; var p=gl.createProgram(); gl.attachShader(p,a); gl.attachShader(p,b); gl.linkProgram(p); if(!gl.getProgramParameter(p,gl.LINK_STATUS)){ console.error('link: '+gl.getProgramInfoLog(p)); return null } return p }
+function hexMesh(){ var P=[], N=[], k, a0, a1, R=.94;
+  function v(x,y,z,nx,ny,nz){ P.push(x,y,z); N.push(nx,ny,nz) }
+  for(k=0;k<6;k++){ a0=(30+60*k)*Math.PI/180; a1=(30+60*(k+1))*Math.PI/180; var x0=Math.cos(a0)*R, z0=Math.sin(a0)*R, x1=Math.cos(a1)*R, z1=Math.sin(a1)*R, am=(a0+a1)/2, nx=Math.cos(am), nz=Math.sin(am);
+    v(0,1,0,0,1,0); v(x0,1,z0,0,1,0); v(x1,1,z1,0,1,0);
+    v(x0,0,z0,nx,0,nz); v(x1,0,z1,nx,0,nz); v(x1,1,z1,nx,0,nz); v(x0,0,z0,nx,0,nz); v(x1,1,z1,nx,0,nz); v(x0,1,z0,nx,0,nz) }
+  return {P:new Float32Array(P),N:new Float32Array(N),n:P.length/3} }
+
+CVD.hexgl=function(){};
+CVD.hexgl.gl=true; CVD.hexgl.fallback='hexrelief';
+CVD.hexgl.make=function(gl,ph){ var sky=glProg(gl,SKY_VS,SKY_FS), hex=glProg(gl,HEX_VS,HEX_FS); if(!sky||!hex) return null;
+  var mesh=hexMesh(), R=.29, dz=1.5*R, dx=Math.sqrt(3)*R, rows=Math.ceil((22-2.0)/dz)+2, imax=Math.ceil(((ph?10:20))/dx), inst=[], i, j;
+  for(j=0;j<rows;j++) for(i=-imax;i<=imax;i++) inst.push(i,j);
+  var vao=gl.createVertexArray(); gl.bindVertexArray(vao);
+  var b0=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b0); gl.bufferData(gl.ARRAY_BUFFER,mesh.P,gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
+  var b1=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b1); gl.bufferData(gl.ARRAY_BUFFER,mesh.N,gl.STATIC_DRAW); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,0,0);
+  var b2=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b2); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(inst),gl.STATIC_DRAW); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,0,0); gl.vertexAttribDivisor(2,1);
+  var U=function(p,n){ return gl.getUniformLocation(p,n) }, nInst=inst.length/2, scroll=0, last=null;
+  return { draw:function(t,w,h,ph){ var dt=last===null?0:Math.min(.1,t-last); last=t; var da=(performance.now()-DIVE.at)/1000, dive=da>=0?Math.min(1,da/1.3):0, pa=pulseAge(), pulse=pa<1.3?(1-pa/1.3)*.8:0, fade=Math.max(0,(dive-.72)/.28);
+      scroll+=dt*(.28+dive*dive*7); gl.viewport(0,0,w,h); gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.clearColor(.043,.043,.047,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+      gl.useProgram(sky); gl.uniform2f(U(sky,'uRes'),w,h); gl.uniform1f(U(sky,'uT'),t); gl.uniform1f(U(sky,'uFade'),fade); gl.uniform1f(U(sky,'uHor'),.66); gl.uniform1f(U(sky,'uPulse'),pulse); gl.drawArrays(gl.TRIANGLES,0,3);
+      gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.useProgram(hex);
+      gl.uniform1f(U(hex,'uT'),t); gl.uniform1f(U(hex,'uScroll'),scroll); gl.uniform1f(U(hex,'uAsp'),w/h); gl.uniform1f(U(hex,'uCamX'),PTR.x*1.1); gl.uniform1f(U(hex,'uCamH'),2.1+PTR.y*.18+dive*1.2); gl.uniform1f(U(hex,'uDive'),dive); gl.uniform1f(U(hex,'uK'),ph?3.4:4.4); gl.uniform1f(U(hex,'uFov'),(1.0-.18*dive)*1.02); gl.uniform2f(U(hex,'uGrid'),R,dz); gl.uniform1f(U(hex,'uPulse'),pulse); gl.uniform1f(U(hex,'uFade'),fade);
+      gl.bindVertexArray(vao); gl.drawArraysInstanced(gl.TRIANGLES,0,mesh.n,nInst) } } };
+
+function initGLScene(cv,live,D){ var stg=cv.closest('.stage'), gl=cv.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'}), sc=gl?D.make(gl,!!(stg&&stg.classList.contains('phone'))):null;
+  if(!sc){ var c2=document.createElement('canvas'); c2.className='cv2d'; c2.dataset.k=D.fallback; cv.parentNode.replaceChild(c2,cv); initCv(c2.parentNode,live); return }
+  var t0=performance.now(), dpr=Math.min(window.devicePixelRatio||1,1.5);
+  function frame(){ if(!cv.isConnected) return; if(!document.hidden){ var w=Math.max(2,Math.round(cv.clientWidth*dpr)), h=Math.max(2,Math.round(cv.clientHeight*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h } var st2=cv.closest('.stage'); sc.draw(live?(performance.now()-t0)/1000+4:12,w,h,!!(st2&&st2.classList.contains('phone'))) } if(live){ if(window.__GLSLOW) setTimeout(frame,window.__GLSLOW); else requestAnimationFrame(frame) } }
+  frame() }
+
+/* ---------- menu sound: a low drone and a bed of air; ticks on hover, a soft chord on select; ducked under the terminal ---------- */
+var MA={c:null,m:null,duck:false};
+function maSet(){ if(!MA.c) return; MA.m.gain.setTargetAtTime((S.sound&&!MA.duck)?.5:0,MA.c.currentTime,.35) }
+function maStart(){ if(MA.c||!S.sound) return; try{ var c=new (window.AudioContext||window.webkitAudioContext)(), m=c.createGain(), i; m.gain.value=0; m.connect(c.destination); MA.c=c; MA.m=m;
+  var lp=c.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=190; lp.Q.value=.7; lp.connect(m);
+  [[55,'sawtooth',.05],[55.35,'sawtooth',.05],[110.2,'sine',.05],[82.4,'triangle',.035]].forEach(function(o){ var os=c.createOscillator(), g=c.createGain(); os.type=o[1]; os.frequency.value=o[0]; g.gain.value=o[2]; os.connect(g); g.connect(lp); os.start() });
+  var lf=c.createOscillator(), lg=c.createGain(); lf.frequency.value=.07; lg.gain.value=70; lf.connect(lg); lg.connect(lp.frequency); lf.start();
+  var nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0); for(i=0;i<d.length;i++) d[i]=Math.random()*2-1; var ns=c.createBufferSource(); ns.buffer=nb; ns.loop=true; var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=420; bp.Q.value=.5; var ng=c.createGain(); ng.gain.value=.018; ns.connect(bp); bp.connect(ng); ng.connect(m); ns.start();
+  MA.nb=nb; maSet() }catch(e){ MA.c=null } }
+function maTone(f,dur,g,type,delay,slide){ if(!MA.c||!S.sound||MA.duck) return; var c=MA.c, t=c.currentTime+(delay||0), o=c.createOscillator(), e=c.createGain(); o.type=type||'sine'; o.frequency.setValueAtTime(f,t); if(slide) o.frequency.exponentialRampToValueAtTime(slide,t+dur); e.gain.setValueAtTime(.0001,t); e.gain.exponentialRampToValueAtTime(g,t+.012); e.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(e); e.connect(MA.m); o.start(t); o.stop(t+dur+.05) }
+function maClick(kind){ if(kind==='hover'){ maTone(1180,.07,.05,'sine') } else if(kind==='select'){ maTone(70,.5,.5,'sine',0,38); maTone(220,1.4,.07,'sine',.02); maTone(330,1.6,.05,'sine',.06); maTone(440,1.8,.03,'sine',.1) } }
+function maDuck(on){ MA.duck=on; maSet() }
+document.addEventListener('pointerdown',function(){ maStart() },{once:false});
+document.addEventListener('keydown',function(){ maStart() });
+document.addEventListener('visibilitychange',function(){ if(!MA.c) return; if(document.hidden) MA.c.suspend(); else MA.c.resume() });
+
+add('Гекс-рельеф 3D','Тот же «Гекс-рельеф», но настоящая трёхмерная сцена (WebGL): объёмные колонны с освещением и туманом, светящиеся рёбра, тёплый горизонт и звёзды, камера смещается за курсором. Нажатие «Новая игра» не просто открывает терминал: камера разгоняется и ныряет в поле, затем затемнение переходит в терминал. Есть звук: низкий гул и тихие щелчки при выборе пунктов (включается после первого клика).',
+ 'самое большое «качество картинки» из того, что было: настоящая глубина, освещение и туман, а не линии; добавляет то, чего не было (звук, переход, реакция на курсор)',
+ 'WebGL: в моём тестовом браузере без видеокарты кадр медленный, на вашей должен быть быстрым; требует проверки на слабом телефоне (есть запасной вариант на 2D)',
+ absScreen('hexgl','vH40'),'');
+
+
+/* ---------- the shell: render, selection, keys ---------- */
+var CSS_SRC=document.getElementById('css-src').textContent;
+function u2css(s){ return s.replace(/(-?\d*\.?\d+)u(?![\w-])/g,function(m,n){ return 'calc(var(--u) * '+n+')' }) }
+var SHARED='\
+.sc{position:absolute;inset:0;width:100%;height:100%}\
+.ttl{position:absolute;display:flex;align-items:center;gap:16u}.ttl .mk{width:46u;height:46u}.ttl .nm{font:700 22u var(--h);letter-spacing:.3em}\
+.ttl.tl{left:60u;top:44u}.ttl.tr{right:60u;top:44u}.ttl.tc{left:0;right:0;top:40u;justify-content:center}\
+.sm{position:absolute;left:0;right:0;bottom:36u;display:flex;justify-content:center;gap:46u}\
+.sm .it{display:flex;flex-direction:column;align-items:center;gap:6u;padding:8u 4u 10u;border-bottom:2px solid transparent;min-width:92u}\
+.sm .l{font:500 21u var(--h);color:var(--mid);letter-spacing:.06em}.sm .s{font:11u var(--n);color:var(--dim);letter-spacing:.08em;height:14u}\
+.sm .it.on{border-bottom-color:var(--ppl)}.sm .it.on .l{color:var(--ink)}.sm .it.on .s{color:var(--ppl)}.sm .it.off{opacity:.35}\
+.phone .sc{height:56%}.phone .ttl.tl,.phone .ttl.tr,.phone .ttl.tc{left:0;right:0;top:20px;justify-content:center}.phone .ttl .nm{font-size:18px}.phone .ttl .mk{width:36px;height:36px}\
+.phone .sm{flex-direction:column;align-items:stretch;gap:0;left:24px;right:24px;bottom:26px}.phone .sm .it{flex-direction:row;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--ln);padding:12px 2px}.phone .sm .it.on{border-bottom-color:var(--ppl)}.phone .sm .l{font-size:21px}\
+.bootov{--u:calc(100cqw / 1280);--ns:1;--g:#D9D8D2;--gb:#F2F1EC;--gd:#6b6a65;--o:#FFD23F;--r:#FF2A1A;--eb:#4FA3FF;position:absolute;inset:0;z-index:30;background:#060607;font-family:"Share Tech Mono","Geist Mono",var(--n);color:var(--g);padding:58u 80u 74u;overflow:hidden;transition:opacity .5s}\
+.bootov.fin{opacity:0;pointer-events:none}\
+.bootov::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(242,241,236,.04) 0 1px,transparent 1px 3u),radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%)}\
+.bootov::after{content:"";position:absolute;left:0;right:0;height:120u;top:-120u;pointer-events:none;z-index:2;background:linear-gradient(180deg,transparent,rgba(242,241,236,calc(.07*var(--ns))),transparent);animation:bscan 4.2s linear infinite}\
+@keyframes bscan{to{top:110%}}\
+.bootov[data-n="0"]{--ns:1}.bootov[data-n="1"]{--ns:.85}.bootov[data-n="2"]{--ns:.66}.bootov[data-n="3"]{--ns:.48}.bootov[data-n="4"]{--ns:.32}.bootov[data-n="5"]{--ns:.16}.bootov[data-n="6"]{--ns:0}\
+.bootov .wr{display:grid;grid-template-columns:minmax(0,1fr) 360u;gap:30u;grid-template-rows:minmax(0,1fr);opacity:0;height:100%}\
+.bootov.on .wr{opacity:1;animation:crton .9s ease-out}\
+@keyframes crton{0%{transform:scale(.25,.004);filter:brightness(5)}35%{transform:scale(1,.004);filter:brightness(5)}70%{transform:scale(1,1.04);filter:brightness(2)}100%{transform:none;filter:none}}\
+.bootov .mn{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column}\
+.bootov .bo{flex:1;min-height:0;overflow:hidden;animation:bflk 3.4s steps(1) infinite}.bootov.act .bo{animation-duration:1.8s}\
+@keyframes bflk{0%,100%{opacity:1;transform:none}12%{opacity:calc(1 - .5*var(--ns));transform:translateX(calc(var(--ns)*4px))}14%{opacity:1;transform:none}47%{opacity:calc(1 - .4*var(--ns));transform:skewX(calc(var(--ns)*-2deg))}48.5%{opacity:1;transform:none}73%{opacity:calc(1 - .5*var(--ns));transform:translateX(calc(var(--ns)*-4px))}75%{opacity:1;transform:none}}\
+.bootov .bh{font:700 20u var(--h);letter-spacing:.3em;color:var(--gb);margin-bottom:22u;display:flex;gap:14u;align-items:center}.bootov .bh .mk{width:32u;height:32u}\
+.bootov .tb{margin-left:auto;border:1px solid var(--o);color:var(--o);padding:5u 14u;font:400 15u "Share Tech Mono",var(--n);letter-spacing:.08em;text-shadow:0 0 6u rgba(255,210,63,.45)}.bootov .tb b{font-weight:400}\
+.bootov .bl{font-size:19u;line-height:1.7;max-width:900u;white-space:pre-wrap;text-transform:uppercase;min-height:1.7em;text-shadow:0 0 calc(var(--u)*7) rgba(242,241,236,.45),calc(var(--ns)*3.2px) 0 rgba(242,241,236,.26)}\
+.bootov.act .bl{text-shadow:0 0 calc(var(--u)*7) rgba(242,241,236,.45),3.4px 0 rgba(242,241,236,.28)}\
+.bootov .bl.tear{transform:translateX(7px) skewX(-9deg);filter:blur(.5px)}\
+.bootov .bl.cm{color:var(--gb)}.bootov .bl.f{color:var(--o);text-shadow:0 0 calc(var(--u)*7) rgba(255,210,63,.5)}.bootov .bl.ok{color:var(--gb)}.bootov .bl.no{color:var(--r);text-shadow:none}.bootov .bl.th{color:var(--g)}.bootov .bl.hx{color:var(--gd);font-size:12u;line-height:1.4;min-height:0;text-shadow:none}\
+.bootov .bq{margin-top:12u;min-height:42u;display:flex;align-items:center;flex-wrap:wrap;gap:10u}\
+.bootov .bq .pm{color:var(--o);font-size:19u;margin-right:6u}\
+.bootov .vb{border:1px solid var(--gd);padding:7u 14u;font:400 16u "Share Tech Mono",var(--n);letter-spacing:.1em;text-transform:uppercase;color:var(--g)}\
+.bootov .vb i{font-style:normal;color:var(--o);margin-right:8u}.bootov .vb:hover{border-color:var(--o);color:var(--gb)}\
+.bootov .cur{display:inline-block;width:10u;height:2u;background:var(--g);vertical-align:-2u;animation:bk 1s steps(1) infinite}\
+.bootov .bskip{position:absolute;right:30u;top:20u;z-index:3;border:1px solid var(--gd);color:var(--g);padding:5u 12u;font:400 11u "Share Tech Mono",var(--n);letter-spacing:.2em;text-transform:uppercase}\
+.bootov .bhint{position:absolute;left:80u;bottom:24u;z-index:3;font-size:11u;letter-spacing:.12em;color:var(--gd);text-transform:uppercase}\
+.bootov .hud{border-left:5px double var(--gd);padding-left:26u;display:flex;flex-direction:column;gap:14u;min-height:0}\
+.bootov .pl{width:100%;height:auto;max-height:260u;display:block;overflow:visible}\
+.bootov .pl .rim{fill:none;stroke:var(--eb);stroke-width:1.3}.bootov .pl .lat{fill:none;stroke:#244a73;stroke-width:.8}\
+.bootov .pl .lon{fill:none;stroke:var(--eb);stroke-width:.8;opacity:.85;animation:lon 8s linear infinite}\
+@keyframes lon{0%,100%{rx:66px}50%{rx:1px}}\
+.bootov .pl .cr path{stroke:var(--o);stroke-width:1.4;fill:none}\
+.bootov .pl .pn{fill:var(--eb);font:9px "Share Tech Mono",monospace;text-anchor:middle;letter-spacing:.24em}\
+.bootov .pl .bp{fill:var(--o);animation:bpl 1.4s ease-in-out infinite}.bootov .pl .bpr{fill:none;stroke:var(--o);stroke-width:.8}\
+@keyframes bpl{50%{opacity:.3}}\
+.bootov .hh{display:grid;grid-template-columns:1fr 1fr;gap:10u 16u}\
+.bootov .g span{display:block;color:var(--gd);letter-spacing:.16em;font-size:10u;margin-bottom:2u}\
+.bootov .g b{font:400 16u "Share Tech Mono",var(--n);color:var(--gb);display:block;margin-bottom:4u;white-space:nowrap}\
+.bootov .g i{display:block;height:3u;background:#18181b}.bootov .g u{display:block;height:100%;width:0;background:var(--g);text-decoration:none}\
+.bootov .mp .cap,.bootov .lgb .cap{font-size:10u;letter-spacing:.16em;color:var(--gd);margin-bottom:6u}\
+.bootov .cells{display:grid;grid-template-columns:repeat(24,1fr);gap:2u}.bootov .cells s{display:block;aspect-ratio:1;background:#141417;text-decoration:none}.bootov .cells s.o{background:#4a4a46}.bootov .cells s.o.x{background:var(--g)}\
+.bootov .lg{font-size:11u;line-height:1.5;color:#6b6a65;overflow:hidden;height:130u;display:flex;flex-direction:column;justify-content:flex-end;text-transform:uppercase}.bootov .lg .rt{color:var(--o)}\
+.bootov .wt{margin-left:14u;font-size:13u;color:var(--gd);letter-spacing:.1em;text-transform:uppercase}\
+.phone .tst{--u:1px}.phone .bootov{--u:1px;padding:34px 20px 60px}.phone .bootov .bl{font-size:14px}.phone .bootov .bl.hx{font-size:9px}.phone .bootov .bh{font-size:16px}.phone .bootov .tb{font-size:11px;padding:3px 8px}.phone .bootov .vb{padding:9px 12px;font-size:13px}.phone .bootov .bhint{left:20px;right:20px;font-size:10px}.phone .bootov .bskip{right:14px;top:12px}\
+.phone .bootov .wr{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:8px}.phone .bootov .hud{order:-1;border:0;padding:0;margin-bottom:6px;gap:8px}.phone .bootov .hh{grid-template-columns:repeat(4,1fr);gap:6px 8px}.phone .bootov .pl,.phone .bootov .mp,.phone .bootov .lgb{display:none}.phone .bootov .g b{font-size:11px}.phone .bootov .g span{font-size:8px}.phone .bootov .wt{display:block;margin:6px 0 0}\
+.tst{--u:calc(100cqw / 1280);position:absolute;right:22u;top:16u;z-index:6;font:600 12u var(--n);letter-spacing:.14em;color:var(--ink);opacity:.62;padding:7u 14u;border:1px solid rgba(242,241,236,.38);background:rgba(11,11,12,.55);text-transform:uppercase;transition:opacity .15s,border-color .15s}.tst:hover{opacity:1;border-color:var(--ppl);color:var(--ppl)}\
+.bootov .pl .s1,.bootov .pl .s2,.bootov .pl .s3{opacity:0;transition:opacity 1.8s ease,transform 3s cubic-bezier(.5,0,.2,1)}\
+.bootov .pl .s1{transform:scale(1)}.bootov .pl .s2{transform:scale(.35) translate(0px,0px)}.bootov .pl .s3{transform:scale(.12)}\
+.bootov[data-loc="1"] .pl .s1{opacity:1}\
+.bootov[data-loc="2"] .pl .s1,.bootov[data-loc="3"] .pl .s1{opacity:0;transform:scale(3.2)}\
+.bootov[data-loc="2"] .pl .s2{opacity:1;transform:scale(1) translate(0px,0px)}\
+.bootov[data-loc="3"] .pl .s2{opacity:0;transform:scale(5) translate(-52.4px,-10.3px)}\
+.bootov[data-loc="3"] .pl .s3{opacity:1;transform:scale(1)}\
+.bootov .pl .gl{stroke:#3a3a40;stroke-width:.5;stroke-dasharray:1 3}.bootov .pl .sd{fill:var(--g);opacity:.95}\
+.bootov .pl .m0c{fill:none;stroke:var(--o);stroke-width:1;animation:bpl 1.6s ease-in-out infinite}.bootov .pl .m0d{fill:var(--o)}.bootov .pl .m0x{stroke:var(--o);stroke-width:1;fill:none}\
+.bootov .pl .m0t{fill:var(--o);font:7px "Share Tech Mono",monospace;letter-spacing:.14em}.bootov .pl .ct{fill:var(--gd);font:6px "Share Tech Mono",monospace;letter-spacing:.14em}\
+.bootov .pl .sg{fill:rgba(255,210,63,.18)}.bootov .pl .sc{fill:var(--o)}\
+.bootov .pl .or{fill:none;stroke:#3a3a3e;stroke-width:.7;stroke-dasharray:2 3}.bootov .pl .or.hot{stroke:var(--eb);stroke-width:1;stroke-dasharray:none}\
+.bootov .pl .pd{fill:#9a9a96}.bootov .pl .pd.me{fill:var(--eb)}\
+.bootov .loc{display:flex;flex-direction:column;gap:3u;min-height:48u}\
+.bootov .lr{display:flex;justify-content:space-between;font-size:12u;letter-spacing:.14em;opacity:0;transform:translateX(8u);transition:opacity .8s,transform .8s;border-bottom:1px solid #1d1d20;padding-bottom:3u}.bootov .lr span{color:var(--gd)}.bootov .lr b{font-weight:400;color:var(--gb)}.bootov .lr.r3 b{color:var(--eb)}\
+.bootov[data-loc="1"] .lr.r1,.bootov[data-loc="2"] .lr.r1,.bootov[data-loc="3"] .lr.r1,.bootov[data-loc="2"] .lr.r2,.bootov[data-loc="3"] .lr.r2,.bootov[data-loc="3"] .lr.r3{opacity:1;transform:none}\
+.phone .bootov .loc{display:none}\
+@media (prefers-reduced-motion:reduce){.bootov,.bootov *,.bootov::after{animation:none!important}.bootov .bl{text-shadow:none}}';
+function allCSS(){ var s=CSS_SRC+SHARED; VAR.forEach(function(v){ s+='\n'+v.css }); s+='\n'+selCSS(); return u2css(s) }
+function selCSS(){ var s='', N=5, i;
+  for(i=0;i<N;i++){
+    s+='.stage[data-sel="'+i+'"] .pane[data-for="'+i+'"]{display:block}';
+    s+='.stage[data-sel="'+i+'"] .v3 .mk.big{transform:rotate('+(i*72-45)+'deg)}';
+    s+='.stage[data-sel="'+i+'"] .v3 .ln'+i+'{stroke:#FFD23F;stroke-width:2}';
+    s+='.v3 .pt:nth-of-type('+(i+1)+'){}';
+  }
+  /* phone order for the ring variant: the items keep their index as --k */
+  return s }
+function build(){ document.getElementById('css-live').textContent=allCSS() }
+
+function stageHTML(vi,small){ var V=VAR[vi-1], cls='stage'+(S.frame==='phone'&&!small?' phone':'');
+  return '<div class="'+cls+'" data-v="'+vi+'" data-sel="'+S.sel+'" data-lay="'+S.lay+'">'+V.r().replace(/style="([^"]*)"/g,function(m,s){ return 'style="'+u2css(s)+'"' })+'<button class="tst" type="button">▶ '+(S.lang==='ru'?'Тест-плей':'Test play')+'</button></div>' }
+function fixPhoneK(root){ root.querySelectorAll('.it[data-i]').forEach(function(e){ e.style.setProperty('--k',e.getAttribute('data-i')) }) }
+function updateSel(root){ if(root.getAttribute('data-sel')!==String(S.sel)) PULSE.at=performance.now(); root.setAttribute('data-sel',S.sel); root.querySelectorAll('.it[data-i]').forEach(function(e){ e.classList.toggle('on',+e.getAttribute('data-i')===S.sel) }) }
+function render(){ bootKill();
+  var single=S.view==='single', host=document.getElementById('host'), grid=document.getElementById('grid');
+  if(S.sel>=0&&items()[S.sel]&&items()[S.sel].off) S.sel=firstOn();
+  host.hidden=!single; grid.hidden=single; document.getElementById('info').hidden=!single; document.getElementById('hint').hidden=!single;
+  if(single){ host.innerHTML=stageHTML(S.v); var st=host.firstChild; fixPhoneK(st); updateSel(st); initCv(st,true);
+    var V=VAR[S.v-1]; document.getElementById('info').innerHTML='<h2>'+S.v+'. '+V.n+'</h2>'+V.d+'<div class="tags"><span><b>+</b> '+V.pro+'</span><span><b>−</b> '+V.con+'</span></div>';
+    S.boot=false; if(S.bootov){ S.bootov=false; playBoot() } }
+  else { grid.innerHTML=VAR.map(function(V,i){ return '<button class="gc" data-open="'+(i+1)+'"><div class="cap">'+(i+1)+' · '+V.n+'</div>'+stageHTML(i+1,true)+'</button>' }).join('');
+    grid.querySelectorAll('.stage').forEach(function(st){ fixPhoneK(st); updateSel(st); initCv(st,false) }) }
+  document.querySelectorAll('[data-k]').forEach(function(b){ var k=b.dataset.k, v=b.dataset.v, cur=k==='save'?(S.save?'1':'0'):String(S[k]); b.classList.toggle('on',cur===v) });
+  document.querySelectorAll('[data-name]').forEach(function(b){ b.classList.toggle('on',TXT.en.pult===b.dataset.name) });
+  document.querySelectorAll('#gv .pill').forEach(function(b){ b.classList.toggle('on',S.view==='single'&&+b.dataset.n===S.v) });
+}
+/* ---------- the start-up terminal (design/INTRO-DRAFT.md, 22.10): an old computer waking up. It hums, flickers, whistles, the letters fall apart, a panel of live metrics never stops, and it still boots ---------- */
+var BTXT={
+  en:{skip:'skip',hint:'choose a command (1–4) · click or space finishes a line · Esc leaves',refuse:'refused: {r}.',mt:'memory test',mtEnd:'user memory ........ none',wait:'awaiting command',
+      hud:{pwr:'POWER',temp:'CORE',mem:'MEMORY',bus:'BUS LOAD',fan:'FAN',sys:'SYSTEMS',up:'UPTIME',map:'MEMORY MAP',log:'LOG'},
+      pre:[['l','cm','** {name} 4.39 · cold start **'],['l','','power rail A ........ 12.04 V  ok'],['l','','power rail B ........  5.01 V  ok'],['l','','mains ............... present'],['l','','battery bank ........ 41 %  charging'],['w',300],['t','self-test',1300],['loc',1,1800],['l','','position ........ sector 00/AE · fix'],
+           ['mem'],['l','','prepared commands ... found 24'],['t','load 1/6 · air',450],['t','load 2/6 · hatches',450],['t','load 3/6 · stores',450],['t','load 4/6 · yards',450],['t','load 5/6 · capsules',450],['t','load 6/6 · translation',450],['l','ok','prepared commands ... 24 loaded'],['loc',2,2600],['l','','system ......... no name in base · 1 star'],
+           ['l','','clock ................ no source · set 0000.00.00'],['l','','bus scan ............. 14 devices'],['l','f','bus 7: timeout'],['t','bus 7: retry',700],['l','ok','bus 7: ok'],['loc',3,3400],['l','ok','planet ......... earth · orbit 3 · surface'],['l','','sensor net ........... 212 nodes · 0 reply'],['l','f','systems offline ...... 6'],['w',350]],
+      sys:[{n:'air',f:'air: filters clogged',sig:'air',vs:[['clean',1],['purge','purge needs clean filters'],['seal','sealed air does not move'],['disable','air is already stalled']],ok:'air: clear',diag:['scan air ... codes E12 E13 E40','fan 1: stalled · fan 2: stalled','particulates 9.4 mg/m3 (limit 2.0)'],init:['fan 1 ........ 1180 rpm','fan 2 ........ 1204 rpm','pressure ..... 0.71 atm','particulates . 1.1 mg/m3'],log:['air.fan1 1180 rpm','air.fan2 1204 rpm','air.press 0.71']},
+           {n:'spaceport hatches',f:'hatches: sealed',sig:'hatch',vs:[['open','no hydraulic pressure'],['pressurize',1],['lock','already sealed'],['disable','hatches are not running']],ok:'hatches: open',diag:['hydraulics ... 0 bar','actuators 1–8: no response','seal pressure ... 0.00 atm'],init:['hydraulics ... 210 bar','actuators 1–8 .. ok','hatch travel ... 0 → 100 %'],log:['hatch.hyd 210 bar','hatch.act 8/8 ok','hatch.seal ok']},
+           {n:'warehouses',f:'warehouses: ledger stale',sig:'tape',vs:[['erase','the records are all there is'],['archive','a mismatched ledger cannot be archived'],['recount',1],['seal','sealed stores cannot be counted']],ok:'warehouses: ledger updated',diag:['ledger checksum ... mismatch','last entry ... unknown','records ... 1204 · unverified'],init:['reading 1204 records','mismatches ... 17 → 0','metal · rations · fuel · parts ... counted'],log:['ledger 1204 rec','ledger crc ok','stock counted']},
+           {n:'shipyards',f:'shipyards: idle',sig:'yard',vs:[['feed','tool heads are cold: material would jam'],['clear','cradles are already empty'],['stop','already idle'],['warm up',1]],ok:'shipyards: running',diag:['cradles 1–4 ... idle','material feed ... off','tool heads ... cold'],init:['tool heads ... 240 °C','cradles 1–4 ... ready','feed ... on'],log:['yard.tool 240 C','yard.cradle 4/4','yard.feed on']},
+           {n:'capsules',f:'capsules: 128 sealed',sig:'cap',vs:[['open','occupied and cold: not first'],['drain coolant','occupied: not now'],['wake',1],['seal','already sealed']],ok:'capsules: open · 128',diag:['sealed units ... 128','coolant ... 4 °C','occupied ... 128'],init:['warm-up ... 4 → 36 °C','locks ... released','name plates ... 128 read'],log:['cap.temp 36 C','cap.lock 128 open','cap.plates 128']},
+           {n:'translation',f:'translation: offline',sig:'tr',vs:[['translate','no module loaded'],['mute','the channel is already silent'],['train','nothing to train yet'],['link',1]],ok:'translation: alexandra online',diag:['module ... offline','channel ... closed','speech of people ... not parsed by this unit'],init:['module ... loaded','channel ... open','voice ... calibrating'],log:['tr.module ok','tr.channel open','tr.voice cal']}],
+      her:'alexandra › I am here. I will translate.',
+      logs:['bus {n} poll ok','sensor {n} ok','chk 0x{h} ok','mem page {n} mapped','clk tick {n}','link {n} ack','thermal {n} ok'],retry:'bus {n} retry'},
+  ru:{skip:'пропустить',hint:'выберите команду (1–4) · клик или пробел — допечатать · Esc — выйти',refuse:'отказ: {r}.',mt:'проверка памяти',mtEnd:'память пользователя .. нет',wait:'жду команду',
+      hud:{pwr:'ПИТАНИЕ',temp:'ЯДРО',mem:'ПАМЯТЬ',bus:'ШИНА',fan:'ВЕНТ.',sys:'СИСТЕМЫ',up:'РАБОТА',map:'КАРТА ПАМЯТИ',log:'ЖУРНАЛ'},
+      pre:[['l','cm','** {name} 4.39 · холодный пуск **'],['l','','шина питания A ...... 12.04 В  ок'],['l','','шина питания B ......  5.01 В  ок'],['l','','сеть ................. есть'],['l','','батарея ............... 41 %  заряд'],['w',300],['t','самопроверка',1300],['loc',1,1800],['l','','позиция ........ сектор 00/AE · фиксация'],
+           ['mem'],['l','','заготовленные команды ... найдено 24'],['t','загрузка 1/6 · воздух',450],['t','загрузка 2/6 · затворы',450],['t','загрузка 3/6 · склады',450],['t','загрузка 4/6 · верфи',450],['t','загрузка 5/6 · капсулы',450],['t','загрузка 6/6 · перевод',450],['l','ok','заготовленные команды ... 24 загружено'],['loc',2,2600],['l','','система ........ имени в базе нет · 1 звезда'],
+           ['l','','часы ................. нет источника · 0000.00.00'],['l','','опрос шины .......... 14 устройств'],['l','f','шина 7: нет ответа'],['t','шина 7: повтор',700],['l','ok','шина 7: ок'],['loc',3,3400],['l','ok','планета ........ земля · орбита 3 · поверхность'],['l','','сеть датчиков ........ 212 узлов · 0 ответов'],['l','f','системы отключены ... 6'],['w',350]],
+      sys:[{n:'воздух',f:'воздух: фильтры забиты',sig:'air',vs:[['очистить',1],['продуть','продувка требует чистых фильтров'],['закрыть','закрытый воздух не движется'],['отключить','воздух и так стоит']],ok:'воздух: чисто',diag:['скан воздуха ... коды E12 E13 E40','вентилятор 1: стоит · 2: стоит','взвесь 9.4 мг/м3 (норма 2.0)'],init:['вентилятор 1 ... 1180 об/мин','вентилятор 2 ... 1204 об/мин','давление ....... 0.71 атм','взвесь ......... 1.1 мг/м3'],log:['воздух.вент1 1180','воздух.вент2 1204','воздух.давл 0.71']},
+           {n:'затворы космопорта',f:'затворы: закрыты',sig:'hatch',vs:[['открыть','нет давления в гидравлике'],['наддуть',1],['запереть','уже заперты'],['отключить','затворы не работают']],ok:'затворы: открыты',diag:['гидравлика ... 0 бар','приводы 1–8: нет ответа','давление уплотнения ... 0.00 атм'],init:['гидравлика ... 210 бар','приводы 1–8 .. ок','ход затвора ... 0 → 100 %'],log:['затв.гидр 210 бар','затв.прив 8/8 ок','затв.уплотн ок']},
+           {n:'склады',f:'склады: учёт устарел',sig:'tape',vs:[['стереть','записи — это всё, что есть'],['архивировать','несошедшийся учёт не архивируют'],['пересчитать',1],['опечатать','опечатанное не пересчитать']],ok:'склады: учёт обновлён',diag:['сумма учёта ... не сходится','последняя запись ... неизвестна','записей ... 1204 · не проверены'],init:['чтение 1204 записей','расхождений ... 17 → 0','металл · рационы · топливо · детали ... сосчитаны'],log:['учёт 1204 зап','учёт сумма ок','склад сосчитан']},
+           {n:'верфи',f:'верфи: простаивают',sig:'yard',vs:[['подать','резцы холодные: материал встанет'],['очистить','стапели и так пусты'],['остановить','и так простаивают'],['прогреть',1]],ok:'верфи: работают',diag:['стапели 1–4 ... простой','подача материала ... выкл','резцы ... холодные'],init:['резцы ... 240 °C','стапели 1–4 ... готовы','подача ... вкл'],log:['верфь.резцы 240 C','верфь.стапель 4/4','верфь.подача вкл']},
+           {n:'капсулы',f:'капсулы: 128 закрыты',sig:'cap',vs:[['открыть','заняты и холодны: не с этого'],['слить хладагент','заняты: не сейчас'],['разбудить',1],['закрыть','уже закрыты']],ok:'капсулы: открыты · 128',diag:['закрытых блоков ... 128','хладагент ... 4 °C','заняты ... 128'],init:['прогрев ... 4 → 36 °C','замки ... сняты','таблички ... 128 прочитано'],log:['капс.темп 36 C','капс.замки 128','капс.таблички 128']},
+           {n:'перевод',f:'перевод: отключён',sig:'tr',vs:[['переводить','модуль не загружен'],['заглушить','канал и так молчит'],['обучить','пока нечего обучать'],['подключить',1]],ok:'перевод: Александра на связи',diag:['модуль ... отключён','канал ... закрыт','речь людей ... этот блок не разбирает'],init:['модуль ... загружен','канал ... открыт','голос ... настройка'],log:['перевод.модуль ок','перевод.канал открыт','перевод.голос наст']}],
+      her:'Александра › Я здесь. Я буду переводить.',
+      logs:['шина {n}: опрос ок','датчик {n}: ок','сумма 0x{h}: ок','страница памяти {n}: есть','такт {n}','связь {n}: ответ','тепло {n}: ок'],retry:'шина {n}: повтор'}
+};
+var BS=1;
+var NOISE=[1,.85,.66,.48,.32,.16,0], GLY='▒░▓█#@%&?/\\<>|01ΞΨ§¤µ¦ƒ';
+var BT={timers:[],run:0,fin:null,ask:null,busy:false,box:null,q:null,ov:null,ns:1,act:false,au:null,tick:null,hud:null,lt:null,h:null,pool:[],sysN:0};
+
+/* --- sound: a fan, a 50 Hz buzz, a whining disk; it rises when the machine works and calms as the systems come on. Every system answers with its own sound --- */
+function auStart(){ try{ if(!S.sound||BT.au) return;
+  var c=new (window.AudioContext||window.webkitAudioContext)(), m=c.createGain(), i, nb=c.createBuffer(1,c.sampleRate*2,c.sampleRate), d=nb.getChannelData(0);
+  for(i=0;i<d.length;i++) d[i]=Math.random()*2-1;
+  m.gain.value=0.8; m.connect(c.destination);
+  var ns=c.createBufferSource(); ns.buffer=nb; ns.loop=true; var bp=c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value=360; bp.Q.value=.8; var fan=c.createGain(); fan.gain.value=0; ns.connect(bp); bp.connect(fan); fan.connect(m); ns.start();
+  var hu=c.createOscillator(); hu.type='sawtooth'; hu.frequency.value=50; var hl=c.createBiquadFilter(); hl.type='lowpass'; hl.frequency.value=140; var hg=c.createGain(); hg.gain.value=0; hu.connect(hl); hl.connect(hg); hg.connect(m); hu.start();
+  var wh=c.createOscillator(); wh.type='sine'; wh.frequency.value=70; var wg=c.createGain(); wg.gain.value=0; wh.connect(wg); wg.connect(m); wh.start();
+  BT.au={c:c,m:m,nb:nb,bp:bp,fan:fan,hg:hg,wh:wh,wg:wg};
+  var t=c.currentTime;
+  var th=c.createOscillator(), tg=c.createGain(); th.frequency.value=64; tg.gain.setValueAtTime(.16,t); tg.gain.exponentialRampToValueAtTime(.0005,t+.3); th.connect(tg); tg.connect(m); th.start(t); th.stop(t+.35); auClick(.1);
+  fan.gain.setTargetAtTime(.075,t+.1,.7); hg.gain.setTargetAtTime(.05,t+.1,.5);
+  wh.frequency.setValueAtTime(48,t+.15); wh.frequency.exponentialRampToValueAtTime(118,t+2.2); wg.gain.setValueAtTime(0,t+.1); wg.gain.linearRampToValueAtTime(.05,t+1.4); wg.gain.linearRampToValueAtTime(.03,t+2.6);
+ }catch(e){ console.error('audio',e); BT.au=null } }
+function auLevel(){ var a=BT.au; if(!a) return; var t=a.c.currentTime, ns=BT.ns, w=BT.act;
+  a.fan.gain.setTargetAtTime(.018+.04*ns+(w?.026:0),t,.25); a.bp.frequency.setTargetAtTime(240+(w?110:0),t,.3);
+  a.hg.gain.setTargetAtTime(.022+.026*ns,t,.3); a.wg.gain.setTargetAtTime(.012+.02*ns+(w?.02:0),t,.25); a.wh.frequency.setTargetAtTime(w?124:100-14*(1-ns),t,.35) }
+function auClick(v){ var a=BT.au; if(!a) return; var c=a.c, s=c.createBufferSource(), g=c.createGain(), t=c.currentTime; s.buffer=a.nb; g.gain.setValueAtTime(v,t); g.gain.exponentialRampToValueAtTime(.0005,t+.018); s.connect(g); g.connect(a.m); s.start(t,Math.random()*1.5,.03) }
+function auBeep(f,ms,vol){ var a=BT.au; if(!a) return; var c=a.c, o=c.createOscillator(), g=c.createGain(), t=c.currentTime, v=vol||.022; o.type='triangle'; o.frequency.value=f; g.gain.setValueAtTime(.0001,t); g.gain.linearRampToValueAtTime(v,t+.012); g.gain.setValueAtTime(v,t+ms/1000); g.gain.exponentialRampToValueAtTime(.0005,t+ms/1000+.04); o.connect(g); g.connect(a.m); o.start(t); o.stop(t+ms/1000+.06) }
+function auTone(type,f0,f1,dur,g,delay){ var a=BT.au; if(!a) return; var c=a.c, t=c.currentTime+(delay||0), o=c.createOscillator(), e=c.createGain();
+  o.type=type; o.frequency.setValueAtTime(f0,t); if(f1!==f0) o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  e.gain.setValueAtTime(.0001,t); e.gain.exponentialRampToValueAtTime(g,t+Math.min(.03,dur/3)); e.gain.exponentialRampToValueAtTime(.0001,t+dur); o.connect(e); e.connect(a.m); o.start(t); o.stop(t+dur+.05) }
+function auNoise(f0,f1,dur,g,q,delay){ var a=BT.au; if(!a) return; var c=a.c, t=c.currentTime+(delay||0), s=c.createBufferSource(), b=c.createBiquadFilter(), e=c.createGain();
+  s.buffer=a.nb; s.loop=true; b.type='bandpass'; b.Q.value=q||1.2; b.frequency.setValueAtTime(f0,t); b.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  e.gain.setValueAtTime(.0001,t); e.gain.exponentialRampToValueAtTime(g,t+dur*.3); e.gain.exponentialRampToValueAtTime(.0001,t+dur); s.connect(b); b.connect(e); e.connect(a.m); s.start(t,Math.random()); s.stop(t+dur+.05) }
+function auSig(k){ var i;
+  if(k==='air'){ auNoise(180,800,1.4,.07,.9); auTone('sine',80,180,1.3,.03) }
+  else if(k==='hatch'){ auTone('sawtooth',75,36,.9,.04); auTone('sine',60,38,.4,.14,.92); setTimeout(function(){ auClick(.1) },920) }
+  else if(k==='tape'){ for(i=0;i<16;i++) setTimeout(function(){ auClick(.02+Math.random()*.03) },i*45+Math.random()*30); setTimeout(function(){ auBeep(660,90,.02) },820) }
+  else if(k==='yard'){ for(i=0;i<7;i++) setTimeout(function(){ auClick(.026) },i*(240-i*22)); auTone('sine',110,260,1.2,.03) }
+  else if(k==='cap'){ auTone('sine',45,32,.5,.2); auTone('sine',110,110,1.6,.025,.3); auTone('sine',165,165,1.6,.02,.5) }
+  else if(k==='tr'){ [392,523,440,587,494].forEach(function(f,j){ auTone('triangle',f,f,.12,.02,j*.11) }); auTone('sine',523,523,1.6,.035,.6); auTone('sine',784,784,1.4,.018,.62) }
+  else auBeep(523,110,.03) }
+function auLoc(k){ if(k===1){ auTone('sine',196,262,.8,.03) } else if(k===2){ auTone('sine',262,330,1.2,.03); auTone('sine',392,392,1.4,.015,.3) } else { auTone('sine',330,440,1.6,.035); auTone('sine',660,660,1.8,.025,.9); auTone('sine',990,990,1.4,.012,.95) } }
+function auErr(){ auBeep(196,110,.035); setTimeout(function(){ auBeep(147,170,.035) },180) }
+function auPost(){ auBeep(620,140,.03) }
+function auSend(){ auClick(.03); auTone('triangle',392,392,.09,.05); auTone('triangle',587,587,.14,.05,.075) }
+function auDegauss(){ auTone('sine',55,22,.7,.22); auNoise(100,900,.5,.09,.6) }
+function auCalm(){ auTone('sine',220,220,2.6,.03,.1); auTone('sine',330,330,2.4,.022,.2); auTone('sine',440,440,2.0,.012,.35) }
+function auStop(){ var a=BT.au; BT.au=null; if(!a) return; try{ a.m.gain.setTargetAtTime(0,a.c.currentTime,.2) }catch(e){} setTimeout(function(){ try{ a.c.close() }catch(e){} },900) }
+
+/* --- the panel: power, core temperature, memory, bus, fan, uptime and a memory map that never stand still; a log that keeps writing --- */
+function planetSVG(){ var ru=S.lang==='ru', R=66, m='', i, g='', st='', rg=rng(37);
+  for(i=-5;i<=5;i++){ g+='<line x1="'+(i*20)+'" y1="-90" x2="'+(i*20)+'" y2="90" class="gl"/>' } for(i=-4;i<=4;i++){ g+='<line x1="-100" y1="'+(i*20)+'" x2="100" y2="'+(i*20)+'" class="gl"/>' }
+  for(i=0;i<46;i++) st+='<circle cx="'+((rg()-.5)*196).toFixed(1)+'" cy="'+((rg()-.5)*172).toFixed(1)+'" r="'+(.8+rg()*1.4).toFixed(1)+'" class="sd"/>';
+  var s1='<g class="s1">'+g+st+'<g class="mk0"><circle cx="18" cy="-6" r="7" class="m0c"/><circle cx="18" cy="-6" r="1.8" class="m0d"/><path d="M4 -6h8M24 -6h8M18 -20v8M18 0v8" class="m0x"/><text x="30" y="-12" class="m0t">'+(ru?'СЕКТОР 00/AE':'SECTOR 00/AE')+'</text></g><text x="-96" y="-82" class="ct">X 0412.7</text><text x="96" y="-82" class="ct" text-anchor="end">Y 0087.2</text><text x="-96" y="86" class="ct">'+(ru?'СЕТКА 1:1000':'GRID 1:1000')+'</text></g>';
+  var oc='', rs=[26,44,64,88], ds='';
+  rs.forEach(function(r,k){ oc+='<ellipse cx="0" cy="0" rx="'+r+'" ry="'+(r*.28).toFixed(1)+'" class="or'+(k===2?' hot':'')+'"/>'; var an=[1.1,4.0,.61,2.4][k]; ds+='<circle cx="'+(r*Math.cos(an)).toFixed(1)+'" cy="'+(r*.28*Math.sin(an)).toFixed(1)+'" r="'+(k===2?2.6:1.6)+'" class="pd'+(k===2?' me':'')+'"/>' });
+  var s2='<g class="s2"><circle r="14" class="sg"/><circle r="4.6" class="sc"/>'+oc+ds+'<text x="0" y="-22" class="m0t" text-anchor="middle">'+(ru?'СИСТЕМА':'SYSTEM')+'</text></g>';
+  for(i=-3;i<=3;i++){ var y=i*R/4, rx=Math.sqrt(R*R-y*y); m+='<ellipse cx="0" cy="'+y.toFixed(1)+'" rx="'+rx.toFixed(1)+'" ry="'+(rx*.16).toFixed(1)+'" class="lat"/>' }
+  for(i=0;i<4;i++) m+='<ellipse cx="0" cy="0" rx="'+R+'" ry="'+R+'" class="lon" style="animation-delay:-'+(i*2)+'s"/>';
+  var s3='<g class="s3"><circle r="'+R+'" class="rim"/>'+m+'<g class="blips"></g><g class="cr"><path d="M-96 -82h14M-89 -89v14"/><path d="M82 -82h14M89 -89v14"/><path d="M-96 78h14M-89 71v14"/><path d="M82 78h14M89 71v14"/></g><text x="0" y="86" class="pn">'+(ru?'ЗЕМЛЯ':'EARTH')+'</text></g>';
+  return '<svg class="pl" viewBox="-100 -90 200 180" aria-hidden="true">'+s1+s2+s3+'</svg>' }
+function locRows(){ var ru=S.lang==='ru'; return '<div class="loc"><div class="lr r1"><span>'+(ru?'СЕКТОР':'SECTOR')+'</span><b>00/AE</b></div><div class="lr r2"><span>'+(ru?'СИСТЕМА':'SYSTEM')+'</span><b>'+(ru?'ИМЕНИ НЕТ':'NO NAME')+'</b></div><div class="lr r3"><span>'+(ru?'ПЛАНЕТА':'PLANET')+'</span><b>'+(ru?'ЗЕМЛЯ':'EARTH')+'</b></div></div>' }
+var BLIPS=[[-30,-25],[22,-38],[40,12],[-8,32],[-44,14],[10,-4]];
+function addBlip(k){ var g=BT.ov&&BT.ov.querySelector('.blips'), p=BLIPS[k-1]; if(!g||!p) return; g.insertAdjacentHTML('beforeend','<circle cx="'+p[0]+'" cy="'+p[1]+'" r="7" class="bpr"/><circle cx="'+p[0]+'" cy="'+p[1]+'" r="2.6" class="bp"/>') }
+function hudHTML(X){ var H=X.hud, g=function(k,l){ return '<div class="g"><span>'+l+'</span><b data-g="'+k+'">--</b><i><u data-b="'+k+'"></u></i></div>' }, cells='', i;
+  for(i=0;i<72;i++) cells+='<s></s>';
+  return '<div class="hud">'+planetSVG()+locRows()+'<div class="hh">'+g('pwr',H.pwr)+g('mem',H.mem)+g('fan',H.fan)+'<div class="g"><span>'+H.sys+'</span><b data-g="sys">0 / 6</b></div></div>'+
+    '<div class="mp"><div class="cap">'+H.map+'</div><div class="cells">'+cells+'</div></div><div class="lgb"><div class="cap">'+H.log+'</div><div class="lg"></div></div></div>' }
+function hudTick(){ var ov=BT.ov; if(!ov) return; var h=BT.h, on=ov.classList.contains('on'), ns=BT.ns, act=BT.act, t=(Date.now()-h.t0)/1000, put=function(k,txt,pc){ var b=ov.querySelector('[data-g="'+k+'"]'), u=ov.querySelector('[data-b="'+k+'"]'); if(b) b.textContent=txt; if(u&&pc!=null) u.style.width=Math.max(0,Math.min(100,pc))+'%' };
+  h.pw+=((on?1:0)-h.pw)*.08; h.tp+=((22+17*Math.min(1,Math.max(0,t-1.7)/30)+(act?3:0))-h.tp)*.03; h.mm+=(BT.memT-h.mm)*.12; h.bs+=((on?16+ns*26+(act?30:0):0)+Math.random()*12-h.bs)*.25; h.fn+=((on||t>.3?1300+1100*ns+(act?420:0):0)*(t>.3?1:0)-h.fn)*.07;
+  var rus=S.lang==='ru';
+  put('pwr',(12.04*h.pw+(Math.random()-.5)*(.05+ns*.5)*h.pw).toFixed(2)+(rus?' В':' V'),h.pw*100-ns*Math.random()*8);
+  put('temp',h.tp.toFixed(1)+' °C',(h.tp-20)/30*100); put('mem',Math.round(h.mm*100)+' %',h.mm*100); put('bus',Math.round(h.bs)+' %',h.bs);
+  put('fan',(Math.round(h.fn/10)*10)+(rus?' об/мин':' rpm'),h.fn/2600*100); put('sys',BT.sysN+' / 6',null); var s=Math.max(0,Math.floor(t-1.7)); put('up',('0'+Math.floor(s/60)).slice(-2)+':'+('0'+(s%60)).slice(-2),null);
+  var cells=ov.querySelectorAll('.cells s'), lit=Math.round(h.mm*cells.length), k;
+  for(k=0;k<cells.length;k++){ var on_=k<lit; if(cells[k]._o!==on_){ cells[k]._o=on_; cells[k].className=on_?'o':'' } }
+  for(k=0;k<3;k++){ var c=cells[(Math.random()*Math.max(1,lit))|0]; if(c){ c.classList.toggle('x') } }
+  var w=ov.querySelector('.wt'); if(w&&h.ask) w.textContent=BTXT[S.lang].wait+' · '+Math.floor((Date.now()-h.ask)/1000)+' s '+'|/-\\'.charAt(Math.floor(Date.now()/160)%4) }
+function ts(){ var t=(Date.now()-BT.h.t0)/1000-1.7; if(t<0) t=0; return ('0'+Math.floor(t/60)).slice(-2)+':'+('0'+Math.floor(t%60)).slice(-2)+'.'+Math.floor((t%1)*10) }
+function logPush(txt,cls){ var lg=BT.ov&&BT.ov.querySelector('.lg'); if(!lg) return; var d=document.createElement('div'); if(cls) d.className=cls; d.textContent='['+ts()+'] '+txt; lg.appendChild(d); while(lg.children.length>11) lg.removeChild(lg.firstChild) }
+function logLoop(){ if(!BT.ov) return; var X=BTXT[S.lang], on=BT.ov.classList.contains('on'); if(on){ var tpl, r=Math.random(), n=1+((Math.random()*220)|0), hx=((Math.random()*65536)|0).toString(16).toUpperCase();
+    if(BT.pool.length&&r<.35) tpl=BT.pool[(Math.random()*BT.pool.length)|0]; else if(r>.93) tpl=X.retry; else tpl=X.logs[(Math.random()*X.logs.length)|0];
+    logPush(tpl.replace('{n}',n).replace('{h}',hx),tpl===X.retry?'rt':'') }
+  BT.lt=setTimeout(logLoop,(BT.act?230:(on?520:900))*(.6+Math.random()*.9)) }
+function glyph(){ return GLY.charAt((Math.random()*GLY.length)|0) }
+function scrambleAll(){ var box=BT.box; if(!box) return; var ns=BT.ns+(BT.act?.45:0), k;
+  for(k=0;k<box.children.length;k++){ var d=box.children[k], t=d._t; if(t==null||d._typing) continue;
+    if(ns<=0.01){ if(d.textContent!==t) d.textContent=t; d.classList.remove('tear'); continue }
+    var o='', p=ns*.04, i, c; for(i=0;i<t.length;i++){ c=t.charAt(i); o+=(c!==' '&&Math.random()<p)?glyph():c } d.textContent=o;
+    if(Math.random()<ns*.05){ d.classList.add('tear'); (function(x){ setTimeout(function(){ x.classList.remove('tear') },110) })(d) } }
+  if(BT.ov) BT.ov.classList.toggle('act',BT.act) }
+function setNoise(n){ BT.ns=NOISE[Math.min(6,n)]; auLevel() }
+function clearAll(){ BT.run++; BT.timers.forEach(clearTimeout); BT.timers=[]; clearInterval(BT.tick); clearInterval(BT.hud); clearTimeout(BT.lt); BT.tick=BT.hud=BT.lt=null; BT.fin=null; BT.ask=null; BT.act=false; auStop() }
+function bootStop(){ DIVE.at=Infinity; maDuck(false); clearAll(); var o=document.querySelector('.bootov'); BT.ov=null; if(!o) return; o.classList.add('fin'); setTimeout(function(){ if(o.parentNode) o.parentNode.removeChild(o) },520) }
+function bootKill(){ DIVE.at=Infinity; clearAll(); BT.ov=null }
+function newLine(cls,text){ var box=BT.box, d=document.createElement('div'); d.className='bl '+cls; d._t=text; d._typing=true; box.appendChild(d); while(box.scrollHeight>box.clientHeight+2&&box.children.length>2) box.removeChild(box.firstChild); return d }
+function btype(cls,text,done,sp){ var d=newLine(cls,text), run=BT.run, i=0, tm, b=(sp?sp*2.0:26)/BS;
+  function fin(){ if(run!==BT.run) return; clearTimeout(tm); d._typing=false; d.textContent=text; BT.fin=null; if(done) BT.timers.push(setTimeout(done,(sp?130:380)/BS)) }
+  function tick(){ if(run!==BT.run) return; i++; var bad=Math.random()<BT.ns*.4&&text.charAt(i-1)!==' '; d.textContent=text.slice(0,i-1)+(bad?glyph():text.charAt(i-1)); if(i%2===0) auClick(.006); if(i>=text.length){ fin(); return } tm=setTimeout(tick,b+Math.random()*b*1.3); BT.timers.push(tm) }
+  BT.fin=fin; tick() }
+function memtest(X,done){ var d=newLine('',''), run=BT.run, n=0, tm; d._typing=true;
+  function fin(){ if(run!==BT.run) return; clearTimeout(tm); d._typing=false; d._t=X.mtEnd; d.textContent=X.mtEnd; BT.memT=.3; auPost(); BT.fin=null; BT.timers.push(setTimeout(done,400)) }
+  function tick(){ if(run!==BT.run) return; n+=16+((Math.random()*16)|0); if(n>=640){ fin(); return } BT.memT=n/640*.3; d.textContent=X.mt+' '+('0000'+n).slice(-4)+' K'; auClick(.012); if(((n/16)|0)%3===0) auBeep(180+n*.5,22,.012); tm=setTimeout(tick,52/BS); BT.timers.push(tm) }
+  BT.fin=fin; tick() }
+function think(label,ms,done,mem){ ms=ms/BS; var run=BT.run, th=newLine('th',''), hx=newLine('hx',''), t0=Date.now(), p=0, tm, ck, m0=BT.memT;
+  th._typing=true; hx._typing=true; BT.act=true; auLevel();
+  ck=setInterval(function(){ if(run!==BT.run){ clearInterval(ck); return } auClick(.014+Math.random()*.02) },70+((Math.random()*60)|0)); BT.timers.push(ck);
+  function bar(v){ var n=Math.round(v/5); return label+' ['+new Array(n+1).join('#')+new Array(21-n).join('.')+'] '+('  '+Math.round(v)).slice(-3)+'%' }
+  function fin(){ if(run!==BT.run) return; clearTimeout(tm); clearInterval(ck); th._typing=false; th._t=label+' ['+new Array(21).join('#')+'] ok'; th.textContent=th._t; if(hx.parentNode) hx.parentNode.removeChild(hx);
+    if(mem) BT.memT=mem; BT.act=false; BT.fin=null; auLevel(); BT.timers.push(setTimeout(done,200)) }
+  function tick(){ if(run!==BT.run) return; var f=(Date.now()-t0)/ms; if(f>=1){ fin(); return }
+    p=Math.min(99,p+Math.random()*(f<.5?9:5)); th.textContent=bar(p); if(mem) BT.memT=m0+(mem-m0)*Math.min(1,f); var s='',i; for(i=0;i<22;i++) s+=('0'+((Math.random()*256)|0).toString(16)).slice(-2).toUpperCase()+' '; hx.textContent=s;
+    tm=setTimeout(tick,55); BT.timers.push(tm) }
+  BT.fin=fin; tick() }
+function seq(items,fn,done){ var k=0; (function go(){ if(k>=items.length){ done(); return } var it=items[k++]; fn(it,go,k-1) })() }
+function bootAsk(s,next){ var X=BTXT[S.lang], q=BT.q, ov=BT.ov;
+  var chips=s.vs.map(function(v,i){ return '<button class="vb" type="button" data-vb="'+i+'"><i>'+(i+1)+'</i>'+v[0]+'</button>' }).join('');
+  q.innerHTML='<span class="pm">&gt;</span>'+chips+'<span class="wt"></span>'; BT.busy=false; BT.h.ask=Date.now();
+  BT.ask=function(i){ i=+i; var vv=s.vs[i]; if(!vv||BT.busy) return; BT.busy=true; BT.h.ask=0; q.innerHTML=''; auSend();
+    btype('cm','> '+vv[0],function(){
+      if(vv[1]===1){ BT.ask=null; var tt=(s.sig==='tr')?2400:1500;
+        think('│  '+vv[0]+' · '+s.n,tt,function(){
+          seq(s.init,function(line,go,ix){ btype('','├─ '+line,go,4) },function(){ var k=+ov.getAttribute('data-n')+1; ov.setAttribute('data-n',k); BT.sysN=k; setNoise(k); addBlip(k); BT.pool=BT.pool.concat(s.log);
+            try{ auSig(s.sig) }catch(e){ console.error(e) } if(k===6) auCalm(); btype('ok','└─ '+s.ok,next) }) }) }
+      else { auErr(); btype('no','│  '+X.refuse.replace('{r}',vv[1]),function(){ bootAsk(s,next) }) } }) } }
+function playBoot(){ var st=document.querySelector('#host .stage'); if(!st||S.view!=='single') return; maDuck(true);
+  bootKill(); var old=st.querySelector('.bootov'); if(old) old.parentNode.removeChild(old); var X=BTXT[S.lang], run=++BT.run;
+  st.insertAdjacentHTML('beforeend',u2css('<div class="bootov" data-n="0"><div class="wr"><div class="mn"><div class="bh">'+mark('')+'<span>'+T().pult+'</span><div class="tb">'+X.hud.up+' T <b data-g="up">00:00</b></div></div><div class="bo"></div><div class="bq"></div></div>'+hudHTML(X)+'</div><button class="bskip" type="button" data-bskip>'+X.skip+'</button><div class="bhint">'+X.hint+'</div></div>'));
+  var ov=st.querySelector('.bootov'); BT.ov=ov; BT.box=ov.querySelector('.bo'); BT.q=ov.querySelector('.bq'); BT.fin=null; BT.ask=null; BT.busy=false; BT.ns=1; BT.act=false; BT.memT=0; BT.sysN=0; BT.pool=[];
+  BT.h={t0:Date.now(),pw:0,tp:21,mm:0,bs:0,fn:0,ask:0}; auStart(); BT.tick=setInterval(scrambleAll,110); BT.hud=setInterval(hudTick,120); logLoop();
+  var q=[]; q.push(function(n){ BT.timers.push(setTimeout(function(){ ov.classList.add('on'); auDegauss(); n() },1700/BS)) });
+  var lastL=-1; X.pre.forEach(function(p,i){ if(p[0]==='l') lastL=i });
+  X.pre.forEach(function(p,pi){ var t=p[0], pf=pi===0?'':(pi===lastL?'└─ ':'├─ ');
+    if(t==='l') q.push(function(n){ btype(p[1],pf+p[2].replace('{name}',T().pult.toLowerCase()),n,5) });
+    else if(t==='w') q.push(function(n){ BT.timers.push(setTimeout(n,p[1]/BS)) });
+    else if(t==='t') q.push(function(n){ var m=/(\d)\/6/.exec(p[1]); think('│  '+p[1],p[2],n,m?(.3+.115*(+m[1])):0) });
+    else if(t==='mem') q.push(function(n){ memtest(X,n) });
+    else if(t==='loc') q.push(function(n){ ov.setAttribute('data-loc',p[1]); auLoc(p[1]); BT.timers.push(setTimeout(n,p[2])) }) });
+  X.sys.forEach(function(s){ q.push(function(n){ btype('f','■ '+s.f,n) }); s.diag.forEach(function(d,di){ q.push(function(n){ btype('',(di===s.diag.length-1?'└─ ':'├─ ')+d,n,4) }) }); q.push(function(n){ BT.timers.push(setTimeout(n,300/BS)) }); q.push(function(n){ bootAsk(s,n) }) });
+  q.push(function(n){ btype('cm',X.her,n) }); q.push(function(n){ BT.timers.push(setTimeout(bootStop,1800)) });
+  var k=0; (function go(){ if(run!==BT.run) return; var f=q[k++]; if(f) f(go) })() }
+function bootKey(e){ if(e.key==='Escape'){ bootStop(); return }
+  if(e.key===' '||e.key==='Enter'){ e.preventDefault(); if(BT.fin) BT.fin(); return }
+  if(/^[1-4]$/.test(e.key)&&BT.ask) BT.ask(+e.key-1) }
+document.addEventListener('visibilitychange',function(){ if(document.hidden) bootKill() }); window.addEventListener('pagehide',bootKill);
+
+function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.classList.add('on'); clearTimeout(toast.k); toast.k=setTimeout(function(){ t.classList.remove('on') },1600) }
+function act(i){ var it=items()[i]; if(!it||it.off) return;
+  if(it.id==='new'){ maClick('select'); var cvk=document.querySelector('#host canvas.cv2d'), Dk=cvk&&CVD[cvk.dataset.k]; if(Dk&&Dk.gl){ DIVE.at=performance.now(); setTimeout(playBoot,1300) } else playBoot(); return }
+  if(it.id==='lang'){ S.lang=S.lang==='en'?'ru':'en'; S.boot=true; render(); return }
+  if(it.id==='sound'){ S.sound=!S.sound; maStart(); maSet(); render(); return }
+  toast('→ '+it.label+'  (макет, ничего не запускается)') }
+
+document.getElementById('gv').innerHTML=VAR.map(function(V,i){ return '<button class="pill" data-n="'+(i+1)+'" title="'+V.n+'">'+(i+1)+'</button>' }).join('');
+document.addEventListener('click',function(e){ var t=e.target;
+  var nm=t.closest('[data-name]'); if(nm){ TXT.en.pult=nm.dataset.name; S.lang='en'; render(); return }
+  var vb=t.closest('[data-vb]'); if(vb){ if(BT.ask) BT.ask(vb.dataset.vb); return } if(t.closest('[data-bskip]')){ bootStop(); return } if(t.closest('.bootov')){ if(BT.fin) BT.fin(); return }
+  if(t.closest('.tst')){ toast((S.lang==='ru'?'Для тестировки: пропустить всё и открыть игру':'For testing: skip everything and open the game')+'  (макет)'); return }
+  var n=t.closest('[data-n]'); if(n){ S.v=+n.dataset.n; S.view='single'; S.boot=true; render(); return }
+  var k=t.closest('[data-k]'); if(k){ var key=k.dataset.k, v=k.dataset.v; if(key==='save') S.save=v==='1'; else if(key==='lang') S.lang=v; else S[key]=v; if(key!=='frame'&&key!=='view') S.boot=true; if(key==='view'&&S.view==='grid'&&false){} S.sel=firstOn(); render(); return }
+  var o=t.closest('[data-open]'); if(o){ S.v=+o.dataset.open; S.view='single'; S.boot=true; render(); window.scrollTo(0,0); return }
+  if(t.closest('#bootbtn')){ if(S.view!=='single') S.view='single'; render(); playBoot(); return }
+  var it=t.closest('.it[data-i]'); if(it&&S.view==='single'){ var i=+it.dataset.i; if(items()[i].off) return; S.sel=i; updateSel(it.closest('.stage')); act(i) } });
+document.addEventListener('mouseover',function(e){ if(S.view!=='single') return; var it=e.target.closest&&e.target.closest('.it[data-i]'); if(!it) return; var i=+it.dataset.i; if(items()[i].off||i===S.sel) return; S.sel=i; updateSel(it.closest('.stage')); maClick('hover') });
+document.addEventListener('keydown',function(e){ if(document.querySelector('.bootov')){ bootKey(e); return } if(S.view!=='single') return; var I=items(), n=I.length, i=S.sel, d=0;
+  if(e.key==='ArrowDown'||e.key==='ArrowRight') d=1; else if(e.key==='ArrowUp'||e.key==='ArrowLeft') d=-1;
+  else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(S.sel); return }
+  else if(/^[1-5]$/.test(e.key)){ var j=+e.key-1; if(!I[j].off){ S.sel=j; updateSel(document.querySelector('#host .stage')); act(j) } return }
+  else if(e.key===']'){ S.v=S.v%VAR.length+1; S.boot=true; render(); return } else if(e.key==='['){ S.v=(S.v+VAR.length-2)%VAR.length+1; S.boot=true; render(); return } else return;
+  e.preventDefault(); do{ i=(i+d+n)%n }while(I[i].off); S.sel=i; updateSel(document.querySelector('#host .stage')) });
+var T0=Date.now(); setInterval(function(){ var t=Math.floor((Date.now()-T0)/1000), s=('0'+Math.floor(t/3600)).slice(-2)+':'+('0'+Math.floor(t/60)%60).slice(-2)+':'+('0'+t%60).slice(-2); document.querySelectorAll('[data-clk]').forEach(function(e){ e.textContent=s }) },1000);
+build(); S.sel=firstOn(); render();
+</script>
+</body>
+</html>
