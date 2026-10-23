@@ -1,0 +1,136 @@
+{
+ "1": {
+  "class_type": "UNETLoader",
+  "inputs": {
+   "unet_name": "flux-2-klein-4b.safetensors",
+   "weight_dtype": "default"
+  }
+ },
+ "2": {
+  "class_type": "CLIPLoader",
+  "inputs": {
+   "clip_name": "qwen_3_4b.safetensors",
+   "type": "flux2",
+   "device": "default"
+  }
+ },
+ "3": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "flux2-vae.safetensors"
+  }
+ },
+ "4": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "text": "Cinematic 3D render, film still, ultra-wide 2.4:1, sleek stylized dark science fiction, minimal and elegant, matte black and glossy black surfaces, crisp white glowing light, deep shadows, very low-key. A dark circular control hall with a glossy black floor and curved walls of monitors showing small white and cyan metric graphs and meters. In the middle of the hall, levitating in mid-air, hangs the Helm: a large black hexagonal prism, a monolith, whose surface is divided into hexagonal panels glowing white along their edges, slowly turning. A single column of white light passes through it from the floor to the ceiling, brighter above and below the object. Crew in matching dark grey-olive coveralls with a yellow stripe on the shoulders sit at slim consoles around the room, seen from behind in shadow. In the foreground, seen from behind and small against the object, stand a slender woman with short slicked-back blonde hair in a light grey uniform with yellow stripes on the shoulders, and a tall man in a long dark coat. Strictly no visible faces, no text, no logos, not a cartoon, not gothic, not steampunk, not retro.",
+   "clip": [
+    "2",
+    0
+   ]
+  }
+ },
+ "5": {
+  "class_type": "ConditioningZeroOut",
+  "inputs": {
+   "conditioning": [
+    "4",
+    0
+   ]
+  }
+ },
+ "6": {
+  "class_type": "EmptyFlux2LatentImage",
+  "inputs": {
+   "width": 1536,
+   "height": 640,
+   "batch_size": 2
+  }
+ },
+ "7": {
+  "class_type": "Flux2Scheduler",
+  "inputs": {
+   "steps": 4,
+   "width": 1536,
+   "height": 640
+  }
+ },
+ "8": {
+  "class_type": "KSamplerSelect",
+  "inputs": {
+   "sampler_name": "euler"
+  }
+ },
+ "9": {
+  "class_type": "CFGGuider",
+  "inputs": {
+   "model": [
+    "1",
+    0
+   ],
+   "positive": [
+    "4",
+    0
+   ],
+   "negative": [
+    "5",
+    0
+   ],
+   "cfg": 1
+  }
+ },
+ "10": {
+  "class_type": "RandomNoise",
+  "inputs": {
+   "noise_seed": 8817
+  }
+ },
+ "11": {
+  "class_type": "SamplerCustomAdvanced",
+  "inputs": {
+   "noise": [
+    "10",
+    0
+   ],
+   "guider": [
+    "9",
+    0
+   ],
+   "sampler": [
+    "8",
+    0
+   ],
+   "sigmas": [
+    "7",
+    0
+   ],
+   "latent_image": [
+    "6",
+    0
+   ]
+  }
+ },
+ "12": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "11",
+    0
+   ],
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "13": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "filename_prefix": "lastberth/intro1_E2",
+   "images": [
+    "12",
+    0
+   ]
+  }
+ }
+}
