@@ -1,0 +1,136 @@
+{
+ "1": {
+  "class_type": "UNETLoader",
+  "inputs": {
+   "unet_name": "flux-2-klein-4b.safetensors",
+   "weight_dtype": "default"
+  }
+ },
+ "2": {
+  "class_type": "CLIPLoader",
+  "inputs": {
+   "clip_name": "qwen_3_4b.safetensors",
+   "type": "flux2",
+   "device": "default"
+  }
+ },
+ "3": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "flux2-vae.safetensors"
+  }
+ },
+ "4": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "text": "Photorealistic cinematic 3D render, film still, ultra-wide 2.4:1, dark and gritty gothic-industrial science fiction, worn black iron, tarnished brass and rust, oil and steam, practical lighting, very low-key, deep shadows, the only light comes from amber and cyan monitors and indicator lamps. The Helm is a squat grotesque cogitator altar in the middle of the hall: a hulking mass of black iron and brass cabinets, packed with dozens of small amber monitors, dials, valves and brass pipes, thick bundles of cables and tubes hanging down from the ceiling and plugged into it from every side, loose wires sticking out, steam venting. From a glass lens on its top a cone of cyan light projects up to the dark ceiling, where it forms a faint rotating hologram. Rows of monitor banks and consoles around the walls. Crew in matching dark grey-olive coveralls with a yellow stripe on the shoulders work at the consoles, seen from behind in shadow. In the foreground, seen from behind, stand a slender woman with short slicked-back blonde hair in a light grey uniform with yellow stripes on the shoulders, and a tall man in a long dark coat. Strictly no visible faces, no text, no logos, no skulls, no symbols, not a cartoon, not a comic.",
+   "clip": [
+    "2",
+    0
+   ]
+  }
+ },
+ "5": {
+  "class_type": "ConditioningZeroOut",
+  "inputs": {
+   "conditioning": [
+    "4",
+    0
+   ]
+  }
+ },
+ "6": {
+  "class_type": "EmptyFlux2LatentImage",
+  "inputs": {
+   "width": 1536,
+   "height": 640,
+   "batch_size": 2
+  }
+ },
+ "7": {
+  "class_type": "Flux2Scheduler",
+  "inputs": {
+   "steps": 4,
+   "width": 1536,
+   "height": 640
+  }
+ },
+ "8": {
+  "class_type": "KSamplerSelect",
+  "inputs": {
+   "sampler_name": "euler"
+  }
+ },
+ "9": {
+  "class_type": "CFGGuider",
+  "inputs": {
+   "model": [
+    "1",
+    0
+   ],
+   "positive": [
+    "4",
+    0
+   ],
+   "negative": [
+    "5",
+    0
+   ],
+   "cfg": 1
+  }
+ },
+ "10": {
+  "class_type": "RandomNoise",
+  "inputs": {
+   "noise_seed": 7700
+  }
+ },
+ "11": {
+  "class_type": "SamplerCustomAdvanced",
+  "inputs": {
+   "noise": [
+    "10",
+    0
+   ],
+   "guider": [
+    "9",
+    0
+   ],
+   "sampler": [
+    "8",
+    0
+   ],
+   "sigmas": [
+    "7",
+    0
+   ],
+   "latent_image": [
+    "6",
+    0
+   ]
+  }
+ },
+ "12": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "11",
+    0
+   ],
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "13": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "filename_prefix": "lastberth/intro1_D1",
+   "images": [
+    "12",
+    0
+   ]
+  }
+ }
+}
