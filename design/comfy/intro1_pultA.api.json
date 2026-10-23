@@ -1,0 +1,136 @@
+{
+ "1": {
+  "class_type": "UNETLoader",
+  "inputs": {
+   "unet_name": "flux-2-klein-4b.safetensors",
+   "weight_dtype": "default"
+  }
+ },
+ "2": {
+  "class_type": "CLIPLoader",
+  "inputs": {
+   "clip_name": "qwen_3_4b.safetensors",
+   "type": "flux2",
+   "device": "default"
+  }
+ },
+ "3": {
+  "class_type": "VAELoader",
+  "inputs": {
+   "vae_name": "flux2-vae.safetensors"
+  }
+ },
+ "4": {
+  "class_type": "CLIPTextEncode",
+  "inputs": {
+   "text": "Wide cinematic frame, ultra-wide 2.4:1, the control hall of a vast starship in a stylized retro-futurist design: heavy rounded forms, brushed steel and cream ceramic panels, thick cable trunks, chunky analog-looking monitors and dials, 1970s science fiction. At the centre rises a colossal stepped pyramid of black and brushed-steel machinery covered with rows of glowing amber indicator lights, the Helm, a giant supercomputer brain. From its flat top a column of blue light projects straight up into the high ceiling, where it spreads into a faint hologram of thin rings. Around the pyramid stands a ring of tall monitor walls with amber and blue graphs and meters. Small figures of the crew in matching grey-olive coveralls with a yellow stripe on the shoulders sit at their consoles, seen from behind in shadow. In the foreground, seen from behind, stand two figures: a slender woman with short slicked-back blonde hair in a light grey uniform with yellow stripes on the shoulders and sleeves, and next to her a tall man in a long dark coat. Strong graphic shapes, limited palette of teal, amber, cream and black, painterly, slightly hazy, strictly no visible faces, no text, no logos.",
+   "clip": [
+    "2",
+    0
+   ]
+  }
+ },
+ "5": {
+  "class_type": "ConditioningZeroOut",
+  "inputs": {
+   "conditioning": [
+    "4",
+    0
+   ]
+  }
+ },
+ "6": {
+  "class_type": "EmptyFlux2LatentImage",
+  "inputs": {
+   "width": 1536,
+   "height": 640,
+   "batch_size": 3
+  }
+ },
+ "7": {
+  "class_type": "Flux2Scheduler",
+  "inputs": {
+   "steps": 4,
+   "width": 1536,
+   "height": 640
+  }
+ },
+ "8": {
+  "class_type": "KSamplerSelect",
+  "inputs": {
+   "sampler_name": "euler"
+  }
+ },
+ "9": {
+  "class_type": "CFGGuider",
+  "inputs": {
+   "model": [
+    "1",
+    0
+   ],
+   "positive": [
+    "4",
+    0
+   ],
+   "negative": [
+    "5",
+    0
+   ],
+   "cfg": 1
+  }
+ },
+ "10": {
+  "class_type": "RandomNoise",
+  "inputs": {
+   "noise_seed": 4401
+  }
+ },
+ "11": {
+  "class_type": "SamplerCustomAdvanced",
+  "inputs": {
+   "noise": [
+    "10",
+    0
+   ],
+   "guider": [
+    "9",
+    0
+   ],
+   "sampler": [
+    "8",
+    0
+   ],
+   "sigmas": [
+    "7",
+    0
+   ],
+   "latent_image": [
+    "6",
+    0
+   ]
+  }
+ },
+ "12": {
+  "class_type": "VAEDecode",
+  "inputs": {
+   "samples": [
+    "11",
+    0
+   ],
+   "vae": [
+    "3",
+    0
+   ]
+  }
+ },
+ "13": {
+  "class_type": "SaveImage",
+  "inputs": {
+   "filename_prefix": "lastberth/intro1_pultA",
+   "images": [
+    "12",
+    0
+   ]
+  }
+ }
+}
