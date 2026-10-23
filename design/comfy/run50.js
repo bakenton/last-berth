@@ -17,8 +17,17 @@ const graph = F => ({
  10:{class_type:'RandomNoise',inputs:{noise_seed:F.seed}},
  11:{class_type:'SamplerCustomAdvanced',inputs:{noise:['10',0],guider:['9',0],sampler:['8',0],sigmas:['7',0],latent_image:['6',0]}},
  12:{class_type:'VAEDecode',inputs:{samples:['11',0],vae:['3',0]}},
- 13:{class_type:'SaveImage',inputs:{filename_prefix:'lastberth/'+F.name,images:['12',0]}}
+ 13:{class_type:'SaveImage',inputs:{filename_prefix:'lastberth/'+F.name,images:['12',0]}},
+ // optional style reference (F.refImg, a file in ComfyUI/input): FLUX.2 ReferenceLatent on both conditionings
+ ...(F.refImg ? {
+  20:{class_type:'LoadImage',inputs:{image:F.refImg}},
+  21:{class_type:'ImageScaleToTotalPixels',inputs:{image:['20',0],upscale_method:'lanczos',megapixels:1,resolution_steps:1}},
+  22:{class_type:'VAEEncode',inputs:{pixels:['21',0],vae:['3',0]}},
+  23:{class_type:'ReferenceLatent',inputs:{conditioning:['4',0],latent:['22',0]}},
+  24:{class_type:'ReferenceLatent',inputs:{conditioning:['5',0],latent:['22',0]}}
+ } : {})
 });
+const wire = g => { if (g[20]) { g[9].inputs.positive = ['23', 0]; g[9].inputs.negative = ['24', 0] } return g };
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
   const a = +process.argv[2] || Math.min(...KEYS), b = +process.argv[3] || Math.max(...KEYS);
@@ -26,7 +35,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
     const F = P[n], dst = path.join(OUT, F.id + '.png');
     if (fs.existsSync(dst)) continue;
     const t0 = Date.now();
-    const r = await (await fetch(URL + '/prompt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: graph(F) }) })).json();
+    const r = await (await fetch(URL + '/prompt', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ prompt: wire(graph(F)) }) })).json();
     if (!r.prompt_id) { console.log(F.id, 'submit failed', JSON.stringify(r).slice(0, 300)); continue; }
     let h;
     for (;;) { await sleep(1500); h = (await (await fetch(URL + '/history/' + r.prompt_id)).json())[r.prompt_id]; if (h && h.status && h.status.completed !== undefined && (h.status.completed || h.status.status_str === 'error')) break; }
