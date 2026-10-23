@@ -1,10 +1,11 @@
 // round 8: gallery page design/pult-50.html from pult50.js (images: intro/cand/f1_H##.webp)
 const fs = require('fs'), path = require('path');
-const P = require('./pult50.js');
+const R = process.env.ROUND || 'pult50', P = require('./' + R + '.js');
+const T = { pult50: ['Пульт: 50 вариантов', 'pult-50.html'], pultI: ['Пульт: чёрный ящик и золотой свет', 'pult-I.html'] }[R];
 const items = Object.keys(P).map(Number).sort((a, b) => a - b).map(n => ({ id: P[n].id, ru: P[n].ru, ref: P[n].ref }));
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const cards = items.map(it => `<figure class="c" data-id="${it.id}"><button class="im" aria-label="Открыть ${it.id}"><img loading="lazy" src="intro/cand/f1_${it.id}.webp" alt="${esc(it.ru)}" width="1536" height="640"></button><figcaption><b>${it.id}</b> ${esc(it.ru)}<small>${esc(it.ref)}</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>`).join('\n');
-const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Пульт: 50 вариантов</title>
+const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${T[0]}</title>
 <style>
 :root{--bg:#0d0f12;--card:#16191e;--ink:#e6e2d8;--dim:#8d929b;--acc:#f0b84a;--line:#262a31}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,sans-serif}
@@ -24,14 +25,14 @@ small{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
 #lb.open{display:flex}#lb img{max-height:82vh;object-fit:contain}#lb p{text-align:center;margin:10px 16px;color:var(--ink)}
 #lb p small{display:inline;margin-left:6px}
 </style></head><body>
-<header><h1>Пульт: 50 вариантов</h1><p>Зал, экипаж, Александра и старший смены одинаковые во всех кадрах, меняется только Пульт. Под кадром источник идеи (по памяти). ★ отмечает понравившиеся.</p>
+<header><h1>${T[0]}</h1><p>Зал, экипаж, Александра и старший смены одинаковые во всех кадрах, меняется только Пульт. ${R === "pultI" ? "Референсы Никиты: чёрный ящик NieR (жёлтые линии, гексагон) и золотой свет Genshin. I13–I17 — доводка I02, I03, I07, I09, I10." : "Под кадром источник идеи (по памяти)."} ★ отмечает понравившиеся.</p>
 <span>отмечено: <b id="n">0</b></span><button id="only" aria-pressed="false">только ★</button><button id="copy">скопировать номера</button></header>
 <main>
 ${cards}
 </main>
 <div id="lb" role="dialog" aria-modal="true"><img alt=""><p></p></div>
 <script>
-const K='pult50-stars',cards=[...document.querySelectorAll('.c')];let S=new Set();
+const K='${R}-stars',cards=[...document.querySelectorAll('.c')];let S=new Set();
 try{S=new Set(JSON.parse(localStorage.getItem(K)||'[]'))}catch(e){}
 const sync=()=>{cards.forEach(c=>{const on=S.has(c.dataset.id);c.classList.toggle('on',on);c.querySelector('.st').setAttribute('aria-pressed',on)});document.getElementById('n').textContent=S.size;try{localStorage.setItem(K,JSON.stringify([...S]))}catch(e){}};
 cards.forEach(c=>c.querySelector('.st').onclick=()=>{S.has(c.dataset.id)?S.delete(c.dataset.id):S.add(c.dataset.id);sync()});
@@ -46,5 +47,5 @@ addEventListener('keydown',e=>{if(!lb.classList.contains('open'))return;if(e.key
 let tx=0;lb.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});lb.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50){e.preventDefault();show(at+(d<0?1:-1))}});
 sync();
 </script></body></html>`;
-fs.writeFileSync(path.join(__dirname, '..', 'pult-50.html'), html, 'utf8');
-console.log('pult-50.html', items.length, 'cards', html.length, 'bytes');
+fs.writeFileSync(path.join(__dirname, '..', T[1]), html, 'utf8');
+console.log(T[1], items.length, 'cards', html.length, 'bytes');

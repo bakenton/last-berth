@@ -1,9 +1,10 @@
 # round 8: raw/H/*.png -> intro/cand/f1_H##.webp (1536x640) + sheets f1_H_sheet1..5.png (10 frames each, 2 columns, labelled)
-import os, glob
+import os, glob, sys
 from PIL import Image, ImageDraw, ImageFont
 here = os.path.dirname(os.path.abspath(__file__))
-raw = os.path.join(here, '..', 'intro', 'raw', 'H'); cand = os.path.join(here, '..', 'intro', 'cand')
-files = sorted(glob.glob(os.path.join(raw, 'H*.png')))
+L = sys.argv[1] if len(sys.argv) > 1 else 'H'  # round letter
+raw = os.path.join(here, '..', 'intro', 'raw', L); cand = os.path.join(here, '..', 'intro', 'cand')
+files = sorted(glob.glob(os.path.join(raw, L + '*.png')))
 for f in files:
     Image.open(f).convert('RGB').save(os.path.join(cand, 'f1_' + os.path.basename(f)[:-4] + '.webp'), quality=82, method=6)
 try: font = ImageFont.truetype('arialbd.ttf', 22)
@@ -15,6 +16,6 @@ for s in range(0, len(files), 10):
     for i, f in enumerate(part):
         im = Image.open(f).convert('RGB').resize((tw, th), Image.LANCZOS)
         x, y = (i % 2) * (tw + g), (i // 2) * (th + g); sheet.paste(im, (x, y))
-        d = ImageDraw.Draw(sheet); d.rectangle([x, y, x + 54, y + 30], fill=(0, 0, 0)); d.text((x + 6, y + 3), os.path.basename(f)[:-4], fill=(255, 200, 90), font=font)
-    sheet.save(os.path.join(cand, 'f1_H_sheet%d.png' % (s // 10 + 1)))
+        d = ImageDraw.Draw(sheet); d.rectangle([x, y, x + 66, y + 30], fill=(0, 0, 0)); d.text((x + 6, y + 3), os.path.basename(f)[:-4], fill=(255, 200, 90), font=font)
+    sheet.save(os.path.join(cand, 'f1_' + L + '_sheet%d.png' % (s // 10 + 1)))
 print(len(files), 'frames')

@@ -1,8 +1,8 @@
 // Submit round-8 frames (pult50.js) straight to the local ComfyUI API and save PNGs to design/intro/raw/H/.
-// node run50.js [from to] — defaults to all 50; skips frames already saved.
+// node run50.js [from to] — defaults to all of the round; skips frames already saved. ROUND=pultI picks another round file.
 const fs = require('fs'), path = require('path');
-const P = require('./pult50.js'), URL = 'http://127.0.0.1:8188';
-const OUT = path.join(__dirname, '..', 'intro', 'raw', 'H'); fs.mkdirSync(OUT, { recursive: true });
+const P = require('./' + (process.env.ROUND || 'pult50') + '.js'), KEYS = Object.keys(P).map(Number), URL = 'http://127.0.0.1:8188';
+const OUT = path.join(__dirname, '..', 'intro', 'raw', P[KEYS[0]].id[0]); fs.mkdirSync(OUT, { recursive: true });
 const W = 1536, Hh = 640, steps = 4;
 const graph = F => ({
  1:{class_type:'UNETLoader',inputs:{unet_name:'flux-2-klein-4b.safetensors',weight_dtype:'default'}},
@@ -21,7 +21,7 @@ const graph = F => ({
 });
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 (async () => {
-  const a = +process.argv[2] || 27, b = +process.argv[3] || 76;
+  const a = +process.argv[2] || Math.min(...KEYS), b = +process.argv[3] || Math.max(...KEYS);
   for (let n = a; n <= b; n++) {
     const F = P[n], dst = path.join(OUT, F.id + '.png');
     if (fs.existsSync(dst)) continue;
