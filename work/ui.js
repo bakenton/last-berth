@@ -167,7 +167,7 @@ function wmark(kind,on,sz){ sz=sz||14; var m=WMARK[kind].replace('/>',on?' fill=
 /* ---------- state ---------- */
 /* U.tut / can(key): the tutorial decides what the player may see; with its lock off everything is open.
    A resource is opened in the core (openRes) the moment the interface shows it — so the tutorial controls Earth's burn. */
-var U={tut:tutBlank(), hist:[], lang:'en', langPicked:false, speed:2, paused:false, acc:0, last:0, ff:false, shiftStop:true,
+var U={tut:tutBlank(), hist:[], lang:'en', langPicked:false, menu:false, speed:2, paused:false, acc:0, last:0, ff:false, shiftStop:true,
   tab:null, win:null, pop:null, filter:'all', addTab:'free', who:{}, scrapArm:null, focus:null, notes:[], driveAt:null, ovlOff:false};
 var G=null;
 function can(k){ return !U.tut.lock||!!U.tut.open[k] }
@@ -601,8 +601,8 @@ function drawCards(){ var b=can('yard')?building():[], h='';
 
 /* ---------- top: the year, the Night, the advisor, the clock ---------- */
 function winPause(){ return U.win==='earth'||U.win==='yard'||U.win==='ark' }
-function bigKind(){ if(!U.langPicked) return 'lang'; if(G.over) return 'over'; if(G.night&&!G.nightSeen) return 'night'; if(G.shiftOpen) return 'shift'; if(U.notes.length) return 'note'; return null }
-function modal(){ return !!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
+function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) return 'over'; if(G.night&&!G.nightSeen) return 'night'; if(G.shiftOpen) return 'shift'; if(U.notes.length) return 'note'; return null }
+function modal(){ return !!U.menu||!!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
 var SPEEDS=[1,2,4,10];
 function drawTop(){
@@ -784,11 +784,11 @@ function watchRings(){
    the lit thing can be pressed (a miss shakes the ring); 'see' — GOT IT or any press. A 'do' whose button is refused or gone
    turns into a 'see'. A resource shows up the moment it is first needed, and the tutorial opens it in the core then (openRes):
    no price and no burn uses a resource the player cannot see yet. The story (NAR) goes through the same queue — never at
-   once with a rule, the story first. E — the launch screen; V — her voice (no dim, time runs, 8 s or a press; Claude: time
+   once with a rule, the story first. V — her voice (no dim, time runs, 8 s or a press; Claude: time
    stands while a rule waits right behind it); W — a big window (the shift, the Night, the end — bigHtml).
    U.tut: lock — what is not open is hidden; help — the rules speak; the story speaks either way. The helper preference is
    kept in this browser; an old save without U.tut has everything open and no helper. */
-var HELP_KEY='lb.help', TUTX={story:true,launch:true,off:false};   // TUTX: the scenarios' hook (LNtut.off) mutes the launch, the voices and the helper
+var HELP_KEY='lb.help', TUTX={story:true,off:false};   // TUTX: the scenarios' hook (LNtut.off) and Test play mute the voices and the helper
 function helpPref(){ if(TUTX.off) return false; try{ return localStorage.getItem(HELP_KEY)!=='0' }catch(e){ return true } }
 function setHelpPref(on){ try{ localStorage.setItem(HELP_KEY,on?'1':'0') }catch(e){} }
 var OPEN_ALL=['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
@@ -842,9 +842,8 @@ var TMSG={
  m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }}
 };
 function hullWorld(sid){ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s.dest&&s.dest!=='earth'?s.dest:s.origin); if(w&&G.colonies[w]) openWorld(w); else closeAll() }
-/* the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; E — launch, V — her voice */
+/* the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; V — her voice (the launch, N-01, gave way to the terminal in v4.40) */
 var NAR={
- N01:{f:'E',k:['nar_N01_1','nar_N01_2','nar_N01_3','nar_N01_4']},
  N02:{f:'V',k:['nar_N02'],pre:function(){ var pid=firstCol(); return pid?{world:pname(pid),n:num(G.colonies[pid].pop)}:null }},
  N03:{f:'V',k:['nar_N03'],pre:function(){ return {year:fcYear()} }},
  N05:{f:'V',k:['nar_N05_1','nar_N05_2']}, N06:{f:'V',k:['nar_N06_1','nar_N06_2']},
@@ -856,7 +855,7 @@ var NAR={
    opens. Each step also opens by a year (Claude — awaits review), so nobody waits forever for a thing that will not happen;
    a soft step is passed when the next one is ready (it has nothing that the next one needs). */
 var STEPS=[
- {t:'hunger',opens:['people','food','line'],q:['N01','m0','m1','m2']},
+ {t:'hunger',opens:['people','food','line'],q:['m0','m1','m2']},
  {t:'time',opens:['speed'],q:['m3'],when:function(){ return reach(G)>0||G.ships.some(function(s){ return s.job==='colonize' })||G.day>0 }},
  {t:'line',opens:['fuel'],q:['N02','m4'],when:function(){ return reach(G)>0||G.day>=40 },go:function(){ U.tut.col=Object.keys(G.colonies)[0] }},
  {t:'home',opens:['earth','skip'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
@@ -875,11 +874,11 @@ function tutOpen(keys){ var t=U.tut; if(!t.lock) return;
   keys.forEach(function(k){ if(t.open[k]) return; t.open[k]=1; if(TAB_KEYS[k]) t.fresh[k]=1;
     if(k==='metal'||k==='fuel'||k==='parts') openRes(G,k) }) }
 function tutOpenAll(){ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','parts'].forEach(function(k){ openRes(G,k) }) }
-function tutPush(id,p){ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return; if(id==='N01'&&!TUTX.launch) return;
+function tutPush(id,p){ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return;
   if(t.seen[id]) return; t.seen[id]=1; t.q.push({id:id,p:p||null}) }
 function tutStep(i){ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function(id){ if(id==='N03'&&!(G.delivered.food>0)) return; if(id==='m12'&&!partsHome()) return; tutPush(id) }) }
 function partsHome(){ return (G.delivered.parts||0)>0||G.earth.parts>0 }
-/* a new game: the launch screen, then step 1 */
+/* a new game: step 1 (the main menu and its terminal come before it) */
 function tutNew(){ var on=helpPref(); U.tut=tutBlank(); var t=U.tut; t.lock=on; t.help=on;
   if(!on) tutOpenAll(); tutStep(0); t.seq=G.log.length?G.log[G.log.length-1].seq||0:0 }
 /* a run already under way (an old save, or the helper turned on in the middle): what has happened is not told again */
@@ -920,13 +919,8 @@ var NART=null;
 function narShow(it){ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(p===null) return false;
   clearTimeout(NART); t.nar={id:it.id,p:p,f:N.f,k:String(Math.random()),i:0,hold:false};
   if(N.f==='V'){ t.nar.hold=!!(t.help&&t.q.length&&TMSG[t.q[0].id]); SFX.play('voice'); NART=setTimeout(narDone,8000) }
-  if(N.f==='E') NART=setTimeout(launchStep,5200);
   return true }
 function narDone(){ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
-function launchFrame(i){ var L0=el('launch'); L0.querySelectorAll('.lfr').forEach(function(f,j){ f.classList.toggle('on',j===i) }); L0.querySelectorAll('.ldots i').forEach(function(d,j){ d.classList.toggle('on',j<=i) }) }
-function launchStep(){ var n=U.tut.nar; if(!n||n.f!=='E'||el('launch').classList.contains('out')) return; clearTimeout(NART); n.i++;   // a press while the last frame dives in must not stop it
-  if(n.i>=NAR[n.id].k.length){ launchEnd(); return } launchFrame(n.i); NART=setTimeout(launchStep,5200) }
-function launchEnd(){ var L0=el('launch'); if(!U.tut.nar||L0.classList.contains('out')) return; clearTimeout(NART); L0.classList.add('out'); NART=setTimeout(narDone,600) }
 /* SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on */
 function tutOff(){ var t=U.tut; setHelpPref(false); if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false;
   t.q=t.q.filter(function(x){ return !TMSG[x.id] }); t.msg=null; act(G,'helper',{on:false}) }
@@ -940,11 +934,10 @@ function tutTick(){ var t=U.tut; if(!U.langPicked||G.over) return;
   tutNext() }
 /* is there something she wants to say before the clock runs on (SKIP stops there) */
 function tutWants(){ var t=U.tut; return !!t.q.length||(t.step>=0&&stepReady(t.step+1)) }
-function tutHold(){ var t=U.tut; return !!t.msg||!!(t.nar&&(t.nar.f==='E'||t.nar.hold)) }
-/* the press: the launch takes it; a rule lets through only its lit thing; her voice closes on any press */
+function tutHold(){ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
+/* the press: a rule lets through only its lit thing; her voice closes on any press */
 function tutTarget(m){ var s=typeof m.at==='function'?m.at():m.at, e=s?document.querySelector(s):null; return e&&e.getClientRects().length?e:null }
 function tutClick(ev){ var t=U.tut, x=ev.target;
-  if(t.nar&&t.nar.f==='E'){ if(x.closest('[data-act="launchskip"]')) launchEnd(); else launchStep(); return true }
   if(t.msg){ var b=x.closest('#helper [data-act]');
     if(b){ if(b.dataset.act==='tutok'){ if(Date.now()-t.msg.at>300) msgDone() } else if(b.dataset.act==='tutskip'){ tutOff(); draw() } return true }
     if(x.closest('#helper')) return true;
@@ -957,7 +950,6 @@ function tutClick(ev){ var t=U.tut, x=ev.target;
   return false }
 function tutKey(e){ var t=U.tut;
   var mine=e.code==='Space'||e.key==='Enter'||e.key==='Escape'||/^[1-4]$/.test(e.key);
-  if(t.nar&&t.nar.f==='E'){ if(mine) e.preventDefault(); if(e.repeat) return true; if(e.key==='Escape') launchEnd(); else if(e.code==='Space'||e.key==='Enter') launchStep(); return true }
   if(t.msg){ if(mine) e.preventDefault(); if(!e.repeat&&t.msg.mode==='see'&&mine&&!/^[1-4]$/.test(e.key)&&Date.now()-t.msg.at>300) msgDone(); return true }
   if(t.lock&&!can('speed')&&(e.code==='Space'||/^[1-4]$/.test(e.key))) return true;
   return false }
@@ -988,12 +980,7 @@ function tutPlace(){ var t=U.tut, Lr=el('tutL'), Rg=el('tutRing'), Rg2=el('tutRi
   else { Lr.style.clipPath='none'; ring(Rg,null); ring(Rg2,null) }
   hp.style.left=left+'px'; hp.style.top=top+'px' }
 function tutLive(e){ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]')) return true; return !!e.querySelector('[data-act]:not([aria-disabled="true"])') }
-function narPlace(){ var n=U.tut.nar, L0=el('launch'), V=el('voice');
-  if(n&&n.f==='E'){ if(L0._k!==n.k){ L0._k=n.k; var N=NAR[n.id];
-      L0.innerHTML='<svg class="lmark" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-markf"/></svg><div class="lcap">'+esc(T('tut_inst'))+'</div><button class="lskip" type="button" data-act="launchskip">'+esc(T('tut_skip'))+'</button>'+
-        N.k.map(function(k,i){ return '<div class="lfr"><div class="limg"><i class="lf'+(i+1)+'"></i></div><div class="lln">'+esc(T(k))+'</div></div>' }).join('')+'<div class="ldots">'+N.k.map(function(){ return '<i></i>' }).join('')+'</div>';
-      L0.className='on'; requestAnimationFrame(function(){ launchFrame(n.i) }) } }
-  else if(L0._k){ L0._k=''; L0.className=''; L0.innerHTML='' }
+function narPlace(){ var n=U.tut.nar, V=el('voice');
   if(n&&n.f==='V'){ if(V._k!==n.k+U.lang){ V._k=n.k+U.lang; var N2=NAR[n.id];
       V.innerHTML='<div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="vtx">'+N2.k.map(function(k){ return esc(fill(T(k),n.p)) }).join('<br>')+'</div></div><i class="vbar"></i>';
       V.className=''; void V.offsetWidth; V.className='on' }
@@ -1011,7 +998,7 @@ function tutLoad(o){ clearTimeout(NART); U.tut=tutBlank(); var t=U.tut;
   if(!o){ tutOpenAll(); t.step=0; tutQuiet(); return }   // a save from before v4.36: everything open, no helper, the story goes on from here
   TUT_KEEP.forEach(function(k){ if(o[k]!==undefined) t[k]=o[k] });
   if(!t.lock) tutOpenAll();
-  t.seen.N01=1; var st=STEPS[t.step]; if(st) st.q.forEach(function(id){ tutPush(id) }) }
+  var st=STEPS[t.step]; if(st) st.q.forEach(function(id){ tutPush(id) }) }
 function tutState(){ var t=U.tut; return {lock:t.lock,help:t.help,step:t.step,msg:t.msg&&t.msg.id,mode:t.msg&&t.msg.mode,nar:t.nar&&t.nar.id,q:t.q.map(function(x){ return x.id }),open:Object.keys(t.open),fresh:Object.keys(t.fresh)} }
 
 /* ---------- render ---------- */
@@ -1360,6 +1347,22 @@ function popMenu(){
     (textsVisible()?'<button type="button" data-act="texts">'+ic('loading',15)+esc(T('textsReload'))+'</button>':'')+'<hr>'+
     '<div class="seedrow">'+esc(T('seed'))+' <input id="seedin" value="'+G.seed+'"></div><button type="button" data-act="new">'+ic('free',15)+esc(T('newGame'))+'</button></div>' }
 
+/* ---------- the main menu (work/menu.js, v4.40): in front of a new run whose clock stands; its terminal tells the start ---------- */
+var LANG_KEY='lb.lang';
+/* the menu speaks the language of the save on record, else the one chosen here last time, else the browser's */
+function menuLang(){ var l=null; try{ l=localStorage.getItem(LANG_KEY) }catch(e){} if(U.saveLang&&U.saveDay!==null) return U.saveLang; if(l==='en'||l==='ru') return l;
+  return /^ru\b/i.test((navigator.language||'')+'')?'ru':'en' }
+function menuOpen(){ U.menu=true; draw();
+  LBMENU.open({T:function(k,p){ return T(k,p) }, v:VERSION.v, lang:function(){ return U.lang },
+    save:function(){ return U.saveDay!==null&&U.saveDay!==undefined?{y:U.saveDay,w:U.saveWorlds||0}:null },
+    sound:function(){ return SFX.isOn() }, setSound:function(on){ SFX.set(on) },
+    setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
+    cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return false },
+    load:function(){ el('loadin').click() },
+    newRun:function(){ U.langPicked=true; act(G,'menu',{go:'new'}) },
+    test:function(){ U.langPicked=true; tutMute(); act(G,'menu',{go:'test'}) },
+    closed:function(){ U.menu=false; draw() }}) }
+
 /* ---------- save and load: a file, and the last autosave in this browser ---------- */
 var SAVE_KEY='lb.save';
 function dump(){ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,voiceSeq:U.voiceSeq,voiceLast:U.voiceLast,voy:U.voy,capt:U.capt,founded:U.founded,shiftStop:U.shiftStop,speed:U.speed,lang:U.lang,tut:tutSave()}},
@@ -1373,10 +1376,13 @@ function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinit
   U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; lineWhy={}; U.langPicked=true; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; window.LN=G; draw() }
 function autosave(){ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
+function loadAuto(){ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
+  try{ undump(t0); say('ok_loadgame',{y:G.day}); return true }catch(e){ say('loadfail'); return false } }
 function saveFile(){ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
   try{ var b=new Blob([data],{type:'application/json'}), u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(u) },500); say('ok_savegame') }catch(e){ say('savefail') } }
 el('loadin').addEventListener('change',function(){ var f=this.files&&this.files[0]; if(!f) return; var r=new FileReader();
-  r.onload=function(){ try{ undump(String(r.result)); say('ok_loadgame',{y:G.day}) }catch(e){ say('loadfail') } }; r.readAsText(f); this.value='' });
+  r.onload=function(){ var fromMenu=U.menu; if(fromMenu) U.langPicked=true;
+    try{ undump(String(r.result)); say('ok_loadgame',{y:G.day}); if(fromMenu) LBMENU.fadeOut() }catch(e){ if(fromMenu) U.langPicked=false; say('loadfail') } }; r.readAsText(f); this.value='' });
 
 /* ---------- run log ---------- */
 function showLog(){ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog'); el('b-savelog').textContent=T('saveBtn'); el('b-copylog').textContent=T('copyBtn'); el('b-closelog').textContent=T('closeBtn'); el('logbox').hidden=false; el('logtxt').focus(); el('logtxt').select() }
@@ -1454,7 +1460,7 @@ function doAct(a,b){
   else if(a==='help'){ if(U.tut.help) tutOff(); else tutOn() }
   else if(a==='save'){ U.pop=null; autosave(); saveFile() }
   else if(a==='load'){ U.pop=null; el('loadin').click() }
-  else if(a==='loadauto'){ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(t0){ try{ undump(t0); U.lang=U.lang||'en'; say('ok_loadgame',{y:G.day}) }catch(e){ say('loadfail') } } return }
+  else if(a==='loadauto'){ loadAuto(); return }
   else if(a==='texts'){ reloadTexts(); return }
   else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); return }
   if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:null);
@@ -1538,17 +1544,22 @@ function frame(ts){
   } else U.acc=0;
   requestAnimationFrame(frame);
 }
+/* everything open, no voices, no helper: the scenarios' hook and the menu's Test play */
+function tutMute(){ TUTX.off=true; TUTX.story=false; clearTimeout(NART); var t=U.tut; t.nar=null; t.q=[]; t.msg=null; if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false; draw() }
 function start(seed){
   G=newGame(seed||undefined); tutNew();
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
-  window.LNtut={off:function(){ TUTX.off=true; TUTX.story=false; TUTX.launch=false; clearTimeout(NART); var t=U.tut; t.nar=null; t.q=[]; t.msg=null; if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false; draw() }};   // v4.36: the scenarios' hook «всё открыто»: no launch, no voices, no helper
+  window.LNtut={off:function(){ LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
   draw();
 }
-(function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en' } }catch(e){} })();
+(function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en';
+  try{ var o=JSON.parse(t0); U.saveWorlds=Object.keys((o.G&&o.G.colonies)||{}).length }catch(e){ U.saveWorlds=0 } } }catch(e){}
+  U.lang=menuLang() })();
 fit();
 start();
+menuOpen();
 requestAnimationFrame(frame);
 })();

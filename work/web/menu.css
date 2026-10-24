@@ -1,0 +1,88 @@
+/* v4.40 (Nikita 23–24.10, design/menu-v1.html variant 5): the main menu and the start-up terminal, work/menu.js.
+   Sizes in u: 1u is one design pixel of a 1280×760 screen (build.py turns «Nu» into calc(var(--u) * N)); on a phone 1u = 1px.
+   Everything sits under #menu: the game's own classes (.mk, .nm, .th) are not reused here. */
+#menu{--u:min(calc(100vw / 1280),calc(100vh / 760));position:fixed;inset:0;z-index:200;background:#0B0B0C;color:#F2F1EC;font-family:'Jost',system-ui,sans-serif;overflow:hidden;transition:opacity .6s;user-select:none;-webkit-user-select:none}
+#menu[hidden]{display:none}
+#menu.out{opacity:0;pointer-events:none}
+#menu.phone{--u:1px}
+#menu button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+#menu .mcv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#menu .mmk{display:block;overflow:visible}
+#menu .mui{position:absolute;inset:0}
+#menu .mui::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(0deg,rgba(11,11,12,.88),transparent);pointer-events:none}
+#menu .mtop,#menu .msm,#menu .mtst,#menu .mver,#menu .mui::after{transition:opacity .8s}
+#menu.diving .mtop,#menu.diving .msm,#menu.diving .mtst,#menu.diving .mver{opacity:0;pointer-events:none;transition:opacity 1.1s}
+#menu.diving .mui::after{opacity:0;transition:opacity 1.6s}
+#menu .mtop{position:absolute;left:0;right:0;top:60u;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14u;pointer-events:none}
+#menu .mtop .mmk{width:76u;height:76u}
+#menu .mname{font:300 54u 'Jost',system-ui,sans-serif;letter-spacing:.5em;padding-left:.5em}
+#menu .mrun{position:relative;width:420u;height:2u;margin-top:4u;background:rgba(242,241,236,.14);overflow:hidden}
+#menu .mrun i{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,transparent,#F2F1EC 60%,#FFD23F);animation:mrun 2.6s cubic-bezier(.45,.05,.55,.95) infinite}
+@keyframes mrun{from{left:-30%}to{left:104%}}
+#menu .msm{position:absolute;left:0;right:0;top:40%;z-index:2;display:flex;flex-direction:column;align-items:center;gap:2u}
+#menu .msm::before{content:"";position:absolute;left:50%;top:50%;width:900u;height:560u;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(8,8,10,.82),rgba(8,8,10,.5) 45%,rgba(8,8,10,0) 72%);z-index:-1;pointer-events:none}
+#menu .mit{display:flex;flex-direction:row;align-items:baseline;justify-content:center;gap:16u;min-width:340u;padding:9u 20u;border-bottom:2px solid transparent;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#menu .mit .l{font:500 27u 'Jost',system-ui,sans-serif;color:#9C9B95;letter-spacing:.06em;text-shadow:0 1px 8px #000}
+#menu .mit .s{font:11u 'Geist Mono',ui-monospace,monospace;color:#5E5D58;letter-spacing:.08em}
+#menu .mit.on{border-bottom-color:#FFD23F}#menu .mit.on .l{color:#F2F1EC}#menu .mit.on .s{color:#FFD23F}
+#menu .mit.off{opacity:.35;cursor:default}
+#menu .mtst{position:absolute;right:22u;top:16u;z-index:6;font:600 12u 'Geist Mono',ui-monospace,monospace;letter-spacing:.14em;color:#F2F1EC;opacity:.62;padding:7u 14u;border:1px solid rgba(242,241,236,.38);background:rgba(11,11,12,.55);text-transform:uppercase;transition:opacity .15s,border-color .15s}
+#menu .mtst:hover{opacity:1;border-color:#FFD23F;color:#FFD23F}
+#menu .mver{position:absolute;right:24u;bottom:14u;z-index:2;font:11u 'Geist Mono',ui-monospace,monospace;letter-spacing:.14em;color:#5E5D58}
+#menu.phone .mtop{top:34px}#menu.phone .mname{font-size:30px}#menu.phone .mtop .mmk{width:58px;height:58px}#menu.phone .mrun{width:210px}
+#menu.phone .msm{top:auto;bottom:24px;left:24px;right:24px;align-items:stretch;gap:0}#menu.phone .msm::before{display:none}
+#menu.phone .mit{justify-content:space-between;min-width:0;border-bottom:1px solid #2E2E33;padding:12px 2px}#menu.phone .mit.on{border-bottom-color:#FFD23F}#menu.phone .mit .l{font-size:21px}
+#menu.phone .mui::after{height:44%}
+/* the terminal: an old machine waking up (design/INTRO-DRAFT.md) */
+#menu .mterm{--ns:1;--g:#D9D8D2;--gb:#F2F1EC;--gd:#6b6a65;--o:#FFD23F;--r:#FF2A1A;--eb:#4FA3FF;position:absolute;inset:0;z-index:30;background:#060607;font-family:'Share Tech Mono','Geist Mono',ui-monospace,monospace;color:var(--g);padding:58u 80u 74u;overflow:hidden;transition:opacity .5s}
+#menu .mterm::before{content:"";position:absolute;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(242,241,236,.04) 0 1px,transparent 1px 3u),radial-gradient(ellipse at 50% 50%,transparent 55%,rgba(0,0,0,.55) 100%)}
+#menu .mterm::after{content:"";position:absolute;left:0;right:0;height:120u;top:-120u;pointer-events:none;z-index:2;background:linear-gradient(180deg,transparent,rgba(242,241,236,calc(.07*var(--ns))),transparent);animation:mscan 4.2s linear infinite}
+@keyframes mscan{to{top:110%}}
+#menu .mterm[data-n="1"]{--ns:.85}#menu .mterm[data-n="2"]{--ns:.66}#menu .mterm[data-n="3"]{--ns:.48}#menu .mterm[data-n="4"]{--ns:.32}#menu .mterm[data-n="5"]{--ns:.16}#menu .mterm[data-n="6"]{--ns:0}
+#menu .mterm .wr{display:grid;grid-template-columns:minmax(0,1fr) 560u;gap:20u;grid-template-rows:minmax(0,1fr);opacity:0;height:100%}
+#menu .mterm.on .wr{opacity:1;animation:mcrt .9s ease-out}
+@keyframes mcrt{0%{transform:scale(.25,.004);filter:brightness(5)}35%{transform:scale(1,.004);filter:brightness(5)}70%{transform:scale(1,1.04);filter:brightness(2)}100%{transform:none;filter:none}}
+#menu .mterm .mn{min-width:0;min-height:0;height:100%;display:flex;flex-direction:column}
+#menu .mterm .bo{flex:1;min-height:0;overflow:hidden;animation:mflk 3.4s steps(1) infinite}#menu .mterm.act .bo{animation-duration:1.8s}
+@keyframes mflk{0%,100%{opacity:1;transform:none}12%{opacity:calc(1 - .5*var(--ns));transform:translateX(calc(var(--ns)*4px))}14%{opacity:1;transform:none}47%{opacity:calc(1 - .4*var(--ns));transform:skewX(calc(var(--ns)*-2deg))}48.5%{opacity:1;transform:none}73%{opacity:calc(1 - .5*var(--ns));transform:translateX(calc(var(--ns)*-4px))}75%{opacity:1;transform:none}}
+#menu .mterm .bh{font:700 20u 'Jost',system-ui,sans-serif;letter-spacing:.3em;color:var(--gb);margin-bottom:22u;display:flex;gap:14u;align-items:center}#menu .mterm .bh .mmk{width:32u;height:32u}
+#menu .mterm .tb{margin-left:auto;border:1px solid var(--o);color:var(--o);padding:5u 14u;font:400 15u 'Share Tech Mono','Geist Mono',monospace;letter-spacing:.08em;text-shadow:0 0 6u rgba(255,210,63,.45)}#menu .mterm .tb b{font-weight:400}
+#menu .mterm .bl{font-size:17u;line-height:1.7;max-width:900u;white-space:pre-wrap;text-transform:uppercase;min-height:1.7em;text-shadow:0 0 7u rgba(242,241,236,.45),calc(var(--ns)*3.2px) 0 rgba(242,241,236,.26)}
+#menu .mterm.act .bl{text-shadow:0 0 7u rgba(242,241,236,.45),3.4px 0 rgba(242,241,236,.28)}
+#menu .mterm .bl.tear{transform:translateX(7px) skewX(-9deg);filter:blur(.5px)}
+#menu .mterm .bl.cm{color:var(--gb)}#menu .mterm .bl.f{color:var(--o);text-shadow:0 0 7u rgba(255,210,63,.5)}#menu .mterm .bl.ok{color:var(--gb)}#menu .mterm .bl.no{color:var(--r);text-shadow:none}#menu .mterm .bl.tk{color:var(--g)}#menu .mterm .bl.hx{color:var(--gd);font-size:12u;line-height:1.4;min-height:0;text-shadow:none}
+#menu .mterm .bq{margin-top:12u;height:84u;flex:none;display:flex;align-items:flex-start;align-content:flex-start;flex-wrap:wrap;gap:10u}
+#menu .mterm .bq .pm{color:var(--o);font-size:19u;margin-right:6u}
+#menu .mterm .vb{border:1px solid var(--gd);padding:7u 14u;font:400 16u 'Share Tech Mono','Geist Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--g)}
+#menu .mterm .vb i{font-style:normal;color:var(--o);margin-right:8u}#menu .mterm .vb:hover{border-color:var(--o);color:var(--gb)}
+#menu .mterm .wt{flex-basis:100%;margin-left:26u;margin-top:2u;font-size:13u;color:var(--gd);letter-spacing:.1em;text-transform:uppercase}
+#menu .mterm .bskip{position:absolute;right:30u;top:20u;z-index:3;border:1px solid var(--gd);color:var(--g);padding:5u 12u;font:400 11u 'Share Tech Mono','Geist Mono',monospace;letter-spacing:.2em;text-transform:uppercase}
+#menu .mterm .bhint{position:absolute;left:80u;bottom:24u;z-index:3;font-size:11u;letter-spacing:.12em;color:var(--gd);text-transform:uppercase}
+#menu .mterm .hud{border-left:1px solid #1d1d20;padding-left:10u;display:flex;flex-direction:column;justify-content:center;gap:10u;min-height:0}
+#menu .mterm .pl{width:100%;height:auto;max-height:92%;display:block;overflow:hidden;flex:1;min-height:0}
+#menu .mterm .pl .disc{fill:url(#mpgd)}#menu .mterm .pl .halo{fill:none;stroke:var(--eb);stroke-width:5;opacity:.22;filter:blur(3px)}#menu .mterm .pl .rim{fill:none;stroke:var(--eb);stroke-width:1.2}#menu .mterm .pl .lat{fill:none;stroke:#244a73;stroke-width:.8}
+#menu .mterm .pl .lon{fill:none;stroke:var(--eb);stroke-width:.8;opacity:.85;animation:mlon 8s linear infinite}
+@keyframes mlon{0%,100%{rx:66px}50%{rx:1px}}
+#menu .mterm .pl .cr path{stroke:var(--o);stroke-width:1.4;fill:none}
+#menu .mterm .pl .pn{fill:var(--eb);font:9px 'Share Tech Mono',monospace;text-anchor:middle;letter-spacing:.24em}
+#menu .mterm .pl .bp{fill:var(--o);animation:mbpl 1.4s ease-in-out infinite}#menu .mterm .pl .bpr{fill:none;stroke:var(--o);stroke-width:.8}
+@keyframes mbpl{50%{opacity:.3}}
+#menu .mterm .pl .s1,#menu .mterm .pl .s2,#menu .mterm .pl .s3{opacity:0;transition:opacity 1.8s ease,transform 3s cubic-bezier(.5,0,.2,1)}
+#menu .mterm .pl .s1{transform:scale(1)}#menu .mterm .pl .s2{transform:scale(.35)}#menu .mterm .pl .s3{transform:scale(.12)}
+#menu .mterm[data-loc="1"] .pl .s1{opacity:1}
+#menu .mterm[data-loc="2"] .pl .s1,#menu .mterm[data-loc="3"] .pl .s1{opacity:0;transform:scale(3.2)}
+#menu .mterm[data-loc="2"] .pl .s2{opacity:1;transform:scale(1)}
+#menu .mterm[data-loc="3"] .pl .s2{opacity:0;transform:scale(5) translate(-52.4px,-10.3px)}
+#menu .mterm[data-loc="3"] .pl .s3{opacity:1;transform:scale(1)}
+#menu .mterm .pl .gl{stroke:#3a3a40;stroke-width:.5;stroke-dasharray:1 3}#menu .mterm .pl .sd{fill:var(--g);opacity:.95}
+#menu .mterm .pl .m0c{fill:none;stroke:var(--o);stroke-width:1;animation:mbpl 1.6s ease-in-out infinite}#menu .mterm .pl .m0d{fill:var(--o)}#menu .mterm .pl .m0x{stroke:var(--o);stroke-width:1;fill:none}
+#menu .mterm .pl .m0t{fill:var(--o);font:7px 'Share Tech Mono',monospace;letter-spacing:.14em}#menu .mterm .pl .ct{fill:var(--gd);font:6px 'Share Tech Mono',monospace;letter-spacing:.14em}
+#menu .mterm .pl .sg{fill:rgba(255,210,63,.18)}#menu .mterm .pl .sc{fill:var(--o)}
+#menu .mterm .pl .or{fill:none;stroke:#3a3a3e;stroke-width:.7;stroke-dasharray:2 3}#menu .mterm .pl .or.hot{stroke:var(--eb);stroke-width:1;stroke-dasharray:none}
+#menu .mterm .pl .pd{fill:#9a9a96}#menu .mterm .pl .pd.me{fill:var(--eb)}
+#menu .mterm .loc{display:flex;flex-direction:column;gap:3u;min-height:56u;flex:none;padding:0 10u}
+#menu .mterm .lr{display:flex;justify-content:space-between;font-size:12u;letter-spacing:.14em;opacity:0;transform:translateX(8u);transition:opacity .8s,transform .8s;border-bottom:1px solid #1d1d20;padding-bottom:3u}#menu .mterm .lr span{color:var(--gd)}#menu .mterm .lr b{font-weight:400;color:var(--gb)}#menu .mterm .lr.r3 b{color:var(--eb)}
+#menu .mterm[data-loc="1"] .lr.r1,#menu .mterm[data-loc="2"] .lr.r1,#menu .mterm[data-loc="3"] .lr.r1,#menu .mterm[data-loc="2"] .lr.r2,#menu .mterm[data-loc="3"] .lr.r2,#menu .mterm[data-loc="3"] .lr.r3{opacity:1;transform:none}
+#menu.phone .mterm{padding:34px 20px 24px}#menu.phone .mterm .bq{height:auto;min-height:84px}#menu.phone .mterm .bl{font-size:14px}#menu.phone .mterm .bl.hx{font-size:9px}#menu.phone .mterm .bh{font-size:16px}#menu.phone .mterm .tb{font-size:11px;padding:3px 8px}#menu.phone .mterm .vb{padding:9px 12px;font-size:13px}#menu.phone .mterm .bhint{display:none}#menu.phone .mterm .bskip{right:14px;top:12px}
+#menu.phone .mterm .wr{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:8px}#menu.phone .mterm .hud{order:-1;border:0;padding:0;margin-bottom:6px;gap:8px}#menu.phone .mterm .pl{max-height:200px;flex:none}#menu.phone .mterm .wt{display:block;margin:6px 0 0}#menu.phone .mterm .loc{display:none}
+@media (prefers-reduced-motion:reduce){#menu .mrun i,#menu .mterm,#menu .mterm *,#menu .mterm::after{animation:none!important}#menu .mterm .bl{text-shadow:none}}

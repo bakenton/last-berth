@@ -519,3 +519,151 @@ UI	u_aSpare	{w}: the line can carry {c} {r} a year, it needs {m}	{w}: линия
 UI	u_aSpareC	{h} runs half empty — move her where a line falls behind, or take her off	{h} ходит полупустым — переведите туда, где линия не справляется, или снимите
 UI	u_aSpareN	{n} hulls too many. First: {h} — move her, or take her off	Лишних судов: {n}. Первое — {h}: переведите или снимите
 UI	u_fixHull	Show the hull	Показать судно
+UI	mn_cont	Continue	Продолжить
+UI	mn_contSub	year {y} · {w} worlds	год {y} · миров: {w}
+UI	mn_empty	no record	нет записи
+UI	mn_new	New game	Новая игра
+UI	mn_load	Load from file	Загрузить из файла
+UI	mn_loadSub	.json	.json
+UI	mn_lang	Language	Язык
+UI	mn_langVal	English	Русский
+UI	mn_sound	Sound	Звук
+UI	mn_on	on	вкл
+UI	mn_off	off	выкл
+UI	mn_test	Test play	Тест-плей
+UI	mn_pult	HELM	ПУЛЬТ
+UI	tm_skip	skip	пропустить
+UI	tm_hint	choose a command (1–4) · click or space finishes a line · Esc skips	выберите команду (1–4) · клик или пробел — допечатать · Esc — пропустить
+UI	tm_refuse	refused: {r}.	отказ: {r}.
+UI	tm_mt	memory test {n} K	проверка памяти {n} K
+UI	tm_mtEnd	user memory ........ none	память пользователя .. нет
+UI	tm_wait	awaiting command · {n} s	жду команду · {n} с
+UI	tm_up	UPTIME T	РАБОТА T
+UI	tm_sector	SECTOR	СЕКТОР
+UI	tm_system	SYSTEM	СИСТЕМА
+UI	tm_planet	PLANET	ПЛАНЕТА
+UI	tm_earth	EARTH	ЗЕМЛЯ
+UI	tm_noName	NO NAME	ИМЕНИ НЕТ
+UI	tm_grid	GRID 1:1000	СЕТКА 1:1000
+UI	tm_p01	** {name} {v} · cold start **	** {name} {v} · холодный пуск **
+UI	tm_p02	power rail A ........ 12.04 V  ok	шина питания A ...... 12.04 В  ок
+UI	tm_p03	power rail B ........  5.01 V  ok	шина питания B ......  5.01 В  ок
+UI	tm_p04	mains ............... present	сеть ................. есть
+UI	tm_p05	battery bank ........ 41 %  charging	батарея ............... 41 %  заряд
+UI	tm_p06	self-test	самопроверка
+UI	tm_p07	position ........ sector 00/AE · fix	позиция ........ сектор 00/AE · фиксация
+UI	tm_p08	prepared commands ... found 24	заготовленные команды ... найдено 24
+UI	tm_p09	load 1/6 · air	загрузка 1/6 · воздух
+UI	tm_p10	load 2/6 · hatches	загрузка 2/6 · затворы
+UI	tm_p11	load 3/6 · stores	загрузка 3/6 · склады
+UI	tm_p12	load 4/6 · yards	загрузка 4/6 · верфи
+UI	tm_p13	load 5/6 · capsules	загрузка 5/6 · капсулы
+UI	tm_p14	load 6/6 · translation	загрузка 6/6 · перевод
+UI	tm_p15	prepared commands ... 24 loaded	заготовленные команды ... 24 загружено
+UI	tm_p16	system ......... no name in base · 1 star	система ........ имени в базе нет · 1 звезда
+UI	tm_p17	clock ................ no source · set 0000.00.00	часы ................. нет источника · 0000.00.00
+UI	tm_p18	bus scan ............. 14 devices	опрос шины .......... 14 устройств
+UI	tm_p19	bus 7: timeout	шина 7: нет ответа
+UI	tm_p20	bus 7: retry	шина 7: повтор
+UI	tm_p21	bus 7: ok	шина 7: ок
+UI	tm_p22	planet ......... earth · orbit 3 · surface	планета ........ земля · орбита 3 · поверхность
+UI	tm_p23	sensor net ........... 212 nodes · 0 reply	сеть датчиков ........ 212 узлов · 0 ответов
+UI	tm_p24	systems offline ...... 6	системы отключены ... 6
+UI	tm_air_n	air	воздух
+UI	tm_air_f	air: filters clogged	воздух: фильтры забиты
+UI	tm_air_v1	clean	очистить
+UI	tm_air_v2	purge	продуть
+UI	tm_air_r2	purge needs clean filters	продувка требует чистых фильтров
+UI	tm_air_v3	seal	закрыть
+UI	tm_air_r3	sealed air does not move	закрытый воздух не движется
+UI	tm_air_v4	disable	отключить
+UI	tm_air_r4	air is already stalled	воздух и так стоит
+UI	tm_air_d1	scan air ... codes E12 E13 E40	скан воздуха ... коды E12 E13 E40
+UI	tm_air_d2	fan 1: stalled · fan 2: stalled	вентилятор 1: стоит · 2: стоит
+UI	tm_air_d3	particulates 9.4 mg/m3 (limit 2.0)	взвесь 9.4 мг/м3 (норма 2.0)
+UI	tm_air_i1	fan 1 ........ 1180 rpm	вентилятор 1 ... 1180 об/мин
+UI	tm_air_i2	fan 2 ........ 1204 rpm	вентилятор 2 ... 1204 об/мин
+UI	tm_air_i3	pressure ..... 0.71 atm	давление ....... 0.71 атм
+UI	tm_air_i4	particulates . 1.1 mg/m3	взвесь ......... 1.1 мг/м3
+UI	tm_air_ok	air: clear	воздух: чисто
+UI	tm_hatch_n	spaceport hatches	затворы космопорта
+UI	tm_hatch_f	hatches: sealed	затворы: закрыты
+UI	tm_hatch_v1	open	открыть
+UI	tm_hatch_r1	no hydraulic pressure	нет давления в гидравлике
+UI	tm_hatch_v2	pressurize	наддуть
+UI	tm_hatch_v3	lock	запереть
+UI	tm_hatch_r3	already sealed	уже заперты
+UI	tm_hatch_v4	disable	отключить
+UI	tm_hatch_r4	hatches are not running	затворы не работают
+UI	tm_hatch_d1	hydraulics ... 0 bar	гидравлика ... 0 бар
+UI	tm_hatch_d2	actuators 1–8: no response	приводы 1–8: нет ответа
+UI	tm_hatch_d3	seal pressure ... 0.00 atm	давление уплотнения ... 0.00 атм
+UI	tm_hatch_i1	hydraulics ... 210 bar	гидравлика ... 210 бар
+UI	tm_hatch_i2	actuators 1–8 .. ok	приводы 1–8 .. ок
+UI	tm_hatch_i3	hatch travel ... 0 → 100 %	ход затвора ... 0 → 100 %
+UI	tm_hatch_ok	hatches: open	затворы: открыты
+UI	tm_store_n	warehouses	склады
+UI	tm_store_f	warehouses: ledger stale	склады: учёт устарел
+UI	tm_store_v1	erase	стереть
+UI	tm_store_r1	the records are all there is	записи — это всё, что есть
+UI	tm_store_v2	archive	архивировать
+UI	tm_store_r2	a mismatched ledger cannot be archived	несошедшийся учёт не архивируют
+UI	tm_store_v3	recount	пересчитать
+UI	tm_store_v4	seal	опечатать
+UI	tm_store_r4	sealed stores cannot be counted	опечатанное не пересчитать
+UI	tm_store_d1	ledger checksum ... mismatch	сумма учёта ... не сходится
+UI	tm_store_d2	last entry ... unknown	последняя запись ... неизвестна
+UI	tm_store_d3	records ... 1204 · unverified	записей ... 1204 · не проверены
+UI	tm_store_i1	reading 1204 records	чтение 1204 записей
+UI	tm_store_i2	mismatches ... 17 → 0	расхождений ... 17 → 0
+UI	tm_store_i3	metal · rations · fuel · parts ... counted	металл · рационы · топливо · детали ... сосчитаны
+UI	tm_store_ok	warehouses: ledger updated	склады: учёт обновлён
+UI	tm_yard_n	shipyards	верфи
+UI	tm_yard_f	shipyards: idle	верфи: простаивают
+UI	tm_yard_v1	feed	подать
+UI	tm_yard_r1	tool heads are cold: material would jam	резцы холодные: материал встанет
+UI	tm_yard_v2	clear	очистить
+UI	tm_yard_r2	cradles are already empty	стапели и так пусты
+UI	tm_yard_v3	stop	остановить
+UI	tm_yard_r3	already idle	и так простаивают
+UI	tm_yard_v4	warm up	прогреть
+UI	tm_yard_d1	cradles 1–4 ... idle	стапели 1–4 ... простой
+UI	tm_yard_d2	material feed ... off	подача материала ... выкл
+UI	tm_yard_d3	tool heads ... cold	резцы ... холодные
+UI	tm_yard_i1	tool heads ... 240 °C	резцы ... 240 °C
+UI	tm_yard_i2	cradles 1–4 ... ready	стапели 1–4 ... готовы
+UI	tm_yard_i3	feed ... on	подача ... вкл
+UI	tm_yard_ok	shipyards: running	верфи: работают
+UI	tm_cap_n	capsules	капсулы
+UI	tm_cap_f	capsules: 128 sealed	капсулы: 128 закрыты
+UI	tm_cap_v1	open	открыть
+UI	tm_cap_r1	occupied and cold: not first	заняты и холодны: не с этого
+UI	tm_cap_v2	drain coolant	слить хладагент
+UI	tm_cap_r2	occupied: not now	заняты: не сейчас
+UI	tm_cap_v3	wake	разбудить
+UI	tm_cap_v4	seal	закрыть
+UI	tm_cap_r4	already sealed	уже закрыты
+UI	tm_cap_d1	sealed units ... 128	закрытых блоков ... 128
+UI	tm_cap_d2	coolant ... 4 °C	хладагент ... 4 °C
+UI	tm_cap_d3	occupied ... 128	заняты ... 128
+UI	tm_cap_i1	warm-up ... 4 → 36 °C	прогрев ... 4 → 36 °C
+UI	tm_cap_i2	locks ... released	замки ... сняты
+UI	tm_cap_i3	name plates ... 128 read	таблички ... 128 прочитано
+UI	tm_cap_ok	capsules: open · 128	капсулы: открыты · 128
+UI	tm_tr_n	translation	перевод
+UI	tm_tr_f	translation: offline	перевод: отключён
+UI	tm_tr_v1	translate	переводить
+UI	tm_tr_r1	no module loaded	модуль не загружен
+UI	tm_tr_v2	mute	заглушить
+UI	tm_tr_r2	the channel is already silent	канал и так молчит
+UI	tm_tr_v3	train	обучить
+UI	tm_tr_r3	nothing to train yet	пока нечего обучать
+UI	tm_tr_v4	link	подключить
+UI	tm_tr_d1	module ... offline	модуль ... отключён
+UI	tm_tr_d2	channel ... closed	канал ... закрыт
+UI	tm_tr_d3	speech of people ... not parsed by this unit	речь людей ... этот блок не разбирает
+UI	tm_tr_i1	module ... loaded	модуль ... загружен
+UI	tm_tr_i2	channel ... open	канал ... открыт
+UI	tm_tr_i3	voice ... calibrating	голос ... настройка
+UI	tm_tr_ok	translation: alexandra online	перевод: Александра на связи
+UI	tm_her	alexandra › I am here. I will translate.	Александра › Я здесь. Я буду переводить.

@@ -19,8 +19,6 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
     if(LNU.tut.open.order||!LNU.tut.lock){ const lines=Object.keys(G.colonies); if(G.ships.filter(s=>s.mode!=='dead').length<3+lines.length&&lines.length) orderFor(G,lines[G.day%lines.length],'courier') } });
   for(let it=0;it<cap&&Date.now()<deadline;it++){
     const s=await st(); if(process.env.TUT_DEBUG) console.log(it,JSON.stringify(s).slice(0,240)); if(s.over){ marks.over=s.over; break }
-    if(s.nar==='N01'){ if(!seen.includes('N01')){ seen.push('N01'); await shot('launch'); marks.launchFrames=await p.evaluate(()=>document.querySelectorAll('#launch .lfr').length) }
-      await p.mouse.click(600,450); await p.waitForTimeout(300); continue }
     if(s.msg){ if(seen[seen.length-1]!==s.msg) seen.push(s.msg);
       if(!marks['h_'+s.msg]){ marks['h_'+s.msg]={parts:await p.evaluate(()=>LN.earth.parts+(LN.delivered.parts||0)),halted:s.halted,text:await p.evaluate(()=>document.querySelector('#helper .htx').textContent),ring:await p.evaluate(()=>getComputedStyle(document.getElementById('tutRing')).display!=='none')}; await shot(s.msg) }
       if(s.mode==='do'){

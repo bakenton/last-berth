@@ -7,12 +7,13 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await UI.newPage(b,{vp:{width:1280,height:800}}); const U=UI.ui(p);
   await U.start(null,undefined,{tut:true}); await p.evaluate(()=>{ LNU.shiftStop=true });
-  await U.tap('[data-lang="ru"]'); await p.waitForTimeout(300);
-  ok('экран запуска по-русски', await p.evaluate(()=>LNI.tut().nar==='N01'&&document.querySelector('#launch .lfr.on .lln').textContent.startsWith('Земля выработана')&&/ИНСТИТУТ/i.test(document.querySelector('#launch .lcap').textContent)));
+  // v4.40: главное меню вместо экрана запуска — язык пунктом «Язык», затем «Новая игра», терминал по-русски, SKIP
+  const mn=await U.menuNew('ru');
+  ok('меню и терминал по-русски', mn.lang==='ru'&&mn.term&&/^\*\* пульт \d+\.\d+ · холодный пуск \*\*$/.test(mn.first)&&mn.gone, JSON.stringify(mn));
   const r=await TUT.drive(p,U,{deadline:T0+130000,shots:process.env.LB_SHOTS?'pw42':null});
   const S=r.seen, M=r.marks, F=M.final;
   ok('все 12 шагов до Ночи и ковчега', F.step===11, 'шаг '+F.step+' год '+F.day+' · '+S.join(' '));
-  const want=['N01','m0','m1','m2','m3','N02','m4','m8','mM','m9','m10','m14','m15','N07','m17','N08','m16','N09','m18','m19'];   // m12 waits for the first parts at home
+  const want=['m0','m1','m2','m3','N02','m4','m8','mM','m9','m10','m14','m15','N07','m17','N08','m16','N09','m18','m19'];   // m12 waits for the first parts at home
   const miss=want.filter(x=>!S.includes(x)); ok('показаны все правила и блоки истории шагов', !miss.length, 'нет '+miss.join(' ')+' · '+S.join(' '));
   ok('первое правило — по-русски, год из прогноза', /^Земля ест больше с каждым годом\. Рационы кончатся в \d+-м\.$/.test((M.h_m0||{}).text||''), (M.h_m0||{}).text);
   ok('m1 называет ферму', /^Заселите мир, где растёт еда, — [A-Z0-9 ]+\.$/.test((M.h_m1||{}).text||''), (M.h_m1||{}).text);

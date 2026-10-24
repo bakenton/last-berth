@@ -21,7 +21,7 @@ np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; f
 # v4.35 (16.10): сценарии переведены на новый интерфейс (окна, вкладки, тосты); убраны из full, т.к. проверяют удалённое:
 #   pw15 (док и рейка), pw16 и pw17 (пролог), pw23 (шесть вступительных карточек), pw34 (знак кольца, #nofree, рейка, телефон F-01..F-08),
 #   pw35 (панель флота с полосами v4.17 — заменена окном мира и вкладкой Fleet), pw39 (журнал, ячейка Земли, док у подвала). Файлы не удалены.
-FULL="smoke fuzz pw9 pw13 pw18 pw19 pw20 pw21 pw22 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw36 pw37 pw38 pw40 pw41 pw42 pw43 sim"
+FULL="smoke fuzz pw9 pw13 pw18 pw19 pw20 pw21 pw22 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw36 pw37 pw38 pw40 pw41 pw42 pw43 pw44 sim"
 SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
 SHOTS=0 RESUME=0 FRESH=0 REBASE=0 QUIET=0 NAMES=()
 for a in "$@"; do case "$a" in
