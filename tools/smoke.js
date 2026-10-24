@@ -36,7 +36,10 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   // фиксированный сид — через меню ≡, как игрок
   await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin','309573272'); await tap('[data-act="new"]');
   await p.waitForTimeout(200);
-  ok('the next game remembers: no helper', await p.evaluate(()=>!LNI.tut().help&&!LNI.tut().lock&&!LNI.tut().msg));
+  // v4.41 (Никита 24.10): обучение есть в каждой новой игре; выключенное — только на ту партию
+  ok('the next game starts with the helper again', await p.evaluate(()=>LNI.tut().help&&LNI.tut().lock&&LNI.tut().msg==='m0'&&localStorage.getItem('lb.help')===null));
+  await tap('#helper [data-act="tutskip"]');
+  ok('…and is turned off again for this run', await p.evaluate(()=>!LNI.tut().help&&!LNI.tut().lock&&!LNI.tut().msg));
   ok('new game started', await day()===0 && await p.evaluate(()=>LNU.paused===true));
   // 2. поселить ближайшую ферму: клик по миру → окно мира → «Отправить поселенцев»
   // Ближайшая ферма должна быть доступна мыши: в центре её кружка стоит чужой мир (на сиде 309573272 — Solace поверх Brine).

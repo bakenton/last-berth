@@ -194,7 +194,7 @@
  1626  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
-## ui.js (1566 строк)
+## ui.js (1569 строк)
 
 ```
 
@@ -357,167 +357,166 @@
   774  watchRings() [7]  ≈ if(U.gk!==G){ U.gk=G; U.noFreeAt=null; U.ringNoted=undefined; U.notes=[] }
 
   781  ## THE TUTORIAL AND THE STORY (V4.36; DESIGN/UI-V7.HTML, BRIEF «ОБУЧЕНИЕ» AND «НАРРАТИВ В МАКЕТЕ»)
-  791  var HELP_KEY  ≈ 'lb.help', TUTX={story:true,off:false}; // TUTX: the scenarios' hook (LNtut.off) and Test 
-  792  helpPref() [1]  ≈ if(TUTX.off) return false; try{ return localStorage.getItem(HELP_KEY)!=='0' }catch(e){ ret
-  793  setHelpPref(on) [1]  ≈ try{ localStorage.setItem(HELP_KEY,on?'1':'0') }catch(e){} }
-  794  var OPEN_ALL  ≈ ['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','part
-  795  var TAB_KEYS  ≈ {earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
-  796  tutBlank() [1]  ≈ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:nul
-  797  secVis(sec) [1]  ≈ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
-  798  visRings() [1]  ≈ return U.tut.lock&&!can('ring2')?Math.min(1,SECTORS.length):SECTORS.length }
-  799  ringFree(sec,kind) [1]  ≈ return PLANETS.filter(function(p){ return p.sec===sec&&(!kind||p.kind===kind)&&!G.colonies
-  800  firstCol() [1]  ≈ var t=U.tut; if(t.col&&G.colonies[t.col]) return t.col; return Object.keys(G.colonies)[0]|
-  801  builtHulls() [1]  ≈ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='building' }).length }
-  802  halfWorld() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return wst(k)==='half' })[0]||null }
-  803  lineless() [2]  ≈ var ks=Object.keys(G.colonies); if(!ks.length) return null;
-  805  mineFor() [1]  ≈ var k=Object.keys(G.colonies).filter(function(x){ return planet(x).kind==='mine' })[0]; if
-  806  fcYear() [1]  ≈ var f=G.foodFc||foodForecast(G); return f?f.y:'—' }
-  807  freeHullAtPier() [1]  ≈ return freeAtPier().some(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }) }
-  809  offLine() [1]  a hull that is on no line: free at the pier, or flying home after it set settlers down
-  810  closeAll() [1]  ≈ U.win=null; U.tab=null; U.pop=null; return {} }
-  812  var TMSG  the rules: where she points, how, and what the press must be
-  844  hullWorld(sid) [1]  ≈ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s
-  846  var NAR  the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; V — her voice (the launch, N-01, gav
-  857  var STEPS  twelve steps, one after another; the windows and the numbers a rule needs are taken when it is shown (pre), no
-  871  stepReady(i) [1]  ≈ var s=STEPS[i]; if(!s) return false; return s.when()||(!!s.soft&&stepReady(i+1)) }
-  872  var STEP_SAFE  ≈ 8; // HANDOFF: no hull is lost before the advisor step (G.safe)
-  873  tutOpen(keys) [3]  ≈ var t=U.tut; if(!t.lock) return;
-  876  tutOpenAll() [1]  ≈ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','pa
-  877  tutPush(id,p) [2]  ≈ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return;
-  879  tutStep(i) [1]  ≈ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function
-  880  partsHome() [1]  ≈ return (G.delivered.parts||0)>0||G.earth.parts>0 }
-  882  tutNew() [2]  a new game: step 1 (the main menu and its terminal come before it)
-  885  tutQuiet() [6]  a run already under way (an old save, or the helper turned on in the middle): what has happened is not told ag
-  891  tutLog() [7]  ≈ var t=U.tut, mx=t.seq;
-  898  tutJit() [11]  ≈ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
-  909  tutBusy() [1]  ≈ return modal() }
-  910  tutNext() [4]  ≈ var t=U.tut; if(t.msg||t.nar||!U.langPicked||G.over) return;
-  914  msgShow(it) [3]  ≈ var t=U.tut, m=TMSG[it.id]; U.pop=null; var p=m.pre?m.pre():{}; if(p===null) return false;
-  917  msgDone() [1]  ≈ var t=U.tut; if(!t.msg) return; t.msg=null; draw() }
-  918  var NART  ≈ null;
-  919  narShow(it) [4]  ≈ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(p===null) return false;
-  923  narDone() [1]  ≈ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
-  925  tutOff() [2]  SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on
-  927  tutOn() [1]  ≈ var t=U.tut; setHelpPref(true); if(t.help) return; t.help=true; tutQuiet(); act(G,'helper'
-  928  tutTick() [7]  ≈ var t=U.tut; if(!U.langPicked||G.over) return;
-  936  tutWants() [1]  is there something she wants to say before the clock runs on (SKIP stops there)
-  937  tutHold() [1]  ≈ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
-  939  tutTarget(m) [1]  the press: a rule lets through only its lit thing; her voice closes on any press
-  940  tutClick(ev) [11]  ≈ var t=U.tut, x=ev.target;
-  951  tutKey(e) [5]  ≈ var t=U.tut;
-  957  tutAct(a,v,res) [3]  after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot
-  961  tutPlace() [21]  the dark with a cut-out (+6 px, one or two pieces), the yellow ring, the helper over the map — or over the tar
-  982  tutLive(e) [1]  ≈ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]
-  983  narPlace() [6]  ≈ var n=U.tut.nar, V=el('voice');
-  990  alx(s) [1]  Alexandra's line under the Institute's in a big window
-  991  icap(right) [1]  ≈ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
-  993  var TUT_KEEP  in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is
-  994  tutSave() [3]  ≈ var t=U.tut, o={}; TUT_KEEP.forEach(function(k){ if(t[k]!==undefined) o[k]=t[k] });
-  997  tutLoad(o) [5]  a save from before v4.36: everything open, no helper, the story goes on from here
- 1002  tutState() [1]  ≈ var t=U.tut; return {lock:t.lock,help:t.help,step:t.step,msg:t.msg&&t.msg.id,mode:t.msg&&t
+  794  var TUTX  TUTX: off/story — this run goes without the helper and the voices (Test play, the scenarios' hook); hook — the
+  795  helpPref() [1]  ≈ return !TUTX.off }
+  796  var OPEN_ALL  ≈ ['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','part
+  797  var TAB_KEYS  ≈ {earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
+  798  tutBlank() [1]  ≈ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:nul
+  799  secVis(sec) [1]  ≈ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
+  800  visRings() [1]  ≈ return U.tut.lock&&!can('ring2')?Math.min(1,SECTORS.length):SECTORS.length }
+  801  ringFree(sec,kind) [1]  ≈ return PLANETS.filter(function(p){ return p.sec===sec&&(!kind||p.kind===kind)&&!G.colonies
+  802  firstCol() [1]  ≈ var t=U.tut; if(t.col&&G.colonies[t.col]) return t.col; return Object.keys(G.colonies)[0]|
+  803  builtHulls() [1]  ≈ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='building' }).length }
+  804  halfWorld() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return wst(k)==='half' })[0]||null }
+  805  lineless() [2]  ≈ var ks=Object.keys(G.colonies); if(!ks.length) return null;
+  807  mineFor() [1]  ≈ var k=Object.keys(G.colonies).filter(function(x){ return planet(x).kind==='mine' })[0]; if
+  808  fcYear() [1]  ≈ var f=G.foodFc||foodForecast(G); return f?f.y:'—' }
+  809  freeHullAtPier() [1]  ≈ return freeAtPier().some(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }) }
+  811  offLine() [1]  a hull that is on no line: free at the pier, or flying home after it set settlers down
+  812  closeAll() [1]  ≈ U.win=null; U.tab=null; U.pop=null; return {} }
+  814  var TMSG  the rules: where she points, how, and what the press must be
+  846  hullWorld(sid) [1]  ≈ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s
+  848  var NAR  the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; V — her voice (the launch, N-01, gav
+  859  var STEPS  twelve steps, one after another; the windows and the numbers a rule needs are taken when it is shown (pre), no
+  873  stepReady(i) [1]  ≈ var s=STEPS[i]; if(!s) return false; return s.when()||(!!s.soft&&stepReady(i+1)) }
+  874  var STEP_SAFE  ≈ 8; // HANDOFF: no hull is lost before the advisor step (G.safe)
+  875  tutOpen(keys) [3]  ≈ var t=U.tut; if(!t.lock) return;
+  878  tutOpenAll() [1]  ≈ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','pa
+  879  tutPush(id,p) [2]  ≈ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return;
+  881  tutStep(i) [1]  ≈ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function
+  882  partsHome() [1]  ≈ return (G.delivered.parts||0)>0||G.earth.parts>0 }
+  884  tutNew() [2]  a new game: step 1 (the main menu and its terminal come before it)
+  887  tutQuiet() [6]  a run already under way (an old save, or the helper turned on in the middle): what has happened is not told ag
+  893  tutLog() [7]  ≈ var t=U.tut, mx=t.seq;
+  900  tutJit() [11]  ≈ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
+  911  tutBusy() [1]  ≈ return modal() }
+  912  tutNext() [4]  ≈ var t=U.tut; if(t.msg||t.nar||!U.langPicked||G.over) return;
+  916  msgShow(it) [3]  ≈ var t=U.tut, m=TMSG[it.id]; U.pop=null; var p=m.pre?m.pre():{}; if(p===null) return false;
+  919  msgDone() [1]  ≈ var t=U.tut; if(!t.msg) return; t.msg=null; draw() }
+  920  var NART  ≈ null;
+  921  narShow(it) [4]  ≈ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(p===null) return false;
+  925  narDone() [1]  ≈ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
+  927  tutOff() [2]  SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on
+  929  tutOn() [1]  ≈ var t=U.tut; if(t.help) return; t.help=true; tutQuiet(); act(G,'helper',{on:true}) }
+  930  tutTick() [7]  ≈ var t=U.tut; if(!U.langPicked||G.over) return;
+  938  tutWants() [1]  is there something she wants to say before the clock runs on (SKIP stops there)
+  939  tutHold() [1]  ≈ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
+  941  tutTarget(m) [1]  the press: a rule lets through only its lit thing; her voice closes on any press
+  942  tutClick(ev) [11]  ≈ var t=U.tut, x=ev.target;
+  953  tutKey(e) [5]  ≈ var t=U.tut;
+  959  tutAct(a,v,res) [3]  after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot
+  963  tutPlace() [21]  the dark with a cut-out (+6 px, one or two pieces), the yellow ring, the helper over the map — or over the tar
+  984  tutLive(e) [1]  ≈ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]
+  985  narPlace() [6]  ≈ var n=U.tut.nar, V=el('voice');
+  992  alx(s) [1]  Alexandra's line under the Institute's in a big window
+  993  icap(right) [1]  ≈ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
+  995  var TUT_KEEP  in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is
+  996  tutSave() [3]  ≈ var t=U.tut, o={}; TUT_KEEP.forEach(function(k){ if(t[k]!==undefined) o[k]=t[k] });
+  999  tutLoad(o) [5]  a save from before v4.36: everything open, no helper, the story goes on from here
+ 1004  tutState() [1]  ≈ var t=U.tut; return {lock:t.lock,help:t.help,step:t.step,msg:t.msg&&t.msg.id,mode:t.msg&&t
 
- 1004  ## RENDER
- 1005  appZoom() [1]  ≈ return +(el('app').dataset.z||1) }
- 1006  drawSide() [3]  ≈ var t=U.tab, h='';
- 1009  drawWin() [3]  ≈ var w=U.win, h='';
- 1012  drawPop() [4]  ≈ var p=U.pop, h='', cls='';
- 1016  focusFix() [4]  ≈ var now=Date.now();
- 1020  draw() [6]  ≈ if(!G) return;
+ 1006  ## RENDER
+ 1007  appZoom() [1]  ≈ return +(el('app').dataset.z||1) }
+ 1008  drawSide() [3]  ≈ var t=U.tab, h='';
+ 1011  drawWin() [3]  ≈ var w=U.win, h='';
+ 1014  drawPop() [4]  ≈ var p=U.pop, h='', cls='';
+ 1018  focusFix() [4]  ≈ var now=Date.now();
+ 1022  draw() [6]  ≈ if(!G) return;
 
- 1027  ## HULLS: WHERE EACH ONE IS, IN ONE LINE
- 1028  hullSt(s) [22]  ≈ var wl=forWorld(s);
- 1050  stRow(s) [3]  ≈ var a=hullSt(s);
- 1053  hullRow(s,acts,id) [2]  ≈ var g=hullGen(s);
- 1055  speedTxt(hl) [1]  ≈ return (hl.speed*driveSpeed(G)).toFixed(2) }
- 1056  specIcons(h) [1]  ≈ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedT
- 1057  hullCost(h) [1]  ≈ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
- 1058  clsSeen(cls) [1]  v4.36: a hull that costs parts shows up once parts are open
+ 1029  ## HULLS: WHERE EACH ONE IS, IN ONE LINE
+ 1030  hullSt(s) [22]  ≈ var wl=forWorld(s);
+ 1052  stRow(s) [3]  ≈ var a=hullSt(s);
+ 1055  hullRow(s,acts,id) [2]  ≈ var g=hullGen(s);
+ 1057  speedTxt(hl) [1]  ≈ return (hl.speed*driveSpeed(G)).toFixed(2) }
+ 1058  specIcons(h) [1]  ≈ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedT
+ 1059  hullCost(h) [1]  ≈ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
+ 1060  clsSeen(cls) [1]  v4.36: a hull that costs parts shows up once parts are open
 
- 1060  ## THE WORLD WINDOW
- 1061  stepOrder(pid) [3]  ≈ var col=!!G.colonies[pid];
- 1064  openWorld(pid,focus) [3]  v4.38: the advisor names a hull — open the tab she is on and light her
- 1067  var FOCUS  ≈ {evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
- 1068  var KW  ≈ {mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
- 1069  wsub(p,extra) [1]  ≈ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toU
- 1070  sendFuel(p) [1]  ≈ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
- 1071  lobeTxt(p) [1]  ≈ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.len
- 1072  assignable(pid) [2]  ≈ var p=planet(pid);
- 1075  pickCourier(pid) [6]  v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that wo
- 1081  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
- 1082  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
- 1083  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
- 1091  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
- 1094  machines(p,c) [15]  before the Gen III yards the block is only noise
- 1109  winWorld(pid) [67]  ≈ var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
- 1177  seamShort(pid) [1]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace
- 1178  seamLeft(pid) [3]  ≈ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
- 1182  picker() [7]  the hull picker: send a free hull, or move one off its line; closed by «keep it where it is» or a press beside
+ 1062  ## THE WORLD WINDOW
+ 1063  stepOrder(pid) [3]  ≈ var col=!!G.colonies[pid];
+ 1066  openWorld(pid,focus) [3]  v4.38: the advisor names a hull — open the tab she is on and light her
+ 1069  var FOCUS  ≈ {evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
+ 1070  var KW  ≈ {mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
+ 1071  wsub(p,extra) [1]  ≈ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toU
+ 1072  sendFuel(p) [1]  ≈ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
+ 1073  lobeTxt(p) [1]  ≈ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.len
+ 1074  assignable(pid) [2]  ≈ var p=planet(pid);
+ 1077  pickCourier(pid) [6]  v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that wo
+ 1083  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
+ 1084  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
+ 1085  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
+ 1093  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
+ 1096  machines(p,c) [15]  before the Gen III yards the block is only noise
+ 1111  winWorld(pid) [67]  ≈ var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
+ 1179  seamShort(pid) [1]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace
+ 1180  seamLeft(pid) [3]  ≈ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
+ 1184  picker() [7]  the hull picker: send a free hull, or move one off its line; closed by «keep it where it is» or a press beside
 
- 1190  ## YARD: WHAT IS BEING BUILT, A FREE HULL OF THE CURRENT GENERATION, THE PIER
- 1191  winYard() [15]  ≈ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
+ 1192  ## YARD: WHAT IS BEING BUILT, A FREE HULL OF THE CURRENT GENERATION, THE PIER
+ 1193  winYard() [15]  ≈ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
 
- 1207  ## FLEET: EVERY HULL AND WHERE IT IS (NO PAUSE)
- 1208  sideFleet() [12]  ≈ var all=G.ships.filter(function(s){ return s.mode!=='dead' });
- 1220  searchFuel(m) [1]  ≈ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=
- 1221  bestSearch(m) [2]  ≈ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target)
+ 1209  ## FLEET: EVERY HULL AND WHERE IT IS (NO PAUSE)
+ 1210  sideFleet() [12]  ≈ var all=G.ships.filter(function(s){ return s.mode!=='dead' });
+ 1222  searchFuel(m) [1]  ≈ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=
+ 1223  bestSearch(m) [2]  ≈ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target)
 
- 1224  ## WORLDS: THE LIST, WORST FIRST
- 1225  var SEV  ≈ {dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
- 1226  sideWorlds() [8]  ≈ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).ma
+ 1226  ## WORLDS: THE LIST, WORST FIRST
+ 1227  var SEV  ≈ {dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
+ 1228  sideWorlds() [8]  ≈ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).ma
 
- 1235  ## TECH: THE HULL GENERATION (THE DRIVE PROGRAMME), THE NEXT GENERATION'S SPECS, THE RINGS
- 1238  steps(n,of,col) [3]  BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs a
- 1241  worksList() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return planet(k).kind==='works' }) }
- 1242  driveHost() [3]  ≈ var ws=worksList(), u=U.driveAt;
- 1245  startDriveWhy(pid) [4]  ≈ if(G.drive) return 'running';
- 1249  sideTech() [29]  ≈ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWor
+ 1237  ## TECH: THE HULL GENERATION (THE DRIVE PROGRAMME), THE NEXT GENERATION'S SPECS, THE RINGS
+ 1240  steps(n,of,col) [3]  BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs a
+ 1243  worksList() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return planet(k).kind==='works' }) }
+ 1244  driveHost() [3]  ≈ var ws=worksList(), u=U.driveAt;
+ 1247  startDriveWhy(pid) [4]  ≈ if(G.drive) return 'running';
+ 1251  sideTech() [29]  ≈ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWor
 
- 1279  ## ARK: THE NIGHT, THE LEVELS, THE CONVOY, THE VERDICT
- 1280  arkDriveTxt() [6]  ≈ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
- 1286  winArk() [24]  ≈ if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_
+ 1281  ## ARK: THE NIGHT, THE LEVELS, THE CONVOY, THE VERDICT
+ 1282  arkDriveTxt() [6]  ≈ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
+ 1288  winArk() [24]  ≈ if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_
 
- 1311  ## THE ADVISOR: WORLDS ONLY, WORST FIRST (NIKITA 15.10: «НЕ ПОНИМАЮ, ЧТО ДЕЛАТЬ»)
- 1314  advRows() [18]  v4.38: a hull named for one line is not offered to the next
- 1334  lineFix(pid,used) [5]  v4.38 (Nikita, 19.10, option A): the one fix for a line that falls behind — a free hull, a spare one off anoth
- 1339  popAdv() [2]  ≈ var a=advRows();
- 1341  popMenu() [8]  ≈ return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('
+ 1313  ## THE ADVISOR: WORLDS ONLY, WORST FIRST (NIKITA 15.10: «НЕ ПОНИМАЮ, ЧТО ДЕЛАТЬ»)
+ 1316  advRows() [18]  v4.38: a hull named for one line is not offered to the next
+ 1336  lineFix(pid,used) [5]  v4.38 (Nikita, 19.10, option A): the one fix for a line that falls behind — a free hull, a spare one off anoth
+ 1341  popAdv() [2]  ≈ var a=advRows();
+ 1343  popMenu() [8]  ≈ return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('
 
- 1350  ## THE MAIN MENU (WORK/MENU.JS, V4.40): IN FRONT OF A NEW RUN WHOSE CLOCK STANDS; ITS TERMINAL TELLS THE START
- 1351  var LANG_KEY  ≈ 'lb.lang';
- 1353  menuLang() [2]  the menu speaks the language of the save on record, else the one chosen here last time, else the browser's
- 1355  menuOpen() [10]  ≈ U.menu=true; draw();
+ 1352  ## THE MAIN MENU (WORK/MENU.JS, V4.40): IN FRONT OF A NEW RUN WHOSE CLOCK STANDS; ITS TERMINAL TELLS THE START
+ 1353  var LANG_KEY  ≈ 'lb.lang';
+ 1355  menuLang() [2]  the menu speaks the language of the save on record, else the one chosen here last time, else the browser's
+ 1357  menuOpen() [10]  ≈ U.menu=true; draw();
 
- 1366  ## SAVE AND LOAD: A FILE, AND THE LAST AUTOSAVE IN THIS BROWSER
- 1367  var SAVE_KEY  ≈ 'lb.save';
- 1368  dump() [2]  ≈ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,
- 1370  undump(t) [8]  ≈ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) }
- 1378  autosave() [1]  ≈ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
- 1379  loadAuto() [2]  ≈ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
- 1381  saveFile() [2]  ≈ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
+ 1368  ## SAVE AND LOAD: A FILE, AND THE LAST AUTOSAVE IN THIS BROWSER
+ 1369  var SAVE_KEY  ≈ 'lb.save';
+ 1370  dump() [2]  ≈ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,
+ 1372  undump(t) [8]  ≈ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) }
+ 1380  autosave() [1]  ≈ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
+ 1381  loadAuto() [2]  ≈ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
+ 1383  saveFile() [2]  ≈ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
 
- 1387  ## RUN LOG
- 1388  showLog() [1]  ≈ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog')
- 1390  saveLog() [5]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
- 1395  copyLog() [3]  ≈ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false;
+ 1389  ## RUN LOG
+ 1390  showLog() [1]  ≈ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog')
+ 1392  saveLog() [5]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
+ 1397  copyLog() [3]  ≈ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false;
 
- 1399  ## SKIP: THE CLOCK RUNS ON UNTIL SOMETHING WANTS THE DESK
- 1400  skipAhead() [8]  ≈ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now()
+ 1401  ## SKIP: THE CLOCK RUNS ON UNTIL SOMETHING WANTS THE DESK
+ 1402  skipAhead() [8]  ≈ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now()
 
- 1409  ## PRESSES
- 1411  var lineWhy  v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier 
- 1412  lineRes(res,sid,pid) [1]  ≈ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res
- 1413  lineWait(sid) [1]  ≈ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
- 1414  resLeft(sid) [1]  ≈ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
- 1415  doAct(a,b) [53]  ≈ var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
+ 1411  ## PRESSES
+ 1413  var lineWhy  v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier 
+ 1414  lineRes(res,sid,pid) [1]  ≈ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res
+ 1415  lineWait(sid) [1]  ≈ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
+ 1416  resLeft(sid) [1]  ≈ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
+ 1417  doAct(a,b) [53]  ≈ var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
 
- 1501  ## THE MAP IS PANNABLE AND ZOOMABLE
- 1516  fit() [2]  desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows
+ 1503  ## THE MAP IS PANNABLE AND ZOOMABLE
+ 1518  fit() [2]  desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows
 
- 1520  ## LOOP
- 1522  var MS  v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year
- 1523  frame(ts) [24]  ≈ if(!U.last) U.last=ts;
- 1548  tutMute() [1]  everything open, no voices, no helper: the scenarios' hook and the menu's Test play
- 1549  start(seed) [9]  ≈ G=newGame(seed||undefined); tutNew();
+ 1522  ## LOOP
+ 1524  var MS  v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year
+ 1525  frame(ts) [24]  ≈ if(!U.last) U.last=ts;
+ 1550  tutMute() [1]  everything open, no voices, no helper: the scenarios' hook and the menu's Test play
+ 1551  start(seed) [10]  a new game: the helper and the voices again (Test play muted only its own run)
 ```
 
 ## menu.js (399 строк)

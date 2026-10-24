@@ -786,11 +786,13 @@ function watchRings(){
    no price and no burn uses a resource the player cannot see yet. The story (NAR) goes through the same queue — never at
    once with a rule, the story first. V — her voice (no dim, time runs, 8 s or a press; Claude: time
    stands while a rule waits right behind it); W — a big window (the shift, the Night, the end — bigHtml).
-   U.tut: lock — what is not open is hidden; help — the rules speak; the story speaks either way. The helper preference is
-   kept in this browser; an old save without U.tut has everything open and no helper. */
-var HELP_KEY='lb.help', TUTX={story:true,off:false};   // TUTX: the scenarios' hook (LNtut.off) and Test play mute the voices and the helper
-function helpPref(){ if(TUTX.off) return false; try{ return localStorage.getItem(HELP_KEY)!=='0' }catch(e){ return true } }
-function setHelpPref(on){ try{ localStorage.setItem(HELP_KEY,on?'1':'0') }catch(e){} }
+   U.tut: lock — what is not open is hidden; help — the rules speak; the story speaks either way. v4.41 (Nikita 24.10): every new
+   game starts with the helper; turned off in the game, it is off for that run only (nothing is kept in the browser). An old save
+   without U.tut has everything open and no helper. */
+/* TUTX: off/story — this run goes without the helper and the voices (Test play, the scenarios' hook); hook — the scenarios' hook
+   (LNtut.off): it holds for every next run of the page, Test play only for its own */
+var TUTX={story:true,off:false,hook:false};
+function helpPref(){ return !TUTX.off }
 var OPEN_ALL=['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
 var TAB_KEYS={earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
 function tutBlank(){ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:null} }
@@ -922,9 +924,9 @@ function narShow(it){ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(
   return true }
 function narDone(){ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
 /* SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on */
-function tutOff(){ var t=U.tut; setHelpPref(false); if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false;
+function tutOff(){ var t=U.tut; if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false;
   t.q=t.q.filter(function(x){ return !TMSG[x.id] }); t.msg=null; act(G,'helper',{on:false}) }
-function tutOn(){ var t=U.tut; setHelpPref(true); if(t.help) return; t.help=true; tutQuiet(); act(G,'helper',{on:true}) }
+function tutOn(){ var t=U.tut; if(t.help) return; t.help=true; tutQuiet(); act(G,'helper',{on:true}) }
 function tutTick(){ var t=U.tut; if(!U.langPicked||G.over) return;
   tutLog();
   if(t.step>=0&&stepReady(t.step+1)) tutStep(t.step+1);
@@ -1547,12 +1549,13 @@ function frame(ts){
 /* everything open, no voices, no helper: the scenarios' hook and the menu's Test play */
 function tutMute(){ TUTX.off=true; TUTX.story=false; clearTimeout(NART); var t=U.tut; t.nar=null; t.q=[]; t.msg=null; if(t.lock){ G.safe=false; t.lock=false; tutOpenAll() } t.help=false; draw() }
 function start(seed){
+  if(!TUTX.hook){ TUTX.off=false; TUTX.story=true }   // a new game: the helper and the voices again (Test play muted only its own run)
   G=newGame(seed||undefined); tutNew();
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
-  window.LNtut={off:function(){ LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
+  window.LNtut={off:function(){ TUTX.hook=true; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
   draw();
 }
 (function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en';

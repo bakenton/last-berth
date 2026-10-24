@@ -62,12 +62,19 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('≡ shows Helper off', /Helper\s*off/i.test(await q.evaluate(()=>document.querySelector('#pop [data-act="help"]').textContent)));
   await V.tap('#pop [data-act="help"]');
   ok('≡ Helper on: the rules speak again, nothing is hidden', await q.evaluate(()=>{ const t=LNI.tut(); return t.help&&!t.lock }));
-  ok('…the helper preference is kept in the browser', await q.evaluate(()=>localStorage.getItem('lb.help')==='1'));
+  ok('…the choice is for this run only: nothing kept in the browser', await q.evaluate(()=>localStorage.getItem('lb.help')===null));
   // 4. a save from before v4.36 (no U.tut): everything open, no helper, the story goes on from here
   const old=await q.evaluate(()=>{ const o=JSON.parse(LNsave()); delete o.U.tut; return JSON.stringify(o) });
   await q.evaluate(s=>LNload(s),old);
   ok('old save: everything open, no helper, nothing told again', await q.evaluate(()=>{ const t=LNI.tut(); return !t.lock&&!t.help&&!t.msg&&!t.nar&&!t.q.length&&t.step>=2&&document.querySelectorAll('#tabs [data-act="tab"]').length===6 }), JSON.stringify(await q.evaluate(()=>LNI.tut())));
   ok('no page errors (skip, menu, old save)', q.errs.length===0, q.errs.join(' | '));
+  // 5. v4.41 (Никита 24.10): обучение есть в каждой новой игре — SKIP THE HELPER выключает его только на эту партию
+  const w=await UI.newPage(b,{vp:{width:1280,height:800}}); const X=UI.ui(w);
+  await X.start(null,undefined,{tut:true}); await X.menuNew('en'); await w.waitForTimeout(300);
+  await X.tap('#helper [data-act="tutskip"]'); ok('SKIP THE HELPER: off for this run', await w.evaluate(()=>!LNI.tut().help));
+  await X.tap('[data-act="pop"][data-v="menu"]'); await X.tap('#pop [data-act="new"]'); await w.waitForTimeout(200);
+  ok('the next new game starts with the helper anyway', await w.evaluate(()=>{ const t=LNI.tut(); return t.help&&t.lock&&t.msg==='m0' }));
+  ok('no page errors (helper again)', w.errs.length===0, w.errs.join(' | ')); await w.close();
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

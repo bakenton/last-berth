@@ -75,6 +75,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.reload(); await p.waitForTimeout(600);
   await U.tap('#menu [data-m="test"]');
   ok('Test play: no terminal, the game opens with everything open and no helper', await waitGone(p)&&await p.evaluate(()=>{ const t=LNI.tut(); return !t.lock&&!t.help&&!t.msg&&LN.day===0&&document.querySelectorAll('#tabs [data-act="tab"]').length===6 }));
+  await U.tap('[data-act="pop"][data-v="menu"]'); await U.tap('#pop [data-act="new"]'); await p.waitForTimeout(200);
+  ok('after Test play, a new game from ≡ starts with the helper', await p.evaluate(()=>{ const t=LNI.tut(); return t.help&&t.lock&&t.msg==='m0' }));
   ok('no page errors (continue, file, test play)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
 
