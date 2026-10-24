@@ -520,3 +520,4 @@ UI	u_aSpareC	{h} runs half empty — move her where a line falls behind, or take
 UI	u_aSpareN	{n} hulls too many. First: {h} — move her, or take her off	Лишних судов: {n}. Первое — {h}: переведите или снимите
 UI	u_fixHull	Show the hull	Показать судно
 UI	u_testPlay	Test play · debug panel	Тест-плей · панель отладки
+UI	u_olderGen	Generation {g} needs {n} more parts	Поколению {g} не хватает деталей: {n}

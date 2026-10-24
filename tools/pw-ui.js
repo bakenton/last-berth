@@ -22,7 +22,8 @@ function ui(p){
       if(k==='shift') await tap('[data-act="shiftok"]'); else if(k==='night') await tap('[data-act="nightok"]'); else if(k==='note') await tap('[data-act="noteok"]'); else break } };
   const clear=async()=>{ await closeBig();
     for(let i=0;i<4&&await p.isVisible('#pfL [data-act="pfok"]');i++) await tap('#pfL [data-act="pfok"]') };
-  const speed=async v=>{ if(v===0){ if(!(await p.evaluate(()=>LNU.paused))) await tap('#top [data-act="spd"][data-v="0"]') } else await tap('#top [data-act="spd"][data-v="'+v+'"]') };
+  // v4.42: the player has 1/2/4 — a scenario's 10 is set through the hook (no button any more), the rest are pressed
+  const speed=async v=>{ if(v===0){ if(!(await p.evaluate(()=>LNU.paused))) await tap('#top [data-act="spd"][data-v="0"]') } else if(v===10) await p.evaluate(()=>{ LNU.speed=10; LNU.paused=false; LNdraw() }); else await tap('#top [data-act="spd"][data-v="'+v+'"]') };
   const pause=()=>speed(0);
   const play=async(v=10)=>{ await speed(v) };
   // идти вперёд на скорости v, закрывая окна, пока cond() истинно не станет; cap — число итераций по ~250 мс

@@ -10,7 +10,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.start('en',309573272); await p.addScriptTag({content:BOT});
   // 1. speed buttons and the clock
   const spd=await p.evaluate(()=>[...document.querySelectorAll('#top [data-act="spd"][data-v]:not([data-v="0"])')].map(e=>e.dataset.v+':'+e.textContent).join(' '));
-  ok('speed buttons 1/2/4/10', spd==='1:1× 2:2× 4:4× 10:10×', spd);
+  ok('speed buttons 1/2/4 (v4.41: no 10×)', spd==='1:1× 2:2× 4:4×', spd);
   ok('default speed 2×', await p.evaluate(()=>LNU.speed===2));
   await U.speed(1); const y0=await p.evaluate(()=>LN.day); await p.waitForTimeout(3100); await U.pause();
   const y1=await p.evaluate(()=>LN.day);

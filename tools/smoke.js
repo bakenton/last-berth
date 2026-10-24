@@ -1,6 +1,6 @@
 // smoke — v4.35 interface, один сквозной прогон, реальная мышь:
 // язык → поселить ближайшую ферму через окно мира → дождаться посадки → второе судно на линию (assign) →
-// 200 лет на ×10 (смена / события / личные дела закрываются кнопками) → вкладки Worlds · Earth · Tech · Yard · Fleet · Ark → нет ошибок страницы.
+// 200 лет на ×4 (смена / события / личные дела закрываются кнопками) → вкладки Worlds · Earth · Tech · Yard · Fleet · Ark → нет ошибок страницы.
 // v4.36: экран запуска — SKIP, первая подсказка — SKIP THE HELPER (путь игрока, который обучение не хочет); голос Александры закрывается нажатием. Без скриншотов. Запуск через tools/regress.sh smoke (пути переписывает regress.sh).
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,200):''));
@@ -13,13 +13,13 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   // пока элемента нет — повтор. Элемент прокручивается в видимую часть.
   const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
     if(bb){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); return } if(k>=6) throw new Error('no '+sel); await p.waitForTimeout(150) } };
-  const SPD10='[data-act="spd"][data-v="10"]', PAUSE='[data-act="spd"][data-v="0"]';
+  const SPD10='[data-act="spd"][data-v="4"]', PAUSE='[data-act="spd"][data-v="0"]';
   // закрыть всё, что останавливает время: смена (с остановкой), событие, Ночь, личное дело
   const clear=async()=>{ for(let i=0;i<8;i++){ const k=await p.evaluate(()=>LNI.big());
       if(k==='shift') await tap('[data-act="shiftok"]'); else if(k==='night') await tap('[data-act="nightok"]'); else if(k==='note') await tap('[data-act="noteok"]'); else break }
     if(await p.isVisible('#pfL [data-act="pfok"]')) await tap('#pfL [data-act="pfok"]');
     if(await p.isVisible('#voice.on')) await tap('#voice') };
-  // идти на ×10, закрывая окна, пока cond() не станет истиной (или cap итераций)
+  // идти на ×4, закрывая окна, пока cond() не станет истиной (или cap итераций)
   const until=async(cond,cap)=>{ for(let t=0;t<cap;t++){ if(await cond()) return true; await clear(); if(await p.evaluate(()=>LNU.paused)) await tap(SPD10); await p.waitForTimeout(250) } return !!(await cond()) };
   const day=()=>p.evaluate(()=>LN.day);
   await p.goto(require('url').pathToFileURL(WORK).href+'/page.html'); await p.waitForTimeout(300);
@@ -55,7 +55,7 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   ok('world window of the farm '+farm, await p.isVisible('#ovl .win'), farm);
   await tap('[data-act="send"][data-p="'+farm+'"]');
   ok('settlers sent', await p.evaluate(f=>LN.ships.some(s=>s.job==='colonize'&&s.dest===f),farm));
-  // 3. ждать посадки (колония появилась), время на ×10
+  // 3. ждать посадки (колония появилась), время на ×4
   const landed=await until(()=>p.evaluate(f=>!!LN.colonies[f],farm),150);
   ok('colony landed', landed, await day());
   // 4. второе судно на линию: пауза, окно мира, первая свободная строка «Добавить судно» → Назначить на линию
@@ -65,10 +65,10 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   await tap('#addblk [data-act="assign"]');
   ok('hull assigned to the line', await p.evaluate(f=>LN.ships.some(s=>s.from===f&&s.mode!=='dead'),farm));
   await p.keyboard.press('Escape');   // окно мира закрывается Escape (крестика нет)
-  // 5. 200 лет на ×10
+  // 5. 200 лет на ×4
   const d0=await day();
   await tap(SPD10);
-  const reached=await until(async()=>(await day())>=d0+200||await p.evaluate(()=>!!LN.over),400);
+  const reached=await until(async()=>(await day())>=d0+200||await p.evaluate(()=>!!LN.over),700);   // v4.42: 4× is the top speed — 200 years take ~2 minutes
   await tap(PAUSE);
   const d1=await day();
   ok('200 years at x10', reached&&d1-d0>=200, d0+'→'+d1);

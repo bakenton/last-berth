@@ -1,7 +1,7 @@
 // pw-tut — проводник по обучению v4.36 для pw41 (EN) и pw42 (RU): новый игрок с экрана запуска до Ночи, мышью.
 // Подсказки «сделай» нажимаются по подсвеченному месту, «смотри» — GOT IT, голос — нажатием, большие окна — их кнопками.
 // Остальная игра (поселить свободный мир, поставить свободное судно на линию, подкормить Землю) — через ядро, чтобы забег дожил до Ночи;
-// время — кнопкой SKIP (она останавливается, когда помощнику есть что сказать) или ×10.
+// время — кнопкой SKIP (она останавливается, когда помощнику есть что сказать) или ×4.
 async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
   const seen=[], marks={};   // seen — что показано по порядку; marks — проверки по ходу
   const box=sel=>p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
@@ -28,7 +28,7 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
           const pid=await p.evaluate(()=>LNU.tut.farm); marks.ring2Before=await p.evaluate(()=>document.querySelectorAll('#map .wd[data-p]').length);
           await click('#map .wd[data-p="'+pid+'"] circle[fill="transparent"]') }
         else if(s.msg==='m2'){ marks.fuelInPrice=await p.evaluate(()=>!!document.querySelector('#ovl .prow .pr svg')&&document.querySelectorAll('#ovl .prow .pr').length); await click('#ovl [data-act="send"]') }
-        else if(s.msg==='m3') await click('#top [data-act="spd"][data-v="10"]');
+        else if(s.msg==='m3') await click('#top [data-act="spd"][data-v="4"]');
         else if(s.msg==='m4') await click('#ovl [data-act="assign"]');
         else if(s.msg==='m8') await click('#ordblk [data-act="order"]:not([aria-disabled="true"])');
         else await click('#helper [data-act="tutok"]');
@@ -48,7 +48,7 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
     if(s.step>=10&&marks.ring2After===undefined) marks.ring2After=await p.evaluate(()=>document.querySelectorAll('#map .wd[data-p]').length);
     await play();
     if(s.open.includes('skip')){ await click('#top [data-act="skip"]'); await p.waitForTimeout(80) }
-    else { if(await p.evaluate(()=>LNU.paused)) await click('#top [data-act="spd"][data-v="10"]'); await p.waitForTimeout(400) }
+    else { if(await p.evaluate(()=>LNU.paused||LNU.speed!==10)) await p.evaluate(()=>{ LNU.speed=10; LNU.paused=false }); await p.waitForTimeout(400) }   // v4.42: the scenario's 10× is a hook (no button)
   }
   marks.final=await st();
   return {seen,marks} }

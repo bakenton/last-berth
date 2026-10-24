@@ -163,7 +163,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   /* ---------- скорость ---------- */
   async function ensureRunning(){ const s=await S(); if(!s||s.over||s.big) return;
     if(s.win&&PAUSING.has(s.win)) return;   // the bot is in the middle of a task: Yard / Earth / Ark stand the clock on purpose
-    if(s.paused||s.speed!==10){ if(s.pop) await p.keyboard.press('Escape'); await tap('#top [data-act="spd"][data-v="10"]',{soft:true}) } }
+    if(s.paused||s.speed!==4){ if(s.pop) await p.keyboard.press('Escape'); await tap('#top [data-act="spd"][data-v="4"]',{soft:true}) } }
 
   /* ---------- аудит экрана ---------- */
   async function audit(tag){
@@ -217,8 +217,8 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
     await p.addScriptTag({content:inPage});
     await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C=Object.fromEntries(list.map(n=>[n,window[n]])); window.__st={idleY:{},fuelHist:[],want:{}}; window.__lastDay=-1 },names);
     rec('brain',{brain:'sim',style:STYLE}) }
-  await tap('#top [data-act="spd"][data-v="10"]');
-  marks.push({t:wall(),year:0,what:'игра начата на ×10'});
+  await tap('#top [data-act="spd"][data-v="4"]');
+  marks.push({t:wall(),year:0,what:'игра начата на ×4'});
 
   /* ---------- учёт действий ---------- */
   const lastDid={}, lastTry={}, did=[], failWhy={}; let lastActYear=0; const idleStretches=[];
