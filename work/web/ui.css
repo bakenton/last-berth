@@ -184,7 +184,7 @@ svg.gi{fill:currentColor}
 .pfn{font-size:15px;font-weight:600;letter-spacing:.08em;margin-top:2px}.pfm{font-size:11.5px;color:var(--mid)}.pfl{font-size:14.5px;line-height:1.4;margin:6px 0}
 .pfbox .b{float:right}
 /* v4.36: the tutorial and the story (design/ui-v7.html): the dark with a cut-out, the yellow ring, Alexandra's panel over the map,
-   her voice at the foot of the map, the launch screen with four frames, her line under the Institute's in a big window */
+   her voice at the foot of the map, her line under the Institute's in a big window (the launch screen gave way to the main menu in v4.40) */
 #tutL{position:absolute;inset:0;z-index:24;background:rgba(5,5,6,.8);display:none}#tutL.on{display:block}
 #tutRing,#tutRing2{position:absolute;z-index:25;border:2px solid var(--ppl);pointer-events:none;display:none;animation:tr 1.3s infinite}
 @keyframes tr{0%{box-shadow:0 0 0 0 rgba(255,210,63,.45)}70%{box-shadow:0 0 0 10px rgba(255,210,63,0)}100%{box-shadow:0 0 0 0 rgba(255,210,63,0)}}

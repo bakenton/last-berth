@@ -1357,7 +1357,7 @@ function menuOpen(){ U.menu=true; draw();
     save:function(){ return U.saveDay!==null&&U.saveDay!==undefined?{y:U.saveDay,w:U.saveWorlds||0}:null },
     sound:function(){ return SFX.isOn() }, setSound:function(on){ SFX.set(on) },
     setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
-    cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return false },
+    cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return whyText('loadfail') },
     load:function(){ el('loadin').click() },
     newRun:function(){ U.langPicked=true; act(G,'menu',{go:'new'}) },
     test:function(){ U.langPicked=true; tutMute(); act(G,'menu',{go:'test'}) },
@@ -1382,7 +1382,7 @@ function saveFile(){ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.jso
   try{ var b=new Blob([data],{type:'application/json'}), u=URL.createObjectURL(b), a=document.createElement('a'); a.href=u; a.download=name; document.body.appendChild(a); a.click(); setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(u) },500); say('ok_savegame') }catch(e){ say('savefail') } }
 el('loadin').addEventListener('change',function(){ var f=this.files&&this.files[0]; if(!f) return; var r=new FileReader();
   r.onload=function(){ var fromMenu=U.menu; if(fromMenu) U.langPicked=true;
-    try{ undump(String(r.result)); say('ok_loadgame',{y:G.day}); if(fromMenu) LBMENU.fadeOut() }catch(e){ if(fromMenu) U.langPicked=false; say('loadfail') } }; r.readAsText(f); this.value='' });
+    try{ undump(String(r.result)); say('ok_loadgame',{y:G.day}); if(fromMenu) LBMENU.fadeOut() }catch(e){ if(fromMenu){ U.langPicked=false; LBMENU.note(whyText('loadfail')) } say('loadfail') } }; r.readAsText(f); this.value='' });
 
 /* ---------- run log ---------- */
 function showLog(){ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog'); el('b-savelog').textContent=T('saveBtn'); el('b-copylog').textContent=T('copyBtn'); el('b-closelog').textContent=T('closeBtn'); el('logbox').hidden=false; el('logtxt').focus(); el('logtxt').select() }

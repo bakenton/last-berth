@@ -54,10 +54,12 @@ function sceneStart(cv){ var gl=null, sc=null, t0=performance.now();
   try{ gl=cv.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'}) }catch(e){ gl=null }
   if(gl) sc=hexScene(gl,phone());
   if(sc){ GLX=gl; var dpr=Math.min(window.devicePixelRatio||1,1.5);
+    cv.addEventListener('webglcontextlost',function(e){ e.preventDefault(); if(OPEN&&cv.isConnected){ GLX=null; flatStart(cv,t0) } });   // the GPU was reset: the flat field, no dive
     (function frame(){ if(!cv.isConnected) return; if(!document.hidden&&!BT.ov){ var w=Math.max(2,Math.round(cv.clientWidth*dpr)), h=Math.max(2,Math.round(cv.clientHeight*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h } sc.draw((performance.now()-t0)/1000+4,w,h,phone()) }
       if(window.__GLSLOW) setTimeout(frame,window.__GLSLOW); else requestAnimationFrame(frame) })();   // __GLSLOW: the scenarios slow the frames down in a browser without a GPU
     return }
-  var c2=document.createElement('canvas'); c2.className='mcv'; cv.parentNode.replaceChild(c2,cv); CV=c2;
+  flatStart(cv,t0) }
+function flatStart(cv,t0){ var c2=document.createElement('canvas'); c2.className='mcv'; cv.parentNode.replaceChild(c2,cv); CV=c2;
   var ctx=c2.getContext('2d'), st={}, lastF=0, dpr2=Math.min(window.devicePixelRatio||1,1.25); GLX=null; if(!ctx) return;
   (function frame(){ if(!c2.isConnected) return; var nowF=performance.now(); if(nowF-lastF>=32&&!document.hidden&&!BT.ov){ lastF=nowF;
       var w=Math.max(2,Math.round(c2.clientWidth*dpr2)), h=Math.max(2,Math.round(c2.clientHeight*dpr2)); if(c2.width!==w||c2.height!==h){ c2.width=w; c2.height=h; st.reset=true }
@@ -74,16 +76,19 @@ function items(){ var s=O.save(); return [
 function firstOn(){ var I=items(); for(var i=0;i<I.length;i++) if(!I[i].off) return i; return 0 }
 function drawUI(){ if(!UI) return; var I=items(); if(I[SEL]&&I[SEL].off) SEL=firstOn();
   UI.innerHTML='<div class="mtop">'+mark()+'<div class="mname">LAST BERTH</div><div class="mrun"><i></i></div></div>'+
-    '<div class="msm">'+I.map(function(it,i){ return '<div class="mit'+(it.off?' off':'')+(i===SEL?' on':'')+'" data-i="'+i+'" data-id="'+it.id+'"><span class="l">'+esc(it.label)+'</span><span class="s">'+esc(it.sub)+'</span></div>' }).join('')+'</div>'+
+    '<div class="msm">'+I.map(function(it,i){ return '<div class="mit'+(it.off?' off':'')+(i===SEL?' on':'')+'" data-i="'+i+'" data-id="'+it.id+'"><span class="l">'+esc(it.label)+'<span class="s">'+esc(it.sub)+'</span></span></div>' }).join('')+'<div class="mmsg" role="status"></div></div>'+
     '<button class="mtst" type="button" data-m="test">▶ '+esc(T('mn_test'))+'</button><div class="mver">v'+esc(O.v)+'</div>' }
 function select(i){ if(i===SEL) return; SEL=i; PULSE.at=performance.now(); UI.querySelectorAll('.mit').forEach(function(e){ e.classList.toggle('on',+e.dataset.i===SEL) }) }
 function act(i){ var it=items()[i]; if(!it||it.off||BUSY) return;
   if(it.id==='new'){ diveThen(termPlay); return }
-  if(it.id==='cont'){ diveThen(function(){ if(O.cont()) fadeOut(); else diveBack() }); return }
+  if(it.id==='cont'){ diveThen(function(){ var why=O.cont(); if(why===true) fadeOut(); else { diveBack(); note(why) } }); return }
   if(it.id==='load'){ O.load(); return }
   if(it.id==='lang'){ O.setLang(O.lang()==='en'?'ru':'en'); drawUI(); return }
   if(it.id==='sound'){ O.setSound(!snd()); if(snd()) maStart(); maSet(); drawUI(); return } }
 function test(){ if(BUSY) return; diveThen(function(){ O.test(); fadeOut() }) }
+/* a word in the menu itself (a save that would not load): the game's toasts are under the menu */
+var NOTE=null;
+function note(txt){ var m=UI&&UI.querySelector('.mmsg'); if(!m) return; m.textContent=txt; m.classList.add('on'); clearTimeout(NOTE); NOTE=setTimeout(function(){ m.classList.remove('on') },5000) }
 
 /* ---------- the dive: the camera speeds over the field, past its edge and into space; then black ---------- */
 var DIVE={at:Infinity,back:-1e9}, DIVE_MS=4200;
@@ -378,7 +383,7 @@ function onKey(e){ if(!OPEN) return; e.stopPropagation(); maStart(); if(e.target
   else return;
   e.preventDefault(); do{ i=(i+d+n)%n }while(I[i].off); select(i); maClick('hover') }
 function onResize(){ if(ROOT) ROOT.classList.toggle('phone',innerWidth<720) }
-function onVis(){ if(!MA.c) return; if(document.hidden) MA.c.suspend(); else MA.c.resume() }
+function onVis(){ [MA.c,BT.au&&BT.au.c].forEach(function(c){ if(!c) return; if(document.hidden) c.suspend(); else c.resume() }) }
 var WIRED=false;
 function open(opts){ O=opts; ROOT=document.getElementById('menu'); if(!ROOT) return; OPEN=true; BUSY=false; SEL=1; DIVE.at=Infinity; DIVE.back=-1e9; BT.ov=null; BT.done=false;
   if(!WIRED){ WIRED=true; ROOT.addEventListener('click',onClick); ROOT.addEventListener('mouseover',onOver); window.addEventListener('keydown',onKey,true); window.addEventListener('resize',onResize); document.addEventListener('mousemove',ptrMove); document.addEventListener('visibilitychange',onVis) }
@@ -389,5 +394,5 @@ function close(){ if(!OPEN) return; OPEN=false; termClear(); maStop();
   if(GLX){ try{ var lc=GLX.getExtension('WEBGL_lose_context'); if(lc) lc.loseContext() }catch(e){} GLX=null }
   ROOT.hidden=true; ROOT.className=''; ROOT.innerHTML=''; UI=CV=null; BT.ov=null; if(O&&O.closed) O.closed() }
 function fadeOut(){ if(!OPEN) return; ROOT.classList.add('out'); setTimeout(close,650) }
-return {open:open,close:close,fadeOut:fadeOut,isOpen:function(){ return OPEN }};
+return {open:open,close:close,fadeOut:fadeOut,note:note,isOpen:function(){ return OPEN }};
 })();

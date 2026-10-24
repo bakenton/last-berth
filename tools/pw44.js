@@ -10,7 +10,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const menuOn=p=>p.evaluate(()=>LNU.menu&&LBMENU.isOpen()&&!document.getElementById('menu').hidden);
   const waitTerm=async p=>{ for(let i=0;i<80&&!(await p.isVisible('#menu .mterm'));i++) await p.waitForTimeout(150); return p.isVisible('#menu .mterm') };
   const waitGone=async p=>{ for(let i=0;i<60&&await p.evaluate(()=>LNU.menu);i++) await p.waitForTimeout(150); return p.evaluate(()=>!LNU.menu&&document.getElementById('menu').hidden) };
-  const labels=p=>p.evaluate(()=>[...document.querySelectorAll('#menu .mit')].map(e=>e.querySelector('.l').textContent+'|'+e.querySelector('.s').textContent+(e.classList.contains('off')?'|off':'')+(e.classList.contains('on')?'|on':'')));
+  const labels=p=>p.evaluate(()=>[...document.querySelectorAll('#menu .mit')].map(e=>e.querySelector('.l').firstChild.textContent+'|'+e.querySelector('.s').textContent+(e.classList.contains('off')?'|off':'')+(e.classList.contains('on')?'|on':'')));
 
   // 1. a first start: the menu, no save on record
   const p=await UI.newPage(b,{vp:{width:1440,height:900}}); const U=UI.ui(p);
@@ -60,6 +60,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('Continue: after the dive the run is loaded, no terminal', await waitGone(p)&&await p.evaluate(y=>LN.day===y&&LNU.langPicked&&!document.querySelector('#menu .mterm'),want.y));
   ok('…and the clock waits for the player', await p.evaluate(()=>LNU.paused===true));
 
+  // 3b. a broken autosave: Continue says so in the menu itself and stays there
+  await p.evaluate(()=>localStorage.setItem('lb.save','{"v":1,"G":{"seed":1,"day":77,"colonies":{}},"x"')); await p.reload(); await p.waitForTimeout(600);
+  await U.tap('#menu .mit[data-id="cont"]'); for(let i=0;i<60&&!(await p.isVisible('#menu .mmsg.on'));i++) await p.waitForTimeout(150);
+  ok('a broken save: the menu stays and says it would not load', await menuOn(p)&&await p.evaluate(()=>/\S/.test(document.querySelector('#menu .mmsg.on').textContent)&&!LNU.langPicked), await p.evaluate(()=>{ const m=document.querySelector('#menu .mmsg'); return m&&m.textContent }));
   // 4. Load from file, from the menu
   const file=require('path').join(require('os').tmpdir(),'lb-pw44-save.json'); require('fs').writeFileSync(file,await p.evaluate(()=>LNsave()));
   await p.evaluate(()=>localStorage.removeItem('lb.save')); await p.reload(); await p.waitForTimeout(600);
