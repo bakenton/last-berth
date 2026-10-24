@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HELM — сбой, змейка (прототип)</title>
+<!-- Прототип 2 мини-игры «сбой Пульта» (24.10.2026): змейка на гексах. Черновик вне игры: work/, лист текстов и Notion не тронуты.
+     Пока идёт сбой, игра на паузе. Трасса энергии растёт с каждым фрагментом; набрал все — в ядро.
+     Стены, красное и свой след убивают. Красное появляется и гаснет — живой лабиринт. ?lv=1..3 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0d;--y:#FFD23F;--r:#FF2A1A;--t:#F2F1EC;--m:#9C9B95;--d:#5E5D58}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--t);font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;font-size:13px;letter-spacing:.06em;pointer-events:none}
+.top{top:0}.bot{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.bar .m{color:var(--m)}
+.bar b{color:var(--y);font-weight:normal}
+.ctl{pointer-events:auto;display:flex;gap:6px;align-items:center}
+.ctl button{background:none;border:1px solid var(--d);color:var(--m);font:inherit;font-size:13px;min-width:32px;height:32px;padding:0 8px;cursor:pointer}
+.ctl button.on{border-color:var(--y);color:var(--y)}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(11,11,13,.88);text-align:center;padding:24px 16px;box-sizing:border-box}
+.ov.hide{display:none}
+h1{font-family:Jost,sans-serif;font-weight:600;letter-spacing:.16em;color:var(--y);font-size:19px;margin:0;line-height:1.35}
+.ov.lost h1{color:var(--r)}
+.sub{color:var(--t);font-size:14px}
+.rules{color:var(--m);font-size:14px;line-height:1.8}
+.go{background:none;border:1px solid var(--y);color:var(--y);font:inherit;font-size:15px;letter-spacing:.2em;padding:12px 30px;cursor:pointer;margin-top:6px}
+.lost .go{border-color:var(--r);color:var(--r)}
+.lore{max-width:340px;width:100%;text-align:left;font-size:14px;line-height:1.65;min-height:9.5em;white-space:pre-wrap}
+.lore .y{color:var(--y)}.lore .m{color:var(--m)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="bar top">
+  <span class="m"><span data-k="tag"></span> · <span data-k="paused"></span></span>
+  <span><span class="m" data-k="frag"></span> <b id="hf">0</b></span>
+</div>
+<div class="bar bot">
+  <span class="m" id="ht"></span>
+  <span class="ctl"><span class="m" data-k="lvl"></span><button data-lv="1">1</button><button data-lv="2">2</button><button data-lv="3">3</button><button id="lang">EN</button></span>
+</div>
+
+<div class="ov" id="ovIntro">
+  <h1 data-k="title"></h1>
+  <div class="sub" data-k="sub"></div>
+  <div class="rules"><div data-k="r1"></div><div data-k="r2"></div><div data-k="r3"></div><div data-k="r4"></div></div>
+  <button class="go" id="bGo" data-k="go"></button>
+</div>
+<div class="ov lost hide" id="ovLost">
+  <h1 data-k="lost"></h1>
+  <div class="sub" id="why"></div>
+  <button class="go" id="bRetry" data-k="retry"></button>
+</div>
+<div class="ov hide" id="ovWon">
+  <div class="lore" id="lore"></div>
+  <button class="go" id="bBack" data-k="back" style="visibility:hidden"></button>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Тексты прототипа. В игре они уйдут в лист (texts-add); здесь — только чтобы смотреть.
+var T={
+ ru:{tag:'ПУЛЬТ · СБОЙ 01',paused:'игра на паузе',frag:'фрагменты',lvl:'ур.',len:'длина трассы',
+  title:'СБОЙ: КОРПУС.ПОК.II',sub:'Команда не просыпается.',
+  r1:'◆ собери {n} фрагментов — трасса растёт',r2:'⬢ потом — в ядро',r3:'не врезайся: стены, красное, свой след',r4:'тап — куда повернуть',
+  go:'ВОЙТИ',lost:'СВЯЗЬ ПОТЕРЯНА',retry:'ЕЩЁ РАЗ',back:'К ПУЛЬТУ',
+  why:{wall:'Трасса упёрлась в стену.',red:'Трасса ушла в сбой.',self:'Трасса замкнулась на себя.',edge:'Трасса ушла за край.'},
+  won:['КОМАНДА ПРОСНУЛАСЬ: КОРПУС.ПОК.II','Восстановлено: 1 блок памяти.','','«Файл чертежа. Автор: этот модуль.\nДата: раньше моей первой записи.»','','Суда второго поколения можно заказывать.']},
+ en:{tag:'HELM · FAULT 01',paused:'game paused',frag:'fragments',lvl:'lvl',len:'trace length',
+  title:'FAULT: HULL.GEN.II',sub:'The command will not wake.',
+  r1:'◆ collect {n} fragments — the trace grows',r2:'⬢ then — into the core',r3:'do not hit walls, red, or your own trace',r4:'tap — where to turn',
+  go:'ENTER',lost:'SIGNAL LOST',retry:'RETRY',back:'BACK TO HELM',
+  why:{wall:'The trace hit a wall.',red:'The trace ran into the fault.',self:'The trace closed on itself.',edge:'The trace left the grid.'},
+  won:['COMMAND WOKE: HULL.GEN.II','Recovered: 1 memory block.','','"Design file. Author: this unit.\nDate: earlier than my first record."','','Generation II hulls can be ordered.']}
+};
+var lang='ru';
+function applyLang(){
+  document.documentElement.lang=lang;
+  [].forEach.call(document.querySelectorAll('[data-k]'),function(e){e.textContent=T[lang][e.getAttribute('data-k')].replace('{n}',LV[lv].fr)});
+  document.getElementById('lang').textContent=lang==='ru'?'EN':'RU';
+}
+
+// Уровни: 1 — первое улучшение, 3 — ковчег. step — мс на шаг трассы, fr — фрагментов,
+// redEvery — как часто вспыхивает сбой (0 — нет), redLife — сколько он живёт, cap — доля поля под сбоем.
+var LV={1:{step:270,fr:6,redEvery:0,redLife:0,cap:0},
+        2:{step:235,fr:8,redEvery:1500,redLife:9000,cap:.10},
+        3:{step:205,fr:10,redEvery:900,redLife:8000,cap:.16}};
+var GROW=2, WARN=1000, READY=900;
+
+var COLS=9, ROWS=19, DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]], S3=Math.sqrt(3); // В, СВ, СЗ, З, ЮЗ, ЮВ
+var cells=[], idx={};
+function key(q,r){return q+','+r}
+for(var r=0;r<ROWS;r++)for(var cc=0;cc<COLS;cc++){ var q=cc-Math.floor(r/2); idx[key(q,r)]=cells.length; cells.push({q:q,r:r}) }
+var N=cells.length, XC=(COLS-.5)/2, YC=1.5*(ROWS-1)/2;
+function at(q,r){return idx[key(q,r)]}
+function off(c,r){return at(c-Math.floor(r/2),r)}
+function step(i,d){ var c=cells[i]; return at(c.q+DIRS[d][0],c.r+DIRS[d][1]) }
+var NB=cells.map(function(_,i){ var o=[]; for(var d=0;d<6;d++){ var j=step(i,d); if(j!==undefined) o.push(j) } return o });
+function hdist(a,b){ var A=cells[a],B=cells[b], dq=A.q-B.q, dr=A.r-B.r; return (Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2 }
+function rng(seed){ var s=(seed>>>0)||1; return function(){ s^=s<<13; s>>>=0; s^=s>>>17; s^=s<<5; s>>>=0; return s/4294967296 } }
+function pick(a,rnd){ return a[Math.floor(rnd()*a.length)] }
+
+var HEAD0=off(4,ROWS-3), CORE=off(4,0);
+
+// Стены уровня постоянны между попытками, чтобы поле можно было выучить.
+var layouts={};
+function layout(lv){
+  if(layouts[lv]) return layouts[lv];
+  var rnd=rng(7919*lv+13), wall, keep={};
+  var body=[HEAD0,step(HEAD0,4),step(step(HEAD0,4),4)];
+  body.concat([CORE]).forEach(function(i){ keep[i]=1; NB[i].forEach(function(j){keep[j]=1; NB[j].forEach(function(k){keep[k]=1})}) });
+  for(var tries=0;tries<50;tries++){
+    wall=new Array(N).fill(false);
+    for(var i=0;i<N;i++) if(!keep[i]&&rnd()<.09) wall[i]=true;
+    if(reach(HEAD0,wall)===N-wall.filter(Boolean).length) break;
+  }
+  return layouts[lv]={wall:wall,body:body};
+}
+function reach(from,wall){ var seen={},q=[from],n=0; seen[from]=1; while(q.length){ var i=q.shift(); n++; NB[i].forEach(function(j){ if(!seen[j]&&!wall[j]){seen[j]=1;q.push(j)} }) } return n }
+
+var G=null, lv=+(new URLSearchParams(location.search).get('lv'))||1, attempt=0;
+if(!LV[lv]) lv=1;
+
+function newRun(){
+  var L=layout(lv), P=LV[lv]; attempt++;
+  G={lv:lv,P:P,t:0,t0:READY,state:'play',rnd:rng(104729*lv+attempt*31),wall:L.wall,
+     body:L.body.slice(),dir:1,queue:[],grow:0,oldTail:L.body[L.body.length-1],
+     frag:-1,got:0,c:new Uint8Array(N),w:new Float64Array(N),die:new Float64Array(N),nextRed:READY+2000,stepNo:0,why:''};
+  spawnFrag(); hud();
+}
+function onBody(i){ return G.body.indexOf(i)>=0 }
+function spawnFrag(){
+  var h=G.body[0];
+  for(var far=6;far>=1;far--){
+    var c=[]; for(var i=0;i<N;i++) if(!G.wall[i]&&!G.c[i]&&i!==CORE&&!onBody(i)&&hdist(i,h)>=far&&hdist(i,h)<=far+5) c.push(i);
+    if(c.length){ G.frag=pick(c,G.rnd); return }
+  }
+}
+
+function update(dt){
+  if(G.state==='dying'){ G.t+=dt; if(G.t>=G.t0+G.P.step) lost(); return }
+  if(G.state!=='play') return;
+  G.t+=dt; var t=G.t, P=G.P, i;
+
+  // сбой: вспыхивает (предупреждение), живёт redLife, гаснет. Не под трассой и не прямо перед головой.
+  for(i=0;i<N;i++){
+    if(G.c[i]===1&&t>=G.w[i]) G.c[i]=2;
+    if(G.c[i]===2&&t>=G.die[i]) G.c[i]=0;
+  }
+  if(P.redEvery&&t>=G.nextRed){
+    G.nextRed=t+P.redEvery*(.7+.6*G.rnd());
+    var bad=0; for(i=0;i<N;i++) if(G.c[i]) bad++;
+    if(bad<P.cap*N){
+      var cand=[]; for(i=0;i<N;i++) if(!G.wall[i]&&!G.c[i]&&i!==CORE&&i!==G.frag&&!onBody(i)&&hdist(i,G.body[0])>=3) cand.push(i);
+      // сбой растёт кляксами: чаще рядом с уже красным
+      var near=cand.filter(function(j){ return NB[j].some(function(k){return G.c[k]}) });
+      var j=pick(near.length&&G.rnd()<.6?near:cand,G.rnd);
+      if(j!==undefined){ G.c[j]=1; G.w[j]=t+WARN; G.die[j]=t+WARN+P.redLife }
+    }
+  }
+
+  if(t<G.t0+P.step) return;
+  // шаг трассы
+  while(G.queue.length){ var d=G.queue.shift(); if(d!==(G.dir+3)%6&&d!==G.dir){ G.dir=d; break } }
+  var h=G.body[0], nx=step(h,G.dir);
+  G.t0=t; G.stepNo++;
+  if(nx===undefined) return die('edge',h);
+  if(G.wall[nx]) return die('wall',nx);
+  if(G.c[nx]===2) return die('red',nx);
+  var tail=G.body[G.body.length-1];
+  if(onBody(nx)&&!(nx===tail&&!G.grow)) return die('self',nx);
+  G.body.unshift(nx);
+  if(G.grow>0){ G.grow--; G.oldTail=tail } else { G.oldTail=G.body.pop() }
+  if(nx===G.frag){ G.got++; G.grow+=GROW; buzz(15); if(G.got<P.fr) spawnFrag(); else G.frag=-1 }
+  if(nx===CORE&&G.got>=P.fr) return win();
+  hud();
+}
+function die(why,cell){ G.state='dying'; G.why=why; G.hit=cell; buzz([60,40,60]) }
+function lost(){ G.state='lost'; document.getElementById('why').textContent=T[lang].why[G.why]; setTimeout(function(){ show('ovLost') },300) }
+function win(){ G.state='won'; hud(); setTimeout(function(){ show('ovWon'); typeLore() },350) }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p) }catch(e){} }
+
+// координаты в единицах размера гекса (центр поля = 0,0)
+function hxy(i){ var c=cells[i]; return [S3*(c.q+c.r/2-XC),1.5*c.r-YC] }
+function lerp(a,b,k){ return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k] }
+
+// ---- рисование
+var cv=document.getElementById('c'), cx=cv.getContext('2d'), W=0,H=0,S=20,OX=0,OY=0,DPR=1;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+  S=Math.min((W-32)/((COLS+.5)*S3),(H-130)/(1.5*(ROWS-1)+2)); OX=W/2; OY=56+(H-56-64)/2;
+}
+function hexPath(x,y,s){ cx.beginPath(); for(var k=0;k<6;k++){ var a=Math.PI/180*(60*k-30); cx[k?'lineTo':'moveTo'](x+s*Math.cos(a),y+s*Math.sin(a)) } cx.closePath() }
+function px(p){ return [OX+p[0]*S,OY+p[1]*S] }
+
+function draw(now){
+  cx.fillStyle='#0b0b0d'; cx.fillRect(0,0,W,H);
+  if(!G) return;
+  var t=G.t, i, p, k;
+  cx.strokeStyle='rgba(255,210,63,.035)'; cx.lineWidth=1;
+  for(k=-H;k<W;k+=34){ cx.beginPath(); cx.moveTo(k,0); cx.lineTo(k+H*.58,H); cx.stroke() }
+
+  for(i=0;i<N;i++){
+    p=px(hxy(i));
+    hexPath(p[0],p[1],S*.93);
+    if(G.wall[i]){ cx.fillStyle='#1d1d20'; cx.fill(); cx.strokeStyle='rgba(156,155,149,.45)'; cx.lineWidth=1.5; cx.stroke(); continue }
+    if(G.c[i]===2){
+      var fade=Math.min(1,(G.die[i]-t)/600);
+      cx.fillStyle='rgba(255,42,26,'+(fade*(.45+.12*Math.sin(now/90+i)))+')'; cx.fill();
+      cx.fillStyle='rgba(255,90,68,'+(.55*fade)+')';
+      for(k=0;k<2;k++){ var yy=p[1]-S*.6+((now/7+i*37+k*53)%(S*1.2)); cx.fillRect(p[0]-S*.6,yy,S*1.2,1) }
+    } else if(G.c[i]===1){
+      var left=(G.w[i]-t)/WARN;
+      cx.fillStyle='rgba(255,42,26,'+(.06+.16*(1-left))+')'; cx.fill();
+      cx.strokeStyle='rgba(255,42,26,'+(.5+.5*Math.sin(now/45))+')'; cx.lineWidth=1.5; cx.stroke();
+    } else { cx.strokeStyle='rgba(255,210,63,.14)'; cx.lineWidth=1; cx.stroke() }
+  }
+  // ядро
+  p=px(hxy(CORE)); var open=G.got>=G.P.fr;
+  cx.save();
+  if(open){ cx.shadowColor='#FFD23F'; cx.shadowBlur=18+8*Math.sin(now/180) }
+  hexPath(p[0],p[1],S*.72); cx.strokeStyle=open?'#FFD23F':'rgba(255,210,63,.45)'; cx.lineWidth=2; cx.stroke();
+  hexPath(p[0],p[1],S*.38); cx.fillStyle=open?'#FFD23F':'rgba(255,210,63,.18)'; cx.fill();
+  cx.restore();
+  if(!open){ cx.fillStyle='rgba(255,210,63,.6)'; cx.font=Math.round(S*.55)+'px "Share Tech Mono",monospace'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText((G.P.fr-G.got)+'',p[0],p[1]+S*1.2) }
+  // фрагмент
+  if(G.frag>=0){
+    p=px(hxy(G.frag)); var s=S*.34;
+    cx.save(); cx.translate(p[0],p[1]); cx.rotate(now/600); cx.shadowColor='#FFD23F'; cx.shadowBlur=12;
+    cx.beginPath(); cx.moveTo(0,-s); cx.lineTo(s*.7,0); cx.lineTo(0,s); cx.lineTo(-s*.7,0); cx.closePath(); cx.fillStyle='#FFD23F'; cx.fill(); cx.restore();
+  }
+  // трасса: голова и хвост плавно доезжают до клетки
+  var kk=G.state==='play'&&t<READY?0:Math.max(0,Math.min(1,(t-G.t0)/G.P.step));
+  if(G.state==='dying'||G.state==='lost') kk=Math.min(kk,.45);
+  var B=G.body, pts=[];
+  var headFrom=hxy(B[1]), headTo=hxy(B[0]);
+  if(G.state==='dying'||G.state==='lost'){ headFrom=hxy(B[0]); headTo=G.hit!==undefined&&cells[G.hit]?hxy(G.hit):lerp(hxy(B[0]),lerp(hxy(B[0]),hxy(B[1]),-1),1) }
+  pts.push(px(lerp(headFrom,headTo,kk)));
+  for(i=(G.state==='dying'||G.state==='lost')?0:1;i<B.length;i++) pts.push(px(hxy(B[i])));
+  if(G.state!=='dying'&&G.state!=='lost'&&G.oldTail!==B[B.length-1]) pts.push(px(lerp(hxy(G.oldTail),hxy(B[B.length-1]),kk)));
+  var blink=(G.state==='dying'||G.state==='lost')&&Math.floor(now/90)%2;
+  cx.save(); cx.lineJoin='round'; cx.lineCap='round';
+  cx.shadowColor=blink?'#FF2A1A':'#FFD23F'; cx.shadowBlur=14;
+  cx.beginPath(); pts.forEach(function(q,ix){ cx[ix?'lineTo':'moveTo'](q[0],q[1]) });
+  cx.strokeStyle=blink?'#FF2A1A':'#FFD23F'; cx.lineWidth=S*.5; cx.stroke();
+  cx.shadowBlur=0; cx.setLineDash([S*.35,S*.5]); cx.lineDashOffset=-now/25;
+  cx.strokeStyle='rgba(20,20,23,.55)'; cx.lineWidth=S*.14; cx.stroke(); cx.setLineDash([]);
+  // голова: глиф Пульта, смотрит по ходу
+  var hp=pts[0], a=Math.atan2(DIRS[G.dir][1]*1.5,S3*(DIRS[G.dir][0]+DIRS[G.dir][1]/2));
+  cx.shadowColor='#FFD23F'; cx.shadowBlur=14;
+  hexPath(hp[0],hp[1],S*.5); cx.fillStyle='#141417'; cx.fill(); cx.strokeStyle=blink?'#FF2A1A':'#FFD23F'; cx.lineWidth=2; cx.stroke();
+  cx.translate(hp[0],hp[1]); cx.rotate(a);
+  cx.beginPath(); cx.moveTo(S*.28,0); cx.lineTo(-S*.16,S*.22); cx.lineTo(-S*.16,-S*.22); cx.closePath(); cx.fillStyle='#FFD23F'; cx.fill();
+  cx.restore();
+  // старт: отсчёт
+  if(G.state==='play'&&t<READY){ cx.fillStyle='rgba(255,210,63,'+(1-t/READY)+')'; cx.font=Math.round(S*1.2)+'px "Share Tech Mono",monospace'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText('▲',hp[0],hp[1]-S*1.6) }
+}
+
+// ---- интерфейс
+var hf=document.getElementById('hf'), ht=document.getElementById('ht');
+function hud(){
+  if(!G) return;
+  hf.textContent=G.got+'/'+G.P.fr;
+  ht.textContent=T[lang].len+' '+G.body.length;
+  [].forEach.call(document.querySelectorAll('[data-lv]'),function(b){ b.classList.toggle('on',+b.getAttribute('data-lv')===lv) });
+}
+function show(id){ ['ovIntro','ovLost','ovWon'].forEach(function(o){ document.getElementById(o).classList.toggle('hide',o!==id) }) }
+
+var loreTimer=0;
+function typeLore(){
+  var box=document.getElementById('lore'), text=T[lang].won.join('\n'), n=0, back=document.getElementById('bBack');
+  back.style.visibility='hidden'; clearInterval(loreTimer);
+  loreTimer=setInterval(function(){
+    n+=2; var out=text.slice(0,n).split('\n').map(function(l,ix){ var cl=ix===0?'y':ix===1?'m':''; return '<span class="'+cl+'">'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>' }).join('\n');
+    box.innerHTML=out+(n<text.length?'<span class="y">▌</span>':'');
+    if(n>=text.length){ clearInterval(loreTimer); back.style.visibility='visible' }
+  },28);
+}
+
+// управление: тап — куда повернуть (ближайшее из шести направлений от головы); до двух поворотов в очереди
+function turnTo(d){
+  if(!G||G.state!=='play') return;
+  var last=G.queue.length?G.queue[G.queue.length-1]:G.dir;
+  if(d===last||d===(last+3)%6||G.queue.length>=2) return;
+  G.queue.push(d);
+}
+function dirToward(x,y){
+  var h=px(hxy(G.body[0])), ang=Math.atan2(y-h[1],x-h[0]), best=0, bd=9;
+  for(var d=0;d<6;d++){ var a=Math.atan2(DIRS[d][1]*1.5,S3*(DIRS[d][0]+DIRS[d][1]/2)), diff=Math.abs(Math.atan2(Math.sin(ang-a),Math.cos(ang-a))); if(diff<bd){bd=diff;best=d} }
+  return best;
+}
+cv.addEventListener('pointerdown',function(e){ if(G&&G.state==='play') turnTo(dirToward(e.clientX,e.clientY)) });
+
+var KEYS={d:0,e:1,w:2,a:3,z:4,x:5};
+addEventListener('keydown',function(e){
+  if(!G||G.state!=='play') return;
+  var k=e.key.length===1?e.key.toLowerCase():e.key, last=G.queue.length?G.queue[G.queue.length-1]:G.dir;
+  if(k==='ArrowLeft'){ turnTo((last+1)%6); e.preventDefault(); return }
+  if(k==='ArrowRight'){ turnTo((last+5)%6); e.preventDefault(); return }
+  if(KEYS[k]!==undefined){ turnTo(KEYS[k]); e.preventDefault() }
+});
+
+document.getElementById('bGo').onclick=function(){ attempt=0; newRun(); show(null) };
+document.getElementById('bRetry').onclick=function(){ newRun(); show(null) };
+document.getElementById('bBack').onclick=function(){ clearInterval(loreTimer); newRun(); G.state='intro'; show('ovIntro') };
+document.getElementById('lang').onclick=function(){ lang=lang==='ru'?'en':'ru'; applyLang(); hud(); if(G&&G.state==='won') typeLore() };
+[].forEach.call(document.querySelectorAll('[data-lv]'),function(b){ b.onclick=function(){ lv=+b.getAttribute('data-lv'); applyLang(); attempt=0; newRun(); G.state='intro'; show('ovIntro') } });
+
+addEventListener('resize',resize);
+var last=0;
+function frame(now){ var dt=Math.min(50,now-(last||now)); last=now; update(dt); draw(now); requestAnimationFrame(frame) }
+applyLang(); resize(); newRun(); G.state='intro'; hud();
+window.HACK={get G(){return G},hxy:hxy,px:px,cells:cells,NB:NB,DIRS:DIRS,CORE:CORE,step:step}; // для проверки из Playwright
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
