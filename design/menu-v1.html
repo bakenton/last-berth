@@ -44,6 +44,7 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .ver{position:absolute;font:11u var(--n);letter-spacing:.14em;color:var(--dim)}
 .pane{display:none}
 .stage.diving .vt .top,.stage.diving .vt .sm,.stage.diving .tst,.stage.diving .ver{opacity:0;pointer-events:none;transition:opacity 1.1s}
+.stage.diving .vt::after{opacity:0;transition:opacity 1.6s}
 .vt .top,.vt .sm{transition:opacity .8s}
 .stage[data-lay]:not(.phone) .vt.vW .sm{left:0;right:0;top:auto;bottom:46u;flex-direction:row;align-items:stretch;justify-content:center;gap:46u}
 .stage[data-lay]:not(.phone) .vt.vW .sm .it{flex-direction:column;align-items:center;justify-content:flex-start;gap:6u;min-width:92u;padding:8u 4u 10u}
@@ -285,15 +286,16 @@ function pulseAge(){ return (performance.now()-PULSE.at)/1000 }
 /* 9 — map: the rings of the game in space; worlds on the orbits, routes between neighbouring rings, a few ships on them; the nearer worlds carry a name in script */
 /* 10 — deep sky: stars at different depths drift past slowly and shift with the cursor, faint dust, constellations in script light up, a convoy of ships crosses the sky now and then */
 /* ---------- a different approach: real 3D (WebGL2) for the hex relief, with lighting, fog and glowing edges, sound, and a camera dive into the terminal ---------- */
-var DIVE={at:Infinity,back:-1e9}, DIVE_MS=3600;
+var DIVE={at:Infinity,back:-1e9}, DIVE_MS=4200;
+function smst(a,b,x){ var t=Math.max(0,Math.min(1,(x-a)/(b-a))); return t*t*(3-2*t) }
 var HEX_VS=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
 layout(location=1) in vec3 aNrm;
 layout(location=2) in vec2 aCell;
-uniform float uT, uScroll, uAsp, uCamX, uCamH, uDive, uK, uFov, uPitch;
+uniform float uT, uScroll, uAsp, uCamX, uCamH, uDive, uK, uFov, uPitch, uGone;
 uniform vec2 uGrid;
-out vec3 vP; out vec2 vL; out float vH; out float vTop; out float vZ; out float vNear; out float vSide; out float vY;
+out vec3 vP; out vec2 vL; out float vH; out float vTop; out float vZ; out float vNear; out float vSide; out float vY; out float vGone;
 float h13(vec3 p){ p=fract(p*.1031); p+=dot(p,p.zyx+31.32); return fract((p.x+p.y)*p.z); }
 float vn(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.-2.*f);
   return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),
@@ -306,8 +308,10 @@ void main(){
   float X=(aCell.x+.5*par)*dx;
   float n=fbm(vec3(aCell.x*.23+par*.12, rowAbs*.23, uT*.04+3.));
   float hgt=max(0.,n-.40)*uK*smoothstep(2.6,7.5,zf);
-  vec3 P=vec3(X+aPos.x*R, aPos.y*hgt, zf+aPos.z*R);
-  vP=P; vL=aPos.xz/.94; vH=hgt; vTop=aNrm.y; vZ=P.z; vNear=smoothstep(z0-.3,z0+1.8,zf); vSide=aNrm.x; vY=aPos.y;
+  /* the dive: a front runs from the horizon to the camera; each column behind it flattens, sinks and goes dark at its own moment */
+  float gone=smoothstep(0.,2.2,zf+h13(vec3(aCell.x,rowAbs,7.1))*3.-mix(25.,-2.,uGone));
+  vec3 P=vec3(X+aPos.x*R, aPos.y*hgt*(1.-gone)-gone*gone*1.2, zf+aPos.z*R);
+  vP=P; vL=aPos.xz/.94; vH=hgt*(1.-gone); vTop=aNrm.y; vZ=P.z; vNear=smoothstep(z0-.3,z0+1.8,zf); vSide=aNrm.x; vY=aPos.y; vGone=gone;
   float vx=P.x-uCamX, vy=P.y-uCamH, vz=-P.z, f=1./tan(uFov*.5);
   float near=.1, far=80.;
   vec4 cp=vec4(f/uAsp*vx, f*vy, (far+near)/(near-far)*vz+2.*far*near/(near-far), -vz);
@@ -316,11 +320,12 @@ void main(){
 }`;
 var HEX_FS=`#version 300 es
 precision highp float;
-in vec3 vP; in vec2 vL; in float vH; in float vTop; in float vZ; in float vNear; in float vSide; in float vY;
-uniform float uT, uPulse, uFade;
+in vec3 vP; in vec2 vL; in float vH; in float vTop; in float vZ; in float vNear; in float vSide; in float vY; in float vGone;
+uniform float uT, uPulse, uFade, uVoid;
 out vec4 oC;
 float hexd(vec2 p){ return max(abs(p.x),max(abs(p.x*.5+p.y*.8660254),abs(p.x*.5-p.y*.8660254)))/.8660254; }
 void main(){
+  if(vGone>.97) discard;
   float z=vZ, fog=clamp((z-2.)/20.,0.,1.), vis=1.-pow(fog,.8);
   float pk=clamp(vH/1.55,0.,1.);
   float wave=pow(max(0.,sin(z*.65+abs(vP.x)*.16-uT*1.1)),9.);
@@ -336,8 +341,9 @@ void main(){
     col=mix(vec3(.012,.012,.015), gold*(.10+.55*pk+.45*wave+.35*uPulse), pow(g,2.4))*facing;
     col+=vec3(.9)*smoothstep(.93,1.,g)*.05;
   }
-  vec3 fogc=vec3(.082,.062,.033);
+  vec3 fogc=vec3(.082,.062,.033)*(1.-uVoid);
   col=mix(fogc,col,vis);
+  col*=1.-smoothstep(.15,.97,vGone);
   col*=vNear*(1.-uFade); col*=mix(1.,.55,smoothstep(.0,.8,1.-vZ/9.)*step(vZ,9.));
   oC=vec4(col,1.);
 }`;
@@ -345,17 +351,18 @@ var SKY_VS=`#version 300 es
 void main(){ vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2)); gl_Position=vec4(p*2.-1.,0.,1.); }`;
 var SKY_FS=`#version 300 es
 precision highp float;
-uniform vec2 uRes; uniform float uT,uFade,uHor,uPulse,uWarp,uSc; out vec4 oC;
+uniform vec2 uRes; uniform float uT,uFade,uHor,uPulse,uWarp,uSc,uVoid; out vec4 oC;
 vec3 h33(vec3 p3){ p3=fract(p3*vec3(.1031,.1030,.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yxx)*p3.zyx); }
 void main(){
-  vec2 uv=gl_FragCoord.xy/uRes; float asp=uRes.x/uRes.y, dy=uv.y-uHor; vec3 Hc=vec3(.082,.062,.033);
-  vec3 col=vec3(.043,.043,.047);
-  col+=vec3(1.,.78,.35)*(.045+.02*uPulse)*exp(-dy*dy*16.)*(.55+.45*exp(-pow((uv.x-.5)*asp*1.2,2.)));
-  col=mix(col,Hc,exp(-abs(dy)*13.)*.92);
-  if(dy<0.){ col=mix(col,Hc,smoothstep(0.,-.03,dy)); col*=mix(1.,.3,smoothstep(0.,-.4,dy)); }
-  if(dy>0.){
+  vec2 uv=gl_FragCoord.xy/uRes; float asp=uRes.x/uRes.y, dy=uv.y-uHor, warm=1.-uVoid; vec3 Hc=vec3(.082,.062,.033);
+  vec3 col=vec3(.043,.043,.047)*warm;
+  col+=vec3(1.,.78,.35)*(.045+.02*uPulse)*exp(-dy*dy*16.)*(.55+.45*exp(-pow((uv.x-.5)*asp*1.2,2.)))*warm;
+  col=mix(col,Hc,exp(-abs(dy)*13.)*.92*warm);
+  if(dy<0.){ col=mix(col,Hc,smoothstep(0.,-.03,dy)*warm); col*=mix(1.,.3,smoothstep(0.,-.4,dy)*warm); }
+  /* in the void the stars fill the whole sky, below the old horizon too */
+  if(dy>0.||uVoid>0.){
     for(int L=0;L<3;L++){ float s=(L==0)?34.:(L==1)?80.:160.; float th=(L==0)?.93:(L==1)?.95:.965; vec2 p=vec2(uv.x*asp,uv.y)*s+vec2(uT*.01*float(L+1),-uSc*(.5+.5*float(L))); vec2 g=floor(p), f=fract(p)-.5; vec3 hh=h33(vec3(g,float(L)*7.3));
-      if(hh.x>th){ vec2 off=(hh.yz-.5)*.7; float d=length(vec2(f.x-off.x,(f.y-off.y)/(1.+uWarp*(6.+4.*float(L))))); float mag=(hh.x-th)/(1.-th); float rr=(L==0)?.07:(L==1)?.05:.035; float b=smoothstep(rr,0.,d)*(.35+.9*mag); b*=(.65+.35*sin(uT*(.6+hh.y*2.)+hh.z*40.))*(1.+uWarp*1.6); col+=b*mix(vec3(.75,.85,1.),vec3(1.,.9,.75),hh.z)*((L==0)?1.1:.65)*smoothstep(0.,.14,dy); } }
+      if(hh.x>th){ vec2 off=(hh.yz-.5)*.7; float d=length(vec2(f.x-off.x,(f.y-off.y)/(1.+uWarp*(6.+4.*float(L))))); float mag=(hh.x-th)/(1.-th); float rr=(L==0)?.07:(L==1)?.05:.035; float b=smoothstep(rr,0.,d)*(.35+.9*mag); b*=(.65+.35*sin(uT*(.6+hh.y*2.)+hh.z*40.))*(1.+uWarp*1.6); col+=b*mix(vec3(.75,.85,1.),vec3(1.,.9,.75),hh.z)*((L==0)?1.1:.65)*mix(smoothstep(0.,.14,dy),1.,uVoid); } }
   }
   col*=1.-.35*pow(length((uv-.5)*vec2(1.,.9)),2.);
   col*=1.-uFade;
@@ -380,11 +387,13 @@ CVD.hexgl.make=function(gl,ph){ var sky=glProg(gl,SKY_VS,SKY_FS), hex=glProg(gl,
   var b1=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b1); gl.bufferData(gl.ARRAY_BUFFER,mesh.N,gl.STATIC_DRAW); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,0,0);
   var b2=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b2); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(inst),gl.STATIC_DRAW); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,0,0); gl.vertexAttribDivisor(2,1);
   var U=function(p,n){ return gl.getUniformLocation(p,n) }, nInst=inst.length/2, scroll=0, wsc=0, last=null, last2=null;
-  return { draw:function(t,w,h,ph){ var dt=last===null?0:Math.min(.1,t-last); last=t; wsc+=(last===null?0:Math.min(.1,t-(last2===null?t:last2)))*0; var da=(performance.now()-DIVE.at)/(DIVE_MS), dive=da>=0?Math.min(1,da):0, e=dive*dive*(3-2*dive), pa=pulseAge(), pulse=pa<1.3?(1-pa/1.3)*.8:0, bf=Math.max(0,1-(performance.now()-DIVE.back)/1000), fade=Math.max(Math.max(0,(dive-.8)/.2),bf); pulse=Math.max(pulse,e*2.4);
-      scroll+=dt*(.28+e*e*17); last2=t; gl.viewport(0,0,w,h); gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.clearColor(.043,.043,.047,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-      gl.useProgram(sky); gl.uniform2f(U(sky,'uRes'),w,h); gl.uniform1f(U(sky,'uT'),t); gl.uniform1f(U(sky,'uFade'),fade); gl.uniform1f(U(sky,'uHor'),.66); gl.uniform1f(U(sky,'uWarp'),0); gl.uniform1f(U(sky,'uSc'),0); gl.uniform1f(U(sky,'uPulse'),pulse); gl.drawArrays(gl.TRIANGLES,0,3);
+  return { draw:function(t,w,h,ph){ var dt=last===null?0:Math.min(.1,t-last); last=t; wsc+=(last===null?0:Math.min(.1,t-(last2===null?t:last2)))*0; var da=(performance.now()-DIVE.at)/(DIVE_MS), dive=da>=0?Math.min(1,da):0, e=dive*dive*(3-2*dive), pa=pulseAge(), pulse=pa<1.3?(1-pa/1.3)*.8:0, bf=Math.max(0,1-(performance.now()-DIVE.back)/1000);
+      /* the dive: the field speeds up and dissolves from the horizon towards the camera (gone), the warm haze drains to black (vd), the stars stay and dim last (fade) */
+      var gone=smst(.06,.8,dive), vd=smst(.05,.6,dive), fade=Math.max(smst(.74,1,dive),bf); pulse=Math.max(pulse,.5*e*(1-gone));
+      scroll+=dt*(.28+e*e*7); last2=t; gl.viewport(0,0,w,h); gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.clearColor(.043,.043,.047,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+      gl.useProgram(sky); gl.uniform2f(U(sky,'uRes'),w,h); gl.uniform1f(U(sky,'uT'),t); gl.uniform1f(U(sky,'uFade'),fade); gl.uniform1f(U(sky,'uHor'),.66); gl.uniform1f(U(sky,'uWarp'),0); gl.uniform1f(U(sky,'uSc'),e*e*1.5); gl.uniform1f(U(sky,'uVoid'),vd); gl.uniform1f(U(sky,'uPulse'),pulse); gl.drawArrays(gl.TRIANGLES,0,3);
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.useProgram(hex);
-      gl.uniform1f(U(hex,'uT'),t); gl.uniform1f(U(hex,'uScroll'),scroll); gl.uniform1f(U(hex,'uAsp'),w/h); gl.uniform1f(U(hex,'uCamX'),PTR.x*1.1); gl.uniform1f(U(hex,'uCamH'),2.1+PTR.y*.18-e*.75); gl.uniform1f(U(hex,'uDive'),dive); gl.uniform1f(U(hex,'uPitch'),0); gl.uniform1f(U(hex,'uK'),ph?3.4:4.4); gl.uniform1f(U(hex,'uFov'),(1.0+.4*e)*1.02); gl.uniform2f(U(hex,'uGrid'),R,dz); gl.uniform1f(U(hex,'uPulse'),pulse); gl.uniform1f(U(hex,'uFade'),fade);
+      gl.uniform1f(U(hex,'uT'),t); gl.uniform1f(U(hex,'uScroll'),scroll); gl.uniform1f(U(hex,'uAsp'),w/h); gl.uniform1f(U(hex,'uCamX'),PTR.x*1.1); gl.uniform1f(U(hex,'uCamH'),2.1+PTR.y*.18-e*.45); gl.uniform1f(U(hex,'uDive'),dive); gl.uniform1f(U(hex,'uPitch'),0); gl.uniform1f(U(hex,'uK'),ph?3.4:4.4); gl.uniform1f(U(hex,'uFov'),(1.0+.2*e)*1.02); gl.uniform2f(U(hex,'uGrid'),R,dz); gl.uniform1f(U(hex,'uPulse'),pulse); gl.uniform1f(U(hex,'uFade'),fade); gl.uniform1f(U(hex,'uGone'),gone); gl.uniform1f(U(hex,'uVoid'),vd);
       gl.bindVertexArray(vao); gl.drawArraysInstanced(gl.TRIANGLES,0,mesh.n,nInst) } } };
 
 function initGLScene(cv,live,D){ var stg=cv.closest('.stage'), gl=cv.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'}), sc=gl?D.make(gl,!!(stg&&stg.classList.contains('phone'))):null;
