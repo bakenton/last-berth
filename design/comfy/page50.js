@@ -1,7 +1,7 @@
 // round 8: gallery page design/pult-50.html from pult50.js (images: intro/cand/f1_H##.webp)
 const fs = require('fs'), path = require('path');
 const R = process.env.ROUND || 'pult50', P = require('./' + R + '.js');
-const T = { pult50: ['Пульт: 50 вариантов', 'pult-50.html'], pultI: ['Пульт: чёрный ящик и золотой свет', 'pult-I.html'], pultJ: ['Пульт: некроны, жёлтый, наши глифы', 'pult-J.html'] }[R];
+const T = { pult50: ['Пульт: 50 вариантов', 'pult-50.html'], pultI: ['Пульт: чёрный ящик и золотой свет', 'pult-I.html'], pultJ: ['Пульт: некроны, жёлтый, наши глифы', 'pult-J.html'], pultK: ['Пульт: колонна-компьютер', 'pult-K.html'] }[R];
 const items = Object.keys(P).map(Number).sort((a, b) => a - b).map(n => ({ id: P[n].id, ru: P[n].ru, ref: P[n].ref }));
 const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
 const cards = items.map(it => `<figure class="c" data-id="${it.id}"><button class="im" aria-label="Открыть ${it.id}"><img loading="lazy" src="intro/cand/f1_${it.id}.webp" alt="${esc(it.ru)}" width="1536" height="640"></button><figcaption><b>${it.id}</b> ${esc(it.ru)}<small>${esc(it.ref)}</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>`).join('\n');
@@ -25,7 +25,7 @@ small{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
 #lb.open{display:flex}#lb img{max-height:82vh;object-fit:contain}#lb p{text-align:center;margin:10px 16px;color:var(--ink)}
 #lb p small{display:inline;margin-left:6px}
 </style></head><body>
-<header><h1>${T[0]}</h1><p>Зал, экипаж, Александра и старший смены одинаковые во всех кадрах, меняется только Пульт. ${R === "pultJ" ? "Стиль некронов (Warhammer 40k): цвет жёлтый, глифы — наше гекс-письмо из меню, поданное модели образцом (intro/ref/glyphs-hex.png)." : R === "pultI" ? "Референсы Никиты: чёрный ящик NieR (жёлтые линии, гексагон) и золотой свет Genshin. I13–I17 — доводка I02, I03, I07, I09, I10." : "Под кадром источник идеи (по памяти)."} ★ отмечает понравившиеся.</p>
+<header><h1>${T[0]}</h1><p>Зал, экипаж, Александра и старший смены одинаковые во всех кадрах, меняется только Пульт. ${R === "pultK" ? "Колонна с окном жёлтой энергии, глифы, углубления, панели доступа. Образцы модели: отмеченный кадр J (под карточкой) и лист наших глифов." : R === "pultJ" ? "Стиль некронов (Warhammer 40k): цвет жёлтый, глифы — наше гекс-письмо из меню, поданное модели образцом (intro/ref/glyphs-hex.png)." : R === "pultI" ? "Референсы Никиты: чёрный ящик NieR (жёлтые линии, гексагон) и золотой свет Genshin. I13–I17 — доводка I02, I03, I07, I09, I10." : "Под кадром источник идеи (по памяти)."} ★ отмечает понравившиеся.</p>
 <span>отмечено: <b id="n">0</b></span><button id="only" aria-pressed="false">только ★</button><button id="copy">скопировать номера</button></header>
 <main>
 ${cards}

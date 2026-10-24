@@ -1,0 +1,57 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Пульт: колонна-компьютер</title>
+<style>
+:root{--bg:#0d0f12;--card:#16191e;--ink:#e6e2d8;--dim:#8d929b;--acc:#f0b84a;--line:#262a31}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,sans-serif}
+header{position:sticky;top:0;z-index:2;background:rgba(13,15,18,.94);backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding:10px 16px;display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+h1{font-size:17px;margin:0;font-weight:600}header p{margin:0;color:var(--dim);font-size:13px;flex:1 1 260px}
+header button{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font:inherit;font-size:13px;cursor:pointer}
+header button[aria-pressed=true]{border-color:var(--acc);color:var(--acc)}#n{color:var(--acc)}
+main{display:grid;grid-template-columns:repeat(auto-fill,minmax(460px,1fr));gap:14px;padding:16px}
+@media(max-width:520px){main{grid-template-columns:1fr;padding:12px 16px}}
+.c{margin:0;background:var(--card);border:1px solid var(--line);border-radius:8px;overflow:hidden;position:relative}
+.c.on{border-color:var(--acc)}.im{display:block;padding:0;border:0;background:#000;width:100%;cursor:zoom-in}
+img{display:block;width:100%;height:auto}figcaption{padding:8px 44px 10px 10px}figcaption b{color:var(--acc);margin-right:4px}
+small{display:block;color:var(--dim);font-size:12.5px;margin-top:2px}
+.st{position:absolute;right:6px;bottom:8px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:transparent;color:var(--dim);font-size:17px;cursor:pointer}
+.c.on .st{color:#111;background:var(--acc);border-color:var(--acc)}body.only .c:not(.on){display:none}
+#lb{position:fixed;inset:0;background:#000;display:none;flex-direction:column;justify-content:center;z-index:5}
+#lb.open{display:flex}#lb img{max-height:82vh;object-fit:contain}#lb p{text-align:center;margin:10px 16px;color:var(--ink)}
+#lb p small{display:inline;margin-left:6px}
+</style></head><body>
+<header><h1>Пульт: колонна-компьютер</h1><p>Зал, экипаж, Александра и старший смены одинаковые во всех кадрах, меняется только Пульт. Колонна с окном жёлтой энергии, глифы, углубления, панели доступа. Образцы модели: отмеченный кадр J (под карточкой) и лист наших глифов. ★ отмечает понравившиеся.</p>
+<span>отмечено: <b id="n">0</b></span><button id="only" aria-pressed="false">только ★</button><button id="copy">скопировать номера</button></header>
+<main>
+<figure class="c" data-id="K01a"><button class="im" aria-label="Открыть K01a"><img loading="lazy" src="intro/cand/f1_K01a.webp" alt="Колонна с окном" width="1536" height="640"></button><figcaption><b>K01a</b> Колонна с окном<small>на основе J08a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K01b"><button class="im" aria-label="Открыть K01b"><img loading="lazy" src="intro/cand/f1_K01b.webp" alt="Колонна с окном (2)" width="1536" height="640"></button><figcaption><b>K01b</b> Колонна с окном (2)<small>на основе J08a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K02a"><button class="im" aria-label="Открыть K02a"><img loading="lazy" src="intro/cand/f1_K02a.webp" alt="Колонна в кольце пилонов" width="1536" height="640"></button><figcaption><b>K02a</b> Колонна в кольце пилонов<small>на основе J08b</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K02b"><button class="im" aria-label="Открыть K02b"><img loading="lazy" src="intro/cand/f1_K02b.webp" alt="Колонна в кольце пилонов (2)" width="1536" height="640"></button><figcaption><b>K02b</b> Колонна в кольце пилонов (2)<small>на основе J08b</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K03a"><button class="im" aria-label="Открыть K03a"><img loading="lazy" src="intro/cand/f1_K03a.webp" alt="Колонна меж двух плит" width="1536" height="640"></button><figcaption><b>K03a</b> Колонна меж двух плит<small>на основе J09a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K03b"><button class="im" aria-label="Открыть K03b"><img loading="lazy" src="intro/cand/f1_K03b.webp" alt="Колонна меж двух плит (2)" width="1536" height="640"></button><figcaption><b>K03b</b> Колонна меж двух плит (2)<small>на основе J09a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K04a"><button class="im" aria-label="Открыть K04a"><img loading="lazy" src="intro/cand/f1_K04a.webp" alt="Колонна с пультами вокруг" width="1536" height="640"></button><figcaption><b>K04a</b> Колонна с пультами вокруг<small>на основе J09b</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K04b"><button class="im" aria-label="Открыть K04b"><img loading="lazy" src="intro/cand/f1_K04b.webp" alt="Колонна с пультами вокруг (2)" width="1536" height="640"></button><figcaption><b>K04b</b> Колонна с пультами вокруг (2)<small>на основе J09b</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K05a"><button class="im" aria-label="Открыть K05a"><img loading="lazy" src="intro/cand/f1_K05a.webp" alt="Колонна в вратах" width="1536" height="640"></button><figcaption><b>K05a</b> Колонна в вратах<small>на основе J10a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K05b"><button class="im" aria-label="Открыть K05b"><img loading="lazy" src="intro/cand/f1_K05b.webp" alt="Колонна в вратах (2)" width="1536" height="640"></button><figcaption><b>K05b</b> Колонна в вратах (2)<small>на основе J10a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K06a"><button class="im" aria-label="Открыть K06a"><img loading="lazy" src="intro/cand/f1_K06a.webp" alt="Окна-лестница" width="1536" height="640"></button><figcaption><b>K06a</b> Окна-лестница<small>на основе J08a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K06b"><button class="im" aria-label="Открыть K06b"><img loading="lazy" src="intro/cand/f1_K06b.webp" alt="Окна-лестница (2)" width="1536" height="640"></button><figcaption><b>K06b</b> Окна-лестница (2)<small>на основе J08a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K07a"><button class="im" aria-label="Открыть K07a"><img loading="lazy" src="intro/cand/f1_K07a.webp" alt="Открытый люк обслуживания" width="1536" height="640"></button><figcaption><b>K07a</b> Открытый люк обслуживания<small>на основе J09a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K07b"><button class="im" aria-label="Открыть K07b"><img loading="lazy" src="intro/cand/f1_K07b.webp" alt="Открытый люк обслуживания (2)" width="1536" height="640"></button><figcaption><b>K07b</b> Открытый люк обслуживания (2)<small>на основе J09a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K08a"><button class="im" aria-label="Открыть K08a"><img loading="lazy" src="intro/cand/f1_K08a.webp" alt="Колонна в проводах" width="1536" height="640"></button><figcaption><b>K08a</b> Колонна в проводах<small>на основе J10a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+<figure class="c" data-id="K08b"><button class="im" aria-label="Открыть K08b"><img loading="lazy" src="intro/cand/f1_K08b.webp" alt="Колонна в проводах (2)" width="1536" height="640"></button><figcaption><b>K08b</b> Колонна в проводах (2)<small>на основе J10a</small></figcaption><button class="st" aria-pressed="false" title="Отметить">★</button></figure>
+</main>
+<div id="lb" role="dialog" aria-modal="true"><img alt=""><p></p></div>
+<script>
+const K='pultK-stars',cards=[...document.querySelectorAll('.c')];let S=new Set();
+try{S=new Set(JSON.parse(localStorage.getItem(K)||'[]'))}catch(e){}
+const sync=()=>{cards.forEach(c=>{const on=S.has(c.dataset.id);c.classList.toggle('on',on);c.querySelector('.st').setAttribute('aria-pressed',on)});document.getElementById('n').textContent=S.size;try{localStorage.setItem(K,JSON.stringify([...S]))}catch(e){}};
+cards.forEach(c=>c.querySelector('.st').onclick=()=>{S.has(c.dataset.id)?S.delete(c.dataset.id):S.add(c.dataset.id);sync()});
+const only=document.getElementById('only');only.onclick=()=>{const v=document.body.classList.toggle('only');only.setAttribute('aria-pressed',v)};
+document.getElementById('copy').onclick=e=>{const t=[...S].sort().join(', ')||'ничего не отмечено';(navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>e.target.textContent='скопировано: '+t,()=>prompt('Номера:',t))};
+const lb=document.getElementById('lb'),li=lb.querySelector('img'),lp=lb.querySelector('p');let at=0;
+const vis=()=>cards.filter(c=>c.offsetParent);
+const show=i=>{const v=vis();at=(i+v.length)%v.length;const c=v[at];li.src=c.querySelector('img').src;lp.innerHTML=c.querySelector('figcaption').innerHTML;lb.classList.add('open')};
+cards.forEach(c=>c.querySelector('.im').onclick=()=>show(vis().indexOf(c)));
+lb.onclick=e=>{const x=e.clientX/innerWidth;x<.3?show(at-1):x>.7?show(at+1):lb.classList.remove('open')};
+addEventListener('keydown',e=>{if(!lb.classList.contains('open'))return;if(e.key==='Escape')lb.classList.remove('open');if(e.key==='ArrowLeft')show(at-1);if(e.key==='ArrowRight')show(at+1)});
+let tx=0;lb.addEventListener('touchstart',e=>tx=e.touches[0].clientX,{passive:true});lb.addEventListener('touchend',e=>{const d=e.changedTouches[0].clientX-tx;if(Math.abs(d)>50){e.preventDefault();show(at+(d<0?1:-1))}});
+sync();
+</script></body></html>
