@@ -73,3 +73,4 @@ GUIDE	p2.b2	Once it is settled, put a hull on its line: <b>Send here</b> under a
 GUIDE	p2.b4	You never load a ship by hand. If a line cannot keep up, put another hull on it. Nobody replaces a hull that is lost or refuses — that is your call.	Ты никогда не грузишь корабль руками. Если линия не справляется — поставь на неё ещё корпус. Потерянный или отказавшийся корпус никто не заменит — это решаешь ты.
 UI	noFreeAny	No free hull at Earth. Order one in the dock, or with + on a world’s line.	У Земли нет свободных корпусов. Закажи корпус в доке или кнопкой + на линии мира.
 UI	evacW_orderC	Build a courier in the dock, or take one off a line.	Заложи курьер в доке или сними один с линии.
+UI	shIdle	(idle at the pier: {n})	(корпусов без дела: {n})

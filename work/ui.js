@@ -707,6 +707,7 @@ function chronLines(k){ var out='', n=0;
 function rw2(k,v,cls){ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
 function bigHtml(kind){
   if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-markf"/></svg><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><p>Choose a language.<br>Выберите язык.</p><div class="langrow"><button class="b pri" type="button" data-lang="en">English</button><button class="b pri" type="button" data-lang="ru">Русский</button></div>'+
+    '<button class="b full" type="button" data-act="testplay">'+esc(T('u_testPlay'))+'</button>'+   // v4.40 (Nikita, 24.10): a new game with the debug panel
     (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(L[U.saveLang||'en'].u_continue||'',{y:U.saveDay}))+'</button>':'')+'</div>';
   /* v4.36: the end, the Night and the shift speak in the Institute's voice, Alexandra's line under it (NAR N-13, N-09, N-04) */
   if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
@@ -865,7 +866,7 @@ var STEPS=[
  {t:'slow',opens:[],q:['m11'],soft:1,when:function(){ return !!halfWorld()||G.day>=400 }},
  {t:'parts',opens:['parts','machines','tech'],q:['m12','m14'],when:function(){ var h=currentHull(G,'hauler'); return (G.delivered.parts||0)>0||G.earth.parts>0||(h!==null&&reach(G)>=HULLS[h].reach)||G.day>=450 }},
  {t:'advisor',opens:['advisor','worlds'],q:['m15'],soft:1,when:function(){ return reach(G)>=5||advRows().length>0||G.day>=500 }},
- {t:'events',opens:['sectors','events'],q:['N07','m17'],soft:1,when:function(){ return !!(G.dir&&G.dir.ev&&G.dir.ev.length)||G.day>=700 }},
+ {t:'events',opens:['sectors','events'],q:['N07','m17'],soft:1,when:function(){ return evOn()||G.day>=700 }},
  {t:'ring2',opens:['ring2','zoom'],q:['N08','m16'],when:function(){ return !ringFree(0).length||settledCount(G)>=5||G.day>=700||!!G.night }},
  {t:'night',opens:['ring3','night','ark','reserve','lift','evac'],q:['m18','m19'],when:function(){ return !!G.night&&!!G.nightSeen }}
 ];
@@ -877,7 +878,8 @@ function tutOpen(keys){ var t=U.tut; if(!t.lock) return;
 function tutOpenAll(){ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','parts'].forEach(function(k){ openRes(G,k) }) }
 function tutPush(id,p){ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return; if(id==='N01'&&!TUTX.launch) return;
   if(t.seen[id]) return; t.seen[id]=1; t.q.push({id:id,p:p||null}) }
-function tutStep(i){ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function(id){ if(id==='N03'&&!(G.delivered.food>0)) return; if(id==='m12'&&!partsHome()) return; tutPush(id) }) }
+function tutStep(i){ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function(id){ if(id==='N03'&&!(G.delivered.food>0)) return; if(id==='m12'&&!partsHome()) return; if((id==='N07'||id==='m17')&&!evOn()) return; tutPush(id) }) }
+function evOn(){ return !!(G.dir&&G.dir.ev&&G.dir.ev.length) }   // v4.40: a soft step opened early has no sector to name — N07 said «Space over  flows…»
 function partsHome(){ return (G.delivered.parts||0)>0||G.earth.parts>0 }
 /* a new game: the launch screen, then step 1 */
 function tutNew(){ var on=helpPref(); U.tut=tutBlank(); var t=U.tut; t.lock=on; t.help=on;
@@ -901,6 +903,7 @@ function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
   if(!t.seen.m24){ var ms=G.ships.filter(function(s){ return s.mode==='missing' })[0]; if(ms){ t.late=ms.id; tutPush('m24') } }
   if(quiet&&t.step>=3&&!t.seen.N03&&G.delivered.food>0) tutPush('N03');   // the step opened by its year: the first cargo is told when it comes
   if(quiet&&t.help&&t.step>=7&&!t.seen.m12&&partsHome()) tutPush('m12');
+  if(quiet&&t.step>=9&&!t.seen.N07&&evOn()){ tutPush('N07'); tutPush('m17') }   // v4.40: the events step told when the first event comes
   if(!t.help||!quiet||!w) return;   // the window ones speak only while that window is up
   var c=planet(w)&&G.colonies[w], ll=c&&lastLift(G,w);
   if(w==='earth'||w==='yard'||w==='ark') tutPush('m7');
@@ -1457,6 +1460,7 @@ function doAct(a,b){
   else if(a==='loadauto'){ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(t0){ try{ undump(t0); U.lang=U.lang||'en'; say('ok_loadgame',{y:G.day}) }catch(e){ say('loadfail') } } return }
   else if(a==='texts'){ reloadTexts(); return }
   else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); return }
+  else if(a==='testplay'){ U.langPicked=true; if(window.LBdebug) window.LBdebug.on(true); draw(); return }   // v4.40: the language stays EN (≡ switches it); the helper as set in ≡
   if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:null);
   tutAct(a,v,res); draw() }
 document.addEventListener('click',function(ev){

@@ -24,7 +24,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('all 12 steps open, to the Night and the ark', F.step===11, 'step '+F.step+' day '+F.day+' over '+M.over+' · '+S.join(' '));
   const want=['N01','m0','m1','m2','m3','N02','m4','m8','mM','m9','m10','m14','m15','N07','m17','N08','m16','N09','m18','m19'];   // m12 waits for the first parts at home
   const miss=want.filter(x=>!S.includes(x)); ok('every rule and story block of the steps was shown', !miss.length, 'missing '+miss.join(' ')+' · '+S.join(' '));
-  const order=want.filter(x=>S.includes(x)).map(x=>S.indexOf(x)); ok('in the order of the steps', order.every((v,i)=>!i||v>order[i-1]), S.join(' '));
+  // v4.40: the events story (N07, m17) waits for the first event in the sky — a soft step opened early has no sector to name
+  const order=want.filter(x=>S.includes(x)&&x!=='N07'&&x!=='m17').map(x=>S.indexOf(x)); ok('in the order of the steps', order.every((v,i)=>!i||v>order[i-1]), S.join(' '));
+  ok('N07 after m15, m17 right after N07', S.indexOf('N07')>S.indexOf('m15')&&S.indexOf('m17')===S.indexOf('N07')+1, S.join(' '));
+  ok('N07 names the sector (no «Space over  flows»)', /^Space over [A-Z]/.test(M.v_N07||''), M.v_N07);
   ok('m12 «Parts are home» only with parts at home', !S.includes('m12')||(M.h_m12&&M.h_m12.parts>0), JSON.stringify(M.h_m12||null));
   ok('first rule: rations end in the forecast year', /Rations run out in \d+\./.test((M.h_m0||{}).text||''), (M.h_m0||{}).text);
   ok('time stands while she speaks', Object.keys(M).filter(k=>k.startsWith('h_')).every(k=>M[k].halted), Object.keys(M).filter(k=>k.startsWith('h_')&&!M[k].halted).join(' '));

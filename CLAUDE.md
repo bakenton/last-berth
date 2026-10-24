@@ -72,7 +72,7 @@ cd work && node ../tools/sim.js core.js 4500   # боты напрямую; BOTS
 cd work && node ../tools/fuzz.js core.js 2000  # бот-хаос по ядру: случайные действия + инварианты; входит в full
 cd work && node ../tools/trace.js serial 11 4500 500   # ряд одного забега по векам (люди/еда/металл/миры); TRACE_CSV=f.csv
 cd work && node ../tools/sweep.js EARTH_BURN 0.8,1.2 rush,serial   # «что будет, если K.X = …» — таблица по стилям, файл не трогает
-node tools/make-god.js && node tools/god-check.js     # god-сборка work/LAST-BERTH-god.html (панель по ` / Ё: время, ресурсы, Ночь, сохранения) + её проверка
+node tools/debug-check.js                              # панель отладки (с v4.40 в каждой сборке: стартовое окно → TEST PLAY; ` / Ё; время, ресурсы, Ночь, слоты) — проверка в браузере
 node tools/playtest.js --minutes 3 [--god] [--viewport 390x844]   # бот-игрок в браузере, отчёт work/playtest/<метка>/report.md (skill /playtest)
 ```
 Переменные: `LB_WORK` (другая рабочая папка), `LB_PLAYWRIGHT`, `LB_CHROMIUM`, `PYTHON`, `BUDGET`. Сценарии ждут плоскую папку — `regress.sh` копирует их в `work/.run`.

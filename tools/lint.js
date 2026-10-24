@@ -10,8 +10,10 @@ const args=process.argv.slice(2), ALL=args.includes('--all');
 const W=path.resolve(args.find(a=>!a.startsWith('--'))||path.join(LB,'work'));
 const rd=f=>fs.readFileSync(path.join(W,f),'utf8');
 const core=rd('core.js'), ui=rd('ui.js');
-const coreLines=core.split('\n').length;
-const text=core+'\n'+ui;
+// v4.40: the debug panel (web/debug.js) is the page's third script and calls the core directly — linted with them
+const dbg=fs.existsSync(path.join(W,'web','debug.js'))?rd('web/debug.js'):'';
+const coreLines=core.split('\n').length, uiLines=ui.split('\n').length;
+const text=core+'\n'+ui+(dbg?'\n'+dbg:'');
 const BROWSER=['window','document','navigator','location','localStorage','sessionStorage','console','setTimeout','clearTimeout','setInterval','clearInterval',
  'requestAnimationFrame','cancelAnimationFrame','performance','Audio','AudioContext','webkitAudioContext','Image','Blob','URL','FileReader','XMLHttpRequest','fetch','Event','CustomEvent',
  'MutationObserver','ResizeObserver','IntersectionObserver','getComputedStyle','matchMedia','alert','confirm','prompt','history','screen','innerWidth','innerHeight',
@@ -24,7 +26,7 @@ const BROWSER=['window','document','navigator','location','localStorage','sessio
     rules:{'no-undef':'error','no-dupe-keys':'error','no-dupe-else-if':'error','no-unreachable':'error','no-self-assign':'error','no-const-assign':'error',
       'no-unused-vars':['warn',{vars:'all',args:'none',caughtErrors:'none'}],'no-use-before-define':'off'}}]});
   const [res]=await eslint.lintText(text,{filePath:path.join(W,'bundle.js')});
-  const loc=l=>l<=coreLines?'core.js:'+l:'ui.js:'+(l-coreLines-1);
+  const loc=l=>l<=coreLines?'core.js:'+l:(l<=coreLines+uiLines?'ui.js:'+(l-coreLines):'debug.js:'+(l-coreLines-uiLines));
   const msgs=res.messages.map(m=>({e:m.severity===2,w:loc(m.line)+' '+m.ruleId+' '+m.message.replace(/ It's defined.*/,'')}));
   if(res.messages.some(m=>m.fatal)){ console.log('lint: PARSE ERROR\n  '+msgs.filter(x=>x.e).map(x=>x.w).join('\n  ')); process.exit(1) }
   const errs=msgs.filter(x=>x.e), warns=msgs.filter(x=>!x.e);
