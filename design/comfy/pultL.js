@@ -1,0 +1,21 @@
+// round L (24.10): Nikita: the interface must be unearthly, not made for humans — strange screens, rotating glyphs and so on
+// (in K the access panels read like ATMs: keypad + small screen). Same column, alien interfaces only.
+// Two references per frame: a K column (K01a/K01b/K06a/K07a) + our glyph sheet. 8 concepts x 2 seeds -> intro1_L01a..L08b.
+const PEOPLE = 'Rows of dark consoles with thin amber light lines; the operators in matching grey-olive coveralls with a yellow stripe on the shoulders are dark silhouettes seen from behind. In the central aisle, seen from behind and small against the Helm, stand a slender woman with short slicked-back blonde hair in a light grey uniform with yellow stripes on the shoulders and a tall man in a long dark coat, both looking up at the Helm, the ship\'s supercomputer. ';
+const HALL = 'Wide cinematic film still, ultra-wide 2.4:1, the same dark circular command hall and the same tall black computer column as in the first reference image, seen from the back of the room. ' + PEOPLE;
+const COL = 'The Helm is a tall black Warhammer 40k Necron-style computer column of dark gunmetal and obsidian-black metal, with a tall window of thick glass full of swirling crackling sunflower yellow energy, deep recessed grooves and engraved columns of glowing yellow glyphs exactly like the hexagonal glyphs in the second reference image. Its interfaces are utterly alien and not made for human hands: ';
+const GRADE = ' Nothing on it resembles a keyboard, a keypad, a button or a flat rectangular monitor. Yellow light in volumetric haze, glossy black floor reflecting the yellow glow, deep black shadows, the only strong colour is yellow, anamorphic lens, photorealistic 3D render, strictly no visible faces, all people turned away from the camera, no letters, no logos, no skulls, no robots.';
+const L = [
+ ['Кольца глифов', 'K01a', 'set into the column at chest height are three large concentric metal rings engraved with glowing yellow glyphs, each ring slowly rotating in a different direction like the dials of a combination lock, with a glowing yellow eye-like lens at their centre.'],
+ ['Глифы в световом поле', 'K01b', 'in a deep recess of the column hangs a field of pale yellow light in which dozens of glyphs float in three dimensions, slowly drifting and turning, some glyphs brighter than others as if being selected.'],
+ ['Чаша жидкого света', 'K01a', 'in front of the column, on a curved black arm, a shallow hexagonal basin is filled with glowing yellow liquid light whose surface ripples and forms raised glyphs that rise out of it and sink back.'],
+ ['Гекс-штыри', 'K01b', 'its lower part is covered with a honeycomb of hundreds of small hexagonal metal pins that slide in and out of the surface, forming shifting relief patterns of glyphs, the tips of the raised pins glowing yellow.'],
+ ['Линзы-глаза', 'K06a', 'along the column runs a vertical row of hexagonal windows, and beside them a cluster of round crystal lenses of different sizes on jointed black arms that swivel and focus, each lens showing distorted glyphs and shapes inside like a strange screen.'],
+ ['Нечеловеческие рычаги', 'K07a', 'a hatch in the column is open on blades of black crystal data plates, and around it stick out curved crescent-shaped levers and three-pronged sockets of black metal far too large and oddly shaped for a human hand, with yellow glyphs sliding along the grooves of the levers.'],
+ ['Кольца вокруг колонны', 'K01a', 'several thin flat rings of black metal float around the column at different heights, each ring carved with glyphs that glow as it passes the window, the rings turning at different speeds like an orrery of text.'],
+ ['Стекло с плывущими глифами', 'K01b', 'beside the window stand two tall curved slabs of dark smoked glass grown into the metal, and inside the glass glyphs drift slowly upward like bubbles in thick oil, breaking apart and recombining.']
+];
+L.forEach(([ru, base, c], i) => ['a', 'b'].forEach((v, j) => {
+  const id = 'L' + String(i + 1).padStart(2, '0') + v;
+  module.exports[147 + i * 2 + j] = { name: 'intro1_' + id, id, ref: 'на основе ' + base, ru: ru + (j ? ' (2)' : ''), seed: 17000 + i * 23 + j * 7, refImg: ['lb_' + base + '.png', 'lb_glyphs-hex.png'], prompt: HALL + COL + c + GRADE };
+}));
