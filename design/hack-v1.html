@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HELM — сбой (прототип)</title>
+<!-- Прототип мини-игры «сбой Пульта» (24.10.2026). Черновик вне игры: work/, лист текстов и Notion не тронуты.
+     Пока идёт сбой, игра на паузе. Собрать фрагменты, дойти до ядра, не попасть под порчу и глюки.
+     ?lv=1..3 — уровень (1 — первое улучшение, 3 — ковчег). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0d;--y:#FFD23F;--r:#FF2A1A;--t:#F2F1EC;--m:#9C9B95;--d:#5E5D58}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--t);font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;font-size:13px;letter-spacing:.06em;pointer-events:none}
+.top{top:0}.bot{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.bar .m{color:var(--m)}
+.bar b{color:var(--y);font-weight:normal}
+.pl{display:inline-block;width:46px;height:4px;background:#2a2a2e;vertical-align:middle;margin-left:6px}
+.pl i{display:block;height:100%;background:var(--y);width:100%}
+.ctl{pointer-events:auto;display:flex;gap:6px;align-items:center}
+.ctl button{background:none;border:1px solid var(--d);color:var(--m);font:inherit;font-size:13px;min-width:32px;height:32px;padding:0 8px;cursor:pointer}
+.ctl button.on{border-color:var(--y);color:var(--y)}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(11,11,13,.88);text-align:center;padding:24px 16px;box-sizing:border-box}
+.ov.hide{display:none}
+h1{font-family:Jost,sans-serif;font-weight:600;letter-spacing:.16em;color:var(--y);font-size:19px;margin:0;line-height:1.35}
+.ov.lost h1{color:var(--r)}
+.sub{color:var(--t);font-size:14px}
+.rules{color:var(--m);font-size:14px;line-height:1.8}
+.go{background:none;border:1px solid var(--y);color:var(--y);font:inherit;font-size:15px;letter-spacing:.2em;padding:12px 30px;cursor:pointer;margin-top:6px}
+.lost .go{border-color:var(--r);color:var(--r)}
+.lore{max-width:340px;width:100%;text-align:left;font-size:14px;line-height:1.65;min-height:9.5em;white-space:pre-wrap}
+.lore .y{color:var(--y)}.lore .m{color:var(--m)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="bar top">
+  <span class="m"><span data-k="tag"></span> · <span data-k="paused"></span></span>
+  <span><span class="m" data-k="frag"></span> <b id="hf">0/3</b></span>
+</div>
+<div class="bar bot">
+  <span><span class="m" data-k="pulse"></span><span class="pl"><i id="hp"></i></span> <span class="m" id="ht"></span></span>
+  <span class="ctl"><span class="m" data-k="lvl"></span><button data-lv="1">1</button><button data-lv="2">2</button><button data-lv="3">3</button><button id="lang">EN</button></span>
+</div>
+
+<div class="ov" id="ovIntro">
+  <h1 data-k="title"></h1>
+  <div class="sub" data-k="sub"></div>
+  <div class="rules"><div data-k="r1"></div><div data-k="r2"></div><div data-k="r3"></div><div data-k="r4"></div></div>
+  <button class="go" id="bGo" data-k="go"></button>
+</div>
+<div class="ov lost hide" id="ovLost">
+  <h1 data-k="lost"></h1>
+  <div class="sub" data-k="lostSub"></div>
+  <button class="go" id="bRetry" data-k="retry"></button>
+</div>
+<div class="ov hide" id="ovWon">
+  <div class="lore" id="lore"></div>
+  <button class="go" id="bBack" data-k="back" style="visibility:hidden"></button>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Тексты прототипа. В игре они уйдут в лист (texts-add); здесь — только чтобы смотреть.
+var T={
+ ru:{tag:'ПУЛЬТ · СБОЙ 01',paused:'игра на паузе',frag:'фрагменты',pulse:'импульс',lvl:'ур.',
+  title:'СБОЙ: КОРПУС.ПОК.II',sub:'Команда не просыпается.',
+  r1:'◆ собери {n} фрагментов',r2:'⬢ дойди до ядра',r3:'красное — не наступай',r4:'тап — идти · тап по себе — импульс',
+  go:'ВОЙТИ',lost:'СВЯЗЬ ПОТЕРЯНА',lostSub:'Сбой держит команду.',retry:'ЕЩЁ РАЗ',back:'К ПУЛЬТУ',
+  won:['КОМАНДА ПРОСНУЛАСЬ: КОРПУС.ПОК.II','Восстановлено: 1 блок памяти.','','«Файл чертежа. Автор: этот модуль.\nДата: раньше моей первой записи.»','','Суда второго поколения можно заказывать.']},
+ en:{tag:'HELM · FAULT 01',paused:'game paused',frag:'fragments',pulse:'pulse',lvl:'lvl',
+  title:'FAULT: HULL.GEN.II',sub:'The command will not wake.',
+  r1:'◆ collect {n} fragments',r2:'⬢ reach the core',r3:'red — do not step',r4:'tap — move · tap yourself — pulse',
+  go:'ENTER',lost:'SIGNAL LOST',lostSub:'The fault holds the command.',retry:'RETRY',back:'BACK TO HELM',
+  won:['COMMAND WOKE: HULL.GEN.II','Recovered: 1 memory block.','','"Design file. Author: this unit.\nDate: earlier than my first record."','','Generation II hulls can be ordered.']}
+};
+var lang='ru';
+function applyLang(){
+  document.documentElement.lang=lang;
+  [].forEach.call(document.querySelectorAll('[data-k]'),function(e){e.textContent=T[lang][e.getAttribute('data-k')].replace('{n}',LV[lv].fr)});
+  document.getElementById('lang').textContent=lang==='ru'?'EN':'RU';
+}
+
+// Уровни: 1 — первое улучшение, 3 — ковчег. ch — глюков, chStep — мс на шаг глюка,
+// sp0→sp1 — интервал роста порчи от начала к 40-й секунде, cap — доля поля, больше которой порча не растёт.
+// fr — фрагментов (появляются по одному, далеко от игрока).
+var LV={1:{ch:1,chStep:430,sp0:1300,sp1:760,seeds:2,cap:.32,fr:5},
+        2:{ch:2,chStep:360,sp0:1100,sp1:620,seeds:2,cap:.38,fr:6},
+        3:{ch:3,chStep:340,sp0:950,sp1:500,seeds:3,cap:.44,fr:7}};
+var STEP=200, WARN=700, PULSE_CD=3000, STUN=2000, FRAG_FAR=5;
+
+var COLS=9, ROWS=19, DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]], S3=Math.sqrt(3);
+var cells=[], idx={};
+function key(q,r){return q+','+r}
+// высокое поле под телефон: строки со сдвигом, координаты осевые
+for(var r=0;r<ROWS;r++)for(var cc=0;cc<COLS;cc++){ var q=cc-Math.floor(r/2); idx[key(q,r)]=cells.length; cells.push({q:q,r:r}) }
+var XC=(COLS-.5)/2, YC=1.5*(ROWS-1)/2;
+var N=cells.length;
+var NB=cells.map(function(c){ var o=[]; DIRS.forEach(function(d){ var j=idx[key(c.q+d[0],c.r+d[1])]; if(j!==undefined) o.push(j) }); return o });
+function at(q,r){return idx[key(q,r)]}
+function off(c,r){return at(c-Math.floor(r/2),r)}
+function hdist(a,b){ var A=cells[a],B=cells[b], dq=A.q-B.q, dr=A.r-B.r; return (Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2 }
+function rng(seed){ var s=(seed>>>0)||1; return function(){ s^=s<<13; s>>>=0; s^=s>>>17; s^=s<<5; s>>>=0; return s/4294967296 } }
+function pick(a,rnd){ return a[Math.floor(rnd()*a.length)] }
+
+var MID=(ROWS-1)/2, START=off(4,ROWS-1), CORE=off(4,0);
+var SEEDS=[off(0,MID),off(COLS-1,MID),off(4,MID)];
+
+// Поле уровня: дыры постоянны между попытками, чтобы поле можно было выучить.
+var layouts={};
+function layout(lv){
+  if(layouts[lv]) return layouts[lv];
+  var rnd=rng(7919*lv+13), hole, keep={};
+  [START,CORE].concat(SEEDS).forEach(function(i){ keep[i]=1; NB[i].forEach(function(j){keep[j]=1}) });
+  for(var tries=0;tries<50;tries++){
+    hole=new Array(N).fill(false);
+    for(var i=0;i<N;i++) if(!keep[i]&&rnd()<.11) hole[i]=true;
+    if(reach(START,hole)===N-hole.filter(Boolean).length) break;
+  }
+  return layouts[lv]={hole:hole};
+}
+function reach(from,hole){ var seen={},q=[from],n=0; seen[from]=1; while(q.length){ var i=q.shift(); n++; NB[i].forEach(function(j){ if(!seen[j]&&!hole[j]){seen[j]=1;q.push(j)} }) } return n }
+
+var G=null, lv=+(new URLSearchParams(location.search).get('lv'))||1, attempt=0;
+if(!LV[lv]) lv=1;
+
+function newRun(){
+  var L=layout(lv), P=LV[lv]; attempt++;
+  G={lv:lv,P:P,t:0,state:'play',rnd:rng(104729*lv+attempt*31),
+     hole:L.hole.slice(),frag:{},got:0,c:new Uint8Array(N),w:new Float64Array(N),
+     me:{i:START,from:START,t0:-1e9},path:[],target:-1,kdir:-1,
+     ch:[],dist:null,distFor:-1,nextSpread:0,pulseAt:0,ring:-1e9};
+  for(var k=0;k<P.seeds;k++) warn(SEEDS[k]);
+  for(k=0;k<P.ch;k++) G.ch.push({i:SEEDS[k%P.seeds],from:SEEDS[k%P.seeds],t0:0,born:1500+k*2500,stun:0});
+  spawnFrag(); // не ближе 3 гексов к глюку, даже ещё не родившемуся
+  hud();
+}
+function spawnFrag(){
+  if(G.got>=G.P.fr) return;
+  for(var far=FRAG_FAR;far>=1;far--){
+    var c=[]; for(var i=0;i<N;i++) if(!G.hole[i]&&!G.c[i]&&i!==CORE&&i!==G.me.i&&hdist(i,G.me.i)>=far&&!G.ch.some(function(h){return hdist(h.i,i)<=2})) c.push(i);
+    if(c.length){ G.frag[pick(c,G.rnd)]=1; return }
+  }
+}
+function warn(i){ if(G.c[i]===0){ G.c[i]=1; G.w[i]=G.t+WARN } }
+
+function bfs(from,passable){ var d=new Int16Array(N).fill(-1),q=[from]; d[from]=0;
+  while(q.length){ var i=q.shift(); NB[i].forEach(function(j){ if(d[j]<0&&passable(j)){ d[j]=d[i]+1; q.push(j) } }) } return d }
+function pathTo(target){
+  if(target<0||G.hole[target]||G.c[target]===2) return [];
+  var d=bfs(target,function(j){return !G.hole[j]&&G.c[j]!==2});
+  if(d[G.me.i]<0) return [];
+  var p=[],i=G.me.i;
+  while(i!==target){ var best=-1; NB[i].forEach(function(j){ if(d[j]>=0&&d[j]<d[i]&&(best<0||d[j]<d[best])) best=j }); if(best<0) break; p.push(best); i=best }
+  return p;
+}
+
+function update(dt){
+  if(G.state!=='play') return;
+  G.t+=dt; var t=G.t, P=G.P, me=G.me;
+
+  // порча: предупреждение → смертельно
+  for(var i=0;i<N;i++) if(G.c[i]===1&&t>=G.w[i]){ G.c[i]=2; if(i===me.i) return lose('red') }
+  if(t>=G.nextSpread){
+    var k=Math.min(1,t/40000), every=P.sp0+(P.sp1-P.sp0)*k; G.nextSpread=t+every;
+    var bad=0,front=[],seen={};
+    for(i=0;i<N;i++) if(G.c[i]) bad++;
+    var room=Math.floor(P.cap*(N-G.hole.filter(Boolean).length))-bad;
+    if(room>0){
+      for(i=0;i<N;i++) if(G.c[i]===2) NB[i].forEach(function(j){ if(!seen[j]&&!G.c[j]&&!G.hole[j]&&j!==CORE&&!G.frag[j]){seen[j]=1;front.push(j)} });
+      var n=Math.min(room,1+Math.floor(bad/10));
+      while(n-->0&&front.length){ var f=front.splice(Math.floor(G.rnd()*front.length),1)[0]; warn(f) }
+    }
+  }
+
+  // ход игрока
+  if(t-me.t0>=STEP){
+    if(!G.path.length&&G.kdir>=0){ var c=cells[me.i], j=at(c.q+DIRS[G.kdir][0],c.r+DIRS[G.kdir][1]); if(j!==undefined) G.path=[j] }
+    if(G.path.length){
+      var nx=G.path[0];
+      if(G.hole[nx]||G.c[nx]===2){ G.path=G.target>=0?pathTo(G.target):[] }
+      else { G.path.shift(); me.from=me.i; me.i=nx; me.t0=t; arrive() ; if(G.state!=='play') return }
+    }
+  }
+
+  // глюки
+  if(G.distFor!==me.i){ G.dist=bfs(me.i,function(j){return !G.hole[j]}); G.distFor=me.i }
+  G.ch.forEach(function(h){
+    if(t<h.born||t<h.stun||t-h.t0<P.chStep) return;
+    var best=[],bd=1e9; NB[h.i].forEach(function(j){ var d=G.dist[j]; if(d<0||G.ch.some(function(o){return o!==h&&o.i===j})) return; if(d<bd){bd=d;best=[j]} else if(d===bd) best.push(j) });
+    if(best.length){ h.from=h.i; h.i=pick(best,G.rnd); h.t0=t }
+  });
+  var mp=pos(me,STEP); // оглушённый глюк безвреден
+  for(i=0;i<G.ch.length;i++){ var h=G.ch[i]; if(t<h.born||t<h.stun) continue; var hp=pos(h,P.chStep); if(Math.hypot(hp[0]-mp[0],hp[1]-mp[1])<S3*.5) return lose('glitch') }
+  hud();
+}
+function arrive(){
+  var i=G.me.i;
+  if(G.frag[i]){ delete G.frag[i]; G.got++; buzz(15); spawnFrag() }
+  if(i===CORE&&G.got>=G.P.fr) win();
+  if(i===G.target&&!G.path.length) G.target=-1;
+}
+function pulse(){
+  if(G.state!=='play'||G.t<G.pulseAt) return;
+  G.pulseAt=G.t+PULSE_CD; G.ring=G.t;
+  [G.me.i].concat(NB[G.me.i]).forEach(function(j){ G.c[j]=0 });
+  G.ch.forEach(function(h){ if(G.t>=h.born&&hdist(h.i,G.me.i)<=2) h.stun=G.t+STUN });
+  buzz(25);
+}
+function lose(why){ G.state='lost'; G.why=why; buzz([60,40,60]); hud(); setTimeout(function(){ show('ovLost') },350) }
+function win(){ G.state='won'; hud(); setTimeout(function(){ show('ovWon'); typeLore() },250) }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p) }catch(e){} }
+
+// позиция в единицах размера гекса (центр поля = 0,0)
+function hxy(i){ var c=cells[i]; return [S3*(c.q+c.r/2-XC),1.5*c.r-YC] }
+function pos(o,step){ var a=hxy(o.from),b=hxy(o.i),k=Math.max(0,Math.min(1,(G.t-o.t0)/step)); k=k*k*(3-2*k); return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k] }
+
+// ---- рисование
+var cv=document.getElementById('c'), cx=cv.getContext('2d'), W=0,H=0,S=20,OX=0,OY=0,DPR=1;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+  S=Math.min((W-32)/((COLS+.5)*S3),(H-130)/(1.5*(ROWS-1)+2)); OX=W/2; OY=56+(H-56-64)/2;
+}
+function hexPath(x,y,s){ cx.beginPath(); for(var k=0;k<6;k++){ var a=Math.PI/180*(60*k-30); cx[k?'lineTo':'moveTo'](x+s*Math.cos(a),y+s*Math.sin(a)) } cx.closePath() }
+function px(p){ return [OX+p[0]*S,OY+p[1]*S] }
+
+function draw(now){
+  cx.fillStyle='#0b0b0d'; cx.fillRect(0,0,W,H);
+  if(!G) return;
+  var t=G.t, i, p, k;
+  // фон: тонкие линии, как у меню
+  cx.strokeStyle='rgba(255,210,63,.035)'; cx.lineWidth=1;
+  for(k=-H;k<W;k+=34){ cx.beginPath(); cx.moveTo(k,0); cx.lineTo(k+H*.58,H); cx.stroke() }
+
+  for(i=0;i<N;i++){
+    p=px(hxy(i));
+    if(G.hole[i]){ hexPath(p[0],p[1],S*.3); cx.strokeStyle='rgba(94,93,88,.35)'; cx.stroke(); continue }
+    hexPath(p[0],p[1],S*.93);
+    if(G.c[i]===2){
+      cx.fillStyle='rgba(255,42,26,'+(.42+.12*Math.sin(now/90+i))+')'; cx.fill();
+      cx.fillStyle='rgba(255,90,68,.55)';
+      for(k=0;k<2;k++){ var yy=p[1]-S*.6+((now/7+i*37+k*53)%(S*1.2)); cx.fillRect(p[0]-S*.6,yy,S*1.2,1) }
+    } else if(G.c[i]===1){
+      var left=(G.w[i]-t)/WARN;
+      cx.fillStyle='rgba(255,42,26,'+(.08+.18*(1-left))+')'; cx.fill();
+      cx.strokeStyle='rgba(255,42,26,'+(.5+.5*Math.sin(now/45))+')'; cx.lineWidth=1.5; cx.stroke();
+    } else {
+      cx.strokeStyle='rgba(255,210,63,.16)'; cx.lineWidth=1; cx.stroke();
+    }
+  }
+  // цель
+  if(G.target>=0&&G.state==='play'){ p=px(hxy(G.target)); hexPath(p[0],p[1],S*.35); cx.strokeStyle='rgba(255,210,63,.5)'; cx.lineWidth=1; cx.stroke() }
+  // ядро
+  p=px(hxy(CORE)); var open=G.got>=G.P.fr;
+  cx.save();
+  if(open){ cx.shadowColor='#FFD23F'; cx.shadowBlur=18+8*Math.sin(now/180) }
+  hexPath(p[0],p[1],S*.72); cx.strokeStyle=open?'#FFD23F':'rgba(255,210,63,.45)'; cx.lineWidth=2; cx.stroke();
+  hexPath(p[0],p[1],S*.38); cx.fillStyle=open?'#FFD23F':'rgba(255,210,63,.18)'; cx.fill();
+  cx.restore();
+  if(!open){ cx.fillStyle='rgba(255,210,63,.6)'; cx.font=Math.round(S*.55)+'px "Share Tech Mono",monospace'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText((G.P.fr-G.got)+'',p[0],p[1]+S*1.2) }
+  // фрагменты
+  Object.keys(G.frag).forEach(function(f){
+    p=px(hxy(+f)); var a=now/600+(+f), s=S*.32;
+    cx.save(); cx.translate(p[0],p[1]); cx.rotate(a); cx.shadowColor='#FFD23F'; cx.shadowBlur=10;
+    cx.beginPath(); cx.moveTo(0,-s); cx.lineTo(s*.7,0); cx.lineTo(0,s); cx.lineTo(-s*.7,0); cx.closePath(); cx.fillStyle='#FFD23F'; cx.fill(); cx.restore();
+  });
+  // глюки
+  G.ch.forEach(function(h){
+    if(t<h.born-900) return;
+    var q=px(t<h.born?hxy(h.i):pos(h,G.P.chStep)), s=S*.55, st=t<h.stun;
+    if(t<h.born){ if(Math.floor(now/80)%2) return; cx.globalAlpha=.5 }
+    cx.save(); cx.translate(q[0]+(st?0:(Math.random()-.5)*2),q[1]+(st?0:(Math.random()-.5)*2));
+    cx.beginPath(); for(k=0;k<7;k++){ var a=k/7*Math.PI*2+now/300, rr=s*(k%2?.55:1)*(st?1:(.85+Math.random()*.3)); cx[k?'lineTo':'moveTo'](Math.cos(a)*rr,Math.sin(a)*rr) } cx.closePath();
+    cx.fillStyle=st?'#5E5D58':'#FF2A1A'; cx.fill(); cx.strokeStyle=st?'#9C9B95':'#FF8A6A'; cx.lineWidth=1; cx.stroke();
+    cx.restore(); cx.globalAlpha=1;
+  });
+  // импульс
+  var rt=(t-G.ring)/400;
+  if(rt>=0&&rt<1){ p=px(pos(G.me,STEP)); cx.beginPath(); cx.arc(p[0],p[1],S*(.6+2.6*rt),0,7); cx.strokeStyle='rgba(255,210,63,'+(1-rt)+')'; cx.lineWidth=3*(1-rt)+1; cx.stroke() }
+  // Пульт: глиф игрока
+  if(G.state!=='lost'||Math.floor(now/70)%2){
+    p=px(pos(G.me,STEP));
+    cx.save(); cx.shadowColor='#FFD23F'; cx.shadowBlur=14;
+    hexPath(p[0],p[1],S*.58); cx.fillStyle='#141417'; cx.fill(); cx.strokeStyle='#FFD23F'; cx.lineWidth=2; cx.stroke();
+    cx.beginPath(); cx.moveTo(p[0],p[1]-S*.3); cx.lineTo(p[0]+S*.26,p[1]+S*.16); cx.lineTo(p[0]-S*.26,p[1]+S*.16); cx.closePath(); cx.fillStyle='#FFD23F'; cx.fill();
+    cx.restore();
+  }
+}
+
+// ---- интерфейс
+var hf=document.getElementById('hf'), hpEl=document.getElementById('hp'), ht=document.getElementById('ht');
+function hud(){
+  if(!G) return;
+  hf.textContent=G.got+'/'+G.P.fr;
+  hpEl.style.width=Math.round(100*Math.max(0,Math.min(1,1-(G.pulseAt-G.t)/PULSE_CD)))+'%';
+  ht.textContent=(G.t/1000).toFixed(1)+'s';
+  [].forEach.call(document.querySelectorAll('[data-lv]'),function(b){ b.classList.toggle('on',+b.getAttribute('data-lv')===lv) });
+}
+function show(id){ ['ovIntro','ovLost','ovWon'].forEach(function(o){ document.getElementById(o).classList.toggle('hide',o!==id) }) }
+
+var loreTimer=0;
+function typeLore(){
+  var box=document.getElementById('lore'), lines=T[lang].won, text=lines.join('\n'), n=0, back=document.getElementById('bBack');
+  back.style.visibility='hidden'; clearInterval(loreTimer);
+  loreTimer=setInterval(function(){
+    n+=2; var s=text.slice(0,n), out=s.split('\n').map(function(l,ix){ var cl=ix===0?'y':ix===1||ix===5?'m':''; return '<span class="'+cl+'">'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>' }).join('\n');
+    box.innerHTML=out+(n<text.length?'<span class="y">▌</span>':'');
+    if(n>=text.length){ clearInterval(loreTimer); back.style.visibility='visible' }
+  },28);
+}
+
+function hexAt(x,y){
+  var a=(x-OX)/S+S3*XC, b=(y-OY)/S+YC, q=(S3/3*a-b/3), r=2/3*b, s=-q-r;
+  var rq=Math.round(q), rr=Math.round(r), rs=Math.round(s), dq=Math.abs(rq-q), dr=Math.abs(rr-r), ds=Math.abs(rs-s);
+  if(dq>dr&&dq>ds) rq=-rr-rs; else if(dr>ds) rr=-rq-rs;
+  var i=at(rq,rr); return i===undefined?-1:i;
+}
+var down=false;
+function steer(e,first){
+  if(!G||G.state!=='play') return;
+  var i=hexAt(e.clientX,e.clientY);
+  if(first){ var mp=px(pos(G.me,STEP)); if(Math.hypot(e.clientX-mp[0],e.clientY-mp[1])<S*.9){ pulse(); return } }
+  if(i<0||i===G.target) return;
+  G.target=i; G.path=pathTo(i);
+}
+cv.addEventListener('pointerdown',function(e){ down=true; steer(e,true) });
+cv.addEventListener('pointermove',function(e){ if(down) steer(e,false) });
+addEventListener('pointerup',function(){ down=false });
+addEventListener('pointercancel',function(){ down=false });
+
+var KEYS={d:0,e:1,w:2,a:3,z:4,x:5,ArrowRight:0,ArrowLeft:3};
+addEventListener('keydown',function(e){
+  if(!G||G.state!=='play') return;
+  if(e.key===' '){ pulse(); e.preventDefault(); return }
+  var d=KEYS[e.key.length===1?e.key.toLowerCase():e.key]; if(d===undefined) return;
+  G.kdir=d; G.target=-1; G.path=[]; e.preventDefault();
+});
+addEventListener('keyup',function(e){ if(G&&KEYS[e.key.length===1?e.key.toLowerCase():e.key]===G.kdir) G.kdir=-1 });
+
+document.getElementById('bGo').onclick=function(){ attempt=0; newRun(); show(null) };
+document.getElementById('bRetry').onclick=function(){ newRun(); show(null) };
+document.getElementById('bBack').onclick=function(){ clearInterval(loreTimer); newRun(); G.state='intro'; show('ovIntro') };
+document.getElementById('lang').onclick=function(){ lang=lang==='ru'?'en':'ru'; applyLang(); if(G&&G.state==='won') typeLore() };
+[].forEach.call(document.querySelectorAll('[data-lv]'),function(b){ b.onclick=function(){ lv=+b.getAttribute('data-lv'); applyLang(); attempt=0; newRun(); G.state='intro'; show('ovIntro') } });
+
+addEventListener('resize',resize);
+var last=0;
+function frame(now){ var dt=Math.min(50,now-(last||now)); last=now; update(dt); draw(now); requestAnimationFrame(frame) }
+applyLang(); resize(); newRun(); G.state='intro'; hud();
+window.HACK={get G(){return G},pulse:pulse,hexAt:hexAt,hxy:hxy,px:px,cells:cells,CORE:CORE,START:START}; // для проверки из Playwright
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
