@@ -60,12 +60,12 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('Continue: after the dive the run is loaded, no terminal', await waitGone(p)&&await p.evaluate(y=>LN.day===y&&LNU.langPicked&&!document.querySelector('#menu .mterm'),want.y));
   ok('…and the clock waits for the player', await p.evaluate(()=>LNU.paused===true));
 
+  const file=require('path').join(require('os').tmpdir(),'lb-pw44-save.json'); require('fs').writeFileSync(file,await p.evaluate(()=>LNsave()));
   // 3b. a broken autosave: Continue says so in the menu itself and stays there
   await p.evaluate(()=>localStorage.setItem('lb.save','{"v":1,"G":{"seed":1,"day":77,"colonies":{}},"x"')); await p.reload(); await p.waitForTimeout(600);
   await U.tap('#menu .mit[data-id="cont"]'); for(let i=0;i<60&&!(await p.isVisible('#menu .mmsg.on'));i++) await p.waitForTimeout(150);
   ok('a broken save: the menu stays and says it would not load', await menuOn(p)&&await p.evaluate(()=>/\S/.test(document.querySelector('#menu .mmsg.on').textContent)&&!LNU.langPicked), await p.evaluate(()=>{ const m=document.querySelector('#menu .mmsg'); return m&&m.textContent }));
   // 4. Load from file, from the menu
-  const file=require('path').join(require('os').tmpdir(),'lb-pw44-save.json'); require('fs').writeFileSync(file,await p.evaluate(()=>LNsave()));
   await p.evaluate(()=>localStorage.removeItem('lb.save')); await p.reload(); await p.waitForTimeout(600);
   const [fc]=await Promise.all([p.waitForEvent('filechooser'),U.tap('#menu .mit[data-id="load"]')]);
   await fc.setFiles(file);

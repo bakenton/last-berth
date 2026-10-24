@@ -1357,7 +1357,7 @@ function menuOpen(){ U.menu=true; draw();
     save:function(){ return U.saveDay!==null&&U.saveDay!==undefined?{y:U.saveDay,w:U.saveWorlds||0}:null },
     sound:function(){ return SFX.isOn() }, setSound:function(on){ SFX.set(on) },
     setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
-    cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return whyText('loadfail') },
+    cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return T('mn_contFail') },
     load:function(){ el('loadin').click() },
     newRun:function(){ U.langPicked=true; act(G,'menu',{go:'new'}) },
     test:function(){ U.langPicked=true; tutMute(); act(G,'menu',{go:'test'}) },

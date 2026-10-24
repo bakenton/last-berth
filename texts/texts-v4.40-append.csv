@@ -146,3 +146,4 @@ UI,tm_tr_i2,channel ... open,канал ... открыт,v4.40 main menu + termi
 UI,tm_tr_i3,voice ... calibrating,голос ... настройка,v4.40 main menu + terminal,live,new
 UI,tm_tr_ok,translation: alexandra online,перевод: Александра на связи,v4.40 main menu + terminal,live,new
 UI,tm_her,alexandra › I am here. I will translate.,Александра › Я здесь. Я буду переводить.,v4.40 main menu + terminal,live,new
+UI,mn_contFail,The last save in this browser would not load.,Последнее сохранение в этом браузере не загрузилось.,v4.40 main menu + terminal,live,new

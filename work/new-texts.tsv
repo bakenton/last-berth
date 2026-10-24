@@ -667,3 +667,4 @@ UI	tm_tr_i2	channel ... open	канал ... открыт
 UI	tm_tr_i3	voice ... calibrating	голос ... настройка
 UI	tm_tr_ok	translation: alexandra online	перевод: Александра на связи
 UI	tm_her	alexandra › I am here. I will translate.	Александра › Я здесь. Я буду переводить.
+UI	mn_contFail	The last save in this browser would not load.	Последнее сохранение в этом браузере не загрузилось.
