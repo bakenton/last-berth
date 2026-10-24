@@ -1,0 +1,7 @@
+// edit of the picked M07a (24.10, Nikita: "this one I like more"): FLUX.2 klein edits with M07a as the only reference.
+// Fixes: the human keypad panel at the base and the round speaker/socket module (earthly interface), crew faces in profile, Alexandra's hair.
+const EDIT = 'Edit the reference image. Keep everything exactly the same: the dark circular hall, the walls of screens, the tall black column, the round glass capsule with the stream of yellow glyph energy and the ring inside it, the yellow light and haze, the camera, the framing and the positions of all people. Change only these things: the slanted control panel with keys at the base of the column becomes a smooth curved black metal ledge with three small concentric rings of glowing yellow hexagonal glyphs set into it, no keys and no buttons; the round speaker, dials and socket module to the right of the capsule are gone, replaced by smooth black metal with an engraved column of glowing yellow glyphs; every crew member faces fully away from the camera, only the backs of their heads are visible; the woman in the light grey uniform has short blonde hair slicked straight back. Photorealistic, no visible faces, no letters.';
+['1', '2', '3'].forEach((v, j) => {
+  const id = 'M07e' + v;
+  module.exports[179 + j] = { name: 'intro1_' + id, id, ref: 'правка M07a', ru: 'M07a, чистка ' + v, seed: 19000 + j * 11, refImg: ['lb_M07a.png'], prompt: EDIT };
+});
