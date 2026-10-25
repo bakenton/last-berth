@@ -1,4 +1,4 @@
-// debug-check — панель отладки в обычной странице (v4.40: god-сборки нет), настоящий браузер: node tools/debug-check.js (из корня, после сборки)
+// debug-check — панель отладки в обычной странице (v4.40: god-сборки нет; v4.43: включается кнопкой Test play главного меню), настоящий браузер: node tools/debug-check.js (из корня, после сборки)
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const path=require('path'),url=require('url');
 const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' — '+String(x).slice(0,160):''));
@@ -7,15 +7,16 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const p=await b.newPage({viewport:{width:1500,height:950}});
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   await p.route(/fonts\.(googleapis|gstatic)\.com/,r=>r.abort());
-  await p.goto(url.pathToFileURL(path.resolve(__dirname,'..','work','page.html')).href); await p.waitForTimeout(300);
+  await p.goto(url.pathToFileURL(path.resolve(__dirname,'..','work','page.html')).href); await p.waitForTimeout(800);
   ok('no DEBUG tab before TEST PLAY', !(await p.isVisible('#god-tab')));
   await p.keyboard.press('Backquote'); ok('` does nothing before TEST PLAY', !(await p.isVisible('#god')));
-  await p.click('[data-act="testplay"]');   // the start window: a new game with the panel open
+  const r=await p.locator('#menu [data-m="test"]').boundingBox(); await p.mouse.click(r.x+r.width/2,r.y+r.height/2);   // the main menu: Test play
+  for(let i=0;i<60&&await p.evaluate(()=>LNU.menu);i++) await p.waitForTimeout(150);
   ok('TEST PLAY opens the panel', await p.isVisible('#god'));
   ok('DEBUG tab present', await p.isVisible('#god-tab'));
-  ok('the start window is gone', await p.evaluate(()=>LNU.langPicked&&!document.querySelector('#lang')));
+  ok('the menu is gone, everything open', await p.evaluate(()=>LNU.langPicked&&!LNU.menu&&document.getElementById('menu').hidden&&!LNI.tut().help));
   const btn=t=>p.click('#god [data-g="'+t+'"]',{timeout:4000});
-  await btn('noPro'); await btn('skip:100');
+  await btn('skip:100');
   const d1=await p.evaluate(()=>LN.day); ok('skip +100 moves clock', d1>=100, d1);
   await btn('skip:500'); const d2=await p.evaluate(()=>LN.day); ok('skip +500', d2>=d1+500, d1+'→'+d2);
   const m0=await p.evaluate(()=>LN.earth.metal); await btn('res:metal:2000');

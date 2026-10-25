@@ -26,7 +26,7 @@ for(const [t,k,en,ru] of rows){
 }
 
 // 2. ключи в коде
-const src=['core.js','ui.js'].map(f=>{ try{ return fs.readFileSync(path.join(W,f),'utf8') }catch(e){ return '' } }).join('\n');
+const src=['core.js','menu.js','ui.js'].map(f=>{ try{ return fs.readFileSync(path.join(W,f),'utf8') }catch(e){ return '' } }).join('\n');
 if(!src) warn.push('core.js/ui.js рядом со страницей не найдены — проверка ключей пропущена');
 else{
   const lit=(re,tb)=>{ let x; while((x=re.exec(src))){ if(!byId[tb+'.'+x[1]]) err.push('в коде '+tb+' «'+x[1]+'», строки в таблице нет') } };

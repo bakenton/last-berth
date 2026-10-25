@@ -1,5 +1,5 @@
-/* DEBUG — the developer panel, built into every page (Nikita, 24.10: no separate god build; started from the start window,
-   button TEST PLAY). Until LBdebug.on() nothing is on screen and no key is caught; window.GOD (the actions) is there always —
+/* DEBUG — the developer panel, built into every page (Nikita, 24.10: no separate god build; started from the main menu,
+   button Test play — v4.43). Until LBdebug.on() nothing is on screen and no key is caught; window.GOD (the actions) is there always —
    the scenarios and the bot player call it. Open/close: the DEBUG tab bottom left or the ` key (Ё in the RU layout).
    Works only through the hooks LN/LNU/LNdraw/LNsave/LNload and the global functions of the core. Not game text: the panel
    speaks Russian, like the other developer tools. */

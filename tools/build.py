@@ -238,9 +238,12 @@ patch('.blk.hl{border-color:var(--ink)}',
 if os.path.exists('web/shell.html'):
     tm=re.search(r'<script type="application/json" id="lb-texts" data-url="[^"]*">.*?</script>',s,re.S).group(0)
     tools=re.search(r'<script type="application/octet-stream" id="lb-tools".*?</script>',s,re.S)
+    # v4.40: the main menu and its terminal — menu.css is written in u (1u = a design pixel of 1280×760), here it becomes calc(var(--u) * N)
+    mcss=re.sub(r'(-?\d*\.?\d+)u(?![\w-])',lambda m:'calc(var(--u) * '+m.group(1)+')',rd('web/menu.css')) if os.path.exists('web/menu.css') else ''
+    menu=('<script>\n'+rd('menu.js')+'</script>') if os.path.exists('menu.js') else ''
     s=('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-       '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+(rd('web/art.css') if os.path.exists('web/art.css') else '')+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
-       '<script>\n'+core+'</script><script>\n'+ui+'</script>'+('<script>\n'+rd('web/debug.js')+'</script>' if os.path.exists('web/debug.js') else '')+(tools.group(0) if tools else '')+'\n</body></html>')
+       '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+(rd('web/art.css') if os.path.exists('web/art.css') else '')+mcss+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
+       '<script>\n'+core+'</script>'+menu+'<script>\n'+ui+'</script>'+('<script>\n'+rd('web/debug.js')+'</script>' if os.path.exists('web/debug.js') else '')+(tools.group(0) if tools else '')+'\n</body></html>')
 wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)

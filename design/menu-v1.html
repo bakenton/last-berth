@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LAST BERTH — меню, финалисты</title>
+<title>LAST BERTH — меню</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500;600;700&family=Geist+Mono:wght@400;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
@@ -44,19 +44,12 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 .ver{position:absolute;font:11u var(--n);letter-spacing:.14em;color:var(--dim)}
 .pane{display:none}
 .stage.diving .vt .top,.stage.diving .vt .sm,.stage.diving .tst,.stage.diving .ver{opacity:0;pointer-events:none;transition:opacity 1.1s}
+.stage.diving .vt::after{opacity:0;transition:opacity 1.6s}
 .vt .top,.vt .sm{transition:opacity .8s}
-.stage[data-lay]:not(.phone) .vt.vW .sm{left:0;right:0;top:auto;bottom:46u;flex-direction:row;align-items:stretch;justify-content:center;gap:46u}
-.stage[data-lay]:not(.phone) .vt.vW .sm .it{flex-direction:column;align-items:center;justify-content:flex-start;gap:6u;min-width:92u;padding:8u 4u 10u}
-.stage[data-lay]:not(.phone) .vt.vW .sm .l{font-size:21u}.stage[data-lay]:not(.phone) .vt.vW .sm .s{height:14u}
-.stage[data-lay]:not(.phone) .vt.vW .sm::before{content:"";position:absolute;left:50%;top:50%;width:900u;height:180u;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(11,11,12,.78),rgba(11,11,12,0) 72%);z-index:-1;pointer-events:none}
-.stage[data-lay="center"]:not(.phone) .vt .sm{left:0;right:0;top:40%;bottom:auto;flex-direction:column;align-items:center;gap:2u}
-.stage[data-lay="center"]:not(.phone) .vt .sm .it{flex-direction:row;align-items:baseline;justify-content:center;gap:16u;min-width:340u;padding:9u 20u 9u}
-.stage[data-lay="center"]:not(.phone) .vt .sm .l{font-size:27u}.stage[data-lay="center"]:not(.phone) .vt .sm .s{height:auto}
-.stage[data-lay="center"]:not(.phone) .vt .sm::before{content:"";position:absolute;left:50%;top:50%;width:900u;height:560u;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(8,8,10,.82),rgba(8,8,10,.5) 45%,rgba(8,8,10,0) 72%);z-index:-1;pointer-events:none}
-.stage[data-lay="left"]:not(.phone) .vt .sm{left:84u;right:auto;top:auto;bottom:84u;flex-direction:column;align-items:flex-start;gap:0;justify-content:flex-start}
-.stage[data-lay="left"]:not(.phone) .vt .sm .it{flex-direction:row;align-items:baseline;gap:16u;min-width:380u;padding:9u 6u 9u;justify-content:space-between}
-.stage[data-lay="left"]:not(.phone) .vt .sm .l{font-size:25u}.stage[data-lay="left"]:not(.phone) .vt .sm .s{height:auto}
-.stage[data-lay="left"]:not(.phone) .vt .sm::before{content:"";position:absolute;left:-60u;bottom:-70u;width:720u;height:520u;background:radial-gradient(ellipse at 20% 80%,rgba(11,11,12,.72),rgba(11,11,12,0) 70%);z-index:-1;pointer-events:none}
+.stage:not(.phone) .vt .sm{left:0;right:0;top:40%;bottom:auto;flex-direction:column;align-items:center;gap:2u}
+.stage:not(.phone) .vt .sm .it{flex-direction:row;align-items:baseline;justify-content:center;gap:16u;min-width:340u;padding:9u 20u 9u}
+.stage:not(.phone) .vt .sm .l{font-size:27u}.stage:not(.phone) .vt .sm .s{height:auto}
+.stage:not(.phone) .vt .sm::before{content:"";position:absolute;left:50%;top:50%;width:900u;height:560u;transform:translate(-50%,-50%);background:radial-gradient(ellipse,rgba(8,8,10,.82),rgba(8,8,10,.5) 45%,rgba(8,8,10,0) 72%);z-index:-1;pointer-events:none}
 </style>
 <style id="css-live"></style>
 </head>
@@ -65,18 +58,16 @@ button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:poin
 <symbol id="i-markf" viewBox="0 0 120 120"><ellipse cx="60" cy="108" rx="34" ry="4.5" fill="#000" opacity=".55" filter="url(#mkbl)"/><g filter="url(#mksh)"><circle cx="60" cy="60" r="40" fill="none" stroke="url(#mkgr)" stroke-width="8" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6 -14,14" fill="url(#mkgv)"/></g></g><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6" fill="#fff" opacity=".28"/></g></symbol></defs></svg>
 <div class="bar">
   <h1>LAST BERTH · меню</h1>
-  <div class="grp" id="gv"></div>
-  <div class="grp"><small>язык</small><button class="pill" data-k="lang" data-v="en">EN</button><button class="pill" data-k="lang" data-v="ru">RU</button></div>
+    <div class="grp"><small>язык</small><button class="pill" data-k="lang" data-v="en">EN</button><button class="pill" data-k="lang" data-v="ru">RU</button></div>
   <div class="grp"><small>сохранение</small><button class="pill" data-k="save" data-v="1">есть</button><button class="pill" data-k="save" data-v="0">нет</button></div>
   <div class="grp"><small>EN вместо Pult</small><button class="pill" data-name="HELM">HELM</button><button class="pill" data-name="CONSOLE">CONSOLE</button><button class="pill" data-name="CONN">CONN</button><button class="pill" data-name="CORE">CORE</button><button class="pill" data-name="TALLY">TALLY</button></div>
-  <div class="grp"><small>кнопки</small><button class="pill" data-k="lay" data-v="low">снизу</button><button class="pill" data-k="lay" data-v="center">по центру</button><button class="pill" data-k="lay" data-v="left">слева</button></div>
   <div class="grp"><small>экран</small><button class="pill" data-k="frame" data-v="desktop">ПК</button><button class="pill" data-k="frame" data-v="phone">телефон</button></div>
-  <div class="grp"><button class="pill" id="bootbtn">▶ терминал</button><button class="pill" data-k="view" data-v="grid">все сразу</button></div>
+  <div class="grp"><button class="pill" id="bootbtn">▶ терминал</button></div>
 </div>
 <div class="info" id="info"></div>
 <div id="host"></div>
 <div id="grid" hidden></div>
-<div class="hint" id="hint">Стрелки ↑↓ и Enter, цифры 1–5 · [ и ] — соседний вариант. «Новая игра» (или кнопка «▶ терминал») запускает стартовый терминал по описанию из design/INTRO-DRAFT.md: чёрный экран, гул, строки с помехами, системы подключаются одна за другой, игрок отвечает глаголом (клавиши 1–4). Esc или «пропустить» — выход. Макет ничего не запускает, цифры в «Продолжить» условные.</div>
+<div class="hint" id="hint">Стрелки ↑↓ и Enter, цифры 1–5. «Новая игра» (или кнопка «▶ терминал») запускает стартовый терминал по описанию из design/INTRO-DRAFT.md: чёрный экран, гул, строки с помехами, системы подключаются одна за другой, игрок отвечает глаголом (клавиши 1–4). Esc или «пропустить» — выход. Макет ничего не запускает, цифры в «Продолжить» условные.</div>
 <div class="toast" id="toast"></div>
 <script>
 /* ---------- the menu model (what the real game can do today: continue the autosave, a new run, a save file, language, sound) ---------- */
@@ -88,7 +79,7 @@ var TXT={
       cSub:'год {y} · {w} миров',lSub:'.json',lVal:'RU',empty:'нет записи',title:'LAST BERTH',pult:'ПУЛЬТ'}
 };
 var YEAR=412, WORLDS=7;
-var S={lang:'en',save:true,sound:true,frame:(window.matchMedia&&matchMedia('(max-width:720px)').matches)?'phone':'desktop',v:5,sel:1,lay:'center',view:'single',boot:true,bootov:false};
+var S={lang:'en',save:true,sound:true,frame:(window.matchMedia&&matchMedia('(max-width:720px)').matches)?'phone':'desktop',v:1,sel:1,lay:'center',view:'single',boot:true,bootov:false};
 function T(){ return TXT[S.lang] }
 function items(){ var t=T(); return [
   {id:'cont',label:t.cont,sub:S.save?t.cSub.replace('{y}',YEAR).replace('{w}',WORLDS):t.empty,off:!S.save},
@@ -106,7 +97,6 @@ function row(it,i,inner,cls){ return '<div class="it '+(cls||'')+(it.off?' off':
 var VAR=[];
 function add(n,d,pro,con,render,css){ VAR.push({n:n,d:d,pro:pro,con:con,r:render,css:css||''}) }
 
-/* 20 — the Pult's map: the same blue wireframe Earth and yellow marks as the start-up terminal */
 /* ---------- abstract directions: everything is drawn in the page (canvas 2D), no pictures ---------- */
 var PAL={ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',ppl:'#FFD23F',earth:'#4FA3FF',food:'#3DDC84',fuel:'#FF8A1F',metal:'#C9CFD6',red:'#FF2A1A',ark:'#B48CFF',bg:'#0b0b0c'};
 function rgba(hex,a){ var n=parseInt(hex.slice(1),16); return 'rgba('+(n>>16)+','+((n>>8)&255)+','+(n&255)+','+a+')' }
@@ -120,49 +110,15 @@ function smenu(I,cls){ return '<div class="sm '+(cls||'')+'">'+I.map(function(it
 function absScreen(kind,cls){ return function(){ var t=T(), I=items(); return '<div class="v vt '+cls+'"><canvas class="cv2d" data-k="'+kind+'"></canvas><div class="top">'+mark('')+'<div class="nm">'+t.title+'</div><div class="run"><i></i></div></div>'+smenu(I)+'<div class="ver" style="right:24u;bottom:14u">v4.39</div></div>' } }
 
 var CVD={};
-/* 1 — rings: the ring map of the game as an abstract clock; the chosen item lights its ring */
-/* 2 — routes: a logistics network, ships run along the arcs */
-/* 3 — flow: people streaming along invisible currents towards a point of light */
-/* 4 — runes: a wall of name plates in an invented script; plates light up as if they were being read */
-CVD.runes=function(c,w,h,t,st,ph){ var u=h/760, cw=(ph?36:46)*u, ch=(ph?52:66)*u, cols=Math.ceil(w/cw)+1, rows=Math.ceil(h/ch)+1, i, j;
-  if(st.reset||!st.cells){ st.cells=[]; for(i=0;i<cols*rows;i++){ var rg=rng(i*31+7), segs=[], n=3+((rg()*3)|0); for(j=0;j<n;j++){ var a=[(rg()*3)|0,(rg()*5)|0], b=[(rg()*3)|0,(rg()*5)|0]; if(a[0]!==b[0]||a[1]!==b[1]) segs.push([a,b]) } st.cells.push({s:segs,per:5+rg()*9,ph:rg(),on:rg()<.55}) } }
-  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); var sweep=(t*70*u)%(w+400*u)-200*u;
-  for(j=0;j<rows;j++) for(i=0;i<cols;i++){ var cell=st.cells[j*cols+i], px=i*cw+cw*.12, py=j*ch+ch*.1, pw=cw*.76, phh=ch*.8, cxm=px+pw/2, cym=py+phh/2;
-    var lit=cell.on?Math.max(0,(Math.sin(6.2832*(t/cell.per+cell.ph))-.62)/.38):0; lit=Math.min(1,lit+Math.max(0,1-Math.abs(cxm-sweep)/(70*u))*.5);
-    var mask=1; if(Math.abs(cxm-w/2)<w*(ph?.46:.3)&&cym<h*.4) mask=.22; if(cym>h*.82) mask=Math.min(mask,.3);
-    c.fillStyle=rgba(PAL.ppl,.05*lit*mask); c.fillRect(px,py,pw,phh); c.strokeStyle='rgba(242,241,236,'+(.07*mask)+')'; c.lineWidth=1; c.strokeRect(px,py,pw,phh);
-    c.strokeStyle=lit>.02?rgba(PAL.ppl,(.2+.8*lit)*mask):'rgba(242,241,236,'+(.12*mask)+')'; c.lineWidth=Math.max(1,u*(1.3+lit)); c.beginPath();
-    cell.s.forEach(function(sg){ var gx=function(q){ return px+pw*(.22+.28*q[0]) }, gy=function(q){ return py+phh*(.14+.18*q[1]) }; c.moveTo(gx(sg[0]),gy(sg[0])); c.lineTo(gx(sg[1]),gy(sg[1])) }); c.stroke() } };
-
-/* 5 — signal: a stack of lines like a pulsar's pulses, the nearest one in yellow */
 function initCv(root,live){ root.querySelectorAll('canvas.cv2d').forEach(function(cv){ if(cv._ini) return; cv._ini=1;
   var D=CVD[cv.dataset.k]; if(D&&D.gl){ initGLScene(cv,live,D); return } var ctx=cv.getContext('2d'), st={}, t0=performance.now(), n=0, heavy=/^hex/.test(cv.dataset.k), gap=heavy?32:0, lastF=0, dpr=Math.min(window.devicePixelRatio||1,heavy?1.25:1.5); if(!D||!ctx) return;
   function frame(){ if(!cv.isConnected) return; var nowF=performance.now(); if(live&&nowF-lastF<gap){ requestAnimationFrame(frame); return } lastF=nowF; if(!document.hidden&&(!live||(n++%1===0))){ var w=Math.max(2,Math.round(cv.clientWidth*dpr)), h=Math.max(2,Math.round(cv.clientHeight*dpr)); if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; st.reset=true }
       var stg=cv.closest('.stage'); D(ctx,w,h,live?(performance.now()-t0)/1000:8,st,!!(stg&&stg.classList.contains('phone')),live); st.reset=false } if(live) requestAnimationFrame(frame) }
   frame() }) }
 
-add('Руны','Стена табличек с выдуманной письменностью из прямых штрихов; таблички по очереди загораются жёлтым, поперёк идёт линия «чтения». Имена на табличках капсул и таблички пропавших в зале Пульта.',
- 'цепляет лор (таблички, язык людей, Александра читает имена); ничем не рисуется, кроме линий; узнаваемо на скриншоте',
- 'руны пока случайные, настоящий алфавит ещё не нарисован; плотный узор мешает читать мелкие подписи кнопок',
- absScreen('runes','vA4'),'.vt .cv2d{position:absolute;inset:0;width:100%;height:100%;display:block}\
-.vt .top{position:absolute;left:0;right:0;top:60u;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14u}.vt .top .mk{width:76u;height:76u}.vt .nm{font:300 54u var(--h);letter-spacing:.5em;padding-left:.5em}\
-.vt .run{position:relative;width:420u;height:2u;margin-top:4u;background:rgba(242,241,236,.14);overflow:hidden}.vt .run i{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,transparent,#F2F1EC 60%,#FFD23F);animation:run17 2.6s cubic-bezier(.45,.05,.55,.95) infinite}@keyframes run17{from{left:-30%}to{left:104%}}\
-.vt .sm{bottom:46u;z-index:2}.vt .sm .l{text-shadow:0 1px 8px #000}.vt::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(0deg,rgba(11,11,12,.88),transparent);pointer-events:none}\
-.phone .vt .top{top:34px}.phone .vt .nm{font-size:30px}.phone .vt .top .mk{width:58px;height:58px}.phone .vt .run{width:210px}.phone .vt .sm{bottom:24px}.phone .vt::after{height:44%}\
-@media (prefers-reduced-motion:reduce){.vt .run i{animation:none}}');
-/* ---------- abstract, round two (7–11) ---------- */
-
-/* 7 — fold: a grid of space bent by moving masses; "space flows differently" (складка/растяжение in the game) */
-/* 8 — swarm: a cloud of people gathers into the mark of the game and breaks apart again */
-/* 9 — warp: the ark in flight; stars stream past, every so often a long jump */
-/* 10 — cells: capsules as a honeycomb, the waking passes across it in waves */
-/* 11 — rosettes: a harmonograph that never repeats; the head of the line is yellow */
-/* ---------- landscapes without a world (12–16): the background of a main menu, drawn from lines, hexes and thread ---------- */
 function skyStars(c,w,h,t,st,yMax,n){ if(st.reset||!st.sk||st.skn!==n){ var rg=rng(99); st.sk=[]; st.skn=n; for(var i=0;i<n;i++) st.sk.push([rg(),rg(),.5+rg()*1.2,rg()*6.28,rg()]) }
   for(var j=0;j<st.sk.length;j++){ var s=st.sk[j], y=s[1]*yMax; c.fillStyle=(s[4]<.15?'rgba(255,226,170,':'rgba(220,230,255,')+(.18+.5*(.5+.5*Math.sin(t*(.4+s[2]*.4)+s[3]))*(1-y/yMax*.5))+')'; c.fillRect(s[0]*w,y,s[2]*h/760,s[2]*h/760) } }
 function fbm2(x,y,z){ return (vn3(x,y,z)*.55+vn3(x*2.1+7.3,y*2.1+1.9,z*1.3)*.3+vn3(x*4.3+3.1,y*4.3+8.8,z*1.7)*.15) }
-
-/* 12 — ridges: layers of mountains drawn with single lines, the far ones pale, the near ones black; the sun is a set of thin rings */
 /* hex ground in perspective: the world is a hexagonal field, the camera hangs low above it */
 function hexGround(c,w,h,t,st,ph,mode){ var u=h/760, hy=h*.34+PTR.y*h*.012, f=h*.9, cx=w/2+PTR.x*h*.035, R=ph?.32:.29, dz=1.5*R, dx=Math.sqrt(3)*R, Hc=2.1, zs=t*.22, z0=2.2, z1=ph?14:22, jmin=Math.floor((zs+z0)/dz)-1, jmax=Math.ceil((zs+z1)/dz)+1, j, i, k;
   c.fillStyle=PAL.bg; c.fillRect(0,0,w,h); skyStars(c,w,h,t,st,hy*1.03,ph?80:140);
@@ -183,117 +139,23 @@ function hexGround(c,w,h,t,st,ph,mode){ var u=h/760, hy=h*.34+PTR.y*h*.012, f=h*
       c.strokeStyle=edge; c.lineWidth=Math.max(1,u*(1+wave*.8)); c.stroke() } }
  }
 CVD.hexrelief=function(c,w,h,t,st,ph){ hexGround(c,w,h,t,st,ph,'relief') };
-/* 14 — thread globe: a sphere wound from rotating great circles, half sunk below the edge of the screen */
-/* 15 — curtains: hanging threads of light over two dark ridges */
-add('Гекс-рельеф','Поле шестиугольных колонн уходит к горизонту и медленно движется на камеру. Высоты из шума, вершины подсвечены жёлтым, по полю идёт волна света. Тёмное небо со звёздами над ним.',
- 'продолжение «сот», но уже как местность; создаёт глубину и «масштаб» без картинки; жёлтые вершины связаны с палитрой игры',
- 'самый тяжёлый из пейзажей (тысяча многоугольников на кадр); колонны могут читаться как «Майнкрафт» при другой подаче',
- absScreen('hexrelief','vB13'),'');
-/* ---------- the people's script, round two (17–21): the glyph wall tied to the game — names on plates, translation, the registry of worlds, the chronicle, the seal ---------- */
-var GL={};
-function glyphOf(ch){ var code=(ch||'a').toLowerCase().charCodeAt(0)||97; if(GL[code]) return GL[code]; var rg=rng(code*131+17), strokes=[], ns=1+(rg()<.55?1:0), s, i, total=0;
-  for(s=0;s<ns;s++){ var n=2+((rg()*3)|0), x=(rg()*3)|0, y=(rg()*5)|0, pts=[[x,y]]; for(i=1;i<n;i++){ var nx, ny, tries=0; do{ nx=(rg()*3)|0; ny=(rg()*5)|0; tries++ }while(tries<14&&((nx===x&&ny===y)||Math.abs(nx-x)+Math.abs(ny-y)<2)); pts.push([nx,ny]); x=nx; y=ny } strokes.push(pts) }
-  return GL[code]=strokes }
-function drawG(c,ch,x,y,w,h,p,col,lw){ var st=glyphOf(ch), segs=[], total=0, s, i; for(s=0;s<st.length;s++) for(i=1;i<st[s].length;i++){ var a=st[s][i-1], b=st[s][i], L=Math.hypot((b[0]-a[0])*w/2,(b[1]-a[1])*h/4); segs.push([s,i,a,b,L]); total+=L }
-  var budget=p*total, tip=null, started=-1; c.strokeStyle=col; c.lineWidth=lw; c.lineCap='round'; c.beginPath();
-  for(i=0;i<segs.length;i++){ var sg=segs[i]; if(budget<=0) break; var f=Math.min(1,budget/sg[4]), ax=x+sg[2][0]/2*w, ay=y+sg[2][1]/4*h, bx=x+sg[3][0]/2*w, by=y+sg[3][1]/4*h; if(started!==sg[0]){ c.moveTo(ax,ay); started=sg[0] } tip=[ax+(bx-ax)*f,ay+(by-ay)*f]; c.lineTo(tip[0],tip[1]); budget-=sg[4] }
-  c.stroke(); return p>0&&p<1?tip:null }
-function maskAt(x,y,w,h,ph){ var m=1, cxn=Math.abs(x-w/2)/w, cyn=y/h; if(cxn<(ph?.5:.3)&&cyn<.36) m=.3; if(cyn>.86) m=Math.min(m,.3); return m }
-var WN=['Tallow','Brine','Cinder','Marrow','Solace','Vesper','Gallows','Ferrous','Hollow','Threnody','Kiln','Lantern','Tinder','Ossuary','Harrow','Wick','Pale','Grist','Anvil','Vigil','Loam','Sallow','Cairn','Ember','Mire','Rook','Dross','Chaff'];
-var TR={en:['Hermes is back. 12 crew.','Rations will last 41 years.','Cinder is empty. Come for us.','Storm over Eos. Wait.','Who counts the ones left?','Atlas carries metal to Tallow.','They ask for a berth.','Alexandra, write it down.','Sisyphus did not return.','Ten more hands for the yard.'],
-        ru:['«Гермес» вернулся. Экипаж 12.','Рационов хватит на 41 год.','Cinder пуст. Заберите нас.','Буря над Эос. Ждите.','Кто считает оставшихся?','«Атлант» везёт металл на Tallow.','Они просят койку.','Александра, запишите.','«Сизиф» не вернулся.','Ещё десять рук на верфь.']};
-function mono(u,s){ return (s*u)+'px "Geist Mono",monospace' }
-
-/* 17 — plates: names are written onto plates by a stylus, stroke by stroke; the wall of the lost in the Pult's hall */
-/* 18 — translation: the people's lines on the left, Alexandra's translation settling on the right */
-/* 19 — registry: tablets of worlds; the name in the people's glyphs, the Pult's name beneath, a class dot, a deposit that runs out */
-/* 20 — chronicle: scrolls of glyph lines rise at three speeds, the years in the margin; a seal sometimes stands out in yellow */
-/* 21 — seal: one name written large, stroke by stroke, inside a turning ring; then the Pult's name appears beneath it */
-/* ---------- hex script (22–24): the same wall of names, but in a cleaner, technical script cut from the hexagon lattice ---------- */
-var HGL={}, HN=[[0,0]]; (function(){ for(var k=0;k<6;k++){ var a=(30+60*k)*Math.PI/180; HN.push([Math.cos(a)*.78,Math.sin(a)*.78]) } })();
-function hglyph(ch){ var code=(ch||'a').toLowerCase().charCodeAt(0)||97; if(HGL[code]) return HGL[code]; var rg=rng(code*97+13), out=[], ns=1+(rg()<.55?1:0), s, i;
-  for(s=0;s<ns;s++){ var n=2+((rg()*3)|0), cur=(rg()*7)|0, pts=[HN[cur]]; for(i=1;i<n;i++){ var nx=cur, g=0; while(nx===cur&&g++<9) nx=(rg()*7)|0; pts.push(HN[nx]); cur=nx } out.push(pts) }
-  return HGL[code]=out }
-function drawHG(c,ch,cx,cy,r,p,col,lw,glow){ var st=hglyph(ch), segs=[], total=0, s, i; for(s=0;s<st.length;s++) for(i=1;i<st[s].length;i++){ var a=st[s][i-1], b=st[s][i], L=Math.hypot((b[0]-a[0])*r,(b[1]-a[1])*r); segs.push([s,a,b,L]); total+=L }
-  function path(bd){ var started=-1, tip=null; c.beginPath(); for(var q=0;q<segs.length;q++){ if(bd<=0) break; var sg=segs[q], f=Math.min(1,bd/sg[3]), ax=cx+sg[1][0]*r, ay=cy+sg[1][1]*r, bx=cx+sg[2][0]*r, by=cy+sg[2][1]*r; if(started!==sg[0]){ c.moveTo(ax,ay); started=sg[0] } tip=[ax+(bx-ax)*f,ay+(by-ay)*f]; c.lineTo(tip[0],tip[1]); bd-=sg[3] } return tip }
-  c.lineJoin='miter'; c.lineCap='butt'; var tip;
-  if(glow){ c.strokeStyle=col; c.globalAlpha=.22; c.lineWidth=lw*4; path(p*total); c.stroke(); c.globalAlpha=1 }
-  c.strokeStyle=col; c.lineWidth=lw; tip=path(p*total); c.stroke(); return p>0&&p<1?tip:null }
-function hexP(c,cx,cy,r,flat){ c.beginPath(); for(var k=0;k<6;k++){ var a=((flat?0:30)+60*k)*Math.PI/180; if(k) c.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); else c.moveTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r) } c.closePath() }
-function lerpCol(a,b,f,al){ return 'rgba('+Math.round(a[0]+(b[0]-a[0])*f)+','+Math.round(a[1]+(b[1]-a[1])*f)+','+Math.round(a[2]+(b[2]-a[2])*f)+','+al+')' }
-
-/* 22 — hex plates: honeycomb of plates; each plate is three small hex cells, the name is traced into them by a laser */
-/* 23 — hex stream: strips of honeycomb cells with hex glyphs rise at different speeds; a read-head sweeps across and the years run in the margin */
-/* 24 — hex field with script: the perspective hex plain, every other cell carries a glyph that lights as the wave passes */
-/* ---------- script without hexagons (25–29): the same technical glyphs, other compositions ---------- */
-function drawHGp(c,ch,proj,p,col,lw,glow){ var st=hglyph(ch), segs=[], total=0, s, i; for(s=0;s<st.length;s++) for(i=1;i<st[s].length;i++){ var a=st[s][i-1], b=st[s][i], L=Math.hypot(b[0]-a[0],b[1]-a[1]); segs.push([s,a,b,L]); total+=L }
-  function path(bd){ var started=-1, tip=null; c.beginPath(); for(var q=0;q<segs.length;q++){ if(bd<=0) break; var sg=segs[q], f=Math.min(1,bd/sg[3]), A=proj(sg[1][0],sg[1][1]), B=proj(sg[2][0],sg[2][1]); if(started!==sg[0]){ c.moveTo(A[0],A[1]); started=sg[0] } tip=[A[0]+(B[0]-A[0])*f,A[1]+(B[1]-A[1])*f]; c.lineTo(tip[0],tip[1]); bd-=sg[3] } return tip }
-  c.lineJoin='miter'; c.lineCap='butt'; var tip; if(glow){ c.strokeStyle=col; c.globalAlpha=.2; c.lineWidth=lw*4; path(p*total); c.stroke(); c.globalAlpha=1 }
-  c.strokeStyle=col; c.lineWidth=lw; tip=path(p*total); c.stroke(); return p>0&&p<1?tip:null }
-function nodesOf(ch){ var st=hglyph(ch), seen={}, out=[]; st.forEach(function(s){ s.forEach(function(pt){ var k=pt[0].toFixed(2)+','+pt[1].toFixed(2); if(!seen[k]){ seen[k]=1; out.push(pt) } }) }); return out }
-
-/* 25 — stream: columns of script fall at three depths; a bright head leaves a fading trail; no cells, just the script */
-CVD.gstream=function(c,w,h,t,st,ph){ var u=h/760, K=ph?13:30, k, j, SZ=[10,16,26], VY=[50,85,130], TR=[320,460,620], TA=[.5,.75,1];
-  if(st.reset||!st.cols){ st.cols=[]; var rg=rng(23); for(k=0;k<K;k++){ var tier=k%3; st.cols.push({x:(k+.5)/K*w+(rg()-.5)*w/K*.5,tier:tier,ph0:rg(),sz:SZ[tier]*u*(ph?1.25:1),vy:VY[tier]*u,tr:TR[tier]*u}) } }
-  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h);
-  st.cols.forEach(function(cl,idx){ var sp=cl.sz*2.4, cyc=h*1.25, head=((t*cl.vy+cl.ph0*cyc)%cyc)-h*.12, n=Math.ceil(h/sp)+1, ta=TA[cl.tier];
-    for(j=0;j<n;j++){ var y=j*sp+sp*.5, d=head-y, lit=d<0?0:Math.exp(-d/cl.tr), al=Math.max(.11,lit)*ta, m=maskAt(cl.x,y,w,h,ph); if(m*al<.03) continue; var ch=String.fromCharCode(97+Math.floor(hsh(idx*131+j*7.7+Math.floor(t*.35+hsh(j)*4))*26)), isHead=d>=0&&d<sp*1.1;
-      drawHG(c,ch,cl.x,y,cl.sz*.5,1,isHead?'rgba(255,226,150,'+(.95*m)+')':'rgba(242,241,236,'+(al*.9*m)+')',Math.max(1,u*(cl.tier+1)*.55),isHead) } }) };
-
-/* 26 — sky glyphs: constellations in the shape of the people's script are lit star by star, drawn, held and dimmed */
-/* 27 — hologram: one glyph as a lit stack of layers turning in space, a scanning ring running through it */
-/* 28 — ribbons: horizontal lines of script slide at different speeds; where a glyph crosses the reading line it lights up */
-/* 29 — sphere of script: bands of glyphs wrap a turning globe, the back dim, the front bright, one glyph lit travels along the equator */
-add('Поток знаков','То же, что «Гекс-поток», но без сот: колонны знаков падают на трёх глубинах (мелкие и тусклые вдали, крупные и яркие ближе), у каждой колонны яркая жёлтая «голова» и тающий след. Только письмо и пустота.',
- 'самый чистый и техничный; глубина без картинки; ничего лишнего, знаки читаются как поток данных корабля',
- 'самый знакомый образ (цифровой дождь), нужна своя подача; без смысла в деталях',
- absScreen('gstream','vE25 vW'),'');
-/* ---------- more of the same family (30–34): script as instrument — manifest, carrier wave, corridor, orbit text, coverage scope ---------- */
-
-/* 30 — manifest: a list of worlds slides through a reading frame; each row is the name in script, the Pult's name, a deposit bar and a number */
-/* 31 — carrier: a wave runs across the screen and the script rides it; bursts of "transmission" light the glyphs yellow */
-/* 32 — corridor: a tunnel whose walls are lines of script; the script rushes towards you, a yellow pulse runs along the walls */
-CVD.corridor=function(c,w,h,t,st,ph){ var u=h/760, f=h*(ph?.78:.62), cx=w/2, cy=h*(ph?.4:.47), Wd=ph?1.8:2.5, Hh=ph?1.9:1.4, zn=1.5, zf=17, dz=.95, sp=1.5, adv=t*sp, kk=Math.floor(adv/dz), zo=adv%dz, N=Math.ceil((zf-zn)/dz)+1, zi, r, wl;
-  c.fillStyle=PAL.bg; c.fillRect(0,0,w,h);
-  function P(X,Y,Z){ return [cx+X*f/Z,cy+Y*f/Z] }
-  var zw=zf-((t*5)%(zf+6));
-  c.strokeStyle='rgba(242,241,236,.09)'; c.lineWidth=Math.max(1,u); [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(function(q){ var a=P(q[0]*Wd,q[1]*Hh,zn), b=P(q[0]*Wd,q[1]*Hh,zf); c.beginPath(); c.moveTo(a[0],a[1]); c.lineTo(b[0],b[1]); c.stroke() });
-  for(zi=0;zi<N;zi++){ var Zc=zn+zi*dz-zo; if(Zc<zn) continue; var fog=Math.pow(Math.max(0,1-(Zc-zn)/(zf-zn)),.9), near=Math.min(1,Math.max(0,(Zc-zn-.4)/2.4)), lit=Math.max(0,1-Math.abs(Zc-zw)/1.2), al=fog*near, kz=kk+zi;
-    if((kz%4)===0){ var q1=P(-Wd,-Hh,Zc), q2=P(Wd,-Hh,Zc), q3=P(Wd,Hh,Zc), q4=P(-Wd,Hh,Zc); c.strokeStyle=lit>.1?rgba(PAL.ppl,.2+.5*lit):'rgba(242,241,236,'+(.1*al)+')'; c.lineWidth=Math.max(1,u*(1+lit)); c.beginPath(); c.moveTo(q1[0],q1[1]); c.lineTo(q2[0],q2[1]); c.lineTo(q3[0],q3[1]); c.lineTo(q4[0],q4[1]); c.closePath(); c.stroke() }
-    if(al<.03) continue;
-    var gs=.27, rowsY=[-.78,-.26,.26,.78], colsX=[-.72,-.24,.24,.72];
-    for(wl=0;wl<4;wl++) for(r=0;r<4;r++){ var id=kz*53+wl*13+r*5.3, ch=String.fromCharCode(97+Math.floor(hsh(id)*26)); if(hsh(id*1.7)<.18) continue; var proj, pc;
-      if(wl<2){ var sx=wl?1:-1, Y=rowsY[r]*Hh; proj=(function(sx,Y,Zc){ return function(gx,gy){ return P(sx*Wd,Y+gy*gs,Zc+gx*gs) } })(sx,Y,Zc); pc=P(sx*Wd,Y,Zc) } else { var sy=wl===2?-1:1, X=colsX[r]*Wd; proj=(function(sy,X,Zc){ return function(gx,gy){ return P(X+gx*gs,sy*Hh,Zc+gy*gs) } })(sy,X,Zc); pc=P(X,sy*Hh,Zc) }
-      var m=maskAt(pc[0],pc[1],w,h,ph); if(m<.05||pc[0]<-80||pc[0]>w+80||pc[1]<-80||pc[1]>h+80) continue; var a2=Math.min(1,al*1.2)*m, ll=lit;
-      drawHGp(c,ch,proj,1,ll>.15?rgba(PAL.ppl,Math.min(1,.4+ll)*Math.min(1,al*1.5)*m):'rgba(242,241,236,'+(.7*a2)+')',Math.max(1,u*(1+2*Math.max(0,1-(Zc-zn)/6))),ll>.5) } } };
-
-/* 33 — orbit text: lines of script run around tilted orbits, rings turn at different speeds; one glyph on each ring is lit */
-/* 34 — coverage: a half-scope with a sweeping line; contacts carry a glyph and coordinates and glow only when the sweep passes over them */
-add('Коридор','Тоннель, стены которого составлены из строк знаков; письмо несётся на тебя, дальше всё тоньше и бледнее; по стенам бежит жёлтый импульс и подсвечивает сегменты. Перелёт по коридору корабля.',
- 'самый «летящий» из всех: ощущение движения и масштаба без планеты; глубина из чистых линий',
- 'самый сложный по коду; в центре тоннеля тёмно, под заголовок нужно место; на узком экране коридор кажется плотным',
- absScreen('corridor','vF32 vW'),'');
 /* ---------- round 3 (6–10 in this page): depth, scale and a scene that answers the cursor and the menu ---------- */
 var PTR={x:0,y:0,tx:0,ty:0}, PULSE={at:-1e9};
 document.addEventListener('mousemove',function(e){ PTR.tx=(e.clientX/innerWidth-.5)*2; PTR.ty=(e.clientY/innerHeight-.5)*2 });
 (function ptrLoop(){ PTR.x+=(PTR.tx-PTR.x)*.05; PTR.y+=(PTR.ty-PTR.y)*.05; requestAnimationFrame(ptrLoop) })();
 function pulseAge(){ return (performance.now()-PULSE.at)/1000 }
 
-/* 6 — stelae: the hex plain, and on it monoliths carrying the names of worlds in script; a wave of light runs through them and a press on a menu item flashes them */
-/* 7 — galaxy: a spiral made of the stars of the game and the people's script; the nearer glyphs are readable, the core is warm, the far arms are blue */
-/* 8 — gates: you fly through time; a frame every ten years, a big gold one every eighty (a shift) with the name in script; years in the margin of each */
-/* 9 — map: the rings of the game in space; worlds on the orbits, routes between neighbouring rings, a few ships on them; the nearer worlds carry a name in script */
-/* 10 — deep sky: stars at different depths drift past slowly and shift with the cursor, faint dust, constellations in script light up, a convoy of ships crosses the sky now and then */
 /* ---------- a different approach: real 3D (WebGL2) for the hex relief, with lighting, fog and glowing edges, sound, and a camera dive into the terminal ---------- */
-var DIVE={at:Infinity,back:-1e9}, DIVE_MS=3600;
+var DIVE={at:Infinity,back:-1e9}, DIVE_MS=4200;
+function smst(a,b,x){ var t=Math.max(0,Math.min(1,(x-a)/(b-a))); return t*t*(3-2*t) }
 var HEX_VS=`#version 300 es
 precision highp float;
 layout(location=0) in vec3 aPos;
 layout(location=1) in vec3 aNrm;
 layout(location=2) in vec2 aCell;
-uniform float uT, uScroll, uAsp, uCamX, uCamH, uDive, uK, uFov, uPitch;
+uniform float uT, uScroll, uAsp, uCamX, uCamH, uDive, uK, uFov, uPitch, uEdge;
 uniform vec2 uGrid;
-out vec3 vP; out vec2 vL; out float vH; out float vTop; out float vZ; out float vNear; out float vSide; out float vY;
+out vec3 vP; out vec2 vL; out float vH; out float vTop; out float vZ; out float vNear; out float vSide; out float vY; out float vEdge;
 float h13(vec3 p){ p=fract(p*.1031); p+=dot(p,p.zyx+31.32); return fract((p.x+p.y)*p.z); }
 float vn(vec3 x){ vec3 i=floor(x), f=fract(x); f=f*f*(3.-2.*f);
   return mix(mix(mix(h13(i),h13(i+vec3(1,0,0)),f.x),mix(h13(i+vec3(0,1,0)),h13(i+vec3(1,1,0)),f.x),f.y),
@@ -307,7 +169,8 @@ void main(){
   float n=fbm(vec3(aCell.x*.23+par*.12, rowAbs*.23, uT*.04+3.));
   float hgt=max(0.,n-.40)*uK*smoothstep(2.6,7.5,zf);
   vec3 P=vec3(X+aPos.x*R, aPos.y*hgt, zf+aPos.z*R);
-  vP=P; vL=aPos.xz/.94; vH=hgt; vTop=aNrm.y; vZ=P.z; vNear=smoothstep(z0-.3,z0+1.8,zf); vSide=aNrm.x; vY=aPos.y;
+  /* the dive: the field ends at uEdge (distance ahead of the camera); the camera flies over that edge into space */
+  vP=P; vL=aPos.xz/.94; vH=hgt; vTop=aNrm.y; vZ=P.z; vNear=smoothstep(z0-.3,z0+1.8,zf); vSide=aNrm.x; vY=aPos.y; vEdge=zf-uEdge;
   float vx=P.x-uCamX, vy=P.y-uCamH, vz=-P.z, f=1./tan(uFov*.5);
   float near=.1, far=80.;
   vec4 cp=vec4(f/uAsp*vx, f*vy, (far+near)/(near-far)*vz+2.*far*near/(near-far), -vz);
@@ -316,11 +179,13 @@ void main(){
 }`;
 var HEX_FS=`#version 300 es
 precision highp float;
-in vec3 vP; in vec2 vL; in float vH; in float vTop; in float vZ; in float vNear; in float vSide; in float vY;
-uniform float uT, uPulse, uFade;
+in vec3 vP; in vec2 vL; in float vH; in float vTop; in float vZ; in float vNear; in float vSide; in float vY; in float vEdge;
+uniform float uT, uPulse, uFade, uVoid;
 out vec4 oC;
 float hexd(vec2 p){ return max(abs(p.x),max(abs(p.x*.5+p.y*.8660254),abs(p.x*.5-p.y*.8660254)))/.8660254; }
 void main(){
+  if(vEdge>0.) discard;
+  float rim=1.-smoothstep(0.,1.1,-vEdge);
   float z=vZ, fog=clamp((z-2.)/20.,0.,1.), vis=1.-pow(fog,.8);
   float pk=clamp(vH/1.55,0.,1.);
   float wave=pow(max(0.,sin(z*.65+abs(vP.x)*.16-uT*1.1)),9.);
@@ -330,13 +195,14 @@ void main(){
     col=vec3(.040,.041,.047)+gold*(.06*pk+.10*wave+.06*uPulse)*(.6+.8*inner);
     col+=gold*edge*(.16+.95*pk+.9*wave+.7*uPulse)+vec3(.9)*edge*.07;
     col+=gold*pk*pk*.10*inner;
+    col+=gold*rim*(.35*edge+.06);
   } else {
     float g=clamp(vY,0.,1.);
     float facing=.55+.45*abs(vSide);
     col=mix(vec3(.012,.012,.015), gold*(.10+.55*pk+.45*wave+.35*uPulse), pow(g,2.4))*facing;
     col+=vec3(.9)*smoothstep(.93,1.,g)*.05;
   }
-  vec3 fogc=vec3(.082,.062,.033);
+  vec3 fogc=vec3(.082,.062,.033)*(1.-uVoid);
   col=mix(fogc,col,vis);
   col*=vNear*(1.-uFade); col*=mix(1.,.55,smoothstep(.0,.8,1.-vZ/9.)*step(vZ,9.));
   oC=vec4(col,1.);
@@ -345,18 +211,24 @@ var SKY_VS=`#version 300 es
 void main(){ vec2 p=vec2(float((gl_VertexID<<1)&2),float(gl_VertexID&2)); gl_Position=vec4(p*2.-1.,0.,1.); }`;
 var SKY_FS=`#version 300 es
 precision highp float;
-uniform vec2 uRes; uniform float uT,uFade,uHor,uPulse,uWarp,uSc; out vec4 oC;
+uniform vec2 uRes; uniform float uT,uFade,uHor,uPulse,uWarp,uSc,uVoid,uFly,uFz; out vec4 oC;
 vec3 h33(vec3 p3){ p3=fract(p3*vec3(.1031,.1030,.0973)); p3+=dot(p3,p3.yxz+33.33); return fract((p3.xxy+p3.yxx)*p3.zyx); }
 void main(){
-  vec2 uv=gl_FragCoord.xy/uRes; float asp=uRes.x/uRes.y, dy=uv.y-uHor; vec3 Hc=vec3(.082,.062,.033);
-  vec3 col=vec3(.043,.043,.047);
-  col+=vec3(1.,.78,.35)*(.045+.02*uPulse)*exp(-dy*dy*16.)*(.55+.45*exp(-pow((uv.x-.5)*asp*1.2,2.)));
-  col=mix(col,Hc,exp(-abs(dy)*13.)*.92);
-  if(dy<0.){ col=mix(col,Hc,smoothstep(0.,-.03,dy)); col*=mix(1.,.3,smoothstep(0.,-.4,dy)); }
-  if(dy>0.){
+  vec2 uv=gl_FragCoord.xy/uRes; float asp=uRes.x/uRes.y, dy=uv.y-uHor, warm=1.-uVoid; vec3 Hc=vec3(.082,.062,.033);
+  vec3 col=vec3(.043,.043,.047)*warm;
+  col+=vec3(1.,.78,.35)*(.045+.02*uPulse)*exp(-dy*dy*16.)*(.55+.45*exp(-pow((uv.x-.5)*asp*1.2,2.)))*warm;
+  col=mix(col,Hc,exp(-abs(dy)*13.)*.92*warm);
+  if(dy<0.){ col=mix(col,Hc,smoothstep(0.,-.03,dy)*warm); col*=mix(1.,.3,smoothstep(0.,-.4,dy)*warm); }
+  /* in the void the stars fill the whole sky, below the old horizon too */
+  if(dy>0.||uVoid>0.){
     for(int L=0;L<3;L++){ float s=(L==0)?34.:(L==1)?80.:160.; float th=(L==0)?.93:(L==1)?.95:.965; vec2 p=vec2(uv.x*asp,uv.y)*s+vec2(uT*.01*float(L+1),-uSc*(.5+.5*float(L))); vec2 g=floor(p), f=fract(p)-.5; vec3 hh=h33(vec3(g,float(L)*7.3));
-      if(hh.x>th){ vec2 off=(hh.yz-.5)*.7; float d=length(vec2(f.x-off.x,(f.y-off.y)/(1.+uWarp*(6.+4.*float(L))))); float mag=(hh.x-th)/(1.-th); float rr=(L==0)?.07:(L==1)?.05:.035; float b=smoothstep(rr,0.,d)*(.35+.9*mag); b*=(.65+.35*sin(uT*(.6+hh.y*2.)+hh.z*40.))*(1.+uWarp*1.6); col+=b*mix(vec3(.75,.85,1.),vec3(1.,.9,.75),hh.z)*((L==0)?1.1:.65)*smoothstep(0.,.14,dy); } }
+      if(hh.x>th){ vec2 off=(hh.yz-.5)*.7; float d=length(vec2(f.x-off.x,(f.y-off.y)/(1.+uWarp*(6.+4.*float(L))))); float mag=(hh.x-th)/(1.-th); float rr=(L==0)?.07:(L==1)?.05:.035; float b=smoothstep(rr,0.,d)*(.35+.9*mag); b*=(.65+.35*sin(uT*(.6+hh.y*2.)+hh.z*40.))*(1.+uWarp*1.6); col+=b*mix(vec3(.75,.85,1.),vec3(1.,.9,.75),hh.z)*((L==0)?1.1:.65)*mix(smoothstep(0.,.14,dy),1.,uVoid); } }
   }
+  /* flight: layers of stars come at the camera out of the vanishing point on the horizon, stretched along their path by the speed */
+  if(uFly>0.){ vec2 q=(gl_FragCoord.xy-uRes*vec2(.5,uHor))/uRes.y; vec2 dir=normalize(q+1e-5);
+    for(int i=0;i<5;i++){ float d=fract(float(i)*.2+uFz), sc=mix(26.,.7,d); vec2 p=q*sc+vec2(float(i)*17.3,float(i)*5.1), g=floor(p), f=fract(p)-.5; vec3 hh=h33(vec3(g,float(i)+11.));
+      if(hh.x>.88){ vec2 o=f-(hh.yz-.5)*.6; float al=dot(o,dir), pe=dot(o,vec2(-dir.y,dir.x)); float r=length(vec2(al/(1.+uFly*5.*d),pe));
+        col+=smoothstep(.035,0.,r)*smoothstep(0.,.3,d)*smoothstep(1.,.8,d)*uFly*1.4*mix(vec3(.8,.88,1.),vec3(1.,.88,.65),hh.z); } } }
   col*=1.-.35*pow(length((uv-.5)*vec2(1.,.9)),2.);
   col*=1.-uFade;
   oC=vec4(col,1.);
@@ -379,12 +251,15 @@ CVD.hexgl.make=function(gl,ph){ var sky=glProg(gl,SKY_VS,SKY_FS), hex=glProg(gl,
   var b0=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b0); gl.bufferData(gl.ARRAY_BUFFER,mesh.P,gl.STATIC_DRAW); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0,3,gl.FLOAT,false,0,0);
   var b1=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b1); gl.bufferData(gl.ARRAY_BUFFER,mesh.N,gl.STATIC_DRAW); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1,3,gl.FLOAT,false,0,0);
   var b2=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,b2); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(inst),gl.STATIC_DRAW); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2,2,gl.FLOAT,false,0,0); gl.vertexAttribDivisor(2,1);
-  var U=function(p,n){ return gl.getUniformLocation(p,n) }, nInst=inst.length/2, scroll=0, wsc=0, last=null, last2=null;
-  return { draw:function(t,w,h,ph){ var dt=last===null?0:Math.min(.1,t-last); last=t; wsc+=(last===null?0:Math.min(.1,t-(last2===null?t:last2)))*0; var da=(performance.now()-DIVE.at)/(DIVE_MS), dive=da>=0?Math.min(1,da):0, e=dive*dive*(3-2*dive), pa=pulseAge(), pulse=pa<1.3?(1-pa/1.3)*.8:0, bf=Math.max(0,1-(performance.now()-DIVE.back)/1000), fade=Math.max(Math.max(0,(dive-.8)/.2),bf); pulse=Math.max(pulse,e*2.4);
-      scroll+=dt*(.28+e*e*17); last2=t; gl.viewport(0,0,w,h); gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.clearColor(.043,.043,.047,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
-      gl.useProgram(sky); gl.uniform2f(U(sky,'uRes'),w,h); gl.uniform1f(U(sky,'uT'),t); gl.uniform1f(U(sky,'uFade'),fade); gl.uniform1f(U(sky,'uHor'),.66); gl.uniform1f(U(sky,'uWarp'),0); gl.uniform1f(U(sky,'uSc'),0); gl.uniform1f(U(sky,'uPulse'),pulse); gl.drawArrays(gl.TRIANGLES,0,3);
+  var U=function(p,n){ return gl.getUniformLocation(p,n) }, nInst=inst.length/2, scroll=0, base=0, fz=0, wsc=0, last=null, last2=null;
+  return { draw:function(t,w,h,ph){ var dt=last===null?0:Math.min(.1,t-last); last=t; wsc+=(last===null?0:Math.min(.1,t-(last2===null?t:last2)))*0; var da=(performance.now()-DIVE.at)/(DIVE_MS), dive=da>=0?Math.min(1,da):0, e=dive*dive*(3-2*dive), pa=pulseAge(), pulse=pa<1.3?(1-pa/1.3)*.8:0, bf=Math.max(0,1-(performance.now()-DIVE.back)/1000);
+      /* the dive: the camera speeds up over the field (D, ahead of it the field now has an edge), flies past the edge at full speed (A of the dive),
+         then goes on through space among oncoming stars while slowing (spd); the warm haze drains to black (vd), everything dims last (fade) */
+      var A=.62, E0=18, dn=Math.min(1,dive/A), D=E0*dn*dn, spd=dive<A?dn:1-.7*smst(A,1,dive), edge=dive>0?E0+.6-D:1e4, vd=smst(.08,.5,dive), fade=Math.max(smst(.8,1,dive),bf);
+      if(dive<=0) base+=dt*.28; scroll=base+D; fz+=dt*(dive>0?spd*1.1:0); pulse=Math.max(pulse,dive<A?.3*spd:0); last2=t; gl.viewport(0,0,w,h); gl.disable(gl.DEPTH_TEST); gl.disable(gl.CULL_FACE); gl.clearColor(.043,.043,.047,1); gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
+      gl.useProgram(sky); gl.uniform2f(U(sky,'uRes'),w,h); gl.uniform1f(U(sky,'uT'),t); gl.uniform1f(U(sky,'uFade'),fade); gl.uniform1f(U(sky,'uHor'),.66); gl.uniform1f(U(sky,'uWarp'),0); gl.uniform1f(U(sky,'uSc'),0); gl.uniform1f(U(sky,'uVoid'),vd); gl.uniform1f(U(sky,'uFly'),dive>0?spd*smst(.12,.45,dive):0); gl.uniform1f(U(sky,'uFz'),fz); gl.uniform1f(U(sky,'uPulse'),pulse); gl.drawArrays(gl.TRIANGLES,0,3);
       gl.enable(gl.DEPTH_TEST); gl.depthFunc(gl.LEQUAL); gl.useProgram(hex);
-      gl.uniform1f(U(hex,'uT'),t); gl.uniform1f(U(hex,'uScroll'),scroll); gl.uniform1f(U(hex,'uAsp'),w/h); gl.uniform1f(U(hex,'uCamX'),PTR.x*1.1); gl.uniform1f(U(hex,'uCamH'),2.1+PTR.y*.18-e*.75); gl.uniform1f(U(hex,'uDive'),dive); gl.uniform1f(U(hex,'uPitch'),0); gl.uniform1f(U(hex,'uK'),ph?3.4:4.4); gl.uniform1f(U(hex,'uFov'),(1.0+.4*e)*1.02); gl.uniform2f(U(hex,'uGrid'),R,dz); gl.uniform1f(U(hex,'uPulse'),pulse); gl.uniform1f(U(hex,'uFade'),fade);
+      gl.uniform1f(U(hex,'uT'),t); gl.uniform1f(U(hex,'uScroll'),scroll); gl.uniform1f(U(hex,'uAsp'),w/h); gl.uniform1f(U(hex,'uCamX'),PTR.x*1.1); gl.uniform1f(U(hex,'uCamH'),2.1+PTR.y*.18-e*.35); gl.uniform1f(U(hex,'uDive'),dive); gl.uniform1f(U(hex,'uPitch'),0); gl.uniform1f(U(hex,'uK'),ph?3.4:4.4); gl.uniform1f(U(hex,'uFov'),(1.0+.25*spd)*1.02); gl.uniform2f(U(hex,'uGrid'),R,dz); gl.uniform1f(U(hex,'uPulse'),pulse); gl.uniform1f(U(hex,'uFade'),fade); gl.uniform1f(U(hex,'uEdge'),edge); gl.uniform1f(U(hex,'uVoid'),vd);
       gl.bindVertexArray(vao); gl.drawArraysInstanced(gl.TRIANGLES,0,mesh.n,nInst) } } };
 
 function initGLScene(cv,live,D){ var stg=cv.closest('.stage'), gl=cv.getContext('webgl2',{antialias:true,alpha:false,powerPreference:'high-performance'}), sc=gl?D.make(gl,!!(stg&&stg.classList.contains('phone'))):null;
@@ -412,7 +287,12 @@ document.addEventListener('visibilitychange',function(){ if(!MA.c) return; if(do
 add('Гекс-рельеф 3D','Тот же «Гекс-рельеф», но настоящая трёхмерная сцена (WebGL): объёмные колонны с освещением и туманом, светящиеся рёбра, тёплый горизонт и звёзды, камера смещается за курсором. Нажатие «Новая игра» не просто открывает терминал: камера разгоняется и ныряет в поле, затем затемнение переходит в терминал. Есть звук: низкий гул и тихие щелчки при выборе пунктов (включается после первого клика).',
  'самое большое «качество картинки» из того, что было: настоящая глубина, освещение и туман, а не линии; добавляет то, чего не было (звук, переход, реакция на курсор)',
  'WebGL: в моём тестовом браузере без видеокарты кадр медленный, на вашей должен быть быстрым; требует проверки на слабом телефоне (есть запасной вариант на 2D)',
- absScreen('hexgl','vH40'),'');
+ absScreen('hexgl','vH40'),'.vt .cv2d{position:absolute;inset:0;width:100%;height:100%;display:block}\
+.vt .top{position:absolute;left:0;right:0;top:60u;z-index:2;display:flex;flex-direction:column;align-items:center;gap:14u}.vt .top .mk{width:76u;height:76u}.vt .nm{font:300 54u var(--h);letter-spacing:.5em;padding-left:.5em}\
+.vt .run{position:relative;width:420u;height:2u;margin-top:4u;background:rgba(242,241,236,.14);overflow:hidden}.vt .run i{position:absolute;top:0;bottom:0;width:26%;background:linear-gradient(90deg,transparent,#F2F1EC 60%,#FFD23F);animation:run17 2.6s cubic-bezier(.45,.05,.55,.95) infinite}@keyframes run17{from{left:-30%}to{left:104%}}\
+.vt .sm{bottom:46u;z-index:2}.vt .sm .l{text-shadow:0 1px 8px #000}.vt::after{content:"";position:absolute;left:0;right:0;bottom:0;height:24%;background:linear-gradient(0deg,rgba(11,11,12,.88),transparent);pointer-events:none}\
+.phone .vt .top{top:34px}.phone .vt .nm{font-size:30px}.phone .vt .top .mk{width:58px;height:58px}.phone .vt .run{width:210px}.phone .vt .sm{bottom:24px}.phone .vt::after{height:44%}\
+@media (prefers-reduced-motion:reduce){.vt .run i{animation:none}}');
 
 
 /* ---------- the shell: render, selection, keys ---------- */
@@ -712,7 +592,6 @@ function act(i){ var it=items()[i]; if(!it||it.off) return;
   if(it.id==='sound'){ S.sound=!S.sound; maStart(); maSet(); render(); return }
   toast('→ '+it.label+'  (макет, ничего не запускается)') }
 
-document.getElementById('gv').innerHTML=VAR.map(function(V,i){ return '<button class="pill" data-n="'+(i+1)+'" title="'+V.n+'">'+(i+1)+'</button>' }).join('');
 document.addEventListener('click',function(e){ var t=e.target;
   var nm=t.closest('[data-name]'); if(nm){ TXT.en.pult=nm.dataset.name; S.lang='en'; render(); return }
   var vb=t.closest('[data-vb]'); if(vb){ if(BT.ask) BT.ask(vb.dataset.vb); return } if(t.closest('[data-bskip]')){ bootStop(); return } if(t.closest('.bootov')){ if(BT.fin) BT.fin(); return }
@@ -727,7 +606,7 @@ document.addEventListener('keydown',function(e){ if(document.querySelector('.boo
   if(e.key==='ArrowDown'||e.key==='ArrowRight') d=1; else if(e.key==='ArrowUp'||e.key==='ArrowLeft') d=-1;
   else if(e.key==='Enter'||e.key===' '){ e.preventDefault(); act(S.sel); return }
   else if(/^[1-5]$/.test(e.key)){ var j=+e.key-1; if(!I[j].off){ S.sel=j; updateSel(document.querySelector('#host .stage')); act(j) } return }
-  else if(e.key===']'){ S.v=S.v%VAR.length+1; S.boot=true; render(); return } else if(e.key==='['){ S.v=(S.v+VAR.length-2)%VAR.length+1; S.boot=true; render(); return } else return;
+  else return;
   e.preventDefault(); do{ i=(i+d+n)%n }while(I[i].off); S.sel=i; updateSel(document.querySelector('#host .stage')) });
 var T0=Date.now(); setInterval(function(){ var t=Math.floor((Date.now()-T0)/1000), s=('0'+Math.floor(t/3600)).slice(-2)+':'+('0'+Math.floor(t/60)%60).slice(-2)+':'+('0'+t%60).slice(-2); document.querySelectorAll('[data-clk]').forEach(function(e){ e.textContent=s }) },1000);
 build(); S.sel=firstOn(); render();
