@@ -1,0 +1,566 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HELM — плата v2 (прототип)</title>
+<!-- Прототип мини-игры «плата Пульта», v2 (26.10.2026, по слову Никиты: настоящая плата, без цифр, «соедини и проведи»).
+     Черновик вне игры: work/, лист текстов и Notion не тронуты. Пока плата открыта, игра на паузе.
+     Детали стоят на местах, игрок тянет медные дорожки между контактами и щёлкает выключатели.
+     Плата — урок: каждая вводит одну деталь и то, как узнать её на настоящей плате (R, C, D, SW, полоска, срез, «+»).
+     Цепь считается по смыслу, без чисел: ток идёт из «+» через нагрузку в «−»; без нагрузки — короткое замыкание;
+     светодиод без резистора сгорает; диод и светодиод — в одну сторону; конденсатор копит заряд и держит нагрузку,
+     когда питание пропало; перепутанный конденсатор вздувается. Цель — таблица «выключатели → что горит»,
+     она проверяется на всех строках сразу. ?lv=1..7 — урок. Прогресс — в localStorage (только удобство). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0d;--y:#FFD23F;--r:#FF2A1A;--g:#3DDC84;--t:#F2F1EC;--m:#9C9B95;--d:#5E5D58;--ln:#2E2E33}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--t);font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:12px 16px;font-size:13px;letter-spacing:.06em;pointer-events:none;box-sizing:border-box}
+.top{top:0}.bot{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.bar .m{color:var(--m)}
+#goals{position:fixed;left:0;right:0;top:38px;padding:0 16px;font-size:13px;line-height:1.6;letter-spacing:.04em;pointer-events:none}
+#goals .ok{color:var(--g)}#goals .no{color:var(--m)}
+#status{position:fixed;left:16px;right:16px;text-align:center;font-size:13px;letter-spacing:.04em;pointer-events:none;min-height:1.4em}
+#status.bad{color:var(--r)}#status.hint{color:var(--y)}
+.ctl{pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ctl button{background:none;border:1px solid var(--d);color:var(--m);font:inherit;font-size:13px;min-width:32px;height:32px;padding:0 8px;cursor:pointer}
+.ctl button.on{border-color:var(--y);color:var(--y)}
+.ctl button.done{color:var(--g)}
+.ctl button.on.done{color:var(--y)}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(11,11,13,.92);text-align:center;padding:24px 16px;box-sizing:border-box;overflow:auto}
+.ov.hide{display:none}
+h1{font-family:Jost,sans-serif;font-weight:600;letter-spacing:.16em;color:var(--y);font-size:19px;margin:0;line-height:1.35}
+.sub{color:var(--t);font-size:15px}
+.cards{display:flex;flex-direction:column;gap:10px;max-width:520px;width:100%}
+.card{display:flex;gap:12px;align-items:center;text-align:left;border:1px solid var(--ln);padding:8px 10px}
+.card canvas{flex:none;width:128px;height:64px}
+.card b{color:var(--t);font-weight:normal;display:block;letter-spacing:.06em}
+.card .mk{color:var(--y);font-size:12px;margin:2px 0}
+.card .ds{color:var(--m);font-size:13px;line-height:1.45}
+.how{color:var(--d);font-size:12px;max-width:520px;line-height:1.6}
+.go{background:none;border:1px solid var(--y);color:var(--y);font:inherit;font-size:15px;letter-spacing:.2em;padding:12px 30px;cursor:pointer;margin-top:4px}
+.lore{max-width:380px;width:100%;text-align:left;font-size:14px;line-height:1.65;min-height:8em;white-space:pre-wrap}
+.lore .y{color:var(--y)}.lore .m{color:var(--m)}.lore .g{color:var(--g)}
+#tip{position:fixed;max-width:260px;background:#141417;border:1px solid var(--ln);padding:6px 9px;font-size:12px;line-height:1.45;color:var(--m);pointer-events:none;display:none;z-index:3}
+#tip b{color:var(--t);font-weight:normal}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="bar top">
+  <span class="m"><span data-k="tag"></span> <span id="hno"></span> · <span data-k="paused"></span></span>
+</div>
+<div id="goals"></div>
+<div id="status"></div>
+<div class="bar bot">
+  <span class="ctl"><button id="reset" data-k="reset"></button></span>
+  <span class="ctl" id="lvls"></span>
+  <span class="ctl"><button id="lang">EN</button></span>
+</div>
+<div id="tip"></div>
+
+<div class="ov" id="ovIntro">
+  <h1 id="iTitle"></h1>
+  <div class="sub" id="iGoal"></div>
+  <div class="cards" id="iCards"></div>
+  <div class="how" data-k="how"></div>
+  <button class="go" id="bGo" data-k="go"></button>
+</div>
+<div class="ov hide" id="ovDone">
+  <div class="lore" id="lore"></div>
+  <button class="go" id="bNext" style="visibility:hidden"></button>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Тексты прототипа. В игре они уйдут в лист (texts-add); здесь — только чтобы смотреть.
+// Маркировка на плате (BAT1, R1, ON, VCC…) — как на настоящих платах, по-английски в обоих языках.
+var T={
+ ru:{tag:'ПУЛЬТ · ПЛАТА',paused:'игра на паузе',reset:'СБРОС',go:'ВОЙТИ',next:'ДАЛЬШЕ',again:'ЕЩЁ РАЗ',back:'К ПУЛЬТУ',
+  how:'Тяни от контакта — дорожка. Тап по дорожке — убрать. Тап по выключателю — вкл/выкл. Наведи на деталь — подсказка.',
+  title:'ПЛАТА {n} · {s}',done:'СОБРАНО',learned:'Что теперь знаешь:',
+  on:'вкл',off:'выкл',allOff:'всё выкл',longOff:'{s} выкл (давно)',justOff:'{s} только что выкл',lit:'горит',dark:'не горит',run:'работает',idle:'не работает',
+  fromPad:'веди от контакта или от дорожки',body:'сквозь деталь дорожку не провести',
+  short:'КОРОТКОЕ ЗАМЫКАНИЕ: ток идёт из + в − мимо нагрузки. Ничего не горит.',
+  burnt:'{s} сгорел: светодиоду нужен резистор на пути. СБРОС — поставить новый.',
+  burst:'{s} вздулся: перепутаны + и −. СБРОС — поставить новый.',
+  rev:'{s} стоит наоборот: его + должен смотреть к + батарейки.',
+  names:['ЦЕПЬ','ВЫКЛЮЧАТЕЛЬ','СВЕТОДИОД','ПАРАЛЛЕЛЬНО','ДИОД','КОНДЕНСАТОР','ПУЛЬТ'],
+  goal:['Зажги лампу L1.','L1 должна слушаться SW1.','Зажги светодиод D1 и не сожги его.','У каждого выключателя — своя лампа.','SW1 зажигает обе лампы, SW2 — только L2.','Выключили SW1 — L1 ещё горит.','Разбуди Пульт и не дай ему забыть.'],
+  learn:['Ток идёт по кругу: из + через нагрузку обратно в −. Разрыв в любом месте — всё гаснет.',
+         'Выключатель — это разрыв, которым можно управлять.',
+         'Светодиод светит только в одну сторону и без резистора сгорает.',
+         'Параллельно: у каждой ветки свой путь от + до −, ветки друг другу не мешают.',
+         'Диод — клапан: ток идёт от + к полоске и никогда обратно.',
+         'Конденсатор копит заряд и держит нагрузку, когда питание пропало.',
+         'Так Пульт не теряет память, когда пропадает питание.'],
+  lore:['КОМАНДА ПРОСНУЛАСЬ: ПУЛЬТ.ПАМЯТЬ','Восстановлено: 1 блок памяти.','','[заглушка: запись блока, до двух строк — пишет Никита]'],
+  part:{bat:['Батарейка','BAT, знаки + и −','Источник. Ток выходит из + и должен вернуться в −.'],
+        lamp:['Лампочка','L','Горит, когда через неё идёт ток. Сторона ей не важна.'],
+        sw:['Выключатель','SW, метка ON','Разрывает цепь. Тап — переключить.'],
+        res:['Резистор','R, цветные полоски на корпусе','Сдерживает ток. Ставится на пути светодиода.'],
+        led:['Светодиод','D, срез на ободке — минус; + у длинной ножки','Светит только при + к +. Без резистора сгорает.'],
+        dio:['Диод','D, полоска на корпусе — минус','Пропускает ток только от + к полоске.'],
+        cap:['Конденсатор','C, светлая полоса и штриховка — минус','Копит заряд и отдаёт его, когда питание пропало. Насквозь ток не пускает. Наоборот — вздуется.'],
+        cmd:['Микросхема Пульта','U, выемка — начало; VCC — плюс, GND — минус','Работает только при верной полярности.']}},
+ en:{tag:'HELM · BOARD',paused:'game paused',reset:'RESET',go:'ENTER',next:'NEXT',again:'AGAIN',back:'BACK TO HELM',
+  how:'Drag from a pad — a trace. Tap a trace — remove. Tap a switch — on/off. Hover a part — a hint.',
+  title:'BOARD {n} · {s}',done:'ASSEMBLED',learned:'What you know now:',
+  on:'on',off:'off',allOff:'all off',longOff:'{s} off (long ago)',justOff:'{s} just switched off',lit:'lit',dark:'dark',run:'running',idle:'stopped',
+  fromPad:'start from a pad or a trace',body:'a trace cannot pass through a part',
+  short:'SHORT CIRCUIT: current runs from + to − past the load. Nothing lights.',
+  burnt:'{s} burnt out: an LED needs a resistor on its path. RESET — fit a new one.',
+  burst:'{s} burst: + and − swapped. RESET — fit a new one.',
+  rev:'{s} is backwards: its + must face the battery +.',
+  names:['CIRCUIT','SWITCH','LED','PARALLEL','DIODE','CAPACITOR','HELM'],
+  goal:['Light lamp L1.','L1 must obey SW1.','Light LED D1 without burning it.','Each switch gets its own lamp.','SW1 lights both lamps, SW2 only L2.','SW1 switched off — L1 still lit.','Wake the Helm and do not let it forget.'],
+  learn:['Current runs in a loop: out of +, through the load, back to −. A break anywhere — all goes dark.',
+         'A switch is a break you control.',
+         'An LED lights one way only and burns out without a resistor.',
+         'Parallel: each branch has its own path from + to −; branches do not interfere.',
+         'A diode is a valve: current flows from + to the stripe and never back.',
+         'A capacitor stores charge and holds the load when power drops.',
+         'This is how the Helm keeps its memory when power drops.'],
+  lore:['COMMAND WOKE: HELM.MEMORY','Recovered: 1 memory block.','','[placeholder: the block\'s entry, two lines max — Nikita writes it]'],
+  part:{bat:['Battery','BAT, + and − marks','The source. Current leaves + and must return to −.'],
+        lamp:['Lamp','L','Lights when current flows through it. Either way round.'],
+        sw:['Switch','SW, ON mark','Breaks the circuit. Tap to flip.'],
+        res:['Resistor','R, colour bands on the body','Holds current back. Goes on an LED\'s path.'],
+        led:['LED','D, flat on the rim — minus; + at the long leg','Lights only + to +. Burns out without a resistor.'],
+        dio:['Diode','D, stripe on the body — minus','Passes current only from + to the stripe.'],
+        cap:['Capacitor','C, light band and hatching — minus','Stores charge and gives it back when power drops. No current straight through. Backwards — it bursts.'],
+        cmd:['Helm chip','U, notch — pin 1; VCC — plus, GND — minus','Runs only the right way round.']}}
+};
+var lang='ru';
+function tx(s,o){ return s.replace(/\{(\w)\}/g,function(_,k){ return o&&o[k]!==undefined?o[k]:'{'+k+'}' }) }
+
+// Уроки. Деталь — [имя, тип, контакт a, контакт b] (клетки [столбец, строка]), корпус — клетка между ними.
+// a — «+» у батарейки и конденсатора, анод у диодов, VCC у микросхемы.
+// rows — цель: при каких выключателях что горит; after — «только что выключили»: конденсаторы, заряженные в этом положении, полны.
+var SIDES=[['BAT1','bat',[2,9],[4,9]],['SW1','sw',[1,7],[1,5]],['SW2','sw',[6,7],[6,5]],['L1','lamp',[1,3],[1,1]],['L2','lamp',[6,3],[6,1]]];
+var LEVELS=[
+ {parts:[['BAT1','bat',[2,8],[4,8]],['L1','lamp',[2,2],[4,2]]],rows:[{want:{L1:1}}],fresh:['bat','lamp']},
+ {parts:[['BAT1','bat',[1,8],[3,8]],['SW1','sw',[1,3],[1,5]],['L1','lamp',[3,1],[5,1]]],
+  rows:[{sw:{},want:{L1:0}},{sw:{SW1:1},want:{L1:1}}],fresh:['sw']},
+ {parts:[['BAT1','bat',[1,8],[3,8]],['D1','led',[4,2],[2,2]],['R1','res',[6,4],[6,6]]],rows:[{want:{D1:1}}],fresh:['led','res']},
+ {parts:SIDES,rows:[{sw:{},want:{L1:0,L2:0}},{sw:{SW1:1},want:{L1:1,L2:0}},{sw:{SW2:1},want:{L1:0,L2:1}}],fresh:[]},
+ {parts:SIDES.concat([['D1','dio',[2,4],[4,4]]]),rows:[{sw:{},want:{L1:0,L2:0}},{sw:{SW1:1},want:{L1:1,L2:1}},{sw:{SW2:1},want:{L1:0,L2:1}}],fresh:['dio']},
+ {parts:[['BAT1','bat',[1,9],[3,9]],['SW1','sw',[1,7],[1,5]],['C1','cap',[3,3],[3,5]],['L1','lamp',[5,3],[5,5]]],
+  rows:[{sw:{},want:{L1:0}},{sw:{SW1:1},want:{L1:1}},{sw:{},after:{SW1:1},want:{L1:1}}],fresh:['cap']},
+ {parts:[['BAT1','bat',[1,9],[3,9]],['SW1','sw',[1,7],[1,5]],['U1','cmd',[3,2],[3,4]],['C1','cap',[5,2],[5,4]],['R1','res',[7,2],[7,4]],['D1','led',[7,5],[7,7]]],
+  rows:[{sw:{},want:{U1:0,D1:0}},{sw:{SW1:1},want:{U1:1,D1:1}},{sw:{},after:{SW1:1},want:{U1:1}}],fresh:['cmd']}
+];
+var COLS=8, ROWS=10, N=COLS*ROWS;
+var NB=[];
+for(var i0=0;i0<N;i0++){ var c0=i0%COLS, r0=(i0/COLS)|0, nb=[];
+  if(c0>0) nb.push(i0-1); if(c0<COLS-1) nb.push(i0+1); if(r0>0) nb.push(i0-COLS); if(r0<ROWS-1) nb.push(i0+COLS); NB.push(nb) }
+function ci(p){ return p[1]*COLS+p[0] }
+
+var G=null, qs=new URLSearchParams(location.search), lv=Math.min(LEVELS.length,Math.max(1,+qs.get('lv')||1));
+var prog={}; try{ prog=JSON.parse(localStorage.getItem('lb-circuit-v2')||'{}') }catch(e){ prog={} }
+function saveProg(){ try{ localStorage.setItem('lb-circuit-v2',JSON.stringify(prog)) }catch(e){} }
+
+function newBoard(){
+  var L=LEVELS[lv-1];
+  G={parts:[],cellPart:new Int16Array(N).fill(-1),pad:{},trace:new Uint8Array(N),adj:[],net:null,
+     sw:{},burned:{},q:{},smoke:{},live:null,rowsOk:[],won:false,state:'intro',hover:-1,litPrev:{}};
+  for(var i=0;i<N;i++) G.adj.push({});
+  L.parts.forEach(function(p,k){
+    var a=ci(p[2]), b=ci(p[3]), body=(a+b)/2;
+    G.parts.push({id:p[0],t:p[1],a:a,b:b,body:body});
+    G.cellPart[a]=G.cellPart[b]=G.cellPart[body]=k; G.pad[a]={k:k,end:'a'}; G.pad[b]={k:k,end:'b'};
+    if(p[1]==='sw') G.sw[p[0]]=0;
+  });
+  changed();
+}
+
+// ——— цепь ———
+function nets(){
+  var p=new Int16Array(N), i; for(i=0;i<N;i++) p[i]=i;
+  function f(x){ while(p[x]!==x){ p[x]=p[p[x]]; x=p[x] } return x }
+  for(i=0;i<N;i++) for(var j in G.adj[i]){ var a=f(i), b=f(+j); if(a!==b) p[a]=b }
+  var n=new Int16Array(N); for(i=0;i<N;i++) n[i]=f(i); return n;
+}
+// Разбор цепи по смыслу. st: {sw, q, burned}. Ответ: lit (яркость 0..1 по имени), short, burn/burst (что сгорит),
+// rev (стоит наоборот — подсказка), charging/drain (конденсаторы), hot (сети, где идёт ток).
+function analyze(st){
+  var net=G.net, E=[], res={lit:{},short:false,burn:{},burst:{},rev:{},charging:{},drain:{},hot:{}};
+  G.parts.forEach(function(c,k){
+    if(st.burned[c.id]) return;
+    var e={k:k,A:net[c.a],B:net[c.b],dir:0,load:0,led:0};
+    if(c.t==='res'||c.t==='lamp') e.load=1;
+    else if(c.t==='cmd'){ e.load=1; e.dir=1 }
+    else if(c.t==='led'){ e.led=1; e.dir=1 }
+    else if(c.t==='dio') e.dir=1;
+    else if(c.t!=='sw'||!st.sw[c.id]) return;
+    if(e.A!==e.B) E.push(e);
+  });
+  function paths(P,M,rev,cb){
+    var seen={}, used=[];
+    (function go(n){
+      if(n===M){ cb(used.slice()); return }
+      seen[n]=1;
+      E.forEach(function(e){
+        var to=-1, back=false;
+        if(e.A===n) to=e.B; else if(e.B===n){ if(e.dir&&!rev) return; to=e.A; back=!!e.dir }
+        if(to<0||seen[to]) return;
+        used.push({e:e,back:back}); go(to); used.pop();
+      });
+      seen[n]=0;
+    })(P);
+  }
+  function reach(from,to){ if(from===to) return true; var seen={}, q=[from]; seen[from]=1;
+    while(q.length){ var n=q.shift(); for(var x=0;x<E.length;x++){ var e=E[x], m=e.A===n?e.B:(e.B===n&&!e.dir?e.A:-1);
+      if(m<0||seen[m]) continue; if(m===to) return true; seen[m]=1; q.push(m) } } return false }
+  function feed(P,M,power){
+    var f={short:false,act:[],burn:[]};
+    paths(P,M,false,function(p){
+      var load=p.some(function(x){ return x.e.load }), leds=p.filter(function(x){ return x.e.led });
+      if(!load&&!leds.length) f.short=true;
+      else if(!load) leds.forEach(function(x){ f.burn.push(x.e.k) });
+      else p.forEach(function(x){ f.act.push(x.e) });
+    });
+    if(f.short) return f;
+    f.act.forEach(function(e){ var id=G.parts[e.k].id; res.lit[id]=Math.max(res.lit[id]||0,power); res.hot[e.A]=Math.max(res.hot[e.A]||0,power); res.hot[e.B]=Math.max(res.hot[e.B]||0,power) });
+    if(f.act.length){ res.hot[P]=Math.max(res.hot[P]||0,power); res.hot[M]=Math.max(res.hot[M]||0,power) }
+    return f;
+  }
+  var bat=G.parts.filter(function(c){ return c.t==='bat' })[0], P=net[bat.a], M=net[bat.b];
+  var f=feed(P,M,1);
+  if(f.short){ res.short=true; res.hot[P]=res.hot[M]=-1 }
+  f.burn.forEach(function(k){ res.burn[G.parts[k].id]=1 });
+  if(!res.short){
+    // наоборот: путь с нагрузкой нашёлся бы, если развернуть деталь
+    paths(P,M,true,function(p){ if(!p.some(function(x){ return x.e.load||x.e.led })) return;
+      p.forEach(function(x){ if(x.back){ var id=G.parts[x.e.k].id; if(!res.lit[id]) res.rev[id]=1 } }) });
+    G.parts.forEach(function(c){
+      if(c.t!=='cap'||st.burned[c.id]) return; var A=net[c.a], B=net[c.b];
+      if(A===B) return;
+      if(reach(P,A)&&reach(B,M)) res.charging[c.id]=1;
+      else if(reach(P,B)&&reach(A,M)) res.burst[c.id]=1;
+    });
+  }
+  G.parts.forEach(function(c){
+    var q=st.q[c.id]||0; if(c.t!=='cap'||st.burned[c.id]||res.charging[c.id]||q<.05) return;
+    var g=feed(net[c.a],net[c.b],q); res.drain[c.id]=g.short?2:(g.act.length?1:0);
+  });
+  return res;
+}
+function rowState(row){ var sw={}; for(var s in G.sw) sw[s]=row&&row[s]?1:0; return sw }
+function evalRows(){
+  var L=LEVELS[lv-1];
+  G.rowsOk=L.rows.map(function(row){
+    var q={};
+    if(row.after){ var pre=analyze({sw:rowState(row.after),q:{},burned:G.burned}); for(var c in pre.charging) q[c]=1 }
+    var r=analyze({sw:rowState(row.sw),q:q,burned:G.burned});
+    if(r.short||Object.keys(r.burn).length||Object.keys(r.burst).length) return false;
+    for(var id in row.want) if(((r.lit[id]||0)>.3?1:0)!==row.want[id]) return false;
+    return true;
+  });
+}
+function changed(){ G.net=nets(); evalRows(); hud() }
+
+// Живая цепь: каждый кадр. Сгоревшее остаётся сгоревшим до СБРОСА.
+var statusMsg=null;
+function tick(dt,now){
+  if(!G||!G.net) return;
+  var r=analyze({sw:G.sw,q:G.q,burned:G.burned}), fresh=false, id;
+  for(id in r.burn) if(!G.burned[id]){ G.burned[id]=1; G.smoke[id]=now; fresh=true; statusMsg=['bad','burnt',id]; pop() }
+  for(id in r.burst) if(!G.burned[id]){ G.burned[id]=1; G.smoke[id]=now; fresh=true; statusMsg=['bad','burst',id]; pop() }
+  if(fresh){ r=analyze({sw:G.sw,q:G.q,burned:G.burned}); evalRows(); hud() }
+  G.parts.forEach(function(c){ if(c.t!=='cap') return; var q=G.q[c.id]||0;
+    if(G.burned[c.id]) q=0; else if(r.charging[c.id]) q=Math.min(1,q+dt*2.5);
+    else if(r.drain[c.id]===2) q=0; else if(r.drain[c.id]===1) q=Math.max(0,q-dt*.4); else q=Math.max(0,q-dt*.01);
+    G.q[c.id]=q });
+  for(id in r.lit) if(r.lit[id]>.3&&!(G.litPrev[id]>.3)) chime();
+  G.litPrev=r.lit;
+  if(r.short&&!(G.live&&G.live.short)) beep(90,.25,.05,'sawtooth');
+  G.live=r;
+  status(r);
+  if(!G.won&&G.state==='play'&&G.rowsOk.every(Boolean)&&!r.short){ G.won=true; prog[lv]=1; saveProg(); setTimeout(win,900) }
+}
+function status(r){
+  var el=document.getElementById('status'), L=T[lang], cls='', s='';
+  if(Date.now()<holdStatus&&!r.short) return;
+  if(r.short){ cls='bad'; s=L.short }
+  else if(statusMsg&&G.burned[statusMsg[2]]){ cls=statusMsg[0]; s=tx(L[statusMsg[1]],{s:statusMsg[2]}) }
+  else { var rv=Object.keys(r.rev)[0]; if(rv){ cls='hint'; s=tx(L.rev,{s:rv}) } }
+  if(el.textContent!==s) el.textContent=s; el.className=cls;
+}
+
+// ——— дорожки ———
+var drag=null;
+function extend(h,j){
+  if(G.cellPart[j]>=0&&!G.pad[j]){ toastBody(); return }
+  if(!G.trace[j]&&!G.pad[j]) G.trace[j]=1;
+  if(!G.adj[h][j]){ G.adj[h][j]=1; G.adj[j][h]=1; changed(); beep(820,.025,.02) }
+  drag.head=j;
+}
+function cut(i){
+  var had=Object.keys(G.adj[i]).length||G.trace[i];
+  for(var u in G.adj[i]) delete G.adj[+u][i];
+  G.adj[i]={}; G.trace[i]=0; if(had){ beep(260,.05,.03); changed() }
+}
+var bodyT=0; function toastBody(){ var now=Date.now(); if(now-bodyT<1500) return; bodyT=now; flash(T[lang].body) }
+function flash(s){ var el=document.getElementById('status'); statusMsg=null; el.textContent=s; el.className='hint'; holdStatus=Date.now()+1200 }
+var holdStatus=0;
+
+// ——— звук ———
+var AC=null;
+function audio(){ if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)() }catch(e){} }
+function beep(f,d,g,type){
+  if(!AC) return; var o=AC.createOscillator(), a=AC.createGain(), t=AC.currentTime;
+  o.type=type||'square'; o.frequency.value=f; a.gain.setValueAtTime(g,t); a.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(a); a.connect(AC.destination); o.start(t); o.stop(t+d);
+}
+function chime(){ beep(660,.14,.04,'triangle'); setTimeout(function(){ beep(990,.18,.03,'triangle') },70) }
+function pop(){ beep(70,.3,.07,'sawtooth'); beep(1800,.05,.03) }
+
+// ——— рисунок ———
+var cv=document.getElementById('c'), cx=cv.getContext('2d'), DPR=1, W=0, H=0, S=40, OX=0, OY=0;
+var MASK='#0f2e1f', MASK2='#123826', CU='#2f7d52', CUHOT='#e2b44a', TIN='#cdbb86', SILK='#e9e6d8';
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+  var st=document.getElementById('status'), botTop=document.querySelector('.bot').getBoundingClientRect().top;
+  st.style.bottom=(H-botTop+4)+'px';
+  var top=document.getElementById('goals').getBoundingClientRect().bottom+12, bot=H-botTop+30;
+  S=Math.floor(Math.min(66,(W-40)/COLS,(H-top-bot)/ROWS));
+  OX=Math.round((W-S*COLS)/2); OY=Math.round(top+(H-top-bot-S*ROWS)/2);
+}
+function cxy(i){ return [OX+(i%COLS+.5)*S, OY+(((i/COLS)|0)+.5)*S] }
+function cellAt(x,y){ var c=Math.floor((x-OX)/S), r=Math.floor((y-OY)/S); return c<0||r<0||c>=COLS||r>=ROWS?-1:r*COLS+c }
+function rr(ctx,x,y,w,h,r){ ctx.beginPath(); ctx.moveTo(x+r,y); ctx.arcTo(x+w,y,x+w,y+h,r); ctx.arcTo(x+w,y+h,x,y+h,r); ctx.arcTo(x,y+h,x,y,r); ctx.arcTo(x,y,x+w,y,r); ctx.closePath() }
+function pad(ctx,x,y,S){ ctx.fillStyle=TIN; ctx.beginPath(); ctx.arc(x,y,S*.24,0,7); ctx.fill(); ctx.fillStyle='#0b0b0d'; ctx.beginPath(); ctx.arc(x,y,S*.075,0,7); ctx.fill() }
+function silk(ctx,s,x,y,S,al,k){ ctx.fillStyle=SILK; ctx.font=Math.round(S*(k||.22))+'px "Share Tech Mono",monospace'; ctx.textAlign=al||'center'; ctx.textBaseline='middle'; ctx.fillText(s,x,y) }
+// мировая точка для локальной (вдоль детали от a к b)
+function loc(x,y,ang,lx,ly){ return [x+lx*Math.cos(ang)-ly*Math.sin(ang), y+lx*Math.sin(ang)+ly*Math.cos(ang)] }
+
+// Деталь в локальных осях: a в (-S,0), b в (S,0). st: {on, lit 0..1, burned, q}
+function part(ctx,t,x,y,ang,S,st){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  var lw=Math.max(1.5,S*.05);
+  function lead(){ ctx.strokeStyle='#a9aeb3'; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(S,0); ctx.stroke() }
+  function capsule(x0,x1,h,fill){ rr(ctx,x0,-h/2,x1-x0,h,h/2); ctx.fillStyle=fill; ctx.fill() }
+  var lit=st.lit||0;
+  if(t==='res'){ lead(); capsule(-.55*S,.55*S,.36*S,'#d9c08e');
+    [['#7a4a1e',-.32],['#111',-.16],['#c0392b',0],['#c9a227',.3]].forEach(function(b){ ctx.fillStyle=b[0]; ctx.fillRect(b[1]*S-.04*S,-.18*S,.08*S,.36*S) }) }
+  else if(t==='dio'){ lead(); capsule(-.45*S,.45*S,.3*S,'#1b1b1d'); ctx.fillStyle='#cfd3d6'; ctx.fillRect(.24*S,-.15*S,.1*S,.3*S) }
+  else if(t==='led'){
+    lead(); var R=.46*S;
+    if(lit>0&&!st.burned){ var g=ctx.createRadialGradient(0,0,R*.2,0,0,R*2.6); g.addColorStop(0,'rgba(255,70,50,'+(.55*lit)+')'); g.addColorStop(1,'rgba(255,70,50,0)'); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,R*2.6,0,7); ctx.fill() }
+    // шелкография: круг со срезом на стороне катода (b)
+    ctx.strokeStyle=SILK; ctx.lineWidth=1.2; ctx.beginPath(); var cut=Math.acos(.78); ctx.arc(0,0,R*1.18,cut,Math.PI*2-cut); ctx.closePath(); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,0,R,cut,Math.PI*2-cut); ctx.closePath();
+    ctx.fillStyle=st.burned?'#2a2a2a':(lit>0?'rgb(255,'+Math.round(90+120*lit)+','+Math.round(70+100*lit)+')':'#6a1e18'); ctx.fill();
+  }
+  else if(t==='lamp'){
+    var R2=.5*S;
+    if(lit>0){ var g2=ctx.createRadialGradient(0,0,R2*.2,0,0,R2*2.8); g2.addColorStop(0,'rgba(255,214,90,'+(.7*lit)+')'); g2.addColorStop(1,'rgba(255,214,90,0)'); ctx.fillStyle=g2; ctx.beginPath(); ctx.arc(0,0,R2*2.8,0,7); ctx.fill() }
+    ctx.strokeStyle='#a9aeb3'; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(-R2,0); ctx.moveTo(R2,0); ctx.lineTo(S,0); ctx.stroke();
+    ctx.fillStyle=lit>0?'rgba(255,236,170,'+(.25+.6*lit)+')':'rgba(242,241,236,.07)'; ctx.beginPath(); ctx.arc(0,0,R2,0,7); ctx.fill();
+    ctx.strokeStyle='#cfd3d6'; ctx.lineWidth=1.3; ctx.stroke();
+    ctx.strokeStyle=lit>0?'#fff6d0':'#8a8a86'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.moveTo(-R2*.6,0);
+    for(var z=0;z<5;z++) ctx.lineTo(-R2*.45+z*R2*.22,(z%2?1:-1)*R2*.25); ctx.lineTo(R2*.6,0); ctx.stroke();
+  }
+  else if(t==='sw'){
+    ctx.strokeStyle='#a9aeb3'; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(-.6*S,0); ctx.moveTo(.6*S,0); ctx.lineTo(S,0); ctx.stroke();
+    rr(ctx,-.62*S,-.27*S,1.24*S,.54*S,3); ctx.fillStyle='#26262a'; ctx.fill(); ctx.strokeStyle='#55555c'; ctx.lineWidth=1; ctx.stroke();
+    rr(ctx,-.45*S,-.1*S,.9*S,.2*S,2); ctx.fillStyle='#111'; ctx.fill();
+    var kx=st.on?.18*S:-.42*S; rr(ctx,kx,-.17*S,.24*S,.34*S,2); ctx.fillStyle=st.on?'#FFD23F':'#d8d6cc'; ctx.fill();
+  }
+  else if(t==='bat'){
+    rr(ctx,-.66*S,-.34*S,1.32*S,.68*S,4); ctx.fillStyle='#19191c'; ctx.fill(); ctx.strokeStyle='#4a4a50'; ctx.lineWidth=1; ctx.stroke();
+    rr(ctx,-.5*S,-.22*S,.98*S,.44*S,3); ctx.fillStyle='#2b2b30'; ctx.fill();
+    ctx.fillStyle='#c9a227'; ctx.fillRect(-.5*S,-.22*S,.2*S,.44*S); ctx.fillStyle='#cfd3d6'; ctx.fillRect(-.6*S,-.09*S,.1*S,.18*S);
+    ctx.strokeStyle='#a9aeb3'; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(-.66*S,0); ctx.moveTo(.66*S,0); ctx.lineTo(S,0); ctx.stroke();
+    if(st.short){ ctx.strokeStyle='rgba(255,42,26,'+(.5+.5*Math.sin(Date.now()/60))+')'; ctx.lineWidth=2; rr(ctx,-.7*S,-.38*S,1.4*S,.76*S,5); ctx.stroke() }
+  }
+  else if(t==='cap'){
+    var R3=.5*S, q=st.q||0;
+    ctx.strokeStyle=SILK; ctx.lineWidth=1.2; ctx.beginPath(); ctx.arc(0,0,R3*1.18,0,7); ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.arc(0,0,R3*1.18,0,7); ctx.clip(); ctx.strokeStyle='rgba(233,230,216,.5)'; ctx.lineWidth=1;
+    for(var h=-R3*1.2;h<R3*1.2;h+=S*.09){ ctx.beginPath(); ctx.moveTo(R3*.15+h*.3,h-R3*.2); ctx.lineTo(R3*1.3+h*.3,h+R3*.2); ctx.stroke() } ctx.restore();
+    ctx.fillStyle=st.burned?'#6b2a22':'#1f3f7d'; ctx.beginPath(); ctx.arc(0,0,R3*(st.burned?1.08:1),0,7); ctx.fill();
+    ctx.save(); ctx.beginPath(); ctx.arc(0,0,R3,0,7); ctx.clip(); ctx.fillStyle=st.burned?'#9b4a3a':'#b9c8e6'; ctx.fillRect(R3*.45,-R3,R3*.6,R3*2); ctx.restore();
+    ctx.strokeStyle='#9aa3ad'; ctx.lineWidth=1.3; ctx.beginPath(); ctx.moveTo(-R3*.4,-R3*.4); ctx.lineTo(R3*.4,R3*.4); ctx.moveTo(R3*.4,-R3*.4); ctx.lineTo(-R3*.4,R3*.4); ctx.stroke();
+    if(q>.02&&!st.burned){ ctx.strokeStyle='rgba(255,210,63,'+(.9*q)+')'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,R3+3,-Math.PI/2,-Math.PI/2+q*Math.PI*2); ctx.stroke() }
+  }
+  else if(t==='cmd'){
+    ctx.strokeStyle='#a9aeb3'; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(S,0); ctx.stroke();
+    if(lit>0){ ctx.shadowColor='rgba(255,210,63,'+lit+')'; ctx.shadowBlur=S*.5 }
+    rr(ctx,-.72*S,-.36*S,1.44*S,.72*S,3); ctx.fillStyle='#151517'; ctx.fill(); ctx.shadowBlur=0;
+    ctx.strokeStyle=lit>0?'rgba(255,210,63,'+(.4+.6*lit)+')':'#3a3a40'; ctx.lineWidth=1.2; ctx.stroke();
+    ctx.fillStyle='#0b0b0d'; ctx.beginPath(); ctx.arc(-.72*S,0,.1*S,-Math.PI/2,Math.PI/2); ctx.fill();
+    ctx.fillStyle=lit>0?'#FFD23F':'#55555c'; ctx.beginPath(); ctx.arc(-.5*S,-.2*S,.04*S,0,7); ctx.fill();
+  }
+  ctx.restore();
+  if(t==='cmd'){ ctx.fillStyle=lit>0?'#FFD23F':'#8a8a86'; ctx.font='600 '+Math.round(S*.2)+'px Jost,sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText('HELM',x,y) }
+  if(t==='sw'){ var p=loc(x,y,ang,.35*S,-.48*S); silk(ctx,'ON',p[0],p[1],S,'center',.18) }
+  if(st.burned&&st.smoke){ var age=(Date.now()-st.smoke)/1000; if(age<2.2) for(var s=0;s<3;s++){ var a=age-s*.25; if(a<0) continue;
+    ctx.fillStyle='rgba(160,160,160,'+Math.max(0,.45*(1-a/1.9))+')'; ctx.beginPath(); ctx.arc(x+Math.sin(a*3+s)*S*.15,y-a*S*.7,S*(.12+a*.12),0,7); ctx.fill() } }
+}
+function polarity(ctx,c,x,y,ang,S){
+  var plus={bat:'+',cap:'+',led:'+',cmd:'VCC'}[c.t], minus={bat:'−',cmd:'GND'}[c.t];
+  var k=c.t==='cmd'?.17:.3;
+  if(plus){ var p=loc(x,y,ang,-S*.62,-S*.42); silk(ctx,plus,p[0],p[1],S,'center',k) }
+  if(minus){ var m=loc(x,y,ang,S*.62,-S*.42); silk(ctx,minus,m[0],m[1],S,'center',k) }
+}
+
+function draw(now){
+  cx.clearRect(0,0,W,H);
+  if(!G) return;
+  var i, p, r=G.live||{lit:{},hot:{}};
+  // плата: маска, крепёжные отверстия, сетка отверстий
+  rr(cx,OX-10,OY-10,S*COLS+20,S*ROWS+20,10); cx.fillStyle=MASK; cx.fill(); cx.strokeStyle='#1d4a33'; cx.lineWidth=1; cx.stroke();
+  [[OX-2,OY-2],[OX+S*COLS+2,OY-2],[OX-2,OY+S*ROWS+2],[OX+S*COLS+2,OY+S*ROWS+2]].forEach(function(h){ cx.fillStyle=TIN; cx.beginPath(); cx.arc(h[0],h[1],5,0,7); cx.fill(); cx.fillStyle='#0b0b0d'; cx.beginPath(); cx.arc(h[0],h[1],3,0,7); cx.fill() });
+  for(i=0;i<N;i++){ if(G.cellPart[i]>=0||G.trace[i]) continue; p=cxy(i); cx.fillStyle=MASK2; cx.beginPath(); cx.arc(p[0],p[1],S*.07,0,7); cx.fill() }
+  if(G.hover>=0&&G.state==='play'&&!(G.cellPart[G.hover]>=0&&!G.pad[G.hover])){ p=cxy(G.hover); cx.strokeStyle='rgba(233,230,216,.16)'; cx.lineWidth=1; cx.strokeRect(p[0]-S*.46,p[1]-S*.46,S*.92,S*.92) }
+  // дорожки: медь под маской, где идёт ток — золото, при КЗ — красное мигание
+  var tw=Math.max(3,S*.26), sh=.5+.5*Math.sin(now/70);
+  function colOf(n){ var h=r.hot[n]; if(h===-1) return 'rgba(255,42,26,'+(.45+.5*sh)+')'; return h>0?mix(CU,CUHOT,h):CU }
+  cx.lineCap='round'; cx.lineWidth=tw;
+  for(i=0;i<N;i++) for(var u in G.adj[i]){ u=+u; if(u<i) continue; var a=cxy(i), b=cxy(u); cx.strokeStyle=colOf(G.net[i]); cx.beginPath(); cx.moveTo(a[0],a[1]); cx.lineTo(b[0],b[1]); cx.stroke() }
+  for(i=0;i<N;i++) if(G.trace[i]){ p=cxy(i); cx.fillStyle=colOf(G.net[i]); cx.beginPath(); cx.arc(p[0],p[1],tw/2,0,7); cx.fill() }
+  // детали, контакты, шелкография
+  G.parts.forEach(function(c){
+    var a=cxy(c.a), b=cxy(c.b), m=cxy(c.body), ang=Math.atan2(b[1]-a[1],b[0]-a[0]);
+    part(cx,c.t,m[0],m[1],ang,S,{on:G.sw[c.id],lit:G.burned[c.id]?0:(r.lit[c.id]||0),burned:G.burned[c.id],smoke:G.smoke[c.id],q:G.q[c.id],short:r.short});
+  });
+  G.parts.forEach(function(c){
+    var a=cxy(c.a), b=cxy(c.b), m=cxy(c.body), ang=Math.atan2(b[1]-a[1],b[0]-a[0]), vert=Math.abs(a[0]-b[0])<1;
+    pad(cx,a[0],a[1],S); pad(cx,b[0],b[1],S);
+    polarity(cx,c,m[0],m[1],ang,S);
+    var round=c.t==='cap'||c.t==='led'||c.t==='lamp';
+    if(vert) silk(cx,c.id,m[0]-S*(round?.64:.46),m[1],S,'right'); else silk(cx,c.id,m[0],m[1]-S*(round?.68:.54),S);
+  });
+}
+function mix(a,b,k){ var A=parseInt(a.slice(1),16), B=parseInt(b.slice(1),16), o=[16,8,0].map(function(s){ var x=(A>>s)&255, y=(B>>s)&255; return Math.round(x+(y-x)*Math.min(1,k)) }); return 'rgb('+o.join(',')+')' }
+
+// ——— интерфейс ———
+var goalsEl=document.getElementById('goals');
+function rowText(row){
+  var L=T[lang], sws=Object.keys(G.sw), head='';
+  if(sws.length){
+    if(row.after) head=tx(L.justOff,{s:Object.keys(row.after).join(', ')});
+    else { var on=sws.filter(function(s){ return row.sw&&row.sw[s] });
+      head=on.length?on.join(' + ')+' '+L.on:(G.parts.some(function(c){ return c.t==='cap' })?tx(L.longOff,{s:sws.join(', ')}):(sws.length>1?L.allOff:sws[0]+' '+L.off)) }
+  }
+  var w=Object.keys(row.want).map(function(id){ var cmd=G.parts.some(function(c){ return c.id===id&&c.t==='cmd' });
+    return id+' '+(row.want[id]?(cmd?L.run:L.lit):(cmd?L.idle:L.dark)) });
+  return (head?head+' → ':'')+w.join(', ');
+}
+function applyLang(){
+  document.documentElement.lang=lang; var L=T[lang];
+  [].forEach.call(document.querySelectorAll('[data-k]'),function(e){ e.textContent=L[e.getAttribute('data-k')] });
+  document.getElementById('lang').textContent=lang==='ru'?'EN':'RU';
+  document.getElementById('hno').textContent='0'+lv+' · '+L.names[lv-1];
+  document.getElementById('iTitle').textContent=tx(L.title,{n:lv,s:L.names[lv-1]});
+  document.getElementById('iGoal').textContent=L.goal[lv-1];
+  var box=document.getElementById('iCards'); box.innerHTML='';
+  LEVELS[lv-1].fresh.forEach(function(t){
+    var d=document.createElement('div'), P=L.part[t]; d.className='card';
+    var c=document.createElement('canvas'); c.width=256; c.height=128; d.appendChild(c);
+    var tx2=document.createElement('div'); tx2.innerHTML='<b></b><div class="mk"></div><div class="ds"></div>';
+    tx2.children[0].textContent=P[0]; tx2.children[1].textContent=P[1]; tx2.children[2].textContent=P[2]; d.appendChild(tx2);
+    box.appendChild(d);
+    var k=c.getContext('2d'); k.scale(2,2); rr(k,0,0,128,64,6); k.fillStyle=MASK; k.fill();
+    var s=26, x=64, y=34; part(k,t,x,y,0,s,{lit:t==='lamp'||t==='led'||t==='cmd'?.9:0,on:1,q:0}); pad(k,x-s,y,s); pad(k,x+s,y,s);
+    polarity(k,{t:t},x,y,0,s);
+  });
+  hud();
+}
+function hud(){
+  if(!G) return;
+  goalsEl.innerHTML=LEVELS[lv-1].rows.map(function(row,ix){ var ok=G.rowsOk[ix];
+    return '<div class="'+(ok?'ok':'no')+'">'+(ok?'✓ ':'· ')+rowText(row).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>' }).join('');
+  var lb=document.getElementById('lvls');
+  if(!lb.children.length){ LEVELS.forEach(function(_,ix){ var b=document.createElement('button'); b.textContent=ix+1; b.onclick=function(){ lv=ix+1; restart() }; lb.appendChild(b) }) }
+  [].forEach.call(lb.children,function(b,ix){ b.classList.toggle('on',ix+1===lv); b.classList.toggle('done',!!prog[ix+1]) });
+}
+function show(id){ ['ovIntro','ovDone'].forEach(function(o){ document.getElementById(o).classList.toggle('hide',o!==id) }) }
+
+var loreTimer=0;
+function typeLines(lines,btn){
+  var box=document.getElementById('lore'), total=0, n=0;
+  lines.forEach(function(l){ total+=l.s.length+1 });
+  btn.style.visibility='hidden'; clearInterval(loreTimer);
+  loreTimer=setInterval(function(){
+    n+=2; var left=n, out=[];
+    lines.forEach(function(l){ if(left<=0) return; var s=l.s.slice(0,left); left-=l.s.length+1;
+      out.push('<span class="'+l.cl+'">'+s.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>') });
+    box.innerHTML=out.join('\n')+(n<total?'<span class="y">▌</span>':'');
+    if(n>=total){ clearInterval(loreTimer); btn.style.visibility='visible' }
+  },20);
+}
+function win(){
+  if(!G.won) return;
+  G.state='done'; show('ovDone'); hud();
+  var L=T[lang], last=lv===LEVELS.length, lines=[{cl:'g',s:L.done},{cl:'m',s:L.learned},{cl:'',s:L.learn[lv-1]}];
+  if(last){ lines.push({cl:'',s:''}); L.lore.forEach(function(s,ix){ lines.push({cl:ix===0?'y':ix===1?'m':'',s:s}) }) }
+  var btn=document.getElementById('bNext'); btn.textContent=last?L.back:L.next;
+  typeLines(lines,btn);
+}
+
+function step(j){
+  if(j<0||j===drag.head) return;
+  var h=drag.head, hc=h%COLS, hr=(h/COLS)|0, jc=j%COLS, jr=(j/COLS)|0;
+  if(Math.abs(hc-jc)===1&&Math.abs(hr-jr)===1){ // срезал угол — через соседнюю клетку
+    var a=hr*COLS+jc, b=jr*COLS+hc, ok=function(x){ return !(G.cellPart[x]>=0&&!G.pad[x]) }, mid=ok(a)?a:b;
+    step(mid); if(drag.head!==mid) return; h=mid;
+  }
+  if(Math.abs(h%COLS-jc)+Math.abs(((h/COLS)|0)-jr)!==1) return;
+  drag.moved=true; extend(h,j);
+}
+var tip=document.getElementById('tip');
+function showTip(e){
+  var i=cellAt(e.clientX,e.clientY), k=i>=0?G.cellPart[i]:-1;
+  if(k<0||drag||G.state!=='play'){ tip.style.display='none'; return }
+  var c=G.parts[k], P=T[lang].part[c.t];
+  tip.innerHTML='<b></b><br><span></span>'; tip.children[0].textContent=c.id+' · '+P[0]; tip.children[2].textContent=P[2];
+  tip.style.display='block';
+  var x=Math.min(W-270,e.clientX+14), y=e.clientY+18; if(y>H-80) y=e.clientY-70; tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+cv.addEventListener('pointerdown',function(e){
+  audio(); if(!G||G.state!=='play') return;
+  var i=cellAt(e.clientX,e.clientY); if(i<0) return;
+  var k=G.cellPart[i];
+  if(k>=0&&!G.pad[i]){ var c=G.parts[k]; if(c.t==='sw'){ G.sw[c.id]=G.sw[c.id]?0:1; beep(G.sw[c.id]?1200:700,.04,.04); hud() } return }
+  if(!G.trace[i]&&!G.pad[i]){ flash(T[lang].fromPad); return }
+  try{ cv.setPointerCapture(e.pointerId) }catch(_){}
+  drag={head:i,start:i,moved:false,x:e.clientX,y:e.clientY};
+  tip.style.display='none';
+});
+cv.addEventListener('pointermove',function(e){
+  if(!G) return; G.hover=cellAt(e.clientX,e.clientY);
+  if(!drag){ if(e.pointerType==='mouse') showTip(e); return }
+  var dx=e.clientX-drag.x, dy=e.clientY-drag.y, n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/(S/4)));
+  for(var s=1;s<=n;s++) step(cellAt(drag.x+dx*s/n,drag.y+dy*s/n));
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+cv.addEventListener('pointerup',function(){ if(drag&&!drag.moved) cut(drag.start); drag=null });
+cv.addEventListener('pointercancel',function(){ drag=null });
+cv.addEventListener('pointerleave',function(){ if(G) G.hover=-1; tip.style.display='none' });
+
+function restart(){ clearInterval(loreTimer); statusMsg=null; newBoard(); applyLang(); show('ovIntro') }
+document.getElementById('bGo').onclick=function(){ audio(); G.state='play'; show(null); hud() };
+document.getElementById('bNext').onclick=function(){ if(lv<LEVELS.length) lv++; restart() };
+document.getElementById('reset').onclick=function(){ if(G.state!=='play') return; statusMsg=null; newBoard(); G.state='play'; hud() };
+document.getElementById('lang').onclick=function(){ lang=lang==='ru'?'en':'ru'; applyLang(); if(G.state==='done') win() };
+
+addEventListener('resize',resize);
+newBoard(); applyLang(); resize();
+window.BOARD={get G(){return G},cxy:cxy,cellAt:cellAt,LEVELS:LEVELS}; // для проверки из Playwright
+var last=0;
+(function frame(now){ var dt=Math.min(.05,(now-(last||now))/1000); last=now;
+  if(G&&G.state==='play') tick(dt,Date.now());
+  draw(now); requestAnimationFrame(frame) })(0);
+})();
+</script>
+</body>
+</html>
