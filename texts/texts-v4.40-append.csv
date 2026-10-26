@@ -1,0 +1,149 @@
+UI,mn_cont,Continue,Продолжить,v4.40 main menu + terminal,live,new
+UI,mn_contSub,year {y} · {w} worlds,год {y} · миров: {w},v4.40 main menu + terminal,live,new
+UI,mn_empty,no record,нет записи,v4.40 main menu + terminal,live,new
+UI,mn_new,New game,Новая игра,v4.40 main menu + terminal,live,new
+UI,mn_load,Load from file,Загрузить из файла,v4.40 main menu + terminal,live,new
+UI,mn_loadSub,.json,.json,v4.40 main menu + terminal,live,new
+UI,mn_lang,Language,Язык,v4.40 main menu + terminal,live,new
+UI,mn_langVal,English,Русский,v4.40 main menu + terminal,live,new
+UI,mn_sound,Sound,Звук,v4.40 main menu + terminal,live,new
+UI,mn_on,on,вкл,v4.40 main menu + terminal,live,new
+UI,mn_off,off,выкл,v4.40 main menu + terminal,live,new
+UI,mn_test,Test play,Тест-плей,v4.40 main menu + terminal,live,new
+UI,mn_pult,HELM,ПУЛЬТ,v4.40 main menu + terminal,live,new
+UI,tm_skip,skip,пропустить,v4.40 main menu + terminal,live,new
+UI,tm_hint,choose a command (1–4) · click or space finishes a line · Esc skips,выберите команду (1–4) · клик или пробел — допечатать · Esc — пропустить,v4.40 main menu + terminal,live,new
+UI,tm_refuse,refused: {r}.,отказ: {r}.,v4.40 main menu + terminal,live,new
+UI,tm_mt,memory test {n} K,проверка памяти {n} K,v4.40 main menu + terminal,live,new
+UI,tm_mtEnd,user memory ........ none,память пользователя .. нет,v4.40 main menu + terminal,live,new
+UI,tm_wait,awaiting command · {n} s,жду команду · {n} с,v4.40 main menu + terminal,live,new
+UI,tm_up,UPTIME T,РАБОТА T,v4.40 main menu + terminal,live,new
+UI,tm_sector,SECTOR,СЕКТОР,v4.40 main menu + terminal,live,new
+UI,tm_system,SYSTEM,СИСТЕМА,v4.40 main menu + terminal,live,new
+UI,tm_planet,PLANET,ПЛАНЕТА,v4.40 main menu + terminal,live,new
+UI,tm_earth,EARTH,ЗЕМЛЯ,v4.40 main menu + terminal,live,new
+UI,tm_noName,NO NAME,ИМЕНИ НЕТ,v4.40 main menu + terminal,live,new
+UI,tm_grid,GRID 1:1000,СЕТКА 1:1000,v4.40 main menu + terminal,live,new
+UI,tm_p01,** {name} {v} · cold start **,** {name} {v} · холодный пуск **,v4.40 main menu + terminal,live,new
+UI,tm_p02,power rail A ........ 12.04 V  ok,шина питания A ...... 12.04 В  ок,v4.40 main menu + terminal,live,new
+UI,tm_p03,power rail B ........  5.01 V  ok,шина питания B ......  5.01 В  ок,v4.40 main menu + terminal,live,new
+UI,tm_p04,mains ............... present,сеть ................. есть,v4.40 main menu + terminal,live,new
+UI,tm_p05,battery bank ........ 41 %  charging,батарея ............... 41 %  заряд,v4.40 main menu + terminal,live,new
+UI,tm_p06,self-test,самопроверка,v4.40 main menu + terminal,live,new
+UI,tm_p07,position ........ sector 00/AE · fix,позиция ........ сектор 00/AE · фиксация,v4.40 main menu + terminal,live,new
+UI,tm_p08,prepared commands ... found 24,заготовленные команды ... найдено 24,v4.40 main menu + terminal,live,new
+UI,tm_p09,load 1/6 · air,загрузка 1/6 · воздух,v4.40 main menu + terminal,live,new
+UI,tm_p10,load 2/6 · hatches,загрузка 2/6 · затворы,v4.40 main menu + terminal,live,new
+UI,tm_p11,load 3/6 · stores,загрузка 3/6 · склады,v4.40 main menu + terminal,live,new
+UI,tm_p12,load 4/6 · yards,загрузка 4/6 · верфи,v4.40 main menu + terminal,live,new
+UI,tm_p13,load 5/6 · capsules,загрузка 5/6 · капсулы,v4.40 main menu + terminal,live,new
+UI,tm_p14,load 6/6 · translation,загрузка 6/6 · перевод,v4.40 main menu + terminal,live,new
+UI,tm_p15,prepared commands ... 24 loaded,заготовленные команды ... 24 загружено,v4.40 main menu + terminal,live,new
+UI,tm_p16,system ......... no name in base · 1 star,система ........ имени в базе нет · 1 звезда,v4.40 main menu + terminal,live,new
+UI,tm_p17,clock ................ no source · set 0000.00.00,часы ................. нет источника · 0000.00.00,v4.40 main menu + terminal,live,new
+UI,tm_p18,bus scan ............. 14 devices,опрос шины .......... 14 устройств,v4.40 main menu + terminal,live,new
+UI,tm_p19,bus 7: timeout,шина 7: нет ответа,v4.40 main menu + terminal,live,new
+UI,tm_p20,bus 7: retry,шина 7: повтор,v4.40 main menu + terminal,live,new
+UI,tm_p21,bus 7: ok,шина 7: ок,v4.40 main menu + terminal,live,new
+UI,tm_p22,planet ......... earth · orbit 3 · surface,планета ........ земля · орбита 3 · поверхность,v4.40 main menu + terminal,live,new
+UI,tm_p23,sensor net ........... 212 nodes · 0 reply,сеть датчиков ........ 212 узлов · 0 ответов,v4.40 main menu + terminal,live,new
+UI,tm_p24,systems offline ...... 6,системы отключены ... 6,v4.40 main menu + terminal,live,new
+UI,tm_air_n,air,воздух,v4.40 main menu + terminal,live,new
+UI,tm_air_f,air: filters clogged,воздух: фильтры забиты,v4.40 main menu + terminal,live,new
+UI,tm_air_v1,clean,очистить,v4.40 main menu + terminal,live,new
+UI,tm_air_v2,purge,продуть,v4.40 main menu + terminal,live,new
+UI,tm_air_r2,purge needs clean filters,продувка требует чистых фильтров,v4.40 main menu + terminal,live,new
+UI,tm_air_v3,seal,закрыть,v4.40 main menu + terminal,live,new
+UI,tm_air_r3,sealed air does not move,закрытый воздух не движется,v4.40 main menu + terminal,live,new
+UI,tm_air_v4,disable,отключить,v4.40 main menu + terminal,live,new
+UI,tm_air_r4,air is already stalled,воздух и так стоит,v4.40 main menu + terminal,live,new
+UI,tm_air_d1,scan air ... codes E12 E13 E40,скан воздуха ... коды E12 E13 E40,v4.40 main menu + terminal,live,new
+UI,tm_air_d2,fan 1: stalled · fan 2: stalled,вентилятор 1: стоит · 2: стоит,v4.40 main menu + terminal,live,new
+UI,tm_air_d3,particulates 9.4 mg/m3 (limit 2.0),взвесь 9.4 мг/м3 (норма 2.0),v4.40 main menu + terminal,live,new
+UI,tm_air_i1,fan 1 ........ 1180 rpm,вентилятор 1 ... 1180 об/мин,v4.40 main menu + terminal,live,new
+UI,tm_air_i2,fan 2 ........ 1204 rpm,вентилятор 2 ... 1204 об/мин,v4.40 main menu + terminal,live,new
+UI,tm_air_i3,pressure ..... 0.71 atm,давление ....... 0.71 атм,v4.40 main menu + terminal,live,new
+UI,tm_air_i4,particulates . 1.1 mg/m3,взвесь ......... 1.1 мг/м3,v4.40 main menu + terminal,live,new
+UI,tm_air_ok,air: clear,воздух: чисто,v4.40 main menu + terminal,live,new
+UI,tm_hatch_n,spaceport hatches,затворы космопорта,v4.40 main menu + terminal,live,new
+UI,tm_hatch_f,hatches: sealed,затворы: закрыты,v4.40 main menu + terminal,live,new
+UI,tm_hatch_v1,open,открыть,v4.40 main menu + terminal,live,new
+UI,tm_hatch_r1,no hydraulic pressure,нет давления в гидравлике,v4.40 main menu + terminal,live,new
+UI,tm_hatch_v2,pressurize,наддуть,v4.40 main menu + terminal,live,new
+UI,tm_hatch_v3,lock,запереть,v4.40 main menu + terminal,live,new
+UI,tm_hatch_r3,already sealed,уже заперты,v4.40 main menu + terminal,live,new
+UI,tm_hatch_v4,disable,отключить,v4.40 main menu + terminal,live,new
+UI,tm_hatch_r4,hatches are not running,затворы не работают,v4.40 main menu + terminal,live,new
+UI,tm_hatch_d1,hydraulics ... 0 bar,гидравлика ... 0 бар,v4.40 main menu + terminal,live,new
+UI,tm_hatch_d2,actuators 1–8: no response,приводы 1–8: нет ответа,v4.40 main menu + terminal,live,new
+UI,tm_hatch_d3,seal pressure ... 0.00 atm,давление уплотнения ... 0.00 атм,v4.40 main menu + terminal,live,new
+UI,tm_hatch_i1,hydraulics ... 210 bar,гидравлика ... 210 бар,v4.40 main menu + terminal,live,new
+UI,tm_hatch_i2,actuators 1–8 .. ok,приводы 1–8 .. ок,v4.40 main menu + terminal,live,new
+UI,tm_hatch_i3,hatch travel ... 0 → 100 %,ход затвора ... 0 → 100 %,v4.40 main menu + terminal,live,new
+UI,tm_hatch_ok,hatches: open,затворы: открыты,v4.40 main menu + terminal,live,new
+UI,tm_store_n,warehouses,склады,v4.40 main menu + terminal,live,new
+UI,tm_store_f,warehouses: ledger stale,склады: учёт устарел,v4.40 main menu + terminal,live,new
+UI,tm_store_v1,erase,стереть,v4.40 main menu + terminal,live,new
+UI,tm_store_r1,the records are all there is,"записи — это всё, что есть",v4.40 main menu + terminal,live,new
+UI,tm_store_v2,archive,архивировать,v4.40 main menu + terminal,live,new
+UI,tm_store_r2,a mismatched ledger cannot be archived,несошедшийся учёт не архивируют,v4.40 main menu + terminal,live,new
+UI,tm_store_v3,recount,пересчитать,v4.40 main menu + terminal,live,new
+UI,tm_store_v4,seal,опечатать,v4.40 main menu + terminal,live,new
+UI,tm_store_r4,sealed stores cannot be counted,опечатанное не пересчитать,v4.40 main menu + terminal,live,new
+UI,tm_store_d1,ledger checksum ... mismatch,сумма учёта ... не сходится,v4.40 main menu + terminal,live,new
+UI,tm_store_d2,last entry ... unknown,последняя запись ... неизвестна,v4.40 main menu + terminal,live,new
+UI,tm_store_d3,records ... 1204 · unverified,записей ... 1204 · не проверены,v4.40 main menu + terminal,live,new
+UI,tm_store_i1,reading 1204 records,чтение 1204 записей,v4.40 main menu + terminal,live,new
+UI,tm_store_i2,mismatches ... 17 → 0,расхождений ... 17 → 0,v4.40 main menu + terminal,live,new
+UI,tm_store_i3,metal · rations · fuel · parts ... counted,металл · рационы · топливо · детали ... сосчитаны,v4.40 main menu + terminal,live,new
+UI,tm_store_ok,warehouses: ledger updated,склады: учёт обновлён,v4.40 main menu + terminal,live,new
+UI,tm_yard_n,shipyards,верфи,v4.40 main menu + terminal,live,new
+UI,tm_yard_f,shipyards: idle,верфи: простаивают,v4.40 main menu + terminal,live,new
+UI,tm_yard_v1,feed,подать,v4.40 main menu + terminal,live,new
+UI,tm_yard_r1,tool heads are cold: material would jam,резцы холодные: материал встанет,v4.40 main menu + terminal,live,new
+UI,tm_yard_v2,clear,очистить,v4.40 main menu + terminal,live,new
+UI,tm_yard_r2,cradles are already empty,стапели и так пусты,v4.40 main menu + terminal,live,new
+UI,tm_yard_v3,stop,остановить,v4.40 main menu + terminal,live,new
+UI,tm_yard_r3,already idle,и так простаивают,v4.40 main menu + terminal,live,new
+UI,tm_yard_v4,warm up,прогреть,v4.40 main menu + terminal,live,new
+UI,tm_yard_d1,cradles 1–4 ... idle,стапели 1–4 ... простой,v4.40 main menu + terminal,live,new
+UI,tm_yard_d2,material feed ... off,подача материала ... выкл,v4.40 main menu + terminal,live,new
+UI,tm_yard_d3,tool heads ... cold,резцы ... холодные,v4.40 main menu + terminal,live,new
+UI,tm_yard_i1,tool heads ... 240 °C,резцы ... 240 °C,v4.40 main menu + terminal,live,new
+UI,tm_yard_i2,cradles 1–4 ... ready,стапели 1–4 ... готовы,v4.40 main menu + terminal,live,new
+UI,tm_yard_i3,feed ... on,подача ... вкл,v4.40 main menu + terminal,live,new
+UI,tm_yard_ok,shipyards: running,верфи: работают,v4.40 main menu + terminal,live,new
+UI,tm_cap_n,capsules,капсулы,v4.40 main menu + terminal,live,new
+UI,tm_cap_f,capsules: 128 sealed,капсулы: 128 закрыты,v4.40 main menu + terminal,live,new
+UI,tm_cap_v1,open,открыть,v4.40 main menu + terminal,live,new
+UI,tm_cap_r1,occupied and cold: not first,заняты и холодны: не с этого,v4.40 main menu + terminal,live,new
+UI,tm_cap_v2,drain coolant,слить хладагент,v4.40 main menu + terminal,live,new
+UI,tm_cap_r2,occupied: not now,заняты: не сейчас,v4.40 main menu + terminal,live,new
+UI,tm_cap_v3,wake,разбудить,v4.40 main menu + terminal,live,new
+UI,tm_cap_v4,seal,закрыть,v4.40 main menu + terminal,live,new
+UI,tm_cap_r4,already sealed,уже закрыты,v4.40 main menu + terminal,live,new
+UI,tm_cap_d1,sealed units ... 128,закрытых блоков ... 128,v4.40 main menu + terminal,live,new
+UI,tm_cap_d2,coolant ... 4 °C,хладагент ... 4 °C,v4.40 main menu + terminal,live,new
+UI,tm_cap_d3,occupied ... 128,заняты ... 128,v4.40 main menu + terminal,live,new
+UI,tm_cap_i1,warm-up ... 4 → 36 °C,прогрев ... 4 → 36 °C,v4.40 main menu + terminal,live,new
+UI,tm_cap_i2,locks ... released,замки ... сняты,v4.40 main menu + terminal,live,new
+UI,tm_cap_i3,name plates ... 128 read,таблички ... 128 прочитано,v4.40 main menu + terminal,live,new
+UI,tm_cap_ok,capsules: open · 128,капсулы: открыты · 128,v4.40 main menu + terminal,live,new
+UI,tm_tr_n,translation,перевод,v4.40 main menu + terminal,live,new
+UI,tm_tr_f,translation: offline,перевод: отключён,v4.40 main menu + terminal,live,new
+UI,tm_tr_v1,translate,переводить,v4.40 main menu + terminal,live,new
+UI,tm_tr_r1,no module loaded,модуль не загружен,v4.40 main menu + terminal,live,new
+UI,tm_tr_v2,mute,заглушить,v4.40 main menu + terminal,live,new
+UI,tm_tr_r2,the channel is already silent,канал и так молчит,v4.40 main menu + terminal,live,new
+UI,tm_tr_v3,train,обучить,v4.40 main menu + terminal,live,new
+UI,tm_tr_r3,nothing to train yet,пока нечего обучать,v4.40 main menu + terminal,live,new
+UI,tm_tr_v4,link,подключить,v4.40 main menu + terminal,live,new
+UI,tm_tr_d1,module ... offline,модуль ... отключён,v4.40 main menu + terminal,live,new
+UI,tm_tr_d2,channel ... closed,канал ... закрыт,v4.40 main menu + terminal,live,new
+UI,tm_tr_d3,speech of people ... not parsed by this unit,речь людей ... этот блок не разбирает,v4.40 main menu + terminal,live,new
+UI,tm_tr_i1,module ... loaded,модуль ... загружен,v4.40 main menu + terminal,live,new
+UI,tm_tr_i2,channel ... open,канал ... открыт,v4.40 main menu + terminal,live,new
+UI,tm_tr_i3,voice ... calibrating,голос ... настройка,v4.40 main menu + terminal,live,new
+UI,tm_tr_ok,translation: alexandra online,перевод: Александра на связи,v4.40 main menu + terminal,live,new
+UI,tm_her,alexandra › I am here. I will translate.,Александра › Я здесь. Я буду переводить.,v4.40 main menu + terminal,live,new
+UI,mn_contFail,The last save in this browser would not load.,Последнее сохранение в этом браузере не загрузилось.,v4.40 main menu + terminal,live,new

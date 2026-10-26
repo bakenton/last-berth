@@ -22,11 +22,25 @@ function ui(p){
       if(k==='shift') await tap('[data-act="shiftok"]'); else if(k==='night') await tap('[data-act="nightok"]'); else if(k==='note') await tap('[data-act="noteok"]'); else break } };
   const clear=async()=>{ await closeBig();
     for(let i=0;i<4&&await p.isVisible('#pfL [data-act="pfok"]');i++) await tap('#pfL [data-act="pfok"]') };
-  const speed=async v=>{ if(v===0){ if(!(await p.evaluate(()=>LNU.paused))) await tap('#top [data-act="spd"][data-v="0"]') } else await tap('#top [data-act="spd"][data-v="'+v+'"]') };
+  // v4.42: the player has 1/2/4 — a scenario's 10 is set through the hook (no button any more), the rest are pressed
+  const speed=async v=>{ if(v===0){ if(!(await p.evaluate(()=>LNU.paused))) await tap('#top [data-act="spd"][data-v="0"]') } else if(v===10) await p.evaluate(()=>{ LNU.speed=10; LNU.paused=false; LNdraw() }); else await tap('#top [data-act="spd"][data-v="'+v+'"]') };
   const pause=()=>speed(0);
   const play=async(v=10)=>{ await speed(v) };
   // идти вперёд на скорости v, закрывая окна, пока cond() истинно не станет; cap — число итераций по ~250 мс
   const until=async(cond,cap=400,v=10)=>{ await play(v); for(let t=0;t<cap;t++){ if(await cond()) return true; await clear(); if(await p.evaluate(()=>LNU.paused)) await play(v); await p.waitForTimeout(250) } return !!(await cond()) };
+  // v4.40: главное меню как игрок — язык пунктом «Язык» (если нужен другой), «Новая игра» → нырок → терминал → SKIP.
+  // Возвращает, что видели: меню, терминал, его первую строку; после — меню закрыто, язык выбран.
+  const menuNew=async(lang)=>{ const seen={menu:await p.isVisible('#menu .mit[data-id="new"]')};
+    if(lang&&await p.evaluate(()=>LNU.lang)!==lang) await tap('#menu .mit[data-id="lang"]');
+    seen.lang=await p.evaluate(()=>LNU.lang);
+    await tap('#menu .mit[data-id="new"]');
+    for(let i=0;i<80&&!(await p.isVisible('#menu .mterm'));i++) await p.waitForTimeout(150);
+    seen.term=await p.isVisible('#menu .mterm');
+    for(let i=0;i<60&&!(await p.evaluate(()=>[...document.querySelectorAll('#menu .mterm .bl')].some(e=>e._t&&!e._typing)));i++) await p.waitForTimeout(150);
+    seen.first=await p.evaluate(()=>{ const e=document.querySelector('#menu .mterm .bl'); return e?e._t:'' });
+    seen.halted=await p.evaluate(()=>LNI.halted());
+    await tap('#menu [data-m="skip"]'); for(let i=0;i<20&&await p.evaluate(()=>LNU.menu);i++) await p.waitForTimeout(100);
+    seen.gone=await p.evaluate(()=>!LNU.menu&&LNU.langPicked&&document.getElementById('menu').hidden); return seen };
   // идти N лет (по LN.day) на скорости v
   const years=async(n,v=10,cap=600)=>{ const d0=await p.evaluate(()=>LN.day); const ok=await until(async()=>(await p.evaluate(()=>LN.day))>=d0+n||!!(await p.evaluate(()=>LN.over)),cap,v); await pause(); return ok };
   // точка на карте, по которой мышь попадает в мир pid (центр круга, иначе края); null — мир полностью закрыт другим
@@ -50,6 +64,6 @@ function ui(p){
     if(lang) await tap('[data-lang="'+lang+'"]');
     if(seed!==undefined){ await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin',String(seed)); await tap('[data-act="new"]') }
     await p.evaluate(()=>{ LNU.shiftStop=false }) };
-  return {tap,at,closeBig,clear,speed,pause,play,until,years,point,openWorld,closeWin,tab,tabOn,day,start} }
+  return {tap,at,closeBig,clear,speed,pause,play,until,years,point,openWorld,closeWin,tab,tabOn,day,start,menuNew} }
 
 module.exports={newPage,ui,WORK,URL};

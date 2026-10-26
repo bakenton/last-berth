@@ -9,7 +9,7 @@
    держит конвой (reserve в Yard), ищет пропавшие суда (Fleet → Search). Раз в ~400 лет обходит все вкладки и аудитит экран.
    --style serial — «постепенный»: линия на мир по одной, ковчег уровнем 2 сразу после даты Ночи.
    --style rush   — «рашер»: по две линии на мир, крупные суда, ковчег — вабанк на лучший уровень.
-   --god   work/LAST-BERTH-god.html (node tools/make-god.js) и GOD.skip в «пустых» местах: доходит дальше за те же минуты
+   --god   GOD.skip (панель отладки, с v4.40 в каждой странице) в «пустых» местах: доходит дальше за те же минуты
            (это уже не чистое время игрока — в отчёте помечено).
    --skip  без --god: когда делать нечего, жмёт настоящую кнопку SKIP (промотка до события).
    --rich  только с --god: добивает недостающие ресурсы ковчега и держит Землю сытой через GOD.res (бот — плохой фермер; в отчёте помечено).
@@ -50,8 +50,8 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
     document.addEventListener('DOMContentLoaded',()=>{ const box=document.getElementById('toasts'); if(!box) return;
       new MutationObserver(ms=>{ ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1&&/toast/.test(n.className)) window.__toasts.push({ts:performance.now(),day:window.LN?window.LN.day:null,cls:n.className.replace('toast','').trim(),txt:(n.textContent||'').trim()}) })) }).observe(box,{childList:true}) });
   });
-  const page=path.join(ROOT,'work',GOD?'LAST-BERTH-god.html':'page.html');
-  if(!fs.existsSync(page)){ console.error('нет '+page+(GOD?' — сначала node tools/make-god.js':' — сначала сборка')); process.exit(2) }
+  const page=path.join(ROOT,'work','page.html');   // v4.40: no god build — window.GOD is in every page
+  if(!fs.existsSync(page)){ console.error('нет '+page+' — сначала сборка'); process.exit(2) }
   await p.goto(url.pathToFileURL(page).href); await p.waitForTimeout(500);
 
   /* ---------- проблемы и снимки ---------- */
@@ -163,7 +163,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   /* ---------- скорость ---------- */
   async function ensureRunning(){ const s=await S(); if(!s||s.over||s.big) return;
     if(s.win&&PAUSING.has(s.win)) return;   // the bot is in the middle of a task: Yard / Earth / Ark stand the clock on purpose
-    if(s.paused||s.speed!==10){ if(s.pop) await p.keyboard.press('Escape'); await tap('#top [data-act="spd"][data-v="10"]',{soft:true}) } }
+    if(s.paused||s.speed!==4){ if(s.pop) await p.keyboard.press('Escape'); await tap('#top [data-act="spd"][data-v="4"]',{soft:true}) } }
 
   /* ---------- аудит экрана ---------- */
   async function audit(tag){
@@ -195,8 +195,8 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
         var ix=Math.min(ra.right,rb.right)-Math.max(ra.left,rb.left), iy=Math.min(ra.bottom,rb.bottom)-Math.max(ra.top,rb.top);
         if(labs[a].textContent.trim()!==labs[c].textContent.trim()&&ix>2&&iy>2&&ix*iy>0.3*Math.min(ra.width*ra.height,rb.width*rb.height)){ ov++; ex=ex||labs[a].textContent.trim()+' × '+labs[c].textContent.trim() } } }
       if(ov) out.push(['warn','map-label-overlap','подписи на карте налезают друг на друга ('+ov+'+): '+ex]);
-      // значок советника совпадает с тем, что в списке
-      try{ var ab=document.querySelector('#top .adv b'); if(ab&&+ab.textContent!==LNI.adv().length) out.push(['warn','adv-badge','число на кнопке советника '+ab.textContent+' ≠ строк '+LNI.adv().length]) }catch(e){}
+      // значок советника совпадает с тем, что в списке (v4.38: серые строки C.mid — «лишние суда» — в счёт не идут)
+      try{ var ab=document.querySelector('#top .adv b'); var an=LNI.adv().filter(function(r){ return r[0]!=='#9C9B95' }).length; if(ab&&+ab.textContent!==an) out.push(['warn','adv-badge','число на кнопке советника '+ab.textContent+' ≠ строк '+an]) }catch(e){}
       return out }).catch(()=>[]);
     const fresh=r.filter(([sev,kind,detail])=>!issues.has(kind+'|'+String(detail).replace(/\d+/g,'#').slice(0,80)));
     const f=fresh.length?await shot(tag+'-'+fresh[0][1]):null; for(const [sev,kind,detail] of r) addIssue(sev,kind,detail,f) }
@@ -217,8 +217,8 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
     await p.addScriptTag({content:inPage});
     await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C=Object.fromEntries(list.map(n=>[n,window[n]])); window.__st={idleY:{},fuelHist:[],want:{}}; window.__lastDay=-1 },names);
     rec('brain',{brain:'sim',style:STYLE}) }
-  await tap('#top [data-act="spd"][data-v="10"]');
-  marks.push({t:wall(),year:0,what:'игра начата на ×10'});
+  await tap('#top [data-act="spd"][data-v="4"]');
+  marks.push({t:wall(),year:0,what:'игра начата на ×4'});
 
   /* ---------- учёт действий ---------- */
   const lastDid={}, lastTry={}, did=[], failWhy={}; let lastActYear=0; const idleStretches=[];

@@ -1,5 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
+var VERSION={v:'4.43'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -711,7 +712,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:'4.39', constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:VERSION.v, constants:K, seed:G.seed, year:G.day, over:G.over||null,
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),convoy:arkConvoy(G),arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.slice(-120).map(function(l){return {day:l.day,code:l.code,d:l.d}}) };
   return JSON.stringify(J);
@@ -888,10 +889,21 @@ function lineCount(G,pid,cls){ var n=0, ships=onLine(G,pid); for(var i=0;i<ships
 function hullAt(cls,gen){ for(var i=0;i<HULLS.length;i++){ if(HULLS[i].key===cls&&HULLS[i].gen===gen) return i } return null }
 function currentHull(G,cls){ var best=null; for(var i=0;i<HULLS.length;i++){ var h=HULLS[i]; if(h.key!==cls) continue; if(h.gen>(G.gen||0)) continue; if(best===null||h.gen>HULLS[best].gen) best=i } return best }
 /* why a new hull of this class cannot be ordered for this line right now; 'ok' when it can */
-function orderCheck(G,pid,cls){
+/* v4.42 (Nikita, 24.10): the hull the yards offer in this class — the current generation, or the one before it while the
+   current one wants more parts than Earth holds (a new drive eats the parts; the yards must not stand idle for it).
+   pid: the line's world — the older hull must reach it. Falls back to the current hull when the older one does not help. */
+function orderHull(G,cls,pid){ var hi=currentHull(G,cls); if(hi===null) return null; var h=HULLS[hi];
+  if(G.earth.parts>=(h.parts||0)) return hi;
+  var best=null; for(var i=0;i<HULLS.length;i++){ var o=HULLS[i];
+    if(o.key!==cls||o.gen>=h.gen||o.gen<(G.gen||0)-K.GEN_OVERLAP||G.earth.parts<(o.parts||0)||reach(G)<o.reach) continue;
+    if(pid&&!canReachSector({hull:i},planet(pid).sec)) continue;
+    if(best===null||o.gen>HULLS[best].gen) best=i }
+  return best===null?hi:best }
+function orderCheck(G,pid,cls,hull){
   if(!G.colonies[pid]) return 'nocolony';
   if(CLASSES.indexOf(cls)<0) return 'noclass';
-  var hi=currentHull(G,cls); if(hi===null) return 'locked';
+  var hi=(hull===undefined||hull===null)?currentHull(G,cls):hull; if(hi===null||!HULLS[hi]||HULLS[hi].key!==cls) return 'locked';
+  if(HULLS[hi].gen<(G.gen||0)-K.GEN_OVERLAP) return 'retired';
   var h=HULLS[hi], p=planet(pid);
   if(reach(G)<h.reach) return 'locked';
   if(!canReachSector({hull:hi},p.sec)) return 'range';
@@ -903,9 +915,10 @@ function orderCheck(G,pid,cls){
   return 'ok';
 }
 /* order a new hull of the current generation for this line: paid now, she takes the line when she leaves the yards */
-function orderFor(G,pid,cls){
-  var r=orderCheck(G,pid,cls); if(r!=='ok') return r;
-  r=buildShip(G,currentHull(G,cls)); if(r!=='ok') return r;
+function orderFor(G,pid,cls,hull){   // hull: v4.42 — the one orderHull offers; by default the current generation
+  var hi=(hull===undefined||hull===null)?currentHull(G,cls):hull;
+  var r=orderCheck(G,pid,cls,hi); if(r!=='ok') return r;
+  r=buildShip(G,hi); if(r!=='ok') return r;
   var ns=G.ships[G.ships.length-1]; ns.lineFor=pid; ns.pend={from:pid,to:'earth'};
   log(G,'yard_line',{n:ns.id,p:pid,g:hullGen(ns)}); G.stats.yardBuilt=(G.stats.yardBuilt||0)+1;
   return 'ok';
@@ -1226,8 +1239,8 @@ function lineHelp(G,pid,opt){
   if(!opt.noMove){ var spare=[];
     for(var k in G.colonies){ if(k!==pid) lineSpare(G,k).forEach(function(s){ if(canReachSector(s,p.sec)&&sails(s)) spare.push(s) }) }
     b=best(spare); if(b) return {kind:'move', sid:b.id, from:b.from||(b.pend&&b.pend.from), add:y(b), gap:gap} }
-  var hs=[]; CLASSES.forEach(function(cls){ var hi=currentHull(G,cls); if(hi===null||(opt.cls&&!opt.cls(cls))) return;
-    if(reach(G)<HULLS[hi].reach||!canReachSector({hull:hi},p.sec)||orderCheck(G,pid,cls)==='orderNight') return; hs.push({hull:hi,cls:cls}) });
+  var hs=[]; CLASSES.forEach(function(cls){ var hi=orderHull(G,cls,pid); if(hi===null||(opt.cls&&!opt.cls(cls))) return;   // v4.42: what the yards offer now
+    if(reach(G)<HULLS[hi].reach||!canReachSector({hull:hi},p.sec)||orderCheck(G,pid,cls,hi)==='orderNight') return; hs.push({hull:hi,cls:cls}) });
   b=best(hs); if(b) return {kind:'build', cls:b.cls, hull:b.hull, add:y(b), gap:gap};
   return null;
 }

@@ -1,6 +1,6 @@
 # LAST BERTH — оглавление кода. Генерируется, руками не править.
 #   python3 tools/map.py [work_dir] > MAP.md        (по умолчанию work/ рядом с tools/)
-# Берёт верхний уровень core.js и ui.js: разделы (/* ---------- … ---------- */), function, var.
+# Берёт верхний уровень core.js, ui.js и menu.js: разделы (/* ---------- … ---------- */), function, var.
 # Назначение — первая строка комментария над объявлением, иначе комментарий в первых строках тела,
 # иначе хвостовой комментарий строки, иначе «≈ <начало кода>» (комментария нет — дописывать его в коде, не в MAP).
 import re, sys, os
@@ -47,11 +47,11 @@ def span(L, i):
         if started and d <= 0: return k - i + 1
         if not started and k > i + 2: return 1
     return len(L) - i
-print('# MAP — оглавление core.js / ui.js\n')
+print('# MAP — оглавление core.js / ui.js / menu.js\n')
 print('Сгенерировано `python3 tools/map.py > MAP.md` после каждой правки кода. Не править руками.')
 print('Навигация: `grep -n <имя> MAP.md` → `sed -n "<строка-40>,<строка+40>p" work/<файл>`. Код целиком не открывать.')
 print('Формат: `строка  имя(аргументы) [длина]  назначение`. «≈ …» = комментария нет, показано начало кода.\n')
-for fn in ('core.js', 'ui.js'):
+for fn in ('core.js', 'ui.js', 'menu.js'):   # menu.js — v4.40, главное меню и терминал
     p = os.path.join(W, fn); L = open(p, encoding='utf-8').read().split('\n')
     print('## %s (%d строк)\n' % (fn, len(L))); print('```')
     for i, l in enumerate(L):

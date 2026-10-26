@@ -5,3 +5,4 @@ work/logs/
 node_modules/
 work/playtest/
 work/LAST-BERTH-god.html
+work/debug-*.png

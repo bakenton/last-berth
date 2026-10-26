@@ -22,7 +22,7 @@ function load(path){
     'setLine','survey','canSurvey','startDrive','scrap','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
     'arkBuy','arkLevel','arkSouls','arkOwed','arkReady','arkConvoy','setReserve','nightLeft','abandon','clearLine','leftBehind',
-    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort'];
+    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','orderHull','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort'];
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }
@@ -36,6 +36,7 @@ function lined(G,pid){return G.ships.some(s=>s.mode!=='dead'&&s.from===pid)}
    years of Earth's metal burn or the fuel floor (the old yards' rule, now the bot's). No renewal: the planner never used it.
    Every core call is a player's action — tools/load.js counts them. */
 const YARD_KEEP=10;
+let PARTS_KEEP=0;   // v4.43: parts the line orders leave for the convoy (set each year in step)
 function plan(st,k){ return st.want[k]||null }
 function wantN(st,k,c){ const L=st.want[k]; return L?(L[c]||0):0 }
 function wantSum(L){ return L?(L.courier||0)+(L.hauler||0)+(L.freighter||0):0 }
@@ -52,8 +53,10 @@ function setW(C,G,st,k,cls,n){
   return 'ok';
 }
 /* why the planner would not order this class for this line now (the v4.6 yards' check: metal floor, fuel floor, parts, crew) */
+/* v4.43 (Nikita, 25.10: «чини»): the bot orders what the yards offer a player since v4.42 — C.orderHull, the generation before
+   while the current one wants parts Earth has not got. Before, it saw only the current generation and waited for its parts. */
 function yardOk(C,G,k,cls){
-  const hi=C.currentHull(G,cls); if(hi===null) return 'locked';
+  const hi=C.orderHull(G,cls,k); if(hi===null) return 'locked';
   const h=C.HULLS[hi], p=C.planet(k); if(!p) return 'noplanet';
   if(!C.canReachSector({hull:hi},p.sec)) return 'range';
   if(C.reach(G)<h.reach) return 'locked';
@@ -62,6 +65,7 @@ function yardOk(C,G,k,cls){
   if(G.earth.metal-h.metal<(nd.metal||0)*YARD_KEEP) return 'metal';
   if(G.earth.fuel-h.fuel<C.K.FEED_FUEL_FLOOR) return 'fuel';
   if(G.earth.parts<(h.parts||0)) return 'parts';
+  if((h.parts||0)>0&&G.earth.parts-h.parts<PARTS_KEEP&&!(p.kind==='farm'&&G.foodFc)) return 'keep';   // v4.43: the convoy's parts are not for the lines — unless Earth's rations run out (whoever starves will not fly)
   if(G.earth.people-C.K.EARTH_KEEP<(h.crew||0)) return 'crew';
   return 'ok';
 }
@@ -74,7 +78,7 @@ function fillLines(C,G,st){
       if(G.reserves[k]<=0&&p.kind!=='works'&&C.pileLeft(G,k)<1) continue;
       let idle=null; for(const o of G.ships){ if(o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.pend&&!o.mutiny&&!o.job&&!o.reserve&&C.HULLS[o.hull].key===cls&&C.canReachSector(o,p.sec)&&(!idle||C.hullGen(o)>C.hullGen(idle))) idle=o }
       if(idle){ const r=C.setLine(G,idle.id,k,'earth'); if(r==='ok'||r==='queued') continue }
-      if(yardOk(C,G,k,cls)==='ok') C.orderFor(G,k,cls) } }
+      if(yardOk(C,G,k,cls)==='ok') C.orderFor(G,k,cls,C.orderHull(G,cls,k)) } }
 }
 /* a hull the planner puts on a line by hand joins the plan (the v4.6 counter followed the hand) */
 function assign(C,G,st,sid,k){ const s=C.shipById(G,sid), r=C.setLine(G,sid,k,'earth');
@@ -88,6 +92,12 @@ function step(C,G,bot,d,st){
   const reachOK=(s,p)=>C.canReachSector(s,p.sec);
     if(bot==='idle') return;
     const E=G.earth;
+    // v4.43: once the ark drive is ready (or 600 years out) and the convoy is short, line orders keep the parts the dearest
+    // missing convoy hull needs. Without it the planner, now that it orders what it can pay for, spent the parts on couriers
+    // year after year and the Gen III freighter (983 parts) never came (serial 115/119/129).
+    PARTS_KEEP=0;
+    if(G.night&&G.arkMark!==null){ const cv=C.arkConvoy(G); if(!cv.ok&&(C.arkReady(G)||C.nightLeft(G)<=600)) for(const cls of CLS){ if((cv.have[cls]||0)>=cv.need[cls]) continue;
+      const c=HULLS.filter(h=>h.key===cls&&h.gen>=cv.gen&&h.gen<=(G.gen||0)).sort((a,b)=>(a.parts||0)-(b.parts||0))[0]; if(c) PARTS_KEEP=Math.max(PARTS_KEEP,c.parts||0) } }
     const maxSec = bot==='greedy' ? 1 : 99;
     const P=STYLES[bot]||{hands:30, keep:(bot==='pro'||bot==='tidy'||bot==='late')?260:60, sFood:90, sMetal:300, evac:bot==='tidy'||bot==='late', legacy:true};
     const pro = !P.legacy||bot==='pro'||bot==='tidy'||bot==='late';   // v4.15: 'tidy' = pro that also evacuates spent worlds, as a player does
@@ -136,7 +146,7 @@ function step(C,G,bot,d,st){
       for(const k in G.colonies){ const p=C.planet(k), lr=C.lineRate(G,k); if(!lr) continue; let L=plan(st,k);
         if(lr.dry&&lr.sitting<1){ if(L){ for(const c of CLS) if(L[c]) setW(C,G,st,k,c,0) } continue }
         if(L){ for(const c of CLS){ const w=L[c]||0, have=C.lineCount(G,k,c); if(w>have){ const yc=yardOk(C,G,k,c);
-          if(yc==='range'||yc==='locked'||yc==='mutiny') setW(C,G,st,k,c,have); else unfilled+=w-have } } }
+          if(yc==='range'||yc==='locked'||yc==='mutiny'||yc==='keep') setW(C,G,st,k,c,have); else unfilled+=w-have } } }   // v4.43: a hull held back for the convoy is not a debt of the yards
         L=plan(st,k);
         if(!wantSum(L)){ setW(C,G,st,k,'courier',1); if(plan(st,k)) unfilled++; continue }
         const pri=(p.kind==='well'&&fuelShort?3:0)+(p.kind==='farm'&&foodShort?3:0)+(p.kind==='mine'&&metalShort?2.5:0)+(p.kind==='works'?2:0)+Math.min(1,lr.sitting/3000);
@@ -154,7 +164,9 @@ function step(C,G,bot,d,st){
         const classes=P.big?['freighter','hauler','courier']:['hauler','courier'];
         const crewOf=c=>{ let b=null; for(const h of HULLS){ if(h.key===c&&h.gen<=(G.gen||0)&&(!b||h.gen>b.gen)) b=h } return b?b.crew:999 };
         const fits=c=>E.people-K.EARTH_KEEP-P.hands>2*crewOf(c)&&crewOut+crewOf(c)<=crewBudget;
-        const cls=classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='ok')||classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='parts')||(fits('courier')?'courier':null);
+        // v4.43: no more «the class it cannot pay parts for» — the big styles ordered freighters with no parts in sight, the order
+        // hung for centuries, `unfilled` stayed at 3+ and shut the rest (seeds 103/118/132: Earth starved by a full farm)
+        const cls=classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='ok')||(fits('courier')?'courier':null);
         if(cls&&wantSum(L)<8) setW(C,G,st,k,cls,(L[cls]||0)+1) }
     } else for(const k in G.colonies){
       if(lined(G,k)) continue;
