@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alexandra Operator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--ppl:#FFD23F;--paper:#E6E7EB;--txt:#1A1A1E;--h:'Jost',system-ui,sans-serif}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--h);overflow:hidden}
+#stage{position:fixed;inset:0;background:var(--bg) url(%%bgdesk%%) left top/1440px auto no-repeat}
+#dim{position:absolute;inset:0;background:rgba(0,0,0,.38);opacity:0;transition:opacity .25s;pointer-events:none}
+#dim.on{opacity:1;pointer-events:auto}
+
+/* the call: her lit window over the dark desk */
+#call{position:absolute;left:104px;bottom:24px;display:flex;align-items:flex-end;gap:0;pointer-events:none}
+#call.on{pointer-events:auto;cursor:pointer}
+.por{position:relative;width:240px;height:300px}
+.win{position:absolute;inset:0;overflow:hidden;border:1px solid var(--ln);background:linear-gradient(transparent 82%,rgba(255,210,63,.10)),radial-gradient(ellipse 70% 55% at 50% 38%,rgba(255,210,63,.20),rgba(255,210,63,.05) 55%,transparent 75%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24.25' height='42'%3E%3Cpath d='M12.12 0L24.25 7V21L12.12 28L0 21V7ZM12.12 28V42' fill='none' stroke='%23FFD23F' stroke-opacity='.09'/%3E%3C/svg%3E") center/24.25px 42px,var(--pan);clip-path:inset(100% 0 0 0);transition:clip-path .32s cubic-bezier(.2,.8,.2,1)}
+#call.on .win{clip-path:inset(0 0 0 0)}
+.por .br{opacity:0;transition:opacity .2s .3s}#call.on .por .br{opacity:1}
+.por img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .18s;filter:drop-shadow(0 0 5px rgba(255,210,63,.22))}
+.por img.on{opacity:1}
+.win .scan{position:absolute;left:0;right:0;height:2px;background:var(--ppl);box-shadow:0 0 12px var(--ppl);top:100%;opacity:0}
+#call.on .win .scan{animation:scan .45s ease-out}
+@keyframes scan{0%{top:100%;opacity:1}80%{opacity:1}100%{top:0;opacity:0}}
+.por .br{position:absolute;z-index:2;width:14px;height:14px;border:2px solid var(--ppl)}
+.br.a{left:-5px;top:-5px;border-right:0;border-bottom:0}.br.b{right:-5px;top:-5px;border-left:0;border-bottom:0}
+.br.c{left:-5px;bottom:-5px;border-right:0;border-top:0}.br.d{right:-5px;bottom:-5px;border-left:0;border-top:0}
+.por.hop{animation:hop .3s}.por.sag{animation:sag .5s}
+@keyframes hop{40%{transform:translateY(-5px)}}@keyframes sag{50%{transform:translateY(3px)}}
+.box{width:520px;min-height:132px;margin-left:-1px;background:var(--pan);color:var(--ink);border:1px solid var(--ln);padding:14px 20px 16px 22px;position:relative;
+  transform:translateX(-24px);opacity:0;transition:transform .25s .12s,opacity .2s .12s;border-left:3px solid var(--ppl)}
+#call.on .box{transform:none;opacity:1}
+.nm{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.22em;color:var(--ppl);margin-bottom:8px}
+.nm i{width:7px;height:7px;border-radius:50%;background:var(--ppl);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.nm span{margin-left:auto;letter-spacing:.08em;font-weight:500;color:var(--mid)}
+.tx{font-size:18px;line-height:1.45;min-height:52px}
+.nx{position:absolute;right:16px;bottom:10px;font-size:13px;color:var(--ppl);opacity:0}
+.nx.on{opacity:1;animation:blink 1.2s infinite}
+
+#call.crew .por{width:150px;height:188px}
+#call.crew .box{min-height:112px}
+#call.crew .src,#call .src:not(:empty){display:block}
+.src{display:none;font-size:12px;letter-spacing:.12em;color:var(--mid);margin:-3px 0 7px}
+#call.crew .src{display:block}
+.bar{position:absolute;left:0;bottom:0;height:2px;background:var(--ppl);width:0}
+#call.crew.on .bar{animation:bar 9s linear forwards}
+@keyframes bar{from{width:100%}to{width:0}}
+/* the small form: a rule, a tip — her face, one line, out of the way */
+#note{position:absolute;left:104px;bottom:24px;display:flex;align-items:stretch;transform:translateY(16px);opacity:0;transition:.22s;pointer-events:none}
+#note.on{transform:none;opacity:1;pointer-events:auto;cursor:pointer}
+#note .face{width:64px;height:80px;background-color:var(--pan);background-size:cover,100% 100%;background-position:center,center;background-repeat:no-repeat;border:2px solid var(--ppl);border-right:0}
+#note .one{width:440px;background:var(--pan);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:9px 14px;font-size:15px;line-height:1.4;display:flex;flex-direction:column;justify-content:center}
+#note .one b{font-size:11px;letter-spacing:.2em;color:var(--ppl);font-weight:600;margin-bottom:3px}
+
+/* the mock-up's own controls (not the game) */
+#ctl{position:absolute;right:16px;top:116px;width:250px;max-height:calc(100vh - 132px);overflow:auto;background:rgba(20,20,23,.96);border:1px solid var(--ln);padding:12px;font-size:13px;z-index:5}
+#ctl h1{font-size:12px;letter-spacing:.18em;font-weight:600;margin:0 0 10px;color:var(--ppl);display:flex}
+#ctl h1 u{margin-left:auto;text-decoration:none;color:var(--mid);cursor:pointer;letter-spacing:0}
+#ctl.min .bd{display:none}
+#ctl button{display:block;width:100%;text-align:left;background:#202024;color:var(--ink);border:1px solid var(--ln);font:inherit;padding:7px 9px;margin:0 0 5px;cursor:pointer}
+#ctl button:hover{border-color:var(--ppl)}
+#ctl .em{display:flex;flex-wrap:wrap;gap:4px;margin:8px 0}
+#ctl .em button{width:auto;display:inline-block;padding:4px 7px;margin:0;font-size:12px}
+#ctl .lg{display:flex;gap:4px}#ctl .lg button{text-align:center}#ctl .lg button.on{border-color:var(--ppl);color:var(--ppl)}
+#ctl .g{font-size:11px;letter-spacing:.14em;color:var(--mid);margin:10px 0 5px;width:100%}
+#ctl p{color:var(--mid);margin:8px 0 0;font-size:12px;line-height:1.4}
+
+@media (max-width:700px){
+  #stage{background-image:url(%%bgphone%%);background-size:100% auto}
+  #call{left:16px;right:16px;bottom:16px;flex-direction:column;align-items:flex-start}
+  .por{width:128px;height:160px;margin-bottom:-1px;z-index:1}
+  .box{width:100%;min-height:120px;transform:translateY(16px);border-left:0;border-top:3px solid var(--ppl);padding:12px 16px 26px}
+  .tx{font-size:16px}
+  #call.crew .por{width:104px;height:130px}
+  #note{left:16px;right:16px;bottom:16px}#note .one{width:auto;flex:1;font-size:14px}
+  #ctl{top:auto;bottom:auto;top:52px;right:8px;left:8px;width:auto;padding:8px}
+  #ctl .bd .sc{display:flex;flex-wrap:wrap;gap:4px}#ctl .bd .sc button{width:auto;margin:0;font-size:12px;padding:5px 7px}
+  #ctl p{display:none}
+}
+</style></head><body>
+<div id="stage">
+  <div id="dim"></div>
+  <div id="call">
+    <div class="por"><div class="win" id="por"><i class="scan"></i></div><i class="br a"></i><i class="br b"></i><i class="br c"></i><i class="br d"></i></div>
+    <div class="box"><div class="nm"><i></i>ALEXANDRA<span id="cnt"></span></div><div class="src" id="src"></div><div class="tx" id="tx"></div><div class="nx" id="nx">▸</div><i class="bar"></i></div>
+  </div>
+  <div id="note"><div class="face" id="nface"></div><div class="one"><b>ALEXANDRA</b><span id="ntx"></span></div></div>
+  <div id="ctl"><h1>МАКЕТ · ОПЕРАТОР<u id="min">свернуть</u></h1><div class="bd">
+    <div class="sc" id="sc"></div>
+    <div class="em" id="em"></div>
+    <div class="lg"><button data-lg="en" class="on">EN</button><button data-lg="ru">RU</button></div>
+    <p>Одно место для её лица — внизу слева. Сюжет: время стоит. Экипаж: время идёт, окно уходит само через 9 с. Правила: малая форма. Тексты — из текущей игры (старый лор), подставлены примерные числа.</p>
+  </div></div>
+</div>
+<script>
+var AVA='%%avatar%%';
+var IMG={talk:'%%talk%%',happy:'%%happy%%',smile:'%%smile%%',sad:'%%sad%%',grief:'%%grief%%',surprised:'%%surprised%%',alarm:'%%alarm%%',confused:'%%confused%%',eureka:'%%eureka%%',resolve:'%%resolve%%',crossed:'%%crossed%%'};
+var EMO_RU={talk:'спокойна',happy:'рада',smile:'тепло',sad:'грусть',grief:'скорбь',surprised:'удивлена',alarm:'тревога',confused:'растеряна',eureka:'идея',resolve:'решимость',crossed:'строго'};
+var SC=[
+ {g:'СЮЖЕТ · большое окно, время стоит'},
+ {t:'N-02 первая колония',l:[['happy','Report from Kiln: 112 people landed. Ready to mine and ship.','Доклад с Kiln: высадились 112 человек. К добыче и поставкам готовы.']]},
+ {t:'N-05 судно пропало',l:[['talk','Hull 7 did not come back. 40 crew went with her.','Судно 7 не вернулось. С ним ушли 40 человек экипажа.'],['grief','No one will remember them. I\'ll write them down.','Их никто не вспомнит. Я запишу.']]},
+ {t:'N-07 событие',l:[['surprised','Space over HELIOS flows differently. The physicists can\'t say why yet.','Над HELIOS пространство течёт иначе. Физики пока не знают почему.']]},
+ {t:'N-08 кольцо II',l:[['confused','We\'re going further. It\'s darker past the edge of the map — or it seems so to me.','Мы идём дальше. За краем карты стало темнее — или мне кажется.']]},
+ {t:'N-10 последний рейс ушёл',l:[['smile','The last courier is off the ground. Everyone who could come is coming.','Последний курьер оторвался от земли. Все, кто мог, летят домой.']]},
+ {t:'N-12c 25 лет',l:[['alarm','Twenty-five years to the Night. Whatever is still out there, call it in now.','До Ночи двадцать пять лет. Всё, что ещё снаружи, зовите сейчас.']]},
+ {t:'N-11 отказ',l:[['crossed','The crew of Hull 7 refused the run. People are afraid and want a place on the ark.','Экипаж судна 7 отказался от рейса. Люди боятся и хотят место на ковчеге.']]},
+ {g:'ЭКИПАЖ ЕЁ ГОЛОСОМ · время идёт'},
+ {t:'колония основана',crew:1,src:['HEAD OF KILN · MARTA','ГЛАВА KILN · МАРТА'],l:[['happy','Down. 112 of us, one dome. Send more people while you still have them.','Сели. Нас 112, один купол. Шлите ещё людей, пока они у вас есть.']]},
+ {t:'судно пропало',crew:1,src:['DUTY OFFICER · OSKAR','ДЕЖУРНЫЙ · ОСКАР'],l:[['alarm','Hull 7 missed its call. Crew of 40. Holding the channel open, per regulation.','Судно 7 не вышло на связь. Экипаж 40. Держим канал открытым, по уставу.']]},
+ {t:'крушение',crew:1,src:['CAPTAIN · HULL 7 · ILSE','КАПИТАН · СУДНО 7 · ИЛЬЗЕ'],l:[['grief','Hull 7, on final to Kiln. Lost the port cluster at two thousand metres. We are not going to make the plain.','Судно 7, заход на Kiln. Потеряли левый блок на двух тысячах. До равнины не дотянем.']]},
+ {t:'бунт',crew:1,src:['CAPTAIN · HULL 4 · TEODOR','КАПИТАН · СУДНО 4 · ТЕОДОР'],l:[['crossed','Hull 4. We have done the arithmetic on the bridge and it does not come out. We are coming home.','Судно 4. Мы посчитали на мостике, и не сходится. Идём домой.']]},
+ {t:'эвакуация',crew:1,src:['HEAD OF KILN · MARTA','ГЛАВА KILN · МАРТА'],l:[['smile','Lifting off. 40 aboard. We left the dome lights on. I do not know why.','Взлетаем. На борту 40. Свет в куполе оставили. Не знаю зачем.']]},
+ {t:'двигатель ковчега (большое)',src:['CHIEF ENGINEER · ARK · NILS','ГЛАВНЫЙ ИНЖЕНЕР · КОВЧЕГ · НИЛЬС'],l:[['resolve','The drive holds. She will fly. Bring us people.','Двигатель держит. Ковчег полетит. Везите людей.']]},
+ {t:'остаются (большое)',src:['HEAD OF KILN · MARTA','ГЛАВА KILN · МАРТА'],l:[['grief','We can hear the countdown. Do not answer. Keep the channel for the ones who will make it.','Мы слышим отсчёт. Не отвечайте. Держите канал для тех, кто успеет.']]},
+ {g:'ПРАВИЛА · малая форма'},
+ {t:'m0 голод',small:1,l:[['talk','Earth eats more every year. Rations run out in 1473.','Земля ест больше с каждым годом. Рационы кончатся в 1473-м.']]},
+ {t:'m8 заказ судна',small:1,l:[['eureka','No free hull at the pier. Order one here — it goes straight to this line.','Свободных судов у причала нет. Закажите здесь — судно сразу пойдёт на эту линию.']]},
+ {t:'m21 последний рейс',small:1,l:[['crossed','Last lift: the year a courier must leave to bring everyone home before the Night.','Последний рейс: год, когда курьер должен вылететь, чтобы успеть до Ночи.']]}
+];
+var GLOW='radial-gradient(ellipse 70% 55% at 50% 38%,rgba(255,210,63,.20),rgba(255,210,63,.05) 55%,transparent 75%)';
+var lang='en',cur=null,idx=0,typing=0,timer=0,face='',auto=0;
+var $=function(i){return document.getElementById(i)};
+var por=$('por'), porO=por.parentNode;
+Object.keys(IMG).forEach(function(k){ var im=new Image(); im.src=IMG[k]; im.dataset.e=k; por.insertBefore(im,por.firstChild) });
+function setFace(e){ if(e===face) return; var was=face; face=e;
+  [].forEach.call(por.querySelectorAll('img'),function(im){ im.classList.toggle('on',im.dataset.e===e) });
+  if(!was) return; porO.classList.remove('hop','sag'); void porO.offsetWidth;
+  if(e==='happy'||e==='eureka'||e==='surprised'||e==='alarm') porO.classList.add('hop'); else if(e==='sad'||e==='grief') porO.classList.add('sag') }
+function type(s){ clearInterval(timer); var tx=$('tx'),i=0; typing=1; $('nx').classList.remove('on'); tx.textContent='';
+  timer=setInterval(function(){ i+=1; tx.textContent=s.slice(0,i); if(i>=s.length) done() },26);
+  function done(){ clearInterval(timer); typing=0; tx.textContent=s; $('nx').classList.add('on') }
+  type.finish=done }
+function line(){ var L=cur.l[idx]; setFace(L[0]); $('cnt').textContent=cur.l.length>1?(idx+1)+'/'+cur.l.length:''; var s=lang==='en'?L[1]:L[2]; type(cur.src?'“'+s+'”':s) }
+function close(){ clearTimeout(auto); $('call').classList.remove('on'); $('note').classList.remove('on'); $('dim').classList.remove('on'); clearInterval(timer); cur=null }
+function play(s){ close(); cur=s; idx=0;
+  if(s.small){ var L=s.l[0]; $('nface').style.backgroundImage='url('+AVA+'),'+GLOW; $('ntx').textContent=lang==='en'?L[1]:L[2];
+    setTimeout(function(){ $('note').classList.add('on') },30); return }
+  face=''; $('tx').textContent=''; $('call').classList.toggle('crew',!!s.crew); $('src').textContent=s.src?s.src[lang==='en'?0:1]:'';
+  if(!s.crew) $('dim').classList.add('on'); else auto=setTimeout(close,9000);
+  setTimeout(function(){ $('call').classList.add('on'); setTimeout(line,280) },60) }
+function next(){ if(!cur) return; if(cur.small) return close(); if(typing) return type.finish(); idx++; if(idx<cur.l.length) line(); else close() }
+$('call').onclick=next; $('note').onclick=next; $('dim').onclick=next;
+document.onkeydown=function(e){ if(e.key===' '||e.key==='Enter'){ e.preventDefault(); next() } };
+SC.forEach(function(s){ if(s.g){ var h=document.createElement('div'); h.className='g'; h.textContent=s.g; $('sc').appendChild(h); return } var b=document.createElement('button'); b.textContent=s.t; b.onclick=function(){ play(s) }; $('sc').appendChild(b) });
+Object.keys(IMG).forEach(function(k){ var b=document.createElement('button'); b.textContent=EMO_RU[k]; b.onclick=function(){
+  if(cur&&!cur.small&&$('call').classList.contains('on')) setFace(k); else play({l:[[k,'Pult, I\'m listening.','Пульт, я слушаю.']]}) }; $('em').appendChild(b) });
+[].forEach.call(document.querySelectorAll('[data-lg]'),function(b){ b.onclick=function(){ lang=b.dataset.lg;
+  [].forEach.call(document.querySelectorAll('[data-lg]'),function(x){ x.classList.toggle('on',x===b) }); if(cur&&!cur.small){ if(cur.src) $('src').textContent=cur.src[lang==='en'?0:1]; line() } } });
+$('min').onclick=function(){ var c=$('ctl'); c.classList.toggle('min'); this.textContent=c.classList.contains('min')?'развернуть':'свернуть' };
+setTimeout(function(){ play(SC[2]) },400);
+</script></body></html>
