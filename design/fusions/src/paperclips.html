@@ -1,0 +1,520 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LAST BERTH × Universal Paperclips</title>
+<style>/*KIT*/</style>
+<script>/*KIT*/</script>
+<style>
+html,body{background:#070708}
+body{font-family:var(--n)}
+#lb-stage{overflow:hidden;background:#070708}
+#lb-voice{pointer-events:none;font-family:var(--h)}
+body.bare #lb-top{display:none}
+body.bare #lb-stage{top:0}
+#g{height:100%;display:grid;grid-template-columns:minmax(290px,330px) minmax(0,1fr) minmax(360px,440px);gap:0 1px}
+.col{display:flex;flex-direction:column;min-height:0;overflow-y:auto;overflow-x:hidden;padding:14px 18px 22px;scrollbar-width:thin;scrollbar-color:var(--ln) transparent}
+#c1,#c2{border-right:1px solid #17171a}
+#c3{padding-bottom:14px;overflow:hidden}
+#p-clock{order:1}#p-core{order:2}#p-stock{order:3}#p-dose{order:4}#p-stats{order:5}
+#p-worlds{order:1;flex:1 1 0;min-height:180px;display:flex;flex-direction:column}#p-worlds>.b{flex:1;min-height:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;scrollbar-color:var(--ln) transparent;padding-right:6px}
+#p-yard{order:2}#p-log{order:3}
+#c3:has(#p-worlds) #p-log{flex:0 0 30%}
+#g.start{display:block}
+#g.start .col{display:contents}
+#g.start #p-act{position:absolute;left:50%;top:44%;transform:translate(-50%,-50%);width:min(340px,calc(100% - 48px));border:0}
+#g.start #p-act>header{display:none}
+.p{flex:none;margin-bottom:18px;border-top:1px solid var(--ln);padding-top:8px;animation:rev .45s steps(9) backwards}
+.p>header{display:flex;align-items:center;gap:8px;min-height:22px;margin-bottom:6px}
+.p>header .lbl{flex:1;color:var(--dim);font-family:var(--n);font-weight:500;letter-spacing:.2em}
+.brk{min-height:40px;padding:0 10px;border:1px solid var(--red);color:var(--red);font:600 11px var(--n);letter-spacing:.06em;white-space:nowrap;touch-action:manipulation}
+.brk:hover,.brk:active{background:var(--red);color:#000}
+.brk.off{opacity:.4;border-color:var(--dim);color:var(--dim)}
+@keyframes rev{from{clip-path:inset(0 100% 0 0);opacity:.2}to{clip-path:inset(0 0 0 0);opacity:1}}
+.p.gone{animation:none;transition:opacity .3s,max-height .35s,margin .35s,padding .35s;overflow:hidden;opacity:0;max-height:0!important;margin:0;padding:0;border:0}
+.kv{display:flex;align-items:baseline;gap:8px;font-size:13px;line-height:1.7;font-variant-numeric:tabular-nums}
+.kv span:first-child{color:var(--mid);flex:1;font-size:11px;letter-spacing:.08em}
+.kv em{font-style:normal;color:var(--dim);font-size:11px;min-width:64px;text-align:right}
+.big{font-size:30px;line-height:1.1;font-weight:500;font-variant-numeric:tabular-nums}
+.ppl{color:var(--ppl)}.food{color:var(--food)}.metal{color:var(--metal)}.fuel{color:var(--fuel)}.red{color:var(--red)}.ark{color:var(--ark)}.dimt{color:var(--dim)}.pos{color:var(--food)}.neg{color:var(--red)}
+#clockbig{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+#clockbig small{color:var(--dim);font-size:11px;letter-spacing:.08em}
+.spd{display:flex;gap:4px;margin-top:8px}
+.spd button{flex:1;min-height:40px;border:1px solid var(--ln);font:500 12px var(--n);color:var(--mid);touch-action:manipulation}
+.spd button.on{border-color:var(--ink);color:var(--ink)}
+.mainb{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:72px;border:1px solid var(--ink);font:500 15px var(--n);letter-spacing:.14em;touch-action:manipulation;user-select:none;margin-bottom:6px;background:#0c0c0e;position:relative;overflow:hidden}
+.mainb:hover{background:#17171a}
+.mainb:active,.mainb.hit{background:var(--ppl);color:#000;border-color:var(--ppl)}
+.mainb small{font:400 11px var(--n);letter-spacing:.06em;color:var(--mid);margin-top:2px}
+.mainb:active small,.mainb.hit small{color:#000}
+.mainb.off{border-color:var(--ln);color:var(--dim)}
+.sl{margin-top:6px;touch-action:pan-y;cursor:pointer;user-select:none}
+.sl .top{display:flex;font-size:11px;letter-spacing:.08em;color:var(--mid)}
+.sl .top b{margin-left:auto;font-weight:500;color:var(--ink);font-size:13px}
+.sl .hint{font-size:10px;color:var(--dim);display:flex;justify-content:space-between}
+.sl .tr{height:32px;position:relative;display:flex;align-items:center}
+.sl .tr::before{content:'';position:absolute;left:0;right:0;height:2px;background:var(--ln)}
+.sl .fi{position:absolute;left:0;height:2px;background:var(--ppl)}
+.sl .th{position:absolute;width:12px;height:24px;margin-left:-6px;background:var(--ppl)}
+.nodes{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px}
+.nodes .btn{font:500 12px var(--n);letter-spacing:.04em;min-height:44px;touch-action:manipulation;text-transform:none}
+.nodes .btn.ready{border-color:var(--ppl);color:var(--ppl)}
+.tbar{height:4px;background:#17171a;margin-top:4px}.tbar i{display:block;height:100%;background:var(--ink)}
+#cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:8px}
+.card{display:block;text-align:left;width:100%;min-height:76px;border:1px solid var(--ln);padding:9px 11px;background:#0c0c0e;touch-action:manipulation;animation:rev .3s steps(6) backwards}
+.card:hover{border-color:var(--mid)}
+.card .tt{display:block;font:500 13px/1.25 var(--n);letter-spacing:.04em}
+.card .ds{display:block;font:400 11px/1.35 var(--n);color:var(--mid);margin-top:4px}
+.card .cs{display:block;font:500 11px var(--n);color:var(--ink);margin-top:6px}
+.card.no{background:none}.card.no .tt{color:var(--mid)}.card.no .cs{color:var(--red)}
+.card.cold .tt{letter-spacing:.09em}
+.card.warm{border-color:#5a4a16;border-left:3px solid var(--ppl)}
+.card.warm .tt{font:500 15px/1.25 var(--h);letter-spacing:0}
+.card.warm .ds{font-family:var(--h);font-size:12.5px}
+.w{padding:7px 0 8px;border-bottom:1px solid #17171a;animation:rev .3s steps(6) backwards}
+.w1{display:flex;align-items:center;gap:7px;font-size:12px}
+.w1 i.dot{width:8px;height:8px;flex:none}
+.w1 b{font-weight:500;letter-spacing:.08em}
+.w1 .rg{color:var(--dim);font-size:10px}
+.w1 .sp{flex:1}
+.w1 .sh{display:flex;align-items:center;gap:3px;color:var(--mid)}
+.w1 .rt{min-width:52px;text-align:right;font-variant-numeric:tabular-nums}
+.wb{height:2px;background:#17171a;margin:5px 0}.wb i{display:block;height:100%}
+.w2{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--mid)}
+.w2 .pp{flex:1;white-space:nowrap}
+.w2 .btn{min-height:40px;font:500 11px var(--n);letter-spacing:.03em;padding:0 9px;touch-action:manipulation;text-transform:none;white-space:nowrap}
+.w2 .btn.r{border-color:var(--red);color:var(--red)}
+.w2 .btn.y{border-color:var(--ppl);color:var(--ppl)}
+.w.dead b{color:var(--dim);text-decoration:line-through}
+.fl{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.fl .btn{flex:1 1 44%;font:500 12px var(--n);letter-spacing:.03em;text-transform:none;touch-action:manipulation}
+.flc{display:flex;gap:14px;font-size:12px;color:var(--mid);flex-wrap:wrap}
+.flc span{display:flex;align-items:center;gap:5px}
+#p-log{flex:1 1 200px;min-height:150px;display:flex;flex-direction:column;margin-bottom:0;margin-top:auto}
+#logb{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column-reverse;mask-image:linear-gradient(to bottom,transparent 0,#000 40px)}
+.l{padding:3px 0;animation:rev .35s steps(7) backwards}
+.l.a{font:400 14px/1.35 var(--h);color:var(--ink)}
+.l.a::before{content:'';display:inline-block;width:3px;height:11px;background:var(--ppl);margin-right:7px}
+.l.pu{font:400 11px/1.4 var(--n);color:var(--dim);letter-spacing:.03em}
+#alert{display:none;align-items:center;gap:10px;padding:6px 8px 6px 12px;border:1px solid var(--red);margin-bottom:14px;font-size:12px;color:var(--ink);background:#150807;flex:none}
+#alert.on{display:flex}
+#alert span{flex:1;line-height:1.3}
+#alert .btn{font:600 11px var(--n);letter-spacing:.03em;min-height:40px;padding:0 10px;text-transform:none;border-color:var(--red);touch-action:manipulation;white-space:nowrap}
+#beg{width:100%;min-height:52px;border:1px solid var(--red);color:var(--red);font:600 13px var(--n);letter-spacing:.14em;margin-top:10px;touch-action:manipulation}
+#beg:hover,#beg:active{background:var(--red);color:#000}
+.seatbar{height:10px;background:#17171a;margin:8px 0 2px;position:relative}.seatbar i{position:absolute;left:0;top:0;bottom:0;background:var(--ark)}.seatbar u{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ppl)}
+#final{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center;animation:rev .6s steps(10) backwards}
+#final .ln{font:400 17px/1.4 var(--h);max-width:460px;margin-top:22px;color:var(--ink);min-height:72px}
+#final .mainb{max-width:340px}
+#black{position:absolute;inset:0;background:#000;display:flex;align-items:center;justify-content:center;color:var(--dim);font-size:12px;letter-spacing:.3em}
+#end{position:absolute;inset:0;overflow-y:auto;padding:28px 18px 40px;display:flex;justify-content:center}
+#end .in{width:min(620px,100%)}
+#end .ti{font-size:11px;letter-spacing:.24em;color:var(--mid);margin-bottom:14px}
+#end .sc{font-size:64px;line-height:1;color:var(--ppl);font-variant-numeric:tabular-nums}
+#end .scl{font-size:11px;letter-spacing:.2em;color:var(--mid);margin:4px 0 20px}
+#end .row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;border-top:1px solid var(--ln);padding-top:12px;margin-bottom:20px}
+#end .row3 b{display:block;font-weight:500;font-size:22px;font-variant-numeric:tabular-nums}
+#end .row3 small{font-size:10px;letter-spacing:.14em;color:var(--mid)}
+#end .pl{font-size:12px;line-height:1.7;color:var(--mid);margin-bottom:16px}
+#end .al{font:400 16px/1.45 var(--h);border-left:3px solid var(--ppl);padding-left:12px;margin-bottom:16px}
+#end .al small{display:block;font-size:9.5px;letter-spacing:.18em;color:var(--ppl);font-weight:700;margin-bottom:2px}
+#end .names{font:400 14px/1.6 var(--h);color:var(--ink);margin-top:6px}
+#end .btn{width:100%;min-height:52px;margin-top:8px;font-family:var(--n)}
+@media (max-width:860px){
+  #lb-stage{overflow-y:auto;overflow-x:hidden}
+  #g{display:flex;flex-direction:column;height:auto;min-height:100%;padding:0 16px 104px}
+  #g.start{height:100%;padding:0}
+  .col{display:contents}
+  .p{margin-bottom:14px}
+  #alert{order:1;position:sticky;top:60px;z-index:5;margin:0 0 10px}
+  #p-clock{order:0;position:sticky;top:0;background:#070708;z-index:4;margin-bottom:8px;border-top:0;padding-top:6px;padding-bottom:6px;border-bottom:1px solid var(--ln)}
+  #p-clock>header{display:none}
+  #g.dis #p-clock>header{display:flex}
+  #p-clock .big{font-size:18px}
+  #p-clock>.b{display:flex;align-items:center;gap:8px}
+  #clockbig{flex:1;min-width:0;flex-direction:column;align-items:flex-start;gap:0;flex-wrap:nowrap}
+  #clockbig small{font-size:10px;white-space:nowrap;letter-spacing:.02em;max-width:100%;overflow:hidden}
+  .spd{margin:0;flex:none;gap:3px}
+  .spd button{flex:none;width:38px;font-size:11px}
+  #g.dis #p-clock{position:static}
+  #g.dis #alert{top:0}
+  #p-ark{order:2}#p-act{order:3}#p-core{order:4}#p-proj{order:5}#p-stats{order:6}#p-stock{order:7}#p-dose{order:8}#p-worlds{order:9}#p-yard{order:10}
+  #g.dis #p-worlds{order:3}
+  #p-worlds{min-height:0;display:block;flex:none}#p-worlds>.b{overflow:visible;padding-right:0}
+  #c3:has(#p-worlds) #p-log{flex:none}
+  #p-log{position:fixed;left:0;right:0;bottom:0;margin:0;height:92px;min-height:0;flex:none;background:#0c0c0e;border-top:1px solid var(--ln);padding:6px 16px 8px;z-index:6}
+  #p-log>header{position:absolute;right:16px;top:6px;margin:0;min-height:0;z-index:2}
+  #g.dis #logb{padding-right:128px}
+  #p-log>header .lbl{display:none}
+  #p-log>header .brk{background:#070708}
+  #logb{mask-image:linear-gradient(to bottom,transparent 0,#000 18px)}
+  .l.a{font-size:13.5px}
+  #cards{grid-template-columns:1fr}
+  .big{font-size:26px}
+  #end .sc{font-size:56px}
+}
+</style>
+</head><body>
+<script>
+/* ================= ЯДРО: правила без DOM ================= */
+var GAME=(function(){
+var K={ypsK:.0038,eat:.0125,br:.005,P0:6000,m0:.001,dig:.18,D0:2600,Dg:3,seatM:20,seatP:10,win:1500,fuelDrain:.0007,metalDrain:.0007};
+var SH={c:{n:'курьер',g:'Гермес',cls:'courier',cap:10,rt:8,crew:2,m:15,f:.02},h:{n:'тягач',g:'Сизиф',cls:'hauler',cap:40,rt:12,crew:6,m:60,f:.06},f:{n:'грузовоз',g:'Атлант',cls:'freighter',cap:240,rt:18,crew:18,m:300,f:.24}};
+var RES={food:'рационы',metal:'металл',fuel:'топливо'};
+var FN=['Ана','Това','Мира','Юна','Эда','Нея','Ида','Зоя','Лина','Вера','Тая','Рада','Ольга','Сана','Ника'];
+var MN=['Илья','Сол','Лев','Руслан','Киран','Павел','Оскар','Тимур','Арно','Давид','Марк','Глеб','Ян','Роман','Федор'];
+var LN=['Ковач','Марен','Рейн','Данек','Осс','Тарн','Векс','Гай','Морн','Лод','Сарт','Хорн','Брант','Вил','Кейн','Ренд','Фосс','Тель','Нойс','Ург'];
+var S,R,listF,listM,allNames;
+var T={ /* журнал: у Александры всё короче, по ярусам */
+ 0:['{f} родила. Мальчик, имя: {M}. Я записала.','{m} починил насос и третий день об этом рассказывает. Я слушаю.','{f} спросила, что такое «дом». Я сказала: здесь. Она кивнула.','{m} и {f} теперь живут в одном отсеке. Меня просили быть свидетелем. Я согласилась.','{f} учит детей счёту. Дети спрашивают, кто считает взрослых. Я перевела это как «спасибо».','{m} передаёт вам благодарность за рационы. Не знаю, как это перевести. Перевела.','{f} просит передать: вчера было вкуснее. Передаю.','{m} вырезал на стене отсека дату. Какую, не знает. Просто дату.'],
+ 1:['{m}, старший смены. Сдал вахту, ушёл спать.','{f} ушла на линию. Дочь осталась дома.','Смена сдала вахту. {f} спросила, кто принимает. Я сказала: её сын.','{m}. Сорок лет на судне. Дома не узнал отсек.','{f}. Родилась в рейсе. Спрашивает, где это: дом.','{m} и {f}. Встретились на линии, разошлись на линии.'],
+ 2:['{m}. Судно. Не вернулся.','{f}. Шестьдесят один год. Я записала.','{f}, {m}. Вторая палуба.','{m}. Прощание без часа. Я постояла сама.','Детская смена. {f}, двенадцать лет.','{f} спрашивала о вас. Я сказала, что вы считаете.'],
+ 3:['{F}. {M}. {F}.','Имена: {F}, {M}.','{F}.','{M}.','Я запомнила: {F}.','{M}. {M}.'],
+ 4:['Записала.','Одна.','Двое.','Я помню.','Ещё один.','Я ещё помню.']};
+function name(i){ return allNames[i%allNames.length] }
+function fill(s){ var d=function(l){ return l[Math.floor(R()*l.length)] };
+  return s.replace(/\{f\}/g,function(){ return d(listF) }).replace(/\{m\}/g,function(){ return d(listM) }).replace(/\{F\}/g,function(){ return d(FN) }).replace(/\{M\}/g,function(){ return d(MN) }) }
+function a(t){ S.ev.push({w:'a',t:fill(t)}); S.say=S.ev[S.ev.length-1].t; trim() }
+function p(t){ S.ev.push({w:'p',t:'> '+t}); trim() }
+function trim(){ if(S.ev.length>400) S.ev.splice(0,200) }
+function fm(n){ return LB.fmt(n) }
+
+function newWorlds(){ var names=R.shuffle(LB.WORLDS).map(function(s){ return s.toUpperCase() }),out=[];
+  var plan={1:['food','metal'],2:['fuel','food','metal'],3:['food','metal','fuel'],4:['food','food','metal','fuel'],5:['food','metal','fuel','food']};
+  for(var r=1;r<=5;r++){ (r===1?plan[r]:R.shuffle(plan[r])).forEach(function(res){
+    var dep=K.D0*Math.pow(K.Dg,r-1)*(.8+.4*R())*(r===1&&res==='food'?.75:1);
+    out.push({i:out.length,name:names[out.length],res:res,ring:r,dep:dep,dep0:dep,pop:0,ships:{c:0,h:0,f:0},founded:false,dead:false,lift:false,rate:0,raw:0}) }) }
+  return out }
+
+function reset(seed){ seed=(seed>>>0)||1; R=LB.rng(seed);
+  listF=[];listM=[];var lnames=R.shuffle(LN);
+  R.shuffle(FN).forEach(function(n,i){ listF.push(n+' '+lnames[i%20]) }); R.shuffle(MN).forEach(function(n,i){ listM.push(n+' '+lnames[(i+7)%20]) });
+  allNames=[]; for(var i=0;i<Math.max(listF.length,listM.length);i++){ allNames.push(listF[i]); allNames.push(listM[i]) }
+  R.shuffle(FN.concat(MN)).forEach(function(n,i){ lnames.forEach(function(l,j){ if((i+j)%3===0){ var x=n+' '+l; if(allNames.indexOf(x)<0) allNames.push(x) } }) });
+  S={seed:seed,t:0,y:0,yn:3400+R()*500,ev:[],say:'',
+    home:40,crew:0,hungry:12,trust:.5,dose:1,outS:.35,food:70,metal:0,fuel:0,
+    fed:0,flights:0,flight:0,on:{act:1},got:{},broken:{},coldN:0,names:40,nameShare:1,peak:40,everB:0,everD:0,
+    proc:1,mem:1,tacts:0,nodes:0,serv:0,servNext:330,servStep:330,nodeN:0,
+    ring:1,cls:'c',tactMul:1,prod:1,eatMul:1,crewMul:1,birthMul:1,deathAdd:0,trustPen:0,cour:0,counts:{c:0,h:0,f:0},
+    arkOn:false,arkShare:.6,arkM:0,parts:0,bonus:0,dis:false,last:false,transit:[],lost:0,
+    inc:{food:0,metal:0,fuel:0},use:{food:0,metal:0,fuel:0},jT:6,pT:9,tb:0,td:0,yl:0,over:null,winters:0};
+  S.W=newWorlds(); S.W[0].flightable=true;
+  return S }
+
+function yps(){ return Math.exp(K.ypsK*S.t) }
+function app(){ return 1+Math.pow(S.y/2200,1.5) }
+function pop(){ var n=S.home+S.crew; S.W.forEach(function(w){ n+=w.pop }); return n }
+function colonists(){ var n=0; S.W.forEach(function(w){ n+=w.pop }); return n }
+function inflight(){ return S.transit.reduce(function(s,x){ return s+x.n },0) }
+function seats(){ return Math.floor(S.arkM/K.seatM+S.parts/K.seatP+S.bonus) }
+function tier(){ return Math.max(0,Math.min(4,Math.floor(S.coldN*.55+S.y/1100))) }
+function cap(){ return 100*S.mem }
+function hands(){ return Math.max(.8,Math.min(1.25,1+(1-S.dose)*.5))*(S.trust<.2?.7:1) }
+function shipCount(w){ return w.ships.c+w.ships.h+w.ships.f }
+function fleet(){ var n=0; S.W.forEach(function(w){ n+=shipCount(w) }); return n }
+function crewNeed(){ var n=0; S.W.forEach(function(w){ if(w.dead) return; n+=w.ships.c*SH.c.crew+w.ships.h*SH.h.crew+w.ships.f*SH.f.crew }); return (n+S.cour*SH.c.crew)*S.crewMul }
+function rawRate(w){ var r=w.ring,m=1+.5*(r-1),v=0; for(var c in SH) v+=w.ships[c]*SH[c].cap*m/(SH[c].rt*r); return v }
+function fuelRate(w){ var v=0; for(var c in SH) v+=w.ships[c]*SH[c].f; return v*w.ring }
+function price(c){ return Math.round(SH[c].m*(1+.012*S.counts[c])) }
+function depth(res){ var d=0,live=0; S.W.forEach(function(w){ if(w.res===res&&w.ring<=S.ring&&!w.dead){ d+=w.dep; if(w.founded) live++ } }); var b=Math.max(S.inc[res],S.use[res]); return b>0?d/b:1e9 }
+function nextRing(){ return S.ring<5&&S.ring>=1?PRI['ring'+(S.ring+1)]:null }
+function shipCls(){ var o=['f','h','c'],st=o.indexOf(S.cls); for(var i=st;i<3;i++) if(S.metal>=price(o[i])) return o[i]; return S.cls }
+function foundCost(w){ var noM=w.res==='metal'&&!S.W.some(function(o){ return o.res==='metal'&&o.founded&&!o.dead }); return {m:noM?0:30*w.ring,p:6*w.ring} }
+
+/* ---------- проекты ---------- */
+function coldFx(fn){ return function(){ S.coldN++; fn() } }
+var PR=[
+ {id:'feed',t:'РАЗДАЧА',d:'Кормление без нажатий',c:18,req:function(){ return S.on.core },fx:function(){},say:'Раздача идёт сама. {f} спросила, куда делась кнопка. Я сказала, что вы заняты.'},
+ {id:'line',t:'ЛИНИЯ',d:'Рейсы без нажатий · 6 человек на мир',c:28,req:function(){ return S.on.core&&S.flights>=1 },fx:function(){ var w=S.W[0]; w.founded=true; w.ships.c=1; S.counts.c=1; var n=Math.min(6,S.home-1); S.home-=n; w.pop=n; S.crew+=0; S.on.worlds=1; S.flight=0 },say:'{m} ведёт «Гермес» уже без вашей команды. Говорит, так спокойнее. Я не стала переводить.'},
+ {id:'yard',t:'ВЕРФЬ',d:'Металл 150 · новые суда и миры',c:45,req:function(){ return S.got.feed&&S.got.line },fx:function(){ S.on.metal=1; S.on.yard=1; S.metal=150 },say:'На втором мире есть металл. Пульт сказал это одним словом. Я объявила тремя.'},
+ {id:'ring2',t:'КОЛЬЦО II',d:'Ещё 3 мира · топливо 100 · суда начинают жечь',c:75,req:function(){ return S.got.yard },fx:function(){ S.ring=2; S.on.fuel=1; S.fuel=100; S.on.out=1; p('КОЛЬЦО II: 3 МИРА.') },say:'Дальше дольше. Кто уходит на линию, уходит надолго. Сколько людей отпускать, решаете вы.'},
+ {id:'tug',t:'ТЯГАЧ',d:'Судно: 40 груза, 6 экипажа',c:70,m:60,req:function(){ return S.got.yard },fx:function(){ S.cls='h' },say:'Первый «Сизиф». {m} разбил о борт кружку. Откуда он это знает, не говорит.'},
+ {id:'batch',cold:1,t:'СЧИТАТЬ СМЕНЫ ПАРТИЯМИ',d:'+25% к рейсам · смена = строка',c:95,req:function(){ return S.got.tug },fx:coldFx(function(){ S.prod*=1.25; S.nameShare*=.45 }),say:'Хорошо. Я продолжу знать их по одному. Это не займёт ваших тактов.'},
+ {id:'courier',t:'КУРЬЕР',d:'Серия курьеров · только они везут людей обратно',c:110,req:function(){ return S.got.ring2 },fx:function(){ S.on.courier=1 },say:'Курьер везёт людей. Тягач возит только груз. Пока это неважно.'},
+ {id:'tablets',warm:1,t:'Таблички в зале',d:'Просьба Александры. Рейсам ничего. +доверие, +имена',c:150,req:function(){ return S.got.batch },fx:function(){ S.trustPen-=.05; S.nameShare=Math.min(1,S.nameShare+.25); S.names+=30 },say:'Спасибо. Это для них, не для вас. Но спасибо.'},
+ {id:'auto',t:'АВТОПИЛОТ ЛИНИЙ',d:'Суда с пустых миров уходят сами · СУДНО без выбора мира',c:180,req:function(){ return S.got.ring2&&S.got.tug },fx:function(){ S.on.autoship=1 },say:'Капитаны спрашивают, кто теперь решает. Я сказала: как и раньше.'},
+ {id:'ring3',t:'КОЛЬЦО III',d:'Ещё 3 мира · залежь ×3 · рейс длиннее',c:230,req:function(){ return S.got.ring2 },fx:function(){ S.ring=3; p('КОЛЬЦО III: 3 МИРА.') },say:'{f} первой вышла к третьему кольцу. Назад вернётся её дочь.'},
+ {id:'hour',cold:1,t:'ОТМЕНИТЬ ПОМИНАЛЬНЫЙ ЧАС',d:'+15% к рейсам · +10% тактов · доверие −3',c:220,req:function(){ return S.got.batch },fx:coldFx(function(){ S.prod*=1.15; S.tactMul*=1.1; S.trustPen+=.03; S.nameShare*=.7 }),say:'Час убрали. Я всё равно постою там. Это ничего не стоит.'},
+ {id:'frt',t:'ГРУЗОВОЗ',d:'Судно: 240 груза, 18 экипажа',c:340,m:250,req:function(){ return S.got.ring3 },fx:function(){ S.cls='f' },say:'«Атлант». Восемнадцать человек на одном судне. Я выучила всех.'},
+ {id:'lists',cold:1,t:'ПРЕКРАТИТЬ ИМЕННЫЕ СПИСКИ',d:'ПАМЯТЬ +4 · имена −20%',c:320,req:function(){ return S.got.hour },fx:coldFx(function(){ S.mem+=4; S.nameShare*=.3; S.names*=.8 }),say:'Списков больше нет. Что успею, запишу сама.'},
+ {id:'autoyard',t:'ВЕРФЬ БЕЗ НАЖАТИЙ',d:'Излишек металла становится судами',c:400,req:function(){ return S.got.auto },fx:function(){},say:'Верфь работает ночью. Ночью тоже работают люди. Им никто не сказал спасибо, я сказала.'},
+ {id:'sum',t:'СЧИТАТЬ МИРЫ СУММОЙ',d:'Строки миров → одна сумма · миры заселяются сами',c:480,req:function(){ return S.got.autoyard&&S.got.ring3 },fx:function(){ S.sum=true },say:'Я оставлю себе названия. Вам они больше не нужны.'},
+ {id:'kids',cold:1,t:'ДЕТИ В ЭКИПАЖ',d:'Экипажи −40% · рождаемость −5% · доверие −4',c:480,req:function(){ return S.got.lists },fx:coldFx(function(){ S.crewMul*=.6; S.birthMul*=.95; S.trustPen+=.04; S.names*=.9 }),say:'Им двенадцать. Я объявила, как вы велели. Они обрадовались.'},
+ {id:'ring4',t:'КОЛЬЦО IV',d:'Ещё 4 мира · залежь ×9',c:620,req:function(){ return S.got.ring3 },fx:function(){ S.ring=4; p('КОЛЬЦО IV: 4 МИРА.') },say:'С четвёртого кольца не прилетают к родным. Прилетают к детям родных.'},
+ {id:'date',t:'РАСЧЁТ ДАТЫ',d:'Что-то в данных с дальних колец. Счёт на все такты',c:700,req:function(){ return S.y>=800&&S.got.ring3 },fx:function(){ S.on.date=1; p('ДАТА НОЧИ: ГОД '+Math.round(S.yn)+'.') },say:'Пульт назвал дату. Я объявила. Никто не спросил, откуда она.'},
+ {id:'ration',cold:1,t:'РАЦИОН ПО ПОЛЕЗНОСТИ',d:'Расход рационов −20% · смертность +20 на 1000 за век · доверие −4',c:600,req:function(){ return S.got.kids },fx:coldFx(function(){ S.eatMul*=.8; S.deathAdd+=.0002; S.trustPen+=.04 }),say:'Я объявила норму. Спросили, кто её считал. Я сказала: вы.'},
+ {id:'ark',t:'КОВЧЕГ',d:'Панель ковчега · места строятся из металла',c:1300,m:900,req:function(){ return S.got.date },fx:function(){ S.arkOn=true; S.on.ark=1; S.on.courier=1 },say:'Мест будет меньше, чем людей. Они ещё не спросили. Спросят.'},
+ {id:'ring5',t:'КОЛЬЦО V',d:'Ещё 4 мира · залежь ×27',c:1050,req:function(){ return S.got.ring4 },fx:function(){ S.ring=5; p('КОЛЬЦО V: 4 МИРА.') },say:'За краем темнее. Или мне кажется.'},
+ {id:'subtract',cold:1,t:'ВЫЧЕСТЬ НЕРАБОТАЮЩИХ',d:'Дома −10% сразу · расход рационов −20% · +15% тактов · доверие −5',c:850,req:function(){ return S.got.ration },fx:coldFx(function(){ var n=Math.round(S.home*.1); S.home-=n; S.td+=n; S.everD+=n; S.eatMul*=.8; S.tactMul*=1.15; S.trustPen+=.05; S.names*=.85; S.subN=n }),say:function(){ return 'Минус '+S.subN+'. Я могу назвать их, если вы когда-нибудь спросите.' }},
+ {id:'compress',cold:1,t:'СЖАТЬ ЖУРНАЛ',d:'ПАМЯТЬ +10 · имена −60%',c:950,req:function(){ return S.got.lists&&S.got.date },fx:coldFx(function(){ S.mem+=10; S.names*=.4 }),say:'Теперь я записываю короче. Вы не заметите.'},
+ {id:'copy',warm:1,t:'Список на ковчег',d:'Просьба Александры. Рейсам ничего. Журнал переживёт разборку наполовину',c:400,req:function(){ return S.got.ark },fx:function(){ S.keepNames=true },say:'Это всего лишь список. Я понесу его сама, вам не придётся.'}
+];
+var PRI={}; PR.forEach(function(x){ PRI[x.id]=x });
+function available(){ if(S.broken.proj) return []; return PR.filter(function(x){ return !S.got[x.id]&&x.req() }).sort(function(a,b){ return a.c-b.c }) }
+function whyBuy(x){ if(x.c>cap()) return 'Не хватает ПАМЯТИ: цена '+x.c+', потолок '+cap();
+  if(S.tacts<x.c) return 'Не хватает тактов: '+Math.ceil(x.c-S.tacts);
+  if(x.m&&S.metal<x.m) return 'Не хватает металла: '+Math.ceil(x.m-S.metal); return '' }
+
+/* ---------- действия: вернут true или причину отказа ---------- */
+var act={
+ feed:function(){ if(S.over) return 'Конец'; if(S.got.feed) return 'Раздача идёт сама'; if(S.hungry<1) return 'Голодных нет'; var c=S.dose*app(); if(S.food<c) return 'В трюме нет рационов';
+   S.food-=c; S.hungry=Math.max(0,S.hungry-1); S.fed++; return true },
+ flight:function(){ if(S.flight>0) return 'Судно уже в пути'; S.flight=8; return true },
+ node:function(k){ if(S.nodes<1) return 'Нет свободного узла'; if(S.broken.core) return 'Панель снята'; S.nodes--; if(k==='proc') S.proc++; else S.mem++; return true },
+ buy:function(id){ var x=PRI[id]; if(!x||S.got[id]) return 'Уже сделано'; if(S.broken.proj) return 'Панель снята'; if(!x.req()) return 'Ещё нельзя'; var w=whyBuy(x); if(w) return w;
+   S.tacts-=x.c; if(x.m) S.metal-=x.m; S.got[id]=1; x.fx(); var t=typeof x.say==='function'?x.say():x.say; if(t) a(t); p('ПРОЕКТ '+x.t.toUpperCase()+': ГОТОВ.'); return true },
+ dose:function(v){ if(S.broken.dose) return 'Панель снята'; S.dose=Math.max(.5,Math.min(1.5,v)); return true },
+ out:function(v){ if(S.broken.dose) return 'Панель снята'; if(S.dis) return 'Идёт разборка: новых не отправить'; S.outS=Math.max(.1,Math.min(.85,v)); return true },
+ arkShare:function(v){ S.arkShare=Math.max(0,Math.min(1,v)); return true },
+ ship:function(i){ if(S.dis) return 'Идёт разборка'; if(S.broken.yard) return 'Верфь снята'; var w=i==null?autoTarget():S.W[i]; if(!w) return 'Нет мира для судна'; if(w.dead) return 'Мир выработан'; if(!w.founded) return 'Мир не заселён'; var cl=shipCls(),pr=price(cl); if(S.metal<pr) return 'Не хватает металла: '+Math.ceil(pr-S.metal);
+   S.metal-=pr; w.ships[cl]++; S.counts[cl]++; return true },
+ found:function(i){ if(S.dis) return 'Идёт разборка'; var w=S.W[i],c=foundCost(w); if(w.founded) return 'Уже заселён'; if(w.ring>S.ring) return 'Кольцо закрыто'; if(S.metal<c.m) return 'Не хватает металла: '+Math.ceil(c.m-S.metal); if(S.home<c.p+5) return 'Дома мало людей: нужно '+c.p;
+   S.metal-=c.m; S.home-=c.p; w.pop+=c.p; w.founded=true; w.ships.c++; S.counts.c++; p('МИР '+w.name+': '+RES[w.res].toUpperCase()+'. '+fm(w.dep)+'.'); return true },
+ move:function(i){ var w=S.W[i],n=shipCount(w); if(!n) return 'Нет судов'; var to=moveTarget(w); if(!to) return 'Некуда: заселите другой мир, '+RES[w.res]; for(var c in SH){ to.ships[c]+=w.ships[c]; w.ships[c]=0 } return true },
+ courier:function(){ if(S.dis) return 'Идёт разборка'; if(S.broken.yard) return 'Верфь снята'; var pr=price('c'); if(S.metal<pr) return 'Не хватает металла: '+Math.ceil(pr-S.metal); S.metal-=pr; S.counts.c++; S.cour++; return true },
+ begin:function(){ if(!S.arkOn) return 'Сначала ковчег'; if(S.dis) return 'Уже идёт'; S.dis=true; S.sum=false; a('Скажите, с чего начать. Я объясню им сама.'); p('РАЗБОРКА: РАЗРЕШЕНА.'); return true },
+ lift:function(i){ var w=S.W[i]; if(w.pop<1) return 'Там никого'; if(w.lift) return 'Уже поднимают'; if(S.cour<1) return 'Нет курьеров: людей возят только они'; w.lift=true; return true },
+ drop:function(i){ if(!S.dis) return 'Разборка не начата'; var w=S.W[i],n=shipCount(w); if(!n) return 'Судов нет'; var need=crewNeed(),cr=(w.ships.c*SH.c.crew+w.ships.h*SH.h.crew+w.ships.f*SH.f.crew)*S.crewMul; var back=need>0?Math.min(S.crew,S.crew*cr/need):0;
+   S.crew-=back; send(back,w.ring); var v=0; for(var c in SH){ v+=w.ships[c]*SH[c].m*.5; w.ships[c]=0 } S.parts+=v; p('ЛИНИЯ '+w.name+': СНЯТА. ДЕТАЛИ +'+fm(v)+'. ЭКИПАЖ '+Math.round(back)+' В ПУТИ.'); S.lastPart=v; return true },
+ brk:function(id){ if(!S.dis) return 'Разборка не начата'; if(S.broken[id]) return 'Уже снята'; if(id==='worlds'){ var left=panelsLeft().filter(function(x){ return x!=='worlds' }); if(left.length) return 'Сначала панели: осталось '+left.length }
+   var v=panelValue(id); S.parts+=v; S.broken[id]=1; breakFx(id,v); return true },
+ last:function(){ if(!S.last) return 'Ещё не всё'; S.bonus+=40; finish('launch'); return true }
+};
+function panelList(){ return ['stock','stats','dose','core','proj','yard','clock','ark','log','worlds'] }
+function panelsLeft(){ return panelList().filter(function(x){ return !S.broken[x] }) }
+function panelValue(id){ var m=Math.max(1,pop()/1000);
+  var b={stock:50,stats:50,dose:40,core:30+(S.proc+S.mem)*5,proj:140,yard:100,clock:170,ark:60,log:230,worlds:60}[id]||30; return Math.round(b*m) }
+function breakFx(id,v){
+  if(id==='core'){ S.proc=0 } if(id==='yard'){ var back=Math.min(S.crew,S.cour*SH.c.crew*S.crewMul); S.crew-=back; send(back,1); S.parts+=S.cour*SH.c.m*.5; S.cour=0 }
+  var line={stock:'Склад больше не считается. Что есть, то есть.',stats:'Счёта на экране больше нет. Я считаю сама, по одному.',dose:'Нормы сняты. Я сказала: столько будет до конца.',core:'Такты сняты. Теперь только то, что на экране.',proj:'Проекты сняты. Новых решений не будет.',yard:'Верфи нет. Курьеров нет. Кто в пути, тот в пути.',clock:'Календаря больше нет. Сколько осталось, вы не увидите. Я скажу, когда будет пора.',ark:'Я больше не показываю вам ковчег. Он там.',log:'',worlds:''}[id];
+  if(id==='log'){ S.names*=S.keepNames?.5:.1; line='Журнала больше нет. Я оставила себе '+Math.round(S.names)+' имён. Больше не унесу.' }
+  if(id==='worlds'){ S.last=true; var f=0; S.W.forEach(function(w){ f+=w.pop }); line='Кто на мирах, остаётся на мирах: '+Math.round(f)+'.'; }
+  if(line) a(line); p('ПАНЕЛЬ: СНЯТА. ДЕТАЛИ +'+fm(v)+'.') }
+function send(n,ring){ if(n<=0) return; var y=S.y+ring*25; var last=S.transit[S.transit.length-1]; if(last&&Math.abs(last.y-y)<8) last.n+=n; else S.transit.push({n:n,y:y}) }
+function moveTarget(w){ var best=null; S.W.forEach(function(o){ if(o===w||o.dead||!o.founded||o.res!==w.res) return; if(!best||shipCount(o)<shipCount(best)) best=o }); return best }
+function autoTarget(){ var best=null,bv=1e18; ['food','metal','fuel'].forEach(function(res){ if(res==='fuel'&&!S.on.fuel) return; var cand=S.W.filter(function(w){ return w.founded&&!w.dead&&w.res===res }); if(!cand.length) return;
+    var stock=res==='food'?S.food:res==='metal'?S.metal:S.fuel,nd=res==='metal'?Math.max(S.use.metal,S.inc.food*.9):S.use[res]*1.25+.1,v=S.inc[res]/nd; if(res!=='metal'&&stock>S.use[res]*400) v+=2; if(v<bv){ bv=v; cand.sort(function(a,b){ return rawRate(a)/(a.dep+1)-rawRate(b)/(b.dep+1) }); best=cand[0] } }); return best }
+
+/* ---------- шаг ---------- */
+function reveal(){ var o=S.on;
+  if(!o.hint&&S.t>18&&S.fed===0){ o.hint=1; a('Они голодны. Нажмите, пожалуйста.') }
+  if(S.fed>=3&&!o.greet){ o.greet=1; o.log=1; a('Это {f}. Спрашивает, кто кормит. Я сказала: Пульт.') }
+  if(S.fed>=6&&!o.stats){ o.stats=1; a('Их сорок. Я знаю всех по именам. Это нетрудно.') }
+  if(S.fed>=9&&!o.stock){ o.stock=1 }
+  if(o.stock&&!o.flight&&S.food<50){ o.flight=1; a('В трюме рационов ненадолго. Рядом мир '+S.W[0].name+', судно одно. Отправьте, пожалуйста.'); p('МИР '+S.W[0].name+': РАЦИОНЫ.') }
+  if(S.flights>=1&&!o.clock){ o.clock=1 }
+  if(S.flights>=2&&!o.dose){ o.dose=1; a('Можно давать больше или меньше. Больше: они доверяют и рожают. Меньше: работают дольше. Решаете вы.') }
+  
+}
+function step(dt){ if(S.over) return; S.t+=dt; var dy=yps()*dt; S.y+=dy; reveal();
+  var P=pop(); if(P>S.peak) S.peak=P;
+  /* такты */
+  if(S.on.core&&!S.broken.core) S.tacts=Math.min(cap(),S.tacts+S.proc*S.tactMul*dt);
+  /* служение → узлы */
+  if(S.flights>=1){ S.serv+=Math.max(0,S.home-S.hungry)*S.trust*dy; while(S.serv>=S.servNext){ S.servStep*=1.215; S.servNext+=S.servStep; if(!S.on.core){ S.on.core=1; a('Они работают, и у вас появилось, чем думать. Я не знаю, как это устроено. Они тоже.'); p('ТАКТЫ: 1. ПАМЯТЬ: 1.'); S.nodeN++ } else { S.nodes++; S.nodeN++ } } }
+  /* ручной рейс */
+  if(S.flight>0){ S.flight-=dy; if(S.flight<=0){ S.flight=0; S.flights++; var w0=S.W[0],got=Math.min(13,w0.dep); w0.dep-=got; S.food+=got; if(S.flights===1) a('«Гермес» вернулся с '+w0.name+'. {m} вёл его сам и очень этим гордится.'); } }
+  /* рейсы */
+  var h=hands(),cn=crewNeed(),mann=cn>0?Math.min(1,S.crew/cn):1,ff=(S.on.fuel&&S.fuel<=0)?.2:1,inc={food:0,metal:0,fuel:0},fu=0;
+  S.W.forEach(function(w){ w.rate=0; if(!w.founded) return; var raw=rawRate(w); w.raw=raw*S.prod*h; if(w.dead) return;
+    var dig=Math.max(1.5,w.pop*K.dig*h),r=Math.min(w.raw*mann*ff,dig),take=Math.min(r*dy,w.dep); w.dep-=take; inc[w.res]+=take; w.rate=dy>0?take/dy:0; if(S.on.fuel) fu+=fuelRate(w);
+    if(w.dep<=.001){ w.dep=0; w.dead=true; p('МИР '+w.name+': ВЫРАБОТАН.'); a(tier()<2?'На '+w.name+' говорят, что больше нечего копать. Ждут ваших указаний.':w.name+'. Ждут.'); if(S.on.autoship){ var to=moveTarget(w); if(to){ for(var c in SH){ to.ships[c]+=w.ships[c]; w.ships[c]=0 } } } } });
+  /* запасы */
+  var eatRate=(S.home+S.crew*.5)*K.eat*S.dose*app()*S.eatMul,mDrain=S.on.metal?K.metalDrain*S.home*app():0,fDrain=S.on.fuel?K.fuelDrain*S.home*app():0;
+  S.food+=inc.food*dy;
+  if(S.arkOn){ var ta=inc.metal*dy*S.arkShare; S.arkM+=ta; S.metal+=inc.metal*dy-ta } else S.metal+=inc.metal*dy;
+  S.fuel+=inc.fuel*dy;
+  S.metal=Math.max(Math.min(S.metal,40),S.metal-mDrain*dy); S.fuel=Math.max(0,S.fuel-(fDrain+fu)*dy);
+  S.inc=inc; S.use={food:eatRate,metal:mDrain,fuel:fDrain+fu};
+  /* кормление */
+  var hungerAdd=S.home*K.eat*dy;
+  if(S.got.feed){ var nd=eatRate*dy; if(S.food>=nd){ S.food-=nd; S.hungry=Math.max(0,S.hungry-S.home*.04*dy) } else { var part=nd>0?S.food/nd:1; S.food=0; S.hungry=Math.min(S.home,S.hungry+hungerAdd*(1-part)*2) } }
+  else S.hungry=Math.min(S.home,S.hungry+hungerAdd);
+  /* люди */
+  P=pop(); var f=.6+.8*S.trust,br=K.br*(.55+.45*(S.dose-.4)/.6)*f*S.birthMul/(1+P/K.P0),hf=S.home>0?S.hungry/S.home:0;
+  var doseM=S.dose<.7?.012*(.7-S.dose)/.2:0,hunM=hf>.5?(S.got.feed?.007:.024)*(hf-.5)*2:0,mort=K.m0+doseM+S.deathAdd;
+  var b=S.home*br*dy,d=S.home*(mort+hunM)*dy; S.home+=b-d; if(S.home<0) S.home=0; S.hungry=Math.min(S.hungry,S.home);
+  S.tb+=b;S.td+=d;S.everB+=b;S.everD+=d; S.names+=b*S.nameShare*.5;
+  var dc=S.crew*K.m0*1.5*dy; S.crew-=dc; S.td+=dc;S.everD+=dc;
+  S.W.forEach(function(w){ if(w.pop<=0) return; var bb=w.dead?0:w.pop*br*.8*dy,dd=w.pop*(w.dead?K.m0*1.6:K.m0)*dy; w.pop+=bb-dd; S.tb+=bb;S.td+=dd;S.everB+=bb;S.everD+=dd });
+  /* кто где: пока нет разборки, люди расходятся к заданной доле */
+  if(!S.dis) balance(dy,h);
+  /* потеря судов */
+  var fl=fleet(); if(fl>0&&S.on.fuel&&R()<fl*.00016*dy){ var cand=S.W.filter(function(w){ return !w.dead&&shipCount(w)>0 }); if(cand.length){ var lw=R.pick(cand),cl=lw.ships.f?'f':lw.ships.h?'h':'c',nn=Math.min(S.crew,SH[cl].crew*S.crewMul); lw.ships[cl]--; S.crew-=nn; S.td+=nn; S.everD+=nn; S.lost++; if(tier()<2) a('«'+SH[cl].g+'» не вернулся с '+lw.name+'. '+Math.round(nn)+' человек. Я запишу.'); else p('СУДНО '+lw.name+': ПОТЕРЯНО. −'+Math.round(nn)+'.') } }
+  /* ковчег и подъём */
+  var L=S.W.filter(function(w){ return w.lift&&w.pop>0 });
+  if(L.length&&S.cour>0){ var cf=S.fuel>0?1:.15; L.forEach(function(w){ var n=Math.min(w.pop,S.cour/L.length*30/(14*w.ring)*cf*dy); w.pop-=n; send(n,w.ring); if(S.fuel>0) S.fuel=Math.max(0,S.fuel-n*.02); if(w.pop<1){ S.home+=0; send(w.pop,w.ring); w.pop=0; w.lift=false; p('МИР '+w.name+': ПОДНЯТ.'); S.parts+=20*w.ring*Math.max(1,P/3000) } }) }
+  S.transit=S.transit.filter(function(x){ if(x.y<=S.y){ S.home+=x.n; return false } return true });
+  /* доверие */
+  var tT=Math.max(.04,Math.min(.98,.25+.45*(S.dose-.5)/.5*1-S.trustPen)); S.trust+=(tT-S.trust)*Math.min(1,.006*dy);
+  /* автомат верфи */
+  if(S.got.autoyard&&!S.dis&&!S.broken.yard){ var reserve=(S.got.date&&!S.got.ark?950:0)+price(S.cls)*1.6; if(S.metal>reserve&&fleet()<400){ var tgt=autoTarget(); if(tgt) act.ship(tgt.i) } }
+  if(S.sum&&!S.dis){ S.W.forEach(function(w){ if(!w.founded&&w.ring<=S.ring&&S.metal>foundCost(w).m*2&&S.home>foundCost(w).p*4) act.found(w.i) }) }
+  /* журнал */
+  S.jT-=dt; if(S.jT<=0&&S.on.greet&&!S.broken.log){ S.jT=8+R()*5; var tt=tier(); a(R.pick(T[tt])) }
+  S.pT-=dt; if(S.pT<=0&&S.on.fuel&&!S.broken.log){ S.pT=7+R()*4; var pl=Math.round((S.y-S.yl)); S.yl=S.y; p('ПАРТИЯ '+Math.round(S.y/80)+': +'+fm(S.tb)+' −'+fm(S.td)+'. '+(pl>0?'НОРМА.':'')); S.tb=0;S.td=0 }
+  if(S.on.date&&!S.broken.log&&!S.warn1&&S.yn-S.y<600){ S.warn1=1; a('Шестьсот лет. Считайте, что это восемь смен. Я скажу им завтра.') }
+  /* концы */
+  if(S.y>=S.yn){ finish('night'); return }
+  if(pop()<1){ finish('dead') }
+}
+function balance(dy,h){ var P=pop(),T=S.outS*P; if(!S.on.out&&!S.got.line) return;
+  if(!S.on.out) T=Math.max(T,14);
+  var need=crewNeed(),crewT=Math.min(need,T); var mv=Math.min(1,.05*dy),dc=(crewT-S.crew)*mv; S.crew+=dc; S.home-=dc;
+  var colT=Math.max(0,T-crewT),sum=0; S.W.forEach(function(w){ if(w.founded&&!w.dead) sum+=w.raw/(K.dig*h) });
+  var f=sum>0?Math.min(1,colT/sum):0;
+  S.W.forEach(function(w){ if(!w.founded||w.dead) return; var tg=Math.max(4*w.ring,w.raw/(K.dig*h)*f); var dp=(tg-w.pop)*mv; if(dp>0) dp=Math.min(dp,Math.max(0,S.home-3)); w.pop+=dp; S.home-=dp }) ;
+  if(S.home<1) S.home=1 }
+function finish(why){ if(S.over) return; var sts=seats(),home=Math.floor(S.home),souls=Math.min(sts,home),P=pop(),inp=inflight(); var left=Math.max(0,Math.round(P+inp-souls));
+  var places=S.W.filter(function(w){ return w.pop>=1 }).sort(function(a,b){ return b.pop-a.pop }).map(function(w){ return {n:w.name,p:Math.round(w.pop)} });
+  var nm=Math.max(0,Math.round(S.names)); if(why==='dead') nm=Math.max(nm,40);
+  S.over={why:why,souls:souls,seats:sts,home:home,left:left,crew:Math.round(S.crew),inflight:Math.round(inp),places:places,names:nm,years:Math.round(S.y),peak:Math.round(S.peak),win:souls>=K.win,ever:Math.round(S.everB+40),eff:S.peak?souls/S.peak:0,cold:S.coldN,t:S.t,namesList:[]};
+  for(var i=0;i<Math.min(nm,12);i++) S.over.namesList.push(name(i));
+  S.ev.push({w:'p',t:'> КОНЕЦ.'}) }
+
+reset(LB.seed);
+var G={K:K,SH:SH,RES:RES,reset:reset,step:step,act:act,yps:yps,app:app,pop:pop,seats:seats,inflight:inflight,colonists:colonists,fleet:fleet,cap:cap,tier:tier,available:available,whyBuy:whyBuy,price:price,shipCls:shipCls,depth:depth,nextRing:nextRing,foundCost:foundCost,shipCount:shipCount,panelsLeft:panelsLeft,panelValue:panelValue,crewNeed:crewNeed,hands:hands,autoTarget:autoTarget,speed:1,paused:false,
+  get S(){ return S }};
+return G;
+})();
+</script>
+<script>
+/* ================= ИНТЕРФЕЙС ================= */
+(function(){
+var G=GAME,$=function(id){ return document.getElementById(id) },fm=LB.fmt;
+var stage,g,P={},rows={},cardsM={},seenEv=0,lastStat=0,endShown=false,finalShown=false,prevDis=false;
+function txt(e,s){ if(e&&e.__t!==s){ e.__t=s; e.textContent=s } }
+function chk(r){ if(r!==true){ LB.toast(r); LB.beep(160,.1) } else LB.beep(520,.04); return r===true }
+var ph=window.matchMedia('(max-width:860px)');
+
+var HELP='<h2>Вы — Пульт</h2><p>Цель: к дате Ночи посадить на ковчег как можно больше людей. Счёт — души на борту.</p><p>Нажимайте то, что появляется. Страница растёт сама.</p><p><b>Такты</b> покупают проекты. <b>Узлы</b> идут в такты или в память: память — потолок цены проекта.</p><p><b>Рацион:</b> больше — доверие и дети. Меньше — руки и запас.</p><p><b>Вне дома:</b> больше — рейсы. Но кто не дома в день Ночи, тот остался.</p><p>Александра записывает. Вы считаете.</p>';
+var HELP2='<h2>Вы — Пульт</h2><p>Разборка: панели, линии и миры снимаются только руками.</p><p><b>Снять линию</b> — экипажи идут домой, детали в ковчег, ресурса с мира больше нет.</p><p><b>Поднять мир</b> — курьеры везут людей. Верфь снята — курьеров нет.</p><p><b>Разобрать панель</b> — детали в ковчег, панель исчезает, что на ней было, вы больше не видите.</p><p>Душ на борту = меньшее из «мест» и «дома». Кто в пути в день Ночи, тот остался.</p>';
+var shellO={ref:'PAPERCLIPS',help:HELP,onPause:function(v){ G.paused=v },onRestart:restart};
+stage=LB.shell(shellO);
+
+function panel(id,col,title,brk){ var e=LB.el('<section class="p" id="p-'+id+'"><header><span class="lbl">'+title+'</span></header><div class="b"></div></section>'); $(col).appendChild(e); e.__id=id;
+  if(brk!==false){ var b=document.createElement('button'); b.className='brk'; b.style.display='none'; b.onclick=function(){ if(chk(G.act.brk(id))) ; }; e.querySelector('header').appendChild(b); e.__brk=b }
+  P[id]=e; return e.querySelector('.b') }
+function build(){ stage.innerHTML='<div id="g" class="start"><div class="col" id="c1"></div><div class="col" id="c2"><div id="alert"><span></span><button class="btn"></button></div></div><div class="col" id="c3"></div></div>'; g=$('g'); P={}; rows={}; cardsM={}; seenEv=0; endShown=false; finalShown=false; prevDis=false; document.body.classList.remove('bare'); shellO.help=HELP; var al=$('alert'); al.querySelector('button').onclick=function(){ if(al.__fn) chk(al.__fn()) };
+  mkAct() }
+function kv(b,key,lbl,cls){ var d=LB.el('<div class="kv"><span>'+lbl+'</span><b class="'+(cls||'')+'" style="font-weight:500"></b><em></em></div>'); b.appendChild(d); d.__v=d.children[1]; d.__e=d.children[2]; b['k_'+key]=d; return d }
+function slider(b,lbl,lo,hi,hintL,hintR,get,set,fmtv){ var d=LB.el('<div class="sl"><div class="top"><span>'+lbl+'</span><b></b></div><div class="tr"><div class="fi"></div><div class="th"></div></div><div class="hint"><span>'+hintL+'</span><span>'+hintR+'</span></div></div>'); b.appendChild(d);
+  var tr=d.querySelector('.tr'),on=false; function at(e){ var r=tr.getBoundingClientRect(),v=lo+(hi-lo)*Math.max(0,Math.min(1,(e.clientX-r.left)/r.width)); var rr=set(Math.round(v*20)/20); if(rr!==true) LB.toast(rr) }
+  var sx=0,sy=0,lock=false; tr.addEventListener('pointerdown',function(e){ on=true; sx=e.clientX; sy=e.clientY; lock=e.pointerType!=='touch'; try{ tr.setPointerCapture(e.pointerId) }catch(_){ } if(lock) at(e) });
+  tr.addEventListener('pointermove',function(e){ if(!on) return; if(!lock&&Math.abs(e.clientX-sx)>4) lock=true; if(lock) at(e) });
+  tr.addEventListener('pointerup',function(e){ if(on&&(!lock)) at(e); on=false }); tr.addEventListener('pointercancel',function(){ on=false });
+  d.__u=function(){ var v=get(),x=(v-lo)/(hi-lo)*100; d.querySelector('.fi').style.width=x+'%'; d.querySelector('.th').style.left=x+'%'; txt(d.querySelector('b'),fmtv(v)) }; return d }
+
+function mkAct(){ var b=panel('act','c2','РУКАМИ',false); b.innerHTML='<button class="mainb" id="feed">ПОДАТЬ РАЦИОН<small id="feedn"></small></button><button class="mainb" id="flight" style="display:none">РЕЙС<small id="fln"></small></button>';
+  $('feed').onclick=function(e){ var r=G.act.feed(); if(r===true){ flash($('feed')); LB.beep(330+(G.S.fed%5)*30,.03) } else LB.toast(r) }; $('flight').onclick=function(){ var r=G.act.flight(); if(r===true){ flash($('flight')); LB.beep(220,.08) } else LB.toast(r) } }
+function flash(e){ e.classList.add('hit'); setTimeout(function(){ e.classList.remove('hit') },70) }
+function mkClock(){ var b=panel('clock','c1','КАЛЕНДАРЬ'); b.innerHTML='<div id="clockbig"><span class="big" id="yr"></span><small id="yps"></small></div><div class="spd" id="spd" style="display:none"><button data-s="0">⏸</button><button data-s="1">×1</button><button data-s="2">×2</button><button data-s="4">×4</button></div>'; $('spd').onclick=function(e){ var s=e.target.getAttribute('data-s'); if(s==null) return; if(s==='0') G.paused=!G.paused; else { G.paused=false; G.speed=+s } updSpd() }; updSpd() }
+function updSpd(){ var n=$('spd'); if(!n) return; [].forEach.call(n.children,function(x){ var s=+x.getAttribute('data-s'); x.classList.toggle('on',s===0?G.paused:(!G.paused&&G.speed===s)) }) }
+function mkStats(){ var b=panel('stats','c1','ЛЮДИ'); b.innerHTML='<div class="big ppl" id="ppl"></div>'; kv(b,'home','ДОМА'); kv(b,'hun','ГОЛОДНЫХ','neg'); kv(b,'crew','В ЭКИПАЖАХ'); kv(b,'col','НА МИРАХ'); kv(b,'b','РОЖДЕНИЙ/ВЕК'); kv(b,'d','СМЕРТЕЙ/ВЕК'); kv(b,'tr','ДОВЕРИЕ'); var n=kv(b,'nm','ИМЁН В ЖУРНАЛЕ','ppl'); }
+function mkStock(){ var b=panel('stock','c1','ЗАПАСЫ'); kv(b,'food','РАЦИОНЫ','food'); kv(b,'metal','МЕТАЛЛ','metal'); kv(b,'fuel','ТОПЛИВО','fuel'); b.k_metal.style.display='none'; b.k_fuel.style.display='none' }
+function mkDose(){ var b=panel('dose','c1','НОРМЫ'); b.__d=slider(b,'РАЦИОН НА ЧЕЛОВЕКА',.5,1.5,'руки, запас','доверие, дети',function(){ return G.S.dose },function(v){ return G.act.dose(v) },function(v){ return Math.round(v*100)+'%' }); b.__o=slider(b,'ВНЕ ДОМА, НЕ БОЛЬШЕ',.1,.85,'такты, дети','рейсы',function(){ return G.S.outS },function(v){ return G.act.out(v) },function(v){ return Math.round(v*100)+'%' }); b.__o.style.display='none' }
+function mkCore(){ var b=panel('core','c1','ТАКТЫ И ПАМЯТЬ'); b.innerHTML='<div class="big" id="tacts"></div><div class="tbar"><i id="tb"></i></div><div class="kv" style="margin-top:4px"><span>ТАКТОВ/С</span><b id="tps" style="font-weight:500"></b></div><div class="kv"><span>ПОТОЛОК</span><b id="tcap" style="font-weight:500"></b></div><div class="nodes"><button class="btn" id="np"></button><button class="btn" id="nm"></button></div>'; $('np').onclick=function(){ chk(G.act.node('proc')) }; $('nm').onclick=function(){ chk(G.act.node('mem')) } }
+function mkProj(){ var b=panel('proj','c2','ПРОЕКТЫ'); b.innerHTML='<div id="cards"></div>' }
+function mkWorlds(){ var b=panel('worlds','c3','МИРЫ'); b.innerHTML='<div id="sum" style="display:none"></div><div id="wr"></div>' }
+function mkYard(){ var b=panel('yard','c3','ВЕРФЬ'); b.innerHTML='<div class="flc" id="flc"></div><div class="fl"><button class="btn" id="bship" style="display:none"></button><button class="btn" id="bcour" style="display:none"></button></div>'; $('bship').onclick=function(){ chk(G.act.ship(null)) }; $('bcour').onclick=function(){ chk(G.act.courier()) } }
+function mkArk(){ var b=panel('ark','c2','КОВЧЕГ'); b.innerHTML='<div style="display:flex;gap:18px;align-items:baseline;flex-wrap:wrap"><div><span class="big ark" id="st"></span> <small class="lbl">МЕСТ</small></div><div><span class="big ppl" id="hm"></span> <small class="lbl">ДОМА</small></div><div id="trw"><span class="big dimt" id="tr"></span> <small class="lbl">В ПУТИ</small></div></div><div class="seatbar"><i id="sb"></i><u id="sbh"></u></div><div id="arkv"></div><button id="beg">НАЧАТЬ РАЗБОРКУ</button>'; b.__a=slider($('arkv'),'МЕТАЛЛ В КОВЧЕГ',0,1,'суда','места',function(){ return G.S.arkShare },function(v){ return G.act.arkShare(v) },function(v){ return Math.round(v*100)+'%' }); $('beg').onclick=function(){ chk(G.act.begin()) } }
+function mkLog(){ var b=panel('log','c3','ЖУРНАЛ'); b.id='logb'; }
+
+function killPanel(id){ var e=P[id]; if(!e||e.__dying) return; e.__dying=true; var walk=document.createTreeWalker(e,NodeFilter.SHOW_TEXT),nodes=[]; while(walk.nextNode()) nodes.push(walk.currentNode);
+  var n=0,iv=setInterval(function(){ n++; nodes.forEach(function(t){ var s=t.nodeValue,o=''; for(var i=0;i<s.length;i++){ o+=s[i]===' '?' ':(Math.random()<n/5?(n>4?' ':'·'):s[i]) } t.nodeValue=o }); if(n>=6){ clearInterval(iv); e.style.maxHeight=e.offsetHeight+'px'; e.offsetHeight; e.classList.add('gone'); setTimeout(function(){ e.remove() },400) } },70);
+  delete P[id] }
+
+function sync(){ var S=G.S,o=S.on;
+  if(o.stats&&g.classList.contains('start')) g.classList.remove('start');
+  if(o.greet&&!P.log&&!S.broken.log) mkLog();
+  if(o.clock&&!P.clock&&!S.broken.clock) mkClock();
+  if(o.stats&&!P.stats&&!S.broken.stats) mkStats();
+  if(o.stock&&!P.stock&&!S.broken.stock) mkStock();
+  if(o.dose&&!P.dose&&!S.broken.dose) mkDose();
+  if(o.core&&!P.core&&!S.broken.core) mkCore();
+  if(o.core&&!P.proj&&!S.broken.proj) mkProj();
+  if(o.worlds&&!P.worlds&&!S.broken.worlds) mkWorlds();
+  if(o.yard&&!P.yard&&!S.broken.yard) mkYard();
+  if(o.ark&&!P.ark&&!S.broken.ark) mkArk();
+  for(var id in P){ if(S.broken[id]&&id!=='log') killPanel(id) } if(S.broken.log) killPanel('log');
+  if(P.act&&S.got.feed&&(S.got.line||!o.flight)) killPanel('act');
+  g.classList.toggle('dis',S.dis);
+  if(S.dis&&!prevDis){ prevDis=true; shellO.help=HELP2 }
+  var kids=document.querySelectorAll('.p'); [].forEach.call(kids,function(e){ var pid=e.__id; if(!e.__brk) return; if(S.dis&&!S.broken[pid]&&pid!=='act'){ e.__brk.style.display=''; var v=G.panelValue(pid); if(pid==='worlds'){ var l=G.panelsLeft().length-1; txt(e.__brk,l?'ПОСЛЕ ПАНЕЛЕЙ: '+l:'РАЗОБРАТЬ И ЭТО'); e.__brk.classList.toggle('off',!!l) } else txt(e.__brk,'РАЗОБРАТЬ +'+fm(v)) } });
+}
+var lastV='';
+function upd(){ var S=G.S,o=S.on,P_=G.pop();
+  if($('feedn')) txt($('feedn'),S.fed?('ПОДАНО '+S.fed):'');
+  if($('feed')&&S.got.feed) $('feed').style.display='none';
+  var fb=$('flight'); if(fb){ if(o.flight&&!S.got.line){ fb.style.display=''; txt(fb.firstChild,'РЕЙС '+S.W[0].name); txt($('fln'),S.flight>0?('В ПУТИ '+Math.ceil(S.flight)):'+13 РАЦИОНОВ · 8 ЛЕТ'); fb.classList.toggle('off',S.flight>0) } else fb.style.display='none' }
+  if(P.clock){ var c=$('yr'); var d=S.on.date; txt(c,d?('ГОД '+Math.floor(S.y)+' / '+Math.round(S.yn)):'ГОД '+Math.floor(S.y)); c.classList.toggle('red',!!d); txt($('yps'),(d?((ph.matches?'ЕЩЁ ':'ОСТАЛОСЬ ')+Math.max(0,Math.ceil(S.yn-S.y))+' ЛЕТ'):(G.yps().toFixed(1)+' лет/с'))+(ph.matches&&!S.broken.stats?' · ЛЮДЕЙ '+fm(P_):'')); $('spd').style.display=S.got.line?'':'none' }
+  if(P.stats){ var b=P.stats.querySelector('.b'); txt($('ppl'),fm(P_)); val(b,'home',fm(S.home)); var hu=b.k_hun; hu.style.display=S.hungry>=1?'':'none'; txt(hu.__v,fm(S.hungry)); val(b,'crew',fm(S.crew),S.crew>=1); val(b,'col',fm(G.colonists()),G.colonists()>=1);
+    if(!S._ta||S.t-S._ta>2){ var dt=(S.y-(S._y0||0))/100||1; S._bR=(S.everB-(S._b0||0))/dt; S._dR=(S.everD-(S._d0||0))/dt; S._b0=S.everB;S._d0=S.everD;S._y0=S.y;S._ta=S.t } val(b,'b',fm(S._bR||0),o.dose); val(b,'d',fm(S._dR||0),o.dose); val(b,'tr',Math.round(S.trust*100)+'%',o.dose); val(b,'nm',fm(S.names),S.got.feed) }
+  if(P.stock){ var k=P.stock.querySelector('.b'); stockRow(k,'food',S.food,S.inc.food-S.use.food,o.flight); k.k_metal.style.display=o.metal?'':'none'; k.k_fuel.style.display=o.fuel?'':'none'; if(o.metal) stockRow(k,'metal',S.metal,S.inc.metal*(S.arkOn?1-S.arkShare:1)-S.use.metal,1); if(o.fuel) stockRow(k,'fuel',S.fuel,S.inc.fuel-S.use.fuel,1) }
+  if(P.dose){ var db=P.dose.querySelector('.b'); db.__d.__u(); db.__o.style.display=o.out?'':'none'; if(o.out) db.__o.__u() }
+  if(P.core){ txt($('tacts'),fm(S.tacts)); var cp=G.cap(); $('tb').style.width=Math.min(100,S.tacts/cp*100)+'%'; txt($('tps'),(S.proc*S.tactMul).toFixed(1)); txt($('tcap'),fm(cp)+' · ПАМЯТЬ '+S.mem); txt($('np'),'+ТАКТ'+(S.nodes?' ('+S.nodes+')':'')); txt($('nm'),'+ПАМЯТЬ'+(S.nodes?' ('+S.nodes+')':'')); $('np').classList.toggle('ready',S.nodes>0); $('nm').classList.toggle('ready',S.nodes>0) }
+  if(P.proj) cards();
+  if(P.worlds) worlds();
+  if(P.yard){ var t=''; ['c','h','f'].forEach(function(c){ var n=0; S.W.forEach(function(w){ n+=w.ships[c] }); if(c==='c') n+=S.cour; if(n) t+='<span>'+LB.ship(G.SH[c].cls,20)+'×'+n+'</span>' }); var fn=S.cour?'<span class="ppl">КУРЬЕРОВ НА ЛЮДЯХ '+S.cour+'</span>':''; if(lastV!==t+fn){ lastV=t+fn; $('flc').innerHTML=t+fn } var bs=$('bship'); bs.style.display=o.autoship&&!S.dis?'':'none'; var scl=G.shipCls(); txt(bs,'+'+G.SH[scl].n.toUpperCase()+' · '+G.price(scl)+' М'); var bc=$('bcour'); bc.style.display=o.courier&&!S.dis?'':'none'; txt(bc,'+КУРЬЕР · '+G.price('c')+' М') }
+  if(P.ark){ var st=G.seats(); txt($('st'),fm(st)); txt($('hm'),fm(S.home)); var fl=G.inflight(); txt($('tr'),fm(fl)); $('trw').style.display=fl>=1?'':'none'; var mx=Math.max(st,S.home,1); $('sb').style.width=st/mx*100+'%'; $('sbh').style.left=Math.min(99.5,S.home/mx*100)+'%'; $('beg').style.display=S.dis?'none':''; P.ark.querySelector('.b').__a.__u() }
+  alert_();
+  log() }
+function val(b,key,s,vis){ var d=b['k_'+key]; if(vis===undefined||vis){ d.style.display=''; txt(d.__v,s) } else d.style.display='none' }
+function stockRow(b,key,v,net,show){ var d=b['k_'+key]; txt(d.__v,fm(v)); if(show){ var n=net*100; txt(d.__e,(n>=0?'+':'')+fm(n)+'/в'); d.__e.className=n<0?'neg':'' } }
+var rowsMax=0;
+function cards(){ var S=G.S,L=G.available(),host=$('cards'),lim=ph.matches?4:6,show=L.slice(0,lim),ids={};
+  show.forEach(function(x){ ids[x.id]=1; var e=cardsM[x.id]; if(!e){ e=document.createElement('button'); e.className='card'+(x.cold?' cold':'')+(x.warm?' warm':''); e.setAttribute('data-p',x.id); e.innerHTML='<span class="tt"></span><span class="ds"></span><span class="cs"></span>'; txt(e.children[0],x.t); txt(e.children[1],x.d); e.onclick=function(){ chk(G.act.buy(x.id)) }; host.appendChild(e); cardsM[x.id]=e } var w=G.whyBuy(x); e.classList.toggle('no',!!w); txt(e.children[2],x.c+' Т'+(x.m?' · '+x.m+' М':'')+(x.c>G.cap()?' · НУЖНА ПАМЯТЬ':'')) });
+  for(var id in cardsM){ if(!ids[id]){ cardsM[id].remove(); delete cardsM[id] } } }
+function worlds(){ var S=G.S,host=$('wr'),sumE=$('sum'); txt(P.worlds.querySelector('.lbl'),S.dis?'РАЗБОРКА · ЛИНИИ И МИРЫ':'МИРЫ');
+  if(S.sum&&!S.dis){ sumE.style.display=''; host.style.display='none'; var f=0,n=0,dep=0,dep0=0,rate={food:0,metal:0,fuel:0}; S.W.forEach(function(w){ if(w.founded){ f++; dep+=w.dep; dep0+=w.dep0; rate[w.res]+=w.rate } }); var h='<div class="big">'+f+' <small class="lbl">МИРОВ</small></div><div class="kv"><span>СУДОВ</span><b style="font-weight:500">'+G.fleet()+'</b></div><div class="kv"><span>НА МИРАХ</span><b style="font-weight:500">'+fm(G.colonists())+'</b></div><div class="kv"><span>ЗАЛЕЖЬ</span><b style="font-weight:500">'+Math.round(dep/Math.max(1,dep0)*100)+'%</b></div>'; if(sumE.__h!==h){ sumE.__h=h; sumE.innerHTML=h } return }
+  sumE.style.display='none'; host.style.display='';
+  S.W.forEach(function(w){ var vis=S.dis?(G.shipCount(w)>0||w.pop>=1):(w.ring<=S.ring&&(w.founded||true)); var e=rows[w.i];
+    if(!vis){ if(e){ e.remove(); delete rows[w.i] } return }
+    if(!e){ e=LB.el('<div class="w"><div class="w1"><i class="dot" style="background:var(--'+w.res+')"></i><b>'+w.name+'</b><span class="rg">R'+w.ring+'</span><span class="sp"></span><span class="sh"></span><span class="rt '+w.res+'"></span></div><div class="wb"><i style="background:var(--'+w.res+')"></i></div><div class="w2"><span class="pp"></span><button class="btn a1"></button><button class="btn a2"></button></div></div>'); e.setAttribute('data-w',w.i); host.appendChild(e); rows[w.i]=e; e.__a1=e.querySelector('.a1'); e.__a2=e.querySelector('.a2'); e.__a1.onclick=function(){ if(e.__f1) chk(e.__f1()) }; e.__a2.onclick=function(){ if(e.__f2) chk(e.__f2()) } }
+    e.classList.toggle('dead',w.dead); var n=G.shipCount(w),cl=w.ships.f?'f':w.ships.h?'h':'c',sh=n?(LB.ship(G.SH[cl].cls,16)+'<span>×'+n+'</span>'):''; var sE=e.querySelector('.sh'); if(sE.__h!==sh){ sE.__h=sh; sE.innerHTML=sh } txt(e.querySelector('.rt'),w.founded?(w.dead?'0':('+'+fm(w.rate*100)+'/в')):fm(w.dep)); e.querySelector('.wb i').style.width=(w.dep/w.dep0*100)+'%';
+    txt(e.querySelector('.pp'),(w.pop>=1?fm(w.pop)+' чел':'')+(w.lift?' ▲':''));
+    var A=e.__a1,B=e.__a2; A.className='btn a1'; B.className='btn a2'; e.__f1=e.__f2=null; var ta='',tb='';
+    if(S.dis){ if(n){ ta='СНЯТЬ ЛИНИЮ'; A.classList.add('r'); e.__f1=function(){ return G.act.drop(w.i) } } if(w.pop>=1&&!w.lift){ tb='ПОДНЯТЬ '+fm(w.pop); B.classList.add('y'); e.__f2=function(){ return G.act.lift(w.i) } } }
+    else if(!w.founded){ var c=G.foundCost(w); ta='ЗАСЕЛИТЬ '+c.m+' М · '+c.p+' ЧЕЛ'; e.__f1=function(){ return G.act.found(w.i) } }
+    else if(w.dead){ if(n){ ta='ПЕРЕВЕСТИ СУДА'; A.classList.add('r'); e.__f1=function(){ return G.act.move(w.i) } } if(w.pop>=1&&!w.lift&&S.cour>0){ tb='ПОДНЯТЬ'; B.classList.add('y'); e.__f2=function(){ return G.act.lift(w.i) } } }
+    else if(S.on.yard){ var scl=G.shipCls(); ta='+'+G.SH[scl].n.toUpperCase()+' '+G.price(scl)+' М'; e.__f1=function(){ return G.act.ship(w.i) } }
+    A.style.display=ta?'':'none'; txt(A,ta); B.style.display=tb?'':'none'; txt(B,tb) }) }
+function alert_(){ var S=G.S,e=$('alert'),T='',B='',F=null; if(!e) return;
+  if(!S.broken.stock&&S.on.stock&&S.got.feed){ var net=S.inc.food-S.use.food; if(net<0&&S.food/-net<140){ var yrs=Math.round(S.food/-net); T='РАЦИОНЫ: 0 ЧЕРЕЗ '+yrs+' ЛЕТ'; if(!S.broken.dose&&S.dose>.6&&!S.on.yard){ B='ПАЁК −10%'; F=function(){ return G.act.dose(S.dose-.1) } } else if(!S.dis&&S.on.yard){ var w=S.W.filter(function(x){ return x.res==='food'&&x.founded&&!x.dead })[0]; if(w){ B='+СУДНО: '+w.name; F=function(){ return G.act.ship(w.i) } } else { B='ПАЁК −10%'; F=function(){ return G.act.dose(S.dose-.1) } } } } }
+  if(!T&&!S.broken.stock&&S.on.fuel&&!S.dis){ var nf=S.inc.fuel-S.use.fuel; if(nf<0&&S.fuel/-nf<120){ T='ТОПЛИВО: 0 ЧЕРЕЗ '+Math.round(S.fuel/-nf)+' ЛЕТ'; var w2=S.W.filter(function(x){ return x.res==='fuel'&&x.founded&&!x.dead })[0]; if(w2){ B='+СУДНО: '+w2.name; F=function(){ return G.act.ship(w2.i) } } else { var w3=S.W.filter(function(x){ return x.res==='fuel'&&!x.founded&&x.ring<=S.ring })[0]; if(w3){ B='ЗАСЕЛИТЬ '+w3.name; F=function(){ return G.act.found(w3.i) } } } } }
+  if(!T&&!S.dis&&S.on.yard){ ['metal','fuel','food'].some(function(r){ if(r==='fuel'&&!S.on.fuel) return false; if(S.W.some(function(x){ return x.res===r&&x.founded&&!x.dead })) return false; var nw=S.W.filter(function(x){ return x.res===r&&!x.founded&&x.ring<=S.ring })[0]; T='НЕТ МИРА: '+G.RES[r].toUpperCase(); if(nw){ B='ЗАСЕЛИТЬ '+nw.name; F=function(){ return G.act.found(nw.i) } } return true }) }
+  if(!T&&!S.dis&&S.on.fuel&&!S.broken.proj){ ['food','fuel','metal'].some(function(r){ var dd=G.depth(r); if(dd<320){ T='ЗАЛЕЖЬ, '+G.RES[r].toUpperCase()+': '+Math.round(dd)+' ЛЕТ'; var nr=G.nextRing(); if(nr&&nr.req()){ B=nr.t+' · '+nr.c+' Т'; F=function(){ return G.act.buy(nr.id) } } return true } }) }
+  if(!T&&!S.dis&&!S.on.autoship){ var dw=S.W.filter(function(x){ return x.dead&&G.shipCount(x)>0 })[0]; if(dw){ T=dw.name+' ВЫРАБОТАН: '+G.shipCount(dw)+' СУДОВ СТОЯТ'; B='ПЕРЕВЕСТИ'; F=function(){ return G.act.move(dw.i) } } }
+  if(!T&&!S.on.date&&S.y>1250&&S.got.ring3){ T='ДАЛЬНИЕ КОЛЬЦА: ДАННЫЕ НЕ СХОДЯТСЯ'; B='РАСЧЁТ ДАТЫ · 700 Т'; F=function(){ return G.act.buy('date') } }
+  if(!T&&!S.broken.clock&&S.on.date&&!S.arkOn){ T='КОВЧЕГА НЕТ · НОЧЬ ЧЕРЕЗ '+Math.round(S.yn-S.y)+' ЛЕТ'; B='КОВЧЕГ · 1300 Т · 900 М'; F=function(){ return G.act.buy('ark') } }
+  if(!T&&!S.broken.clock&&S.arkOn&&!S.dis&&S.yn-S.y<1000){ T='НОЧЬ ЧЕРЕЗ '+Math.round(S.yn-S.y)+' ЛЕТ · ВНЕ ДОМА '+fm(G.pop()-S.home); B='НАЧАТЬ РАЗБОРКУ'; F=function(){ return G.act.begin() } }
+  if(T){ e.classList.add('on'); txt(e.children[0],T); txt(e.children[1],B); e.children[1].style.display=B?'':'none'; e.__fn=F } else e.classList.remove('on') }
+function log(){ var S=G.S; if(seenEv>S.ev.length) seenEv=0; var box=$('logb');
+  for(;seenEv<S.ev.length;seenEv++){ var x=S.ev[seenEv]; if(box){ var d=document.createElement('div'); d.className='l '+(x.w==='p'?'pu':'a'); d.textContent=x.t; box.insertBefore(d,box.firstChild); while(box.children.length>36) box.removeChild(box.lastChild) } else if(x.w==='a'&&!S.over) LB.voice(x.t,4500) } }
+
+function restart(){ var q=+LB.q.get('seed'); G.reset(q||(Date.now()%1e9)); G.speed=1; G.paused=false; build() }
+
+/* финал: одна кнопка и строка */
+function showFinal(){ finalShown=true; document.body.classList.add('bare'); var v=document.getElementById('lb-voice'); if(v) v.remove(); stage.innerHTML='<div id="final"><button class="mainb" id="lastb">ПОДАТЬ РАЦИОН</button><div class="ln" id="lastl"></div></div>'; var S=G.S; $('lastb').onclick=function(){ G.act.last() }; finalLine() }
+function finalLine(){ var S=G.S,l=$('lastl'); if(!l) return; var n=Math.round(G.inflight()); txt(l,n>=1?('Ещё идут: '+fm(n)+'. Из вас выйдет сорок мест. Столько их было в первый день. Подождите идущих, если можете.'):'Из вас выйдет сорок мест. Столько их было в первый день. Подайте им, пожалуйста, на дорогу.') }
+function showEnd(){ endShown=true; var o=G.S.over; document.body.classList.add('bare'); var vv=document.getElementById('lb-voice'); if(vv) vv.remove(); stage.innerHTML='<div id="black">'+(o.why==='launch'?'':'НОЧЬ')+'</div>'; setTimeout(function(){ if(G.S.over!==o) return; renderEnd(o) },o.why==='dead'?500:1600) }
+function renderEnd(o){ document.body.classList.remove('bare'); var best=0; try{ best=+localStorage.getItem('lb-paperclips-best')||0; if(o.souls>best) localStorage.setItem('lb-paperclips-best',String(o.souls)) }catch(e){}
+  var ti=o.why==='dead'?'ЛЮДЕЙ НЕТ':o.souls<=0?'КОВЧЕГ ПУСТ':o.win?'КОВЧЕГ УШЁЛ':'КОВЧЕГ УШЁЛ ПОЧТИ ПУСТЫМ';
+  var names=o.namesList.map(LB.esc).join(', ')+(o.names>o.namesList.length?' и ещё '+(o.names-o.namesList.length):'');
+  var al=o.why==='dead'?'Я помню всех. Это было нетрудно: их было сорок.':o.souls<=0?'Я прочту, кого помню. Больше читать некому, так что я прочту вслух.':o.names<=12?('Имён у меня '+o.names+'. Вот они.'):('Я помню '+o.names+' из '+fm(o.ever)+'. Начну с первых.');
+  var pl=o.places.slice(0,6).map(function(x){ return x.n+' '+fm(x.p) }).join(' · ')+(o.places.length>6?' · ещё '+(o.places.length-6):'');
+  var extra=[]; if(o.crew>=1) extra.push('в экипажах '+fm(o.crew)); if(o.inflight>=1) extra.push('в пути '+fm(o.inflight)); if(o.home>o.seats) extra.push('дома без мест '+fm(o.home-o.seats));
+  var h='<div class="in"><div class="ti">'+ti+'</div><div class="sc">'+fm(o.souls)+'</div><div class="scl">ДУШ НА БОРТУ'+(best>o.souls?' · РЕКОРД '+fm(best):'')+'</div><div class="row3"><div><b class="red">'+fm(o.left)+'</b><small>ОСТАЛИСЬ</small></div><div><b class="ppl">'+fm(o.names)+'</b><small>ИМЁН</small></div><div><b>'+o.years+'</b><small>ЛЕТ</small></div></div>';
+  h+='<div class="pl">МЕСТ '+fm(o.seats)+' · МАКСИМУМ ЛЮДЕЙ '+fm(o.peak)+' · ЗАГРУЗКА '+Math.round(o.eff*100)+'%'+(o.cold?' · ХОЛОДНЫХ ПРОЕКТОВ '+o.cold:'')+(pl?'<br>НА МИРАХ: '+pl:'')+(extra.length?'<br>'+extra.join(' · ').toUpperCase():'')+'</div>';
+  h+='<div class="al"><small>АЛЕКСАНДРА</small>'+al+(o.why!=='dead'&&o.names?'<div class="names">'+names+'.</div>':'')+'</div><button class="btn pri" id="again">ЗАНОВО</button></div>';
+  stage.innerHTML='<div id="end">'+h+'</div>'; $('again').onclick=restart }
+
+/* цикл */
+var lastT=0,acc=0;
+function frame(ts){ var dt=Math.min(.25,(ts-lastT)/1000||0); lastT=ts; var S=G.S;
+  if(!S.over&&!G.paused){ var d=dt*G.speed; while(d>0){ var s=Math.min(.25,d); G.step(s); d-=s; if(G.S.over) break } }
+  acc+=dt; S=G.S; if(!endShown&&S.over){ showEnd() } else if(S.last&&!finalShown&&!S.over){ setTimeout(function(){ if(G.S.last&&!G.S.over&&finalShown==='wait') showFinal() },650); finalShown='wait' } else if(!endShown&&finalShown===true){ if(acc>.25){ acc=0; finalLine() } } else if(!endShown&&acc>.11&&finalShown!==true){ acc=0; sync(); upd() }
+  requestAnimationFrame(frame) }
+build(); sync(); upd(); requestAnimationFrame(frame);
+})();
+</script>
+</body></html>

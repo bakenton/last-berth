@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>LAST BERTH × Slipways</title>
+<style>/*KIT*/</style>
+<script>/*KIT*/</script>
+<style>
+#app{position:absolute;inset:0;display:flex}
+#mapw{position:relative;flex:1;min-width:0;min-height:0;background:#08080A;overflow:hidden}
+#map{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#side{width:380px;flex:none;display:flex;flex-direction:column;background:var(--pan);border-left:1px solid var(--ln);min-height:0;overflow-y:auto}
+#hud{padding:10px 12px;border-bottom:1px solid var(--ln)}
+.tl{display:flex;align-items:baseline;gap:8px}
+.tl b{font:600 15px var(--n)} .tl .sp{flex:1}
+.tl span{font:500 11px var(--n);color:var(--mid)}
+.tl span.hot{color:var(--red)}
+.ticks{display:flex;gap:2px;margin:6px 0 8px}
+.ticks i{flex:1;height:6px;background:var(--pan2)}
+.ticks i.p{background:var(--mid)} .ticks i.n{background:var(--ink)}
+.ticks i.r{background:#3a2a55} .ticks i.r.p{background:var(--ark)} .ticks i.r.n{background:#fff}
+.rs{display:grid;grid-template-columns:repeat(5,1fr);gap:4px}
+.res{background:var(--bg);border-top:2px solid var(--c);padding:4px 5px 3px;min-width:0}
+.res b{display:block;font:600 16px/1.1 var(--n)}
+.res i{display:block;font:500 11px/1.2 var(--n);font-style:normal;color:var(--mid);white-space:nowrap}
+.res i.up{color:var(--food)} .res i.dn{color:var(--red)}
+.res small{display:block;font-size:9px;letter-spacing:.1em;color:var(--mid);font-weight:600}
+.kv{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin-top:6px}
+.kv div{background:var(--bg);padding:3px 5px}
+.kv small{display:block;font-size:9px;letter-spacing:.1em;color:var(--mid);font-weight:600;white-space:nowrap}
+.kv b{font:600 13px var(--n)}
+.kv b em{font-style:normal;color:var(--mid);font-weight:400}
+#alerts{position:absolute;left:8px;right:8px;top:8px;display:flex;flex-direction:column;gap:4px;pointer-events:none;z-index:3}
+.al{pointer-events:auto;display:flex;align-items:center;gap:8px;background:rgba(20,20,23,.94);border:1px solid var(--ln);border-left:3px solid var(--red);padding:3px 4px 3px 10px;font-size:13px;line-height:1.2;max-width:520px;min-height:40px}
+.al.y{border-left-color:var(--ppl)} .al.v{border-left-color:var(--ark)}
+.al span{flex:1;min-width:0} .al .num{font-weight:600}
+.al .btn{min-height:36px;padding:0 10px;font-size:11px;flex:none}
+#mapbtns{position:absolute;right:8px;bottom:8px;display:flex;gap:4px;z-index:3}
+#mapbtns .btn{min-width:44px;min-height:44px;padding:0 10px;font-size:11px;background:rgba(20,20,23,.94)}
+#mapbtns .btn.on{background:var(--ppl);border-color:var(--ppl);color:#000}
+#ctx{padding:10px 12px;border-bottom:1px solid var(--ln);min-height:96px}
+#ctx h3{margin:0;font:600 15px var(--n);letter-spacing:.04em;display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+#ctx h3 small{font:600 10px var(--h);letter-spacing:.14em;color:var(--mid)}
+#ctx h3 svg{flex:none}
+.ln{font:500 12.5px/1.35 var(--n);margin-top:4px;color:var(--ink)}
+.ln .m{color:var(--mid)} .ln .bad{color:var(--red)} .ln .ok{color:var(--food)} .ln .y{color:var(--ppl)}
+.chips{display:flex;flex-wrap:wrap;gap:4px 8px;margin-top:5px;font:600 13px var(--n)}
+.chips span{white-space:nowrap}
+.acts{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.acts .btn{flex:1 1 auto;font-size:12px;padding:0 10px}
+.why{font-size:12.5px;color:var(--red);margin-top:6px;line-height:1.25}
+.hint{font-size:13.5px;color:var(--mid);line-height:1.3}
+#extras{flex:1;overflow-y:auto}
+.box{padding:10px 12px;border-bottom:1px solid var(--ln)}
+.box h4{margin:0 0 6px;font-size:10px;letter-spacing:.18em;font-weight:600;color:var(--mid);display:flex;align-items:center}
+.box h4 .x{display:none}
+.it{display:flex;align-items:center;gap:8px;padding:5px 0;border-top:1px solid var(--pan2)}
+.it>div{flex:1;min-width:0}
+.it b{display:block;font-size:13px;font-weight:600;letter-spacing:.02em}
+.it small{display:block;font:500 11px/1.25 var(--n);color:var(--mid)}
+.it .why{margin-top:1px;font-size:11px}
+.it .btn{flex:none;min-width:84px;font:600 11px var(--n);padding:0 6px;letter-spacing:0;text-transform:none}
+.it.done b{color:var(--mid)}
+#bar{display:flex;gap:6px;padding:8px 12px;background:var(--pan);position:sticky;bottom:0;border-top:1px solid var(--ln)}
+#bar .btn{min-height:46px} #bar .next{flex:1}
+#bar .mob{display:none}
+#bar .btn.next.r{background:var(--ark);border-color:var(--ark)}
+#lb-voice{top:auto;bottom:var(--vb,12px);left:8px;transform:none;width:min(520px,calc(100% - 16px));z-index:25;font-size:14px;line-height:1.3;padding:7px 12px}
+@media (min-width:900px){#lb-voice{width:min(560px,calc(100% - 520px))}}
+#end{position:absolute;inset:0;z-index:30;background:rgba(5,5,6,.86);display:flex;align-items:center;justify-content:center;padding:12px}
+#end>div{width:min(640px,100%);max-height:100%;overflow:auto;background:var(--pan);border:1px solid var(--ln);padding:18px}
+#end .big{font:600 56px/1 var(--n);color:var(--ppl)}
+#end .big.bad{color:var(--red)}
+#end .rank{font-size:13px;letter-spacing:.14em;font-weight:600;margin:6px 0 10px;color:var(--mid)}
+#end table{width:100%;border-collapse:collapse;font:500 13px var(--n);margin:8px 0}
+#end td{padding:3px 0;border-top:1px solid var(--pan2)} #end td:last-child{text-align:right;font-weight:600}
+#end .say{border-left:3px solid var(--ppl);padding:6px 10px;margin:10px 0;font-size:14px;line-height:1.35}
+#end .say small{display:block;font-size:9.5px;letter-spacing:.18em;color:var(--ppl);font-weight:700}
+#end .btn{width:100%;margin-top:6px}
+@media (max-width:899px){
+  #app{flex-direction:column}
+  #side{display:contents}
+  #hud{order:0;padding:6px 8px;background:var(--pan)}
+  #mapw{order:1;flex:1}
+  #ctx{order:2;background:var(--pan);border-top:1px solid var(--ln);border-bottom:0;min-height:88px;max-height:44%;overflow-y:auto;padding:8px 10px;flex:none}
+  #bar{order:3;padding:6px 8px;position:static;gap:4px}
+  #bar .btn{padding:0 6px;font-size:11px;letter-spacing:.03em}
+  #bar .mob{display:inline-flex;flex:none;min-width:58px}
+  #bar .undo{flex:none;width:44px}
+  #bar .next{font-size:12px}
+  #extras{display:none;position:fixed;left:0;right:0;bottom:0;top:var(--top);background:var(--pan);z-index:20;flex:none;overflow-y:auto;padding-bottom:12px}
+  #extras.open{display:block}
+  #extras .box{display:none} #extras.open.t #tech,#extras.open.a #ark{display:block}
+  .box h4{font-size:13px;min-height:44px}
+  .box h4 .x{display:flex;margin-left:auto}
+  .it{padding:7px 0} .it .btn{min-height:44px}
+  .ticks{margin:4px 0 5px}
+  .tl b{font-size:13px}
+  .res{padding:3px 4px 2px} .res b{font-size:14px} .res small{font-size:8px;letter-spacing:.06em} .res i{font-size:10.5px}
+  .kv{margin-top:4px} .kv small{font-size:8px;letter-spacing:.06em} .kv b{font-size:12px}
+  #lb-top .t{font-size:11px;letter-spacing:.1em}
+}
+</style>
+</head>
+<body>
+<script>
+/* ===== ЯДРО: только правила, без DOM ===== */
+var Core=(function(){
+'use strict';
+var K={PPL_LOAD:2,SPEED:65,FOOD_CAP:30,TURNS:30,RISE:23,BERTHS:6,EARTH_CAP:30,RANGE:[135,175,220],HOUSE_CAP:15,HOUSE_CAP2:24,GROW:3,GROW2:4,WIN:45,
+  START:{food:14,metal:24,fuel:16,parts:4},START_PPL:30,SEATS0:30,SEAT_STEP:35,DEFICIT:3,
+  SCRAP:{metal:8,fuel:4,seats:5},
+  ARK:[{metal:8,fuel:2,parts:1},{metal:12,fuel:3,parts:2},{metal:16,fuel:4,parts:3},{metal:20,fuel:5,parts:4},{metal:24,fuel:6,parts:5}]};
+var GOODS=['food','metal','fuel','parts'];
+var GRU={food:'рационы',metal:'металл',fuel:'топливо',parts:'детали',ppl:'люди'};
+var TYPES={
+  farm:{ru:'ФЕРМА',ppl:1,fuel:1,base:4},
+  mine:{ru:'ШАХТА',ppl:2,fuel:1,base:4,good:'metal'},
+  well:{ru:'СКВАЖИНА',ppl:2,fuel:1,base:4,good:'fuel'},
+  factory:{ru:'ЗАВОД',ppl:3,fuel:2,base:3,good:'parts'},
+  house:{ru:'ЖИЛЬЁ',ppl:1,fuel:1},
+  relay:{ru:'РЕТРАНСЛЯТОР',ppl:1,fuel:1},
+  sleep:{ru:'СПЯЩИЕ',ppl:0,fuel:2},
+  earth:{ru:'ЗЕМЛЯ',ppl:0,fuel:0}
+};
+var TECH={
+  range:{ru:'ДВИГАТЕЛЬ',d:['длина линии 135 → 175','длина линии 175 → 220'],lv:[{parts:2,metal:3},{parts:6,metal:8}]},
+  wide:{ru:'ШИРОКАЯ ЛИНИЯ',d:['линия везёт вдвое больше'],lv:[{parts:3,metal:4}]},
+  berth:{ru:'ПРИЧАЛ',d:['причалов Земли 6 → 7','причалов Земли 7 → 8'],lv:[{parts:6,metal:10},{parts:10,metal:16}]},
+  demo:{ru:'РАЗБОРКА',d:['снос вдвое дешевле'],lv:[{parts:2,metal:2}]},
+  dense:{ru:'ПЛОТНОЕ ЖИЛЬЁ',d:['жильё: мест 15 → 24, рост 3 → 4'],lv:[{parts:3,metal:4}]}
+};
+function dist(a,b){ return Math.hypot(a.x-b.x,a.y-b.y) }
+function clone(G){ return JSON.parse(JSON.stringify(G)) }
+
+/* --- карта: случайная, но честная --- */
+function gen(seed){
+  var r=LB.rng(seed), R=440, N=42, MIND=70, pts=null, tries=0;
+  function connected(P,range){ var seen={0:1},st=[0],n=1; while(st.length){ var a=st.pop(); for(var i=0;i<P.length;i++) if(!seen[i]&&dist(P[a],P[i])<=range){ seen[i]=1; n++; st.push(i) } } return n }
+  for(;tries<400;tries++){
+    var P=[{x:0,y:0}], guard=0;
+    /* честный старт: семь миров кольцом у Земли, короткие магистрали есть на всех картах */
+    var a0=r()*Math.PI*2; for(var ri=0;ri<7;ri++){ var ang=a0+ri*Math.PI*2/7+(r()-.5)*.35, rd=98+r()*50, pr={x:Math.round(Math.cos(ang)*rd),y:Math.round(Math.sin(ang)*rd)}; var okr=true; for(var i0=1;i0<P.length;i0++) if(dist(pr,P[i0])<MIND) okr=false; if(okr) P.push(pr) }
+    if(P.length<7) continue;
+    while(P.length<N+1&&guard++<6000){ var a=r()*Math.PI*2, d=Math.sqrt(r())*R, p={x:Math.round(Math.cos(a)*d),y:Math.round(Math.sin(a)*d)};
+      if(d<92) continue; var ok=true; for(var i=1;i<P.length;i++) if(dist(p,P[i])<MIND){ ok=false; break } if(ok) P.push(p) }
+    if(P.length<N+1) continue;
+    pts=P; if(connected(P,K.RANGE[1])===P.length&&connected(P,K.RANGE[0])>=18) break;
+  }
+  var order=pts.slice(1).sort(function(a,b){ return Math.hypot(a.x,a.y)-Math.hypot(b.x,b.y) });
+  var nearBag=['farm','farm','farm','mine','mine','mine','well','well','factory','factory','house','house'];
+  var farBag=['farm','farm','farm','farm','farm','farm','farm','farm','mine','mine','mine','mine','mine','mine','well','well','well','well','factory','factory','factory','house','house','house','house','relay','relay','sleep','sleep','sleep'];
+  var best=null,bestS=-1,i2;
+  for(var t=0;t<300;t++){
+    var ty=r.shuffle(nearBag).concat(r.shuffle(farBag)).slice(0,order.length), s=0;
+    for(i2=0;i2<order.length;i2++){ var o=order[i2], dd=Math.hypot(o.x,o.y);
+      if((ty[i2]==='relay'&&dd<170)||(ty[i2]==='sleep'&&dd<240)){ s-=20 }
+      if(ty[i2]==='mine'||ty[i2]==='well'||ty[i2]==='house'){ var fok=false; for(var j=0;j<order.length;j++) if(ty[j]==='farm'&&dist(o,order[j])<=K.RANGE[1]){ fok=true; break } if(fok) s+=2 }
+      if(ty[i2]==='factory'){ var mk=false,fk=false; for(var j2=0;j2<order.length;j2++){ if(ty[j2]==='mine'&&dist(o,order[j2])<=K.RANGE[1]) mk=true; if(ty[j2]==='farm'&&dist(o,order[j2])<=K.RANGE[1]) fk=true } if(mk&&fk) s+=2 } }
+    /* старт: ферма в досягаемости Земли, рядом с ней шахта и скважина */
+    var nearFarm=[]; for(i2=0;i2<order.length;i2++) if(ty[i2]==='farm'&&Math.hypot(order[i2].x,order[i2].y)<=K.RANGE[0]) nearFarm.push(order[i2]);
+    var mineOk=false,wellOk=false; nearFarm.forEach(function(f){ for(var q=0;q<order.length;q++){ if(dist(f,order[q])<=K.RANGE[0]){ if(ty[q]==='mine') mineOk=true; if(ty[q]==='well') wellOk=true } } });
+    if(nearFarm.length>=2) s+=30; else if(nearFarm.length) s+=12; if(mineOk) s+=20; if(wellOk) s+=12;
+    /* завод в первых кольцах: и ферма, и шахта на базовой длине; жильё рядом с фермой */
+    var facOk=false,houseOk=false; for(i2=0;i2<order.length;i2++){ var oo=order[i2],rr=Math.hypot(oo.x,oo.y); if(rr>270) continue; var hf=false,hm=false; for(var q2=0;q2<order.length;q2++){ if(q2!==i2&&dist(oo,order[q2])<=K.RANGE[0]){ if(ty[q2]==='farm') hf=true; if(ty[q2]==='mine') hm=true } } if(ty[i2]==='factory'&&hf&&hm) facOk=true; if(ty[i2]==='house'&&hf) houseOk=true }
+    if(facOk) s+=40; if(houseOk) s+=15;
+    if(s>bestS){ bestS=s; best=ty }
+  }
+  var names=r.shuffle(LB.WORLDS), people=r.shuffle(LB.PEOPLE);
+  var worlds=[{id:0,x:0,y:0,type:'earth',name:'ЗЕМЛЯ',awake:true,dead:false,people:0,q:0,lifted:false,base:0,deposit:0,deposit0:0}];
+  order.forEach(function(o,i){ var d=Math.hypot(o.x,o.y), ty=best[i], w={id:i+1,x:o.x,y:o.y,type:ty,awake:false,dead:false,people:0,q:0,lifted:false,
+      name:(i<names.length?names[i]:names[i-names.length]+' II').toUpperCase(),elder:people[i%people.length],base:TYPES[ty].base||0,deposit:0,deposit0:0,sleepers:0};
+    if(ty==='mine'){ w.deposit=Math.round(30+d*0.1+r.int(0,8)); if(d>280) w.base=5 }
+    if(ty==='well'){ w.deposit=Math.round(30+d*0.09+r.int(0,6)); if(d>280) w.base=5 }
+    if(ty==='sleep'){ w.sleepers=r.int(12,18) }
+    w.deposit0=w.deposit; worlds.push(w) });
+  return worlds;
+}
+function newGame(seed){
+  return {tr:{},seed:seed,turn:1,stock:Object.assign({},K.START),earth:K.START_PPL,worlds:gen(seed),lines:[],nextLine:1,tech:{range:0,wide:0,berth:0,demo:0,dense:0},ark:0,deficit:0,events:[],jam:{},lost:{metal:0},maxDeficit:0,over:null,history:[],deadCount:0};
+}
+function needFood(t){ return 2+Math.floor((t-1)/4) }
+function needMetal(t){ return Math.floor((t-1)/5) }
+function berths(G){ return K.BERTHS+G.tech.berth }
+function usedBerths(G){ return G.lines.filter(function(l){ return l.a===0||l.b===0 }).length }
+function seats(G){ return Math.max(0,K.SEATS0+K.SEAT_STEP*G.ark-K.SCRAP.seats*(G.scrap||0)) }
+function swap(G,from){ var to=from==='metal'?'fuel':'metal'; if(G.stock[from]<6) return 'Не хватает: '+GRU[from]+' 6 (есть '+Math.floor(G.stock[from])+')'; G.stock[from]-=6; G.stock[to]+=3; return null }
+function canScrap(G){ if(seats(G)<K.SCRAP.seats) return {ok:false,why:'Разбирать больше нечего'}; return {ok:true} }
+function scrap(G){ var c=canScrap(G); if(!c.ok) return c.why; G.scrap=(G.scrap||0)+1; G.stock.metal+=K.SCRAP.metal; G.stock.fuel+=K.SCRAP.fuel; return null }
+function capLen(len){ return len<=110?6:(len<=150?5:(len<=190?4:3)) }
+function cap(l){ return capLen(l.len)*(l.wide?2:1) }
+/* человек с пожитками занимает на линии два места груза */
+function pplCap(l){ return Math.max(1,Math.floor(cap(l)/K.PPL_LOAD)) }
+function usable(G,l){ if(l.dead) return false; var a=G.worlds[l.a],b=G.worlds[l.b]; return a.awake&&b.awake&&!a.dead&&!b.dead }
+function adjacency(G){ var adj=G.worlds.map(function(){ return [] }); G.lines.forEach(function(l){ if(usable(G,l)){ adj[l.a].push({l:l,to:l.b}); adj[l.b].push({l:l,to:l.a}) } }); return adj }
+function hops(G,adj){ adj=adj||adjacency(G); var d=G.worlds.map(function(){ return Infinity }); d[0]=0; var q=[0]; while(q.length){ var a=q.shift(); adj[a].forEach(function(e){ if(d[e.to]===Infinity){ d[e.to]=d[a]+1; q.push(e.to) } }) } return d }
+/* мир связан с Землёй живыми линиями (или ему есть на чём сесть: сосед в сети) */
+function inNet(G,id,dist){ dist=dist||hops(G); if(dist[id]<Infinity) return true; return G.lines.some(function(l){ return !l.dead&&((l.a===id&&dist[l.b]<Infinity)||(l.b===id&&dist[l.a]<Infinity)) }) }
+function afford(G,c){ var miss=[]; GOODS.forEach(function(g){ if(c[g]&&G.stock[g]<c[g]) miss.push(GRU[g]+' '+c[g]+' (есть '+Math.floor(G.stock[g])+')') }); if(c.ppl&&G.earth<c.ppl) miss.push('людей '+c.ppl+' (на Земле '+G.earth+')'); return miss }
+function pay(G,c){ GOODS.forEach(function(g){ if(c[g]) G.stock[g]-=c[g] }); if(c.ppl) G.earth-=c.ppl }
+function lineCost(G,len){ return {metal:Math.round(1+len/45),fuel:Math.round(len/90),ppl:1} }
+function range(G,a,b){ var r=K.RANGE[G.tech.range]; if(a===0||b===0||G.worlds[a].type==='relay'&&G.worlds[a].awake||G.worlds[b].type==='relay'&&G.worlds[b].awake) r=Math.round(r*1.4); return r }
+function segCross(p1,p2,p3,p4){ function o(a,b,c){ return (b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x) } var d1=o(p3,p4,p1),d2=o(p3,p4,p2),d3=o(p1,p2,p3),d4=o(p1,p2,p4); return ((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0)) }
+function segDist(p,a,b){ var dx=b.x-a.x,dy=b.y-a.y,t=((p.x-a.x)*dx+(p.y-a.y)*dy)/(dx*dx+dy*dy); t=Math.max(0,Math.min(1,t)); return Math.hypot(p.x-a.x-t*dx,p.y-a.y-t*dy) }
+function findLine(G,a,b){ for(var i=0;i<G.lines.length;i++){ var l=G.lines[i]; if((l.a===a&&l.b===b)||(l.a===b&&l.b===a)) return l } return null }
+function lineById(G,id){ for(var i=0;i<G.lines.length;i++) if(G.lines[i].id===id) return G.lines[i]; return null }
+/* проверка линии: {ok, why, code, len, cost, blocker} */
+function canLink(G,a,b){
+  var A=G.worlds[a],B=G.worlds[b],res={ok:false,len:Math.round(dist(A,B))};
+  res.cost=lineCost(G,res.len);
+  if(a===b) { res.why='Один и тот же мир'; res.code='same'; return res }
+  if(findLine(G,a,b)){ res.why='Линия уже есть'; res.code='dup'; return res }
+  if(A.dead||B.dead){ res.why=(A.dead?A.name:B.name)+' мёртв: линию не принять'; res.code='dead'; return res }
+  var R=range(G,a,b); res.range=R;
+  if(res.len>R){ res.why='Длина '+res.len+', двигатель тянет '+R; res.code='range'; return res }
+  if((a===0||b===0)&&usedBerths(G)>=berths(G)){ res.why='Причалы Земли заняты: '+usedBerths(G)+'/'+berths(G); res.code='berth'; return res }
+  for(var i=0;i<G.lines.length;i++){ var l=G.lines[i]; if(l.a===a||l.b===a||l.a===b||l.b===b) continue;
+    if(segCross(A,B,G.worlds[l.a],G.worlds[l.b])){ res.why='Пересекает '+(l.dead?'мёртвую линию ':'линию ')+G.worlds[l.a].name+'—'+G.worlds[l.b].name; res.code='cross'; res.blocker=l.id; return res } }
+  for(var k=0;k<G.worlds.length;k++){ if(k===a||k===b) continue; if(segDist(G.worlds[k],A,B)<14){ res.why='На пути мир '+G.worlds[k].name; res.code='through'; return res } }
+  var d=hops(G); if(!inNet(G,a,d)&&!inNet(G,b,d)&&d[a]===Infinity&&d[b]===Infinity){ res.why='Ни один конец не связан с Землёй'; res.code='net'; return res }
+  var m=afford(G,res.cost); if(m.length){ res.why='Не хватает: '+m.join(', '); res.code='afford'; return res }
+  res.ok=true; return res;
+}
+function link(G,a,b){ var c=canLink(G,a,b); if(!c.ok) return c.why; pay(G,c.cost); G.lines.push({id:G.nextLine++,a:a,b:b,wide:false,dead:false,crew:1,len:c.len}); return null }
+function wakeCost(G,id){ var t=TYPES[G.worlds[id].type]; return {ppl:t.ppl,fuel:t.fuel} }
+function canWake(G,id){ var w=G.worlds[id],res={ok:false,cost:wakeCost(G,id)};
+  if(w.awake){ res.why='Уже заселён'; return res } if(w.dead){ res.why='Мир мёртв'; return res }
+  var d=hops(G),ok=G.lines.some(function(l){ return !l.dead&&((l.a===id&&d[l.b]<Infinity)||(l.b===id&&d[l.a]<Infinity)) });
+  if(!ok){ res.why='Нет линии до Земли'; res.code='noline'; return res }
+  var m=afford(G,res.cost); if(m.length){ res.why='Не хватает: '+m.join(', '); res.code='afford'; return res } res.ok=true; return res }
+function wake(G,id){ var c=canWake(G,id); if(!c.ok) return c.why; pay(G,c.cost); var w=G.worlds[id]; w.awake=true; w.people=c.cost.ppl+(w.sleepers||0); return null }
+function widenCost(G,l){ return {metal:Math.round(2+l.len/30),fuel:Math.round(1+l.len/70),parts:1,ppl:1} }
+function canWiden(G,l){ var res={ok:false,cost:widenCost(G,l)}; if(!G.tech.wide){ res.why='Нужна техника ШИРОКАЯ ЛИНИЯ'; return res } if(l.wide){ res.why='Линия уже широкая'; return res } if(l.dead){ res.why='Линия мертва'; return res } var m=afford(G,res.cost); if(m.length){ res.why='Не хватает: '+m.join(', '); return res } res.ok=true; return res }
+function widen(G,id){ var l=lineById(G,id),c=canWiden(G,l); if(!c.ok) return c.why; pay(G,c.cost); l.wide=true; l.crew+=1; return null }
+function demoCost(G,l){ var f=G.tech.demo?.5:1; return {metal:Math.ceil((3+l.len/40)*f),fuel:Math.ceil(2*f)} }
+function canDemolish(G,l){ var res={ok:false,cost:demoCost(G,l)}; if(G.tr&&G.tr[l.id]){ res.why='По линии идут люди'; return res } var m=afford(G,res.cost); if(m.length){ res.why='Не хватает: '+m.join(', '); return res } res.ok=true; return res }
+/* экипаж сходит на ближний к Земле конец, если тот жив; иначе пропадает на корпусе */
+function crewOff(G,l){ var d=hops(G),near=d[l.a]<=d[l.b]?l.a:l.b,w=G.worlds[near]; if(d[l.a]===Infinity&&d[l.b]===Infinity){ near=l.a===0?0:(l.b===0?0:(G.worlds[l.a].dead?l.b:l.a)); w=G.worlds[near] }
+  if(near===0) G.earth+=l.crew; else if(!w.dead) w.q+=l.crew; else G.lost.crew=(G.lost.crew||0)+l.crew; l.crew=0 }
+function demolish(G,id){ var l=lineById(G,id),c=canDemolish(G,l); if(!c.ok) return c.why; pay(G,c.cost); crewOff(G,l); G.lines.splice(G.lines.indexOf(l),1); return null }
+function techCost(G,k){ return TECH[k].lv[G.tech[k]]||null }
+function canTech(G,k){ var c=techCost(G,k),res={ok:false,cost:c}; if(!c){ res.why='Уже изучено'; return res } var m=afford(G,c); if(m.length){ res.why='Не хватает: '+m.join(', '); return res } res.ok=true; return res }
+function buyTech(G,k){ var c=canTech(G,k); if(!c.ok) return c.why; pay(G,c.cost); G.tech[k]++; return null }
+function arkCost(G){ return K.ARK[G.ark]||null }
+function canArk(G){ var c=arkCost(G),res={ok:false,cost:c}; if(!c){ res.why='Ковчег достроен'; return res } var m=afford(G,c); if(m.length){ res.why='Не хватает: '+m.join(', '); return res } res.ok=true; return res }
+function buyArk(G){ var c=canArk(G); if(!c.ok) return c.why; pay(G,c.cost); G.ark++; return null }
+function canLift(G,id){ var w=G.worlds[id]; if(G.turn<K.RISE) return {ok:false,why:'Подъём с хода '+K.RISE}; if(!w.awake||w.dead||id===0) return {ok:false,why:'Некого поднимать'}; if(w.lifted) return {ok:false,why:'Уже поднят'}; return {ok:true} }
+function lift(G,id){ var c=canLift(G,id); if(!c.ok) return c.why; var w=G.worlds[id]; w.lifted=true; w.q+=w.people; w.people=0; return null }
+
+/* время идти по линии, ходов: длинная линия — долгая дорога */
+function lineTime(l){ return Math.max(1,Math.ceil(l.len/K.SPEED)) }
+/* кратчайшее время до Земли по живым линиям */
+function tdist(G,adj){ adj=adj||adjacency(G); var d=G.worlds.map(function(){ return Infinity }),done={}; d[0]=0;
+  for(var n=0;n<d.length;n++){ var bi=-1; for(var i=0;i<d.length;i++) if(!done[i]&&d[i]<Infinity&&(bi<0||d[i]<d[bi])) bi=i; if(bi<0) break; done[bi]=1; adj[bi].forEach(function(e){ var v=d[bi]+lineTime(e.l); if(v<d[e.to]) d[e.to]=v }) } return d }
+function trCopy(tr){ var o={}; for(var k in tr) o[k]=tr[k].map(function(g){ return {n:g.n,t:g.t,from:g.from,to:g.to} }); return o }
+/* шаг отхода: люди входят на линию (не больше её пропускной способности), идут её время. q и tr мутируются. */
+function hop(G,q,used,adj,dst,tr){
+  adj=adj||adjacency(G); dst=dst||tdist(G,adj); tr=tr||{};
+  var cap0={},moves=[],arrived=0,jam={},start=q.slice();
+  G.lines.forEach(function(l){ cap0[l.id]=usable(G,l)?pplCap(l):0 });
+  var order=[]; for(var i=1;i<q.length;i++) if(start[i]>0&&dst[i]<Infinity) order.push(i);
+  order.sort(function(a,b){ return dst[a]-dst[b]||a-b });
+  order.forEach(function(w){ var left=start[w];
+    var ex=adj[w].filter(function(e){ return dst[e.to]<dst[w] }).sort(function(x,y){ return (dst[x.to]+lineTime(x.l))-(dst[y.to]+lineTime(y.l))||x.to-y.to });
+    ex.forEach(function(e){ if(left<=0) return; var m=Math.min(left,cap0[e.l.id]); if(m<=0) return; cap0[e.l.id]-=m; left-=m; q[w]-=m; (tr[e.l.id]=tr[e.l.id]||[]).push({n:m,t:lineTime(e.l),from:w,to:e.to}); moves.push({l:e.l.id,from:w,to:e.to,n:m}); if(used) used[e.l.id]=(used[e.l.id]||0)+m*K.PPL_LOAD });
+    if(left>0&&ex.length){ var jl=ex[0].l.id; jam[jl]=(jam[jl]||0)+left } });
+  for(var id in tr){ var rest=[]; tr[id].forEach(function(g){ g.t--; if(g.t<=0){ if(g.to===0) arrived+=g.n; else q[g.to]+=g.n } else rest.push(g) }); if(rest.length) tr[id]=rest; else delete tr[id] }
+  return {moves:moves,arrived:arrived,jam:jam};
+}
+/* прогноз: «если поднять всех сейчас» — сколько будет дома к Ночи */
+function forecast(G){
+  var adj=adjacency(G),dst=tdist(G,adj),tr=trCopy(G.tr||{});
+  var q=G.worlds.map(function(w){ return w.id===0?0:w.q+((w.awake&&!w.dead)?w.people:0) }),lost={};
+  var home=G.earth;
+  G.lines.forEach(function(l){ if(!l.crew) return;
+    if(l.dead){ var dw=G.worlds[l.a].dead?l.a:l.b; lost[dw]=(lost[dw]||0)+l.crew; return }
+    var far=dst[l.a]>=dst[l.b]?l.a:l.b; if(dst[far]===Infinity||!G.worlds[far].awake) far=far===l.a?l.b:l.a;
+    if(far===0) home+=l.crew; else q[far]+=l.crew });
+  var left=G.turn<K.RISE?K.TURNS-K.RISE+1:K.TURNS-G.turn+1, flow={},jam={};
+  for(var t=0;t<left;t++){ var h=hop(G,q,null,adj,dst,tr); home+=h.arrived; h.moves.forEach(function(m){ flow[m.l]=(flow[m.l]||0)+m.n }); for(var j in h.jam) jam[j]=(jam[j]||0)+h.jam[j] }
+  for(var k0 in tr) tr[k0].forEach(function(g){ if(g.to) q[g.to]+=g.n });
+  var stuck={},total=home; q.forEach(function(n,i){ if(n>0){ stuck[i]=n; total+=n } }); for(var d in lost){ stuck[d]=(stuck[d]||0)+lost[d]; total+=lost[d] }
+  var topJam=null,tj=0; for(var k in jam) if(jam[k]>tj){ tj=jam[k]; topJam=+k }
+  return {home:home,total:total,stuck:stuck,flow:flow,jam:jam,topJam:topJam,left:left,dst:dst};
+}
+/* экономика хода: чистая функция. used — занято людьми на линиях */
+function econ(G,used){
+  var adj=adjacency(G),dst=hops(G,adj),res={},out=G.worlds.map(function(){ return {food:0,metal:0,fuel:0,parts:0} }),st=G.worlds.map(function(){ return {} }),flows={},load={};
+  G.lines.forEach(function(l){ var u=(used&&used[l.id])||0; res[l.id]=usable(G,l)?cap(l)-u:0; load[l.id]=u });
+  function act(w){ return w.awake&&!w.dead&&!w.lifted&&w.id!==0 }
+  function flow(l,from,to,g,n){ if(n<=0) return; var key=l.id+'|'+g+'|'+from; if(!flows[key]) flows[key]={l:l.id,from:from,to:to,g:g,n:0}; flows[key].n+=n; res[l.id]-=n; load[l.id]+=n }
+  function boost(w){ var b=0; adj[w.id].forEach(function(e){ var o=G.worlds[e.to]; if(o.type==='house'&&act(o)&&o.people>0) b++ }); return Math.min(2,b) }
+  G.worlds.forEach(function(w){ if(act(w)&&dst[w.id]===Infinity) st[w.id].cut=true });
+  G.worlds.forEach(function(w){ if(act(w)&&w.type==='farm'){ var b=boost(w); out[w.id].food=w.base+b; st[w.id].made=w.base+b; st[w.id].boost=b } });
+  function source(w,g){ var c=adj[w.id].filter(function(e){ return out[e.to][g]>0&&res[e.l.id]>0 }); if(!c.length) return null; c.sort(function(x,y){ return out[y.to][g]-out[x.to][g]||x.to-y.to }); return c[0] }
+  function take(w,e,g){ out[e.to][g]--; flow(e.l,e.to,w.id,g,1) }
+  var cons=G.worlds.filter(function(w){ return act(w)&&(w.type==='mine'||w.type==='well') }).sort(function(a,b){ return dst[a.id]-dst[b.id]||a.id-b.id });
+  cons.forEach(function(w){ var e=source(w,'food'); if(!e){ st[w.id].no='рационов'; return } take(w,e,'food'); var b=boost(w),m=Math.min(w.base+b,w.deposit); out[w.id][TYPES[w.type].good]=m; st[w.id].made=m; st[w.id].boost=b });
+  G.worlds.filter(function(w){ return act(w)&&w.type==='factory' }).sort(function(a,b){ return dst[a.id]-dst[b.id]||a.id-b.id }).forEach(function(w){ var f=source(w,'food'),m=source(w,'metal');
+    if(f&&m&&f.l.id===m.l.id&&res[f.l.id]<2) m=null;
+    if(!f||!m){ st[w.id].no=!f&&!m?'рационов и металла':(!f?'рационов':'металла'); return } take(w,f,'food'); take(w,m,'metal'); var b=boost(w); out[w.id].parts=w.base+b; st[w.id].made=w.base+b; st[w.id].boost=b });
+  var grow={};
+  G.worlds.filter(function(w){ return act(w)&&w.type==='house' }).sort(function(a,b){ return dst[a.id]-dst[b.id]||a.id-b.id }).forEach(function(w){ var e=source(w,'food'); if(!e){ st[w.id].no='рационов'; return } take(w,e,'food'); st[w.id].fed=true;
+    var capH=G.tech.dense?K.HOUSE_CAP2:K.HOUSE_CAP, g=Math.min(G.tech.dense?K.GROW2:K.GROW,Math.max(0,capH-w.people)); grow[w.id]=g; st[w.id].grow=g });
+  function route(from,g,n){ /* BFS к Земле по остатку */ var sent=0;
+    while(n>0){ var prev={},q=[from],found=false; prev[from]=-1; while(q.length&&!found){ var a=q.shift(); for(var i=0;i<adj[a].length;i++){ var e=adj[a][i]; if(res[e.l.id]<=0||prev[e.to]!==undefined) continue; prev[e.to]={at:a,l:e.l}; if(e.to===0){ found=true; break } q.push(e.to) } }
+      if(!found) break; var bn=n,p=0; while(p!==from){ var pr=prev[p]; bn=Math.min(bn,res[pr.l.id]); p=pr.at } p=0; while(p!==from){ var pr2=prev[p]; flow(pr2.l,pr2.at,p,g,bn); p=pr2.at } n-=bn; sent+=bn }
+    return sent }
+  var delivered={food:0,metal:0,fuel:0,parts:0,ppl:0},byDist=G.worlds.filter(function(w){ return w.id!==0 }).sort(function(a,b){ return dst[a.id]-dst[b.id]||a.id-b.id });
+  /* по единице: всегда то, чего на Земле меньше всего; груз делит линию, а не вытесняет */
+  var room=G.turn>=K.RISE?0:Math.max(0,K.EARTH_CAP-G.earth),drain={};
+  byDist.forEach(function(w){ out[w.id].ppl=(act(w)&&w.type==='house')?w.people:0 });
+  var level={food:G.stock.food-3*needFood(G.turn),metal:G.stock.metal-3*needMetal(G.turn),fuel:G.stock.fuel,parts:G.stock.parts,ppl:G.earth+2},stuckR={},gs=GOODS.concat(['ppl']),foodRoom=Math.max(0,K.FOOD_CAP+needFood(G.turn)-G.stock.food);
+  for(var guard=0;guard<400;guard++){ var best=null; gs.forEach(function(g){ if(g==='ppl'&&room<=0) return; if(best&&level[best]<=level[g]) return; if(byDist.some(function(w){ return out[w.id][g]>0&&!stuckR[w.id+g] })) best=g });
+    if(!best) break; if(best==='food'&&delivered.food>=foodRoom){ gs=gs.filter(function(x){ return x!=='food' }); continue } var bw=null; byDist.forEach(function(w){ if(out[w.id][best]>0&&!stuckR[w.id+best]&&(!bw||out[w.id][best]>out[bw.id][best])) bw=w });
+    if(route(bw.id,best,1)){ delivered[best]++; out[bw.id][best]--; level[best]++; if(best==='ppl'){ room--; drain[bw.id]=(drain[bw.id]||0)+1 } } else stuckR[bw.id+best]=1 }
+  byDist.forEach(function(w){ GOODS.forEach(function(g){ if(out[w.id][g]>0) st[w.id].jam=(st[w.id].jam||0)+out[w.id][g] }) });
+  /* что реально добыто: выработка минус несданное */
+  var spent={}; G.worlds.forEach(function(w){ if((w.type==='mine'||w.type==='well')&&st[w.id].made){ spent[w.id]=st[w.id].made-(out[w.id][TYPES[w.type].good]||0) } });
+  return {delivered:delivered,flows:Object.keys(flows).map(function(k){ return flows[k] }),load:load,st:st,spent:spent,grow:grow,drain:drain,dst:dst};
+}
+function income(G){ var used={}; if(G.turn>=K.RISE){ var q=G.worlds.map(function(w){ return w.q }); hop(G,q,used,null,null,trCopy(G.tr||{})) } return econ(G,used) }
+/* сколько отрежет смерть мира */
+function cutIfDead(G,id){ var t=clone(G); var w=t.worlds[id]; w.dead=true; var d=hops(t),worlds=0,ppl=0; t.worlds.forEach(function(o){ if(o.id&&o.id!==id&&o.awake&&!o.dead&&d[o.id]===Infinity){ worlds++; ppl+=o.people+o.q } }); return {worlds:worlds,ppl:ppl} }
+function turnsLeft(G,w,e){ if(w.type!=='mine'&&w.type!=='well') return Infinity; e=e||income(G); var r=e.spent[w.id]||0; if(!r) r=w.base; return Math.ceil(w.deposit/r) }
+function die(G,w){ w.dead=true; G.deadCount++;
+  var d0=hops(G); /* люди уходят к живому соседу перед смертью линий */
+  var nb=[]; G.lines.forEach(function(l){ if(l.dead) return; var o=l.a===w.id?l.b:(l.b===w.id?l.a:-1); if(o>=0&&G.worlds[o].awake&&!G.worlds[o].dead) nb.push(o) });
+  nb.sort(function(a,b){ return (a===0?-1:0)-(b===0?-1:0)||a-b });
+  var ppl=w.people+w.q; w.people=0; w.q=0;
+  if(nb.length){ var t=nb[0]; if(t===0) G.earth+=ppl; else if(G.worlds[t].lifted) G.worlds[t].q+=ppl; else G.worlds[t].people+=ppl } else G.lost.dead=(G.lost.dead||0)+ppl;
+  G.lines.forEach(function(l){ if(l.a===w.id||l.b===w.id) l.dead=true });
+  var d=hops(G),cut=[],cp=0; G.worlds.forEach(function(o){ if(o.id&&o.awake&&!o.dead&&d[o.id]===Infinity&&d0[o.id]<Infinity){ cut.push(o.name); cp+=o.people+o.q } });
+  G.events.push({k:'dead',w:w.id,cut:cut.length,ppl:cp});
+}
+/* линия сворачивается сама, когда за ней больше никого нет */
+function fold(G){ var again=true,count=0,inb={}; for(var k0 in G.tr) G.tr[k0].forEach(function(g){ inb[g.to]=1 });
+  function empty(w){ return w.id!==0&&(w.lifted||!w.awake)&&w.people+w.q===0&&!inb[w.id] }
+  while(again){ again=false;
+    for(var i=0;i<G.lines.length;i++){ var l=G.lines[i]; if(l.dead) continue;
+      if(G.tr[l.id]) continue;
+      var A=G.worlds[l.a],B=G.worlds[l.b];
+      if(!empty(A)&&!empty(B)) continue;
+      /* нельзя отрезать тех, кто ещё идёт */
+      var t=clone(G); t.lines.splice(i,1); var d=hops(t),bad=t.worlds.some(function(o){ return o.id&&o.awake&&!o.dead&&(o.people+o.q>0||inb[o.id])&&d[o.id]===Infinity&&hops(G)[o.id]<Infinity });
+      if(bad) continue;
+      crewOff(G,l); G.lines.splice(i,1); G.events.push({k:'fold',a:l.a,b:l.b}); again=true; count++; break } }
+  return count }
+function endTurn(G){
+  if(G.over) return; G.events=[];
+  var used={},rise=G.turn>=K.RISE;
+  if(rise){ var q=G.worlds.map(function(w){ return w.q }),h=hop(G,q,used,null,null,G.tr); G.worlds.forEach(function(w,i){ w.q=q[i] }); G.earth+=h.arrived; for(var j in h.jam){ G.jam[j]=(G.jam[j]||0)+h.jam[j]; var jl=lineById(G,+j); if(jl){ G.jamNames=G.jamNames||{}; G.jamNames[j]=G.worlds[jl.a].name+'—'+G.worlds[jl.b].name } } G.lastMoves=h.moves }
+  var e=econ(G,used);
+  GOODS.forEach(function(g){ G.stock[g]+=e.delivered[g] });
+  for(var s in e.spent){ G.worlds[s].deposit=Math.max(0,G.worlds[s].deposit-e.spent[s]) }
+  for(var gw in e.grow){ G.worlds[gw].people+=e.grow[gw] }
+  for(var dw in e.drain){ G.worlds[dw].people-=e.drain[dw]; G.earth+=e.drain[dw] }
+  var nf=needFood(G.turn),nm=needMetal(G.turn);
+  if(G.stock.food>=nf){ G.stock.food-=nf; G.deficit=0; if(G.earth<K.EARTH_CAP) G.earth+=1 } else { G.stock.food=0; G.deficit++; G.maxDeficit=Math.max(G.maxDeficit,G.deficit); G.events.push({k:'hunger',n:G.deficit}) }
+  if(G.stock.metal>=nm){ G.stock.metal-=nm } else { var miss=nm-G.stock.metal; G.stock.metal=0; var loss=Math.min(G.earth,miss); G.earth-=loss; G.lost.metal+=loss; if(loss) G.events.push({k:'hull',n:loss}) }
+  G.worlds.forEach(function(w){ if((w.type==='mine'||w.type==='well')&&w.awake&&!w.dead&&w.deposit<=0) die(G,w) });
+  if(G.turn>=K.RISE) fold(G);
+  G.history.push({t:G.turn,food:G.stock.food,metal:G.stock.metal,fuel:G.stock.fuel,parts:G.stock.parts,earth:G.earth});
+  if(G.deficit>=K.DEFICIT){ finish(G,'famine'); return }
+  if(G.turn>=K.TURNS){ finish(G,'night'); return }
+  G.turn++;
+}
+function finish(G,kind){
+  var so=kind==='famine'?0:Math.min(G.earth,seats(G)),stuck=[],left=0;
+  G.worlds.forEach(function(w){ var n=w.people+w.q; if(w.id&&n>0){ stuck.push({id:w.id,name:w.name,n:n,elder:w.elder}); left+=n } });
+  var crew=0; G.lines.forEach(function(l){ crew+=l.crew }); crew+=(G.lost.crew||0);
+  var transit=0; for(var tk in G.tr) G.tr[tk].forEach(function(g){ transit+=g.n });
+  stuck.sort(function(a,b){ return b.n-a.n });
+  var jid=null,jn=0; for(var k in G.jam) if(G.jam[k]>jn){ jn=G.jam[k]; jid=+k }
+  var jl=jid?lineById(G,jid):null;
+  var over=G.earth-seats(G);
+  G.over={transit:transit,kind:kind,souls:so,seats:seats(G),earth:G.earth,overflow:kind==='famine'?0:Math.max(0,over),stuck:stuck,left:left,crew:crew,jam:jid?{n:jn,name:jl?G.worlds[jl.a].name+'—'+G.worlds[jl.b].name:(G.jamNames&&G.jamNames[jid])||'свёрнутая линия'}:null,win:kind==='night'&&so>=K.WIN,turn:G.turn,rank:rank(so,kind)};
+}
+function rank(s,kind){ if(kind==='famine') return 'ЗЕМЛЯ НЕ ДОЖДАЛАСЬ'; if(s>=140) return 'ВСЕ, КОГО МОЖНО БЫЛО'; if(s>=110) return 'ПОЛНЫЙ КОВЧЕГ'; if(s>=80) return 'УШЛИ'; if(s>=K.WIN) return 'ГОРСТЬ, НО ДОМА'; if(s>=30) return 'ПОЧТИ НИКОГО'; return 'СУДНО-БАЗА БЕЗ МИРА' }
+return {pplCap:pplCap,swap:swap,lineTime:lineTime,tdist:tdist,capLen:capLen,scrap:scrap,canScrap:canScrap,hop:hop,K:K,GOODS:GOODS,GRU:GRU,TYPES:TYPES,TECH:TECH,newGame:newGame,clone:clone,endTurn:endTurn,link:link,canLink:canLink,wake:wake,canWake:canWake,widen:widen,canWiden:canWiden,demolish:demolish,canDemolish:canDemolish,demoCost:demoCost,lift:lift,canLift:canLift,buyTech:buyTech,canTech:canTech,techCost:techCost,buyArk:buyArk,canArk:canArk,arkCost:arkCost,income:income,forecast:forecast,hops:hops,adjacency:adjacency,usable:usable,berths:berths,usedBerths:usedBerths,seats:seats,needFood:needFood,needMetal:needMetal,lineById:lineById,findLine:findLine,cutIfDead:cutIfDead,turnsLeft:turnsLeft,cap:cap,range:range,wakeCost:wakeCost,dist:dist};
+})();
+
+/* ===== ИНТЕРФЕЙС ===== */
+(function(){
+var K=Core.K,S=null,undo=[],sel=null,prop=null,selLine=null,lens=false,V={},voiced={},seed=LB.seed,sheet=null;
+var COL={food:'#3DDC84',metal:'#C9CFD6',fuel:'#FF8A1F',parts:'#E8E4D8',ppl:'#FFD23F',ark:'#B48CFF',earth:'#4FA3FF',red:'#FF2A1A',relay:'#45D4E8',sleep:'#FFD23F',ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',ln:'#2E2E33'};
+var TCOL={farm:COL.food,mine:COL.metal,well:COL.fuel,factory:COL.parts,house:COL.ppl,relay:COL.relay,sleep:COL.sleep,earth:COL.earth};
+var GICON={food:'Р',metal:'М',fuel:'Т',parts:'Д',ppl:'Л'};
+var gs=function(g){ return '<span style="color:'+COL[g]+'">'+GICON[g]+'</span>' };
+
+var stage=LB.shell({title:'LAST BERTH',ref:'SLIPWAYS',help:
+ '<h2>Последняя сеть</h2>'+
+ '<p>Вы — Пульт. 30 смен до Ночи, случайностей нет. <b>Счёт — души на борту.</b></p>'+
+ '<p><b>Мир, потом второй мир</b> — линия. Пересекать нельзя. До подтверждения видно, что придёт на Землю и сколько успеет домой.</p>'+
+ '<p>Мир работает, если заселён и <b>сосед по линии</b> даёт вход: ферма → шахта, скважина; ферма + шахта → завод. Излишек идёт к Земле. Жильё растит людей и даёт соседям +1.</p>'+
+ '<p>Чем длиннее линия, тем меньше везёт: <b>6, 5, 4 или 3 груза в ход</b>, человек занимает два места. У Земли <b>6 причалов</b>.</p>'+
+ '<p>Шахта и скважина иссякают. Мир гаснет, его линии мертвы: не везут, мешают, держат причал, пока не снесёте.</p>'+
+ '<p><b>Последний подъём</b>, ходы 23–30. Поднятый мир встаёт. Люди идут домой: линия 2–4 хода, входят 1–3 человека в ход, широкая вдвое больше. Кто не дома в Ночь, остался. Мест столько, сколько построено на ковчеге.</p>'+
+ '<p><b>ОТХОД</b> в шапке: сколько будет дома, если поднять всех сейчас. Склад рационов — '+Core.K.FOOD_CAP+'. Три хода без рационов — конец.</p>',
+ onStart:function(){ LB.voice('Они проснулись и спрашивают, что делать. Я сказала: вы знаете.',6000) },
+ onRestart:function(){ start(+LB.q.get('seed')||(Date.now()%1e9)) }});
+stage.innerHTML='<div id="app"><div id="mapw"><canvas id="map"></canvas><div id="alerts"></div><div id="mapbtns"></div></div><div id="side"><div id="hud"></div><div id="ctx"></div><div id="extras"><div class="box" id="ark"></div><div class="box" id="tech"></div></div><div id="bar"></div></div></div>';
+var cv=document.getElementById('map'),cx=cv.getContext('2d'),mapw=document.getElementById('mapw'),W=0,H=0,DPR=1,cam={x:0,y:0,s:.7};
+function $(id){ return document.getElementById(id) }
+function worldIcon(t,sz){ sz=sz||14; var c=TCOL[t],h=sz/2,s=''; if(t==='farm'||t==='earth') s='<circle cx="7" cy="7" r="6" fill="'+c+'"/>'; else if(t==='mine') s='<rect x="1.5" y="1.5" width="11" height="11" fill="'+c+'"/>'; else if(t==='well') s='<polygon points="7,1 13.5,13 .5,13" fill="'+c+'"/>'; else if(t==='factory') s='<polygon points="13.5,7 10.2,12.6 3.8,12.6 .5,7 3.8,1.4 10.2,1.4" fill="'+c+'"/>'; else if(t==='house') s='<polygon points="7,.5 13.5,7 7,13.5 .5,7" fill="'+c+'"/>'; else if(t==='relay') s='<circle cx="7" cy="7" r="5" fill="none" stroke="'+c+'" stroke-width="2"/><circle cx="7" cy="7" r="1.6" fill="'+c+'"/>'; else s='<circle cx="7" cy="7" r="5" fill="none" stroke="'+c+'" stroke-width="2" stroke-dasharray="2 2"/>'; return '<svg viewBox="0 0 14 14" width="'+sz+'" height="'+sz+'" aria-hidden="true">'+s+'</svg>' }
+
+/* --- действия, общие для игрока и ботов --- */
+function act(fn){ undo.push(Core.clone(S)); var err=fn(); if(err){ undo.pop(); LB.toast(err); return err } LB.beep(520,.05); prop=null; refresh(); return null }
+var A={
+  link:function(a,b){ return act(function(){ return Core.link(S,a,b) }) },
+  wake:function(id){ return act(function(){ return Core.wake(S,id) }) },
+  linkWake:function(a,b,t){ return act(function(){ var e=Core.link(S,a,b); if(e) return e; return Core.wake(S,t) }) },
+  widen:function(id){ return act(function(){ return Core.widen(S,id) }) },
+  demolish:function(id){ var r=act(function(){ return Core.demolish(S,id) }); if(!r) selLine=null; refresh(); return r },
+  lift:function(id){ var w=S.worlds[id],n=w.people+w.q,r=act(function(){ return Core.lift(S,id) }); if(!r&&n>=6&&!voiced.lift){ voiced.lift=1; LB.voice(w.elder+' с '+w.name+' спрашивает, что брать с собой. Я сказала: детей.',6000) } return r },
+  liftDue:function(){ return act(function(){ var n=0; dueWorlds().forEach(function(w){ if(Core.canLift(S,w.id).ok){ Core.lift(S,w.id); n++ } }); return n?null:'Сейчас идти некому' }) },
+  liftAll:function(){ return act(function(){ var n=0; S.worlds.forEach(function(w){ if(Core.canLift(S,w.id).ok){ Core.lift(S,w.id); n++ } }); return n?null:'Некого поднимать' }) },
+  tech:function(k){ return act(function(){ return Core.buyTech(S,k) }) },
+  scrap:function(){ return act(function(){ return Core.scrap(S) }) },
+  swap:function(f){ return act(function(){ return Core.swap(S,f) }) },
+  ark:function(){ return act(function(){ return Core.buyArk(S) }) },
+  undo:function(){ if(!undo.length) return; S=undo.pop(); GAME.state=S; prop=null; refresh(); LB.beep(300,.05) },
+  next:function(){ if(S.over) return; undo=[]; prop=null; selLine=null; sel=null; Core.endTurn(S); LB.beep(S.turn>=K.RISE?220:340,.09,'triangle'); afterTurn(); refresh() }
+};
+function afterTurn(){
+  S.events.forEach(function(ev){
+    if(ev.k==='dead'){ var w=S.worlds[ev.w]; LB.voice(w.name+' выработан. Люди ушли к соседям. Линии остались. '+(ev.cut?'Отрезало миров: '+ev.cut+', людей: '+ev.ppl+'.':''),8000) }
+    if(ev.k==='hunger'&&ev.n===2) LB.voice('На Земле пустые полки вторую смену. Я не знаю, что им сказать на третью.',7000);
+  });
+  if(S.turn===K.RISE&&!voiced.rise){ voiced.rise=1; lens=true; LB.voice('Восемь смен. Я сказала им: идите домой. Поднимите миры, и они пойдут.',9000) }
+  if(S.turn===8&&!voiced.m8&&S.lines.length){ voiced.m8=1; LB.voice('Вы проложили им дорогу на работу. Обратно они пойдут по ней же.',7000) }
+  if(S.over) showEnd();
+}
+/* кому пора выходить: дорога домой занимает всё, что осталось до Ночи */
+function dueWorlds(){ var d=V.fc.dst,left=K.TURNS-S.turn+1; return S.worlds.filter(function(w){ return Core.canLift(S,w.id).ok&&d[w.id]<Infinity&&d[w.id]>=left-1 }) }
+/* --- предпросмотр: копия состояния, действие, разница --- */
+function previewOf(fn){ var a=V.e,bf=V.fc,c=Core.clone(S),err=fn(c); if(err) return {err:err}; var e=Core.income(c),f=Core.forecast(c),d={};
+  ['food','metal','fuel','parts','ppl'].forEach(function(g){ d[g]=e.delivered[g]-a.delivered[g] }); return {d:d,fc:f.home-bf.home,tot:f.total-bf.total,home:f.home,total:f.total} }
+function delta(p,noPpl){ if(!p) return ''; var h=''; ['food','metal','fuel','parts','ppl'].forEach(function(g){ if(p.d[g]&&!(noPpl&&g==='ppl')) h+='<span style="color:'+COL[g]+'">'+(p.d[g]>0?'+':'')+p.d[g]+' '+Core.GRU[g]+'</span>' });
+  if(!h) h='<span style="color:var(--mid)">на Землю без изменений</span>';
+  h+='<span style="color:'+(p.fc>0?'var(--ppl)':p.fc<0?'var(--red)':'var(--mid)')+'">отход '+(p.fc>0?'+':'')+p.fc+'</span>'; return '<div class="chips">'+h+'</div>' }
+function cost(c){ if(!c) return ''; var h=[]; if(c.metal) h.push('<span style="color:'+COL.metal+'">'+c.metal+' мет</span>'); if(c.fuel) h.push('<span style="color:'+COL.fuel+'">'+c.fuel+' топ</span>'); if(c.parts) h.push('<span style="color:'+COL.parts+'">'+c.parts+' дет</span>'); if(c.ppl) h.push('<span style="color:'+COL.ppl+'">'+c.ppl+' чел</span>'); return h.join(' ') }
+/* --- обновление всего, кроме холста --- */
+function refresh(){ if(!S) return; V.e=Core.income(S); V.fc=Core.forecast(S); V.adj=Core.adjacency(S); V.mv=S.turn>=K.RISE?Core.hop(S,S.worlds.map(function(w){ return w.q }),{},null,null,JSON.parse(JSON.stringify(S.tr))):null; renderHud(); renderCtx(); renderExtras(); renderBar(); renderAlerts(); renderMapBtns();
+  document.documentElement.style.setProperty('--vb',(innerWidth<900?($('ctx').offsetHeight+$('bar').offsetHeight+58):12)+'px') }
+function renderHud(){ var t=S.turn,r=S.turn>=K.RISE,h='<div class="tl"><b>ХОД '+t+'/'+K.TURNS+'</b><div class="sp"></div>';
+  h+=r?'<span class="hot">ПОДЪЁМ · НОЧЬ ЧЕРЕЗ '+(K.TURNS-t+1)+'</span>':'<span>ПОДЪЁМ ЧЕРЕЗ '+(K.RISE-t)+'</span>'; h+='</div><div class="ticks">';
+  for(var i=1;i<=K.TURNS;i++) h+='<i class="'+(i>=K.RISE?'r ':'')+(i<t?'p':i===t?'n':'')+'"></i>'; h+='</div><div class="rs">';
+  var nf=Core.needFood(t),nm=Core.needMetal(t),e=V.e.delivered;
+  [['food','РАЦИОНЫ',S.stock.food,e.food-nf,'--food'],['metal','МЕТАЛЛ',S.stock.metal,e.metal-nm,'--metal'],['fuel','ТОПЛИВО',S.stock.fuel,e.fuel,'--fuel'],['parts','ДЕТАЛИ',S.stock.parts,e.parts,'--parts'],['ppl','ЛЮДИ',S.earth,e.ppl,'--ppl']].forEach(function(c){
+    h+='<div class="res" style="--c:var('+c[4]+')"><b id="st-'+c[0]+'">'+Math.floor(c[2])+'</b><i class="'+(c[3]>0?'up':c[3]<0?'dn':'')+'">'+(c[3]>0?'+':'')+c[3]+'</i><small>'+c[1]+'</small></div>' });
+  var ub=Core.usedBerths(S),b=Core.berths(S),f=V.fc;
+  h+='</div><div class="kv"><div><small>ПРИЧАЛЫ</small><b>'+ub+'<em>/'+b+'</em></b></div><div><small>МЕСТ НА БОРТУ</small><b style="color:var(--ark)">'+Core.seats(S)+'</b></div><div><small>ОТХОД</small><b id="fc" style="color:var(--ppl)">'+f.home+'<em>/'+f.total+'</em></b></div></div>';
+  $('hud').innerHTML=h }
+function statusOf(w){ var st=V.e.st[w.id]||{}; if(!w.awake) return ''; if(w.dead) return '<span class="bad">мёртв</span>'; if(w.lifted) return '<span class="y">поднят</span>'; if(st.cut) return '<span class="bad">отрезан от Земли</span>'; if(st.no) return '<span class="bad">нет '+st.no+' от соседа</span>'; if(st.jam) return '<span class="bad">пробка: не вывезено '+st.jam+'</span>'; return '<span class="ok">работает</span>' }
+function recipe(w){ var g={mine:'мет',well:'топ'}[w.type]; switch(w.type){ case 'farm': return '→ '+gs('food')+' '+(w.base+((V.e.st[w.id]||{}).boost||0)); case 'mine': return gs('food')+' 1 → '+gs('metal')+' '+w.base; case 'well': return gs('food')+' 1 → '+gs('fuel')+' '+w.base; case 'factory': return gs('food')+' 1 + '+gs('metal')+' 1 → '+gs('parts')+' '+w.base; case 'house': return gs('food')+' 1 → '+gs('ppl')+' +'+(S.tech.dense?K.GROW2:K.GROW)+' · сосед +1'; case 'relay': return 'линии отсюда длиннее ×1.4'; case 'sleep': return gs('ppl')+' '+w.sleepers+' спят'; default: return '' } }
+function renderCtx(){ var h='';
+  if(prop){ var a=prop.a,b=prop.b,c=Core.canLink(S,a,b),A1=S.worlds[a],B1=S.worlds[b];
+    h+='<h3>'+A1.name+' — '+B1.name+' <small>'+c.len+'</small></h3>';
+    if(!c.ok){ h+='<div class="why">'+LB.esc(c.why)+'</div><div class="acts">'; h+='<button class="btn" data-a="sel" data-id="'+b+'">К '+B1.name+'</button><button class="btn" data-a="cancel">Отмена</button></div>' }
+    else { var sleeper=!A1.awake?a:(!B1.awake?b:null);
+      var both=sleeper!==null&&previewOf(function(cl){ var e=Core.link(cl,a,b); if(e) return e; return Core.wake(cl,sleeper) });
+      var only=previewOf(function(cl){ return Core.link(cl,a,b) });
+      h+='<div class="ln">'+cost(c.cost)+' · груз <b>'+Core.capLen(c.len)+'</b> · людей <b>'+Math.max(1,Math.floor(Core.capLen(c.len)/K.PPL_LOAD))+'</b> в ход · идти <b>'+Math.max(1,Math.ceil(c.len/K.SPEED))+'</b> ход.</div>';
+      [A1,B1].forEach(function(w){ if(w.deposit0&&!w.dead){ var r=w.awake?Core.turnsLeft(S,w,V.e):Math.ceil(w.deposit/w.base); h+='<div class="ln bad">умрёт вместе с '+w.name+' через ≈'+r+' ход.</div>' } });
+      if(sleeper!==null&&both&&!both.err){ var wc=Core.wakeCost(S,sleeper); h+='<div class="ln">+ заселить '+S.worlds[sleeper].name+': '+cost(wc)+' · '+recipe(S.worlds[sleeper])+'</div>'+delta(both); 
+        h+='<div class="acts"><button class="btn pri" data-a="linkwake" data-x="'+a+'" data-y="'+b+'" data-t="'+sleeper+'">Линия и заселить</button><button class="btn" data-a="link" data-x="'+a+'" data-y="'+b+'">Только линия</button><button class="btn" data-a="cancel">Отмена</button></div>' }
+      else { h+=delta(only.err?null:only); if(sleeper!==null&&both&&both.err) h+='<div class="why">Заселить нельзя: '+LB.esc(both.err)+'</div>'; h+='<div class="acts"><button class="btn pri" data-a="link" data-x="'+a+'" data-y="'+b+'">Проложить</button><button class="btn" data-a="cancel">Отмена</button></div>' }
+    }
+  } else if(selLine){ var l=Core.lineById(S,selLine); if(!l){ selLine=null; return renderCtx() } var la=S.worlds[l.a],lb=S.worlds[l.b];
+    h+='<h3>'+la.name+' — '+lb.name+' <small>'+(l.dead?'МЁРТВАЯ':(l.wide?'ШИРОКАЯ':'ЛИНИЯ'))+'</small></h3>';
+    if(l.dead){ h+='<div class="ln m">не везёт, мешает, экипаж '+l.crew+' на корпусе</div>' }
+    else { var cp=Core.cap(l),ld=V.e.load[l.id]||0,by={}; V.e.flows.forEach(function(f){ if(f.l===l.id) by[f.g]=(by[f.g]||0)+f.n }); var ff=''; for(var g in by) ff+=' <span style="color:'+COL[g]+'">'+by[g]+' '+Core.GRU[g]+'</span>';
+      h+='<div class="ln">загрузка <b class="'+(ld>=cp?'bad':'')+'">'+ld+'/'+cp+'</b>'+ff+'</div><div class="ln m">экипаж '+l.crew+' · отход везёт '+(V.fc.flow[l.id]||0)+(V.fc.jam[l.id]?' · <span class="bad">ждут '+V.fc.jam[l.id]+'</span>':'')+'</div>' }
+    var dc=Core.canDemolish(S,l),wc2=Core.canWiden(S,l),pd=previewOf(function(cl){ return Core.demolish(cl,l.id) }); h+='<div class="acts">';
+    if(!l.dead&&!l.wide){ h+='<button class="btn '+(wc2.ok?'pri':'off')+'" data-a="widen" data-id="'+l.id+'" data-why="'+LB.esc(wc2.why||'')+'">Шире: '+wc2.cost.metal+'М '+wc2.cost.fuel+'Т '+wc2.cost.parts+'Д</button>' }
+    h+='<button class="btn '+(dc.ok?(l.dead?'pri':''):'off')+'" data-a="demolish" data-id="'+l.id+'" data-why="'+LB.esc(dc.why||'')+'">Снести: '+dc.cost.metal+'М '+dc.cost.fuel+'Т</button><button class="btn" data-a="cancel">✕</button></div>';
+    if(!pd.err) h+=delta(pd);
+  } else if(sel!==null){ var w=S.worlds[sel],ty=Core.TYPES[w.type],d=V.e.dst[w.id];
+    h+='<h3>'+worldIcon(w.type)+w.name+' <small>'+ty.ru+'</small></h3>';
+    if(w.id===0){ var nf=Core.needFood(S.turn),nm=Core.needMetal(S.turn); h+='<div class="ln">ест '+gs('food')+' '+nf+' '+gs('metal')+' '+nm+' в ход · через 5 ходов '+gs('food')+' '+Core.needFood(S.turn+5)+' '+gs('metal')+' '+Core.needMetal(S.turn+5)+'</div><div class="ln m">вмещает '+K.EARTH_CAP+' до Подъёма · нажмите мир в круге</div>' }
+    else { h+='<div class="ln">'+recipe(w)+'</div>';
+      var info=[]; if(w.deposit0) info.push('залежь <b>'+Math.floor(w.deposit)+'</b>'+(w.awake&&!w.dead?' · ≈'+Core.turnsLeft(S,w,V.e)+' ход.':' · ≈'+Math.ceil(w.deposit/w.base)+' ход.'));
+      if(w.awake&&!w.dead){ info.push('людей <b class="y">'+(w.people+w.q)+'</b>'); info.push(V.fc.dst[w.id]<Infinity?'до Земли <b>'+V.fc.dst[w.id]+'</b> ход.':'<span class="bad">нет пути</span>') } if(V.fc.stuck[w.id]&&!S.over) info.push('<span class="bad">не дойдёт '+V.fc.stuck[w.id]+'</span>');
+      if(info.length) h+='<div class="ln m">'+info.join(' · ')+'</div>'; if(w.awake) h+='<div class="ln">'+statusOf(w)+'</div>';
+      if(w.deposit0&&w.awake&&!w.dead){ var cu=Core.cutIfDead(S,w.id); if(cu.worlds) h+='<div class="ln bad">погаснет — отрежет миров '+cu.worlds+', людей '+cu.ppl+'</div>' }
+      h+='<div class="acts">';
+      if(!w.awake&&!w.dead){ var cw2=Core.canWake(S,w.id),pv=previewOf(function(cl){ return Core.wake(cl,w.id) }); h+='<button class="btn '+(cw2.ok?'pri':'off')+'" data-a="wake" data-id="'+w.id+'" data-why="'+LB.esc(cw2.why||'')+'">Заселить: '+cw2.cost.ppl+' чел '+cw2.cost.fuel+' топ</button>'; h+='</div>'; if(cw2.ok&&!pv.err) h+=delta(pv); else if(!cw2.ok) h+='<div class="why">'+LB.esc(cw2.why)+'. Нажмите мир в сети рядом.</div>'; h+='<div class="acts">' }
+      if(Core.canLift(S,w.id).ok){ var pl=previewOf(function(cl){ return Core.lift(cl,w.id) }); h+='<button class="btn warn" data-a="lift" data-id="'+w.id+'">Поднять '+(w.people+w.q)+' чел</button></div>'+delta(pl,true)+'<div class="acts">' }
+      h+='</div>' }
+  } else { h+='<div class="hint">'+tip()+'</div>' }
+  $('ctx').innerHTML=h }
+function tip(){ var cnt={}; S.worlds.forEach(function(w){ if(w.awake&&!w.dead) cnt[w.type]=(cnt[w.type]||0)+1 });
+  if(S.turn>=K.RISE) return 'Дальние — первыми. Ближние фермы — последними: Земля ест до конца, склад рационов мал. Красное число — кто не успеет.';
+  if(!S.lines.length) return 'Нажмите ЗЕМЛЮ, потом ферму <span style="color:var(--food)">●</span> рядом. Рационов на ходов: '+Math.ceil(S.stock.food/Core.needFood(S.turn))+'.';
+  if(!cnt.mine) return 'Шахте <span style="color:var(--metal)">■</span> нужна ферма-сосед. Соедините их линией.';
+  if(!cnt.well) return 'Топливо <span style="color:var(--fuel)">▲</span> кончается. Скважине нужна ферма-сосед.';
+  if(!cnt.factory) return 'Завод ⬡ — шахта и ферма соседями. Детали — техника и ковчег.';
+  if(!cnt.house) return 'Жильё ◆ растит людей и даёт соседям +1. Его люди пойдут домой последними.';
+  if(S.ark===0&&S.turn>=14) return 'Без ковчега на борту только '+Core.seats(S)+' мест.';
+  return 'Смотрите на ОТХОД: '+V.fc.home+' из '+V.fc.total+' успеют домой, если поднять сейчас.' }
+function renderExtras(){ var mob=innerWidth<900,x=mob?'<button class="btn x" data-a="closesheet">Закрыть</button>':'';
+  var h='<h4>КОВЧЕГ · МЕСТ '+Core.seats(S)+x+'</h4>'; var ca=Core.canArk(S);
+  for(var i=0;i<K.ARK.length;i++){ var c=K.ARK[i],done=i<S.ark,cur=i===S.ark; h+='<div class="it '+(done?'done':'')+'"><div><b>УРОВЕНЬ '+(i+1)+' · '+(K.SEATS0+K.SEAT_STEP*(i+1))+' МЕСТ</b><small>'+cost(c)+'</small>'+(cur&&!ca.ok?'<div class="why">'+LB.esc(ca.why)+'</div>':'')+'</div>'+(done?'<small>готов</small>':(cur?'<button class="btn '+(ca.ok?'pri':'off')+'" data-a="ark" data-why="'+LB.esc(ca.why||'')+'">Строить</button>':''))+'</div>'; }
+  var cs=Core.canScrap(S); h+='<div class="it"><div><b>РАЗОБРАТЬ ОТСЕК</b><small><span style="color:var(--metal)">+'+K.SCRAP.metal+' мет</span> <span style="color:var(--fuel)">+'+K.SCRAP.fuel+' топ</span> <span style="color:var(--red)">−'+K.SCRAP.seats+' мест</span></small></div><button class="btn '+(cs.ok?'':'off')+'" data-a="scrap" data-why="'+LB.esc(cs.why||'')+'">Разобрать</button></div>';
+  h+='<div class="it"><div><b>ПЕРЕГНАТЬ</b><small>судно-база: 6 → 3</small></div><button class="btn '+(S.stock.metal>=6?'':'off')+'" data-a="swap" data-k="metal" data-why="Нужно 6 металла">6М→3Т</button><button class="btn '+(S.stock.fuel>=6?'':'off')+'" data-a="swap" data-k="fuel" data-why="Нужно 6 топлива">6Т→3М</button></div>';
+  $('ark').innerHTML=h;
+  h='<h4>ТЕХНИКА'+x+'</h4>'; Object.keys(Core.TECH).forEach(function(k){ var T=Core.TECH[k],lv=S.tech[k],c=T.lv[lv],ct=Core.canTech(S,k);
+    if(!c){ h+='<div class="it done"><div><b>'+T.ru+'</b><small>'+T.d[T.d.length-1]+'</small></div><small>готово</small></div>'; return }
+    h+='<div class="it"><div><b>'+T.ru+(T.lv.length>1?' '+(lv+1):'')+'</b><small>'+T.d[lv]+'</small>'+(ct.ok?'':'<div class="why">'+LB.esc(ct.why)+'</div>')+'</div><button class="btn '+(ct.ok?'':'off')+'" data-a="tech" data-k="'+k+'" data-why="'+LB.esc(ct.why||'')+'">'+c.parts+'Д '+c.metal+'М</button></div>' });
+  $('tech').innerHTML=h;
+  var ex=$('extras'); ex.className=sheet?('open '+sheet):'' }
+function renderBar(){ var last=S.turn>=K.TURNS,r=S.turn>=K.RISE,can=Core.canArk(S).ok,ct=Object.keys(Core.TECH).some(function(k){ return Core.canTech(S,k).ok });
+  $('bar').innerHTML='<button class="btn undo '+(undo.length?'':'off')+'" data-a="undo" aria-label="Отменить" data-why="Отменять нечего">↶</button><button class="btn mob" data-a="sheet" data-k="t" style="'+(ct?'color:var(--ink)':'color:var(--mid)')+'">Техника</button><button class="btn mob" data-a="sheet" data-k="a" style="'+(can?'border-color:var(--ark);color:var(--ark)':'color:var(--mid)')+'">Ковчег</button><button class="btn next pri '+(r?'r':'')+'" data-a="next">'+(last?'Ночь':'Следующая смена')+'</button>' }
+function renderAlerts(){ var a=[],nf=Core.needFood(S.turn),net=V.e.delivered.food-nf,t;
+  if(S.deficit>0) a.push(['r','<b class="num">'+S.deficit+'/'+K.DEFICIT+'</b> ход без рационов','К ФЕРМЕ','gofarm']);
+  else if(net<0&&S.stock.food+net*3<0) { t=Math.floor(S.stock.food/-net); a.push(['r','Рационы кончатся через <b class="num">'+t+'</b>: '+net+' в ход','К ФЕРМЕ','gofarm']) }
+  var nm=Core.needMetal(S.turn),mn=V.e.delivered.metal-nm; if(mn<0&&S.stock.metal+mn*2<0) a.push(['r','Металл кончится: '+mn+' в ход, люди гибнут','К ШАХТЕ','gomine']);
+  var worst=null; S.worlds.forEach(function(w){ if(w.deposit0&&w.awake&&!w.dead&&!w.lifted){ var tl=Core.turnsLeft(S,w,V.e); if(tl<=3){ var cu=Core.cutIfDead(S,w.id); if(!worst||tl<worst.tl||cu.worlds>worst.cu.worlds) worst={w:w,tl:tl,cu:cu} } } });
+  if(worst) a.push([worst.cu.worlds?'r':'y','<b class="num">'+worst.w.name+'</b> пуст через '+worst.tl+(worst.cu.worlds?': отрежет '+worst.cu.worlds+' мир., '+worst.cu.ppl+' чел':''),'ПОКАЗАТЬ','w'+worst.w.id]);
+  var deadL=S.lines.filter(function(l){ return l.dead&&(l.a===0||l.b===0) }); if(deadL.length&&Core.usedBerths(S)>=Core.berths(S)) a.push(['r','Мёртвая линия держит причал','К ЛИНИИ','l'+deadL[0].id]);
+  if(S.turn>=K.RISE&&!S.over){ var un=0,farW=null,dd=V.fc.dst; S.worlds.forEach(function(w){ if(w.id&&w.awake&&!w.dead&&!w.lifted){ un+=w.people; if(w.people>0&&dd[w.id]<Infinity&&(!farW||dd[w.id]>dd[farW.id])) farW=w } }); var due=dueWorlds(),dn=due.reduce(function(x,w){ return x+w.people },0);
+    if(due.length) a.unshift(['v','Пора выходить: <b class="num">'+dn+'</b> чел, миров <b class="num">'+due.length+'</b>','ПОДНЯТЬ ИХ','liftdue']); else if(farW) a.unshift(['v','Ждут: <b class="num">'+un+'</b> чел. Дальний: <b class="num">'+farW.name+'</b>, '+dd[farW.id]+' ход.','К НЕМУ','w'+farW.id]) }
+  if(S.turn>=20&&S.turn<K.RISE&&V.fc.home<Math.min(V.fc.total,Core.seats(S))&&S.turn%2===0&&V.fc.topJam){ var jl=Core.lineById(S,V.fc.topJam); if(jl) a.push(['y','Пробка отхода: <b class="num">'+S.worlds[jl.a].name+'—'+S.worlds[jl.b].name+'</b>','К ЛИНИИ','l'+jl.id]) }
+  $('alerts').innerHTML=a.slice(0,innerWidth<900?2:3).map(function(x){ return '<div class="al '+(x[0]==='y'?'y':x[0]==='v'?'v':'')+'"><span>'+x[1]+'</span><button class="btn" data-a="alert" data-k="'+x[3]+'">'+x[2]+'</button></div>' }).join('') }
+function renderMapBtns(){ $('mapbtns').innerHTML='<button class="btn '+(lens||S.turn>=K.RISE?'on':'')+'" data-a="lens">Отход</button><button class="btn" data-a="fit" aria-label="Вся карта">⊙</button>' }
+function goTo(id){ sel=id; selLine=null; prop=null; var w=S.worlds[id]; cam.x=w.x; cam.y=w.y; refresh() }
+function nearestOf(type,pred){ var best=null,bd=1e9; S.worlds.forEach(function(w){ if(w.type===type&&!w.dead&&(!pred||pred(w))){ var d=Math.hypot(w.x,w.y); if(d<bd){ bd=d; best=w } } }); return best }
+document.addEventListener('click',function(ev){ var t=ev.target.closest('[data-a]'); if(!t) return; var a=t.dataset.a,id=+t.dataset.id;
+  if(t.classList.contains('off')){ if(t.dataset.why) LB.toast(t.dataset.why,2600); return }
+  switch(a){
+    case 'next': A.next(); break;
+    case 'undo': A.undo(); break;
+    case 'cancel': prop=null; selLine=null; sel=null; refresh(); break;
+    case 'sel': prop=null; selLine=null; sel=id; refresh(); break;
+    case 'link': A.link(+t.dataset.x,+t.dataset.y); sel=null; refresh(); break;
+    case 'linkwake': A.linkWake(+t.dataset.x,+t.dataset.y,+t.dataset.t); sel=null; refresh(); break;
+    case 'wake': A.wake(id); break;
+    case 'widen': A.widen(id); break;
+    case 'demolish': A.demolish(id); break;
+    case 'lift': A.lift(id); break;
+    case 'tech': A.tech(t.dataset.k); break;
+    case 'ark': A.ark(); break;
+    case 'scrap': A.scrap(); break;
+    case 'swap': A.swap(t.dataset.k); break;
+    case 'lens': if(S.turn<K.RISE){ lens=!lens; renderMapBtns() } break;
+    case 'fit': fit(true); break;
+    case 'sheet': sheet=t.dataset.k; renderExtras(); break;
+    case 'closesheet': sheet=null; renderExtras(); break;
+    case 'again': start(+LB.q.get('seed')||(Date.now()%1e9)); break;
+    case 'alert': var k=t.dataset.k; if(k==='liftall') A.liftAll(); else if(k==='liftdue') A.liftDue(); else if(k==='gofarm'){ var f=nearestOf('farm',function(w){ return !w.awake })||nearestOf('farm'); if(f) goTo(f.id) } else if(k==='gomine'){ var m=nearestOf('mine',function(w){ return !w.awake }); if(m) goTo(m.id) } else if(k[0]==='w') goTo(+k.slice(1)); else if(k[0]==='l'){ selLine=+k.slice(1); sel=null; prop=null; var L=Core.lineById(S,selLine); if(L){ cam.x=(S.worlds[L.a].x+S.worlds[L.b].x)/2; cam.y=(S.worlds[L.a].y+S.worlds[L.b].y)/2 } refresh() } break;
+  }
+});
+/* --- холст --- */
+function resize(){ DPR=Math.min(2,window.devicePixelRatio||1); var r=mapw.getBoundingClientRect(); W=r.width; H=r.height; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR) }
+new ResizeObserver(function(){ var first=!W; resize(); if(first) fit(); if(S&&innerWidth>=900&&sheet){ sheet=null; renderExtras() } }).observe(mapw);
+function fit(toggle){ if(!W||!H) return; var near=Math.max(.32,Math.min(1.1,Math.min(W,H)/(2*(W<500?300:480)))),all=Math.max(.32,Math.min(W,H)/(2*480)); var s=near; if(toggle===true&&Math.abs(cam.s-near)<.01&&cam.x===0&&cam.y===0) s=all; cam.x=0; cam.y=0; cam.s=s }
+function toS(x,y){ return {x:W/2+(x-cam.x)*cam.s,y:H/2+(y-cam.y)*cam.s} }
+function toW(x,y){ return {x:cam.x+(x-W/2)/cam.s,y:cam.y+(y-H/2)/cam.s} }
+var stars=[]; (function(){ var r=LB.rng(77); for(var i=0;i<260;i++) stars.push({x:(r()-.5)*1500,y:(r()-.5)*1500,a:.05+r()*.28,s:r()<.1?1.6:1}) })();
+function poly(x,y,n,r,rot){ cx.beginPath(); for(var i=0;i<n;i++){ var a=rot+i*Math.PI*2/n; if(i) cx.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r); else cx.moveTo(x+Math.cos(a)*r,y+Math.sin(a)*r) } cx.closePath() }
+function shape(w,x,y,r){ switch(w.type){ case 'mine': cx.beginPath(); cx.rect(x-r*.85,y-r*.85,r*1.7,r*1.7); break; case 'well': poly(x,y,3,r*1.15,-Math.PI/2); break; case 'factory': poly(x,y,6,r*1.05,0); break; case 'house': poly(x,y,4,r*1.2,0); break; default: cx.beginPath(); cx.arc(x,y,r,0,Math.PI*2) } }
+function shipGlyph(x,y,ang,sz,wide){ cx.save(); cx.translate(x,y); cx.rotate(ang); var n=wide?4:3; poly(0,0,n,sz,0); cx.fillStyle=wide?'#FF6FB5':'#45D4E8'; cx.fill(); cx.beginPath(); cx.moveTo(sz,0); cx.lineTo(sz*.45,sz*.32); cx.lineTo(sz*.45,-sz*.32); cx.closePath(); cx.fillStyle='#FFD23F'; cx.fill(); cx.restore() }
+function draw(now){ requestAnimationFrame(draw); if(!S||!W) return; cx.setTransform(DPR,0,0,DPR,0,0); cx.fillStyle='#08080A'; cx.fillRect(0,0,W,H);
+  /* звёзды гаснут к Ночи */
+  var dark=(S.turn-1)/(K.TURNS-1),T=now/1000; stars.forEach(function(s,i){ if(i/stars.length<dark*.85) return; var p=toS(s.x,s.y); cx.fillStyle='rgba(242,241,236,'+s.a+')'; cx.fillRect(p.x,p.y,s.s,s.s) });
+  var e0=toS(0,0);
+  /* кольца */
+  cx.lineWidth=1; [150,300,450].forEach(function(r){ cx.strokeStyle='rgba(79,163,255,.07)'; cx.beginPath(); cx.arc(e0.x,e0.y,r*cam.s,0,Math.PI*2); cx.stroke() });
+  var showLens=lens||S.turn>=K.RISE,fc=V.fc,e=V.e;
+  /* дальность выбранного */
+  var src=prop?prop.a:sel; if(src!==null&&src!==undefined&&!S.over){ var sw=S.worlds[src],sp=toS(sw.x,sw.y),R=Core.range(S,src,src); cx.strokeStyle='rgba(242,241,236,.2)'; cx.setLineDash([4,5]); cx.beginPath(); cx.arc(sp.x,sp.y,R*cam.s,0,Math.PI*2); cx.stroke(); cx.setLineDash([]);
+    S.worlds.forEach(function(w){ if(w.id===src) return; var R2=Core.range(S,src,w.id); if(Core.dist(sw,w)>R2) return; var c=Core.canLink(S,src,w.id); if(c.code==='dup') return; var p=toS(w.x,w.y),ok=c.ok||c.code==='afford'; cx.strokeStyle=ok?'rgba(242,241,236,.34)':'rgba(255,42,26,.22)'; cx.setLineDash(ok?[2,4]:[1,5]); cx.beginPath(); cx.moveTo(sp.x,sp.y); cx.lineTo(p.x,p.y); cx.stroke(); cx.setLineDash([]) }) }
+  /* линии */
+  S.lines.forEach(function(l){ var a=S.worlds[l.a],b=S.worlds[l.b],p=toS(a.x,a.y),q=toS(b.x,b.y),us=Core.usable(S,l),sl=selLine===l.id;
+    if(l.dead){ cx.strokeStyle=sl?'#FF2A1A':'rgba(255,42,26,.45)'; cx.lineWidth=2; cx.setLineDash([3,4]); cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y); cx.stroke(); cx.setLineDash([]); return }
+    var ld=e.load[l.id]||0,cp=Core.cap(l),full=us&&ld>=cp;
+    var w=l.wide?4.5:2.2; if(sl){ cx.strokeStyle='rgba(255,255,255,.2)'; cx.lineWidth=w+7; cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y); cx.stroke() }
+    if(showLens&&fc.flow[l.id]){ var fl=fc.flow[l.id]; cx.strokeStyle='rgba(255,210,63,'+Math.min(.9,.3+fl/40)+')'; cx.lineWidth=w+Math.min(5,fl/8); cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y); cx.stroke() }
+    cx.strokeStyle=!us?'#3a3a40':(full?'#F2F1EC':'#77767A'); cx.lineWidth=w; cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y); cx.stroke();
+    if(l.wide){ cx.strokeStyle='#08080A'; cx.lineWidth=1.4; cx.beginPath(); cx.moveTo(p.x,p.y); cx.lineTo(q.x,q.y); cx.stroke() }
+    /* метка загрузки */
+    if(us&&ld>0&&(full||sl||cam.s>=1.05)){ var mx=(p.x+q.x)/2,my=(p.y+q.y)/2,txt=ld+'/'+cp; cx.font='600 10px "Geist Mono",monospace'; var tw=cx.measureText(txt).width; cx.fillStyle='rgba(8,8,10,.85)'; cx.fillRect(mx-tw/2-2,my-6,tw+4,12); cx.fillStyle=full?'#FF2A1A':'#9C9B95'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText(txt,mx,my) }
+    if(showLens&&fc.jam[l.id]>=4){ var jx=(p.x+q.x)/2,jy=(p.y+q.y)/2+13; cx.font='600 11px "Geist Mono",monospace'; cx.fillStyle='#FF2A1A'; cx.textAlign='center'; cx.fillText('ждут '+fc.jam[l.id],jx,jy) } });
+  /* проект линии */
+  if(prop){ var pa=toS(S.worlds[prop.a].x,S.worlds[prop.a].y),pb=toS(S.worlds[prop.b].x,S.worlds[prop.b].y),okp=Core.canLink(S,prop.a,prop.b).ok; cx.strokeStyle=okp?'#FFD23F':'#FF2A1A'; cx.lineWidth=2.5; cx.setLineDash([7,5]); cx.lineDashOffset=-T*24; cx.beginPath(); cx.moveTo(pa.x,pa.y); cx.lineTo(pb.x,pb.y); cx.stroke(); cx.setLineDash([]); cx.lineDashOffset=0;
+    var cbl=Core.canLink(S,prop.a,prop.b).blocker; if(cbl){ var bl=Core.lineById(S,cbl); if(bl){ var ba=toS(S.worlds[bl.a].x,S.worlds[bl.a].y),bb=toS(S.worlds[bl.b].x,S.worlds[bl.b].y); cx.strokeStyle='#FF2A1A'; cx.lineWidth=4; cx.beginPath(); cx.moveTo(ba.x,ba.y); cx.lineTo(bb.x,bb.y); cx.stroke() } } }
+  /* потоки: точка = единица груза, суда — плоские фигуры с жёлтым носом */
+  e.flows.forEach(function(f,i){ var a=S.worlds[f.from],b=S.worlds[f.to],p=toS(a.x,a.y),q=toS(b.x,b.y),len=Math.hypot(q.x-p.x,q.y-p.y)||1,per=Math.max(.9,len/60); for(var n=0;n<f.n;n++){ var t=((T/per)+n/f.n+i*.17)%1,x=p.x+(q.x-p.x)*t,y=p.y+(q.y-p.y)*t; cx.fillStyle=COL[f.g]; cx.fillRect(x-1.8,y-1.8,3.6,3.6) } });
+  var mv=V.mv;
+  if(mv) mv.moves.forEach(function(m,i){ var a=S.worlds[m.from],b=S.worlds[m.to],p=toS(a.x,a.y),q=toS(b.x,b.y),per=1.3; for(var n=0;n<m.n;n++){ var t=((T/per)+n/m.n+i*.13)%1,x=p.x+(q.x-p.x)*t,y=p.y+(q.y-p.y)*t; cx.fillStyle='#FFD23F'; cx.beginPath(); cx.arc(x,y,2.6,0,Math.PI*2); cx.fill() } });
+  /* люди в пути: стоят на линии там, куда успели дойти */
+  for(var trk in S.tr){ var tl0=Core.lineById(S,+trk); if(!tl0) continue; S.tr[trk].forEach(function(g){ var a=S.worlds[g.from],b=S.worlds[g.to],p=toS(a.x,a.y),q=toS(b.x,b.y),tm=Core.lineTime(tl0),f=1-g.t/tm; for(var n=0;n<Math.min(g.n,8);n++){ var t=Math.min(.98,f+n*.03),x=p.x+(q.x-p.x)*t,y=p.y+(q.y-p.y)*t; cx.fillStyle='#FFD23F'; cx.beginPath(); cx.arc(x,y,3,0,Math.PI*2); cx.fill() } }) }
+  S.lines.forEach(function(l,i){ if(!Core.usable(S,l)||!(e.load[l.id]>0)) return; var a=S.worlds[l.a],b=S.worlds[l.b],p=toS(a.x,a.y),q=toS(b.x,b.y),len=Math.hypot(q.x-p.x,q.y-p.y)||1,per=Math.max(2,len/28),ph=((T/per)+i*.31)%2,fw=ph<1,t=fw?ph:2-ph,x=p.x+(q.x-p.x)*t,y=p.y+(q.y-p.y)*t,ang=Math.atan2(q.y-p.y,q.x-p.x)+(fw?0:Math.PI); shipGlyph(x,y,ang,l.wide?7:6,l.wide) });
+  /* миры */
+  var rW=Math.max(6.5,Math.min(11,10*Math.sqrt(cam.s)));
+  S.worlds.forEach(function(w){ var p=toS(w.x,w.y); if(p.x<-60||p.y<-60||p.x>W+60||p.y>H+60) return; var c=TCOL[w.type],st=e.st[w.id]||{},isSel=(sel===w.id&&!prop)||(prop&&(prop.a===w.id||prop.b===w.id));
+    if(w.id===0){ var R0=Math.max(15,22*Math.sqrt(cam.s)); cx.fillStyle='#16283f'; cx.beginPath(); cx.arc(p.x,p.y,R0,0,Math.PI*2); cx.fill(); cx.strokeStyle=COL.earth; cx.lineWidth=2.5; cx.stroke();
+      var b=Core.berths(S),used=S.lines.filter(function(l){ return l.a===0||l.b===0 }),dd=used.filter(function(l){ return l.dead }).length; for(var i=0;i<b;i++){ var a=-Math.PI/2+i*Math.PI*2/b,xx=p.x+Math.cos(a)*(R0+6),yy=p.y+Math.sin(a)*(R0+6); cx.fillStyle=i<dd?COL.red:(i<used.length?COL.ppl:'#2E2E33'); cx.fillRect(xx-2.5,yy-2.5,5,5) }
+      if(isSel){ cx.strokeStyle='#fff'; cx.lineWidth=1.5; cx.beginPath(); cx.arc(p.x,p.y,R0+12,0,Math.PI*2); cx.stroke() }
+      cx.font='600 13px "Geist Mono",monospace'; cx.fillStyle='#F2F1EC'; cx.textAlign='center'; cx.textBaseline='middle'; cx.fillText(S.earth,p.x,p.y); return }
+    if(w.dead){ cx.strokeStyle='#5E5D58'; cx.lineWidth=1.6; var z=rW*.7; cx.beginPath(); cx.moveTo(p.x-z,p.y-z); cx.lineTo(p.x+z,p.y+z); cx.moveTo(p.x+z,p.y-z); cx.lineTo(p.x-z,p.y+z); cx.stroke() }
+    else { shape(w,p.x,p.y,rW);
+      if(!w.awake){ cx.fillStyle='#0E0E11'; cx.fill(); cx.globalAlpha=.75; cx.strokeStyle=c; cx.lineWidth=1.5; if(w.type==='sleep') cx.setLineDash([2,3]); cx.stroke(); cx.setLineDash([]); cx.globalAlpha=1 }
+      else if(w.lifted){ cx.fillStyle='#0E0E11'; cx.fill(); cx.strokeStyle=COL.ppl; cx.lineWidth=2; cx.stroke() }
+      else { cx.fillStyle=c; cx.globalAlpha=(st.no||st.cut)?.4:1; cx.fill(); cx.globalAlpha=1; if(st.no||st.cut){ cx.strokeStyle=COL.red; cx.lineWidth=1.6; cx.stroke() } if(w.type==='relay'){ cx.fillStyle='#08080A'; cx.beginPath(); cx.arc(p.x,p.y,rW*.5,0,Math.PI*2); cx.fill() } }
+      /* залежь: дуга */
+      if(w.deposit0){ var f=w.deposit/w.deposit0; cx.strokeStyle='#2E2E33'; cx.lineWidth=2; cx.beginPath(); cx.arc(p.x,p.y,rW+5,0,Math.PI*2); cx.stroke(); cx.strokeStyle=f<.25?COL.red:c; cx.beginPath(); cx.arc(p.x,p.y,rW+5,-Math.PI/2,-Math.PI/2+f*Math.PI*2); cx.stroke() }
+    }
+    if(isSel){ cx.strokeStyle='#fff'; cx.lineWidth=1.5; cx.strokeRect(p.x-rW-8,p.y-rW-8,2*rW+16,2*rW+16) }
+    if(cam.s>=.42||isSel){ cx.font='500 '+(isSel?11:10)+'px "Geist Mono",monospace'; cx.textAlign='center'; cx.textBaseline='top'; cx.lineWidth=3; cx.strokeStyle='rgba(8,8,10,.9)'; cx.strokeText(w.name,p.x,p.y+rW+(w.deposit0?8:4)); cx.fillStyle=isSel?'#F2F1EC':(w.awake&&!w.dead?'#9C9B95':'#5E5D58'); cx.fillText(w.name,p.x,p.y+rW+(w.deposit0?8:4)) }
+    if(st.boost&&cam.s>=.42){ cx.font='600 10px "Geist Mono",monospace'; cx.textAlign='right'; cx.textBaseline='top'; cx.fillStyle=COL.ppl; cx.fillText('+'+st.boost,p.x-rW-3,p.y+2) }
+    var pn=w.people+w.q; if(pn>0){ cx.font='600 12px "Geist Mono",monospace'; cx.textAlign='left'; cx.textBaseline='bottom'; cx.fillStyle=COL.ppl; cx.fillText(pn,p.x+rW+3,p.y-rW+2) }
+    if(w.type==='sleep'&&!w.awake){ cx.font='600 11px "Geist Mono",monospace'; cx.textAlign='left'; cx.textBaseline='bottom'; cx.fillStyle=COL.ppl; cx.globalAlpha=.7; cx.fillText(w.sleepers,p.x+rW+3,p.y-rW+2); cx.globalAlpha=1 }
+    if(showLens&&fc.stuck[w.id]){ cx.font='700 12px "Geist Mono",monospace'; cx.textAlign='right'; cx.textBaseline='bottom'; cx.fillStyle=COL.red; cx.fillText('−'+fc.stuck[w.id],p.x-rW-3,p.y-rW+2) }
+  });
+  /* Ночь наползает от края */
+  var edge=Math.max(W,H)*.9,inner=Math.max(.05,1-dark*.72); var gd=cx.createRadialGradient(W/2,H/2,edge*inner*.6,W/2,H/2,edge); gd.addColorStop(0,'rgba(5,3,10,0)'); gd.addColorStop(1,'rgba(5,3,10,'+(.25+dark*.55)+')'); cx.fillStyle=gd; cx.fillRect(0,0,W,H);
+}
+requestAnimationFrame(draw);
+/* --- указатель: мышь и касание одинаково --- */
+var ptrs={},pinch=null,drag=null;
+function pickWorld(x,y){ var best=null,bd=26; S.worlds.forEach(function(w){ var p=toS(w.x,w.y),d=Math.hypot(p.x-x,p.y-y); if(w.id===0) d=Math.max(0,d-14); if(d<bd){ bd=d; best=w } }); return best }
+function pickLine(x,y){ var best=null,bd=14,P={x:x,y:y}; S.lines.forEach(function(l){ var a=toS(S.worlds[l.a].x,S.worlds[l.a].y),b=toS(S.worlds[l.b].x,S.worlds[l.b].y),dx=b.x-a.x,dy=b.y-a.y,t=Math.max(0,Math.min(1,((x-a.x)*dx+(y-a.y)*dy)/(dx*dx+dy*dy||1))),d=Math.hypot(x-a.x-t*dx,y-a.y-t*dy); if(d<bd){ bd=d; best=l } }); return best }
+function tapAt(x,y){ if(!S||S.over) return; var w=pickWorld(x,y);
+  if(w){ LB.beep(700,.03); if(prop||sel!==null){ var src=prop?prop.a:sel; if(w.id===src){ sel=null; prop=null; selLine=null; refresh(); return }
+        var ex=Core.findLine(S,src,w.id); if(ex){ selLine=ex.id; sel=null; prop=null; refresh(); return }
+        if(!w.dead&&!S.worlds[src].dead&&Core.dist(S.worlds[src],w)<=Core.range(S,src,w.id)*1.6){ sel=src; prop={a:src,b:w.id}; selLine=null; refresh(); return } }
+      sel=w.id; prop=null; selLine=null; refresh(); return }
+  var l=pickLine(x,y); if(l){ selLine=l.id; sel=null; prop=null; refresh(); return }
+  sel=null; prop=null; selLine=null; refresh() }
+cv.addEventListener('pointerdown',function(e){ cv.setPointerCapture(e.pointerId); var r=cv.getBoundingClientRect(); ptrs[e.pointerId]={x:e.clientX-r.left,y:e.clientY-r.top}; var ids=Object.keys(ptrs);
+  if(ids.length===1) drag={x0:ptrs[ids[0]].x,y0:ptrs[ids[0]].y,cx:cam.x,cy:cam.y,moved:false}; if(ids.length===2){ var a=ptrs[ids[0]],b=ptrs[ids[1]]; pinch={d:Math.hypot(a.x-b.x,a.y-b.y),s:cam.s,mid:toW((a.x+b.x)/2,(a.y+b.y)/2)}; drag=null } });
+cv.addEventListener('pointermove',function(e){ if(!ptrs[e.pointerId]) return; var r=cv.getBoundingClientRect(); ptrs[e.pointerId]={x:e.clientX-r.left,y:e.clientY-r.top}; var ids=Object.keys(ptrs);
+  if(ids.length>=2&&pinch){ var a=ptrs[ids[0]],b=ptrs[ids[1]],d=Math.hypot(a.x-b.x,a.y-b.y); cam.s=Math.max(.32,Math.min(2.2,pinch.s*d/pinch.d)); var mx=(a.x+b.x)/2,my=(a.y+b.y)/2; cam.x=pinch.mid.x-(mx-W/2)/cam.s; cam.y=pinch.mid.y-(my-H/2)/cam.s; return }
+  if(drag){ var p=ptrs[e.pointerId],dx=p.x-drag.x0,dy=p.y-drag.y0; if(Math.hypot(dx,dy)>8) drag.moved=true; if(drag.moved){ cam.x=clampC(drag.cx-dx/cam.s); cam.y=clampC(drag.cy-dy/cam.s) } } });
+function clampC(v){ return Math.max(-560,Math.min(560,v)) }
+function up(e){ if(!ptrs[e.pointerId]) return; var p=ptrs[e.pointerId],n=Object.keys(ptrs).length; delete ptrs[e.pointerId]; if(n===1){ if(drag&&!drag.moved&&e.type==='pointerup') tapAt(p.x,p.y); drag=null; pinch=null } else if(n===2){ pinch=null; drag=null } }
+cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',up);
+cv.addEventListener('wheel',function(e){ e.preventDefault(); var r=cv.getBoundingClientRect(),x=e.clientX-r.left,y=e.clientY-r.top,w=toW(x,y); cam.s=Math.max(.32,Math.min(2.2,cam.s*Math.exp(-e.deltaY*.0012))); cam.x=w.x-(x-W/2)/cam.s; cam.y=w.y-(y-H/2)/cam.s },{passive:false});
+/* --- итог --- */
+function showEnd(){ var o=S.over,old=$('end'); if(old) old.remove(); var rec=0; try{ rec=+localStorage.getItem('lb-slipways-best')||0; if(o.souls>rec){ localStorage.setItem('lb-slipways-best',o.souls) } }catch(e){}
+  var h='<div>';
+  if(o.kind==='famine'){ h+='<div class="big bad">0</div><div class="rank">'+o.rank+' · ХОД '+o.turn+'</div><div class="say"><small>АЛЕКСАНДРА</small>Три смены без рационов. Я называла их по именам, пока было кому отвечать.</div>' }
+  else { h+='<div class="big '+(o.win?'':'bad')+'">'+o.souls+'</div><div class="rank">ДУШ НА БОРТУ · '+o.rank+(o.win?' · ПОБЕДА':' · ПОРАЖЕНИЕ: НУЖНО '+K.WIN)+'</div><table>'+
+    '<tr><td>Дошли до Земли</td><td>'+o.earth+'</td></tr><tr><td>Мест на ковчеге</td><td>'+o.seats+'</td></tr>'+(o.overflow?'<tr><td style="color:var(--red)">Дома, но без места</td><td style="color:var(--red)">'+o.overflow+'</td></tr>':'')+
+    '<tr><td>Не дошли: на мирах</td><td>'+o.left+'</td></tr>'+(o.transit?'<tr><td>Не дошли: в пути на линиях</td><td>'+o.transit+'</td></tr>':'')+'<tr><td>Не дошли: экипажи на линиях</td><td>'+o.crew+'</td></tr>'+
+    (o.jam?'<tr><td>Пробка: '+o.jam.name+'</td><td>ждали '+o.jam.n+'</td></tr>':'')+'<tr><td>Рекорд</td><td>'+Math.max(rec,o.souls)+'</td></tr></table>';
+    var say; if(o.stuck.length){ var s=o.stuck[0]; say='На '+s.name+' остались '+s.n+'. Среди них '+LB.esc(s.elder)+'. Вы посчитали их верно. Я запомню, как звали.' } else if(o.overflow){ say='Дома '+o.earth+', мест '+o.seats+'. Я стояла с остальными у трапа, пока не закрыли.' } else if(o.crew){ say='Миры пусты. Экипажи '+o.crew+' так и сидят на мёртвых линиях. Им никто не сказал.' } else say='Все дома. Я сказала им, что вы знали, что делаете.'; h+='<div class="say"><small>АЛЕКСАНДРА</small>'+say+'</div>' }
+  h+='<button class="btn pri" data-a="again" id="again">Заново</button></div>'; var d=LB.el('<div id="end">'+h+'</div>'); $('mapw').parentNode.appendChild(d); LB.voice('') }
+function start(sd){ seed=sd; S=Core.newGame(seed); GAME.state=S; undo=[]; sel=null; prop=null; selLine=null; lens=false; sheet=null; voiced={}; var e=$('end'); if(e) e.remove(); LB.voice(''); fit(); refresh() }
+window.GAME={state:null,core:Core,K:K,act:A,start:start,refresh:refresh,income:function(){ return Core.income(S) },forecast:function(){ return Core.forecast(S) },cam:cam,screenOf:function(id){ var w=S.worlds[id],p=toS(w.x,w.y),r=cv.getBoundingClientRect(); return {x:p.x+r.left,y:p.y+r.top} },select:function(id){ sel=id; prop=null; refresh() }};
+start(seed);
+})();
+</script>
+</body></html>

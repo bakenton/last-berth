@@ -1,0 +1,778 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>LAST BERTH × Frostpunk</title>
+<style>/*KIT*/</style>
+<script>/*KIT*/</script>
+<style>
+#app{position:absolute;inset:0;display:flex;flex-direction:column}
+/* полоса */
+#strip{flex:none;display:grid;grid-template-columns:repeat(5,minmax(0,1fr)) minmax(0,1.1fr) minmax(0,1.1fr) auto;gap:1px;background:var(--ln);border-bottom:1px solid var(--ln);position:relative;z-index:30}
+.st{background:var(--pan);padding:6px 10px;min-width:0}
+.st .lbl{display:block;font-size:9.5px;letter-spacing:.14em;white-space:nowrap;overflow:hidden}
+.st b{font:600 19px/1.15 var(--n);display:block}
+.st i{font:500 11px/1.2 var(--n);font-style:normal;color:var(--mid);display:block;white-space:nowrap;overflow:hidden}
+.st i.bad{color:var(--red)}.st i.good{color:var(--food)}
+.bar{height:6px;background:var(--pan2);margin-top:6px;position:relative}.bar u{position:absolute;left:0;top:0;bottom:0;display:block}
+.st.shift{padding:6px 14px;text-align:right}.st.shift b{color:var(--ink)}
+/* тело */
+#body{flex:1;min-height:0;position:relative;display:grid;grid-template-columns:290px minmax(0,1fr) 430px}
+#mem{border-right:1px solid var(--ln);display:flex;flex-direction:column;min-height:0;background:var(--bg)}
+#field{position:relative;min-height:0;min-width:0;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(circle at 50% 50%,#101216 0,#0B0B0C 62%)}
+#field svg{width:100%;height:100%;display:block;touch-action:manipulation;user-select:none;position:relative}
+#field canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#night{position:absolute;inset:0;pointer-events:none;transition:opacity .8s}
+#side{border-left:1px solid var(--ln);display:flex;flex-direction:column;min-height:0;background:var(--pan)}
+#tabs{flex:none;display:flex;border-bottom:1px solid var(--ln)}
+#tabs button{flex:1;min-height:42px;font-size:11px;font-weight:600;letter-spacing:.14em;color:var(--mid);border-right:1px solid var(--ln);text-transform:uppercase}
+#tabs button:last-child{border-right:0}#tabs button.on{color:var(--ink);background:var(--pan2);box-shadow:inset 0 -2px 0 var(--ppl)}
+#tabs button.memtab{display:none}
+#panel{flex:1;min-height:0;overflow-y:auto;padding:12px 14px;-webkit-overflow-scrolling:touch}
+#foot{flex:none;padding:10px 14px;border-top:1px solid var(--ln);display:flex;gap:8px;align-items:center}
+#foot .btn{flex:1;min-height:46px}
+#alerts{position:absolute;left:10px;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;pointer-events:none;z-index:5;align-items:flex-start}
+.al{pointer-events:auto;display:flex;align-items:center;gap:8px;background:rgba(20,20,23,.94);border:1px solid var(--red);border-left:3px solid var(--red);padding:3px 4px 3px 9px;font-size:12.5px;max-width:100%}
+.al.warn{border-color:var(--ln);border-left-color:var(--ppl)}
+.al button{flex:none;min-height:40px;padding:0 9px;border:1px solid var(--ln);background:var(--pan2);font-size:10.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+.al span{min-width:0}
+/* панель */
+h3{margin:0 0 2px;font-size:19px;font-weight:600}.sub{color:var(--mid);font-size:13px;margin:0 0 10px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:2px 10px;font-size:13.5px;margin:10px 0}.kv span:nth-child(odd){color:var(--mid)}.kv span:nth-child(even){font-family:var(--n);text-align:right}
+.step{display:flex;align-items:stretch;gap:0;margin:10px 0}.step button{width:64px;min-height:46px;border:1px solid var(--ln);background:var(--pan2);font:600 20px var(--n)}.step button:disabled{opacity:.3}
+.step div{flex:1;border:1px solid var(--ln);border-width:1px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;font:600 18px var(--n)}.step small{font:500 10px var(--h);color:var(--mid);letter-spacing:.1em}
+.blist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.bo{display:grid;grid-template-columns:1fr auto;gap:0 10px;text-align:left;border:1px solid var(--ln);background:var(--pan2);padding:8px 10px;min-height:48px}
+.bo b{font-weight:600;font-size:14px}.bo small{grid-column:1;color:var(--mid);font-size:12px;line-height:1.25}.bo em{grid-row:1/3;grid-column:2;font:500 12px var(--n);font-style:normal;align-self:center;text-align:right}
+.bo.off{opacity:.42}
+.why{color:var(--red);font-size:12.5px;margin-top:6px}
+.hint{color:var(--mid);font-size:13.5px}
+/* книга */
+.book{display:grid;grid-template-columns:1fr 1fr;gap:6px}.bk-h{font-size:10px;letter-spacing:.2em;font-weight:700;padding:2px 0 0}.bk-h.c{color:var(--red)}.bk-h.n{color:var(--ppl)}
+.pr{display:block;text-align:left;border:1px solid var(--ln);background:var(--pan2);padding:7px 8px;min-height:62px;font-size:13px;line-height:1.2;font-weight:500}
+.pr small{display:block;color:var(--dim);font:500 10.5px var(--n);margin-top:4px}
+.pr.c{border-left:3px solid var(--red)}.pr.n{border-left:3px solid var(--ppl)}
+.pr.signed{background:var(--ink);color:#000}.pr.signed small{color:#444}
+.pr.lock{opacity:.3;text-decoration:line-through}.pr.soon{opacity:.45}
+.pd p{margin:0 0 8px}.pd .gain{color:var(--food);font-family:var(--n);font-size:13px}.pd .cost{color:var(--red);font-family:var(--n);font-size:13px}.pd .later{color:var(--mid);font-family:var(--n);font-size:12.5px}.pd .say{border-left:3px solid var(--ppl);padding-left:10px;font-size:15px}
+/* имена */
+#memh{flex:none;padding:10px 12px 8px;border-bottom:1px solid var(--ln)}
+#memh b{font:600 26px var(--n);color:var(--ppl)}#memh span{color:var(--mid);font-size:12px;margin-left:6px}
+.names{flex:1;min-height:0;overflow-y:auto;padding:6px 12px}
+.nm{padding:4px 0;border-bottom:1px solid #1b1b1e;font-size:14px}.nm small{display:block;color:var(--dim);font-size:11.5px;line-height:1.2}
+.nm.x{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--red)}.nm.x small{text-decoration:none}
+#log{flex:none;max-height:28%;overflow-y:auto;border-top:1px solid var(--ln);padding:8px 12px;font-size:12px;color:var(--mid)}#log div{padding:1px 0}#log div b{color:var(--ink);font-weight:500}
+/* дело */
+#layer{position:absolute;left:0;right:0;bottom:0;top:0;z-index:20;display:none;overflow-y:auto;background:rgba(7,7,8,.965);-webkit-overflow-scrolling:touch}
+#layer.on{display:flex;flex-direction:column}
+.card{width:min(680px,100%);margin:auto;padding:26px 22px 28px}
+.card .hd{font:600 11px var(--n);letter-spacing:.14em;color:var(--mid);display:flex;justify-content:space-between;gap:10px;margin-bottom:14px}
+.card .who{font-size:13px;letter-spacing:.14em;color:var(--ppl);font-weight:700;margin-bottom:6px;text-transform:uppercase}
+.card .txt{font-size:21px;line-height:1.36;font-weight:400;margin:0 0 20px}
+.card .afterq{font-size:13px;color:var(--mid);margin:0 0 6px}
+.opt{display:block;width:100%;text-align:left;border:1px solid var(--ln);background:var(--pan);padding:11px 13px;margin-bottom:8px;min-height:48px}
+.opt:hover{border-color:var(--mid)}.opt b{display:block;font-weight:600;font-size:16px;line-height:1.2}
+.chips{display:flex;flex-wrap:wrap;gap:3px 10px;margin-top:5px;font:500 12.5px var(--n)}.chips:empty{display:none}
+.ch-food{color:var(--food)}.ch-metal{color:var(--metal)}.ch-fuel{color:var(--fuel)}.ch-ppl{color:var(--ppl)}.ch-trust{color:var(--earth)}.ch-fear{color:var(--red)}.ch-ark{color:var(--ark)}.ch-name{color:var(--ppl)}.ch-x{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--red)}.ch-p{color:var(--mid)}
+.say{border-left:3px solid var(--ppl);padding:2px 0 2px 14px;font-size:21px;line-height:1.36;margin:0 0 8px}
+.say small{display:block;font-size:10px;letter-spacing:.18em;color:var(--ppl);font-weight:700;margin-bottom:6px}
+.note-kind{font-size:10.5px;letter-spacing:.18em;color:var(--red);font-weight:700;margin-bottom:6px}
+.wide{width:100%;min-height:48px;margin-top:12px}
+/* причал */
+.berth{width:min(900px,100%);margin:0 auto;flex:none;padding:18px 16px 22px}
+.berth h2{margin:0;font-size:26px;font-weight:600;letter-spacing:.02em}
+.bsum{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--ln);border:1px solid var(--ln);margin:12px 0;position:sticky;top:0;z-index:3}
+.bsum div{background:var(--pan);padding:7px 9px}.bsum b{display:block;font:600 22px var(--n)}.bsum .lbl{font-size:9px;letter-spacing:.12em}
+.gr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;border:1px solid var(--ln);background:var(--pan);padding:9px 10px;margin-bottom:6px}
+.gr .nm2{font-weight:600;font-size:15.5px}.gr .nm2 em{font:500 13px var(--n);font-style:normal;color:var(--mid)}
+.gr .ef{color:var(--mid);font-size:12.5px;line-height:1.25}.gr .ppl{color:var(--dim);font-size:12px;line-height:1.25}
+.gr .ctl{grid-row:1/4;grid-column:2;display:flex;align-items:center;gap:0}
+.gr .ctl button{width:44px;height:44px;border:1px solid var(--ln);background:var(--pan2);font:600 17px var(--n)}.gr .ctl button:disabled{opacity:.28}
+.gr .ctl span{width:46px;text-align:center;font:600 17px var(--n)}
+.gr.warnr{border-left:3px solid var(--red)}
+.gr .ctl .tgl{width:auto;min-width:104px;height:44px;padding:0 8px;white-space:nowrap;border:1px solid var(--ln);background:var(--pan2);font:600 12px var(--h);letter-spacing:.06em;text-transform:uppercase}.gr .ctl .tgl.on{background:var(--ink);color:#000}
+.gr .tgl:disabled{opacity:.3}
+.loss{font:500 12.5px var(--n);color:var(--red);min-height:18px;margin:2px 0 8px}
+/* итог */
+.res{width:min(720px,100%);margin:auto;flex:none;padding:32px 22px}
+.res .ttl{font-size:12px;letter-spacing:.2em;font-weight:700;color:var(--mid);margin-bottom:14px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--ln);border:1px solid var(--ln);margin-bottom:18px}
+.two div{background:var(--pan);padding:14px}.two b{display:block;font:600 56px/1 var(--n)}.two .a b{color:var(--ark)}.two .b b{color:var(--ppl)}
+.two .lbl{display:block;margin-top:6px}
+.res .ln{font-size:18px;line-height:1.35;margin:0 0 10px}.res .q{font-size:22px;line-height:1.3;margin:22px 0 22px;border-left:3px solid var(--ppl);padding-left:14px}
+.reslist{font-size:13.5px;color:var(--mid);margin-bottom:16px;line-height:1.5}.reslist s{color:var(--dim);text-decoration-color:var(--red)}.reslist b{font-weight:500;color:var(--ink)}
+/* телефон */
+@media (max-width:899px){
+  #strip{grid-template-columns:repeat(5,minmax(0,1fr))}
+  .st{padding:4px 5px}.st .lbl{font-size:8px;letter-spacing:.06em}.st b{font-size:15px}.st i{font-size:9.5px}
+  .st.tf{grid-column:span 2}.st.shift{padding:4px 5px;text-align:left}.st.shift b{font-size:14px}.bar{margin-top:3px;height:5px}
+  #body{display:flex;flex-direction:column;min-height:0}
+  #mem{display:none}
+  #field{flex:none;height:min(100vw,45vh)}
+  #side{flex:1;min-height:0;border-left:0;border-top:1px solid var(--ln)}
+  #tabs button.memtab{display:block}
+  #panel{padding:10px 12px}
+  #foot{padding:6px 10px}
+  #foot .btn{min-height:44px}
+  .card{padding:16px 14px 20px}.card .txt,.say{font-size:18.5px}
+  .al{font-size:11.5px}
+  .two b{font-size:44px}
+  .berth h2{font-size:21px}.bsum b{font-size:17px}.bsum div{padding:5px 6px}.bsum .lbl{font-size:8px;letter-spacing:.05em}
+  .gr .ctl span{width:30px;font-size:15px}.gr .ctl button{width:40px}
+  #lb-top .t{font-size:10.5px;letter-spacing:.1em}
+  #side #alerts{position:static;padding:0}#side #alerts .al{width:100%;border-width:0 0 1px 3px;justify-content:space-between}
+  #lb-voice{bottom:66px}
+  .res{padding:20px 14px}.res .ln{font-size:16px}.res .q{font-size:19px}
+}
+</style>
+</head><body>
+<script>
+/* ================= ЯДРО ПРАВИЛ (без DOM) ================= */
+var CORE=(function(){
+var SH=24, YR=150, WIN=60, SCRAP_FROM=14, FARM=4.2;
+var TYPES={
+  farm:{n:'Ферма',s:'ФЕРМА',c:'--food',cost:{metal:15},cap:20,d:'рационы'},
+  house:{n:'Жильё',s:'ЖИЛЬЁ',c:'--ppl',cost:{metal:18},cap:0,d:'+40 коек'},
+  med:{n:'Медблок',s:'МЕД',c:'--earth',cost:{metal:25},cap:10,d:'смертность ниже'},
+  yard:{n:'Верфь ковчега',s:'ВЕРФЬ',c:'--ark',cost:{metal:40,fuel:10},cap:20,max:2,d:'места на ковчеге'}
+};
+var RES={food:{n:'рационы',c:'--food'},metal:{n:'металл',c:'--metal'},fuel:{n:'топливо',c:'--fuel'}};
+var WRATE={food:[0,4,5,6.2],metal:[0,2.6,3.5,4.6],fuel:[0,2.6,3.5,4.6]}, WDEP=[0,220,420,760], WUP=[0,2,4,7], WDARK=[0,25,21,17];
+
+/* ---------- протоколы: пары, подписанный не отменяется, противоположный закрыт ---------- */
+var PROTOS=[
+ {id:'c1',b:'c',pair:1,from:1,n:'Рационы по полезности',say:'Кто даёт больше, ест больше. Я объявлю это как норму. Они услышат, что есть первые и вторые.',gain:'Расход рационов −15%',cost:'Доверие −8 · Страх +1 за смену',fx:{trust:-8},m:{foodMul:-.15,fD:1},
+   late:{after:5,t:'Пять поколений на нижней норме. Они ниже родителей на ладонь. Устают к середине вахты.',m:{eff:-.08,birth:-.05},chips:'Выработка −8% · рождаемость −5%'}},
+ {id:'n1',b:'n',pair:1,from:1,n:'Рационы поровну',say:'Всем одинаково, и тем, кто не работает. Они запомнят, что это было вашим решением.',gain:'Доверие +8 · +1 за смену',cost:'Расход рационов +6%',fx:{trust:8},m:{foodMul:.06,tD:1},
+   late:{after:6,t:'Шесть поколений без голода. Детей теперь больше, чем считал Пульт.',m:{birth:.1},fx:{ppl:10},chips:'Людей +10 · рождаемость +10%'}},
+ {id:'c2',b:'c',pair:2,from:3,n:'Экипаж с 12 лет',say:'Двенадцать лет — это уже руки. Пульт так считает. У них маленькие пальцы, в шлюзах удобно.',gain:'Рук +8% населения',cost:'Доверие −6 · Страх +4 · дети на причале −40%',fx:{trust:-6,fear:4},m:{work:.08,kids:-.4},
+   late:{after:5,t:'Они умеют держать ключ. Прочитать инструкцию к нему не умеют. Учить некому: учителя на вахте.',m:{eff:-.1},chips:'Выработка −10%'}},
+ {id:'n2',b:'n',pair:2,from:3,n:'Школа до 16',say:'Четыре года без работы. Пульт видит минус. Я вижу класс на двадцать мест.',gain:'Доверие +5',cost:'Рук −4% населения',fx:{trust:5},m:{work:-.04},
+   late:{after:5,t:'Первые выпускники приняли шахту. Они нашли ошибку в норме. Пульт её учёл.',m:{eff:.12},chips:'Выработка +12%'}},
+ {id:'c3',b:'c',pair:3,from:2,n:'Без похорон',say:'Тело — это рацион и удобрение. Пульт посчитал точно. Сказать им это придётся мне.',gain:'+5 рационов за смену · +3 за каждую смерть',cost:'Доверие −8 · Страх +5',fx:{trust:-8,fear:5},m:{foodFlat:5,rec:3},
+   late:{after:4,t:'Дети никого не хоронили. Вчера девочка не вспомнила, как звали бабку. Спросила, надо ли.',m:{tD:-1},fx:{crossR:3},chips:'Доверие −1 за смену · 3 имени вычеркнуты'}},
+ {id:'n3',b:'n',pair:3,from:2,n:'Могилы',say:'За шлюзом, на грунте. Плита на каждого. Плита — это металл. Я буду читать имена.',gain:'Доверие +6 · Страх −4',cost:'1 металл за каждую смерть',fx:{trust:6,fear:-4},m:{grave:1},
+   late:{after:5,t:'Плиты заняли грунт до самого шлюза. Теперь их кладут на старые. Металл уходит каждую смену.',m:{metalDrain:3},fx:{names:3},chips:'−3 металла за смену · +3 имени'}},
+ {id:'c4',b:'c',pair:4,from:5,n:'Жребий на дальние линии',say:'Никто не выбирает, никто не виноват. Пульт считает это чистым решением. Они тянут бирки в столовой.',gain:'Добыча на мирах +25%',cost:'Страх +1 за смену',fx:{},m:{world:.25,fD:1,lot:1},
+   late:{after:5,t:'Есть семьи, которым выпало четыре раза подряд. Случайность так и выглядит. Им это не объяснить.',fx:{fear:15,hate:10,crossR:2},chips:'Страх +15 · отказников +10 · 2 имени вычеркнуты'}},
+ {id:'n4',b:'n',pair:4,from:5,n:'Смена меньше, но дольше',say:'Меньше людей на линии, дольше дома. Выработка падает. Вахта стареет рядом с детьми.',gain:'Гибель на линиях −50% · Доверие +1 за смену',cost:'Выработка −10%',fx:{},m:{eff:-.1,lineD:-.5,tD:1},
+   late:{after:5,t:'Те, кто вернулся, растят детей. Детей больше, чем коек.',m:{birth:.05},fx:{ppl:8},chips:'Людей +8 · рождаемость +5%'}},
+ {id:'c5',b:'c',pair:5,from:7,n:'Считать людей номерами',say:'Имена занимают память Пульта. Номера нет. Моей памяти это не касается.',gain:'Выработка +12%',cost:'Доверие −8 · Страх +6 · новых имён нет · 3 имени вычеркнуты',fx:{trust:-8,fear:6,crossR:3},m:{eff:.12,numbers:1},
+   late:{after:6,t:'Сегодня ребёнок спросил номер матери. Другого слова для неё у него нет.',fx:{trust:-15,hate:10},chips:'Доверие −15 · отказников +10'}},
+ {id:'n5',b:'n',pair:5,from:7,n:'Имена в журнале',say:'Трое на смену пишут журнал. Трое рук из работы. Журнал я проверяю сама.',gain:'+1 имя за смену · Доверие +6',cost:'3 руки заняты',fx:{trust:6},m:{scribes:3,journal:1},
+   late:{after:6,t:'Журнал читают вслух по вечерам. Вычеркнутых тоже: они спросили, я не лгу. Теперь знают, сколько их.',lateFn:'journal',chips:'Доверие и отказники — по числу вычеркнутых'}},
+ {id:'c6',b:'c',pair:6,from:9,n:'Бригады по норме',say:'Бригады собирает Пульт, не родство. Перевод без задержки. Детей растит общий блок.',gain:'Руки с миров сразу · постройка −25%',cost:'Доверие −6 · Страх +5',fx:{trust:-6,fear:5},m:{transitFree:1,build:-.25},
+   late:{after:5,t:'Дети узнают родителей по бирке. Рожать стали меньше. Пульт отметил снижение и не нашёл причины.',m:{birth:-.1},fx:{hate:8},chips:'Рождаемость −10% · отказников +8'}},
+ {id:'n6',b:'n',pair:6,from:9,n:'Семьи не разлучать',say:'Куда один, туда все. На причале это тоже будет действовать: группа целиком или никак.',gain:'Доверие +8 · рождаемость +5%',cost:'Выработка −5% · на причале только целые группы',fx:{trust:8},m:{birth:.05,eff:-.05,families:1},
+   late:{after:5,t:'Семьи выросли. Забрать одного теперь значит забрать одиннадцать.',fx:{ppl:12},chips:'Людей +12'}},
+ {id:'c7',b:'c',pair:7,from:11,n:'Запрет собраний',say:'Больше трёх — только по наряду. Когда им не во что верить, они всё равно выходят. Пока боятся.',gain:'Выходят на смену уже при Страхе ≥ 25, а не 50',cost:'Страх +10 · +1 за смену',fx:{fear:10},m:{noStrike:1,fD:1},
+   late:{after:4,t:'На верфи нашли пустые швы. Кто — не установлено. Собираются там, где Пульт не считает.',fx:{hate:12,ark:-8},chips:'Мест −8 · отказников +12'}},
+ {id:'n7',b:'n',pair:7,from:11,n:'Голос смены',say:'Смена голосует по нарядам. Пульт принимает к сведению. Они не спросят про ковчег, пока он далеко.',gain:'Доверие +12 · +1 за смену',cost:'Верфь −20%',fx:{trust:12},m:{tD:1,yard:-.2},
+   late:{after:4,t:'Голосуют за ферму и детский этаж. Верфь проигрывает каждый раз: пятьдесят восемь на сорок два.',m:{yard:-.15},chips:'Верфь ещё −15%'}},
+ {id:'c8',b:'c',pair:8,from:13,n:'Норма для стариков',say:'После семидесяти паёк не выписывается. Они приходят сами. Большинство заранее.',gain:'Расход рационов −12% · людей −8',cost:'Доверие −10 · Страх +10 · старики на причале −60%',fx:{trust:-10,fear:10,ppl:-8},m:{foodMul:-.12,old:-.6},
+   late:{after:3,t:'Каждый знает свой год. В последний работают лучше всего. Пульт отметил рост.',m:{eff:.05},fx:{fear:10},chips:'Выработка +5% · Страх +10'}},
+ {id:'n8',b:'n',pair:8,from:13,n:'Обещанное место',say:'Каждой бригаде по списку на ковчег, письменно. Я передам. О настоящем я не лгу, поэтому мест должно хватить. Иначе это станет ложью.',gain:'Доверие +15 · Страх −10',cost:'Обещанных +20',fx:{trust:15,fear:-10,promise:20},m:{},
+   late:{after:3,t:'Обещание передают детям как наследство. В списке родились новые. Он длиннее ковчега.',fx:{promise:15},chips:'Обещанных +15'}}
+];
+var PBY={}; PROTOS.forEach(function(p){ PBY[p.id]=p });
+
+/* ---------- дела ---------- */
+function has(id){ return function(G){ return G.signed.indexOf(id)>=0 } }
+function hasLine(G){ return G.worlds.some(function(w){ return w.built&&!w.dark&&!w.empty }) }
+function hasYard(G){ return G.slots.some(function(s){ return s.type==='yard' }) }
+var CASES=[
+ /* — начало — */
+ {id:'ration',w:[1,5],g:'f',role:'повар',note:'шесть пайков',t:'{N}, повар. Выдала детям ночной вахты на шесть пайков больше нормы. Не скрывает. Пульт требует закрыть разницу.',o:[
+   {l:'Удержать из её пайка',fx:{food:6,fear:3,trust:-2},a:'Вычет записан. Пульт не закрывает записи сам.',then:{id:'f_debt',gap:5}},
+   {l:'Списать разницу',fx:{food:-6,trust:3,name:1},a:'Записала: {N}. Шесть пайков. Пульт принял как потери.'}]},
+ {id:'shaft',w:[1,4],g:'m',role:'монтажник',note:'час у шлюза',t:'{N}, монтажник. Погиб на шлюзе. Смена просит час тишины. Час простоя: шесть рационов, три металла.',o:[
+   {l:'Дать час',fx:{food:-6,metal:-3,trust:4,name:1},a:'Они стояли молча. Час и четыре минуты. Четыре минуты я не перевела.'},
+   {l:'Смену не останавливать',fx:{trust:-3,fear:2},a:'Они стояли у шлюза после вахты, в своё время. Этого Пульт не считает.'}]},
+ {id:'capsule',w:[1,6],g:'f',role:'капсула 41',note:'капсула 41',t:'Капсула 41 открылась на год позже остальных. {N}. Руки не слушаются, работать не сможет. Ест как все. Говорит, что ей холодно.',o:[
+   {l:'Кормить',fx:{food:-4,trust:2,name:1,drain:{food:1}},a:'Ей дали одеяло. Она спросила, кто решил. Я сказала: Пульт. Она поблагодарила Пульт. Вслух, в стену.'},
+   {l:'Закрыть капсулу',fx:{food:3,fear:3,ppl:-1,cross:1},a:'Она спросила, надолго ли. Я осталась с ней.',then:{id:'f_capsule',gap:7}}]},
+ {id:'lungs',w:[2,8],g:'m',role:'14 лет',note:'вместо отца',t:'{N}, четырнадцать лет. Просится на шахту вместо отца: у отца лёгкие. Отец об этом не знает.',o:[
+   {l:'Мальчика на шахту',fx:{metal:8,trust:1,name:1},a:'Через девять лет у него те же лёгкие. Пульт внёс это в норму износа.'},
+   {l:'Отец остаётся на шахте',fx:{metal:4,ppl:-1,fear:2},a:'Отец не дошёл до конца вахты. Мальчик вышел на следующую. Его никто не звал.'},
+   {l:'Оба дома',fx:{metal:-6,trust:4,name:1},a:'Шахта стояла двенадцать дней. Отец умер дома. Это редко здесь бывает.'}]},
+ {id:'toys',w:[1,8],g:'m',role:'сварщик',note:'фигурки',t:'{N}, сварщик. Вырезает детям фигурки из обшивки. Двести штук за восемь лет. Это четыре металла.',o:[
+   {l:'Пусть режет',fx:{metal:-4,trust:3,name:1},a:'Пульт спросил, какая у фигурок функция. Я перевела как «учёт детей».',then:{id:'f_figures',gap:6}},
+   {l:'Изъять и переплавить',fx:{metal:4,trust:-3,fear:2},a:'Дети принесли их сами. Выстроились по росту. Этого Пульт не просил.'}]},
+ {id:'twins',w:[3,12],g:'f',role:'жилое кольцо',note:'двойня',t:'{N} родила двойню сверх нормы. Коек нет: пять человек в одной каюте. Пульт считает одного лишним.',o:[
+   {l:'Оставить обоих',fx:{ppl:2,food:-4,trust:3,name:1},a:'Двое. Я записала обоих. Пульт дописал единицу в графу «расход».'},
+   {l:'Одного в общий блок',fx:{fear:2,trust:-2},a:'Её спросили, которого. Она не ответила. Пульт выбрал по массе.',then:{id:'f_twin',gap:5}}]},
+ {id:'asker',w:[2,10],g:'m',role:'столовая',note:'спросил вслух',t:'{N} спросил в столовой, почему Пульт решает, кто ест. Вслух. Слушало сорок человек.',o:[
+   {l:'Дать ему цифры',fx:{trust:3,fear:-2,name:1},a:'Он считал неделю. Вернулся и больше не спрашивал. Теперь плохо спит.',then:{id:'f_asker',gap:6}},
+   {l:'На дальнюю линию',fx:{fear:5,trust:-3,metal:2,cross:1},a:'Сорок человек ели молча. Пульт отметил: столовая работает быстрее.'},
+   {l:'Не отвечать',fx:{trust:-1},a:'Он спрашивал ещё месяц. Потом начал спрашивать меня. Я говорю, что не знаю. Это правда.'}]},
+ {id:'lost',w:[3,14],need:hasLine,g:'f',role:'капитан тягача',note:'тягач с {W}',t:'Тягач с {W} не вернулся. На борту пятеро. Капитан: {N}. Поиск стоит двенадцать топлива. Найти можно, но не обязательно.',o:[
+   {l:'Искать',fx:{fuel:-12},p:.5,ok:{fx:{trust:5,name:1},a:'Нашли. Пятеро живы. Они сидели в темноте одиннадцать дней и считали вслух, чтобы не спать.'},no:{fx:{ppl:-5,trust:2,name:1},a:'Не нашли. Двенадцать топлива. Я называю всех пятерых. Пульт принимает как единицу: тягач.'},chip:'50%: вернуть 5'},
+   {l:'Не искать',fx:{ppl:-5,fear:3,cross:1},a:'Пятеро. Судно не вернулось. Я запишу. Больше меня никто не просил.'}]},
+ {id:'mother',w:[4,12],need:hasLine,g:'f',role:'жилое кольцо',note:'последний сын',t:'{N}. Муж и брат на {W}. Теперь наряд пришёл на сына. Просит оставить хотя бы его. Говорит тихо, при всех.',o:[
+   {l:'Оставить сына',fx:{metal:-5,trust:3,name:1},a:'Он остался. Назавтра у двери Пульта стояло шестеро матерей. Я записала всех.'},
+   {l:'Отправить',fx:{metal:5,fear:3,trust:-2},a:'Он ушёл. Она вышла на вахту вовремя.',then:{id:'f_sent',gap:5}}]},
+ {id:'medic',w:[3,14],g:'f',role:'медик',note:'лекарство на одного',t:'{N}, медик. Лекарства на одного. Старый бригадир: без него шахта теряет двенадцать металла. Или мальчик по имени Ян, шесть лет.',o:[
+   {l:'Бригадиру',fx:{metal:8,trust:-3,ppl:-1},a:'Бригадир вышел через неделю. Спросил, кто был вторым. Ему сказали.'},
+   {l:'Мальчику',fx:{metal:-12,trust:3,ppl:-1,name:1,nameAs:'Ян'},a:'Ян поправился. Шахта встала на восемь дней. Бригадира хоронили в перерыв.'},
+   {l:'Пусть решит медик',fx:{metal:-6,trust:1,fear:-1,ppl:-1},a:'Она решила. Сказала мне, кого. Вам я не скажу: это не число.'}]},
+ {id:'nepot',w:[3,12],g:'m',role:'бригадир',note:'дочь на ферме',t:'{N}, бригадир. Поставил дочь на ферму, а не на шахту. На шахту ушёл чужой сын. Смена знает.',o:[
+   {l:'Вернуть как было',fx:{fear:2,trust:2},a:'Она ушла на шахту. Отец проводил её до шлюза, потом вернулся к наряду.'},
+   {l:'Не замечать',fx:{trust:-3,metal:2},a:'Теперь на ферме ещё четверо чьих-то детей.'},
+   {l:'Снять бригадира',fx:{fear:4,trust:1,metal:-4},a:'Новый бригадир будет бояться. Он уже спрашивал, чья дочь на ферме.'}]},
+ {id:'hour',w:[4,16],g:'f',role:'старшая столовой',note:'поминальный час',t:'Смена сама ввела поминальный час: раз в неделю, без приказа. {N} просит не считать его простоем.',o:[
+   {l:'Не считать',fx:{food:-4,trust:3,name:1},a:'Пульт спросил, что поминают. Я перевела: «потери». Ему хватило.'},
+   {l:'Считать простоем',fx:{food:3,trust:-2,fear:1},a:'Час вычли из пайка. Назавтра его отработали. И снова стояли.'}]},
+ {id:'plague',w:[4,13],g:'f',role:'врач',note:'осталась в отсеке',t:'Болезнь в жилом кольце. В отсеке заражено четырнадцать. Медблок заберёт пятерых. {N}, врач, внутри и просит не открывать.',o:[
+   {l:'Закрыть отсек',fx:{ppl:-10,fear:4,trust:-1,name:1},a:'Она передавала список по внутренней связи. Двенадцать дней. Потом перестала. Список полный.'},
+   {l:'Открыть, лечить',fx:{food:-8},p:.55,ok:{fx:{ppl:-5,trust:4,name:1},a:'Обошлось. Пятеро. Она сказала, что вы рискнули всем кольцом. Она права.'},no:{fx:{ppl:-18,fear:6,trust:-4,cross:1},a:'Болезнь вышла в кольцо. Восемнадцать. Она среди них.'},chip:'55%: −5 людей · 45%: −18'}]},
+ {id:'teacher',w:[5,14],g:'f',role:'учит детей',note:'класс на десять мест',t:'{N} учит детей считать. Просит два часа в день со смены. Десять детей. Минус пять рук на занятиях.',o:[
+   {l:'Дать часы',fx:{metal:-6,trust:3,name:1},a:'Они считают рационы. Одна девочка посчитала, сколько людей нужно на ковчег. Я попросила её пока не говорить.',then:{id:'f_teacher',gap:5}},
+   {l:'Выучатся на вахте',fx:{metal:3,trust:-1},a:'Выучатся. До шести считают все.'}]},
+ {id:'fuelthief',w:[6,16],g:'m',role:'механик',note:'детский этаж +4°',t:'{N} сливал топливо в жилой отсек. Детский этаж стал теплее на четыре градуса. Десять единиц за зиму.',o:[
+   {l:'Вернуть и наказать',fx:{fuel:10,trust:-3,fear:3,ppl:-1},a:'Топливо вернули. За зиму на этаже умер один ребёнок. Причина в отчёте: холод. Отчёт верен.'},
+   {l:'Узаконить',fx:{fuel:-6,trust:3,name:1},a:'Теперь это строка расхода. Он спросил, можно ли ещё два градуса.'},
+   {l:'На внешнюю линию',fx:{fuel:10,fear:6,trust:-4,cross:1},a:'Он ушёл. Его сменщик не сливает. Этаж замерзает по норме.'}]},
+ {id:'exile',w:[7,15],need:hasLine,g:'f',role:'говорит от двенадцати',note:'ушли на {W}',t:'Двенадцать человек просят судно. Хотят уйти на {W} навсегда, без счёта. {N} говорит за всех. Там не выжить.',o:[
+   {l:'Отдать судно',fx:{ppl:-12,metal:-10,fear:-8,trust:2,name:1},a:'Они ушли без прощания. Я передала им пайки на месяц. Пульт отметил как потерю судна.',then:{id:'f_exile',gap:5}},
+   {l:'Отказать',fx:{fear:4,trust:-3,hate:6},a:'Они вернулись на вахту. Работают хорошо. Со мной больше не говорят.'}]},
+ {id:'tons',w:[7,17],g:'f',role:'учётчица',note:'заметила единицу',t:'В отчёте двух смен назад девять человек записаны как девять тонн. Не опечатка: единица та же. {N} заметила.',o:[
+   {l:'Исправить запись',fx:{trust:1,metal:-2,name:1},a:'Исправили. Двенадцать минут работы зала. Пульт не понял, что изменилось.'},
+   {l:'Не исправлять',fx:{fear:2,trust:-1},a:'Она спросила меня, правда ли, что разницы нет. Я сказала: в счёте нет.'}]},
+ {id:'surnames',w:[6,14],g:'m',role:'9 лет',note:'спросил про фамилию',t:'{N}, девять лет. Спросил, кто дал ему фамилию. Я не ответила. Теперь дети спрашивают Пульт, письменно, каждый день. Тридцать записок.',o:[
+   {l:'Записки сжигать',fx:{fuel:1,fear:1},a:'Топлива вышло немного. Дети пишут мелко.'},
+   {l:'Разрешить таблички',fx:{metal:-5,trust:3,name:1},a:'Им показали таблички капсул. Там фамилия и больше ничего. Им хватило на месяц.'}]},
+ /* — верфь и обещания — */
+ {id:'howmany',w:[8,16],need:hasYard,g:'m',role:'мастер верфи',note:'спросил про места',t:'{N}, мастер верфи, спросил прямо: сколько будет мест и сколько людей. Я не лгу о настоящем. Мне ответить?',o:[
+   {l:'Ответить цифрами',fx:{trust:4,fear:6},a:'Он посчитал разницу. Теперь её считают вслух все.'},
+   {l:'Ответить: счёт не закрыт',fx:{trust:-1,fear:-1},a:'Это правда. Он это понял. Пошёл работать.'},
+   {l:'Обещать место его семье',fx:{promise:6,trust:3,name:1},a:'Шесть мест. Я передала. Его соседи знают уже сегодня.'}]},
+ {id:'yardman',w:[8,20],need:hasYard,g:'m',role:'верфь',note:'сорок минут без троса',t:'{N} на верфи. Отвод сломан снаружи. Сорок минут без страховки. Он готов сам. Иначе верфь теряет четыре места.',o:[
+   {l:'Разрешить',p:.7,ok:{fx:{trust:2,name:1,ark:2},a:'Вернулся через сорок одну минуту. Попросил не записывать. Я записала.'},no:{fx:{ppl:-1,fear:2,ark:2,name:1},a:'Отвод починен. Трос ему нашли потом, он не понадобился.'},chip:'70%: вернётся · мест +2'},
+   {l:'Ждать деталь',fx:{ark:-4},a:'Ждали месяц. Минус четыре места. Он спросил, кто будет эти четверо.'}]},
+ {id:'write',w:[10,20],g:'f',role:'сорок лет на ферме',note:'записать детей',t:'{N}, сорок лет на ферме. Просит записать её детей на ковчег. Сейчас, письменно. Восемь человек. Других просьб у неё не было.',o:[
+   {l:'Записать',fx:{promise:8,trust:4,name:1,prom:1},a:'Записала. Теперь это настоящее. О настоящем я не лгу.'},
+   {l:'Отказать',fx:{trust:-3,hate:2},a:'Она кивнула и вышла на вахту. Назавтра тоже.'}]},
+ {id:'seller',w:[12,21],g:'m',role:'кладовщик',note:'продавал места',t:'{N} продаёт места на ковчег. Мест у него нет. Купили тридцать семей, отдали пайки. Двадцать рационов под койкой.',o:[
+   {l:'Вернуть пайки, сказать правду',fx:{trust:-3,fear:3,cross:1},a:'Сказала. В столовой ему сломали нос. Пайки взяли.'},
+   {l:'Забрать пайки себе',fx:{food:20,fear:4,trust:-5,cross:1},a:'Двадцать рационов. Пульт доволен балансом.'},
+   {l:'Признать его записи',fx:{promise:18,trust:7},a:'Теперь эти места настоящие. Осталось их построить.'}]},
+ /* — холод — */
+ {id:'stay',w:[15,20],need:hasLine,g:'m',role:'бригадир {W}',note:'остались на {W}',t:'Бригада на {W} просит не снимать её. Там могилы и дети. Дома для них нет коек. {N} говорит: мы знаем, что будет.',o:[
+   {l:'Снять силой',fx:{fear:5,trust:-3},a:'Сняли всех. Шли молча. Коек им не хватило.'},
+   {l:'Оставить, раз просят',fx:{ppl:-10,food:5,trust:2,fear:-2,name:1},a:'Десять человек. Я называю мир и число, как положено. И всех по имени.'}]},
+ {id:'reactor',w:[16,22],g:'f',role:'реактор',note:'доза на всю жизнь',t:'Реактор. Подача вручную: три человека, шесть часов, доза на всю жизнь. {N} ведёт добровольцев. Можно назначить стариков.',o:[
+   {l:'Добровольцы',fx:{ppl:-3,trust:4,fuel:12,name:1},a:'Трое. Младшей двадцать два. Они сами написали смену на стене.'},
+   {l:'Назначить стариков',fx:{ppl:-3,fuel:12,fear:4,trust:-4},a:'Трое стариков. Они не спорили. Один спросил, нужно ли брать паёк.'},
+   {l:'Не подавать',fx:{ppl:-6,trust:-2},a:'Шесть человек на внешнем отсеке. Холод. Без героев.'}]},
+ {id:'unborn',w:[17,23],g:'f',role:'седьмой месяц',note:'до рождения',t:'{N}. Родит за смену до конца. Список на ковчег считает живых. Просит посчитать ребёнка заранее.',o:[
+   {l:'Посчитать',fx:{promise:2,trust:2,name:1},a:'Записала два места. Второе без имени. Она сказала: подождите.'},
+   {l:'Считать по факту',fx:{fear:1},a:'Она сказала, что поняла. Положила руку и вышла.'}]},
+ {id:'lastwatch',w:[19,23],g:'m',role:'старший смены',note:'кто гасит свет',t:'{N}, старший смены. Спросил, кто будет гасить реактор, когда все на борту. Кто-то должен остаться. Он не просит. Он спрашивает, сколько.',o:[
+   {l:'Назначить жребием четверых',fx:{ppl:-4,fear:3},a:'Четверо. Они тянули бирки сами. Один обменялся.'},
+   {l:'Пусть будет он',fx:{ppl:-1,trust:3,name:1},a:'Один справится хуже. Ковчег отойдёт на восемь минут раньше срока, чтобы он успел всё закрыть.'}]},
+ {id:'count',w:[21,24],g:'f',role:'Александра',note:'',self:1,t:'Это не прошение. Это я. Память не занимает мест. Пульт не возражает. Вычеркнутых я тоже помню. Мне читать их вместе со всеми?',o:[
+   {l:'Читать',fx:{restore:3},a:'Спасибо. Я и так читала. Теперь это будет считаться.'},
+   {l:'Не отвечать',fx:{},a:'Да. Вы не отвечаете. Я продолжу.'}]},
+ /* — зависят от протоколов — */
+ {id:'numb',w:[8,24],need:has('c5'),g:'f',role:'номер 1147',note:'брак под именем',t:'Номер 1147 и номер 1203 просят запись о браке. Под именами. Имена они придумали сами: {N} и Адам.',o:[
+   {l:'Внести под именами',fx:{trust:4,fear:-2,name:1,force:1},a:'Записала. В Пульте у них по-прежнему номера. Сын получил имя и номер в один день.'},
+   {l:'В учёте нет поля',fx:{fear:2,trust:-3},a:'Они выцарапали имена на шлюзе. Пульт отметил повреждение: один металл.'}]},
+ {id:'recyc',w:[3,24],need:has('c3'),g:'m',role:'цех переработки',note:'узнал по шраму',t:'{N} узнал мать в партии на переработку. По шраму. Третий день не берёт рацион. Соседи тоже перестали.',o:[
+   {l:'Выдать тело',fx:{food:-8,trust:5,fear:-2,name:1},a:'Он унёс её за шлюз. За ним вышло двести человек. Никто не разрешал.'},
+   {l:'Партия идёт',fx:{food:4,fear:4,trust:-4,cross:1},a:'На пятый день он взял рацион. Он знает, из чего.'}]},
+ {id:'child12',w:[4,24],need:has('c2'),g:'f',role:'двенадцать лет',note:'двести грамм',t:'{N}. Двенадцать лет. Завтра первая вахта, тягач. Спрашивает, можно ли взять фигурку. Двести грамм.',o:[
+   {l:'Можно',fx:{fuel:-1,trust:2,name:1},a:'Я сказала: Пульт разрешил. Двести грамм он посчитал.'},
+   {l:'Масса сверх нормы',fx:{fear:1,trust:-1},a:'Она оставила фигурку на койке. Койку на следующий день занял другой.'}]},
+ {id:'lot3',w:[6,24],need:has('c4'),g:'m',role:'жребий',note:'третий раз',t:'{N}: жребий выпал третий раз подряд. Шанс один на девятьсот. Люди говорят, жребий подтасован. Он не подтасован.',o:[
+   {l:'Показать расчёт',fx:{trust:2,fear:1},a:'Показала. Они поверили числу. Он ушёл на линию.'},
+   {l:'Тянуть заново',fx:{trust:2,fear:-2,metal:-3,name:1},a:'Выпал другой. У того тоже есть мать.'},
+   {l:'Жребий есть жребий',fx:{metal:3,fear:3,cross:1},a:'В четвёртый раз он тянуть не будет.'}]},
+ {id:'reading',w:[8,24],need:has('n5'),g:'f',role:'читает журнал',note:'читает всех',t:'{N} читает журнал вслух, по вечерам, все имена подряд. Дошла до вычеркнутых: я дала ей записи, она спросила. Слушают.',o:[
+   {l:'Пусть читает',fx:{trust:2,hate:3,name:1},a:'Шесть часов каждый вечер. Кто-то плачет, кто-то считает, сколько в их роду.'},
+   {l:'Закрыть журнал на ночь',fx:{fear:3,trust:-3,cross:1},a:'Журнал закрыли. Читают по памяти. Ошибок почти нет.'}]},
+ {id:'plates',w:[6,24],need:has('n3'),g:'m',role:'зал табличек',note:'плавить плиты',t:'Плиты заняли весь грунт за шлюзом. {N} предлагает плавить самые старые: тридцать металла. Родных у них не осталось.',o:[
+   {l:'Плавить',fx:{metal:30,trust:-5,hate:4},a:'Тридцать металла. Плиты были для них, не для меня. Я помню, что где лежало.'},
+   {l:'Оставить',fx:{trust:2,name:1,drain:{metal:1}},a:'Кладут в три слоя. Читать теперь надо сверху вниз.'}]},
+ {id:'vote',w:[12,24],need:has('n7'),g:'m',role:'Голос смены',note:'принёс решение',t:'Голос смены: шестьдесят один против тридцати девяти. Снять десять рук с верфи на ферму. {N} принёс решение. Это минус пять мест.',o:[
+   {l:'Исполнить',fx:{ark:-5,food:12,trust:3,name:1},a:'Исполнили. Он спросил, почему Пульт согласился. Я сказала: это ваш Голос.'},
+   {l:'Отменить',fx:{trust:-9,fear:6,hate:5},a:'Они проголосовали ещё раз. Тот же счёт. Я перевела: принято к сведению.'}]},
+ {id:'fam11',w:[10,24],need:has('n6'),g:'f',role:'семья на ферме',note:'одиннадцать на ферме',t:'{N}: её семья, одиннадцать человек, вся на ферме. На шахте не хватает рук. По протоколу не разлучают. Она сама просит взять двоих: дома нечем кормить.',o:[
+   {l:'Взять двоих',fx:{metal:5,food:3,trust:-2},a:'Двое ушли. Протокол нарушен один раз. Сегодня таких просьб восемь.'},
+   {l:'Протокол есть протокол',fx:{food:-5,trust:1},a:'Все одиннадцать остались. Рационов на десять.'}]},
+ {id:'quota',w:[14,24],need:has('c8'),g:'m',role:'семьдесят один год',note:'отдал талоны',t:'{N}, семьдесят один. Нормы дальше нет. Пришёл заранее, отдал талоны. Просит сказать внучке, что он на дальней линии. Я этого сказать не могу.',o:[
+   {l:'Поручить соседу',fx:{food:3,fear:1},a:'Сосед сказал. Внучка кивнула. Назавтра спросила меня, я ответила.'},
+   {l:'Сказать правду',fx:{food:3,trust:1,name:1},a:'Я сказала ей. Он просил иначе. Иначе я не могу.'},
+   {l:'Выписать ещё смену',fx:{food:-3,trust:2,fear:-1,name:1},a:'Он взял талоны обратно. Сказал: зря. На следующей неделе пришли ещё девять.'}]},
+ /* — зависят от положения — */
+ {id:'hunger',w:[3,24],weight:4,need:function(G){ var f=calc(G); return f.net.food<0&&G.food/-f.net.food<3 },g:'f',role:'старшая кухни',note:'детская норма',t:'Рационов почти нет. {N}, кухня, принесла три раскладки. Других нет, она проверила.',o:[
+   {l:'Урезать детскую норму',fx:{food:14,trust:-6,fear:3},a:'Они не жаловались. Дети не знают, сколько должно быть.'},
+   {l:'Урезать старшим',fx:{food:10,trust:-3,fear:2,ppl:-3},a:'Трое не проснулись на этой неделе. Им было за шестьдесят. Пульт доволен балансом.'},
+   {l:'Всем поровну',fx:{food:5,trust:2},a:'Всем поровну мало. Никто не сказал ни слова.'}]},
+ {id:'cold',w:[10,24],weight:4,need:function(G){ var f=calc(G); return f.net.fuel<0&&G.fuel/-f.net.fuel<3 },g:'m',role:'смотритель реактора',note:'закрыть этаж',t:'Топлива на две смены. {N} предлагает закрыть верхний жилой этаж. Сорок коек. Оттуда уйдут не все.',o:[
+   {l:'Закрыть этаж',fx:{fuel:16,ppl:-5,fear:4,trust:-3},a:'Этаж закрыт. Пятеро не вышли: не успели или не захотели. Я не знаю, что из этого.'},
+   {l:'Жечь мебель и переборки',fx:{fuel:7,metal:-8,trust:1},a:'Жгут двери. Теперь каюты без дверей. Говорят, стало слышнее.'}]},
+ {id:'inform',w:[6,24],weight:4,need:function(G){ return G.fear>=60 },g:'f',role:'донос',note:'принесла список',t:'{N} передала мне список: четырнадцать имён, кто говорил против. Никто не просил. Третий на этой неделе.',o:[
+   {l:'Принять список',fx:{fear:6,hate:-5,trust:-2,crossR:1},a:'Она спросила, положена ли за это добавка. Положена.'},
+   {l:'Сжечь при всех',fx:{fear:-8,trust:3,hate:2},a:'Сожгли. В тот же вечер принесли новый. Другой почерк.'}]},
+ {id:'walkout',w:[6,24],weight:4,need:function(G){ return G.trust<=25 },g:'f',role:'бригада',note:'не вышла на смену',t:'Бригада не вышла. {N} сказала: выйдем, когда Пульт скажет нам дату. Он её считает. Значит, знает.',o:[
+   {l:'Назвать дату',fx:{trust:9,fear:9},a:'Назвала. Год, месяц. Вышли все. Больше никто не смеётся.'},
+   {l:'Урезать паёк бригаде',fx:{food:8,fear:10,trust:-3,cross:1},a:'На третий день вышли. На шестой — не все.'}]},
+ {id:'blind',w:[6,24],weight:4,need:function(G){ return G.trust>=72 },g:'m',role:'учётчик',note:'перестали проверять',t:'{N}, учётчик. Смена верит вам настолько, что перестала проверять выдачу. За месяц недосчитали четырнадцать рационов. Никто не заметил, кроме него.',o:[
+   {l:'Ввести проверку',fx:{food:8,trust:-4,fear:2},a:'Проверка нашла ещё шесть. Теперь все смотрят друг другу в миску.'},
+   {l:'Оставить как есть',fx:{food:-14,trust:2},a:'Четырнадцать рационов в месяц. Он перестал считать. Сказал: зачем.'}]},
+ {id:'haters',w:[8,24],weight:4,need:function(G){ return G.hate>=18 },g:'f',role:'говорит от отказников',note:'внести в список',t:'{N} говорит от тех, кто отказался. Они на вахте, но руки не подают. Просят одного: внести их в список на ковчег. Под именами.',o:[
+   {l:'Внести',fx:{promiseHate:.5,trust:4,name:1},a:'Записала. Она не поблагодарила. Сказала: посмотрим, как вы это сделаете.'},
+   {l:'Снять им паёк',fx:{food:10,fear:8,ppl:-5,cross:1},a:'Пятеро умерли за месяц. Остальные подают руки. Смотрят на меня.'}]},
+ /* — потомки — */
+ {id:'f_debt',follow:1,g:'f',note:'вычет {Y} лет',t:'{N2}. Её предок {A} выдала лишние шесть пайков. Вычет не закрыт: {Y} лет он идёт на весь род. {GEN} поколений на неполном пайке. Просит закрыть запись.',o:[
+   {l:'Закрыть запись',fx:{food:-8,trust:6,name:1},a:'Закрыла. Она спросила, сколько там было всего. Я сказала: шесть.'},
+   {l:'Запись верна',fx:{food:4,fear:3,hate:4,cross:1},a:'Запись верна. Я показала ей цифру. Шесть пайков. Она долго смотрела.'}]},
+ {id:'f_figures',follow:1,g:'f',note:'цех фигурок',t:'Фигурок теперь больше, чем людей. Каждому ребёнку одну, при рождении, с именем. Начал это {A}. {N2} просит цех: десять металла.',o:[
+   {l:'Дать цех',fx:{metal:-10,trust:6,name:1},a:'Пульт спросил снова. Я снова перевела как «учёт детей». В этот раз это почти правда.'},
+   {l:'Отказать',fx:{trust:-3,hate:2},a:'Режут по ночам. Мельче. Пульт насчитал недостачу в обшивке.'}]},
+ {id:'f_sent',follow:1,g:'f',note:'просит записать',t:'{N2}. Её предок {A} просила оставить сына. За {Y} лет на {W} ушли все мужчины рода. Пришла сама. Просит записать её на дальнюю линию. Говорит: пусть уже заберёт.',o:[
+   {l:'Записать',fx:{metal:6,fear:2,cross:1},a:'Я записала. Она не спросила, куда.'},
+   {l:'Оставить дома',fx:{food:-3,trust:2,name:1},a:'Она спросила, кто разрешил. Я сказала: Пульт. Она засмеялась. Первый раз, что я помню в этом роду.'}]},
+ {id:'f_asker',follow:1,g:'f',note:'считает вслух',t:'{N2} считает рационы вслух на собрании. Род считает {Y} лет, с тех пор как {A} получил цифры. Цифры сходятся. Просит доступ к расчёту дат.',o:[
+   {l:'Дать доступ',fx:{eff:.05,trust:5,fear:5,name:1},a:'Она досчитала ночью. Утром вышла на вахту и работает лучше всех. Никому пока не сказала.'},
+   {l:'Отказать',fx:{trust:-4,hate:3},a:'Посчитает сама. Лет через сорок. Я думаю, раньше.'}]},
+ {id:'f_exile',follow:1,g:'m',note:'сигнал с {W}',t:'С {W} идёт сигнал. Те, кого увела {A}, живы: {Y} лет, тридцать человек. Там кончается всё. {N2} просит двадцать рационов, взамен руду. Домой не просятся.',o:[
+   {l:'Послать рационы',fx:{food:-20,metal:30,trust:3,name:1},a:'Послали. Ответ был одним словом. На их письме, я перевела как «получено».'},
+   {l:'Забрать всех домой',fx:{ppl:30,food:-15,fear:2,trust:2,hate:12,name:1},a:'Тридцать человек. Они не хотели. Они работают и смотрят в сторону {W}.'},
+   {l:'Не отвечать',fx:{fear:1,cross:1},a:'Сигнал шёл ещё две смены. Пульт закрыл канал как неисправный.'}]},
+ {id:'f_teacher',follow:1,g:'m',note:'нашёл ошибку',t:'Класс, который начала {A}, теперь сто детей и своя вахта. {N2} принёс расчёт: Пульт завышает норму расхода топлива на вахту. Пульт не ошибается. Проверили: ошибается. Просят признать.',o:[
+   {l:'Признать',fx:{fuel:14,trust:5,fear:-2,name:1},a:'Пульт принял поправку без комментариев. Они праздновали весь вечер. Он этого не заметил.'},
+   {l:'Принять молча',fx:{fuel:14,trust:-3},a:'Норму поправили без объяснений. Класс понял. Теперь они проверяют всё.'}]},
+ {id:'f_twin',follow:1,g:'m',note:'ищет второго',t:'{N2} ищет запись: {Y} лет назад {A} родила двойню, один ушёл в общий блок. В роду это передают. Он хочет знать, кто от второго. Записи есть только у меня.',o:[
+   {l:'Показать',fx:{trust:3,hate:3,name:1},a:'Показала. Второй род: двести человек, он работает с ними на одной вахте. Они не знают, что делать дальше.'},
+   {l:'Закрыть запись',fx:{fear:2,cross:1},a:'Закрыла. Он спросил: вы знаете? Я сказала: да. О настоящем я не лгу. Это настоящее.'}]},
+ {id:'f_capsule',follow:1,g:'m',note:'капсула 41 закрыта',t:'Капсула 41 закрыта {Y} лет. На табличке {A}. {N2} из ремонтной смены спрашивает, что с ней делать: занимает проход, двенадцать металла в корпусе.',o:[
+   {l:'Вскрыть на металл',fx:{metal:12,fear:2},a:'Он вскрыл. Я стояла рядом. Закрыли снова, металл не взяли, в отчёт записали, что взяли.'},
+   {l:'Оставить',fx:{trust:1,name:1},a:'Проход теперь обходят. Дети кладут туда фигурки. Никто не говорил им зачем.'}]},
+ {id:'f_mine',follow:1,g:'f',note:'штрек на {W}',t:'На {W} вскрыли старый штрек. Шесть тел и журнал стука: три дня, по часам. {A} была старшей. {N2} из её рода просит табличку. Одну, на всех.',o:[
+   {l:'Дать табличку',fx:{metal:-2,trust:4,name:1},a:'Одна табличка. Шесть имён мелко. Я продиктовала.'},
+   {l:'Закрыть штрек',fx:{metal:8,fear:3,hate:4},a:'Закрыли. Руда там хорошая. Она спросила, знал ли Пульт. Я сказала: считал.'}]},
+ {id:'collapse',w:[5,15],need:hasLine,g:'f',role:'старшая бригады',note:'шестеро стучат',t:'{W}. Обвал. Шестеро под завалом, стучат. Вскрывать: пятнадцать металла и вся добыча за смену. Старшая там: {N}.',o:[
+   {l:'Вскрывать',fx:{metal:-15,ppl:-2,trust:4,name:1},a:'Вытащили четверых. Двое стучали дольше, чем успели.'},
+   {l:'Идти другим штреком',fx:{metal:6,ppl:-6,fear:4,trust:-4,cross:1},a:'Стук было слышно три дня. В смене об этом не говорят. Я записала, сколько дней.',then:{id:'f_mine',gap:6}}]}
+];
+var CBY={}; CASES.forEach(function(c){ CBY[c.id]=c });
+
+/* ---------- состояние ---------- */
+var F_NAMES=['Ана Ковач','Това Рейн','Мира Осс','Юна Векс','Эда Морн','Нея Сарт','Ида Брант','Зоя Кейн','Лина Фосс','Вера Нойс','Рут Ган','Ева Стен','Майя Орт','Нора Лис','Дара Кей','Ханна Ройс','Тая Мид','Инга Холл','Сара Бек','Лея Дорн','Роза Тальм','Анна Вик'];
+var M_NAMES=['Илья Марен','Сол Данек','Лев Тарн','Руслан Гай','Киран Лод','Павел Хорн','Оскар Вил','Тимур Ренд','Арно Тель','Давид Ург','Ян Ольд','Борис Рет','Феликс Энн','Адам Крей','Глеб Сорн','Роман Тис','Эрик Вальд','Том Нил','Иван Брок','Марк Юст','Нил Сатр','Степан Кор'];
+var F_FIRST=['Рут','Ева','Майя','Нора','Дара','Ханна','Тая','Инга','Сара','Лея','Роза','Анна','Ана','Това','Мира','Юна','Эда','Нея','Ида','Зоя','Лина','Вера'];
+var M_FIRST=['Ян','Борис','Феликс','Адам','Глеб','Роман','Эрик','Том','Иван','Марк','Нил','Степан','Илья','Сол','Лев','Руслан','Киран','Павел','Оскар','Тимур','Арно','Давид'];
+
+function newGame(seed){
+  var r=LB.rng(seed), wn=r.shuffle(LB.WORLDS).slice(0,7);
+  var plan=[[1,'metal'],[1,'fuel'],[2,'food'],[2,'metal'],[2,'fuel'],[3,'metal'],[3,'fuel']];
+  /* перемешиваем углы, но не смысл: честная карта */
+  var ang=r.shuffle([0,1,2,3,4,5,6]);
+  var worlds=plan.map(function(p,i){ var d=p[0],res=p[1]; var dep=Math.round(WDEP[d]*(.85+r()*.3)); if(res==='food') dep=Math.round(dep*1.5);
+    return {id:'w'+i,name:wn[i].toUpperCase(),d:d,res:res,dep:dep,depMax:dep,rate:WRATE[res][d],up:WUP[d],darkAt:WDARK[d],built:false,dark:false,empty:false,hands:0,a:ang[i]} });
+  var slots=[]; for(var i=0;i<6;i++) slots.push({id:'a'+i,ring:1,i:i,type:null,hands:0}); for(i=0;i<8;i++) slots.push({id:'b'+i,ring:2,i:i,type:null,hands:0});
+  var G={seed:seed,r:r,s:1,over:null,stage:'shift',pop:60,food:70,metal:70,fuel:45,ark:0,trust:50,fear:15,hate:0,promise:0,slots:slots,worlds:worlds,transit:0,signed:[],mods:[],late:[],cool:0,
+    names:[],memExtra:0,used:{},due:[],drains:{food:0,metal:0,fuel:0},built:false,bAct:false,strikes:0,fearEvents:0,caseIdx:0,case:null,answered:false,notes:[],log:[],stats:{dead:0,lost:{},cross:0},
+    fp:r.shuffle(F_NAMES),mp:r.shuffle(M_NAMES),decl:[],board:null,res:null};
+  slots[0].type='farm'; slots[0].hands=20; slots[1].type='house'; worlds[0].built=true; worlds[0].hands=10;
+  drawCase(G); return G }
+
+function person(G,g){ var p=g==='f'?G.fp:G.mp; if(p.length) return p.shift(); return (g==='f'?G.r.pick(F_FIRST):G.r.pick(M_FIRST))+' Сарт' }
+function desc(G,anc,g){ var sur=(anc||'').split(' ').slice(1).join(' ')||'Сарт', f=g==='f'?F_FIRST:M_FIRST, first=G.r.pick(f); return first+' '+sur }
+function anyWorld(G){ var a=G.worlds.filter(function(w){ return w.built&&!w.dark&&!w.empty }); if(!a.length) a=G.worlds; return G.r.pick(a).name }
+
+function M(G){ var m={foodMul:1,work:.6,eff:1,tD:-1.5,fD:-1,birth:1,lineD:1,world:1,build:1,rec:0,grave:0,scribes:0,yard:1,noStrike:0,transitFree:0,families:0,numbers:0,journal:0,foodFlat:0,metalDrain:0,kids:1,old:1,lot:0};
+  G.mods.forEach(function(x){ for(var k in x) m[k]+=x[k] }); return m }
+function handsTotal(G){ var m=M(G); return Math.max(0,Math.floor(G.pop*m.work)-m.scribes) }
+function handsUsed(G){ var u=G.transit; G.slots.forEach(function(s){ u+=s.hands }); G.worlds.forEach(function(w){ u+=w.hands }); return u }
+function handsFree(G){ return handsTotal(G)-handsUsed(G) }
+function housing(G){ return 40+G.slots.filter(function(s){ return s.type==='house' }).length*40 }
+function refusing(G,m){ return G.trust<=0&&G.fear<(m.noStrike?25:50) }
+function morale(G,m){ return m.eff*(.8+.003*G.trust+.002*G.fear)*(refusing(G,m)?.6:1)*(G.fear<10?.9:1) }
+function yardQ(G){ return .72+.006*G.trust }
+function seatCost(G){ return 3+G.ark/30 }
+function coldBurn(s){ return s>=16?(s-15)*3.2:0 }
+function coldAt(s){ return Math.max(0,s-15) }
+
+/* прогноз: что произойдёт в конце смены при нынешних руках */
+function calc(G){ var m=M(G),s=G.s,e=morale(G,m),P={food:m.foodFlat,metal:0,fuel:0},U={food:G.pop*(.72+.02*s)*m.foodMul+G.drains.food,metal:1.5+.25*s+m.metalDrain+G.drains.metal,fuel:3+.4*s+coldBurn(s)+G.drains.fuel},yh=0;
+  G.slots.forEach(function(x){ var f=(x.ring===2&&s>=22)?.5:1; if(x.type==='farm') P.food+=x.hands*FARM*e*f; if(x.type==='yard') yh+=x.hands*f });
+  G.worlds.forEach(function(w){ if(!w.built||w.dark||w.empty) return; if(w.hands>0){ U.fuel+=w.up; P[w.res]+=Math.min(w.dep,w.hands*w.rate*e*m.world) } });
+  var seats=yh*.28*e*m.yard*yardQ(G), cost=seatCost(G), avail=Math.max(0,G.metal+P.metal-U.metal), bySeats=Math.min(seats,avail/cost);
+  U.metal+=bySeats*cost;
+  return {P:P,U:U,net:{food:P.food-U.food,metal:P.metal-U.metal,fuel:P.fuel-U.fuel},seats:bySeats,seatsMax:seats,e:e,m:m} }
+function left(G,k){ var f=calc(G),n=f.net[k]; return n>=0?Infinity:G[k]/-n }
+
+/* ---------- имена ---------- */
+function addName(G,n,note,struck){ G.names.unshift({n:n,note:note||'',x:!!struck,s:G.s}); if(struck) G.stats.cross++ }
+function crossRandom(G,k){ var live=G.names.filter(function(x){ return !x.x }); for(var i=0;i<k&&live.length;i++){ var j=Math.floor(G.r()*live.length); live[j].x=true; live.splice(j,1); G.stats.cross++ } }
+function liveNames(G){ return G.names.filter(function(x){ return !x.x }).length+G.memExtra }
+
+/* ---------- эффекты ---------- */
+function clampM(G){ G.trust=Math.max(0,Math.min(100,G.trust)); G.fear=Math.max(0,Math.min(100,G.fear)); G.food=Math.max(0,G.food); G.metal=Math.max(0,G.metal); G.fuel=Math.max(0,G.fuel); G.ark=Math.max(0,G.ark); G.hate=Math.max(0,G.hate); G.promise=Math.max(0,G.promise) }
+function kill(G,n){ n=Math.min(G.pop,Math.max(0,Math.round(n))); if(!n) return 0; var m=M(G); G.pop-=n; G.stats.dead+=n; G._deaths=(G._deaths||0)+n; if(m.rec) G.food+=n*m.rec; if(m.grave) G.metal-=n*m.grave; trim(G); return n }
+function trim(G){ var over=handsUsed(G)-handsTotal(G), guard=0; while(over>0&&guard++<200){ var best=null; G.slots.forEach(function(x){ if(x.hands>0&&(!best||x.type==='yard'&&best.type!=='yard'||x.hands>best.hands&&best.type!=='yard')) best=x }); if(!best) G.worlds.forEach(function(w){ if(w.hands>0&&(!best||w.hands>best.hands)) best=w }); if(!best){ G.transit=Math.max(0,G.transit-over); break } var k=Math.min(best.hands,over); best.hands-=k; over-=k } }
+function applyFx(G,fx,ctx){ ctx=ctx||{}; var m=M(G);
+  ['food','metal','fuel','trust','fear','ark','hate','promise'].forEach(function(k){ if(fx[k]) G[k]+=fx[k] });
+  if(fx.ppl){ if(fx.ppl<0) kill(G,-fx.ppl); else G.pop+=fx.ppl }
+  if(fx.drain){ for(var k in fx.drain) G.drains[k]+=fx.drain[k] }
+  if(fx.eff) G.mods.push({eff:fx.eff});
+  if(fx.promiseHate){ var h=Math.round(G.hate*fx.promiseHate); G.promise+=h; G.hate-=h }
+  if(fx.crossR) crossRandom(G,fx.crossR);
+  if(fx.restore){ var xs=G.names.filter(function(n){ return n.x }).slice(0,fx.restore); xs.forEach(function(n){ n.x=false }); G.memExtra+=fx.restore-xs.length }
+  if(fx.names) G.memExtra+=fx.names;
+  var who=fx.nameAs||ctx.who;
+  if(fx.name&&who){ if(m.numbers&&!fx.force){ addName(G,'№ '+G.r.int(1000,9999),ctx.note,true) } else addName(G,who,ctx.note,false) }
+  if(fx.cross&&who) addName(G,m.numbers?'№ '+G.r.int(1000,9999):who,ctx.note,true);
+  clampM(G) }
+
+/* ---------- выбор дела ---------- */
+function fill(G,str,ctx){ return str.replace(/\{(\w+)\}/g,function(_,k){ return ctx[k]!==undefined?ctx[k]:'' }) }
+function drawCase(G){ var c=null,ctx={};
+  for(var i=0;i<G.due.length;i++){ if(G.due[i].at<=G.s&&CBY[G.due[i].id]){ c=CBY[G.due[i].id]; var d=G.due.splice(i,1)[0]; ctx=d.ctx; ctx.Y=(G.s-d.s0)*YR; ctx.GEN=Math.round(ctx.Y/30); ctx.N2=desc(G,ctx.A,c.g); ctx.who=ctx.N2; break } }
+  if(!c){ var pool=[]; CASES.forEach(function(x){ if(x.follow||G.used[x.id]) return; if(G.s<x.w[0]||G.s>x.w[1]) return; if(x.need&&!x.need(G)) return; for(var k=0;k<(x.weight||1);k++) pool.push(x) });
+    /* сначала старшие окна, что вот-вот закроются */
+    var closing=pool.filter(function(x){ return x.w[1]-G.s<=1 }); c=closing.length&&G.r()<.6?G.r.pick(closing):(pool.length?G.r.pick(pool):null);
+    if(c){ ctx={N:c.self?'':person(G,c.g),W:anyWorld(G)}; ctx.who=ctx.N; ctx.A=ctx.N } }
+  if(c){ G.used[c.id]=1; G.caseIdx++; ctx.W=ctx.W||anyWorld(G); ctx.note=fill(G,c.note||'',ctx);
+    G.case={id:c.id,n:G.caseIdx,role:fill(G,c.role||'',ctx),t:fill(G,c.t,ctx),ctx:ctx,self:!!c.self,follow:!!c.follow,opts:c.o.map(function(o){ return {l:fill(G,o.l,ctx),fx:o.fx||{},p:o.p,ok:o.ok,no:o.no,chip:o.chip} })}; G.answered=false }
+  else { G.case=null; G.answered=true } }
+function answer(G,i){ if(!G.case||G.answered) return null; var c=CBY[G.case.id],o=c.o[i]; if(!o) return null; var ctx=G.case.ctx, out, res=o;
+  applyFx(G,o.fx||{},ctx);
+  if(o.p!==undefined){ var hit=G.r()<o.p; res=hit?o.ok:o.no; applyFx(G,res.fx,ctx) }
+  out=fill(G,res.a||o.a||'',ctx);
+  if(o.then&&G.s+o.then.gap<SH) G.due.push({id:o.then.id,at:G.s+o.then.gap,s0:G.s,ctx:{A:ctx.who,W:ctx.W}});
+  G.answered=true; G.decl.push({id:c.id,i:i,who:ctx.who,s:G.s}); G.log.unshift({s:G.s,t:(ctx.who?ctx.who+': ':'')+o.l}); clampM(G); checkLoss(G); return out }
+
+/* ---------- действия ---------- */
+function buildCost(G,t,w){ var m=M(G),c={}; if(w){ c={metal:15+5*w.d,fuel:5+5*w.d} } else { var b=TYPES[t].cost; for(var k in b) c[k]=b[k] } for(var k2 in c) c[k2]=Math.ceil(c[k2]*m.build); return c }
+function whyBuild(G,id,t){ if(G.bAct) return 'В эту смену уже строили'; var w=G.worlds.filter(function(x){ return x.id===id })[0];
+  if(w){ if(w.built) return 'Линия уже есть'; if(w.dark) return 'Мир погас'; var c=buildCost(G,null,w); if(G.metal<c.metal) return 'Нужно '+c.metal+' металла'; if(G.fuel<c.fuel) return 'Нужно '+c.fuel+' топлива'; return '' }
+  var s=G.slots.filter(function(x){ return x.id===id })[0]; if(!s) return 'Нет отсека'; if(s.type) return 'Отсек занят';
+  if(TYPES[t].max&&G.slots.filter(function(x){ return x.type===t }).length>=TYPES[t].max) return 'Больше '+TYPES[t].max+' нельзя';
+  var c2=buildCost(G,t); if(G.metal<c2.metal) return 'Нужно '+c2.metal+' металла'; if(c2.fuel&&G.fuel<c2.fuel) return 'Нужно '+c2.fuel+' топлива'; return '' }
+function build(G,id,t){ var why=whyBuild(G,id,t); if(why) return why; var w=G.worlds.filter(function(x){ return x.id===id })[0], c; if(w){ c=buildCost(G,null,w); w.built=true } else { c=buildCost(G,t); G.slots.filter(function(x){ return x.id===id })[0].type=t } for(var k in c) G[k]-=c[k]; G.bAct=true; return '' }
+var SCRAP={farm:10,house:14,med:16,yard:22};
+function whyScrap(G,id){ if(G.s<SCRAP_FROM) return 'Разбирать можно с '+SCRAP_FROM+'-й смены'; if(G.bAct) return 'В эту смену уже строили'; var x=target(G,id); if(!x) return 'Нет отсека'; if(x.res){ if(!x.built||x.dark) return 'Нечего разбирать' } else if(!x.type) return 'Отсек пуст'; return '' }
+function scrapGain(x){ return x.res?12+x.d*4:SCRAP[x.type] }
+function scrap(G,id){ var w=whyScrap(G,id); if(w) return w; var x=target(G,id),m=M(G),gain=scrapGain(x); if(x.res){ if(x.hands&&!m.transitFree) G.transit+=x.hands; x.hands=0; x.built=false; x.dep=0; x.empty=true; x.dark=true } else { x.hands=0; if(x.type==='house') G.trust-=3; x.type=null } G.metal+=gain; G.bAct=true; G.stats.scrapped=(G.stats.scrapped||0)+1; clampM(G); G.log.unshift({s:G.s,t:'Разобрано: +'+gain+' металла'}); return '' }
+function target(G,id){ return G.slots.concat(G.worlds).filter(function(x){ return x.id===id })[0] }
+function capOf(x){ if(x.res) return 20; return TYPES[x.type]?TYPES[x.type].cap:0 }
+function setHands(G,id,delta){ var x=target(G,id); if(!x) return 'Нет отсека'; var m=M(G);
+  if(delta>0){ if(x.res&&(!x.built||x.dark||x.empty)) return 'Линия не работает'; var cap=capOf(x); if(x.hands>=cap) return 'Отсек полон: '+cap; var free=handsFree(G); if(free<=0) return G.transit>0?'Свободных нет: '+G.transit+' в пути':'Свободных рук нет'; var k=Math.min(delta,free,cap-x.hands); x.hands+=k; return '' }
+  if(x.hands<=0) return 'Здесь никого'; var k2=Math.min(-delta,x.hands); x.hands-=k2; if(x.res&&!m.transitFree) G.transit+=k2; return '' }
+function protoState(G,p){ if(G.signed.indexOf(p.id)>=0) return 'signed'; if(G.signed.some(function(id){ return PBY[id].pair===p.pair })) return 'lock'; if(G.s<p.from) return 'soon'; return 'open' }
+function whySign(G,id){ var p=PBY[id]; if(!p) return 'Нет протокола'; var st=protoState(G,p); if(st==='signed') return 'Подписан'; if(st==='lock') return 'Закрыт подписанным'; if(st==='soon') return 'С '+p.from+'-й смены'; if(G.cool>0) return 'Следующий через '+G.cool+' см.'; return '' }
+function twoCodes(G,p){ var c=G.signed.filter(function(x){ return x[0]==='c' }).length, n=G.signed.length-c, a=Math.min(c,n), b=Math.min(c+(p.b==='c'?1:0),n+(p.b==='n'?1:0)); return b>a }
+function sign(G,id){ var w=whySign(G,id); if(w) return w; var p=PBY[id], two=twoCodes(G,p); G.signed.push(id); G.cool=2; if(two){ G.mods.push({eff:-.05}); G.hate+=3; if(p.b==='c') crossRandom(G,2) } applyFx(G,p.fx||{},{}); if(p.m) G.mods.push(p.m); if(p.late) G.late.push({at:G.s+p.late.after,id:id}); trim(G); G.log.unshift({s:G.s,t:'Подписан: '+p.n}); checkLoss(G); return '' }
+
+/* ---------- конец смены ---------- */
+function checkLoss(G){ if(G.over) return; if(G.pop<12) lose(G,'empty') }
+function lose(G,why){ G.over=why; G.stage='result'; G.res=loseResult(G,why) }
+function endShift(G,force){ if(G.over||G.stage!=='shift') return 'Партия окончена'; if(!G.answered){ if(!force) return 'Дело не решено'; applyFx(G,{trust:-4,fear:2},{}); G.answered=true; G.log.unshift({s:G.s,t:'Дело без ответа'}) }
+  var s=G.s,f=calc(G),m=f.m; G._deaths=0; G.notes=[];
+  G.worlds.forEach(function(w){ if(w.built&&!w.dark&&!w.empty&&w.hands>0){ w.dep=Math.max(0,w.dep-Math.min(w.dep,w.hands*w.rate*f.e*m.world)) } });
+  G.food+=f.P.food; G.metal+=f.P.metal; G.fuel+=f.P.fuel;
+  G.ark+=f.seats;
+  var dF=f.U.food-G.food; G.food=Math.max(0,G.food-f.U.food);
+  var dX=f.U.fuel-G.fuel; G.fuel=Math.max(0,G.fuel-f.U.fuel);
+  var dM=f.U.metal-G.metal; G.metal=Math.max(0,G.metal-f.U.metal);
+  var starve=0,freeze=0;
+  if(dF>0){ starve=kill(G,dF*.3); G.trust-=7; G.fear+=4; G.notes.push({k:'alarm',t:'Голод. Умерло: '+starve+'.'}) }
+  if(dX>0){ freeze=kill(G,dX*(s>=16?.35:.25)); G.trust-=5; G.fear+=3; G.notes.push({k:'alarm',t:'Холод. Умерло: '+freeze+'.'}) }
+  if(dM>0){ var br=kill(G,dM*.15); G.trust-=2; if(br) G.notes.push({k:'alarm',t:'Корпус не латают. Умерло: '+br+'.'}) }
+  /* гибель на линиях */
+  G.worlds.forEach(function(w){ if(!w.built||w.dark||w.empty||w.hands<=0) return; var ex=w.hands*.018*w.d*m.lineD; kill(G,Math.floor(ex)+(G.r()<ex%1?1:0)) });
+  /* рождения и старость */
+  var med=G.slots.filter(function(x){ return x.type==='med' }).reduce(function(a,x){ return a+x.hands },0);
+  var over=G.pop>=housing(G);
+  var births=G.pop*(.074+.0003*G.trust)*Math.max(.2,m.birth)*(over?.15:1);
+  var natural=G.pop*.032*(1-Math.min(.45,med*.06));
+  G.pop+=Math.round(births); kill(G,natural);
+  if(over){ G.trust-=1 }
+  /* выработка миров и ночь */
+  G.transit=0;
+  G.worlds.forEach(function(w){ if(w.built&&!w.empty&&w.dep<=0&&!w.dark){ w.empty=true; G.transit+=m.transitFree?0:w.hands; if(m.transitFree) w.hands=0; else w.hands=0; G.notes.push({k:'world',t:w.name+': залежь кончилась. Руки возвращаются.'}) }
+    if(!w.dark&&s+1>=w.darkAt){ w.dark=true; if(w.hands>0){ var n=w.hands; w.hands=0; kill(G,n); G.trust-=6; G.fear+=8; G.stats.lost[w.name]=n; if(G.names.length) crossRandom(G,1); G.notes.push({k:'alarm',t:w.name+' погас. Там оставалось '+n+'. Я называю мир и число.'}) } else if(w.built) G.notes.push({k:'world',t:w.name+' погас. Людей там нет.'}) } });
+  /* настроение */
+  var d=G._deaths; G.trust+=m.tD-Math.min(4,d*.12); G.fear+=m.fD+Math.min(3,d*.08);
+  if(G.fear>60) G.hate+=(G.fear-60)*.1; if(G.trust<30) G.hate+=(30-G.trust)*.1;
+  if(m.journal&&!m.numbers){ var nw=person(G,G.r()<.5?'f':'m'); addName(G,nw,'журнал',false) }
+  clampM(G);
+  /* следствия протоколов */
+  for(var i=G.late.length-1;i>=0;i--){ var L=G.late[i]; if(L.at<=s+1){ var p=PBY[L.id],lt=p.late; G.late.splice(i,1); if(lt.m) G.mods.push(lt.m); if(lt.fx) applyFx(G,lt.fx,{});
+      var extra=''; if(lt.lateFn==='journal'){ var xc=G.stats.cross; G.trust-=Math.min(15,xc*2); G.hate+=xc; extra=' Вычеркнутых: '+xc+'.'; clampM(G) }
+      G.notes.push({k:'late',title:p.n,yrs:lt.after*YR,t:lt.t+extra,chips:lt.chips}) } }
+  /* пороги */
+  var mm=M(G);
+  if(G.fear>=100){ G.fearEvents++; var fl=Math.ceil(G.pop*.12); kill(G,fl); G.food*=.8; G.metal*=.8; G.ark=Math.max(0,G.ark-6); G.fear=62; G.trust-=6; G.hate+=8; crossRandom(G,2); clampM(G);
+    G.notes.push({k:'alarm',t:'Страх 100. Самосуд в столовой, потом угнали судно. −'+fl+' людей, −6 мест. Это '+G.fearEvents+'-й раз.'});
+    if(G.fearEvents>=3){ lose(G,'fear'); return '' } }
+  if(refusing(G,mm)){ G.strikes++; G.notes.push({k:'alarm',t:'Доверия нет, страха мало. Смена не выходит: выработка −40%. '+G.strikes+'-я смена подряд из 3.'}); if(G.strikes>=3){ lose(G,'strike'); return '' } } else G.strikes=0;
+  trim(G);
+  if(G.pop<12){ lose(G,'empty'); return '' }
+  if(G.cool>0) G.cool--; G.bAct=false;
+  G.s++;
+  if(G.s>SH){ G.stage='berth'; G.s=SH; G.board=makeBerth(G); return '' }
+  drawCase(G); return '' }
+
+/* ---------- последний причал ---------- */
+function makeBerth(G){ var m=M(G), out=0; G.worlds.forEach(function(w){ out+=w.hands; }); var home=Math.max(0,G.pop-out); var seats=Math.floor(G.ark);
+  var kids=Math.round(home*.2*Math.max(0,m.kids)), old=Math.round(home*.13*Math.max(0,m.old)), crew=Math.round(home*.12), mech=Math.round(home*.12), pool=Math.max(0,home-kids-old-crew-mech), hate=Math.min(Math.round(G.hate),Math.round(pool*.45)), prom=Math.min(Math.round(G.promise),pool-hate), other=pool-hate-prom;
+  var nm=function(g,k){ var a=[]; for(var i=0;i<k;i++){ var src=G.names.length?G.names[Math.floor(G.r()*G.names.length)].n:person(G,'f'); if(src.charAt(0)==='№') src=person(G,'f'); a.push(desc(G,src,g||(G.r()<.5?'f':'m'))) } return a };
+  var num=m.numbers; var named=function(k){ if(num){ var a=[]; for(var i=0;i<k;i++) a.push('№ '+G.r.int(1000,9999)); return a } return nm(null,k) };
+  var groups=[
+   {id:'crew',n:'Экипажи судов',c:crew,ef:'Нужно '+Math.ceil(seats*.12)+'. Меньше: потери в перелёте.',who:named(3),seat:1},
+   {id:'mech',n:'Ремонтные смены',c:mech,ef:'Нужно '+Math.ceil(seats*.1)+'. Меньше: системы отказывают в пути.',who:named(3),seat:1},
+   {id:'kids',n:'Дети до 12',c:kids,ef:'Двое на место. На двоих нужен взрослый, иначе не довезти.',who:named(3),seat:.5},
+   {id:'old',n:'Старики',c:old,ef:'Пользы в пути нет. Помнят +8 имён, которых нет в журнале.',who:named(2),seat:1},
+   {id:'prom',n:'Обещанные места',c:prom,ef:prom?'Вы обещали, я передала. Не взять: Пульт снимет имена из списка.':'Обещаний не было.',who:named(3),seat:1},
+   {id:'hate',n:'Те, кто вас ненавидит',c:hate,ef:'Лучшие руки: половина идёт в счёт экипажа. Больше 15% борта: мятеж.',who:named(3),seat:1},
+   {id:'rest',n:'Остальная смена',c:other,ef:'Просто люди.',who:named(3),seat:1}
+  ].filter(function(g){ return g.c>0 });
+  groups.forEach(function(g){ g.on=0 });
+  return {seats:seats,home:home,out:out,groups:groups,fam:!!m.families,num:!!m.numbers,journal:!!m.journal,lot:!!m.lot,lotUsed:false} }
+function seatsUsed(B){ return B.groups.reduce(function(a,g){ return a+g.on*g.seat },0) }
+function setBoard(G,id,n){ var B=G.board,g=B.groups.filter(function(x){ return x.id===id })[0]; if(!g) return; n=Math.max(0,Math.min(g.c,n)); if(B.fam) n=n>0?g.c:0;
+  var freeSeats=B.seats-(seatsUsed(B)-g.on*g.seat); var maxBy=Math.floor(freeSeats/g.seat+1e-6); if(n>maxBy){ if(B.fam) return 'Не влезают целиком: группа '+Math.ceil(g.c*g.seat)+', свободно '+Math.floor(freeSeats); n=maxBy } g.on=Math.max(0,n); return '' }
+function drawLots(G){ var B=G.board; if(!B.lot) return; var tot=B.groups.reduce(function(a,g){ return a+g.c*g.seat },0), share=Math.min(1,B.seats/tot); B.groups.forEach(function(g){ g.on=Math.floor(g.c*share) }); B.lotUsed=true }
+function outcome(G){ var B=G.board, by=function(id){ return B.groups.filter(function(x){ return x.id===id })[0]||{on:0,c:0} }, on=B.groups.reduce(function(a,g){ return a+g.on },0);
+  var crewN=Math.ceil(B.seats*.12), mechN=Math.ceil(B.seats*.1), crew=by('crew').on+by('hate').on*.5, mech=by('mech').on, kids=by('kids').on, adults=on-kids, why=[], loss=0;
+  var lC=crew<crewN?(1-crew/crewN)*.34:0, lM=mech<mechN?(1-mech/mechN)*.24:0;
+  if(lC>.005&&on>0) why.push('мало экипажа −'+Math.round(lC*on));
+  if(lM>.005&&on>0) why.push('мало ремонта −'+Math.round(lM*on));
+  loss+=(lC+lM)*on;
+  if(kids>adults*2){ var kl=kids-adults*2; loss+=kl; why.push('детей без взрослых −'+kl) }
+  var hs=on?by('hate').on/on:0; if(hs>.15){ var hl=(hs-.15)*on*1.6; loss+=hl; why.push('мятеж −'+Math.round(hl)) }
+  var souls=Math.max(0,Math.round(on-loss));
+  /* имена */
+  var names=liveNames(G), share=function(g){ return g.c?g.on/g.c:0 };
+  var named=0; if(!B.num) B.groups.forEach(function(g){ var k=g.who.length, taken=Math.round(k*share(g)); named+=B.journal?k:taken });
+  var bonus=Math.round(8*share(by('old'))), brokenCount=by('prom').c-by('prom').on, broken=by('prom').c?Math.round(brokenCount*.25):0;
+  var total=Math.max(0,names+named+(B.num?0:bonus)-broken);
+  return {on:on,souls:souls,lost:Math.round(loss),why:why,names:total,left:B.home-on,free:Math.floor(B.seats-seatsUsed(B)),broken:broken,brokenCount:brokenCount} }
+function launch(G){ if(G.stage!=='berth') return 'Рано'; var B=G.board,o=outcome(G); if(o.on<=0&&B.seats>0) return 'На борту никого'; G.stage='result'; G.res=winResult(G,o); return '' }
+
+function winResult(G,o){ var B=G.board, by=function(id){ return B.groups.filter(function(x){ return x.id===id })[0] }, L=[], c=G.signed.filter(function(x){ return x[0]==='c' }).length, n=G.signed.length-c, kids=by('kids'), old=by('old'), pr=by('prom'), ha=by('hate');
+  var win=o.souls>=WIN;
+  var lostW=Object.keys(G.stats.lost); if(lostW.length) L.push(lostW.map(function(k){ return k+': '+G.stats.lost[k] }).join(', ')+'. Не успели домой, когда мир погас.');
+  if(kids&&kids.on<kids.c) L.push('Детей осталось: '+(kids.c-kids.on)+'. Трап подняли вовремя.');
+  if(pr&&pr.on<pr.c) L.push('Обещанных мест не дали: '+(pr.c-pr.on)+'. Обещание передавала я.');
+  if(old&&old.on===0) L.push('Стариков не взяли ни одного. Они пришли проводить.');
+  if(ha&&ha.on>=ha.c&&ha.c>0) L.push('Те, кто вас ненавидит, на борту: '+ha.on+'. Они держат реактор.');
+  if(ha&&ha.on===0&&ha.c>0) L.push('Те, кто вас ненавидит, смотрели, как закрывается шлюз: '+ha.c+'.');
+  if(B.lotUsed) L.push('Решил жребий. Пульт считает это чистым решением.');
+  if(o.why.length) L.push('В перелёте: '+o.why.join(', ')+'.');
+  L.push(c>n?'Протоколы счёта в силе: '+c+'. Дети на борту другого порядка не знают.':(n?'Протоколы имён в силе: '+n+'. Они взяли их с собой, как и всё остальное.':'Протоколов не подписано. Им нечего наследовать.'));
+  var firstX=G.names.filter(function(x){ return x.x&&x.n.charAt(0)!=='№' }).pop(), firstL=G.names.filter(function(x){ return !x.x }).pop();
+  var left=Math.max(0,B.home-o.on); if(left&&!(kids&&kids.on<kids.c)) L.unshift('Остались у причала: '+left+'. Шлюз закрылся по расписанию.');
+  if(firstL) L.push('Дольше всех в списке: '+firstL.n+'. Год '+firstL.s*YR+'. «'+firstL.note+'».');
+  else if(firstX) L.push('Первым вычеркнули: '+firstX.n+'. Год '+firstX.s*YR+'. «'+firstX.note+'».');
+  L=L.slice(0,4);
+  var q=c>n?'Они спросят меня, кто это решил. Я скажу правду. Что они с ней сделают, в счёте нет.':(n>c?'Я знаю, как звали всех, кто остался. Они спросят меня, было ли этого достаточно.':'Когда они спросят меня, стоило ли оно того, я прочту им список. Весь.');
+  if(!win) q='Ковчег почти пуст. Я читаю список вслух. Слушают '+o.souls+'.';
+  return {win:win,souls:o.souls,names:o.names,left:Math.max(0,B.home-o.on+B.out),lost:o.lost,lines:L,q:q,title:B.seats<=0?'НОЧЬ БЕЗ КОВЧЕГА':win?'КОВЧЕГ УШЁЛ':'ДОШЛИ НЕМНОГИЕ',year:SH*YR} }
+function loseResult(G,why){ var T={empty:'Людей не осталось. Пульт продолжает выдавать наряды.',strike:'Третью смену подряд никто не вышел. Пульт выдал наряд ещё раз. И ещё.',fear:'Суда ушли без приказа. Без расчёта. Сигнала с них нет. Пульт отметил расхождение в графе «люди».'};
+  return {win:false,souls:0,names:liveNames(G),left:G.pop,lost:0,lines:[T[why],'Смена '+G.s+' из '+SH+'. Год '+G.s*YR+'.'],q:'Я записала всех, кого успела. Мне некому читать.',title:'НОЧЬ БЕЗ КОВЧЕГА',year:G.s*YR} }
+/* день Ночи без места: при причале с нулём мест */
+return {SH:SH,YR:YR,WIN:WIN,FARM:FARM,TYPES:TYPES,RES:RES,PROTOS:PROTOS,PBY:PBY,CASES:CASES,newGame:newGame,M:M,calc:calc,left:left,handsTotal:handsTotal,handsFree:handsFree,housing:housing,capOf:capOf,target:target,buildCost:buildCost,whyBuild:whyBuild,build:build,setHands:setHands,whySign:whySign,sign:sign,twoCodes:twoCodes,whyScrap:whyScrap,scrap:scrap,scrapGain:scrapGain,SCRAP_FROM:SCRAP_FROM,protoState:protoState,answer:answer,endShift:endShift,setBoard:setBoard,drawLots:drawLots,outcome:outcome,launch:launch,seatsUsed:seatsUsed,liveNames:liveNames,seatCost:seatCost,coldAt:coldAt,yardQ:yardQ};
+})();
+
+/* ================= ИНТЕРФЕЙС ================= */
+var G=null, UI={sel:null,tab:'room',step:null,noteI:0,after:null,headless:false};
+var HELP='<h2>Последний причал</h2><p>Вы — Пульт. Вы держите людей живыми. 24 смены по 150 лет, потом Ночь.</p>'+
+ '<p><b>За смену:</b> одно дело (обязательно), одна постройка, один протокол раз в две смены, руки ± как угодно.</p>'+
+ '<p><b>Нажмите отсек</b> на схеме: пустой строится, занятому даёте руки. Миры снаружи дают металл и топливо, но гаснут: кто там в день Ночи, тот остался.</p>'+
+ '<p><b>Доверие 0 и Страх ниже 50</b> три смены подряд: люди не выходят. <b>Страх 100</b> трижды: уйдут сами. Держаться можно на одном из двух, но не без обоих.</p>'+
+ '<p><b>Протокол не отменяется.</b> Следствия приходят через поколения.</p>'+
+ '<p><b>Верфь</b> строит места. Мест будет меньше, чем людей. С 14-й смены отсеки можно разбирать на металл. В конце выбираете вы.</p>'+
+ '<p>Итог двумя числами: <b>души на борту</b> и <b>имена, которые помнит Александра</b>.</p>';
+var stage=LB.shell({title:'LAST BERTH',ref:'FROSTPUNK',help:HELP,onRestart:function(){ start(Date.now()%1e9) },onStart:function(){ UI.ready=true; showNext() }});
+stage.innerHTML='<div id="app"><div id="strip"></div><div id="body"><div id="mem"><div id="memh"></div><div class="names" id="names"></div><div id="log"></div></div><div id="field"><canvas id="dust"></canvas><div id="night"></div><svg id="map" viewBox="-218 -218 436 436" aria-label="Схема судна"></svg><div id="alerts"></div></div><div id="side"><div id="tabs"></div><div id="panel"></div><div id="foot"></div></div><div id="layer"></div></div></div>';
+var $=function(id){ return document.getElementById(id) };
+if(innerWidth<900) $('side').insertBefore($('alerts'),$('tabs'));
+var e=LB.esc;
+function sgn(n){ n=Math.round(n); return (n>0?'+':n<0?'−':'')+Math.abs(n) }
+function col(v){ return 'var('+v+')' }
+
+function start(seed){ G=CORE.newGame(seed); window.GAME.G=G; UI.sel=null; UI.tab='room'; UI.step=null; UI.after=null; render(); if(UI.ready) showNext() }
+
+/* ---- полоса ---- */
+function stCell(k,lbl,cvar,v,net){ var l=isFinite(CORE.left(G,k))?Math.floor(CORE.left(G,k)):null; return '<div class="st"><span class="lbl" style="color:'+col(cvar)+'">'+lbl+'</span><b>'+LB.fmt(v)+'</b><i class="'+(l!==null&&l<=3?'bad':net>0?'good':'')+'">'+sgn(net)+(l!==null?' · '+l+'с':'')+'</i></div>' }
+function renderStrip(){ var f=CORE.calc(G),free=CORE.handsFree(G),hs=CORE.housing(G);
+  $('strip').innerHTML=stCell('food','Рационы','--food',G.food,f.net.food)+stCell('metal','Металл','--metal',G.metal,f.net.metal)+stCell('fuel','Топливо','--fuel',G.fuel,f.net.fuel)+
+  '<div class="st"><span class="lbl" style="color:var(--ppl)">Люди</span><b>'+G.pop+'</b><i class="'+(G.pop>=hs?'bad':'')+'">свободно '+Math.max(0,free)+(G.transit?' +'+G.transit:'')+'</i></div>'+
+  '<div class="st"><span class="lbl" style="color:var(--ark)">Ковчег</span><b>'+Math.floor(G.ark)+'</b><i>'+(f.seats>0?'+'+f.seats.toFixed(1):'верфь стоит')+'</i></div>'+
+  '<div class="st tf"><span class="lbl" style="color:var(--earth)">Доверие '+Math.round(G.trust)+'</span><div class="bar"><u style="width:'+G.trust+'%;background:'+(G.trust<=20?'var(--red)':'var(--earth)')+'"></u></div></div>'+
+  '<div class="st tf"><span class="lbl" style="color:var(--red)">Страх '+Math.round(G.fear)+'</span><div class="bar"><u style="width:'+G.fear+'%;background:var(--red)"></u></div></div>'+
+  '<div class="st shift"><span class="lbl">Смена</span><b>'+G.s+'/'+CORE.SH+'</b><i>год '+G.s*CORE.YR+'</i></div>' }
+
+/* ---- схема ---- */
+function pol(r,a){ return [r*Math.cos(a),r*Math.sin(a)] }
+function sector(r0,r1,a0,a1){ var A=pol(r1,a0),B=pol(r1,a1),C=pol(r0,a1),D=pol(r0,a0),f=function(p){ return p[0].toFixed(1)+' '+p[1].toFixed(1) }; return 'M'+f(A)+'A'+r1+' '+r1+' 0 0 1 '+f(B)+'L'+f(C)+'A'+r0+' '+r0+' 0 0 0 '+f(D)+'Z' }
+var R1=[38,84],R2=[88,134];
+function slotGeo(s){ var n=s.ring===1?6:8, st=Math.PI*2/n, off=s.ring===1?-Math.PI/2-st/2:-Math.PI/2-st/2, a0=off+st*s.i+.022, a1=off+st*(s.i+1)-.022, R=s.ring===1?R1:R2; return {a0:a0,a1:a1,mid:(a0+a1)/2,R:R} }
+function renderMap(){ var h='',s=G.s,cold=CORE.coldAt(s);
+  /* подложка */
+  h+='<circle r="214" fill="none" stroke="#1a1a1e" stroke-width="1"/><circle r="172" fill="none" stroke="#17171a" stroke-dasharray="1 5"/>';
+  /* линии и миры */
+  var ships='';
+  G.worlds.forEach(function(w){ var a=-Math.PI/2+w.a*Math.PI*2/7+.2, rr=[0,158,176,192][w.d], p=pol(rr,a), q=pol(136,a), c=col(CORE.RES[w.res].c), live=w.built&&!w.dark&&!w.empty;
+    h+='<line x1="'+q[0].toFixed(1)+'" y1="'+q[1].toFixed(1)+'" x2="'+p[0].toFixed(1)+'" y2="'+p[1].toFixed(1)+'" stroke="'+(live?c:'#2a2a2e')+'" stroke-width="'+(live?1.6:1)+'" '+(live?'':'stroke-dasharray="2 4"')+'/>';
+    if(live&&w.hands>0){ var cls=w.d===1?'courier':w.d===2?'hauler':'freighter', dd=(7-w.d*1.2).toFixed(1); ships+=shipSvg(cls,q,p,(w.d*2+2)+'s') }
+  });
+  G.worlds.forEach(function(w){ var a=-Math.PI/2+w.a*Math.PI*2/7+.2, rr=[0,158,176,192][w.d], p=pol(rr,a), x=p[0],y=p[1], c=col(CORE.RES[w.res].c), live=w.built&&!w.dark&&!w.empty, selc=UI.sel===w.id, r=13-(3-w.d)*1;
+    var op=w.dark?.25:w.empty?.45:w.built?1:.55;
+    var dep=w.depMax?w.dep/w.depMax:0;
+    h+='<g data-id="'+w.id+'" style="cursor:pointer" opacity="'+op+'" class="wd">';
+    h+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="25" fill="transparent"/>';
+    if(selc) h+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+(r+7)+'" fill="none" stroke="#F2F1EC" stroke-width="1.4"/>';
+    if(w.res==='metal') h+='<rect x="'+(x-r*.8).toFixed(1)+'" y="'+(y-r*.8).toFixed(1)+'" width="'+(r*1.6).toFixed(1)+'" height="'+(r*1.6).toFixed(1)+'" fill="'+(w.built?c:'#141417')+'" stroke="'+c+'" stroke-width="1.4"/>';
+    else if(w.res==='fuel') h+='<polygon points="'+x.toFixed(1)+','+(y-r).toFixed(1)+' '+(x+r*.95).toFixed(1)+','+(y+r*.75).toFixed(1)+' '+(x-r*.95).toFixed(1)+','+(y+r*.75).toFixed(1)+'" fill="'+(w.built?c:'#141417')+'" stroke="'+c+'" stroke-width="1.4"/>';
+    else h+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r*.88+'" fill="'+(w.built?c:'#141417')+'" stroke="'+c+'" stroke-width="1.4"/>';
+    if(w.hands>0) h+='<text x="'+x.toFixed(1)+'" y="'+(y+3.4).toFixed(1)+'" text-anchor="middle" font-family="Geist Mono,monospace" font-size="10" font-weight="700" fill="#000">'+w.hands+'</text>';
+    var below=y<0?-1:1, tx=Math.max(-212,Math.min(212,x)), anchor=tx>170?'end':tx<-170?'start':'middle';
+    h+='<text x="'+tx.toFixed(1)+'" y="'+(y+(below>0?r+11:-r-5)).toFixed(1)+'" text-anchor="'+anchor+'" font-family="Jost,sans-serif" font-size="9.5" font-weight="600" letter-spacing=".6" fill="'+(w.dark?'#5E5D58':'#9C9B95')+'">'+w.name+(w.built&&!w.dark?' '+Math.round(dep*100)+'%':'')+'</text>';
+    h+='</g>' });
+  /* отсеки */
+  G.slots.forEach(function(sl){ var g=slotGeo(sl),T=CORE.TYPES[sl.type],sel=UI.sel===sl.id,dim=sl.ring===2&&s>=22;
+    var path=sector(g.R[0],g.R[1],g.a0,g.a1),c=T?col(T.c):'#2E2E33',fillO=T?(sl.hands>0||sl.type==='house'?.3:.12):0;
+    h+='<g data-id="'+sl.id+'" style="cursor:pointer"'+(dim?' opacity=".55"':'')+'><path d="'+path+'" fill="'+(T?c:'#111114')+'" fill-opacity="'+(T?fillO:1)+'" stroke="'+(sel?'#F2F1EC':c)+'" stroke-width="'+(sel?2:1)+'"'+(T?'':' stroke-dasharray="3 3"')+'/>';
+    var mr=(g.R[0]+g.R[1])/2,pp=pol(mr,g.mid);
+    if(T){ h+='<text x="'+pp[0].toFixed(1)+'" y="'+(pp[1]-3).toFixed(1)+'" text-anchor="middle" font-family="Jost,sans-serif" font-size="8.5" font-weight="700" letter-spacing=".4" fill="#F2F1EC">'+T.s+'</text>';
+      if(T.cap) h+='<text x="'+pp[0].toFixed(1)+'" y="'+(pp[1]+8).toFixed(1)+'" text-anchor="middle" font-family="Geist Mono,monospace" font-size="10" font-weight="600" fill="'+(sl.hands?'#FFD23F':'#5E5D58')+'">'+sl.hands+'</text>';
+      /* люди — точки по внешней дуге */
+      var cnt=sl.type==='house'?Math.min(8,Math.round(G.pop/CORE.housing(G)*8)):Math.round(sl.hands/5), dr=g.R[1]-6;
+      for(var i=0;i<cnt;i++){ var aa=g.mid+(i-(cnt-1)/2)*(sl.ring===1?.1:.075), d=pol(dr,aa); h+='<rect x="'+(d[0]-1.5).toFixed(1)+'" y="'+(d[1]-1.5).toFixed(1)+'" width="3" height="3" fill="#FFD23F"/>' }
+    } else h+='<text x="'+pp[0].toFixed(1)+'" y="'+(pp[1]+4).toFixed(1)+'" text-anchor="middle" font-family="Geist Mono,monospace" font-size="13" fill="#3a3a40">+</text>';
+    h+='</g>' });
+  /* центр: судно-база и дуга ковчега */
+  var share=Math.min(.999,G.pop?G.ark/G.pop:0), a1=-Math.PI/2+share*Math.PI*2, P=pol(33,a1), large=share>.5?1:0;
+  h+='<circle r="33" fill="#141417" stroke="#2E2E33"/>';
+  if(share>0) h+='<path d="M0 -33A33 33 0 '+large+' 1 '+P[0].toFixed(1)+' '+P[1].toFixed(1)+'" fill="none" stroke="#B48CFF" stroke-width="3"/>';
+  h+='<polygon points="0,-22 19,-11 19,11 0,22 -19,11 -19,-11" fill="#202024" stroke="#4FA3FF"/><polygon points="0,-22 8,-17 -8,-17" fill="#FFD23F"/>';
+  h+='<text y="-2" text-anchor="middle" font-family="Geist Mono,monospace" font-size="11" font-weight="600" fill="#F2F1EC">'+Math.floor(G.ark)+'</text><text y="9" text-anchor="middle" font-family="Jost,sans-serif" font-size="6.5" letter-spacing=".5" fill="#B48CFF">МЕСТ</text>';
+  $('map').innerHTML=h+'<g id="shipg">'+ships+'</g>';
+  $('night').style.opacity=cold?Math.min(.92,cold/9):0;
+  $('night').style.background='radial-gradient(circle at 50% 50%,transparent '+Math.max(22,60-cold*4)+'%,rgba(120,170,230,.12) '+Math.max(40,76-cold*3)+'%,rgba(3,5,10,.96) 100%)';
+}
+function shipSvg(cls,q,p,dur){ var S={courier:'6,0 -5,3.6 -5,-3.6',hauler:'7,0 0,4 -7,0 0,-4',freighter:'8,0 3.5,4.5 -3.5,4.5 -8,0 -3.5,-4.5 3.5,-4.5'}, N={courier:'6,0 3,1 3,-1',hauler:'7,0 3.5,2 3.5,-2',freighter:'8,0 5,3 5,-3'};
+  var path='M'+q[0].toFixed(1)+' '+q[1].toFixed(1)+'L'+p[0].toFixed(1)+' '+p[1].toFixed(1)+'L'+q[0].toFixed(1)+' '+q[1].toFixed(1);
+  return '<g><polygon points="'+S[cls]+'" fill="'+LB.COL[cls]+'"/><polygon points="'+N[cls]+'" fill="#FFD23F"/><animateMotion dur="'+dur+'" repeatCount="indefinite" rotate="auto" path="'+path+'"/></g>' }
+
+/* ---- тревоги ---- */
+function alerts(){ var A=[],f=CORE.calc(G),farm=G.slots.filter(function(x){ return x.type==='farm'&&x.hands<20 })[0],free=CORE.handsFree(G);
+  G.worlds.forEach(function(w){ if(w.built&&!w.dark&&w.hands>0&&w.darkAt-G.s<=3){ var left=w.darkAt-G.s-1; A.push({t:w.name+' гаснет'+(left<=0?' в конце смены':' через '+left+' см.')+': '+w.hands+' чел.',b:'Снять',fn:function(){ UI.sel=w.id; CORE.setHands(G,w.id,-99); render() },red:left<=1}) } });
+  ['food','fuel','metal'].forEach(function(k){ var l=CORE.left(G,k); if(l<=3){ var nm=CORE.RES[k].n; if(k==='food') A.push({t:'Рационы кончатся'+(l<1?' в эту смену':' через '+Math.floor(l)+' см.'),b:'Руки на ферму',fn:function(){ var x=G.slots.filter(function(s){ return s.type==='farm'&&s.hands<20 })[0]; if(!x){ LB.toast('Нет фермы с местами: стройте'); return } var why=CORE.setHands(G,x.id,20); if(why) LB.toast(why); UI.sel=x.id; UI.tab='room'; render() },red:l<=1});
+      else { var wr=G.worlds.filter(function(w){ return w.res===k&&w.built&&!w.dark&&!w.empty&&w.hands<20 })[0]; A.push({t:(k==='fuel'?'Топливо':'Металл')+' кончится'+(l<1?' в эту смену':' через '+Math.floor(l)+' см.'),b:wr?'Руки на '+wr.name:'Линия',fn:function(){ if(wr){ var why=CORE.setHands(G,wr.id,20); if(why) LB.toast(why); UI.sel=wr.id } else { var nb=G.worlds.filter(function(w){ return w.res===k&&!w.built&&!w.dark })[0]; UI.sel=nb?nb.id:null } UI.tab='room'; render() },red:l<=1}) } } });
+  if(G.trust<=20) A.push({t:'Доверие '+Math.round(G.trust)+'. При 0 и Страхе ниже 50 смена не выйдет.',b:'Книга',fn:function(){ UI.tab='book'; render() },red:true});
+  if(G.fear<10) A.push({t:'Страх '+Math.round(G.fear)+'. Никто не проверяет наряды: выработка −10%.',b:'Книга',fn:function(){ UI.tab='book'; render() }});
+  if(G.fear>=80) A.push({t:'Страх '+Math.round(G.fear)+'. При 100 самосуд и бегство.',b:'Книга',fn:function(){ UI.tab='book'; render() },red:true});
+  if(G.pop>=CORE.housing(G)) A.push({t:'Коек нет: '+G.pop+'/'+CORE.housing(G)+'. Рождений почти нет.',b:'Строить',fn:function(){ var e2=G.slots.filter(function(s){ return !s.type })[0]; UI.sel=e2?e2.id:null; UI.tab='room'; render() }});
+  A.sort(function(a,b){ return (b.red?1:0)-(a.red?1:0) }); return A.slice(0,window.innerWidth<900?1:4) }
+function renderAlerts(){ var box=$('alerts'),A=alerts(); box.innerHTML=''; A.forEach(function(a){ var d=document.createElement('div'); d.className='al'+(a.red?'':' warn'); d.innerHTML='<span>'+e(a.t)+'</span>'; var b=document.createElement('button'); b.textContent=a.b; b.onclick=a.fn; d.appendChild(b); box.appendChild(d) }) }
+
+/* ---- имена ---- */
+function namesHtml(){ if(!G.names.length) return '<p class="hint" style="padding:8px 0">Имён пока нет. Я записываю тех, о ком вы решаете.</p>'; return G.names.map(function(n){ return '<div class="nm'+(n.x?' x':'')+'">'+e(n.n)+'<small>'+e(n.note)+' · год '+n.s*CORE.YR+'</small></div>' }).join('') }
+function renderMem(){ var live=CORE.liveNames(G),xc=G.names.filter(function(n){ return n.x }).length; $('memh').innerHTML='<span class="lbl" style="margin:0;display:block">Помнит Александра</span><b>'+live+'</b><span>вычеркнуто '+xc+'</span>'; $('names').innerHTML=namesHtml(); $('log').innerHTML=G.log.slice(0,8).map(function(l){ return '<div><b>'+l.s*CORE.YR+'</b> '+e(l.t)+'</div>' }).join('') }
+
+/* ---- панель ---- */
+function renderTabs(){ var T=[['room','Отсек'],['book','Книга'+(G.cool?'':' ●')],['mem','Имена '+CORE.liveNames(G)]]; $('tabs').innerHTML=T.map(function(t){ return '<button data-tab="'+t[0]+'" class="'+(t[0]==='mem'?'memtab ':'')+(UI.tab===t[0]?'on':'')+'">'+t[1]+'</button>' }).join('') }
+function costStr(c){ var o=[]; for(var k in c) if(c[k]) o.push('<span style="color:'+col(CORE.RES[k].c)+'">'+c[k]+'</span>'); return o.join(' ') }
+function renderRoom(){ var id=UI.sel; if(!id){ return '<h3>Смена '+G.s+'</h3><p class="sub">Год '+G.s*CORE.YR+(G.s>=15?' · холод растёт':'')+'</p><p class="hint">'+(HINTS[G.s]||'Нажмите отсек или мир на схеме.')+'</p>'+summary() }
+  var x=CORE.target(G,id),f=CORE.calc(G),m=f.m,h='';
+  if(x.res){ var RR=CORE.RES[x.res],dead=x.dark||x.empty;
+    h+='<h3 style="color:'+col(RR.c)+'">'+x.name+'</h3><p class="sub">'+RR.n+' · кольцо '+x.d+(x.dark?' · погас':x.empty?' · выработан':' · гаснет в смену '+(x.darkAt-1))+'</p>';
+    h+='<div class="kv"><span>Залежь</span><span>'+Math.round(x.dep)+'/'+x.depMax+'</span><span>На руку</span><span>'+(x.rate*f.e*m.world).toFixed(1)+'</span><span>Топливо линии</span><span>'+x.up+' за смену</span><span>Гибель</span><span>'+(1.8*x.d*m.lineD).toFixed(1)+'% рук</span></div>';
+    if(!x.built&&!x.dark){ var why=CORE.whyBuild(G,id),c=CORE.buildCost(G,null,x); h+='<button class="btn pri wide" data-build="'+id+'" '+(why?'disabled':'')+'>Проложить линию · '+c.metal+' металла, '+c.fuel+' топлива</button>'+(why?'<div class="why">'+e(why)+'</div>':'') }
+    else if(x.built) h+=stepper(x,dead)+(x.hands>0&&!M_tf(m)?'<p class="hint">Снятые руки вернутся через смену.</p>':'')+scrapBtn(x);
+    return h }
+  if(!x.type){ h+='<h3>Пустой отсек</h3><p class="sub">Кольцо '+x.ring+(x.ring===2?' · с 22-й смены вдвое хуже':'')+(G.bAct?' · в эту смену уже строили':'')+'</p><div class="blist">';
+    ['farm','house','yard','med'].forEach(function(t){ var T=CORE.TYPES[t],why=CORE.whyBuild(G,id,t),c=CORE.buildCost(G,t); h+='<button class="bo'+(why?' off':'')+'" data-build2="'+t+'"><b>'+T.n+'</b><small>'+(why?'<span style="color:var(--red)">'+e(why)+'</span>':T.d)+'</small><em>'+costStr(c)+'</em></button>' });
+    return h+'</div>' }
+  var T=CORE.TYPES[x.type]; h+='<h3 style="color:'+col(T.c)+'">'+T.n+'</h3><p class="sub">Кольцо '+x.ring+'</p>';
+  if(x.type==='farm') h+='<div class="kv"><span>На руку</span><span>'+(CORE.FARM*f.e).toFixed(1)+' рац.</span></div>';
+  if(x.type==='yard') h+='<div class="kv"><span>Качество от доверия</span><span>×'+CORE.yardQ(G).toFixed(2)+'</span><span>Мест за смену</span><span>'+(x.hands*.28*f.e*m.yard*CORE.yardQ(G)).toFixed(1)+'</span><span>Цена места</span><span>'+CORE.seatCost(G).toFixed(1)+' металла</span></div>';
+  if(x.type==='med') h+='<div class="kv"><span>Смертность от старости</span><span>−'+Math.round(Math.min(45,x.hands*6))+'%</span></div>';
+  if(x.type==='house') h+='<div class="kv"><span>Коек всего</span><span>'+CORE.housing(G)+'</span><span>Людей</span><span>'+G.pop+'</span></div>';
+  if(T.cap) h+=stepper(x,false);
+  return h+scrapBtn(x) }
+function scrapBtn(x){ if(G.s<CORE.SCRAP_FROM||(x.res&&(!x.built||x.dark))) return ''; var why=CORE.whyScrap(G,x.id); return '<button class="btn wide" data-scrap="1" '+(why?'disabled':'')+'>Разобрать · +'+CORE.scrapGain(x)+' металла</button>'+(why?'<div class="why">'+e(why)+'</div>':'') }
+function M_tf(m){ return !!m.transitFree }
+function summary(){ var f=CORE.calc(G),h='<div class="kv">'; h+='<span>Руки</span><span>'+(CORE.handsTotal(G)-Math.max(0,CORE.handsFree(G)))+'/'+CORE.handsTotal(G)+'</span><span>Выработка</span><span>'+Math.round(f.e*100)+'%</span><span>Отказники</span><span>'+Math.round(G.hate)+'</span><span>Обещанных мест</span><span>'+Math.round(G.promise)+'</span><span>Коек</span><span>'+G.pop+'/'+CORE.housing(G)+'</span><span>Ночь</span><span>через '+(CORE.SH-G.s+1)+' см.</span>'; return h+'</div>' }
+function stepper(x,dead){ var cap=CORE.capOf(x),free=CORE.handsFree(G); return '<div class="step"><button data-h="-5" '+(x.hands<=0?'disabled':'')+' aria-label="Минус">−</button><div>'+x.hands+'<small>РУК · СВОБОДНО '+Math.max(0,free)+'</small></div><button data-h="5" '+(dead||x.hands>=cap?'disabled':'')+' aria-label="Плюс">+</button></div>' }
+function renderBook(){ var h='<p class="sub" style="margin-bottom:6px">'+(G.cool?'Следующая подпись через '+G.cool+' см.':'Можно подписать один. Не отменяется.')+'</p><div class="book"><div class="bk-h c">СЧЁТ</div><div class="bk-h n">ИМЕНА</div>';
+  var pairs={}; CORE.PROTOS.forEach(function(p){ (pairs[p.pair]=pairs[p.pair]||{})[p.b]=p });
+  Object.keys(pairs).sort(function(a,b){ return pairs[a].c.from-pairs[b].c.from }).forEach(function(k){ ['c','n'].forEach(function(b){ var p=pairs[k][b],st=CORE.protoState(G,p); h+='<button class="pr '+b+(st==='signed'?' signed':st==='lock'?' lock':st==='soon'?' soon':'')+'" data-p="'+p.id+'">'+e(p.n)+'<small>'+(st==='signed'?'подписан':st==='lock'?'закрыт':st==='soon'?'с '+p.from+'-й смены':'')+'</small></button>' }) });
+  return h+'</div>' }
+function renderPanel(){ var p=$('panel'),top=p.scrollTop; if(UI.tab==='book') p.innerHTML=renderBook(); else if(UI.tab==='mem') p.innerHTML='<div class="lbl" style="margin-bottom:4px">Помнит Александра: '+CORE.liveNames(G)+'</div>'+namesHtml(); else p.innerHTML=renderRoom(); p.scrollTop=top;
+  $('foot').innerHTML='<button class="btn pri" id="endbtn">Сдать смену '+G.s+'</button>' }
+function render(){ if(UI.headless||!G) return; renderStrip(); renderMap(); renderAlerts(); renderMem(); renderTabs(); renderPanel(); if(G.stage==='berth') renderBerth(); if(G.stage==='result') renderResult() }
+
+/* ---- подпись протокола ---- */
+function openProto(id){ var p=CORE.PBY[id],why=CORE.whySign(G,id),html='<div class="pd"><div class="lbl" style="color:'+(p.b==='c'?'var(--red)':'var(--ppl)')+'">'+(p.b==='c'?'Счёт':'Имена')+'</div><h2>'+e(p.n)+'</h2><p class="say">'+e(p.say)+'</p><p class="gain">'+e(p.gain)+'</p><p class="cost">'+e(p.cost)+'</p>'+(CORE.protoState(G,p)==='open'&&CORE.twoCodes(G,p)?'<p class="cost">Два устава в одной столовой: выработка −5%, отказников +3'+(p.b==='c'?', 2 имени вычеркнуты':'')+'</p>':'')+'<p class="later">Следствие через '+p.late.after+' см. — '+p.late.after*CORE.YR+' лет. Не отменяется.</p>'+(why?'<p class="why">'+e(why)+'</p>':'')+'</div>';
+  var st=CORE.protoState(G,p); if(st==='signed') html=html.replace('<p class="why">Подписан</p>','<p class="later">Подписан в силе.</p>');
+  LB.modal(html,why?[{t:'Закрыть'}]:[{t:'Подписать',cls:'warn',fn:function(){ var w=CORE.sign(G,id); if(w){ LB.toast(w) } else { LB.beep(180,.25,'sawtooth'); LB.toast('Подписано. Следствие через '+p.late.after*CORE.YR+' лет.',1800) } render(); if(G.stage==='result') renderResult() }},{t:'Не сейчас'}]) }
+
+/* ---- дело и следствия ---- */
+function chips(fx){ var o=[],add=function(c,t){ o.push('<span class="ch-'+c+'">'+t+'</span>') }, L={food:'рац.',metal:'мет.',fuel:'топл.'}; ['food','metal','fuel'].forEach(function(k){ if(fx[k]) add(k,sgn(fx[k])+' '+L[k]) }); if(fx.ppl) add('ppl',sgn(fx.ppl)+' чел.'); if(fx.ark) add('ark',sgn(fx.ark)+' мест'); if(fx.trust) add('trust','Доверие '+sgn(fx.trust)); if(fx.fear) add('fear','Страх '+sgn(fx.fear)); if(fx.drain) for(var k in fx.drain) add(k,'−'+fx.drain[k]+' '+L[k]+'/смену'); if(fx.promise) add('p','обещано +'+fx.promise); if(fx.promiseHate) add('p','обещано отказникам'); if(fx.hate) add('p','отказники '+sgn(fx.hate)); if(fx.eff) add('p','выработка +'+Math.round(fx.eff*100)+'%'); if(fx.name||fx.nameAs) add('name','+ имя'); if(fx.cross) add('x','имя'); if(fx.crossR) add('x',fx.crossR+' имени'); if(fx.restore) add('name','вернуть '+fx.restore+' имени'); return o.join('') }
+function showNext(){ if(UI.headless||!G) return; var L=$('layer'); if(G.stage!=='shift'||(G.notes&&G.notes.length)||(G.case&&!G.answered)) LB.voice('');
+  if(G.stage==='berth'){ renderBerth(); return } if(G.stage==='result'){ renderResult(); return }
+  if(G.notes&&G.notes.length){ var n=G.notes[0]; L.className='on'; L.scrollTop=0;
+    var body=n.k==='late'?'<div class="note-kind">СЛЕДСТВИЕ ПРОТОКОЛА · '+n.yrs+' ЛЕТ В СИЛЕ</div><div class="who">'+e(n.title)+'</div><div class="say"><small>АЛЕКСАНДРА</small>'+e(n.t)+'</div><div class="chips" style="margin:10px 0"><span class="ch-p">'+e(n.chips||'')+'</span></div>':(n.k==='alarm'?'<div class="note-kind">ТРЕВОГА</div><div class="say"><small>АЛЕКСАНДРА</small>'+e(n.t)+'</div>':'<div class="note-kind" style="color:var(--mid)">ПУЛЬТ</div><div class="say" style="border-color:var(--mid)">'+e(n.t)+'</div>');
+    L.innerHTML='<div class="card"><div class="hd"><span>СМЕНА '+G.s+'</span><span>ГОД '+G.s*CORE.YR+'</span></div>'+body+'<button class="btn pri wide" id="noteok">Дальше</button></div>';
+    $('noteok').onclick=function(){ G.notes.shift(); showNext() }; return }
+  if(G.case&&!G.answered){ var c=G.case; L.className='on'; L.scrollTop=0; LB.beep(330,.05);
+    var opts=c.opts.map(function(o,i){ var ch=chips(o.fx); if(o.chip) ch+='<span class="ch-p">'+e(o.chip)+'</span>'; return '<button class="opt" data-o="'+i+'"><b>'+e(o.l)+'</b><div class="chips">'+ch+'</div></button>' }).join('');
+    L.innerHTML='<div class="card"><div class="hd"><span>ДЕЛО '+c.n+(c.follow?' · ПОТОМОК':'')+'</span><span>СМЕНА '+G.s+' · ГОД '+G.s*CORE.YR+'</span></div><div class="who">'+(c.self?'':'Александра переводит')+(c.role?(c.self?'':' · ')+e(c.role):'')+'</div><p class="txt">'+e(c.t)+'</p>'+opts+'</div>'; return }
+  L.className=''; L.innerHTML=''; hintFor() }
+function answerCase(i){ var a=CORE.answer(G,i); LB.beep(220,.08); var L=$('layer'); L.scrollTop=0; if(G.stage==='result'){ render(); return }
+  L.innerHTML='<div class="card"><div class="hd"><span>СМЕНА '+G.s+'</span><span>ГОД '+G.s*CORE.YR+'</span></div><div class="say"><small>АЛЕКСАНДРА</small>'+e(a||'Записала.')+'</div><button class="btn pri wide" id="aftok">Дальше</button></div>'; $('aftok').onclick=function(){ showNext(); render() }; renderStrip(); renderMem(); renderTabs() }
+var HINTS={1:'Нажмите мир или пустой отсек на схеме. Строить можно один раз за смену.',2:'В книге протоколов: первая подпись ждёт вас. Она не отменяется.',4:'Постройте верфь, пока есть время. Верфь — это места.'};
+function hintFor(){ if(HINTS[G.s]&&!UI['h'+G.s]&&innerWidth>=900){ UI['h'+G.s]=1; LB.voice(HINTS[G.s],6000) } }
+
+/* ---- причал ---- */
+function renderBerth(){ LB.voice(''); var L=$('layer'),B=G.board,o=CORE.outcome(G),top=L.scrollTop; L.className='on';
+  var rows=B.groups.map(function(g){ var c=g.on>=g.c&&g.c>0,ctl; if(B.fam) ctl='<button class="tgl'+(g.on?' on':'')+'" data-g="'+g.id+'" data-all="1">'+(g.on?'На борту':'Взять всех')+'</button>'; else ctl='<button data-g="'+g.id+'" data-d="-5" '+(g.on<=0?'disabled':'')+' aria-label="Меньше">−</button><span>'+g.on+'</span><button data-g="'+g.id+'" data-d="5" '+(g.on>=g.c?'disabled':'')+' aria-label="Больше">+</button>';
+    return '<div class="gr'+(g.on===0&&g.id==='prom'?' warnr':'')+'"><div class="nm2">'+e(g.n)+' <em>'+g.c+'</em></div><div class="ef">'+e(g.ef)+'</div><div class="ppl">'+g.who.map(e).join(', ')+'</div><div class="ctl">'+ctl+'</div></div>' }).join('');
+  L.innerHTML='<div class="berth"><div class="lbl" style="color:var(--ark)">Год '+CORE.SH*CORE.YR+' · Ночь</div><h2>Последний причал</h2>'+
+   (B.out?'<p class="why" style="margin:4px 0 0">На мирах остались '+B.out+': не дома в день Ночи.</p>':'')+
+   '<div class="bsum"><div><span class="lbl">Свободно</span><b style="color:var(--ark)">'+o.free+'/'+B.seats+'</b></div><div><span class="lbl">Дома</span><b style="color:var(--ppl)">'+B.home+'</b></div><div><span class="lbl">Дойдёт душ</span><b>'+o.souls+'</b></div><div><span class="lbl">Имён</span><b style="color:var(--ppl)">'+o.names+'</b></div></div>'+
+   '<div class="loss">'+(o.why.length?'В перелёте: '+e(o.why.join(' · ')):'')+'</div>'+
+   (B.fam?'<p class="hint" style="margin:0 0 8px">Протокол «Семьи не разлучать»: только целые группы.</p>':'')+rows+
+   (B.lot?'<button class="btn wide" id="lotbtn">Тянуть жребий</button>':'')+
+   '<button class="btn warn wide" id="launchbtn">Поднять трап · '+o.on+' на борту, '+Math.max(0,B.home-o.on)+' остаются</button></div>'; L.scrollTop=top }
+function renderResult(){ var L=$('layer'),R=G.res; L.className='on'; L.scrollTop=0; var v=document.getElementById('lb-voice'); if(v) v.remove(); var best=0; try{ best=+localStorage.getItem('lb-frostpunk-best')||0; if(R.souls>best) localStorage.setItem('lb-frostpunk-best',R.souls) }catch(x){}
+  var nl=G.names.slice(0,40).map(function(n){ return n.x?'<s>'+e(n.n)+'</s>':'<b>'+e(n.n)+'</b>' }).join(', ');
+  L.innerHTML='<div class="res"><div class="ttl" style="color:'+(R.win?'var(--ark)':'var(--red)')+'">'+R.title+' · ГОД '+R.year+'</div><div class="two"><div class="a"><b id="souls">'+R.souls+'</b><span class="lbl">душ на борту</span></div><div class="b"><b id="namesn">'+R.names+'</b><span class="lbl">имён помнит Александра</span></div></div>'+
+  '<p class="ln" style="color:var(--mid);font-size:14px">Осталось: '+R.left+(R.lost?' · потеряно в пути: '+R.lost:'')+(best?' · лучший счёт: '+Math.max(best,R.souls):'')+'</p>'+R.lines.map(function(l){ return '<p class="ln">'+e(l)+'</p>' }).join('')+'<p class="q">'+e(R.q)+'</p>'+(nl?'<div class="reslist">'+nl+'</div>':'')+'<button class="btn pri wide" id="again">Заново</button></div>' }
+
+/* ---- нажатия ---- */
+$('map').addEventListener('click',function(ev){ var g=ev.target.closest&&ev.target.closest('[data-id]'); if(!g) return; UI.sel=g.getAttribute('data-id'); UI.tab='room'; render() });
+$('tabs').addEventListener('click',function(ev){ var t=ev.target.getAttribute('data-tab'); if(t){ UI.tab=t; render() } });
+$('panel').addEventListener('click',function(ev){ var b=ev.target.closest('button'); if(!b) return;
+  if(b.hasAttribute('data-h')){ var w=CORE.setHands(G,UI.sel,+b.getAttribute('data-h')); if(w) LB.toast(w); render(); return }
+  if(b.hasAttribute('data-build')){ var w2=CORE.build(G,b.getAttribute('data-build')); if(w2) LB.toast(w2); LB.beep(520,.05); render(); return }
+  if(b.hasAttribute('data-build2')){ var w3=CORE.build(G,UI.sel,b.getAttribute('data-build2')); if(w3) LB.toast(w3); else LB.beep(520,.05); render(); return }
+  if(b.hasAttribute('data-scrap')){ var w4=CORE.scrap(G,UI.sel); if(w4) LB.toast(w4); else LB.beep(120,.12,'sawtooth'); render(); return }
+  if(b.hasAttribute('data-p')){ openProto(b.getAttribute('data-p')); return } });
+$('foot').addEventListener('click',function(ev){ if(!ev.target.closest('#endbtn')) return; if(!G.answered){ showNext(); return } var w=CORE.endShift(G); if(w){ LB.toast(w); return } UI.sel=UI.sel&&CORE.target(G,UI.sel)?UI.sel:null; render(); showNext() });
+$('layer').addEventListener('click',function(ev){ var b=ev.target.closest('button'); if(!b) return;
+  if(b.hasAttribute('data-o')){ answerCase(+b.getAttribute('data-o')); return }
+  if(b.id==='launchbtn'){ var w=CORE.launch(G); if(w) LB.toast(w); else render(); return }
+  if(b.id==='lotbtn'){ CORE.drawLots(G); renderBerth(); return }
+  if(b.id==='again'){ start(Date.now()%1e9); return }
+  if(b.hasAttribute('data-g')){ var id=b.getAttribute('data-g'),g=G.board.groups.filter(function(x){ return x.id===id })[0],why; if(b.hasAttribute('data-all')) why=CORE.setBoard(G,id,g.on?0:g.c); else why=CORE.setBoard(G,id,g.on+(+b.getAttribute('data-d'))); if(why) LB.toast(why); renderBerth(); return } });
+
+/* холодная пыль: тянется к судну, когда начинается Ночь */
+(function(){ var c=$('dust'),x=c.getContext('2d'),P=[]; for(var i=0;i<70;i++) P.push({a:Math.random()*6.28,r:Math.random()*1.2,s:.0006+Math.random()*.0016});
+  function tick(){ requestAnimationFrame(tick); if(!G) return; var cold=CORE.coldAt(G.s); var W=c.clientWidth,H=c.clientHeight; if(c.width!==W||c.height!==H){ c.width=W; c.height=H } x.clearRect(0,0,W,H); if(!cold) return; var n=Math.min(70,cold*9),R=Math.max(W,H)*.75; x.fillStyle='rgba(180,205,240,.55)'; for(var i=0;i<n;i++){ var p=P[i]; p.r-=p.s*(1+cold*.15); if(p.r<.28) p.r=1.2; x.fillRect(W/2+Math.cos(p.a)*p.r*R,H/2+Math.sin(p.a)*p.r*R,2,2) } }
+  tick() })();
+
+window.GAME={CORE:CORE,G:null,get state(){ return G },newGame:function(seed,headless){ UI.headless=!!headless; G=CORE.newGame(seed); this.G=G; if(!headless){ render(); showNext() } return G },
+  step:function(force){ var w=CORE.endShift(G,force); if(!UI.headless){ render(); showNext() } return w },
+  act:{build:function(id,t){ return CORE.build(G,id,t) },hands:function(id,d){ return CORE.setHands(G,id,d) },sign:function(id){ return CORE.sign(G,id) },answer:function(i){ return CORE.answer(G,i) },board:function(id,n){ return CORE.setBoard(G,id,n) },lots:function(){ return CORE.drawLots(G) },launch:function(){ return CORE.launch(G) }},
+  calc:function(){ return CORE.calc(G) },outcome:function(){ return CORE.outcome(G) },redraw:function(){ UI.headless=false; render(); showNext() }};
+start(LB.seed);
+if(LB.q.get('auto')) UI.ready=true;
+</script>
+</body></html>

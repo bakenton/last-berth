@@ -1,0 +1,139 @@
+<title>LAST BERTH × пять игр</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>/*KIT*/</style>
+<script>/*KIT*/</script>
+<style>
+/* Раскладка: столбец карточек вариантов, снимок и данные рядом; на телефоне один столбец. Цвета — токены игры, тёмный вид один. */
+:root{color-scheme:dark}
+html,body{height:auto;overflow:auto}
+body{background:var(--bg);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+main{max-width:1080px;margin:0 auto;display:flex;flex-direction:column;gap:32px}
+header h1{margin:0;font-size:clamp(26px,5vw,40px);font-weight:600;line-height:1.1;text-wrap:balance}
+header h1 em{font-style:normal;color:var(--ppl)}
+header p{margin:10px 0 0;max-width:68ch;color:var(--mid)}
+h2{margin:0;font-size:22px;font-weight:600}
+.verdict{border-left:3px solid var(--ppl);background:var(--pan);padding:14px 16px;display:flex;flex-direction:column;gap:8px}
+.verdict p{margin:0;max-width:72ch}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;min-width:640px;font-size:14px}
+th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);font-weight:600;text-align:left}
+th,td{padding:8px 10px 8px 0;border-bottom:1px solid var(--ln);vertical-align:top}
+td a{color:var(--ink)}
+.v{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,6fr);gap:20px;border-top:1px solid var(--ln);padding-top:20px}
+.v img{display:block;width:100%;height:auto;border:1px solid var(--ln)}
+.v .col{display:flex;flex-direction:column;gap:10px;min-width:0}
+.v h2 small{display:block;font-size:11px;letter-spacing:.18em;color:var(--ppl);font-weight:700;margin-bottom:3px;text-transform:uppercase}
+.v p{margin:0}
+.v dl{margin:0;display:grid;grid-template-columns:96px minmax(0,1fr);gap:6px 12px}
+.v dt{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);font-weight:600;padding-top:3px}
+.v dd{margin:0}
+.bots{font:12.5px/1.55 var(--n);color:var(--mid)}
+.bots b{color:var(--ink);font-weight:600}
+a.play{align-self:flex-start;text-decoration:none}
+a:focus-visible,.btn:focus-visible{outline:2px solid var(--ppl);outline-offset:2px}
+footer{color:var(--mid);font-size:13px;border-top:1px solid var(--ln);padding-top:16px;display:flex;flex-direction:column;gap:6px}
+@media (max-width:760px){.v{grid-template-columns:minmax(0,1fr)}.v dl{grid-template-columns:minmax(0,1fr);gap:2px}.v dd{margin-bottom:8px}}
+</style>
+<main>
+<header>
+  <h1>LAST BERTH <em>×</em> пять игр</h1>
+  <p>Пять отдельных играбельных прототипов. Основная игра не менялась. Партия занимает 6–14 минут, работает на компьютере и телефоне, без сети.</p>
+</header>
+
+<section class="verdict">
+  <p><b>С чего начать:</b> сыграйте Mini Metro и Frostpunk. Это две разные дороги для проекта.</p>
+  <p><b>Лучшая новая игра:</b> Mini Metro. Понятно с первого касания, родной для телефона, переигрывается, и суть LAST BERTH в финале целая: сеть разворачивается и везёт людей домой.</p>
+  <p><b>Лучшее для основной игры:</b> протоколы и список имён из Frostpunk, счётчик ОТХОД из Slipways, разборка интерфейса из Paperclips. Их можно пересадить, не переписывая ядро.</p>
+  <p><b>Это моя оценка.</b> Живой человек не сыграл ни одной партии. Боты проверили правила и баланс, ощущение от игры они проверить не могут.</p>
+</section>
+
+<section class="tw">
+<table>
+  <thead><tr><th>Вариант</th><th>Партия</th><th>Чем держит</th><th>Переигрывать</th><th>Главная слабость</th></tr></thead>
+  <tbody>
+    <tr><td><a href="metro.html">Mini Metro</a></td><td class="num">8 мин</td><td>Рисование сети, финальный разворот</td><td>Высоко</td><td>В Подъём спасается треть людей, карта густая</td></tr>
+    <tr><td><a href="slipways.html">Slipways</a></td><td class="num">30 ходов</td><td>Головоломка, цена решений в конце</td><td>Средне</td><td>Сложно, середина партии может стать рутиной</td></tr>
+    <tr><td><a href="frostpunk.html">Frostpunk</a></td><td class="num">24 смены</td><td>Выбор, законы на поколения, имена</td><td>Низко</td><td>Числа на кнопках могут убить текст</td></tr>
+    <tr><td><a href="ftl.html">FTL</a></td><td class="num">≈8 мин</td><td>Страх фронта, шлюз или человек</td><td>Средне</td><td>Скорость в кризисе почти не влияет на счёт</td></tr>
+    <tr><td><a href="paperclips.html">Paperclips</a></td><td class="num">≈12 мин</td><td>Страница растёт, потом разбирается</td><td>Низко</td><td>Сильный одноразовый опыт, в середине мало рук</td></tr>
+  </tbody>
+</table>
+</section>
+
+<article class="v">
+  <img src="thumbs/metro.jpg" alt="Карта Mini Metro в Последний подъём: цветные линии, миры с числом людей и красные пометки «не успеют»" width="720" height="450">
+  <div class="col">
+    <h2><small>Реальное время · рисование</small>Mini Metro</h2>
+    <p>Вся игра на одной карте: вы тянете линии пальцем, суда возят груз, залежи кончаются, сеть ползёт наружу. За 90 секунд до Ночи та же сеть обязана везти людей домой.</p>
+    <dl>
+      <dt>Решение</dt><dd>Короткая надёжная линия или дальняя богатая, которую потом не успеешь эвакуировать.</dd>
+      <dt>Боты, 16 сидов</dt><dd class="bots"><b>197</b> душ с перестройкой · 136 без действий в Подъём · 135 только дальние · 51 только ближние · 0 бездействие</dd>
+      <dt>Оценка</dt><dd>Сильнейшая основа новой игры. Первая версия финала ничего не решала, поэтому я отправил её на переделку: теперь перестройка даёт +45 %.</dd>
+    </dl>
+    <a class="btn pri play" href="metro.html">Играть</a>
+  </div>
+</article>
+
+<article class="v">
+  <img src="thumbs/slipways.jpg" alt="Сеть Slipways в середине партии: миры, линии и панель с причалами и счётчиком ОТХОД" width="720" height="450">
+  <div class="col">
+    <h2><small>Пошаговая головоломка</small>Slipways</h2>
+    <p>30 ходов, случая нет. Линии нельзя пересекать, у Земли 6 причалов. Последние 8 ходов сеть судят не за доход, а за то, сколько людей она успевает провести домой.</p>
+    <dl>
+      <dt>Решение</dt><dd>Какую линию проложить сейчас, зная, что через двадцать ходов по ней пойдут люди.</dd>
+      <dt>Боты, 16 сидов</dt><dd class="bots"><b>56</b> душ разумная · 35 держит экономику до конца · 33 к дальним · 7 две магистрали · 0 бездействие</dd>
+      <dt>Оценка</dt><dd>Самая умная, но и самая сложная для входа. Часть разрыва между ботами дают правила, часть — то, что разумной я дал больше знаний. Счётчик ОТХОД стоит взять в основную игру в любом случае.</dd>
+    </dl>
+    <a class="btn pri play" href="slipways.html">Играть</a>
+  </div>
+</article>
+
+<article class="v">
+  <img src="thumbs/frostpunk.jpg" alt="Круговая схема отсеков судна-базы, слева вычеркнутые имена, справа книга протоколов" width="720" height="450">
+  <div class="col">
+    <h2><small>Пошагово · моральный выбор</small>Frostpunk</h2>
+    <p>Главный ресурс — согласие людей. Протоколы действуют веками, дети рождаются уже при них, потомки возвращаются с делами предков. В финале мест меньше, чем людей, и выбираете вы.</p>
+    <dl>
+      <dt>Решение</dt><dd>Эффективность против людей каждую смену. В конце два числа: души на борту и имена, которые помнит Александра.</dd>
+      <dt>Боты, 8 сидов</dt><dd class="bots"><b>91</b> душа, 2 имени: СЧЁТ · <b>76</b> душ, 55 имён: ИМЕНА · 14 слепая жёсткость · 12 слепая доброта · 0 бездействие</dd>
+      <dt>Оценка</dt><dd>Лучше всех раскрывает лор: Пульт считает, Александра помнит. Прямо пересаживается в основную игру. Текстов хватит примерно на две партии, и разрыв в именах может сделать ИМЕНА очевидным выбором.</dd>
+    </dl>
+    <a class="btn pri play" href="frostpunk.html">Играть</a>
+  </div>
+</article>
+
+<article class="v">
+  <img src="thumbs/ftl.jpg" alt="Карта узлов с наступающей Ночью, сечение ковчега с пожаром в спальном блоке, реактор и экипаж" width="720" height="450">
+  <div class="col">
+    <h2><small>Рогалик · кризисы с паузой</small>FTL</h2>
+    <p>Игра начинается там, где основная заканчивается. Ковчег бежит к Последнему причалу, позади идёт Ночь. Войны нет: пожары, пробоины, спящие в капсулах и экипаж с именами.</p>
+    <dl>
+      <dt>Решение</dt><dd>Свернуть за выжившими или уйти от фронта. Открыть отсек в вакуум, если там человек.</dd>
+      <dt>Боты, 8 сидов</dt><dd class="bots"><b>16.8</b> душ разумный, 6/8 дошли · 5.1 беглец, 7/8 · 3.3 берёт всех, 1/8 · 0 без реакции и бездействие</dd>
+      <dt>Оценка</dt><dd>Самые сильные отдельные моменты, но дальше всех от логистики. Логичнее как дополнение: третий акт основной игры, в который вы входите с теми, кого увезли. Кризис пока слабо зависит от скорости.</dd>
+    </dl>
+    <a class="btn pri play" href="ftl.html">Играть</a>
+  </div>
+</article>
+
+<article class="v">
+  <img src="thumbs/paperclips.jpg" alt="Текстовый терминал: календарь, такты, проекты, миры и журнал Александры" width="720" height="450">
+  <div class="col">
+    <h2><small>Инкрементальная · терминал</small>Universal Paperclips</h2>
+    <p>Вы буквально Пульт. Одна кнопка на чёрном экране вырастает в тысячелетнюю машину из чисел. В конце вы разбираете её по кускам вместе с самим интерфейсом, и снова остаётся одна кнопка.</p>
+    <dl>
+      <dt>Решение</dt><dd>Ставка рациона, какие холодные проекты подписать, когда начать разбирать.</dd>
+      <dt>Боты, 8 сидов</dt><dd class="bots"><b>9503</b> души, 1994 имени: разумный · 6085, 130: все холодные · 2865, 11892: только тёплые · 0 жадный, без ковчега, бездействие</dd>
+      <dt>Оценка</dt><dd>Самый сильный однократный опыт и точнее всех передаёт «вы и есть Пульт». Как основа игры не годится: второй раз сюжет известен. Прецедент по памяти: сам Paperclips тоже проходят один раз.</dd>
+    </dl>
+    <a class="btn pri play" href="paperclips.html">Играть</a>
+  </div>
+</article>
+
+<footer>
+  <span>Проверено: браузер мышью на 1440×900 и касанием на 390×844, партии до итога, боты. Сравнивать души можно только внутри одного варианта.</span>
+  <span>Не проверено: игра живым человеком, настоящий телефон (была эмуляция Chromium), звук.</span>
+</footer>
+</main>

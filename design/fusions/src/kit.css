@@ -1,0 +1,27 @@
+/* LAST BERTH fusions — общий вид: те же токены, что work/web/ui.css. Один файл на прототип, всё вшито. */
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--food:#3DDC84;--ppl:#FFD23F;--ark:#B48CFF;--metal:#C9CFD6;--fuel:#FF8A1F;--earth:#4FA3FF;--parts:#E8E4D8;--courier:#45D4E8;--hauler:#FF6FB5;--freighter:#F2F1EC;--h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace;--top:44px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font:15px/1.4 var(--h);overflow:hidden;overscroll-behavior:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+.num{font-family:var(--n);font-variant-numeric:tabular-nums}
+.lbl{font-size:10px;letter-spacing:.18em;font-weight:600;color:var(--mid);text-transform:uppercase}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;padding:0 14px;border:1px solid var(--ln);background:var(--pan);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;user-select:none}
+.btn:hover{border-color:var(--mid)}
+.btn.pri{background:var(--ink);border-color:var(--ink);color:#000}
+.btn.warn{background:var(--ppl);border-color:var(--ppl);color:#000}
+.btn:disabled,.btn.off{opacity:.38;cursor:default}
+#lb-top{position:fixed;left:0;right:0;top:0;height:var(--top);display:flex;align-items:center;gap:10px;padding:0 10px;background:var(--pan);border-bottom:1px solid var(--ln);z-index:40}
+#lb-top .t{font-weight:700;letter-spacing:.16em;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#lb-top .t em{font-style:normal;color:var(--ppl)}
+#lb-top .sp{flex:1}
+#lb-top a,#lb-top button{display:flex;align-items:center;justify-content:center;width:34px;height:34px;border:1px solid var(--ln);color:var(--ink);text-decoration:none;font:600 14px var(--n);flex:none}
+#lb-stage{position:fixed;left:0;right:0;top:var(--top);bottom:0;overflow:hidden}
+.lb-veil{position:fixed;inset:0;background:rgba(5,5,6,.82);display:flex;align-items:center;justify-content:center;padding:16px;z-index:60}
+.lb-modal{width:min(560px,100%);max-height:calc(100% - 16px);overflow:auto;background:var(--pan);border:1px solid var(--ln);padding:20px}
+.lb-modal h2{margin:0 0 10px;font-size:20px;font-weight:600}
+.lb-modal p{margin:0 0 10px;color:var(--ink)}
+.lb-modal .row{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.lb-modal .row .btn{flex:1 1 auto}
+#lb-voice{position:fixed;left:50%;transform:translateX(-50%);bottom:12px;width:min(620px,calc(100% - 16px));background:var(--pan);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:10px 14px;z-index:50;cursor:pointer}
+#lb-voice small{display:block;font-size:9.5px;letter-spacing:.18em;color:var(--ppl);font-weight:700;margin-bottom:2px}
+#lb-toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(var(--top) + 10px);background:var(--pan2);border:1px solid var(--red);color:var(--ink);padding:6px 14px;font-size:13px;z-index:55;pointer-events:none;max-width:calc(100% - 16px)}

@@ -1,0 +1,929 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,maximum-scale=1,user-scalable=no">
+<title>LAST BERTH × MINI METRO</title>
+<style>/*KIT*/</style>
+<script>/*KIT*/</script>
+<style>
+#lb-stage{user-select:none;-webkit-user-select:none}
+#field{position:absolute;inset:0;width:100%;height:100%;touch-action:none;display:block;cursor:crosshair}
+#hud{position:absolute;left:0;right:0;top:0;display:flex;flex-wrap:wrap;align-items:stretch;pointer-events:none;background:linear-gradient(#0b0b0cf2 70%,#0b0b0c00);padding:6px 8px 10px;gap:0 2px}
+.chip{flex:1 1 0;min-width:0;display:flex;align-items:center;gap:6px;padding:0 4px;height:36px}
+.chip svg{flex:none}
+.chip div{min-width:0;line-height:1.05}
+.chip b{display:block;font:600 16px var(--n);font-variant-numeric:tabular-nums}
+.chip small{display:block;font:400 10px var(--n);color:var(--dim);white-space:nowrap}
+.chip.low b{color:var(--red)}.chip.low small{color:var(--red)}
+.chip.empty svg{animation:bl .5s steps(2) infinite}
+.chip.hid{display:none}
+@keyframes bl{50%{opacity:.15}}
+#date{flex:1 1 100%;display:flex;align-items:center;gap:8px;height:18px;padding:0 4px;font:400 11px var(--n);color:var(--mid);white-space:nowrap}
+#date .bar{flex:1;height:2px;background:var(--ln);position:relative;min-width:30px}
+#date .bar i{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+#date.night{color:var(--ink)}#date.night .bar i{background:var(--ppl)}
+#date.lift{color:var(--ppl)}#date.lift .bar i{background:var(--red)}
+#ctx{position:absolute;left:0;right:0;display:flex;justify-content:center;pointer-events:none;padding:0 8px}
+#ctx>div{pointer-events:auto;display:flex;align-items:center;gap:10px;min-height:44px;max-width:640px;width:100%;background:#141417ee;border:1px solid var(--ln);padding:2px 2px 2px 12px;font-size:13px;line-height:1.2}
+#ctx>div.alarm{border-color:var(--red)}
+#ctx>div.ppl{border-color:var(--ppl)}
+#ctx .tx{flex:1;min-width:0}
+#ctx .tx b{font-weight:600}
+#ctx .tx .num{font-size:12px}
+#ctx .btn{flex:none;min-height:40px;padding:0 12px;font-size:12px}
+#ctx .sw{display:inline-block;width:10px;height:10px;margin-right:6px}
+#dock{position:absolute;left:0;right:0;bottom:0;background:var(--pan);border-top:1px solid var(--ln);display:flex;flex-wrap:wrap;gap:4px 10px;padding:6px 8px calc(6px + env(safe-area-inset-bottom));align-items:center;touch-action:none}
+#shiftbar{position:absolute;left:0;top:-1px;height:1px;background:var(--ppl)}
+.grp{display:flex;gap:4px;align-items:center}
+.grp.sp{margin-left:auto}
+.tok{height:44px;min-width:60px;display:flex;align-items:center;justify-content:center;gap:5px;border:1px solid var(--ln);background:var(--bg);touch-action:none;padding:0 6px;position:relative}
+.tok b{font:600 14px var(--n)}
+.tok small{position:absolute;right:3px;top:1px;font:400 9px var(--n);color:var(--dim)}
+.tok.zero{opacity:.35}
+.tok.kit small{color:var(--metal)}
+.lnt{width:40px;height:40px;display:flex;align-items:center;justify-content:center;font:600 13px var(--n);color:#000;border:2px solid transparent;touch-action:none}
+.lnt.free{background:none!important;color:var(--mid)}
+.lnt.sel{box-shadow:0 0 0 2px var(--ink)}
+.lnt.rem{opacity:.4;border-style:dashed}
+.spd{width:42px;height:44px;font:600 13px var(--n);border:1px solid var(--ln);background:var(--bg)}
+.spd.on{background:var(--ink);color:#000;border-color:var(--ink)}
+#giftv{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(5,5,6,.72);padding:16px;z-index:30}
+#giftv h3{margin:0;font:600 12px var(--h);letter-spacing:.24em;color:var(--mid)}
+#giftv h3 em{font-style:normal;color:var(--ink)}
+#giftv .free{display:flex;align-items:center;gap:8px;font:400 12px var(--n);color:var(--mid)}
+#giftv .cards{display:flex;gap:10px;width:min(620px,100%)}
+.gift{flex:1 1 0;min-width:0;min-height:170px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;background:var(--pan);border:1px solid var(--ln);padding:14px 10px;text-align:center;animation:gin .22s ease-out both}
+.gift:nth-child(2){animation-delay:.07s}
+.gift:hover{border-color:var(--ink)}
+.gift:active{background:var(--pan2)}
+.gift .ic{height:44px;display:flex;align-items:center;justify-content:center}
+.gift b{font-weight:600;font-size:15px;letter-spacing:.08em}
+.gift span{font:400 11.5px/1.35 var(--n);color:var(--mid)}
+@keyframes gin{from{transform:translateY(14px);opacity:0}}
+#end{position:absolute;inset:0;z-index:35;overflow:auto;background:rgba(5,5,6,.86);display:flex;justify-content:center;padding:18px 16px;animation:fin .8s ease-out both}
+@keyframes fin{from{opacity:0}}
+#end .box{width:min(560px,100%);margin:auto 0}
+#end .rate{font:600 12px var(--h);letter-spacing:.24em;color:var(--mid)}
+#end .big{font:600 76px/1 var(--n);color:var(--ppl);margin:6px 0 0}
+#end .big.dead{color:var(--red)}
+#end .cap{font-size:13px;color:var(--mid);margin-bottom:14px}
+#end .rows{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--ln);border:1px solid var(--ln);margin-bottom:14px}
+#end .rows div{background:var(--pan);padding:8px 10px}
+#end .rows b{display:block;font:600 19px var(--n)}
+#end .rows small{font-size:10px;letter-spacing:.14em;color:var(--mid);text-transform:uppercase}
+#end .sayit{border-left:3px solid var(--ppl);background:var(--pan);padding:10px 12px;margin-bottom:12px;font-size:14px}
+#end .sayit small{display:block;font-size:9.5px;letter-spacing:.18em;color:var(--ppl);font-weight:700;margin-bottom:3px}
+#end .left{margin-bottom:14px}
+#end .left div{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid var(--pan2);font-size:13px}
+#end .left .w{font:600 11.5px var(--n);letter-spacing:.06em}
+#end .left .who{color:var(--mid);flex:1;text-align:right;min-width:0}
+#end .left .n{font:600 13px var(--n);color:var(--ppl);width:30px;text-align:right}
+#end .row{display:flex;gap:8px;flex-wrap:wrap}
+#end .row .btn{flex:1 1 auto;min-height:46px}
+#lb-voice{bottom:var(--vb,110px);pointer-events:none;background:#141417e6;width:min(520px,calc(100% - 16px));padding:7px 12px;font-size:13.5px;line-height:1.3;animation:fin .3s}
+#lb-toast{top:auto;bottom:calc(var(--vb,110px) + 4px);border-color:var(--red);font-size:13px;text-align:center}
+.lb-modal p{font-size:14.5px;line-height:1.38;margin-bottom:8px}
+.lb-modal p b{color:var(--ppl);font-weight:600}
+@media (min-width:760px){
+  #hud{padding:8px 12px 14px;flex-wrap:nowrap;gap:6px}
+  .chip{flex:0 0 96px;height:38px}
+  #date{order:9;flex:1 1 auto;height:38px;padding-left:18px;font-size:12px}
+  #dock{flex-wrap:nowrap;padding:6px 12px;gap:18px}
+  .tok{min-width:72px}
+}
+</style>
+</head><body>
+<script>
+/* ===================== ЯДРО ПРАВИЛ (без рисования) ===================== */
+var K={
+  T:480, LIFT:390, REVEAL:160, GIFT:50, HUNGER:45, RES:50, SEAT0:40, SEATK:2.2, LIFT_V:.55, STARVE:{food:.5,metal:.25,fuel:.25}, MIN_WIN:100,
+  START:{food:45,metal:40,fuel:40}, PEOPLE:42, CAP:12,
+  R:[105,185,285,400], DEP:[45,62,230,400], RATE:[.5,.7,1,1.4], COST:[3,5,8,13], GROW:[.1,.14,.24,.3],
+  BURN:{food:[.35,1.2],metal:[.12,.5],fuel:[.03,.14]}, YEARS:10, Y0:3200
+};
+var CLS={
+  courier:{name:'Курьер',cap:2,v:88,crew:1,metal:5,fuel:.2},
+  hauler:{name:'Тягач',cap:4,v:60,crew:2,metal:9,fuel:.4},
+  freighter:{name:'Грузовоз',cap:8,v:39,crew:3,metal:16,fuel:.8}
+};
+var RES=['food','metal','fuel'], RNAME={food:'Рационы',metal:'Металл',fuel:'Топливо'}, RGEN={food:'рационов',metal:'металла',fuel:'топлива'};
+var GIFTS={
+  line:{t:'Линия',d:'+1 линия'},
+  courier:{t:'Курьер',d:'2 места, быстрый, верфь 5 металла'},
+  hauler:{t:'Тягач',d:'4 места, верфь 9 металла'},
+  freighter:{t:'Грузовоз',d:'8 мест, медленный, верфь 16 металла'},
+  engine:{t:'Двигатель',d:'все суда +12% скорости'},
+  hold:{t:'Трюмы',d:'+1 место на каждом судне'},
+  wake:{t:'Подъём смены',d:'+12 человек на Земле'},
+  berth:{t:'Палуба ковчега',d:'+30 мест на борту'}
+};
+
+function burn(r,t){ var b=K.BURN[r], u=Math.min(1,t/K.T); return b[0]+b[1]*Math.pow(u,1.5) }
+function clamp(v,a,b){ return v<a?a:v>b?b:v }
+
+function newWorlds(seed,asp){
+  var r=LB.rng(seed^0x5bd1), names=r.shuffle(LB.WORLDS), w=[{id:0,type:'earth',name:'ЗЕМЛЯ',ring:-1,x:0,y:0,bornAt:0,founded:true,pop:0,dep:0,dep0:0,surf:0}];
+  var sa=Math.sqrt(clamp(asp||1,.74,1.9)), ni=0;
+  var plan=[
+    {types:['food','metal','fuel','food'],born:function(i){ return i<3?0:30 }},
+    {types:r.shuffle(['food','metal','fuel','food','metal']),born:function(i){ return 38+i*20 }},
+    {types:r.shuffle(['food','metal','fuel','food','metal','fuel']),born:function(i){ return 128+i*20 }},
+    {types:r.shuffle(['food','metal','fuel','food','metal','fuel']),born:function(i){ return 245+i*18 }}
+  ];
+  plan.forEach(function(p,ring){
+    var n=p.types.length, base=r()*6.283;
+    /* порядок секторов перемешан, чтобы первые миры кольца не лежали рядом */
+    var sect=r.shuffle(p.types.map(function(_,i){ return i }));
+    p.types.forEach(function(type,i){
+      var x,y,tries=0,ok;
+      do{ var a=base+(sect[i]+(r()-.5)*.62)*6.283/n, rad=K.R[ring]*(.93+r()*.14);
+        x=Math.cos(a)*rad*sa; y=Math.sin(a)*rad/sa; ok=true;
+        for(var j=1;j<w.length;j++){ var dx=w[j].x-x,dy=w[j].y-y; if(dx*dx+dy*dy<64*64){ ok=false; break } }
+      }while(!ok&&++tries<40);
+      var dj=.85+r()*.3;
+      w.push({id:w.length,type:type,ring:ring,name:names[ni++].toUpperCase(),x:x,y:y,bornAt:p.born(i),
+        dep:Math.round(K.DEP[ring]*dj),dep0:Math.round(K.DEP[ring]*dj),rate:K.RATE[ring],surf:0,acc:0,founded:false,pop:0,dead:false,founder:null,cost:K.COST[ring]});
+    });
+  });
+  return w;
+}
+
+function newState(seed,asp){
+  return {seed:seed,asp:asp,t:0,phase:'play',worlds:newWorlds(seed,asp),lines:[],ships:[],
+    stock:{food:K.START.food,metal:K.START.metal,fuel:K.START.fuel},people:K.PEOPLE,ark:0,seatBonus:0,hunger:0,
+    lineCap:3,dock:{courier:{built:1,kit:0},hauler:{built:2,kit:0},freighter:{built:0,kit:0}},
+    speed:1,hold:0,nextGift:K.GIFT,shift:0,gift:null,nextId:1,fx:[],ev:[],
+    inr:{food:0,metal:0,fuel:0},outr:{food:0,metal:0,fuel:0},_in:{food:0,metal:0,fuel:0},_out:{food:0,metal:0,fuel:0},
+    names:LB.rng(seed^0x77).shuffle(LB.PEOPLE),nameI:0,grng:LB.rng(seed^0x9e37),starving:0,stats:{carried:0,founded:0,evac:0,starved:0},result:null};
+}
+
+/* ---- геометрия линии: восьминаправленная ломаная со скруглением ---- */
+function octi(a,b,out){
+  var dx=b.x-a.x,dy=b.y-a.y,ax=Math.abs(dx),ay=Math.abs(dy),sx=dx<0?-1:1,sy=dy<0?-1:1,d=Math.min(ax,ay),st=Math.max(ax,ay)-d;
+  var horiz=ax>ay, c;
+  if(st<2||d<2){ out.push({x:b.x,y:b.y}); return }
+  var sLen=st,dLen=d*1.414;
+  if(sLen>dLen){ c=horiz?{x:a.x+sx*st,y:a.y}:{x:a.x,y:a.y+sy*st} }
+  else{ c={x:a.x+sx*d,y:a.y+sy*d} }
+  var l1=Math.hypot(c.x-a.x,c.y-a.y),l2=Math.hypot(b.x-c.x,b.y-c.y),r=Math.min(18,l1*.5,l2*.5);
+  var p0={x:c.x+(a.x-c.x)*r/l1,y:c.y+(a.y-c.y)*r/l1},p2={x:c.x+(b.x-c.x)*r/l2,y:c.y+(b.y-c.y)*r/l2};
+  out.push(p0);
+  for(var i=1;i<=5;i++){ var u=i/5,v=1-u; out.push({x:v*v*p0.x+2*u*v*c.x+u*u*p2.x,y:v*v*p0.y+2*u*v*c.y+u*u*p2.y}) }
+  out.push({x:b.x,y:b.y});
+}
+function routeLen(S,nodes){ var L=0,o; for(var i=0;i<nodes.length-1;i++){ o=[S.worlds[nodes[i]]]; octi(S.worlds[nodes[i]],S.worlds[nodes[i+1]],o); for(var j=1;j<o.length;j++) L+=Math.hypot(o[j].x-o[j-1].x,o[j].y-o[j-1].y) } return L }
+function buildPaths(S){
+  var groups={};
+  S.lines.forEach(function(L){ for(var i=0;i<L.nodes.length-1;i++){ var a=L.nodes[i],b=L.nodes[i+1],k=Math.min(a,b)+'-'+Math.max(a,b); (groups[k]=groups[k]||[]).push(L.id) } });
+  S.lines.forEach(function(L){
+    var pts=[],stops=[0],cum=[0];
+    function add(p){ var q=pts[pts.length-1]; if(q){ var d=Math.hypot(p.x-q.x,p.y-q.y); if(d<.01) return; cum.push(cum[cum.length-1]+d) } pts.push(p) }
+    for(var i=0;i<L.nodes.length-1;i++){
+      var a=S.worlds[L.nodes[i]],b=S.worlds[L.nodes[i+1]],lo=a.id<b.id?a:b,hi=a.id<b.id?b:a,k=lo.id+'-'+hi.id,g=groups[k],off=(g.indexOf(L.id)-(g.length-1)/2)*8;
+      var nx=-(hi.y-lo.y),ny=hi.x-lo.x,nn=Math.hypot(nx,ny)||1; nx=nx/nn*off; ny=ny/nn*off;
+      var A={x:a.x+nx,y:a.y+ny},B={x:b.x+nx,y:b.y+ny},o=[];
+      add(A); octi(A,B,o); o.forEach(add);
+      stops.push(cum[cum.length-1]);
+    }
+    L.path=pts; L.cum=cum; L.stops=stops; L.len=cum[cum.length-1];
+  });
+}
+function posAt(L,s){
+  var c=L.cum,P=L.path,lo=0,hi=c.length-1; s=clamp(s,0,L.len);
+  while(hi-lo>1){ var m=(lo+hi)>>1; if(c[m]<=s) lo=m; else hi=m }
+  var f=c[hi]>c[lo]?(s-c[lo])/(c[hi]-c[lo]):0,A=P[lo],B=P[hi];
+  return {x:A.x+(B.x-A.x)*f,y:A.y+(B.y-A.y)*f,a:Math.atan2(B.y-A.y,B.x-A.x)};
+}
+function lineOf(S,id){ for(var i=0;i<S.lines.length;i++) if(S.lines[i].id===id) return S.lines[i]; return null }
+function shipCap(S,sh){ return CLS[sh.cls].cap+S.hold }
+function segOf(L,s){ var i=0; while(i<L.stops.length-2&&L.stops[i+1]<=s) i++; return i }
+function snapshot(S){ S.ships.forEach(function(sh){ var L=lineOf(S,sh.line),i=segOf(L,sh.s),d=L.stops[i+1]-L.stops[i]; var o=posAt(L,sh.s); if(sh.ghost){ var gf0=clamp(sh.ghost.left/sh.ghost.d,0,1); o={x:o.x+(sh.ghost.x-o.x)*gf0,y:o.y+(sh.ghost.y-o.y)*gf0} } sh._m={a:L.nodes[i],b:L.nodes[i+1],f:d>0?clamp((sh.s-L.stops[i])/d,0,1):0,x:o.x,y:o.y} }) }
+function restore(S){ S.ships.forEach(function(sh){ var L=lineOf(S,sh.line),m=sh._m,ia=L.nodes.indexOf(m.a),ib=L.nodes.indexOf(m.b);
+  if(ia>=0&&ib===ia+1) sh.s=L.stops[ia]+m.f*(L.stops[ib]-L.stops[ia]); else if(ia>=0) sh.s=L.stops[ia]; else sh.s=L.len;
+  sh.fromS=sh.s;
+  /* судно не телепортируется: летит от прежнего места к новой точке линии, время честное */
+  var n=posAt(L,sh.s),gd=Math.hypot(n.x-m.x,n.y-m.y); sh.ghost=gd>25?{x:m.x,y:m.y,d:gd,left:gd}:null;
+  delete sh._m }) }
+
+/* ---- суда ---- */
+function canLoad(S,sh,w){ if(sh.recall||sh.load.length>=shipCap(S,sh)) return false; return S.phase==='lift'?w.pop>=1:w.surf>=1 }
+function nextStop(S,L,sh){
+  if(sh.recall) return 0;
+  var last=L.nodes.length-1;
+  if(sh.dir>0) return last;
+  for(var i=last;i>=1;i--){ if(L.stops[i]<sh.s-.01&&canLoad(S,sh,S.worlds[L.nodes[i]])) return i }
+  return 0;
+}
+function depart(S,sh,L){ var f=CLS[sh.cls].fuel*(.5+L.len/300); S.stock.fuel=Math.max(0,S.stock.fuel-f); S._out.fuel+=f }
+function addStock(S,r,n){ S._in[r]+=n; if(r==='metal'&&S.stock.metal+n>K.RES){ var over=S.stock.metal+n-K.RES; S.stock.metal=K.RES; S.ark+=over } else S.stock[r]+=n }
+function pushFx(S,o){ if(S.fx.length<80) S.fx.push(o) }
+function stepShip(S,sh,dt){
+  var L=lineOf(S,sh.line); if(!L) return;
+  var lf=S.phase==='lift'?K.LIFT_V:1;
+  if(sh.ghost){ sh.ghost.left-=CLS[sh.cls].v*S.speed*lf*dt; if(sh.ghost.left>0) return; sh.ghost=null; sh.fromS=sh.s }
+  if(sh.wait>0){ sh.wait-=dt; if(sh.wait>0) return; dt=-sh.wait; sh.wait=0; if(sh.s<.01&&!sh.recall) depart(S,sh,L) }
+  var ti=nextStop(S,L,sh),ts=L.stops[ti],d=ts-sh.s,ad=Math.abs(d),fromD=Math.abs(sh.s-sh.fromS);
+  var f=clamp(Math.min(ad,fromD)/24,.24,1), mv=CLS[sh.cls].v*S.speed*lf*f*dt*(sh.recall?1.15:1);
+  if(mv>=ad){ sh.s=ts; sh.fromS=ts; arrive(S,sh,L,ti) } else { sh.s+=d>0?mv:-mv; sh.dirv=d>0?1:-1 }
+}
+function arrive(S,sh,L,i){
+  if(i===0){
+    var n=sh.load.length; var p=posAt(L,0);
+    sh.load.forEach(function(k){ if(k==='ppl'){ S.people+=1; S.stats.evac++ } else { addStock(S,k,1); S.stats.carried++ } pushFx(S,{k:'in',r:k,x:sh.x||p.x,y:sh.y||p.y}) });
+    sh.load=[];
+    if(sh.recall){ dockShip(S,sh); return }
+    sh.dir=1; sh.wait=.3+n*.09; return;
+  }
+  var w=S.worlds[L.nodes[i]],got=0;
+  if(i===L.nodes.length-1) sh.dir=-1;
+  sh.dir=-1;
+  while(canLoad(S,sh,w)){
+    if(S.phase==='lift'){ w.pop-=1; sh.load.push('ppl'); if(w.pop<1) S.ev.push({k:'cleared',w:w.id}) }
+    else { w.surf-=1; sh.load.push(w.type) }
+    got++;
+  }
+  sh.wait=.3+got*(S.phase==='lift'?.12:.09);
+}
+function dockShip(S,sh){
+  var c=CLS[sh.cls]; S.people+=c.crew; S.dock[sh.cls].built++;
+  S.ships.splice(S.ships.indexOf(sh),1);
+  var L=lineOf(S,sh.line); if(L&&L.removing&&!S.ships.some(function(x){ return x.line===L.id })) deleteLine(S,L);
+  if(sh.next){ var nl=lineOf(S,sh.next); if(nl&&!nl.removing) A.deploy(sh.cls,sh.next) }
+  else if(S.phase==='lift'){ var bl=bestLiftLine(S,sh.cls); if(bl) A.deploy(sh.cls,bl.id) }
+  S.ev.push({k:'docked',cls:sh.cls});
+}
+function linePop(S,L){ return L.nodes.slice(1).reduce(function(a,id){ return a+Math.floor(S.worlds[id].pop) },0) }
+function bestLiftLine(S,cls){ var left=K.T-S.t,best=null,bs=0,v=CLS[cls].v*S.speed*K.LIFT_V;
+  S.lines.forEach(function(L){ if(L.removing||L.len*2/v+2>left) return; var cap=S.ships.filter(function(x){ return x.line===L.id&&!x.recall }).reduce(function(a,x){ return a+shipCap(S,x) },0),sc=linePop(S,L)/(cap+1); if(sc>bs){ bs=sc; best=L } });
+  return best }
+function deleteLine(S,L){ S.lines.splice(S.lines.indexOf(L),1); snapshot(S); buildPaths(S); restore(S) }
+
+/* ---- шаг времени ---- */
+function step(S,dt){
+  if(S.phase==='over'||S.gift) return;
+  S.t+=dt;
+  var lift=S.phase==='lift';
+  if(!lift&&S.t>=K.LIFT){ S.phase='lift'; lift=true; S.worlds.forEach(function(w){ if(w.id){ w.surf=0 } }); S.ev.push({k:'lift'}) }
+  if(!lift&&S.t>=S.nextGift){ S.nextGift+=K.GIFT; S.shift++; var fr=['courier','hauler','hauler','freighter','hauler','freighter','hauler'][(S.shift-1)%7]; S.dock[fr].kit++; S.shiftShip=fr; S.gift=makeGift(S); return }
+  /* миры */
+  S.worlds.forEach(function(w){
+    if(!w.id) return;
+    if(w.bornAt<=S.t&&!w.seen){ w.seen=true; if(S.t>0) S.ev.push({k:'born',w:w.id}) }
+    if(!w.founded) return;
+    if(!lift&&w.dead) w.pop+=K.GROW[w.ring]*.5*dt;
+    if(!lift&&!w.dead){
+      w.pop+=K.GROW[w.ring]*dt;
+      if(w.dep>=1&&w.surf<K.CAP){ w.acc+=w.rate*dt; while(w.acc>=1&&w.dep>=1&&w.surf<K.CAP){ w.acc-=1; w.dep-=1; w.surf+=1 } if(w.surf>=K.CAP) w.acc=Math.min(w.acc,1) }
+      if(w.dep<1&&w.surf===0){ w.dead=true; S.ev.push({k:'dead',w:w.id}) }
+    }
+  });
+  /* суда */
+  S.ships.slice().forEach(function(sh){ stepShip(S,sh,dt); });
+  /* Земля */
+  var empt=0,die=0;
+  RES.forEach(function(r){ var b=burn(r,S.t)*dt; S.stock[r]-=b; if(S.stock[r]<=0){ S.stock[r]=0; empt++; die+=K.STARVE[r] }
+    S.inr[r]+=(S._in[r]/dt-S.inr[r])*dt/25; S.outr[r]+=(S._out[r]/dt-S.outr[r])*dt/25; S._in[r]=0; S._out[r]=0 });
+  S.people+=(.13+.015*S.worlds.filter(function(w){ return w.founded&&w.id&&!w.dead }).length)*dt*(lift?0:1);
+  if(lift){ S.hunger=0; S.starving=die; if(die>0){ var dead=Math.min(S.people,die*dt); S.people-=dead; S.stats.starved+=dead } }
+  else { if(empt) S.hunger=Math.min(1,S.hunger+dt/K.HUNGER*(empt>1?1.3:1)); else S.hunger=Math.max(0,S.hunger-dt/(K.HUNGER*1.5));
+    if(S.hunger>=1){ finish(S,'hunger'); return } }
+  if(S.t>=K.T) finish(S,'night');
+}
+function makeGift(S){
+  var r=S.grng, body=['courier','hauler','hauler','freighter','freighter','line','line'];
+  if(S.lineCap>=7) body=body.filter(function(x){ return x!=='line' });
+  var a=(S.shift%2===1&&S.lineCap<6)?'line':r.pick(body), rest=['engine','hold','wake','berth','line','courier','freighter','engine','hold'].filter(function(x){ return x!==a&&!(x==='line'&&S.lineCap>=7) });
+  return [a,r.pick(rest)];
+}
+function seats(S){ return Math.floor(K.SEAT0+S.ark*K.SEATK+S.seatBonus) }
+function finish(S,why){
+  var w=S.worlds.filter(function(w){ return w.id&&w.founded&&w.pop>=1 });
+  var home=S.people, sea=0, atDock=0;
+  S.ships.forEach(function(sh){ var c=CLS[sh.cls].crew, p=sh.load.filter(function(k){ return k==='ppl' }).length;
+    if(sh.s<3&&sh.wait>0){ atDock+=c } else sea+=c+p });
+  home+=atDock; home=Math.floor(home);
+  var st=seats(S), lost=why==='hunger', souls=lost?0:Math.min(home,st);
+  var onW=w.reduce(function(a,x){ return a+Math.floor(x.pop) },0);
+  var overs=lost?0:Math.max(0,home-st), left=onW+sea+overs+(lost?home:0);
+  var win=!lost&&souls>=K.MIN_WIN, ratio=souls/Math.max(1,souls+left);
+  S.phase='over';
+  S.result={why:why,win:win,souls:souls,left:left,seats:st,onWorlds:onW,atSea:sea,overs:overs,ratio:ratio,t:S.t,
+    worlds:w.map(function(x){ return {name:x.name,pop:Math.floor(x.pop),founder:x.founder,dead:x.dead} }).sort(function(a,b){ return b.pop-a.pop }),
+    carried:S.stats.carried,evac:S.stats.evac,starved:Math.round(S.stats.starved),
+    rate:lost?'ЗЕМЛЯ МОЛЧИТ':!win?'ПУСТОЙ КОВЧЕГ':ratio>=.55?'ПОЛНЫЙ БОРТ':ratio>=.3?'ПОСЛЕДНИЙ ПРИЧАЛ':'ОСТАВЛЕННЫЕ'};
+}
+
+/* ---- действия ---- */
+var S=null;
+function no(why){ return {ok:false,why:why} }
+var A={
+  /* фиксация черновика линии: nodes начинается с Земли (0). lineId=null — новая */
+  commit:function(lineId,nodes){
+    if(!S||S.phase==='over') return no('Партия окончена');
+    var L=lineId?lineOf(S,lineId):null;
+    if(lineId&&(!L||L.removing)) return no('Линии нет');
+    if(lineId&&nodes.length<2) return A.removeLine(lineId);
+    if(!lineId&&nodes.length<2) return no('Линия короче одного мира');
+    if(nodes[0]!==0) return no('Линия начинается от Земли');
+    if(!lineId&&freeLines(S)<1) return no('Нет свободной линии: снимите старую или дождитесь смены');
+    var cost=0,seen={};
+    for(var i=1;i<nodes.length;i++){ var w=S.worlds[nodes[i]];
+      if(!w||!w.seen&&w.bornAt>S.t) return no('Мира ещё нет');
+      if(seen[w.id]) return no('Мир уже на линии'); seen[w.id]=1;
+      if(!w.founded) cost+=w.cost }
+    if(cost>0&&S.phase==='lift') return no('В Последний подъём миры не заселяют');
+    if(cost>Math.floor(S.people)) return no('Основание стоит '+cost+' чел, на Земле '+Math.floor(S.people));
+    S.people-=cost;
+    nodes.slice(1).forEach(function(id){ var w=S.worlds[id]; if(!w.founded){ w.founded=true; w.pop=w.cost; w.founder=S.names[S.nameI++%S.names.length]; S.stats.founded++; S.ev.push({k:'found',w:id}) } });
+    snapshot(S);
+    var made=false;
+    if(L){ L.nodes=nodes.slice() } else { L={id:S.nextId++,color:freeColor(S),nodes:nodes.slice(),removing:false}; S.lines.push(L); made=true }
+    buildPaths(S); restore(S);
+    if(made){ var c=['hauler','courier','freighter'].filter(function(k){ return S.dock[k].built>0 })[0]; if(c) A.deploy(c,L.id) }
+    return {ok:true,line:L.id};
+  },
+  insert:function(lineId,seg,worldId){ var L=lineOf(S,lineId); if(!L) return no('Линии нет'); if(L.nodes.indexOf(worldId)>=0) return no('Мир уже на линии'); var n=L.nodes.slice(); n.splice(seg+1,0,worldId); return A.commit(lineId,n) },
+  removeLine:function(id){ var L=lineOf(S,id); if(!L) return no('Линии нет'); if(L.removing) return {ok:true};
+    var any=false; L.removing=true; S.ships.forEach(function(sh){ if(sh.line===id){ sh.recall=true; sh.dir=-1; any=true } }); if(!any) deleteLine(S,L); return {ok:true} },
+  deploy:function(cls,lineId){ var d=S.dock[cls],c=CLS[cls],L=lineOf(S,lineId);
+    if(!L||L.removing) return no('Линии нет');
+    if(d.built+d.kit<1) return no('Нет свободного судна: '+c.name.toLowerCase()+' приходит со смены');
+    if(c.crew>Math.floor(S.people)) return no('Экипаж '+c.crew+' чел, на Земле '+Math.floor(S.people));
+    if(d.built<1&&S.stock.metal<c.metal) return no('Верфь просит '+c.metal+' металла, есть '+Math.floor(S.stock.metal));
+    if(d.built>0) d.built--; else { d.kit--; S.stock.metal-=c.metal; S._out.metal+=c.metal }
+    S.people-=c.crew;
+    S.ships.push({id:S.nextId++,cls:cls,line:lineId,s:0,fromS:0,dir:1,wait:.15,load:[],recall:false,next:null});
+    return {ok:true} },
+  recall:function(id,next){ var sh=S.ships.filter(function(x){ return x.id===id })[0]; if(!sh) return no('Судна нет'); sh.recall=true; sh.dir=-1; sh.next=next||null; return {ok:true} },
+  recallAll:function(){ S.ships.forEach(function(sh){ sh.recall=true; sh.dir=-1; sh.next=null }); return {ok:true} },
+  dropEmpty:function(){ var n=0; S.lines.slice().forEach(function(L){ if(!L.removing&&linePop(S,L)<1&&!S.ships.some(function(x){ return x.line===L.id&&x.load.length>0 })){ A.removeLine(L.id); n++ } }); return {ok:true,n:n} },
+  pickGift:function(i){ if(!S.gift) return no('Подарка нет'); var g=S.gift[i]; if(!g) return no('Нет такого'); S.gift=null;
+    if(g==='line') S.lineCap++; else if(CLS[g]) S.dock[g].kit++; else if(g==='engine') S.speed*=1.12; else if(g==='hold') S.hold++; else if(g==='wake') S.people+=12; else if(g==='berth') S.seatBonus+=30;
+    return {ok:true,gift:g} }
+};
+function forecast(fn){
+  var keep=S,fo=null,cp=JSON.parse(JSON.stringify(S)); cp.grng=null; cp.fx=[]; cp.ev=[]; S=cp;
+  try{ if(fn) fn();
+    var g=0; while(S.phase!=='over'&&g++<2000) step(S,.1);
+    var left={},lost={};
+    S.worlds.forEach(function(w){ if(w.id&&w.founded&&w.pop>=1) left[w.id]=Math.floor(w.pop) });
+    S.ships.forEach(function(sh){ if(!(sh.s<3&&sh.wait>0)) lost[sh.id]=1 });
+    var R=S.result||{}; fo={souls:R.souls||0,left:R.left||0,atSea:R.atSea||0,onWorlds:R.onWorlds||0,overs:R.overs||0,starved:R.starved||0,worlds:left,ships:lost};
+  }finally{ S=keep }
+  return fo }
+function freeLines(S){ return S.lineCap-S.lines.length }
+function freeColor(S){ for(var i=0;i<7;i++){ if(!S.lines.some(function(L){ return L.color===i })) return i } return 0 }
+function netFlow(S,r){ return S.inr[r]-S.outr[r]-burn(r,S.t) }
+function timeLeft(S,r){ var n=netFlow(S,r); return n>=-.02?Infinity:S.stock[r]/-n }
+
+/* ===================== ИНТЕРФЕЙС ===================== */
+var LCOL=['#4C7DFF','#00C2A8','#D45BE0','#EF6F47','#8CC63F','#6FA8C7','#E2B65A'];
+var RCOL={food:'#3DDC84',metal:'#C9CFD6',fuel:'#FF8A1F',ppl:'#FFD23F',earth:'#4FA3FF'};
+var seedNow=LB.seed, ui={paused:false,spd:1,sel:null,selWorld:null,selShip:null,drag:null,flash:{},lineFx:{},parts:[],lastVoice:-99,endT:0,endShown:false,giftShown:false,pulse:0,liftFx:0,alertKey:'',said:{}};
+var stage,cv,c,hud,dock,ctxBar,W=0,H=0,dpr=1,V={s:1,cx:0,cy:0,top:60,bot:90};
+
+/* нажатие: срабатывает на отпускании пальца, click только как запасной путь (клавиатура) */
+function tap(el,fn){ var dn=false,done=0; el.addEventListener('pointerdown',function(){ dn=true }); el.addEventListener('pointerup',function(e){ if(dn){ dn=false; done=performance.now(); fn(e) } }); el.addEventListener('click',function(e){ if(performance.now()-done>400) fn(e) }) }
+function aspectNow(){ var w=window.innerWidth,h=window.innerHeight-44-(w<760?210:130); return w/Math.max(200,h) }
+function reset(seed,opts){
+  opts=opts||{}; seedNow=seed; S=newState(seed,opts.asp||aspectNow()); S.worlds.forEach(function(w){ if(w.bornAt<=0) w.seen=true });
+  ui.sel=ui.selWorld=ui.selShip=null; ui.drag=null; ui.parts=[]; ui.flash={}; ui.lineFx={}; ui.endShown=false; ui.endT=0; ui.giftShown=false; ui.said={}; ui.alertKey=''; ui.lastVoice=-99; ui.liftFx=0;
+  ui.spd=1; if(ui.started) ui.paused=false;
+  var e=document.getElementById('end'); if(e) e.remove(); e=document.getElementById('giftv'); if(e) e.remove();
+  if(stage){ V.s=fitScale(); domTick(true); say('start','Они проснулись и ничего не помнят. Я скажу им, что вы знаете, что делать.',6500) }
+  return S;
+}
+
+var HELP='<h2>Последний причал</h2>'+
+ '<p><b>Цель:</b> в день Ночи увезти на ковчеге как можно больше людей. Счёт — души на борту.</p>'+
+ '<p><b>Линия:</b> тяните пальцем от Земли к миру, затем от конца линии дальше. Первое касание мира — основание, оно стоит людей. Назад по линии — снять участок. Потянуть за середину — вставить мир.</p>'+
+ '<p><b>Суда:</b> значок снизу перетащите на линию, судно с линии — вниз, домой. Курьер быстрый на 2 места, тягач на 4, грузовоз медленный на 8.</p>'+
+ '<p><b>Земля</b> ест всё быстрее. Пуст рацион, металл или топливо — вокруг неё смыкается красное кольцо. Сомкнулось — конец.</p>'+
+ '<p><b>Миры</b> вырабатываются. Дальше богаче, но дольше.</p>'+
+ '<p><b>Металл</b> сверх 50 строит ковчег: больше металла — больше мест.</p>'+
+ '<p><b>Последний подъём:</b> за 90 с до Ночи грузов нет, суда возят людей домой и идут медленнее. Кто не на Земле в день Ночи, тот остался, экипажи тоже. Красным видно, кого не успеют забрать. Спасайте перерисовкой: укоротите дальнюю линию, снимите пустую, дотяните до брошенного мира. Снятые суда сами идут к людям. Пустая Земля убивает людей.</p>';
+
+function say(key,text,ms){ if(key&&ui.said[key]) return; if(key) ui.said[key]=1; LB.voice(text,ms||5200); ui.lastVoice=performance.now() }
+
+function shapeIcon(r,sz){ sz=sz||14; var col=RCOL[r];
+  if(r==='food') return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 14 14"><circle cx="7" cy="7" r="6" fill="'+col+'"/></svg>';
+  if(r==='metal') return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 14 14"><rect x="1.5" y="1.5" width="11" height="11" fill="'+col+'"/></svg>';
+  if(r==='fuel') return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 14 14"><polygon points="7,1 13.5,13 .5,13" fill="'+col+'"/></svg>';
+  if(r==='ppl') return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 14 14"><polygon points="7,1 13,7 7,13 1,7" fill="'+col+'"/></svg>';
+  return '<svg width="'+sz+'" height="'+sz+'" viewBox="0 0 14 14"><path d="M7 1l6 3.4v5.2L7 13 1 9.6V4.4z" fill="#B48CFF"/></svg>';
+}
+function buildDom(){
+  stage=LB.shell({ref:'MINI METRO',help:HELP,
+    onPause:function(p){ ui.helpP=p },
+    onStart:function(){ ui.started=true; say('start','Они проснулись и ничего не помнят. Я скажу им, что вы знаете, что делать.',6500) },
+    onRestart:function(){ newRun() }});
+  cv=document.createElement('canvas'); cv.id='field'; stage.appendChild(cv); c=cv.getContext('2d');
+  hud=LB.el('<div id="hud"></div>'); stage.appendChild(hud);
+  ['food','metal','fuel','ppl','ark'].forEach(function(r){ hud.appendChild(LB.el('<div class="chip" data-r="'+r+'">'+shapeIcon(r)+'<div><b>0</b><small></small></div></div>')) });
+  hud.appendChild(LB.el('<div id="date"><span class="a"></span><span class="bar"><i></i></span><span class="b"></span></div>'));
+  ctxBar=LB.el('<div id="ctx"></div>'); stage.appendChild(ctxBar);
+  dock=LB.el('<div id="dock"></div>'); stage.appendChild(dock);
+  resize();
+  window.addEventListener('resize',resize);
+  cv.addEventListener('pointerdown',pDown);
+  document.addEventListener('pointermove',pMove,{passive:false});
+  document.addEventListener('pointerup',pUp);
+  document.addEventListener('pointercancel',pCancel);
+  dock.addEventListener('pointerdown',dockDown);
+  tap(ctxBar,function(e){ var b=e.target.closest('[data-a]'); if(b) doAct(b.getAttribute('data-a'),b.getAttribute('data-v')) });
+  document.addEventListener('keydown',function(e){ if(e.code==='Space'){ e.preventDefault(); ui.paused=!ui.paused; dockKey=''; domTick(true) } });
+  document.addEventListener('contextmenu',function(e){ e.preventDefault() });
+}
+function newRun(same){ reset(same?seedNow:(LB.q.get('seed')&&same!==false?seedNow:(Date.now()%1e9)|0)) }
+
+function resize(){
+  dpr=Math.min(2.5,window.devicePixelRatio||1); W=stage.clientWidth; H=stage.clientHeight;
+  cv.width=W*dpr; cv.height=H*dpr;
+  V.top=hud.offsetHeight||60; V.bot=(dock.offsetHeight||96)+48;
+  ctxBar.style.bottom=(dock.offsetHeight+4)+'px';
+  V.s=fitScale();
+}
+function fitScale(){
+  var mx=60,my=60;
+  S.worlds.forEach(function(w){ if(w.bornAt<=S.t+6){ mx=Math.max(mx,Math.abs(w.x)); my=Math.max(my,Math.abs(w.y)) } });
+  var hw=W/2-(isPhone()?52:60), hh=(H-V.top-V.bot)/2-24;
+  return Math.min(2.2,Math.min(hw/mx,hh/my));
+}
+function isPhone(){ return W<760 }
+function RW(){ return isPhone()?11:14 }
+function RE(){ return isPhone()?17:22 }
+function toS(x,y){ return {x:V.cx+x*V.s,y:V.cy+y*V.s} }
+function toW(x,y){ return {x:(x-V.cx)/V.s,y:(y-V.cy)/V.s} }
+
+/* ---- нажатия по карте ---- */
+function pt(e){ var r=stage.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+function seenWorlds(){ return S.worlds.filter(function(w){ return w.id&&w.bornAt<=S.t }) }
+function hitWorld(p,rad){ var best=null,bd=1e9; seenWorlds().forEach(function(w){ var q=toS(w.x,w.y),d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd){ bd=d; best=w } }); return best&&bd<=rad?best:null }
+function hitEarth(p){ return Math.hypot(V.cx-p.x,V.cy-p.y)<=Math.max(30,RE()+12) }
+function handlePos(L){ var P=L.path,a=P[P.length-2]||P[0],b=P[P.length-1],d=Math.hypot(b.x-a.x,b.y-a.y)||1,q=toS(b.x,b.y); return {x:q.x+(b.x-a.x)/d*(RW()+18),y:q.y+(b.y-a.y)/d*(RW()+18),ax:(b.x-a.x)/d,ay:(b.y-a.y)/d,qx:q.x,qy:q.y} }
+function hitHandle(p){ var best=null,bd=26; S.lines.forEach(function(L){ if(L.removing) return; var h=handlePos(L),d=Math.hypot(h.x-p.x,h.y-p.y); if(d<bd){ bd=d; best=L } }); return best }
+function hitShip(p){ var best=null,bd=isPhone()?26:22; S.ships.forEach(function(sh){ if(sh.rx==null||sh.recall) return; var q=toS(sh.rx,sh.ry),d=Math.hypot(q.x-p.x,q.y-p.y); if(d<bd&&!(sh.s<4)){ bd=d; best=sh } }); return best }
+function hitSeg(p,th){
+  var w=toW(p.x,p.y),t=th/V.s,best=null,bd=t;
+  S.lines.forEach(function(L){ if(L.removing) return; var P=L.path,c=L.cum;
+    for(var i=0;i<P.length-1;i++){ var A=P[i],B=P[i+1],dx=B.x-A.x,dy=B.y-A.y,l2=dx*dx+dy*dy||1,u=clamp(((w.x-A.x)*dx+(w.y-A.y)*dy)/l2,0,1),d=Math.hypot(A.x+dx*u-w.x,A.y+dy*u-w.y);
+      if(d<bd){ bd=d; best={L:L,seg:segOf(L,c[i]+(c[i+1]-c[i])*u)} } } });
+  return best;
+}
+function pDown(e){
+  if(!S||S.phase==='over'||S.gift) return;
+  e.preventDefault();
+  var p=pt(e),touch=e.pointerType!=='mouse';
+  try{ cv.setPointerCapture(e.pointerId) }catch(_){}
+  ui.pid=e.pointerId;
+  var d={sx:p.x,sy:p.y,px:p.x,py:p.y,moved:false,touch:touch};
+  var h=hitHandle(p);
+  if(h){ d.kind='draw'; d.lineId=h.id; d.nodes=h.nodes.slice(); d.color=h.color; ui.drag=d; clearSel(); return }
+  if(hitEarth(p)){
+    if(freeLines(S)<1&&!S.lines.some(function(L){ return L.removing })){ LB.toast('Нет свободной линии: снимите старую или дождитесь смены'); return }
+    if(freeLines(S)<1){ LB.toast('Линия снимается, суда идут домой'); return }
+    d.kind='draw'; d.lineId=null; d.nodes=[0]; d.color=freeColor(S); ui.drag=d; clearSel(); return }
+  var sh=hitShip(p);
+  if(sh){ d.kind='ship'; d.ship=sh.id; ui.drag=d; return }
+  var w=hitWorld(p,Math.max(22,RW()+10));
+  if(w){
+    var ends=S.lines.filter(function(L){ return !L.removing&&L.nodes[L.nodes.length-1]===w.id });
+    if(ends.length===1){ d.kind='draw'; d.lineId=ends[0].id; d.nodes=ends[0].nodes.slice(); d.color=ends[0].color; d.tapWorld=w.id; ui.drag=d; return }
+    d.kind='tapw'; d.world=w.id; ui.drag=d; return }
+  var sg=hitSeg(p,touch?18:12);
+  if(sg){ d.kind='pull'; d.lineId=sg.L.id; d.seg=sg.seg; d.color=sg.L.color; ui.drag=d; return }
+  d.kind='none'; ui.drag=d;
+}
+function clearSel(){ ui.sel=ui.selWorld=ui.selShip=null; ctxKey='' }
+function draftCost(d){ var s=0; d.nodes.forEach(function(id){ var w=S.worlds[id]; if(id&&!w.founded) s+=w.cost }); return s }
+function pMove(e){
+  var d=ui.drag; if(!d) return; if(ui.pid!=null&&e.pointerId!==ui.pid) return;
+  var p=pt(e); d.px=p.x; d.py=p.y;
+  if(Math.hypot(p.x-d.sx,p.y-d.sy)>8) d.moved=true;
+  if(d.kind==='draw'&&d.moved){
+    var n=d.nodes,last=n[n.length-1];
+    /* назад: палец вернулся к предыдущему узлу — снять участок */
+    if(n.length>=2){ var pv=S.worlds[n[n.length-2]],q=toS(pv.x,pv.y),rad=pv.id?Math.max(18,RW()+6):RE()+4;
+      if(Math.hypot(q.x-p.x,q.y-p.y)<rad){ n.pop(); d.refuse=null; draftFore(d); buzz(6); return } }
+    /* вперёд: новый мир */
+    var w=hitWorld(p,Math.max(19,RW()+7));
+    if(w&&n.indexOf(w.id)<0){
+      var why=null;
+      if(!w.founded&&S.phase==='lift') why='В Последний подъём миры не заселяют';
+      else if(!w.founded&&draftCost(d)+w.cost>Math.floor(S.people)) why='Основание стоит '+(draftCost(d)+w.cost)+' чел, на Земле '+Math.floor(S.people);
+      if(why){ if(d.refuse!==w.id){ d.refuse=w.id; LB.toast(why,2200); LB.beep(160,.1) } }
+      else { n.push(w.id); draftFore(d); buzz(10); LB.beep(520+n.length*60,.05,'triangle',.04); ui.flash['w'+w.id]=performance.now() }
+    }
+  }
+  if(d.kind==='dock'&&d.moved) d.near=nearestLine(p);
+  if(d.kind==='ship'&&d.moved) d.near=nearestLine(p,d.ship);
+  e.preventDefault&&e.cancelable&&e.preventDefault();
+}
+function draftFore(d){ d.fore=null; if(S.phase!=='lift'||d.nodes.length<2) return; d.fore=forecast(function(){ A.commit(d.lineId,d.nodes.slice()) }) }
+function buzz(ms){ try{ navigator.vibrate&&navigator.vibrate(ms) }catch(_){} }
+function nearestLine(p,skipShip){ var skip=null; if(skipShip){ var s0=S.ships.filter(function(x){ return x.id===skipShip })[0]; skip=s0&&s0.line } var sg=hitSeg(p,46); if(sg&&sg.L.id!==skip) return sg.L.id; return null }
+function pUp(e){
+  var d=ui.drag; if(!d||(ui.pid!=null&&e.pointerId!==ui.pid)) return; ui.drag=null; ui.pid=null; var p=pt(e);
+  if(d.kind==='draw'){
+    if(!d.moved&&d.tapWorld!=null){ selectWorld(d.tapWorld); return }
+    if(!d.moved) { if(d.lineId==null&&!S.lines.length) LB.toast('Тяните от Земли к миру',1800); return }
+    var res=A.commit(d.lineId,d.nodes); foreTick(performance.now(),true);
+    if(d.lineId==null&&d.nodes.length<2) return;
+    if(!res.ok&&d.nodes.length>=2){ LB.toast(res.why,2400); return }
+    if(res.ok&&d.lineId==null){ ui.lineFx[res.line]=performance.now(); LB.beep(660,.08,'triangle',.05) }
+    dockKey='';
+    return;
+  }
+  if(d.kind==='pull'){
+    if(!d.moved){ selectLine(d.lineId); return }
+    var w=hitWorld(p,Math.max(22,RW()+10));
+    if(w){ var r=A.insert(d.lineId,d.seg,w.id); if(!r.ok) LB.toast(r.why,2400); else { buzz(10); foreTick(performance.now(),true) } }
+    return;
+  }
+  if(d.kind==='tapw'){ if(!d.moved) selectWorld(d.world); return }
+  if(d.kind==='ship'){
+    if(!d.moved){ ui.selShip=d.ship; ui.sel=ui.selWorld=null; ctxKey=''; return }
+    var dockTop=H-dock.offsetHeight;
+    if(p.y>=dockTop-8){ A.recall(d.ship); LB.beep(300,.06) }
+    else if(d.near){ var r2=A.recall(d.ship,d.near); LB.beep(420,.06) }
+    dockKey='';
+    return;
+  }
+  if(d.kind==='dock'){
+    if(!d.moved){
+      if(ui.sel){ var r3=A.deploy(d.cls,ui.sel); if(!r3.ok) LB.toast(r3.why,2400); dockKey=''; return }
+      var cl=CLS[d.cls]; LB.toast(cl.name+': '+(cl.cap+S.hold)+' мест, экипаж '+cl.crew+'. Тяните на линию',2200); return }
+    if(d.near){ var r4=A.deploy(d.cls,d.near); if(!r4.ok) LB.toast(r4.why,2600); else { LB.beep(600,.06,'triangle',.05); buzz(10) } dockKey='' }
+    return;
+  }
+  if(d.kind==='none'&&!d.moved){ if(ui.sel||ui.selWorld||ui.selShip) clearSel() }
+}
+function pCancel(e){ if(ui.drag&&(ui.pid==null||e.pointerId===ui.pid)){ ui.drag=null; ui.pid=null } }
+function selectLine(id){ ui.sel=id; ui.selWorld=ui.selShip=null; ctxKey='' }
+function selectWorld(id){ ui.selWorld=id; ui.sel=ui.selShip=null; ctxKey='' }
+function dockDown(e){
+  var t=e.target.closest('[data-cls],[data-line],[data-free],[data-spd]'); if(!t) return;
+  e.preventDefault();
+  if(t.hasAttribute('data-spd')){ var v=t.getAttribute('data-spd'); if(v==='p') ui.paused=!ui.paused; else { ui.spd=+v; ui.paused=false } dockKey=''; domTick(true); return }
+  if(t.hasAttribute('data-line')){ var id=+t.getAttribute('data-line'); if(ui.sel===id) clearSel(); else selectLine(id); dockKey=''; return }
+  if(t.hasAttribute('data-free')){ LB.toast('Тяните от Земли к миру',1800); ui.pulse=performance.now(); return }
+  var cls=t.getAttribute('data-cls'),p=pt(e);
+  ui.drag={kind:'dock',cls:cls,sx:p.x,sy:p.y,px:p.x,py:p.y,moved:false,touch:e.pointerType!=='mouse'}; ui.pid=e.pointerId;
+}
+function doAct(a,v){
+  if(a==='dropEmpty'){ A.dropEmpty(); LB.beep(300,.08); foreTick(performance.now(),true); dockKey='' }
+  if(a==='recallAll'){ A.recallAll(); LB.beep(300,.1); ctxKey='' }
+  if(a==='show'){ ui.showRes=v; ui.showT=performance.now(); }
+  if(a==='rmline'){ A.removeLine(+v); clearSel(); dockKey=''; foreTick(performance.now(),true) }
+  if(a==='deploy'){ var d=S.dock,k=['hauler','courier','freighter'].filter(function(x){ return d[x].built+d[x].kit>0 })[0]; if(!k){ LB.toast('Свободных судов нет: снимите судно с другой линии',2400); return } var r=A.deploy(k,+v); if(!r.ok) LB.toast(r.why,2400); dockKey='' }
+  if(a==='recall'){ A.recall(+v); clearSel(); dockKey='' }
+}
+
+var foreT=0;
+function foreTick(now,force){ if(S.phase!=='lift'){ ui.fore=null; return } if(!force&&now-foreT<500) return; foreT=now; ui.fore=forecast() }
+/* ---- полосы интерфейса (обновляются 5 раз в секунду, не в каждом кадре) ---- */
+var dockKey='',ctxKey='',lastDom=0;
+function domTick(force){
+  var now=performance.now(); if(!force&&now-lastDom<200) return; lastDom=now;
+  RES.forEach(function(r){ var e=hud.querySelector('[data-r='+r+']'),v=S.stock[r],tl=timeLeft(S,r);
+    e.querySelector('b').textContent=Math.floor(v);
+    e.querySelector('small').textContent=v<=0?'пусто':tl===Infinity?'+'+Math.abs(netFlow(S,r)).toFixed(1)+'/с':Math.ceil(tl)+' с';
+    e.classList.toggle('low',v<=0||tl<25); e.classList.toggle('empty',v<=0) });
+  var ep=hud.querySelector('[data-r=ppl]'), onW=S.worlds.reduce(function(a,w){ return a+(w.id&&w.founded?Math.floor(w.pop):0) },0);
+  ep.querySelector('b').textContent=Math.floor(S.people); ep.querySelector('small').textContent=onW?'миры '+onW:'на Земле';
+  var ea=hud.querySelector('[data-r=ark]'), st=seats(S);
+  ea.classList.toggle('hid',S.t<K.REVEAL); ea.querySelector('b').textContent=st; ea.querySelector('small').textContent='мест';
+  var de=hud.querySelector('#date'),y=K.Y0+Math.floor(S.t*K.YEARS),left=Math.max(0,K.T-S.t);
+  de.classList.toggle('night',S.t>=K.REVEAL); de.classList.toggle('lift',S.phase!=='play');
+  if(S.t<K.REVEAL){ de.querySelector('.a').textContent='год '+y; de.querySelector('.b').textContent='смена '+(S.shift+1); de.querySelector('.bar i').style.width=(100*(S.t-(S.nextGift-K.GIFT))/K.GIFT)+'%' }
+  else if(S.phase==='play'){ de.querySelector('.a').textContent='год '+y; de.querySelector('.b').textContent='Ночь через '+Math.ceil(left*K.YEARS)+' лет'; de.querySelector('.bar i').style.width=(100*S.t/K.T)+'%' }
+  else { var mm=Math.floor(left/60),ss=Math.ceil(left%60); if(ss===60){ mm++; ss=0 } de.querySelector('.a').textContent='ПОСЛЕДНИЙ ПОДЪЁМ'; de.querySelector('.b').textContent='Ночь '+mm+':'+(ss<10?'0':'')+ss; de.querySelector('.bar i').style.width=(100*(S.t-K.LIFT)/(K.T-K.LIFT))+'%' }
+  /* док */
+  var usedShips={}; S.ships.forEach(function(sh){ usedShips[sh.line]=(usedShips[sh.line]||0)+1 });
+  var parts=['courier','hauler','freighter'].map(function(k){ var d=S.dock[k]; return k+d.built+'.'+d.kit }).join();
+  var key=parts+'|'+S.lineCap+'|'+S.lines.map(function(L){ return L.id+':'+L.color+':'+(usedShips[L.id]||0)+':'+(L.removing?1:0) }).join()+'|'+ui.sel+'|'+ui.paused+'|'+ui.spd+'|'+S.hold;
+  if(key!==dockKey){ dockKey=key;
+    var html='<div id="shiftbar"></div><div class="grp">';
+    ['courier','hauler','freighter'].forEach(function(k){ var d=S.dock[k],n=d.built+d.kit,cl=CLS[k];
+      html+='<button class="tok'+(n?'':' zero')+(d.built<1&&d.kit>0?' kit':'')+'" data-cls="'+k+'" aria-label="'+cl.name+'">'+LB.ship(k,30)+'<b>'+n+'</b>'+(d.built<1&&d.kit>0?'<small>−'+cl.metal+'</small>':'')+'</button>' });
+    html+='</div><div class="grp sp" style="order:2">';
+    html+='<button class="spd'+(ui.paused?' on':'')+'" data-spd="p" aria-label="Пауза">❚❚</button><button class="spd'+(!ui.paused&&ui.spd===1?' on':'')+'" data-spd="1">×1</button><button class="spd'+(!ui.paused&&ui.spd===2?' on':'')+'" data-spd="2">×2</button>';
+    html+='</div><div class="grp lns" style="order:'+(isPhone()?3:1)+(isPhone()?';flex:1 1 100%':'')+'">';
+    S.lines.forEach(function(L){ html+='<button class="lnt'+(ui.sel===L.id?' sel':'')+(L.removing?' rem':'')+'" style="background:'+LCOL[L.color]+'" data-line="'+L.id+'" aria-label="Линия">'+(usedShips[L.id]||0)+'</button>' });
+    for(var i=0;i<freeLines(S);i++) html+='<button class="lnt free" style="border-color:'+LCOL[(function(n){ var f=[]; for(var q=0;q<7;q++) if(!S.lines.some(function(L){ return L.color===q })) f.push(q); return f[n]||0 })(i)]+'" data-free="1" aria-label="Свободная линия">+</button>';
+    html+='</div>';
+    dock.innerHTML=html; var nb=dock.offsetHeight+48; if(nb!==V.bot){ V.bot=nb; ctxBar.style.bottom=(dock.offsetHeight+4)+'px' } setVb()
+  }
+  var sb=document.getElementById('shiftbar'); if(sb) sb.style.width=(S.phase==='lift'?0:100*(S.t-(S.nextGift-K.GIFT))/K.GIFT)+'%';
+  renderCtx();
+}
+function setVb(){ document.documentElement.style.setProperty('--vb',(dock.offsetHeight+6+(ctxBar.firstChild?ctxBar.firstChild.offsetHeight+6:0))+'px') }
+function renderCtx(){
+  var html='',cls='';
+  if(ui.sel&&lineOf(S,ui.sel)){ var L=lineOf(S,ui.sel),ships=S.ships.filter(function(s){ return s.line===L.id });
+    var trip=ships.length?Math.round(L.len*2/(CLS[ships[0].cls].v*S.speed)+1):Math.round(L.len*2/(CLS.hauler.v*S.speed)+1);
+    html='<span class="tx"><i class="sw" style="background:'+LCOL[L.color]+'"></i>миров <span class="num">'+(L.nodes.length-1)+'</span> · судов <span class="num">'+ships.length+'</span> · рейс <span class="num">'+trip+' с</span></span><button class="btn" data-a="rmline" data-v="'+L.id+'">Снять линию</button>';
+  } else if(ui.selWorld&&S.worlds[ui.selWorld]){ var w=S.worlds[ui.selWorld];
+    html='<span class="tx"><b>'+w.name+'</b> · '+RNAME[w.type].toLowerCase()+' <span class="num">'+Math.floor(w.dep)+'/'+w.dep0+'</span>'+(w.founded?' · людей <span class="num">'+Math.floor(w.pop)+'</span>'+(w.founder?' · '+LB.esc(w.founder):''):' · основание <span class="num">−'+w.cost+'</span>')+'</span>';
+  } else if(ui.selShip&&S.ships.some(function(s){ return s.id===ui.selShip })){ var sh=S.ships.filter(function(s){ return s.id===ui.selShip })[0],c0=CLS[sh.cls];
+    html='<span class="tx"><b>'+c0.name+'</b> · мест <span class="num">'+shipCap(S,sh)+'</span> · экипаж <span class="num">'+c0.crew+'</span></span><button class="btn" data-a="recall" data-v="'+sh.id+'">Домой</button>';
+  } else { var al=alertNow(); if(al){ html=al.html; cls=al.cls } }
+  var key=cls+'|'+html;
+  if(key===ctxKey) return; ctxKey=key;
+  ctxBar.innerHTML=html?'<div class="'+cls+'">'+html+'</div>':'';
+  setVb();
+}
+function alertNow(){
+  var left=K.T-S.t;
+  if(S.phase==='over') return null;
+  if(S.phase==='lift'){
+    var f=ui.fore; if(!f) return null;
+    var lostN=Object.keys(f.ships).length, starv=S.starving>0?' · <span style="color:var(--red)">Земля −'+S.starving.toFixed(2).replace(/0$/,'')+' чел/с</span>':'';
+    var txt='<span class="tx">Дойдут <span class="num" style="color:var(--ppl)">'+f.souls+'</span> · останутся <span class="num" style="color:var(--red)">'+f.left+'</span>'+(lostN?' · судов не вернётся <span class="num">'+lostN+'</span>':'')+starv+'</span>';
+    var empt=S.lines.some(function(L){ return !L.removing&&linePop(S,L)<1 });
+    if(S.ships.length&&left<=30) return {cls:'alarm',html:txt+'<button class="btn warn" data-a="recallAll">Все суда домой</button>'};
+    if(empt) return {cls:'ppl',html:txt+'<button class="btn" data-a="dropEmpty">Снять пустые</button>'};
+    return {cls:lostN?'alarm':'ppl',html:txt};
+  }
+  if(S.t>K.LIFT-40){ var need=RES.map(function(r){ var bn=burn(r,S.t+60)+(r==='fuel'?S.outr.fuel:0); return {r:r,sec:S.stock[r]/bn} }).sort(function(a,b){ return a.sec-b.sec })[0];
+    if(need.sec<90) return {cls:'alarm',html:'<span class="tx">Подъём через <span class="num">'+Math.ceil(K.LIFT-S.t)+' с</span>: '+RGEN[need.r]+' на <span class="num">'+Math.round(need.sec)+' с</span> из 90</span><button class="btn" data-a="show" data-v="'+need.r+'">Показать миры</button>'} }
+  var low=RES.filter(function(r){ return timeLeft(S,r)<25||S.stock[r]<=0 }).sort(function(a,b){ return S.stock[a]-S.stock[b] })[0];
+  if(low){ return {cls:'alarm',html:'<span class="tx">'+RNAME[low]+(S.stock[low]<=0?' кончились':' кончатся через <span class="num">'+Math.ceil(timeLeft(S,low))+' с</span>')+'</span><button class="btn" data-a="show" data-v="'+low+'">Показать миры</button>'} }
+  var bare=S.lines.filter(function(L){ return !L.removing&&!S.ships.some(function(s){ return s.line===L.id }) })[0];
+  if(bare) return {cls:'',html:'<span class="tx"><i class="sw" style="background:'+LCOL[bare.color]+'"></i>Линия без судна</span><button class="btn" data-a="deploy" data-v="'+bare.id+'">Поставить судно</button>'};
+  var deadL=S.lines.filter(function(L){ return !L.removing&&L.nodes.slice(1).every(function(id){ return S.worlds[id].dead }) })[0];
+  if(deadL) return {cls:'',html:'<span class="tx"><i class="sw" style="background:'+LCOL[deadL.color]+'"></i>Линия выработана: '+S.worlds[deadL.nodes[deadL.nodes.length-1]].name+'</span><button class="btn" data-a="rmline" data-v="'+deadL.id+'">Снять линию</button>'};
+  return null;
+}
+
+/* ---- события ядра: голос Александры, вспышки ---- */
+function drainEv(){
+  var ev=S.ev; S.ev=[];
+  ev.forEach(function(e){
+    var w=e.w?S.worlds[e.w]:null;
+    if(e.k==='found'){ ui.flash['f'+w.id]=performance.now(); if(S.stats.founded<=2||S.stats.founded%4===0) say('',w.name+'. Первое имя в списке: '+w.founder+'. Я запомню.') }
+    if(e.k==='born'){ ui.flash['b'+w.id]=performance.now(); LB.beep(880,.04,'sine',.03) }
+    if(e.k==='dead'){ ui.flash['d'+w.id]=performance.now(); say('','На '+w.name+' кончилась залежь. '+Math.floor(w.pop)+' человек ждут. '+w.founder+' спрашивает, когда вы за ними придёте.',6000) }
+    if(e.k==='cleared'){ ui.flash['f'+w.id]=performance.now(); say('',w.name+' пуст. '+w.founder+' дома.',3500) }
+    if(e.k==='lift'){ ui.liftFx=performance.now(); LB.beep(110,.5,'sawtooth',.05); foreTick(performance.now(),true); say('','Я сказала им, что вы приедете за всеми. Красным я отмечаю, кого суда не успеют забрать. Перечертите линии.',8000); ui.sel=ui.selWorld=ui.selShip=null; ctxKey='' }
+  });
+  var u=S.fx; S.fx=[];
+  u.forEach(function(f){ if(ui.parts.length<120) ui.parts.push({r:f.r,x:f.x,y:f.y,t0:performance.now(),d:320+Math.random()*180}); });
+  if(u.length) LB.beep(740,.03,'sine',.02);
+  if(S.t>=K.REVEAL) say('reveal','Вы досчитали дату Ночи. Металл сверх нужд идёт на ковчег: есть '+seats(S)+' мест. Людям я скажу сама.',7000);
+  if(S.t>=K.LIFT-40) say('prep','Скоро суда перестанут возить еду. Запасы на Земле станут всем, что у нас есть.',6500);
+}
+
+/* ---- конец партии ---- */
+function endScreen(){
+  ui.endShown=true; var R=S.result,best=0;
+  try{ best=+localStorage.getItem('lb-metro-best')||0; if(R.souls>best) localStorage.setItem('lb-metro-best',R.souls) }catch(_){}
+  var tops=R.worlds.slice(0,5), line;
+  if(R.why==='hunger') line='Земля больше не ела. Год '+(K.Y0+Math.floor(R.t*K.YEARS))+'. Я успела записать '+Math.max(1,S.stats.founded)+' имён мест, где мы были.';
+  else if(!tops.length) line='Все, кто был на мирах, дома. Я их пересчитала по именам, не по тоннам.';
+  else line=tops[0].name+', '+tops[0].founder+': ещё на связи. Я не скажу, что суда не придут. Скажу, что вы считали.';
+  if(R.why!=='hunger'&&R.overs>0) line='На Земле стоят '+R.overs+' человек, которым нет места. Вы считали металл. Я считала их.';
+  var el=LB.el('<div id="end"><div class="box"><div class="rate">'+R.rate+'</div><div class="big '+(R.souls?'':'dead')+' num" id="soulsN">0</div><div class="cap">'+(R.why==='hunger'?'душ на борту: ковчег не достроен':'душ на борту'+(R.starved>0?' · на Земле от голода умерло '+R.starved:''))+'</div>'+
+    '<div class="rows"><div><b style="color:var(--red)">'+R.left+'</b><small>осталось</small></div><div><b style="color:var(--ark)">'+R.seats+'</b><small>мест</small></div><div><b>'+Math.max(best,R.souls)+'</b><small>рекорд</small></div></div>'+
+    '<div class="sayit"><small>АЛЕКСАНДРА</small>'+LB.esc(line)+'</div>'+
+    (tops.length?'<div class="left">'+tops.map(function(x){ return '<div><span class="w">'+x.name+'</span><span class="who">'+LB.esc(x.founder||'')+'</span><span class="n">'+x.pop+'</span></div>' }).join('')+'</div>':'')+
+    '<div class="row"><button class="btn pri" id="again">Ещё одна Ночь</button><button class="btn" id="sameb">Тот же мир</button></div></div></div>');
+  stage.appendChild(el);
+  tap(el.querySelector('#again'),function(){ newRun(false) });
+  tap(el.querySelector('#sameb'),function(){ newRun(true) });
+  var t0=performance.now(),n=el.querySelector('#soulsN'); (function up(){ var u=clamp((performance.now()-t0)/1200,0,1); n.textContent=Math.round(R.souls*(1-Math.pow(1-u,3))); if(u<1&&document.body.contains(n)) requestAnimationFrame(up) })();
+}
+function giftScreen(){
+  ui.giftShown=true;
+  var v=LB.el('<div id="giftv"><h3>СМЕНА <em>'+(S.shift)+'</em> · ГОД <em>'+(K.Y0+Math.floor(S.t*K.YEARS))+'</em></h3><div class="cards"></div><div class="free">'+LB.ship(S.shiftShip,30)+'<span>верфь сдала: '+CLS[S.shiftShip].name.toLowerCase()+'</span></div></div>'),cs=v.querySelector('.cards');
+  S.gift.forEach(function(g,i){ var o=GIFTS[g],ic=CLS[g]?LB.ship(g,58):'<svg width="40" height="40" viewBox="0 0 40 40">'+({line:'<path d="M4 34L18 20H36" stroke="#4C7DFF" stroke-width="5" fill="none"/>',engine:'<path d="M6 12l14 8-14 8zM20 12l14 8-14 8z" fill="#FFD23F"/>',hold:'<rect x="6" y="6" width="28" height="28" fill="none" stroke="#F2F1EC" stroke-width="3"/><path d="M20 12v16M12 20h16" stroke="#FFD23F" stroke-width="3"/>',wake:'<polygon points="20,4 34,20 20,36 6,20" fill="#FFD23F"/>',berth:'<path d="M20 3l14 8v18l-14 8-14-8V11z" fill="#B48CFF"/>'}[g]||'')+'</svg>';
+    var b=LB.el('<button class="gift" data-g="'+i+'"><span class="ic">'+ic+'</span><b>'+o.t+'</b><span>'+o.d+'</span></button>');
+    tap(b,function(){ if(!S.gift) return; A.pickGift(i); v.remove(); ui.giftShown=false; dockKey=''; LB.beep(700,.08,'triangle',.05); buzz(12); domTick(true) });
+    cs.appendChild(b) });
+  stage.appendChild(v); LB.beep(520,.1,'triangle',.05);
+}
+
+/* ===================== РИСОВАНИЕ ===================== */
+var stars=null;
+function ensureStars(){ if(stars) return; var r=LB.rng(424242); stars=[]; for(var i=0;i<130;i++) stars.push({x:r(),y:r(),a:.06+r()*.22,s:r()<.12?1.6:1}) }
+function shape(type,x,y,r){
+  c.beginPath();
+  if(type==='food') c.arc(x,y,r,0,6.2832);
+  else if(type==='metal') c.rect(x-r*.86,y-r*.86,r*1.72,r*1.72);
+  else if(type==='fuel'){ var q=r*1.18; c.moveTo(x,y-q); c.lineTo(x+q*.92,y+q*.66); c.lineTo(x-q*.92,y+q*.66); c.closePath() }
+  else if(type==='ppl'){ c.moveTo(x,y-r*1.2); c.lineTo(x+r*1.2,y); c.lineTo(x,y+r*1.2); c.lineTo(x-r*1.2,y); c.closePath() }
+}
+var SHIPP={};
+function shipPath(cls){ if(SHIPP[cls]) return SHIPP[cls]; var d={courier:['48,20 16,29.07 16,10.93','48,20 38.4,22.72 38.4,17.28'],hauler:['58.67,20 32,35.11 5.33,20 32,4.89','58.67,20 42.67,29.07 42.67,10.93'],freighter:['64,20 41.6,38.13 16,38.13 0,20 16,1.87 41.6,1.87','64,20 44.8,35.54 44.8,4.46']}[cls];
+  function P(s){ return new Path2D('M'+s.split(' ').join('L')+'Z') } SHIPP[cls]=[P(d[0]),P(d[1])]; return SHIPP[cls] }
+function drawShip(cls,x,y,ang,alpha,scl){
+  var k=(isPhone()?.42:.5)*(scl||1), sh=shipPath(cls);
+  c.save(); c.translate(x,y); c.rotate(ang); c.scale(k,k); c.translate(-32,-20); c.globalAlpha=alpha==null?1:alpha;
+  c.lineWidth=5; c.strokeStyle='#0B0B0C'; c.lineJoin='round'; c.stroke(sh[0]);
+  c.fillStyle=LB.COL[cls]; c.fill(sh[0]); c.fillStyle='#FFD23F'; c.fill(sh[1]);
+  c.restore();
+}
+function polyStroke(P,frac,w,col,a){
+  if(P.length<2) return;
+  c.strokeStyle=col; c.lineWidth=w; c.lineJoin='round'; c.lineCap='round'; c.globalAlpha=a==null?1:a;
+  c.beginPath(); var q=toS(P[0].x,P[0].y); c.moveTo(q.x,q.y);
+  var n=frac>=1?P.length:Math.max(2,Math.ceil(P.length*frac));
+  for(var i=1;i<n;i++){ q=toS(P[i].x,P[i].y); c.lineTo(q.x,q.y) } c.stroke(); c.globalAlpha=1;
+}
+function frame(now){
+  requestAnimationFrame(frame);
+  var dtReal=Math.min(.1,(now-(frame.l||now))/1000); frame.l=now;
+  if(S&&!S.gift&&S.phase!=='over'&&!ui.paused&&!ui.helpP&&!document.querySelector('.lb-veil')){
+    frame.acc=(frame.acc||0)+dtReal*ui.spd;
+    while(frame.acc>=.04){ step(S,.04); frame.acc-=.04; if(S.gift||S.phase==='over') break }
+  }
+  drainEv();
+  if(S.gift&&!ui.giftShown&&!ui.drag) giftScreen();
+  if(S.phase==='over'&&!ui.endShown){ if(!ui.endT) { ui.endT=now; ui.drag=null } else if(now-ui.endT>1300) endScreen() }
+  foreTick(now);
+  domTick();
+  render(now,dtReal);
+}
+function render(now,dt){
+  var tgt=fitScale(); V.s+=(tgt-V.s)*Math.min(1,dt*1.8);
+  V.cx=W/2; V.cy=V.top+(H-V.top-V.bot)/2;
+  c.setTransform(dpr,0,0,dpr,0,0);
+  var u=S.t/K.T,lift=S.phase==='lift'||S.phase==='over';
+  c.fillStyle='#0B0B0C'; c.fillRect(0,0,W,H);
+  /* умирающее солнце: тёплый свет с края, гаснет со временем */
+  var sx=W*.92,sy=V.top*.2,sr=Math.max(W,H)*1.05,ga=.13*(1-u)*(1-u)+.012,g=c.createRadialGradient(sx,sy,0,sx,sy,sr);
+  g.addColorStop(0,'rgba(255,138,31,'+ga+')'); g.addColorStop(.55,'rgba(255,60,20,'+ga*.3+')'); g.addColorStop(1,'rgba(0,0,0,0)'); c.fillStyle=g; c.fillRect(0,0,W,H);
+  ensureStars(); c.fillStyle='#F2F1EC';
+  stars.forEach(function(s){ c.globalAlpha=s.a*(lift?.45:1); c.fillRect(s.x*W,s.y*H,s.s,s.s) }); c.globalAlpha=1;
+  /* кольца */
+  var sa=Math.sqrt(clamp(S.asp,.74,1.9));
+  c.setLineDash([2,7]); c.lineWidth=1; c.strokeStyle='#F2F1EC';
+  K.R.forEach(function(rr,i){ var w0=S.worlds.filter(function(w){ return w.ring===i }),b=Math.min.apply(null,w0.map(function(w){ return w.bornAt })); if(b>S.t+6) return; c.globalAlpha=.09*clamp((S.t+6-b)/4,0,1); c.beginPath(); c.ellipse(V.cx,V.cy,rr*sa*V.s,rr/sa*V.s,0,0,6.2832); c.stroke() });
+  c.setLineDash([]); c.globalAlpha=1;
+  var drag=ui.drag;
+  /* линии */
+  var lw=isPhone()?4.2:5;
+  S.lines.forEach(function(L){ var col=LCOL[L.color],sel=ui.sel===L.id,frac=1,fx=ui.lineFx[L.id]; if(fx){ frac=clamp((now-fx)/360,0,1); if(frac>=1) delete ui.lineFx[L.id] }
+    var skip=drag&&drag.kind==='draw'&&drag.lineId===L.id;
+    if(skip) return;
+    if(L.removing){ c.setLineDash([3,7]); polyStroke(L.path,1,2.5,col,.55); c.setLineDash([]); return }
+    if(sel) polyStroke(L.path,1,lw+6,col,.25);
+    polyStroke(L.path,frac,lw,col,(drag&&(drag.kind==='dock'||drag.kind==='ship')&&drag.near===L.id)?1:(drag&&(drag.kind==='dock'||drag.kind==='ship')?.5:1));
+    if(drag&&(drag.kind==='dock'||drag.kind==='ship')&&drag.near===L.id) polyStroke(L.path,1,lw+7,col,.3);
+    /* держатель конца */
+    var h=handlePos(L),px=-h.ay,py=h.ax; c.strokeStyle=col; c.lineWidth=lw; c.lineCap='butt'; c.beginPath(); c.moveTo(h.qx,h.qy); c.lineTo(h.x,h.y); c.stroke(); c.lineWidth=lw+.5; c.beginPath(); c.moveTo(h.x+px*7,h.y+py*7); c.lineTo(h.x-px*7,h.y-py*7); c.stroke(); c.lineCap='round';
+  });
+  /* черновик */
+  if(drag&&drag.kind==='draw') drawDraft(drag,lw);
+  if(drag&&drag.kind==='pull') drawPull(drag,lw);
+  /* миры */
+  var rw=RW(), pulseRes=ui.showRes&&now-ui.showT<4000?ui.showRes:null;
+  c.textAlign='center'; c.textBaseline='middle';
+  S.worlds.forEach(function(w){ if(!w.id||w.bornAt>S.t) return; drawWorld(w,rw,now,pulseRes,lift) });
+  /* суда */
+  S.ships.forEach(function(sh){ drawShipOn(sh,dt,now) });
+  /* искры в Землю */
+  ui.parts=ui.parts.filter(function(p){ var t=(now-p.t0)/p.d; if(t>=1){ ui.pulse=now; return false } var e=t*t*(3-2*t),q=toS(p.x*(1-e),p.y*(1-e)); c.fillStyle=RCOL[p.r]||'#fff'; c.globalAlpha=1-t*.3; shape(p.r,q.x,q.y,3); c.fill(); c.globalAlpha=1; return true });
+  drawEarth(now,lift);
+  if(drag&&drag.kind==='draw'&&drag.moved) drawDraftTag(drag);
+  /* подсказка первого хода */
+  if(!S.lines.length&&!(drag&&drag.kind==='draw')) drawHint(now);
+  /* судно в руке */
+  if(drag&&(drag.kind==='dock'||drag.kind==='ship')&&drag.moved){ var cls=drag.cls||(S.ships.filter(function(x){ return x.id===drag.ship })[0]||{}).cls; if(cls){ var yy=drag.py-(drag.touch?46:0); drawShip(cls,drag.px,yy,-Math.PI/2+.0,1,1.5) } }
+  /* Ночь: тьма сходится к Земле */
+  var maxD=Math.hypot(W,H)*.62, p=lift?clamp((S.t-K.LIFT)/(K.T-K.LIFT),0,1):0, base=lift?1:clamp(u*.5,0,.5);
+  var rIn=lift?maxD*(1-p*.88):maxD*(1.4-u*.4),gn=c.createRadialGradient(V.cx,V.cy,Math.max(20,rIn*.5),V.cx,V.cy,Math.max(40,rIn)+90);
+  var dark=lift?.82:.5*base; gn.addColorStop(0,'rgba(4,4,10,0)'); gn.addColorStop(1,'rgba(4,4,10,'+dark+')'); c.fillStyle=gn; c.fillRect(0,0,W,H);
+  var hv=S.phase==='lift'?Math.min(.7,S.starving):S.hunger; if(hv>0&&S.phase!=='over'){ var gh=c.createRadialGradient(W/2,H/2,Math.min(W,H)*.35,W/2,H/2,Math.max(W,H)*.75); gh.addColorStop(0,'rgba(255,42,26,0)'); gh.addColorStop(1,'rgba(255,42,26,'+(.34*hv*(.8+.2*Math.sin(now/170)))+')'); c.fillStyle=gh; c.fillRect(0,0,W,H) }
+  /* вспышка начала подъёма */
+  if(ui.liftFx){ var t=(now-ui.liftFx)/2600; if(t<1){ c.fillStyle='rgba(255,210,63,'+(.12*(1-t))+')'; c.fillRect(0,0,W,H); c.globalAlpha=t<.15?t/.15:t>.7?(1-t)/.3:1; c.fillStyle='#FFD23F'; c.font='600 '+(isPhone()?22:34)+'px Jost'; setSp(.2); c.fillText('ПОСЛЕДНИЙ ПОДЪЁМ',W/2,V.cy-RE()-64); c.font='400 13px "Geist Mono"'; setSp(0); c.fillStyle='#F2F1EC'; c.fillText('грузов больше нет',W/2,V.cy-RE()-38); c.globalAlpha=1 } }
+  if(ui.paused&&S.phase!=='over'){ c.font='600 11px Jost'; setSp(.24); c.fillStyle='#9C9B95'; c.textAlign='center'; c.fillText('ПАУЗА · МОЖНО РИСОВАТЬ',W/2,V.top+14); setSp(0) }
+}
+function setSp(em){ try{ c.letterSpacing=em?(em*11).toFixed(1)+'px':'0px' }catch(_){} }
+function drawWorld(w,rw,now,pulseRes,lift){
+  var q=toS(w.x,w.y),col=RCOL[w.type],bn=clamp((S.t-w.bornAt)/.5,0,1),r=rw*(w.seen&&S.t-w.bornAt<.5?(.4+.6*bn):1),fl=ui.flash['f'+w.id],bt=now;
+  /* появление */
+  var b=ui.flash['b'+w.id]; if(b){ var t=(now-b)/1200; if(t<1){ c.strokeStyle=col; c.globalAlpha=.6*(1-t); c.lineWidth=1.5; c.beginPath(); c.arc(q.x,q.y,r+6+t*38,0,6.2832); c.stroke(); c.globalAlpha=1 } else delete ui.flash['b'+w.id] }
+  if(fl){ var t2=(now-fl)/700; if(t2<1){ c.fillStyle='#FFD23F'; c.globalAlpha=.35*(1-t2); c.beginPath(); c.arc(q.x,q.y,r+4+t2*30,0,6.2832); c.fill(); c.globalAlpha=1 } else delete ui.flash['f'+w.id] }
+  if(pulseRes===w.type&&!w.dead){ var ph=(now%800)/800; c.strokeStyle=col; c.lineWidth=2; c.globalAlpha=1-ph; c.beginPath(); c.arc(q.x,q.y,r+6+ph*20,0,6.2832); c.stroke(); c.globalAlpha=1 }
+  if(ui.drag&&ui.drag.kind==='draw'&&!w.founded&&S.phase!=='lift'){ c.strokeStyle='#F2F1EC'; c.globalAlpha=.22; c.lineWidth=1; c.beginPath(); c.arc(q.x,q.y,Math.max(19,rw+7),0,6.2832); c.stroke(); c.globalAlpha=1 }
+  /* тело */
+  if(!w.founded){
+    shape(w.type,q.x,q.y,r); c.fillStyle='#0B0B0C'; c.fill(); c.strokeStyle=col; c.lineWidth=1.6; c.globalAlpha=lift?.35:.72; c.stroke(); c.globalAlpha=1;
+  } else if(w.dead){
+    shape(w.type,q.x,q.y,r); c.fillStyle='#17171a'; c.fill(); c.strokeStyle='#5E5D58'; c.lineWidth=1.6; c.stroke();
+    c.strokeStyle='#5E5D58'; c.lineWidth=1.2; c.beginPath(); c.moveTo(q.x-r*.45,q.y-r*.45); c.lineTo(q.x+r*.45,q.y+r*.45); c.stroke();
+  } else {
+    shape(w.type,q.x,q.y,r); c.fillStyle=col; c.globalAlpha=lift?.28:1; c.fill(); c.globalAlpha=1;
+    /* кольцо залежи */
+    var frac=w.dep/w.dep0; c.strokeStyle=col; c.lineWidth=2; c.globalAlpha=.25; c.beginPath(); c.arc(q.x,q.y,r+5,0,6.2832); c.stroke(); c.globalAlpha=frac<.2?.5+.5*Math.sin(now/120):1; c.beginPath(); c.arc(q.x,q.y,r+5,-1.5708,-1.5708+6.2832*frac); c.stroke(); c.globalAlpha=1;
+  }
+  /* значки на поверхности */
+  var R=r+11;
+  if(S.phase==='lift'||S.phase==='over'){
+    if(w.founded&&w.pop>=1&&!isPhone()){ var n=Math.min(10,Math.ceil(w.pop/4)); c.fillStyle='#FFD23F'; for(var i=0;i<n;i++){ var a=-1.5708+i*.628; shape('ppl',q.x+Math.cos(a)*R,q.y+Math.sin(a)*R,2.6); c.fill() } }
+  } else if(w.surf>0){ c.fillStyle=col; for(var j=0;j<w.surf;j++){ var a2=-1.5708+j*(6.2832/K.CAP); shape(w.type,q.x+Math.cos(a2)*R,q.y+Math.sin(a2)*R,2.7); c.fill() } }
+  /* Подъём: кого не успеют забрать */
+  var stay=(S.phase==='lift'&&ui.fore&&ui.fore.worlds[w.id])||0;
+  if(stay>0){ var served=S.lines.some(function(L){ return !L.removing&&L.nodes.indexOf(w.id)>=0 });
+    c.strokeStyle='#FF2A1A'; c.lineWidth=1.8; c.globalAlpha=.65+.35*Math.sin(now/200); if(!served) c.setLineDash([3,4]); c.beginPath(); c.arc(q.x,q.y,r+6,0,6.2832); c.stroke(); c.setLineDash([]); c.globalAlpha=1 }
+  /* подпись */
+  c.textAlign='center'; c.textBaseline='middle'; c.font='500 '+(isPhone()?9:10.5)+'px Jost'; setSp(.1);
+  c.fillStyle=w.founded?(w.dead?'#7c7b76':'#C9C8C2'):'#7c7b76'; c.globalAlpha=(lift&&!(w.founded&&w.pop>=1))?.5:1;
+  var ly=q.y+r+(isPhone()?20:21); if(!(isPhone()&&lift&&w.founded&&w.pop>=1)) c.fillText(w.name,q.x,ly); c.globalAlpha=1; setSp(0);
+  if(w.founded&&w.pop>=1){ var big=lift||w.dead, pn=Math.floor(w.pop); c.font='600 '+(pn>99?(isPhone()?9:10):(isPhone()?10.5:12))+'px "Geist Mono"'; c.fillStyle=big?'#FFD23F':'#0B0B0C'; c.fillText(pn,q.x,q.y+(w.type==='fuel'?r*.22:.5)) }
+  if(stay>0){ c.font='600 '+(isPhone()?11:11.5)+'px "Geist Mono"'; c.fillStyle='#FF2A1A'; c.fillText(isPhone()?'−'+stay:'не успеют '+stay,q.x,isPhone()?ly:ly+13) }
+}
+function drawEarth(now,lift){
+  var q={x:V.cx,y:V.cy},R0=RE(),pu=ui.pulse?clamp(1-(now-ui.pulse)/220,0,1):0,R=R0+pu*1.6;
+  c.fillStyle='#0B0B0C'; c.beginPath(); c.arc(q.x,q.y,R0+24,0,6.2832); c.globalAlpha=.55; c.fill(); c.globalAlpha=1;
+  c.fillStyle='#4FA3FF'; c.beginPath(); c.arc(q.x,q.y,R,0,6.2832); c.fill();
+  c.fillStyle='#0B0B0C'; c.beginPath(); c.arc(q.x,q.y,R-3,0,6.2832); c.fill();
+  /* судно-база: люди на Земле */
+  c.fillStyle='#FFD23F'; c.font='600 '+(isPhone()?13:15)+'px "Geist Mono"'; c.textAlign='center'; c.textBaseline='middle'; c.fillText(Math.floor(S.people),q.x,q.y+.5);
+  /* три дуги запасов */
+  var r1=R0+6,gap=.14;
+  RES.forEach(function(r,i){ var a0=-1.5708+i*2.0944+gap,a1=a0+2.0944-2*gap,f=clamp(S.stock[r]/(r==='food'?120:r==='metal'?K.RES:80),0,1);
+    c.lineCap='butt'; c.strokeStyle='#2E2E33'; c.lineWidth=4; c.beginPath(); c.arc(q.x,q.y,r1,a0,a1); c.stroke();
+    if(S.stock[r]<=0){ c.strokeStyle='#FF2A1A'; c.globalAlpha=.5+.5*Math.sin(now/90); c.beginPath(); c.arc(q.x,q.y,r1,a0,a1); c.stroke(); c.globalAlpha=1 }
+    else { c.strokeStyle=RCOL[r]; c.beginPath(); c.arc(q.x,q.y,r1,a0,a0+(a1-a0)*f); c.stroke() } });
+  /* места ковчега */
+  if(S.t>=K.REVEAL){ var rs=R0+12,fr=clamp(seats(S)/500,0,1); c.strokeStyle='#B48CFF'; c.lineWidth=2; c.globalAlpha=.9; c.beginPath(); c.arc(q.x,q.y,rs,-1.5708,-1.5708+6.2832*fr); c.stroke(); c.globalAlpha=1 }
+  /* кольцо голода */
+  if(S.phase==='lift'&&S.starving>0){ var rs2=R0+18; c.strokeStyle='#FF2A1A'; c.lineWidth=3; c.globalAlpha=.55+.45*Math.sin(now/110); c.beginPath(); c.arc(q.x,q.y,rs2,0,6.2832); c.stroke(); c.globalAlpha=1; if(!isPhone()){ c.fillStyle='#FF2A1A'; c.font='600 12px "Geist Mono"'; c.textAlign='center'; c.fillText('−'+S.starving.toFixed(2).replace(/0$/,'')+' чел/с',q.x,q.y+R0+34) } }
+  if(S.hunger>0){ var rh=R0+18; c.strokeStyle='#FF2A1A'; c.lineWidth=5; c.globalAlpha=.75+.25*Math.sin(now/110); c.beginPath(); c.arc(q.x,q.y,rh,-1.5708,-1.5708+6.2832*S.hunger); c.stroke(); c.globalAlpha=.2; c.lineWidth=5; c.beginPath(); c.arc(q.x,q.y,rh,0,6.2832); c.stroke(); c.globalAlpha=1 }
+  if(ui.pulse&&now-ui.pulse<600&&S.lines.length===0){}
+  c.lineCap='round';
+}
+function drawShipOn(sh,dt,now){
+  var L=lineOf(S,sh.line); if(!L) return;
+  var p=posAt(L,sh.s),tgtA=p.a+((sh.dirv||1)<0?Math.PI:0);
+  if(sh.ghost){ var gf=clamp(sh.ghost.left/sh.ghost.d,0,1),nx=p.x+(sh.ghost.x-p.x)*gf,ny=p.y+(sh.ghost.y-p.y)*gf; tgtA=Math.atan2(p.y-sh.ghost.y,p.x-sh.ghost.x); p={x:nx,y:ny,a:tgtA} }
+  if(sh.wait>0&&sh.ang!=null) tgtA=sh.ang;
+  if(sh.rx==null){ sh.rx=p.x; sh.ry=p.y; sh.ang=tgtA }
+  var kk=Math.min(1,dt*14); sh.rx+=(p.x-sh.rx)*kk; sh.ry+=(p.y-sh.ry)*kk;
+  var da=((tgtA-sh.ang+Math.PI*3)%(Math.PI*2))-Math.PI; sh.ang+=da*Math.min(1,dt*10);
+  sh.x=p.x; sh.y=p.y;
+  var q=toS(sh.rx,sh.ry);
+  /* груз хвостом по рельсу */
+  var dirSign=sh.dirv||1;
+  for(var i=0;i<sh.load.length&&i<12&&!sh.ghost;i++){ var pp=posAt(L,sh.s-dirSign*(14+i*6.5)/V.s*(isPhone()?.85:1)),qq=toS(pp.x,pp.y),k=sh.load[i]; c.fillStyle=RCOL[k==='ppl'?'ppl':k]; shape(k,qq.x,qq.y,2.6); c.fill() }
+  var dragged=ui.drag&&ui.drag.kind==='ship'&&ui.drag.ship===sh.id&&ui.drag.moved;
+  drawShip(sh.cls,q.x,q.y,sh.ang,sh.recall||dragged?.55:1);
+  if(S.phase==='lift'&&ui.fore&&ui.fore.ships[sh.id]){ c.strokeStyle='#FF2A1A'; c.lineWidth=2; c.globalAlpha=.6+.4*Math.sin(now/170); c.beginPath(); c.arc(q.x,q.y,isPhone()?14:17,0,6.2832); c.stroke(); c.globalAlpha=1 }
+  if(ui.selShip===sh.id){ c.strokeStyle='#F2F1EC'; c.lineWidth=1; c.beginPath(); c.arc(q.x,q.y,18,0,6.2832); c.stroke() }
+}
+function drawDraft(d,lw){
+  var col=LCOL[d.color],P=[{x:0,y:0}],n=d.nodes;
+  if(n.length>0){ P=[{x:S.worlds[n[0]].x,y:S.worlds[n[0]].y}]; for(var i=0;i<n.length-1;i++) octi(S.worlds[n[i]],S.worlds[n[i+1]],P) }
+  var last=S.worlds[n[n.length-1]],pw=toW(d.px,d.py),near=d.moved;
+  polyStroke(P,1,lw+1,col,1);
+  if(near){ var o=[{x:last.x,y:last.y}]; octi(last,pw,o); polyStroke(o,1,lw,col,.55); var e=toS(pw.x,pw.y); c.fillStyle=col; c.beginPath(); c.arc(e.x,e.y,lw+3,0,6.2832); c.fill() }
+}
+function drawDraftTag(d){
+  var col=LCOL[d.color],n=d.nodes;
+  /* подпись над пальцем: цена и рейс */
+  var w=hitWorld({x:d.px,y:d.py},Math.max(26,RW()+12)),len=routeLen(S,n),txt='';
+  var trip=Math.round(len*2/CLS.hauler.v/S.speed+1);
+  if(n.length>=2) txt='рейс '+trip+' с';
+  var cost=draftCost(d); if(cost) txt='−'+cost+' чел · '+txt;
+  if(w&&!w.founded&&n.indexOf(w.id)>=0&&w.dep) txt=w.name+' · залежь '+w.dep+' · '+txt;
+  if(S.phase==='lift'&&d.fore&&ui.fore) txt='домой '+ui.fore.souls+' → '+d.fore.souls;
+  if(txt){ c.font='500 12px "Geist Mono"'; c.textAlign='center'; c.textBaseline='middle'; var tw=c.measureText(txt).width+16,tx=clamp(d.px,tw/2+4,W-tw/2-4),ty=d.py-(d.touch?64:34); if(ty<V.top+16) ty=d.py+(d.touch?56:34); c.fillStyle='#141417'; c.strokeStyle=col; c.lineWidth=1; c.fillRect(tx-tw/2,ty-12,tw,24); c.strokeRect(tx-tw/2,ty-12,tw,24); c.fillStyle='#F2F1EC'; c.fillText(txt,tx,ty+.5) }
+}
+function drawPull(d,lw){
+  if(!d.moved) return; var L=lineOf(S,d.lineId); if(!L) return; var A0=S.worlds[L.nodes[d.seg]],B0=S.worlds[L.nodes[d.seg+1]],pw=toW(d.px,d.py),o=[{x:A0.x,y:A0.y}]; octi(A0,pw,o); octi(pw,B0,o); polyStroke(o,1,lw,LCOL[d.color],.7);
+  var w=hitWorld({x:d.px,y:d.py},Math.max(22,RW()+10)); if(w){ var q=toS(w.x,w.y); c.strokeStyle='#F2F1EC'; c.lineWidth=1.5; c.beginPath(); c.arc(q.x,q.y,RW()+8,0,6.2832); c.stroke() }
+}
+function drawHint(now){
+  var w=S.worlds.filter(function(w){ return w.id&&w.ring===0&&w.bornAt<=S.t&&w.type==='food' })[0]||S.worlds[1],A0=toS(0,0),B0=toS(w.x,w.y),u=(now%2200)/2200,e=clamp(u/.75,0,1),x=A0.x+(B0.x-A0.x)*e,y=A0.y+(B0.y-A0.y)*e;
+  c.strokeStyle='#F2F1EC'; c.globalAlpha=.3; c.lineWidth=2; c.setLineDash([3,6]); c.beginPath(); c.moveTo(A0.x,A0.y); c.lineTo(B0.x,B0.y); c.stroke(); c.setLineDash([]);
+  c.globalAlpha=u>.9?(1-u)*10:1; c.fillStyle='#F2F1EC'; c.beginPath(); c.arc(x,y,7,0,6.2832); c.fill(); c.globalAlpha=1;
+  c.font='500 13px Jost'; c.fillStyle='#F2F1EC'; c.textAlign='center'; c.textBaseline='middle'; c.fillText('Тяните от Земли к миру',W/2,V.top+22);
+}
+
+/* ===================== СТАРТ И ДОСТУП ДЛЯ БОТОВ ===================== */
+S=newState(LB.seed,aspectNow()); S.worlds.forEach(function(w){ if(w.bornAt<=0) w.seen=true });
+buildDom();
+ui.started=!!LB.q.get('auto');
+domTick(true); resize(); V.s=fitScale(); V.cx=W/2; V.cy=V.top+(H-V.top-V.bot)/2;
+requestAnimationFrame(frame);
+window.GAME={
+  K:K,CLS:CLS,RES:RES,
+  get S(){ return S },
+  reset:function(seed,opts){ return reset(seed,opts) },
+  step:function(dt){ step(S,dt||.05) },
+  run:function(sec,dt){ dt=dt||.05; for(var i=0,n=Math.round(sec/dt);i<n;i++){ step(S,dt); if(S.gift||S.phase==='over') break } S.ev=[]; S.fx=[] },
+  act:A,
+  seats:function(){ return seats(S) },
+  forecast:function(fn){ return forecast(fn) },
+  burn:function(r,t){ return burn(r,t==null?S.t:t) },
+  net:function(r){ return netFlow(S,r) },
+  timeLeft:function(r){ return timeLeft(S,r) },
+  routeLen:function(n){ return routeLen(S,n) },
+  freeLines:function(){ return freeLines(S) },
+  posAt:posAt,
+  pause:function(b){ ui.paused=!!b; dockKey='' },
+  view:{ world:function(id){ var w=S.worlds[id],q=toS(w.x,w.y),r=stage.getBoundingClientRect(); return {x:q.x+r.left,y:q.y+r.top} }, ship:function(id){ var sh=S.ships.filter(function(x){ return x.id===id })[0]; if(!sh||sh.rx==null) return null; var q=toS(sh.rx,sh.ry),r=stage.getBoundingClientRect(); return {x:q.x+r.left,y:q.y+r.top} }, line:function(id,sf){ var L=lineOf(S,id),p=posAt(L,L.len*(sf==null?.5:sf)),q=toS(p.x,p.y),r=stage.getBoundingClientRect(); return {x:q.x+r.left,y:q.y+r.top} }, handle:function(id){ var h=handlePos(lineOf(S,id)),r=stage.getBoundingClientRect(); return {x:h.x+r.left,y:h.y+r.top} } }
+};
+</script>
+</body></html>
