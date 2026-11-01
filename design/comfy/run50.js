@@ -3,15 +3,15 @@
 const fs = require('fs'), path = require('path');
 const P = require('./' + (process.env.ROUND || 'pult50') + '.js'), KEYS = Object.keys(P).map(Number), URL = 'http://127.0.0.1:8188';
 const OUT = path.join(__dirname, '..', 'intro', 'raw', P[KEYS[0]].id[0]); fs.mkdirSync(OUT, { recursive: true });
-const W = 1536, Hh = 640, steps = 4;
+const steps = 4;   // frame size: F.w × F.h, by default the 2.4:1 film frame
 const graph = F => ({
  1:{class_type:'UNETLoader',inputs:{unet_name:'flux-2-klein-4b.safetensors',weight_dtype:'default'}},
  2:{class_type:'CLIPLoader',inputs:{clip_name:'qwen_3_4b.safetensors',type:'flux2',device:'default'}},
  3:{class_type:'VAELoader',inputs:{vae_name:'flux2-vae.safetensors'}},
  4:{class_type:'CLIPTextEncode',inputs:{text:F.prompt,clip:['2',0]}},
  5:{class_type:'ConditioningZeroOut',inputs:{conditioning:['4',0]}},
- 6:{class_type:'EmptyFlux2LatentImage',inputs:{width:W,height:Hh,batch_size:1}},
- 7:{class_type:'Flux2Scheduler',inputs:{steps,width:W,height:Hh}},
+ 6:{class_type:'EmptyFlux2LatentImage',inputs:{width:F.w||1536,height:F.h||640,batch_size:1}},
+ 7:{class_type:'Flux2Scheduler',inputs:{steps,width:F.w||1536,height:F.h||640}},
  8:{class_type:'KSamplerSelect',inputs:{sampler_name:'euler'}},
  9:{class_type:'CFGGuider',inputs:{model:['1',0],positive:['4',0],negative:['5',0],cfg:1}},
  10:{class_type:'RandomNoise',inputs:{noise_seed:F.seed}},

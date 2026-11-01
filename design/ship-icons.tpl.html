@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Иконки судов</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--ppl:#FFD23F}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'Jost',system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:18px;letter-spacing:.2em;color:var(--ppl);margin:0 0 6px}
+h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ppl);margin:26px 0 2px}
+p{color:var(--mid);margin:4px 0 12px;max-width:760px}
+.sticky{position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0 6px}
+.map{position:relative;border:1px solid var(--ln);background:#0B0B0C url(%%bg%%) 52.78% 50%/200% auto no-repeat;width:720px;max-width:100%;aspect-ratio:720/300;overflow:hidden}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0;align-items:center}
+.tabs span{font-size:11px;color:var(--dim);letter-spacing:.14em}
+.tabs button{font:inherit;font-size:12px;letter-spacing:.12em;background:var(--pan2);color:var(--ink);border:1px solid var(--ln);padding:6px 10px;cursor:pointer}
+.tabs button.on{border-color:var(--ppl);color:var(--ppl)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.v{background:var(--pan);border:1px solid var(--ln);padding:10px;cursor:pointer}
+.v.on{border-color:var(--ppl)}
+.big,.small{display:flex;align-items:center;justify-content:space-around;gap:6px}
+.big img{height:44px;max-width:30%;object-fit:contain}
+.small{margin-top:10px;padding:8px 0;background:#060607}
+.v span{display:block;text-align:center;font-size:11px;color:var(--dim);letter-spacing:.12em;margin-top:6px}
+.v.on span{color:var(--ppl)}
+@media (max-width:600px){.row{gap:4px}.v{padding:5px}.big img{height:26px}}
+</style></head><body><main>
+<h1>ИКОНКИ СУДОВ · COMFYUI</h1>
+<p>Шесть стилей, в каждом по три набора. Слева направо: курьер «Гермес», тягач «Сизиф», грузовоз «Атлант». Нажми на набор, и он поплывёт по карте. Внизу каждой карточки — настоящий размер.</p>
+<div class="sticky"><div class="map" id="map"></div>
+<div class="tabs" id="size"></div></div>
+<div id="sets"></div>
+</main>
+<script>
+var IMG=%%IMG%%;
+var STYLE={1:'Силуэт цветом класса',2:'Тонкий контур',3:'Плоский, два тона',4:'Значок в гексе',5:'Вид сверху',6:'Глиф из линий'};
+var BASE={c:24,h:20,f:30};   // the longest side, px, at 1×
+var pick='Y11', scale=1.25;
+function src(id,k){ return IMG[id+'_'+k] }
+function sets(){ var h=''; Object.keys(STYLE).forEach(function(s){
+  h+='<h2>'+s+' · '+STYLE[s]+'</h2><div class="row">'+[1,2,3].map(function(v){ var id='Y'+s+v;
+    return '<div class="v'+(pick===id?' on':'')+'" data-id="'+id+'"><div class="big">'+'chf'.split('').map(function(k){ return '<img src="'+src(id,k).src+'" alt="">' }).join('')+'</div>'
+      +'<div class="small">'+'chf'.split('').map(function(k){ var im=src(id,k), L=BASE[k]*scale, w=im.w>=im.h?L:L*im.w/im.h; return '<img src="'+im.src+'" width="'+w.toFixed(0)+'" alt="">' }).join('')+'</div><span>'+id.slice(1)+'</span></div>' }).join('')+'</div>' });
+  document.getElementById('sets').innerHTML=h }
+document.getElementById('sets').onclick=function(e){ var v=e.target.closest('.v'); if(!v) return; pick=v.dataset.id; sets(); mapBuild() };
+function tabs(){ document.getElementById('size').innerHTML='<span>РАЗМЕР</span>'+[[1,'как сейчас'],[1.25,'×1.25'],[1.5,'×1.5'],[2,'×2']].map(function(s){ return '<button data-s="'+s[0]+'" class="'+(scale===s[0]?'on':'')+'">'+s[1]+'</button>' }).join('')+'<span id="cur" style="margin-left:8px"></span>' }
+document.getElementById('size').onclick=function(e){ if(e.target.dataset.s){ scale=+e.target.dataset.s; tabs(); sets(); mapBuild() } };
+var E=[380,200], WL={KILN:[78,83],VESPER:[215,92],MARROW:[365,43],CINDER:[599,154],TALLOW:[596,252]};
+var RUNS=[['h','KILN',0],['f','CINDER',.3],['c','TALLOW',.6],['h','MARROW',.15],['f','VESPER',.75],['c','KILN',.45]];
+var t0=performance.now(), G=[];
+function mapBuild(){ document.getElementById('map').innerHTML='<svg viewBox="0 0 720 300">'+RUNS.map(function(r){ var im=src(pick,r[0]), L=BASE[r[0]]*scale, w=im.w>=im.h?L:L*im.w/im.h, h=w*im.h/im.w;
+    return '<g><image href="'+im.src+'" x="'+(-w/2)+'" y="'+(-h/2)+'" width="'+w+'" height="'+h+'"/></g>' }).join('')+'</svg>';
+  G=[].slice.call(document.querySelectorAll('#map g')); document.getElementById('cur').textContent='НА КАРТЕ: '+pick.slice(1) }
+function frame(now){ var t=(now-t0)/1000;
+  RUNS.forEach(function(r,i){ var P=WL[r[1]], ph=((t/8)+r[2])%1, back=ph>=.5, f=back?(ph-.5)*2:ph*2;
+    var A=back?P:E, B=back?E:P, x=A[0]+(B[0]-A[0])*f, y=A[1]+(B[1]-A[1])*f, flip=B[0]<A[0]?-1:1;
+    G[i].setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+') scale('+flip+' 1)') });
+  requestAnimationFrame(frame) }
+tabs(); sets(); mapBuild(); requestAnimationFrame(frame);
+</script></body></html>

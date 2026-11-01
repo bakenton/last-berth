@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Суда-гробы</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--ppl:#FFD23F}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'Jost',system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:18px;letter-spacing:.2em;color:var(--ppl);margin:0 0 6px}
+h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ppl);margin:26px 0 2px}
+p{color:var(--mid);margin:4px 0 12px;max-width:760px}
+.sticky{position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0 6px}
+.map{position:relative;border:1px solid var(--ln);background:#0B0B0C url(%%bg%%) 52.78% 50%/200% auto no-repeat;width:720px;max-width:100%;aspect-ratio:720/300;overflow:hidden}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 0;align-items:center}
+.tabs span{font-size:11px;color:var(--dim);letter-spacing:.14em}
+.tabs button{font:inherit;font-size:12px;letter-spacing:.12em;background:var(--pan2);color:var(--ink);border:1px solid var(--ln);padding:6px 10px;cursor:pointer}
+.tabs button.on{border-color:var(--ppl);color:var(--ppl)}
+.row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.lab{grid-column:1/-1;font-size:11px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-top:8px}
+.v{background:var(--pan);border:1px solid var(--ln);padding:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:6px}
+.v.on{border-color:var(--ppl)}
+.v img{width:100%;height:120px;object-fit:contain}
+.v span{font-size:11px;color:var(--dim);letter-spacing:.12em}
+.v.on span{color:var(--ppl)}
+@media (max-width:600px){.row{gap:4px}.v{padding:4px}.v img{height:70px}}
+</style></head><body><main>
+<h1>СУДА-ГРОБЫ · COMFYUI</h1>
+<p>Чёрный блок без окон: рампа, трюм, жёлтые глифы. Два ракурса: сбоку, чуть сверху (на карте только зеркалится) и строго сверху (на карте поворачивается по маршруту). Нажми на вариант, и он встанет на карту.</p>
+<div class="sticky"><div class="map" id="map"></div>
+<div class="tabs" id="size"></div><div class="tabs" id="rim"></div></div>
+<div id="pick"></div>
+</main>
+<script>
+var IMG=%%IMG%%;
+var COL={c:'#45D4E8',h:'#FF6FB5',f:'#F2F1EC'}, NAME={c:'Курьер «Гермес»',h:'Тягач «Сизиф»',f:'Грузовоз «Атлант»'}, VIEW={S:'Сбоку',T:'Сверху'};
+var BASE={c:26,h:30,f:40};   // the longest side, px, at 1×
+var pick={c:'ZSc1',h:'ZSh1',f:'ZSf3'}, scale=1.5, rim='y';
+function pickHtml(){ document.getElementById('pick').innerHTML=['c','h','f'].map(function(k){
+  return '<h2>'+NAME[k]+'</h2><div class="row">'+['S','T'].map(function(v){ return '<div class="lab">'+VIEW[v]+'</div>'+Object.keys(IMG).filter(function(id){ return id[1]===v&&id[2]===k }).map(function(id){
+    return '<div class="v'+(pick[k]===id?' on':'')+'" data-id="'+id+'"><img src="'+IMG[id].src+'" alt=""><span>'+v+id[3]+'</span></div>' }).join('') }).join('')+'</div>' }).join('') }
+document.getElementById('pick').onclick=function(e){ var v=e.target.closest('.v'); if(!v) return; pick[v.dataset.id[2]]=v.dataset.id; pickHtml(); mapBuild() };
+function filt(k){ var c=rim==='y'?'#FFD23F':rim==='c'?COL[k]:null; return c?'drop-shadow(0 0 .7px '+c+') drop-shadow(0 0 2px '+c+'80)':'none' }
+function tabs(){
+  document.getElementById('size').innerHTML='<span>РАЗМЕР</span>'+[[1,'26–40 px'],[1.5,'×1.5'],[2,'×2']].map(function(s){ return '<button data-s="'+s[0]+'" class="'+(scale===s[0]?'on':'')+'">'+s[1]+'</button>' }).join('');
+  document.getElementById('rim').innerHTML='<span>КРОМКА</span>'+[['y','жёлтая'],['c','цветом класса'],['n','нет']].map(function(s){ return '<button data-r="'+s[0]+'" class="'+(rim===s[0]?'on':'')+'">'+s[1]+'</button>' }).join('') }
+document.getElementById('size').onclick=function(e){ if(e.target.dataset.s){ scale=+e.target.dataset.s; tabs(); mapBuild() } };
+document.getElementById('rim').onclick=function(e){ if(e.target.dataset.r){ rim=e.target.dataset.r; tabs(); mapBuild() } };
+var E=[380,200], WL={KILN:[78,83],VESPER:[215,92],MARROW:[365,43],CINDER:[599,154],TALLOW:[596,252]};
+var RUNS=[['h','KILN',0],['f','CINDER',.3],['c','TALLOW',.6],['h','MARROW',.15],['f','VESPER',.75],['c','KILN',.45]];
+var t0=performance.now(), G=[];
+function mapBuild(){ document.getElementById('map').innerHTML='<svg viewBox="0 0 720 300">'+RUNS.map(function(r){ var k=r[0], im=IMG[pick[k]], L=BASE[k]*scale, w=im.w>=im.h?L:L*im.w/im.h, h=w*im.h/im.w;
+    return '<g><image href="'+im.src+'" x="'+(-w/2)+'" y="'+(-h/2)+'" width="'+w+'" height="'+h+'" style="filter:'+filt(k)+'"/></g>' }).join('')+'</svg>';
+  G=[].slice.call(document.querySelectorAll('#map g')) }
+function frame(now){ var t=(now-t0)/1000;
+  RUNS.forEach(function(r,i){ var P=WL[r[1]], ph=((t/8)+r[2])%1, back=ph>=.5, f=back?(ph-.5)*2:ph*2;
+    var A=back?P:E, B=back?E:P, x=A[0]+(B[0]-A[0])*f, y=A[1]+(B[1]-A[1])*f, top=pick[r[0]][1]==='T';
+    // top-down: turn along the route; side view: only mirror
+    var tr=top?'rotate('+(Math.atan2(B[1]-A[1],B[0]-A[0])*180/Math.PI).toFixed(1)+')':'scale('+(B[0]<A[0]?-1:1)+' 1)';
+    G[i].setAttribute('transform','translate('+x.toFixed(1)+' '+y.toFixed(1)+') '+tr) });
+  requestAnimationFrame(frame) }
+pickHtml(); tabs(); mapBuild(); requestAnimationFrame(frame);
+</script></body></html>

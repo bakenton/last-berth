@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Суда-гексы</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--ppl:#FFD23F}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'Jost',system-ui,sans-serif}
+main{max-width:760px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:18px;letter-spacing:.2em;color:var(--ppl);margin:0 0 6px}
+p{color:var(--mid);margin:4px 0 12px}
+.map{position:relative;border:1px solid var(--ln);background:#0B0B0C url(%%bg%%) 52.78% 50%/200% auto no-repeat;width:720px;max-width:100%;aspect-ratio:720/300;overflow:hidden}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0;align-items:center}
+.tabs span{font-size:11px;color:var(--dim);letter-spacing:.14em}
+.tabs button{font:inherit;font-size:12px;letter-spacing:.12em;background:var(--pan2);color:var(--ink);border:1px solid var(--ln);padding:6px 10px;cursor:pointer}
+.tabs button.on{border-color:var(--ppl);color:var(--ppl)}
+.key{display:flex;flex-direction:column;gap:6px;margin-top:16px;background:var(--pan);border:1px solid var(--ln);padding:12px}
+.key div{display:flex;align-items:center;gap:10px}
+</style></head><body><main>
+<h1>СУДА-ГЕКСЫ</h1>
+<p>Плоский шестиугольник в цвете класса, без рисунка и без поворота.</p>
+<div class="map" id="map"></div>
+<div class="tabs" id="size"></div>
+<div class="key" id="key"></div>
+</main>
+<script>
+var COL={c:'#45D4E8',h:'#FF6FB5',f:'#F2F1EC'}, NAME={c:'Курьер «Гермес»',h:'Тягач «Сизиф»',f:'Грузовоз «Атлант»'};
+var SIZES={same:{label:'один размер',r:{c:8,h:8,f:8}},cls:{label:'размер по классу',r:{c:6,h:8,f:11}}}, mode='same';
+function hex(r){ var i,p=[]; for(i=0;i<6;i++) p.push((r*Math.cos(i*Math.PI/3)).toFixed(2)+','+(r*Math.sin(i*Math.PI/3)).toFixed(2)); return p.join(' ') }
+var E=[380,200], WL={KILN:[78,83],VESPER:[215,92],MARROW:[365,43],CINDER:[599,154],TALLOW:[596,252]};
+var RUNS=[['h','KILN',0],['f','CINDER',.3],['c','TALLOW',.6],['h','MARROW',.15],['f','VESPER',.75],['c','KILN',.45]];
+var t0=performance.now(), G=[];
+function build(){ var R=SIZES[mode].r;
+  document.getElementById('map').innerHTML='<svg viewBox="0 0 720 300">'+RUNS.map(function(r){ return '<g><polygon points="'+hex(R[r[0]])+'" fill="'+COL[r[0]]+'"/></g>' }).join('')+'</svg>';
+  G=[].slice.call(document.querySelectorAll('#map g'));
+  document.getElementById('size').innerHTML=Object.keys(SIZES).map(function(k){ return '<button data-s="'+k+'" class="'+(mode===k?'on':'')+'">'+SIZES[k].label+'</button>' }).join('');
+  document.getElementById('key').innerHTML=['c','h','f'].map(function(k){ return '<div><svg width="28" height="28" viewBox="-14 -14 28 28"><polygon points="'+hex(R[k])+'" fill="'+COL[k]+'"/></svg>'+NAME[k]+'</div>' }).join('') }
+document.getElementById('size').onclick=function(e){ if(e.target.dataset.s){ mode=e.target.dataset.s; build() } };
+function frame(now){ var t=(now-t0)/1000;
+  RUNS.forEach(function(r,i){ var P=WL[r[1]], ph=((t/8)+r[2])%1, back=ph>=.5, f=back?(ph-.5)*2:ph*2, A=back?P:E, B=back?E:P;
+    G[i].setAttribute('transform','translate('+(A[0]+(B[0]-A[0])*f).toFixed(1)+' '+(A[1]+(B[1]-A[1])*f).toFixed(1)+')') });
+  requestAnimationFrame(frame) }
+build(); requestAnimationFrame(frame);
+</script></body></html>

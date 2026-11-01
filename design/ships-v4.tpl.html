@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Суда на карте, заход 4</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--ppl:#FFD23F}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.5 'Jost',system-ui,sans-serif}
+main{max-width:1100px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:18px;letter-spacing:.2em;color:var(--ppl);margin:0 0 6px}
+h2{font-size:13px;letter-spacing:.18em;text-transform:uppercase;color:var(--ppl);margin:34px 0 4px}
+p{color:var(--mid);margin:4px 0 12px;max-width:760px}
+.cls{display:flex;flex-wrap:wrap;gap:12px}
+.card{background:var(--pan);border:1px solid var(--ln);padding:12px 14px;flex:1 1 300px}
+.card b{display:block;font-size:12px;letter-spacing:.14em;text-transform:uppercase}
+.card i{font-style:normal;color:var(--mid);font-size:12px}
+.pair{display:flex;align-items:center;gap:18px;margin-top:8px}
+.pair span{font-size:10px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;display:block;text-align:center}
+.real{display:flex;flex-wrap:wrap;align-items:center;gap:22px;margin:12px 0 0;padding:10px 14px;background:#060607;border:1px solid var(--ln)}
+.real span{font-size:10px;color:var(--dim);letter-spacing:.14em}
+.map{position:relative;margin-top:12px;border:1px solid var(--ln);background:#0B0B0C url(%%bg%%) 52.78% 50%/200% auto no-repeat;width:720px;max-width:100%;aspect-ratio:720/300;overflow:hidden}
+.map svg{position:absolute;inset:0;width:100%;height:100%}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}
+.tabs button{font:inherit;font-size:12px;letter-spacing:.12em;text-transform:uppercase;background:var(--pan2);color:var(--ink);border:1px solid var(--ln);padding:8px 12px;cursor:pointer}
+.tabs button.on{border-color:var(--ppl);color:var(--ppl)}
+.legend{font-size:12px;color:var(--mid);margin-top:6px}
+.legend em{font-style:normal;padding:0 4px}
+</style></head><body><main>
+<h1>СУДА НА КАРТЕ · ЗАХОД 4</h1>
+<p>Сейчас суда нарисованы как морские: катер, буксир с краном, контейнеровоз. Здесь — космические, и форма идёт от имени класса. Цвет класса прежний. Трюм показывает груз: на обратном пути, гружёное, судно светится цветом ресурса, а туда идёт пустым.</p>
+
+<h2>Сейчас в игре</h2>
+<div class="real" id="now"></div>
+
+<h2>Форма от мифа</h2>
+<div class="cls" id="cards"></div>
+
+<h2>Как нарисовать</h2>
+<p>Форма одна, отрисовка — на выбор. Переключатель меняет всё ниже.</p>
+<div class="tabs" id="tabs"></div>
+<div class="real" id="real"></div>
+<div class="map" id="map"></div>
+<div class="legend">Груз: <em style="color:#C9CFD6">металл</em><em style="color:#3DDC84">еда</em><em style="color:#FF8A1F">топливо</em><em style="color:#F2F1EC">детали</em><em style="color:#FFD23F">люди</em> · к Земле — гружёные, от Земли — пустые · размер — как в игре (20 / 22 / 28 px)</div>
+</main>
+<script>
+var COL={courier:'#45D4E8',hauler:'#FF6FB5',freighter:'#F2F1EC'}, RES={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F'};
+var NAME={courier:['Курьер «Гермес»','вестник с крылатыми сандалиями: узкий дротик с двумя крыльями; трюм — герметичная капсула, только он возит людей'],
+  hauler:['Тягач «Сизиф»','вечно толкает камень в гору: маленький буксир упирается в один большой гекс-блок груза и толкает его перед собой'],
+  freighter:['Грузовоз «Атлант»','держит небо на плечах: длинный хребет, на котором поверх лежат три блока груза — ноша больше его самого']};
+var W={courier:20,hauler:22,freighter:28};
+function hex(cx,cy,r,flat){ var p=[]; for(var i=0;i<6;i++){ var a=Math.PI/180*(60*i+(flat?0:30)); p.push((cx+r*Math.cos(a)).toFixed(1)+' '+(cy+r*Math.sin(a)).toFixed(1)) } return 'M'+p.join(' L')+' Z' }
+// nose to +x; body = the hull, cargo = the hold that lights up with what it carries, eng = the nozzle the flame comes out of
+var SHAPE={
+  courier:{body:['M30 0 L14 -5 H-12 L-20 -3 V3 L-12 5 H14 Z','M2 -5 L-10 -14 H-15 L-8 -5 Z','M2 5 L-10 14 H-15 L-8 5 Z'], cargo:['M9 0 m-4 0 a4 4 0 1 0 8 0 a4 4 0 1 0 -8 0'], eng:[-20,0]},
+  hauler:{body:['M-28 -6 H-10 L-6 -3 V3 L-10 6 H-28 Z','M-6 -2 H2 V2 H-6 Z'], cargo:[hex(15,0,13,true)], eng:[-28,0]},
+  freighter:{body:['M31 3 L25 8 H-25 L-31 4 V1 L-25 -1 H25 Z','M-15 -1 V-3 M0 -1 V-3 M15 -1 V-3'], cargo:[hex(-14,-9,7.5),hex(0,-9,7.5),hex(14,-9,7.5)], eng:[-31,2.5]}};
+var MODES=[['fill','Заливка','силуэт цветом класса, как сейчас'],['line','Контур','тонкая линия, как миры и маршруты на карте'],['dark','Чёрный корпус','чёрное тело с цветной кромкой, ближе к стилю Пульта']];
+var mode='fill';
+function ship(cls,load,px,m,flame){ m=m||mode; var S=SHAPE[cls], c=COL[cls], vb='-34 -18 68 36', h='';
+  var sw=px<40?1.2:1.6;
+  var bodyA=m==='fill'?'fill="'+c+'"':m==='line'?'fill="none" stroke="'+c+'" stroke-width="'+sw+'" vector-effect="non-scaling-stroke" stroke-linejoin="round"':'fill="#141417" stroke="'+c+'" stroke-width="'+sw+'" vector-effect="non-scaling-stroke" stroke-linejoin="round"';
+  if(flame) h+='<path d="M'+S.eng[0]+' '+S.eng[1]+' h-14" stroke="#FFD23F" stroke-width="'+(px<40?2:3)+'" vector-effect="non-scaling-stroke" stroke-linecap="round" opacity=".85"><animate attributeName="opacity" values=".85;.4;.85" dur=".35s" repeatCount="indefinite"/></path>';
+  S.body.forEach(function(d){ h+='<path d="'+d+'" '+(d.indexOf(' V-3')>0?'fill="none" stroke="'+c+'" stroke-width="'+sw+'" vector-effect="non-scaling-stroke"':bodyA)+'/>' });
+  S.cargo.forEach(function(d){ var f=load?RES[load]:(m==='fill'?'#0B0B0C':m==='line'?'none':'#141417');
+    h+='<path d="'+d+'" fill="'+f+'" stroke="'+(m==='fill'&&load?'#0B0B0C':c)+'" stroke-width="'+sw+'" vector-effect="non-scaling-stroke" stroke-linejoin="round"/>' });
+  return '<svg viewBox="'+vb+'" width="'+px+'" height="'+(px*36/68).toFixed(1)+'" style="overflow:visible">'+h+'</svg>' }
+var LOAD={courier:'people',hauler:'metal',freighter:'food'};
+// the current symbols, for comparison
+var OLD={courier:'<path d="M2 26 L12 34 H50 L60 26 Z"/><path d="M8 26 L14 16 H40 L44 26 Z"/><path d="M28 16 L34 10 H40 V16 Z" opacity=".35"/>',
+  hauler:'<path d="M2 22 L8 36 H54 L60 22 Z"/><rect x="34" y="10" width="16" height="12"/><rect x="18" y="2" width="3" height="20"/>',
+  freighter:'<path d="M0 24 L6 36 H60 L64 24 Z"/><rect x="8" y="16" width="10" height="8"/><rect x="20" y="16" width="10" height="8"/><rect x="32" y="16" width="10" height="8"/><rect x="8" y="8" width="10" height="7"/><rect x="20" y="8" width="10" height="7"/><rect x="46" y="6" width="10" height="18"/>'};
+document.getElementById('now').innerHTML=Object.keys(OLD).map(function(k){ return '<svg viewBox="0 0 64 40" width="'+W[k]+'" fill="'+COL[k]+'">'+OLD[k]+'</svg><svg viewBox="0 0 64 40" width="'+W[k]*4+'" fill="'+COL[k]+'">'+OLD[k]+'</svg>' }).join('');
+function cards(){ document.getElementById('cards').innerHTML=Object.keys(SHAPE).map(function(k){
+  return '<div class="card"><b style="color:'+COL[k]+'">'+NAME[k][0]+'</b><i>'+NAME[k][1]+'</i><div class="pair"><div>'+ship(k,null,150,null,true)+'<span>туда, пустой</span></div><div>'+ship(k,LOAD[k],150,null,true)+'<span>обратно, гружёный</span></div></div></div>' }).join('') }
+function real(){ var h=''; Object.keys(SHAPE).forEach(function(k){ h+=ship(k,null,W[k],null,true)+ship(k,LOAD[k],W[k],null,true)+'<span>'+W[k]+' px</span>' }); document.getElementById('real').innerHTML=h }
+// the map: Earth and five worlds where the screenshot has them (screen px − the crop)
+var E=[380,200], WL={KILN:[78,83],VESPER:[215,92],MARROW:[365,43],CINDER:[599,154],TALLOW:[596,252]};
+var RUNS=[['hauler','KILN','metal',0],['freighter','CINDER','food',.3],['courier','TALLOW','people',.6],['hauler','MARROW','fuel',.15],['freighter','VESPER','parts',.75],['courier','KILN',null,.45]];
+var t0=performance.now();
+function frame(now){ var t=(now-t0)/1000, s='';
+  RUNS.forEach(function(r){ var cls=r[0], P=WL[r[1]], dur=7+r[0].length*.4, ph=((t/dur)+r[3])%1, back=ph>=.5, f=back?(ph-.5)*2:ph*2;
+    var A=back?P:E, B=back?E:P, x=A[0]+(B[0]-A[0])*f, y=A[1]+(B[1]-A[1])*f, flip=B[0]<A[0]?-1:1, w=W[cls], h=w*36/68;
+    var ang=Math.atan2(B[1]-A[1],(B[0]-A[0])*flip)*180/Math.PI;
+    s+='<g transform="translate('+x.toFixed(1)+' '+y.toFixed(1)+') scale('+flip+' 1) rotate('+(ang*.25).toFixed(1)+')">'+ship(cls,back?(r[2]):null,w,null,true).replace('<svg ','<svg x="'+(-w/2)+'" y="'+(-h/2)+'" ')+'</g>' });
+  document.getElementById('map').innerHTML='<svg viewBox="0 0 720 300">'+s+'</svg>'; requestAnimationFrame(frame) }
+function tabs(){ document.getElementById('tabs').innerHTML=MODES.map(function(m){ return '<button class="'+(m[0]===mode?'on':'')+'" data-m="'+m[0]+'" title="'+m[2]+'">'+m[1]+'</button>' }).join('') }
+document.getElementById('tabs').onclick=function(e){ var m=e.target.dataset.m; if(!m) return; mode=m; tabs(); cards(); real() };
+tabs(); cards(); real(); requestAnimationFrame(frame);
+</script></body></html>
