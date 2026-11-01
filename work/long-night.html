@@ -325,9 +325,9 @@ svg.gi{fill:currentColor}
 </head>
 <body>
 <svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs>
-<symbol id="i-courier" viewBox="0 0 64 40"><path d="M2 26 L12 34 H50 L60 26 Z"/><path d="M8 26 L14 16 H40 L44 26 Z"/><path d="M28 16 L34 10 H40 V16 Z" opacity=".35"/><path d="M50 30 H64 M54 34 H66" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
-<symbol id="i-hauler" viewBox="0 0 64 40"><path d="M2 22 L8 36 H54 L60 22 Z"/><rect x="34" y="10" width="16" height="12"/><rect x="38" y="13" width="8" height="4" opacity=".35"/><rect x="18" y="2" width="3" height="20"/><path d="M20 4 L40 16 M20 4 L6 22" stroke="currentColor" stroke-width="2" fill="none"/></symbol>
-<symbol id="i-freighter" viewBox="0 0 64 40"><path d="M0 24 L6 36 H60 L64 24 Z"/><rect x="8" y="16" width="10" height="8"/><rect x="20" y="16" width="10" height="8"/><rect x="32" y="16" width="10" height="8"/><rect x="8" y="8" width="10" height="7"/><rect x="20" y="8" width="10" height="7"/><rect x="32" y="8" width="10" height="7"/><rect x="48" y="4" width="10" height="20"/><rect x="50" y="7" width="6" height="3" opacity=".35"/></symbol>
+<symbol id="i-courier" viewBox="0 0 64 40"><polygon points="48,20 16,29.07 16,10.93"/><polygon points="48,20 38.4,22.72 38.4,17.28" fill="#FFD23F"/></symbol>
+<symbol id="i-hauler" viewBox="0 0 64 40"><polygon points="58.67,20 32,35.11 5.33,20 32,4.89"/><polygon points="58.67,20 42.67,29.07 42.67,10.93" fill="#FFD23F"/></symbol>
+<symbol id="i-freighter" viewBox="0 0 64 40"><polygon points="64,20 41.6,38.13 16,38.13 0,20 16,1.87 41.6,1.87"/><polygon points="64,20 44.8,35.54 44.8,4.46" fill="#FFD23F"/></symbol>
 <linearGradient id="mkgr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".45" stop-color="#D9D8D2"/><stop offset=".55" stop-color="#8E8D88"/><stop offset="1" stop-color="#E9E8E2"/></linearGradient><linearGradient id="mkgv" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF5A44"/><stop offset=".55" stop-color="#FF2A1A"/><stop offset="1" stop-color="#B80F05"/></linearGradient><filter id="mksh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="1.5" dy="3" stdDeviation="2.2" flood-color="#000" flood-opacity=".7"/></filter><filter id="mkbl" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="6"/></filter><symbol id="i-mark" viewBox="0 0 120 120"><circle cx="60" cy="60" r="40" fill="none" stroke="#F2F1EC" stroke-width="10" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.75)"><polygon points="0,-16 14,14 0,6 -14,14" fill="#FF2A1A"/></g></symbol>
 <symbol id="i-markf" viewBox="0 0 120 120"><ellipse cx="60" cy="108" rx="34" ry="4.5" fill="#000" opacity=".55" filter="url(#mkbl)"/><g filter="url(#mksh)"><circle cx="60" cy="60" r="40" fill="none" stroke="url(#mkgr)" stroke-width="8" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6 -14,14" fill="url(#mkgv)"/></g></g><g transform="translate(86 34) rotate(45) scale(1.5)"><polygon points="0,-16 14,14 0,6" fill="#fff" opacity=".28"/></g></symbol>
 </defs></svg>
@@ -345,7 +345,7 @@ svg.gi{fill:currentColor}
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'4.43'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'4.44'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -2928,7 +2928,7 @@ function drawMap(){
   });
   for(var k in G.colonies){ p=planet(k); xy=pos(p);
     s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity=".45" stroke-width="'+F(1.6)+'" pointer-events="none"/>' }
-  // ships: the silhouette of the class, in its colour
+  // ships: the figure of the class in its colour (3, 4, 6 sides), the yellow nose along the route
   for(i=0;i<G.ships.length;i++){
     var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
     var A=nodeXY(sh.origin), B=nodeXY(sh.dest||sh.target); if(!A||!B) continue;
@@ -2937,8 +2937,8 @@ function drawMap(){
     var x=A.x+(B.x-A.x)*f, y=A.y+(B.y-A.y)*f;
     if(sh.mode==='missing'){
       s+='<circle cx="'+x+'" cy="'+y+'" r="'+F(8)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(1)+'" stroke-dasharray="'+F(2)+' '+F(3)+'"/><text x="'+x+'" y="'+(y+3.5*Z)+'" fill="'+C.red+'" font-size="'+F(10)+'" text-anchor="middle" class="nm">?</text>';
-    } else { var scls=shipClass(sh), sw=({courier:20,hauler:22,freighter:28})[scls]*Z, shz=sw*0.625, flip=(B.x<A.x)?-1:1;
-      s+='<use href="#i-'+scls+'" x="'+(-sw/2)+'" y="'+(-shz)+'" width="'+sw+'" height="'+shz+'" fill="'+CLSCOL[scls]+'" pointer-events="none" transform="translate('+x+' '+y+') scale('+flip+' 1)"/>' }
+    } else { var scls=shipClass(sh), sw=36*Z, shz=sw*0.625, turn=Math.atan2(B.y-A.y,B.x-A.x)*180/Math.PI;
+      s+='<use href="#i-'+scls+'" x="'+(-sw/2)+'" y="'+(-shz/2)+'" width="'+sw+'" height="'+shz+'" fill="'+CLSCOL[scls]+'" pointer-events="none" transform="translate('+x+' '+y+') rotate('+turn.toFixed(1)+')"/>' }
   }
   // worlds
   for(i=0;i<PLANETS.length;i++){

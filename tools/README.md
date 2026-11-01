@@ -115,7 +115,7 @@ pw11 бот селит ферму, когда еды < 40 лет (рождаем
 - `say(code,p)` теперь с плейсхолдерами; успех действий — свои коды `ok_build/ok_want/ok_kit/ok_survey/ok_ark/ok_found/ok_drive/ok_evac/ok_scrap/ok_release/ok_renew_on/off` (MSG в таблице).
 - `SFX` (ui.js): Web Audio, без файлов; `SFX.play('click|tab|ok|deny|info|warn|bad|crit|voice')`; toast → info/warn, bigAlert → bad/crit, say → ok/deny, окно личного дела → voice, смена → info, дата Ночи → crit. Кнопка `#b-sfx` (♫) в шапке, состояние в `localStorage['lb.sfx']`.
 - `pressFx(x,y)` — квадрат-метка в точке клика (`.pfx`), живёт 0.4 с, переживает перерисовку панели.
-- Иконки: символы `#i-courier/#i-hauler/#i-freighter` (катер/траулер/контейнеровоз), `#i-k-mine/well/farm/works` (стрела с ковшом / коромысло / трактор / шестерни с цепью), `#i-pile/#i-house/#i-plant`. Хелперы `sico(cls)`, `kico(kind,cls)`, `pico(sym,res)`. На карте корпус в пути — силуэт (`<use>`), развёрнут по направлению.
+- Иконки: символы `#i-courier/#i-hauler/#i-freighter` (с v4.44 треугольник/ромб/шестиугольник с жёлтым носом, в `work/web/shell.html`), `#i-k-mine/well/farm/works` (стрела с ковшом / коромысло / трактор / шестерни с цепью), `#i-pile/#i-house/#i-plant`. Хелперы `sico(cls)`, `kico(kind,cls)`, `pico(sym,res)`. На карте корпус в пути — эта фигура (`<use>`), повёрнута по курсу.
 - Патч ui.js: `patch412.py` (одноразовый, в zip не входит). CSS/HTML — в build.py (маркеры `id="b-sfx"`, `id="i-courier"`, `.pfx{`).
 - Проверено 30.09 во встроенном браузере Cowork (клики, тосты RU/EN, иконки, карточка планеты, ♫). **Звук на слух не проверен** — только отсутствие ошибок.
 

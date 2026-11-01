@@ -545,7 +545,7 @@ function drawMap(){
   });
   for(var k in G.colonies){ p=planet(k); xy=pos(p);
     s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity=".45" stroke-width="'+F(1.6)+'" pointer-events="none"/>' }
-  // ships: the silhouette of the class, in its colour
+  // ships: the figure of the class in its colour (3, 4, 6 sides), the yellow nose along the route
   for(i=0;i<G.ships.length;i++){
     var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
     var A=nodeXY(sh.origin), B=nodeXY(sh.dest||sh.target); if(!A||!B) continue;
@@ -554,8 +554,8 @@ function drawMap(){
     var x=A.x+(B.x-A.x)*f, y=A.y+(B.y-A.y)*f;
     if(sh.mode==='missing'){
       s+='<circle cx="'+x+'" cy="'+y+'" r="'+F(8)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(1)+'" stroke-dasharray="'+F(2)+' '+F(3)+'"/><text x="'+x+'" y="'+(y+3.5*Z)+'" fill="'+C.red+'" font-size="'+F(10)+'" text-anchor="middle" class="nm">?</text>';
-    } else { var scls=shipClass(sh), sw=({courier:20,hauler:22,freighter:28})[scls]*Z, shz=sw*0.625, flip=(B.x<A.x)?-1:1;
-      s+='<use href="#i-'+scls+'" x="'+(-sw/2)+'" y="'+(-shz)+'" width="'+sw+'" height="'+shz+'" fill="'+CLSCOL[scls]+'" pointer-events="none" transform="translate('+x+' '+y+') scale('+flip+' 1)"/>' }
+    } else { var scls=shipClass(sh), sw=36*Z, shz=sw*0.625, turn=Math.atan2(B.y-A.y,B.x-A.x)*180/Math.PI;
+      s+='<use href="#i-'+scls+'" x="'+(-sw/2)+'" y="'+(-shz/2)+'" width="'+sw+'" height="'+shz+'" fill="'+CLSCOL[scls]+'" pointer-events="none" transform="translate('+x+' '+y+') rotate('+turn.toFixed(1)+')"/>' }
   }
   // worlds
   for(i=0;i<PLANETS.length;i++){
