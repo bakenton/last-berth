@@ -107,6 +107,16 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await P.tap('#menu .mit[data-id="new"]');
   ok('phone: the terminal', await waitTerm(ph));
   await ph.close();
+
+  // 9. a Russian browser: the first start speaks Russian, the terminal still asks for its four verbs
+  const ru=await b.newPage({locale:'ru-RU',viewport:{width:1440,height:900}}); const R=UI.ui(ru); ru.errs=[]; ru.on('pageerror',e=>ru.errs.push(String(e)));
+  await ru.goto(require('url').pathToFileURL(process.env.LB_WORK||require('path').resolve(__dirname,'..','work')).href+'/page.html'); await ru.waitForTimeout(600);
+  L=await labels(ru); ok('a Russian browser: the menu speaks Russian at the first start', L[1].startsWith('Новая игра')&&L[3].startsWith('Язык|Русский')&&await ru.evaluate(()=>LNU.lang==='ru'), L.join(' · '));
+  await R.tap('#menu .mit[data-id="new"]'); ok('…the terminal opens', await waitTerm(ru));
+  for(let i=0;i<400&&!(await ru.isVisible('#menu .vb'));i++){ await ru.keyboard.press('Space'); await ru.waitForTimeout(60) }
+  ok('…and asks for a verb: four of them', await ru.evaluate(()=>document.querySelectorAll('#menu .vb').length===4));
+  ok('no page errors (Russian browser)', ru.errs.length===0, ru.errs.join(' | '));
+  await ru.close();
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);
