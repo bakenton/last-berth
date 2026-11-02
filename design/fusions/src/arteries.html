@@ -1,0 +1,153 @@
+<title>LAST BERTH: артерии</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>/*KIT*/</style>
+<script>/*KIT*/</script>
+<style>
+/* Раскладка: карта занимает всё, панель справа; на телефоне карта сверху, панель снизу со своей прокруткой. */
+:root{color-scheme:dark}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 320px;background:var(--bg)}
+#mapW{position:relative;min-width:0;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#hint{position:absolute;left:12px;top:12px;right:12px;pointer-events:none;color:var(--ppl);font-size:14px;font-weight:600}
+aside{background:var(--pan);border-left:1px solid var(--ln);overflow:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:14px}
+aside h1{margin:0;font-size:18px;font-weight:600}
+aside a.back{color:var(--mid);font-size:12px;text-decoration:none}
+.seg{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:6px}
+.seg .btn{padding:0;min-height:44px}
+.seg .btn.on{background:var(--ink);border-color:var(--ink);color:#000}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.row .btn{min-height:44px;padding:0 6px}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td{padding:5px 0;border-bottom:1px solid var(--ln)}
+td:nth-child(n+2){text-align:right;font-family:var(--n);font-variant-numeric:tabular-nums;white-space:nowrap;padding-left:10px}
+th:nth-child(n+2){padding-left:10px}
+td.up{color:var(--fuel)}td.down{color:var(--food)}td.same{color:var(--mid)}
+th{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mid);font-weight:600;text-align:right;padding-bottom:4px}
+th:first-child{text-align:left}
+#warn{color:var(--red);font-weight:600;font-size:13px;min-height:18px}
+#sel{border-top:1px solid var(--ln);padding-top:10px;display:flex;flex-direction:column;gap:8px;font-size:13px}
+#sel b{font-size:15px}
+#sel .mid{color:var(--mid)}
+#sel .lost{color:var(--red);font-weight:600}
+footer{color:var(--dim);font-size:12px;margin-top:auto}
+@media (max-width:760px){
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,56%) minmax(0,44%)}
+  aside{border-left:0;border-top:1px solid var(--ln);padding:12px max(16px,env(safe-area-inset-right,0px)) 20px max(16px,env(safe-area-inset-left,0px))}
+}
+</style>
+<div id="app">
+  <div id="mapW"><canvas id="c" aria-label="Карта миров и линий"></canvas><div id="hint">Тяните линию от мира к миру</div></div>
+  <aside>
+    <div><a class="back" href="index.html">← к вариантам</a><h1>Артерии</h1></div>
+    <div><div class="lbl">Дальность перелёта, колец</div>
+      <div class="seg" id="hops"><button class="btn" data-h="0">Нет</button><button class="btn" data-h="3">3</button><button class="btn" data-h="2">2</button><button class="btn" data-h="1">1</button></div></div>
+    <div class="row"><button class="btn" id="rays">Лучи</button><button class="btn" id="web">Паутина</button></div>
+    <div id="warn"></div>
+    <table id="tb"></table>
+    <div id="sel"></div>
+    <footer>Настоящая карта и суда игры: бот rush, сид 101, год 2500. Песочница считает флот, времени и Ночи в ней нет.</footer>
+  </aside>
+</div>
+<script>
+(function(){
+var D={hulls:[{key:'courier',cap:480,speed:2.39,burn:1,metal:553,crew:18},{key:'hauler',cap:3318,speed:1.48,burn:1.6,metal:1797,crew:44},{key:'freighter',cap:16684,speed:1.12,burn:2.2,metal:4424,crew:99}],fuelPerDist:0.135,
+worlds:[{id:'w1',name:'Brine',sec:0,kind:'works',dist:32,ang:5.675,rate:3.05},{id:'w9',name:'Threnody',sec:1,kind:'works',dist:105,ang:5.927,rate:5.55},{id:'w10',name:'Kiln',sec:2,kind:'works',dist:132,ang:5.516,rate:7.66},{id:'w11',name:'Lantern',sec:2,kind:'mine',dist:150,ang:0.994,rate:0.2,dry:true},{id:'w13',name:'Ossuary',sec:2,kind:'mine',dist:168,ang:2.373,rate:0.2,dry:true},{id:'w15',name:'Wick',sec:3,kind:'mine',dist:178,ang:1.933,rate:18.04},{id:'w16',name:'Pale',sec:3,kind:'mine',dist:180,ang:5.643,rate:26.04},{id:'w17',name:'Grist',sec:3,kind:'works',dist:181,ang:4.728,rate:10.41},{id:'w20',name:'Loam',sec:3,kind:'well',dist:222,ang:3.247,rate:22.23},{id:'w25',name:'Tallowfen',sec:4,kind:'well',dist:291,ang:3.798,rate:73.27},{id:'w18',name:'Anvil',sec:3,kind:'mine',dist:206,ang:0.818,rate:39.48},{id:'w22',name:'Cairn',sec:4,kind:'mine',dist:241,ang:6.075,rate:20.26},{id:'w19',name:'Vigil',sec:3,kind:'farm',dist:211,ang:2.916,rate:27.51},{id:'w21',name:'Sallow',sec:4,kind:'farm',dist:232,ang:2.344,rate:24.14},{id:'w23',name:'Ember',sec:4,kind:'works',dist:282,ang:4.497,rate:6.81},{id:'w24',name:'Mire',sec:4,kind:'mine',dist:284,ang:1.296,rate:17.25},{id:'w26',name:'Rook',sec:4,kind:'mine',dist:293,ang:0.687,rate:32.19}]};
+var ROWS=[['n','Суда'],['metal','Металл'],['crew','Экипаж'],['fuel','Топливо/год'],['far','Путь домой, лет']];
+var css=getComputedStyle(document.documentElement), col=function(n){ return css.getPropertyValue('--'+n).trim() };
+var KC={mine:col('metal'),farm:col('food'),well:col('fuel'),works:col('parts')}, W={};
+D.worlds.forEach(function(w){ W[w.id]=w });
+var S={par:{},hop:0,sel:null,drag:null,fall:false,touched:false}, cv=document.getElementById('c'), cx=cv.getContext('2d'), VW=0,VH=0,R=1;
+var still=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function ringOf(id){ return id==='earth'?-1:W[id].sec }
+function dist(a,b){ if(a==='earth') return W[b].dist; if(b==='earth') return W[a].dist; var p=W[a],q=W[b];
+  return Math.max(6,Math.round(Math.hypot(Math.cos(p.ang)*p.dist-Math.cos(q.ang)*q.dist,Math.sin(p.ang)*p.dist-Math.sin(q.ang)*q.dist))) }
+function fleet(rate,d){ var out=null; D.hulls.forEach(function(h){ var rt=Math.max(1,2*d/h.speed), n=Math.max(1,Math.ceil(rate*rt/h.cap-1e-9)), r={n:n,metal:n*h.metal,crew:n*h.crew,fuel:n*(d*D.fuelPerDist*h.burn*1.5)/rt,hull:h.key};
+  if(!out||r.metal<out.metal) out=r }); return out }
+function isUnder(a,b,par){ var x=a; while(x&&x!=='earth'){ if(x===b) return true; x=par[x] } return false }   // a sits behind b
+function legal(from,to){ var d=ringOf(from)-ringOf(to); if(d<0) return 'out'; if(S.hop&&d>S.hop) return 'range'; return 'ok' }
+function under(id,par){ return D.worlds.filter(function(w){ return w.id!==id&&isUnder(w.id,id,par) }) }
+/* the tree, deepest world first: what each leg must carry and the hulls that do it */
+function calc(par){ var flow={}, t={n:0,metal:0,crew:0,fuel:0,far:0}, legs={};
+  D.worlds.forEach(function(w){ flow[w.id]=w.rate });
+  D.worlds.slice().sort(function(a,b){ return depth(b.id,par)-depth(a.id,par) }).forEach(function(w){ var to=par[w.id], d=dist(w.id,to), f=fleet(flow[w.id],d);
+    legs[w.id]={flow:flow[w.id],d:d,f:f}; t.n+=f.n; t.metal+=f.metal; t.crew+=f.crew; t.fuel+=f.fuel; if(to!=='earth') flow[to]+=flow[w.id] });
+  var fast=Math.max.apply(null,D.hulls.map(function(h){ return h.speed }));
+  D.worlds.forEach(function(w){ var y=0,x=w.id; while(x!=='earth'){ y+=dist(x,par[x])/fast; x=par[x] } t.far=Math.max(t.far,Math.round(y)) });
+  t.fuel=Math.round(t.fuel); t.legs=legs; return t }
+function depth(id,par){ var n=0,x=id; while(x!=='earth'){ n++; x=par[x] } return n }
+function raysPar(){ var p={}; D.worlds.forEach(function(w){ p[w.id]='earth' }); return p }
+/* the same greedy the numbers came from: each world takes the shortest way home through a world the hull can reach */
+function webPar(hop){ var p={}, h=hop||2; D.worlds.forEach(function(w){ if(w.sec<h){ p[w.id]='earth'; return } var b=null;
+    D.worlds.forEach(function(o){ if(o.sec>=w.sec||w.sec-o.sec>h) return; var via=dist(w.id,o.id)+o.dist; if(!b||via<b.v) b={o:o.id,v:via} }); p[w.id]=b?b.o:'earth' }); return p }
+var BASE=calc(raysPar());
+
+function xy(id){ if(id==='earth') return {x:VW/2,y:VH/2}; var w=W[id], r=R*Math.pow(w.dist/293,.8); return {x:VW/2+Math.cos(w.ang)*r,y:VH/2+Math.sin(w.ang)*r} }
+function nodeAt(x,y,reach){ var best=null,bd=reach; ['earth'].concat(D.worlds.map(function(w){ return w.id })).forEach(function(id){ var p=xy(id), d=Math.hypot(p.x-x,p.y-y); if(d<bd){ bd=d; best=id } }); return best }
+function size(){ var r=cv.getBoundingClientRect(), dpr=Math.min(2,devicePixelRatio||1); VW=r.width; VH=r.height; cv.width=VW*dpr; cv.height=VH*dpr; cx.setTransform(dpr,0,0,dpr,0,0); R=Math.max(40,Math.min(VW,VH)/2-30) }
+function pt(e){ var r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+
+function link(from,to){ var why=legal(from,to);
+  if(to===from) return 'same';
+  if(why==='out'){ LB.toast('Груз идёт к Земле, а не от неё',1800); return why }
+  if(why==='range'){ LB.toast('Слишком далеко: колец за перелёт не больше '+S.hop,1800); return why }
+  if(isUnder(to,from,S.par)){ LB.toast('Этот мир уже везёт через '+W[from].name,1800); return 'loop' }
+  S.par[from]=to; S.touched=true; S.fall=false; panel(); return 'ok' }
+
+function panel(){ var t=calc(S.par), html='<tr><th></th><th>Лучи</th><th>Сейчас</th><th>Δ</th></tr>';
+  ROWS.forEach(function(r){ var a=BASE[r[0]],b=t[r[0]], pc=a?Math.round(100*(b/a-1)):0;
+    html+='<tr><td>'+r[1]+'</td><td>'+a.toLocaleString('ru-RU')+'</td><td>'+b.toLocaleString('ru-RU')+'</td><td class="'+(pc>0?'up':pc<0?'down':'same')+'">'+(pc>0?'+':'')+pc+'%</td></tr>' });
+  document.getElementById('tb').innerHTML=html;
+  var bad=D.worlds.filter(function(w){ return legal(w.id,S.par[w.id])!=='ok' }).length;
+  document.getElementById('warn').textContent=bad?('Не долетают: '+bad):'';
+  [].forEach.call(document.querySelectorAll('#hops .btn'),function(b){ b.classList.toggle('on',+b.dataset.h===S.hop) });
+  document.getElementById('hint').style.display=S.touched?'none':'';
+  var el=document.getElementById('sel'); if(!S.sel){ el.innerHTML=''; return }
+  var w=W[S.sel], leg=t.legs[S.sel], back=under(S.sel,S.par), tot=D.worlds.reduce(function(a,o){ return a+o.rate },0), lost=back.reduce(function(a,o){ return a+o.rate },w.rate);
+  el.innerHTML='<b>'+w.name+'</b><span class="mid">кольцо '+w.sec+(w.dry?', выработан':'')+' · везёт '+leg.flow.toFixed(0)+' в год · судов: '+leg.f.n+'</span>'
+    +'<span class="mid">Через него идут миров: '+back.length+'</span>'
+    +(S.fall?'<span class="lost">Без него теряется '+Math.round(100*lost/tot)+'% потока</span>':'')
+    +'<div class="row"><button class="btn" id="fall">'+(S.fall?'Вернуть':'Если падёт')+'</button><button class="btn" id="home"'+(S.par[S.sel]==='earth'?' disabled':'')+'>На Землю</button></div>';
+  document.getElementById('fall').onclick=function(){ S.fall=!S.fall; panel() };
+  document.getElementById('home').onclick=function(){ var r=link(S.sel,'earth'); };
+}
+
+function draw(now){ cx.clearRect(0,0,VW,VH); var i,t=calc(S.par);
+  cx.strokeStyle=col('ln'); cx.lineWidth=1;
+  [0,1,2,3,4].forEach(function(s){ var m=0; D.worlds.forEach(function(w){ if(w.sec===s) m=Math.max(m,w.dist) }); cx.beginPath(); cx.arc(VW/2,VH/2,R*Math.pow(m/293,.8),0,7); cx.stroke() });
+  var fallen=S.fall&&S.sel, down={}; if(fallen){ down[S.sel]=1; under(S.sel,S.par).forEach(function(o){ down[o.id]=1 }) }
+  D.worlds.forEach(function(w){ var to=S.par[w.id], a=xy(w.id), b=xy(to), leg=t.legs[w.id], feed=under(w.id,S.par).length>0, bad=legal(w.id,to)!=='ok';
+    cx.lineCap='round'; cx.setLineDash(down[w.id]?[5,6]:[]);
+    cx.strokeStyle=bad||down[w.id]?col('red'):feed?col('ppl'):col('dim'); cx.lineWidth=Math.min(9,1.2+Math.sqrt(leg.flow)*.5);
+    cx.beginPath(); cx.moveTo(a.x,a.y); cx.lineTo(b.x,b.y); cx.stroke(); cx.setLineDash([]);
+    if(!down[w.id]){ var dots=Math.max(1,Math.min(5,Math.round(leg.flow/20))), L=Math.hypot(a.x-b.x,a.y-b.y); cx.fillStyle=col('ink');
+      for(i=0;i<dots;i++){ var u=still?(i+.5)/dots:((now/1000*40/Math.max(40,L))+i/dots)%1; cx.beginPath(); cx.arc(a.x+(b.x-a.x)*u,a.y+(b.y-a.y)*u,2,0,7); cx.fill() } } });
+  if(S.drag){ var f=xy(S.drag.from), tgt=S.drag.over, ok=tgt&&tgt!==S.drag.from&&legal(S.drag.from,tgt)==='ok'&&!isUnder(tgt,S.drag.from,S.par);
+    cx.strokeStyle=ok?col('ppl'):col('mid'); cx.lineWidth=2.5; cx.setLineDash([6,5]); cx.beginPath(); cx.moveTo(f.x,f.y); cx.lineTo(S.drag.x,S.drag.y); cx.stroke(); cx.setLineDash([]) }
+  var e=xy('earth'); cx.fillStyle=col('earth'); cx.beginPath(); cx.arc(e.x,e.y,8,0,7); cx.fill();
+  cx.textAlign='center'; cx.font='600 11px '+col('h');
+  D.worlds.forEach(function(w){ var p=xy(w.id), r=Math.min(11,4+Math.sqrt(w.rate)*.7), legalT=S.drag&&w.id!==S.drag.from&&legal(S.drag.from,w.id)==='ok'&&!isUnder(w.id,S.drag.from,S.par);
+    cx.globalAlpha=S.drag&&w.id!==S.drag.from&&!legalT?.3:1;
+    cx.fillStyle=col('bg'); cx.beginPath(); cx.arc(p.x,p.y,r+2,0,7); cx.fill();
+    cx.fillStyle=down[w.id]?col('red'):KC[w.kind]; cx.strokeStyle=KC[w.kind]; cx.lineWidth=2; cx.beginPath(); cx.arc(p.x,p.y,r,0,7); if(w.dry) cx.stroke(); else cx.fill();
+    if(S.sel===w.id||legalT){ cx.strokeStyle=col('ppl'); cx.lineWidth=2; cx.beginPath(); cx.arc(p.x,p.y,r+5,0,7); cx.stroke() }
+    cx.lineWidth=3; cx.lineJoin='round'; cx.strokeStyle=col('bg'); cx.strokeText(w.name,p.x,p.y-r-6);
+    cx.fillStyle=col('ink'); cx.fillText(w.name,p.x,p.y-r-6); cx.globalAlpha=1 });
+  if(!still||S.drag) requestAnimationFrame(draw) }
+function again(){ if(still) draw(0) }
+
+cv.addEventListener('pointerdown',function(e){ var p=pt(e), id=nodeAt(p.x,p.y,30); if(!id||id==='earth'){ S.sel=null; S.fall=false; panel(); again(); return }
+  S.drag={from:id,x:p.x,y:p.y,sx:p.x,sy:p.y,over:null}; try{ cv.setPointerCapture(e.pointerId) }catch(_){ } if(still) draw(0) });
+cv.addEventListener('pointermove',function(e){ if(!S.drag) return; var p=pt(e); S.drag.x=p.x; S.drag.y=p.y; S.drag.over=nodeAt(p.x,p.y,30) });
+cv.addEventListener('pointerup',function(e){ if(!S.drag) return; var d=S.drag, moved=Math.hypot(d.x-d.sx,d.y-d.sy)>10; S.drag=null;
+  if(!moved){ S.sel=d.from; S.fall=false; panel() } else if(d.over&&d.over!==d.from){ S.sel=d.from; link(d.from,d.over) } again() });
+cv.addEventListener('pointercancel',function(){ S.drag=null; again() });
+[].forEach.call(document.querySelectorAll('#hops .btn'),function(b){ b.onclick=function(){ S.hop=+b.dataset.h; panel(); again() } });
+document.getElementById('rays').onclick=function(){ S.par=raysPar(); S.fall=false; panel(); again() };
+document.getElementById('web').onclick=function(){ S.par=webPar(S.hop); S.touched=true; S.fall=false; panel(); again() };
+addEventListener('resize',function(){ size(); again() });
+window.GAME={state:S,calc:calc,base:BASE,xy:xy,canvas:cv};
+S.par=raysPar(); size(); panel(); requestAnimationFrame(draw);
+})();
+</script>
