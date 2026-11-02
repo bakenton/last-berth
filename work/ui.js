@@ -607,9 +607,12 @@ function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) retu
 function modal(){ return !!U.menu||!!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
 var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
+/* Nikita, 02.11 (run 221175121: 2361 sleepers lost, «я не знал, что от него зависит»): what today's drive would do to everyone at home and at the pier */
+function arkToday(){ var s=Math.floor(G.earth.people)+crewDocked(G), w=Math.floor(s*arkWake(G)); return {s:s,w:w,lost:s-w} }
 function drawTop(){
   var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
+  if(can('ark')&&G.night&&G.arkMark!==null){ var at=arkToday(); h+='<button class="yr wake" type="button" data-act="tab" data-v="ark" title="'+attr(T('u_topWakeT'))+'"><small>'+ic('ark',11,C.ark)+esc(T('u_wake'))+'</small><b style="color:'+(!at.w?C.red:(at.lost?C.people:C.food))+'">'+num(at.w)+'</b>'+(at.lost?'<span>'+esc(fill(T('u_topLost'),{n:num(at.lost)}))+'</span>':'')+'</button>' }
   if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
@@ -716,14 +719,14 @@ function bigHtml(kind){
   /* v4.36: the end, the Night and the shift speak in the Institute's voice, Alexandra's line under it (NAR N-13, N-09, N-04) */
   if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
     if(G.over==='night'){ var sl=G.souls||0, lb=G.left||leftBehind(G), tier=sl<=0?0:(sl<300?1:(sl<1200?2:3)), behind=lb.home+lb.hulls+lb.colonies+lb.transit;
-      var sailed=!G.grounded&&(G.boarded||0)>0, why='';
+      var sailed=!G.grounded&&(G.boarded||0)>0, why='', noWake=sailed?G.boarded-sl:0;
       if(!sailed){ if(G.grounded&&G.groundedWhy==='convoy'){ var cv=arkConvoy(G), sh=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) sh.push(d+' × '+T(c)) }); why=fill(T('nar_rsConvoy'),{s:sh.join(', '),g:roman(convoyGen(G))}) }
         else if(G.grounded) why=fill(T('nar_rsDrive'),{g:roman(G.arkMark)}); else why=T('nar_rsLevel') }
       return '<div class="nwin '+(sailed&&tier?'good':'bad')+'">'+icap(T('u_year')+' '+G.day+' · '+T('u_theNight'))+
         (sailed?'<div class="nbig" style="color:'+C.ark+'"><small>'+esc(T('nar_aboard'))+'</small><b>'+num(G.boarded)+'</b></div><p>'+esc(fill(T('nar_N13a'),{n:num(G.boarded)}))+'</p>'
-               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+'<div class="rws">'+
+               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+(noWake>0?'<p style="color:'+C.red+'">'+esc(fill(T('nar_rsWake'),{n:num(noWake),g:roman(G.driveLvl||0),h:roman((G.driveLvl||0)+1),p:Math.round(wakeAt(G,(G.driveLvl||0)+1)*100)}))+'</p>':'')+'<div class="rws">'+
         rw2(esc(T('statSouls')),num(G.boarded||0),(G.boarded||0)?'good':'bad')+
-        rw2(esc(T('statWoke')),G.grounded?esc(T(G.groundedWhy==='convoy'?'arkNoConvoy':'arkNoDrive')):num(sl)+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+
+        rw2(esc(T('statWoke')),G.grounded?esc(T(G.groundedWhy==='convoy'?'arkNoConvoy':'arkNoDrive')):num(sl)+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+(noWake>0?rw2(esc(T('statNoWake')),num(noWake),'bad'):'')+
         rw2(esc(T('statBerths')),arkLevel(G)+' / '+K.ARK_LEVELS.length)+(G.cargo?rw2(esc(T('statCargo')),price(G.cargo,null)):'')+
         rw2(esc(T('statLeft')),num(behind)+' · '+lb.hulls+' '+esc(T('lbHulls'))+' · '+lb.colonies+' '+esc(T('lbCol')),'warn')+
         rw2(esc(T('statDay')),G.day)+rw2(esc(T('statSec')),SECTORS.length)+rw2(esc(T('statPeak')),G.stats.peak)+rw2(esc(T('statDrive')),G.driveLvl||0)+(G.stats.mutinies?rw2(esc(T('statMutiny')),G.stats.mutinies,'warn'):'')+'</div>'+
@@ -1026,10 +1029,15 @@ function focusFix(){ var now=Date.now();
   if(U.focus){ U.focusK=U.focus; U.focusT=now; U.focus=null; var e0=document.querySelector(U.focusK); if(e0) e0.scrollIntoView({block:'nearest'}) }
   if(!U.focusK) return; if(now-U.focusT>3000){ U.focusK=null; return }
   var e=document.querySelector(U.focusK); if(e&&!e.classList.contains('focus')){ e.style.animationDelay=-(now-U.focusT)+'ms'; e.classList.add('focus') } }
+/* Nikita, 02.11: «хочется ближе к концу накала» — static and dark over the map for the last NIGHT_FX years, growing to the end. Looks only: the layer takes no clicks and lies under the cards */
+var NIGHT_FX=200;
+function drawNightFx(){ var e=el('nightfx'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, on=left<=NIGHT_FX;
+  e.style.display=on?'block':'none'; if(!on) return;
+  e.style.setProperty('--nf',(0.1+0.9*(1-Math.max(0,left)/NIGHT_FX)).toFixed(3)); e.classList.toggle('still',halted()) }
 function draw(){
   if(!G) return;
   voiceWatch(); watchRings(); tutTick();
-  drawTop(); drawRes(); drawTabs(); drawMap(); drawEvBar(); drawCards(); drawSide(); drawWin(); drawPop(); drawBig(); drawPF(); focusFix(); tutPlace();
+  drawTop(); drawRes(); drawTabs(); drawMap(); drawNightFx(); drawEvBar(); drawCards(); drawSide(); drawWin(); drawPop(); drawBig(); drawPF(); focusFix(); tutPlace();
   var m=el('map'); if(m.pauseAnimations){ if(halted()) m.pauseAnimations(); else m.unpauseAnimations() }
 }
 
@@ -1258,8 +1266,14 @@ function startDriveWhy(pid){ if(G.drive) return 'running';
   if(settledCount(G)<driveReachFor(G)) return ['needsettled',{n:driveReachFor(G),r:settledCount(G)}];
   if(!pid) return worksList().length?['nohost',{n:K.DRIVE_POP}]:['nohost',{n:K.DRIVE_POP}];
   return 'ok' }
+/* Nikita, 26.10: «непонятно что за программа двигателя» — a note that opens and closes any time; the choice stays between runs */
+function driveHelpOn(){ if(U.driveHelp===undefined){ U.driveHelp=false; try{ U.driveHelp=localStorage.getItem('lb.driveHelp')==='1' }catch(e){} } return U.driveHelp }
+function driveHelp(work){ var w=K.ARK_WAKE, pc=function(x){ return Math.round(x*100) };
+  return '<div class="dhelp"><p>'+esc(T('u_dh1'))+'</p><p>'+esc(T('u_dh2'))+'</p><p>'+esc(fill(T('u_dh3'),{n:num(work)}))+'</p><p>'+esc(T('u_dh4'))+'</p>'+
+    (can('ark')&&G.night&&G.arkMark!==null?'<p style="color:'+C.ark+'">'+esc(fill(T('u_dh5'),{g:roman(G.arkMark),a:pc(w[0]),b:pc(w[1]),c:pc(w[2]),d:pc(w[3])}))+'</p>':'')+'</div>' }
 function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWorkFor(G), h='';
-  h+=sec(esc(T('u_hullGen')),roman(g)+' → '+roman(g+1));
+  h+=sec(esc(T('u_hullGen'))+'<button type="button" class="qm'+(driveHelpOn()?' on':'')+'" data-act="drivehelp" aria-expanded="'+driveHelpOn()+'" title="'+attr(T('u_dhQ'))+'" aria-label="'+attr(T('u_dhQ'))+'">?</button>',roman(g)+' → '+roman(g+1));
+  if(driveHelpOn()) h+=driveHelp(work);
   h+='<div class="gnow"><span class="gen big">'+roman(g)+'</span>'+ic('tTech',18,C.mid)+'<span class="gen big nx">'+roman(g+1)+'</span>'+(G.drive?'<span class="gtx">'+esc(fill(T('u_driveAt'),{p:pname(G.drive)}))+'</span>':'')+'</div>';
   h+='<div class="lab">'+esc(fill(T('u_step1'),{n:Math.min(s,need),m:need}))+'</div>'+steps(s,need,C.food);
   var ws=worksList(), have=G.drive?G.driveWork:G.earth.parts+ws.reduce(function(a,k){ return a+(G.colonies[k].store.parts||0) },0);
@@ -1295,6 +1309,8 @@ function arkDriveTxt(){ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.
   if(f.st==='settled') return [fill(T('u_arkNeedW'),{g:roman(G.arkMark),n:f.n,r:f.r}),C.red];
   if(f.st==='host') return [fill(T('u_arkNoHost'),{g:roman(G.arkMark)}),C.red];
   return [fill(T('u_arkStall'),{g:roman(G.arkMark)}),C.red] }
+/* Nikita, 02.11 (35 presses at the end of run 221175121): every hull on a line, in one press — the same two orders the hull rows give. A hull on an evacuation or a landing finishes first */
+function homeList(){ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!s.mutiny&&!s.job&&(s.from||s.pend) }) }
 function winArk(){
   if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_timePaused')),ic('ark',18,C.ark))+'<div class="bd"><div class="big mid">'+ic('night',22,C.mid)+esc(T('u_noDate'))+'</div>'+hint(esc(fill(T('u_noDateHint'),{n:K.NIGHT_TRIGGER_SECTORS,y:K.NIGHT_TRIGGER_YEAR})))+'</div></div>';
   var lv=arkLevel(G), top=K.ARK_LEVELS.length, ad=arkDriveTxt(), lvl=G.driveLvl||0, h='';
@@ -1314,7 +1330,10 @@ function winArk(){
   CLASSES.forEach(function(cls){ var mine=pier.filter(function(s){ return shipClass(s)===cls }); h+='<div class="cg">';
     for(var i=0;i<cv.need[cls];i++){ var s=mine[i]; h+='<div class="slot'+(s?' on':'')+'">'+shipIc(cls,40)+'<span>'+esc(s?T(cls)+' '+roman(hullGen(s))+' '+fill(T('hullNo'),{n:s.id}):T('u_empty').toUpperCase())+'</span></div>' }
     h+='</div>' });
-  h+='</div>'+hint(esc(fill(T('u_convoyHint'),{g:roman(cv.gen)})))+btn(esc(T('u_toYard')),'tab',{v:'yard'},'','tYard')+'</div>';
+  var over=[]; CLASSES.forEach(function(c){ over=over.concat(pier.filter(function(s){ return shipClass(s)===c }).slice(cv.need[c])) });
+  var hl=can('reserve')?homeList():[];
+  h+='</div>'+(over.length?hint('<span style="color:'+C.ark+'">'+ic('reserve',14,C.ark)+' '+esc(fill(T('u_convoyOver'),{n:num(over.reduce(function(a,s){ return a+(s.crew||0) },0)),k:over.length}))+'</span>'):'')+hint(esc(fill(T('u_convoyHint'),{g:roman(cv.gen)})))+btn(esc(T('u_toYard')),'tab',{v:'yard'},'','tYard')+
+    (hl.length?btn(esc(fill(T(U.homeArm?'u_allHomeArm':'u_allHome'),{n:hl.length})),'allhome',null,U.homeArm?'red':'','reserve')+hint(esc(T('u_allHomeHint'))):'')+'</div>';
   var short=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) short.push(d+' × '+T(c)) });
   var lb=leftBehind(G), souls=arkSouls(G), wk=arkWake(G), stays=lv<1?T('u_vNoLevel'):(!arkReady(G)?fill(T('u_vNoDrive'),{g:roman(G.arkMark)}):(!cv.ok?fill(T('u_vConvoy'),{s:short.join(', ')}):null));
   h+=sec(esc(T('u_ifToday')))+'<div class="verdict'+(stays?'':' ok')+'"><b>'+esc(T(stays?'u_arkStays':'u_arkSails'))+'</b><span>'+esc(stays||fill(T('u_vSails'),{s:num(souls),w:num(Math.floor(souls*wk)),l:num(lb.home+lb.hulls+lb.colonies+lb.transit)}))+'</span><i>'+esc(fill(T('u_vBoard'),{s:num(souls)}))+'</i></div>';
@@ -1426,6 +1445,7 @@ function lineWait(sid){ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
 function resLeft(sid){ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
 function doAct(a,b){
   var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
+  if(a!=='allhome') U.homeArm=false;
   if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null } else U.win=U.win===v?null:v; SFX.play('tab') }
   else if(a==='world'){ openWorld(v,d.f) }
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
@@ -1445,6 +1465,8 @@ function doAct(a,b){
     else { var wr2=(shipById(G,sid)||{}).reserve; res=setLine(G,sid,pid,'earth'); act(G,'line',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)}; res=lineRes(res,sid,pid); if(res==='ok'&&lineWait(sid)){ okc='ok_assignWait'; okp.w=lineWait(sid) } if(wr2&&res==='ok') resLeft(sid) } }
   else if(a==='order'){ var ohi=d.h!==undefined?+d.h:null; res=orderFor(G,d.p,d.c,ohi); act(G,'order',{p:d.p,c:d.c,h:ohi},res); if(res==='ok'){ var oh=HULLS[ohi!==null?ohi:currentHull(G,d.c)]; okc='ok_order'; okp={p:pname(d.p),c:hullName(oh),y:oh.days} } }
   else if(a==='build'){ var bh=HULLS[+d.h]; res=buildShip(G,+d.h); act(G,'build',{hull:bh.key,gen:bh.gen},res); okc='ok_build'; okp={n:G.nextShip-1,h:hullName(bh),y:bh.days} }
+  else if(a==='drivehelp'){ U.driveHelp=!driveHelpOn(); try{ localStorage.setItem('lb.driveHelp',U.driveHelp?'1':'0') }catch(e){} }
+  else if(a==='allhome'){ if(!U.homeArm) U.homeArm=true; else { U.homeArm=false; var hl=homeList(), cg=convoyGen(G); hl.forEach(function(s){ if(hullGen(s)>=cg){ res=setReserve(G,s.id,true); act(G,'reserve',{hull:s.id,on:true},res) } else { res=clearLine(G,s.id); act(G,'release',{hull:s.id},res) } }); okc='ok_allhome'; okp={n:hl.length} } }
   else if(a==='reserve'){ var ron=d.on==='1'; res=setReserve(G,+d.s,ron); act(G,'reserve',{hull:+d.s,on:ron},res); okc=ron?'ok_reserve':'ok_unreserve'; okp={n:+d.s} }
   else if(a==='scrap'){ var sid2=+d.s; if(U.scrapArm!==sid2){ U.scrapArm=sid2 } else { U.scrapArm=null; res=scrap(G,sid2); act(G,'scrap',{hull:sid2},res); okc='ok_scrap' } }
   else if(a==='evac'){ var ep=d.p, ec=pickCourier(ep), ecol=G.colonies[ep];

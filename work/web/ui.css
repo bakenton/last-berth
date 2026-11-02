@@ -40,6 +40,18 @@ svg.gi{fill:currentColor}
 #map .wd{cursor:pointer}#map .nm{font-family:var(--h);font-weight:600}
 @keyframes al{50%{stroke-opacity:.15}}.alarm{animation:al 1.4s infinite}
 @keyframes blk{0%,100%{opacity:1}50%{opacity:.25}}.evwarn{animation:blk 1.6s infinite}.evearth{animation:blk .9s infinite}
+#nightfx{position:absolute;inset:0;z-index:1;pointer-events:none;display:none;overflow:hidden;--nf:0}
+#nightfx i{position:absolute;inset:0;display:block}
+#nightfx .nfd{background:radial-gradient(ellipse at 50% 50%,rgba(20,0,0,calc(var(--nf)*.16)) 25%,rgba(0,0,0,calc(var(--nf)*.72)) 100%)}
+#nightfx .nfn{inset:-240px;background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 1.4 -.45'/%3E%3C/filter%3E%3Crect width='240' height='240' filter='url(%23n)'/%3E%3C/svg%3E");opacity:calc(var(--nf)*.1);animation:nfn .6s steps(5) infinite}
+#nightfx .nfs{background:repeating-linear-gradient(0deg,rgba(0,0,0,.5) 0 1px,transparent 1px 3px);opacity:calc(var(--nf)*.45)}
+#nightfx .nfb{top:-14%;bottom:auto;height:14%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.07) 50%,transparent);opacity:var(--nf);animation:nfb 11s linear infinite}
+#nightfx.still i{animation-play-state:paused}
+@keyframes nfn{0%{transform:translate(0,0)}20%{transform:translate(-90px,50px)}40%{transform:translate(70px,-110px)}60%{transform:translate(-40px,-70px)}80%{transform:translate(110px,90px)}100%{transform:translate(0,0)}}
+@keyframes nfb{to{top:100%}}
+.yr.wake{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;font:inherit}
+.qm{margin-left:8px;width:18px;height:18px;padding:0;border:1px solid var(--mid);background:none;color:var(--mid);font:600 11px var(--n);line-height:16px;cursor:pointer}.qm:hover,.qm.on{background:var(--mid);color:#000}
+.dhelp{border:1px solid var(--ln);padding:8px 10px;margin:0 0 10px;font-size:12.5px;line-height:1.45;color:var(--mid)}.dhelp p{margin:0 0 6px}.dhelp p:last-child{margin:0}
 #evbar{position:absolute;left:50%;transform:translateX(-50%);top:10px;display:flex;flex-direction:column;gap:6px;z-index:2;pointer-events:none}
 .evc{display:flex;align-items:center;gap:10px;border:1px dashed;background:var(--pan);padding:6px 14px;font-size:12.5px;white-space:nowrap}
 .evc.on{border-style:solid}.evc b{letter-spacing:.14em;font-size:11px}.evc span{color:var(--mid)}
