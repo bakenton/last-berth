@@ -671,7 +671,8 @@ UI	mn_contFail	The last save in this browser would not load.	Последнее 
 UI	u_testPlay	Test play · debug panel	Тест-плей · панель отладки
 UI	u_olderGen	Generation {g} needs {n} more parts	Поколению {g} не хватает деталей: {n}
 UI	u_topLost	{n} never wake	{n} не проснутся
-UI	u_topWakeT	On today's drive, if everyone at Earth and at the pier boarded. Opens the ark.	На сегодняшнем двигателе, если на борт сядут все на Земле и у причала. Открывает ковчег.
+UI	u_topWakeT	If the ark sailed today, on this drive, with everyone at Earth and at the pier. Opens the ark.	Если бы ковчег улетел сегодня, на этом двигателе, со всеми на Земле и у причала. Открывает ковчег.
+UI	u_topConvoy	convoy short, the ark stays	конвой неполон, ковчег не улетит
 UI	statNoWake	Never woke	Не проснулись
 UI	nar_rsWake	{n} sleepers never woke: on a generation {g} drive the crossing was too long. Generation {h} would have woken {p}%.	{n} спящих не проснулись: на двигателе поколения {g} перелёт оказался слишком долгим. Поколение {h} разбудило бы {p}%.
 UI	u_dhQ	What is the drive programme?	Что такое программа двигателя?

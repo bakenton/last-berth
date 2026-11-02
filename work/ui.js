@@ -607,12 +607,12 @@ function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) retu
 function modal(){ return !!U.menu||!!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
 var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
-/* Nikita, 02.11 (run 221175121: 2361 sleepers lost, «я не знал, что от него зависит»): what today's drive would do to everyone at home and at the pier */
-function arkToday(){ var s=Math.floor(G.earth.people)+crewDocked(G), w=Math.floor(s*arkWake(G)); return {s:s,w:w,lost:s-w} }
+/* Nikita, 02.11 (run 221175121: 2361 sleepers lost, «я не знал, что от него зависит»): the number on the top bar is what would happen today. Shown once a level is paid and the drive is at the mark */
+function arkToday(){ var s=arkSouls(G), w=Math.floor(s*arkWake(G)); return {s:s,w:w,lost:s-w} }
 function drawTop(){
   var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
-  if(can('ark')&&G.night&&G.arkMark!==null){ var at=arkToday(); h+='<button class="yr wake" type="button" data-act="tab" data-v="ark" title="'+attr(T('u_topWakeT'))+'"><small>'+ic('ark',11,C.ark)+esc(T('u_wake'))+'</small><b style="color:'+(!at.w?C.red:(at.lost?C.people:C.food))+'">'+num(at.w)+'</b>'+(at.lost?'<span>'+esc(fill(T('u_topLost'),{n:num(at.lost)}))+'</span>':'')+'</button>' }
+  if(can('ark')&&G.night&&arkLevel(G)>=1&&arkReady(G)){ var at=arkToday(), cvOk=arkConvoy(G).ok; h+='<button class="yr wake" type="button" data-act="tab" data-v="ark" title="'+attr(T('u_topWakeT'))+'"><small>'+ic('ark',11,C.ark)+esc(T('u_wake'))+'</small><b style="color:'+(!cvOk?C.red:(at.lost?C.people:C.food))+'">'+(cvOk?num(at.w):0)+'</b>'+(!cvOk?'<span>'+esc(T('u_topConvoy'))+'</span>':(at.lost?'<span>'+esc(fill(T('u_topLost'),{n:num(at.lost)}))+'</span>':''))+'</button>' }
   if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
@@ -1030,10 +1030,11 @@ function focusFix(){ var now=Date.now();
   if(!U.focusK) return; if(now-U.focusT>3000){ U.focusK=null; return }
   var e=document.querySelector(U.focusK); if(e&&!e.classList.contains('focus')){ e.style.animationDelay=-(now-U.focusT)+'ms'; e.classList.add('focus') } }
 /* Nikita, 02.11: «хочется ближе к концу накала» — static and dark over the map for the last NIGHT_FX years, growing to the end. Looks only: the layer takes no clicks and lies under the cards */
-var NIGHT_FX=200;
-function drawNightFx(){ var e=el('nightfx'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, on=left<=NIGHT_FX;
-  e.style.display=on?'block':'none'; if(!on) return;
-  e.style.setProperty('--nf',(0.1+0.9*(1-Math.max(0,left)/NIGHT_FX)).toFixed(3)); e.classList.toggle('still',halted()) }
+var NIGHT_FX=200, NIGHT_FX_LAST=50;
+function drawNightFx(){ var e=el('mapbox'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, on=left<=NIGHT_FX, last=left<=NIGHT_FX_LAST;
+  e.classList.toggle('nfon',on); e.classList.toggle('nflast',last); e.classList.toggle('nfstill',on&&halted()); if(!on) return;
+  e.style.setProperty('--nf',(0.1+0.9*(1-Math.max(0,left)/NIGHT_FX)).toFixed(3));
+  e.style.setProperty('--nl',(last?Math.pow(1-Math.max(0,left)/NIGHT_FX_LAST,0.7):0).toFixed(3)) }
 function draw(){
   if(!G) return;
   voiceWatch(); watchRings(); tutTick();
