@@ -33,7 +33,7 @@ function patched(){
   c=rep(c,"if(o.from===node){ o.from=null; o.to=null }","if(o.from===node||o.to===node){ o.from=null; o.to=null }");
   return c;
 }
-const EXPORTS=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','openSector','ensureGen','buildShip','colonize','canDepart','setLine','clearLine','scrap','shipById','legDays','currentHull','lineRate','shipRange','earthNeed','foundParty','enRoute','lineCheck','batchM','hubCap','hubOf','hubSum','inbound','NP'];
+const EXPORTS=['newGame','tick','K','SECTORS','PLANETS','HULLS','planet','openSector','ensureGen','buildShip','colonize','canDepart','setLine','clearLine','scrap','shipById','legDays','currentHull','lineRate','shipRange','earthNeed','foundParty','enRoute','lineCheck','batchM','hubCap','hubOf','hubSum','inbound','pileLeft','NP'];
 const wrap=c=>'(function(){\n'+c+'\n;return {'+EXPORTS.map(n=>n+':'+n).join(',')+'}})()';
 
 // снимок: настоящая партия бота rush, середина игры

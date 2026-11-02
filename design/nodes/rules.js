@@ -1,5 +1,5 @@
 /* ---------- правила узлов (только песочница, в игре этого нет) ---------- */
-var NP={batchA:0.5, batchFrom:3, hubK:2, courierEarth:1, courierHop:1, chains:true};
+var NP={batchA:0, batchFrom:3, hubK:2, courierEarth:1, courierHop:1, chains:true};
 var HUB_KEYS=['metal','food','fuel','parts'];
 function hubOf(c){ return c.hub||(c.hub={metal:0,food:0,fuel:0,parts:0}) }
 function hubSum(c){ var h=c&&c.hub; return h?h.metal+h.food+h.fuel+h.parts:0 }

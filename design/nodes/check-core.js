@@ -45,7 +45,7 @@ ok(c2.at==='earth','снятое судно вернулось домой');
 C.NP.hubK=2;
 
 // партия: тягач ждёт, пока не набралось
-G=fresh(); C.NP.batchFrom=npBatch; put(G,far.id,1); const h3=hull(G,'hauler');
+G=fresh(); C.NP.batchFrom=npBatch; C.NP.batchA=0.5; put(G,far.id,1); const h3=hull(G,'hauler');
 const mM=C.batchM(G,far); ok(mM>0,'партия на дальнем кольце '+mM);
 if(C.lineCheck(G,h3,far.id,'earth')==='range'){ console.log('(тягач не дотягивает, берём грузовоз)') }
 const big=C.lineCheck(G,h3,far.id,'earth')==='ok'?h3:hull(G,'freighter');
@@ -58,7 +58,7 @@ run(G,900); const dg=G.delivered[far.dep]; ok(dg>=mM||G.colonies[far.id].store[f
 G=fresh(); C.NP.courierEarth=99; C.NP.batchA=0; put(G,far.id); const c4=hull(G,'courier'); const rr=C.setLine(G,c4.id,far.id,'earth');
 ok(rr==='queued'||rr==='range','курьер на дальней линии: '+rr);
 if(rr==='queued'){ run(G,200); C.NP.courierEarth=1; run(G,300); ok(!c4.from&&c4.kicked==='courierFar','правило сняло курьера'); ok(c4.at==='earth','курьер дома') }
-C.NP.courierEarth=1; C.NP.batchA=0.5;
+C.NP.courierEarth=1; C.NP.batchA=0;
 
 // длинный прогон без проверок: падать не должен, снимок бота тоже
 G=fresh(); put(G,far.id); put(G,hub.id); const c5=hull(G,'courier'), h5=hull(G,'freighter'); C.setLine(G,c5.id,far.id,hub.id); C.setLine(G,h5.id,hub.id,'earth'); run(G,3000);

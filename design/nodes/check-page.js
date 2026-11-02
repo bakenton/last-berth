@@ -42,6 +42,10 @@ async function run(b,name,opt){
   await tapBtn('[data-a=speed][data-v="15"]');
   await p.waitForFunction(i=>(NS.G.colonies[i.b].hubIn||0)>0,ids,{timeout:60000});
   ok(true,name+': узел получил груз, год '+await p.evaluate(()=>NS.G.day));
+  // суда ходят туда-сюда: цель рейса меняется
+  const legs=await p.evaluate(async i=>{ const seen={}; for(let n=0;n<160;n++){ NS.G.ships.forEach(s=>{ if(s.from===i.a&&s.to===i.b&&s.mode==='transit'){ const o=seen.feeder=seen.feeder||{}; o[s.dest]=1 } if(s.from===i.b&&s.to==='earth'&&s.mode==='transit'){ const o=seen.trunk=seen.trunk||{}; o[s.dest]=1 } }); await new Promise(r=>setTimeout(r,50)) } return seen },ids);
+  ok(legs.feeder&&Object.keys(legs.feeder).length===2,name+': курьер ходит в обе стороны '+JSON.stringify(legs.feeder));
+  ok(legs.trunk&&Object.keys(legs.trunk).length===2,name+': тягач ходит в обе стороны '+JSON.stringify(legs.trunk));
   await tapAt(await at(ids.b));
   const txt=await p.locator('#panel').innerText();
   ok(txt.includes('Перевалка'),name+': видно перевалку');
