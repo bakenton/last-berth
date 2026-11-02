@@ -64,5 +64,4 @@ for(const key of Object.keys(S)){ const a=S[key]; const hold=a.hc+a.hh+a.hf; a.N
   const tb=a.best.courier+a.best.hauler+a.best.freighter+a.best.none||1;
   lines.push([v,key,'hulls c/h/f',f(a.c/a.n,1),f(a.h/a.n,1),f(a.f/a.n,1),'hold%',f(100*a.hc/hold),f(100*a.hh/hold),f(100*a.hf/hold),'metal',f(a.metal/a.n),'Nc p50/p90',f(a.Nc[a.Nc.length>>1]||0,1),f(a.Nc[Math.floor(a.Nc.length*.9)]||0,1),'cheapest% c/h/f/none',f(100*a.best.courier/tb),f(100*a.best.hauler/tb),f(100*a.best.freighter/tb),f(100*a.best.none/tb)].join(' ')) }
 fs.writeFileSync(path.join(scratch,'lv-out-'+tag+'.txt'),lines.join('\n')+'\n');
-console.log(lines.join('
-'));
+console.log(lines.join('\n'));
