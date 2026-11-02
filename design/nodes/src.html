@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<title>LAST BERTH: сеть узлов</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>/*KIT*/</style>
+<style>
+:root{color-scheme:dark}
+#app{position:fixed;inset:0;display:grid;grid-template-columns:minmax(0,1fr) 340px;background:var(--bg)}
+#mapW{position:relative;min-width:0;min-height:0}
+canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:pointer}
+#hint{position:absolute;left:10px;top:10px;right:10px;pointer-events:none;color:var(--ppl);font-size:14px;font-weight:600}
+#over{position:absolute;left:10px;bottom:10px;right:10px;pointer-events:none;color:var(--red);font-size:14px;font-weight:600}
+aside{background:var(--pan);border-left:1px solid var(--ln);overflow:auto;display:flex;flex-direction:column;min-height:0}
+.bar{display:flex;align-items:center;gap:4px;padding:8px 12px;border-bottom:1px solid var(--ln);position:sticky;top:0;background:var(--pan);z-index:2}
+.bar .yr{font-family:var(--n);font-size:15px;margin-right:auto;white-space:nowrap}
+.bar .btn{min-height:40px;min-width:40px;padding:0 8px}
+.btn.on{background:var(--ink);border-color:var(--ink);color:#000}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);border-bottom:1px solid var(--ln)}
+.tabs button{min-height:44px;font-size:13px;color:var(--mid);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--ppl)}
+#panel{padding:12px;display:flex;flex-direction:column;gap:12px}
+#earth{padding:8px 12px;border-bottom:1px solid var(--ln)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+td,th{padding:3px 0;text-align:right;font-family:var(--n);font-variant-numeric:tabular-nums;white-space:nowrap}
+td:first-child,th:first-child{text-align:left;font-family:var(--h)}
+th{font-size:10px;letter-spacing:.1em;color:var(--mid);font-weight:600}
+.up{color:var(--fuel)}.down{color:var(--red)}.mid{color:var(--mid)}.warn{color:var(--ppl)}.bad{color:var(--red)}
+h2{margin:0;font-size:16px;font-weight:600}
+.sub{color:var(--mid);font-size:12px}
+.row{display:flex;flex-wrap:wrap;gap:6px}
+.row .btn{flex:1 1 auto;min-height:44px;padding:0 8px;font-size:13px}
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;margin-top:4px}
+.seg .btn{min-height:44px;padding:0 2px;font-size:13px}
+.opt{display:grid;grid-template-columns:30px 1fr auto;gap:8px;align-items:center;width:100%;min-height:52px;padding:6px 8px;border:1px solid var(--ln);text-align:left;font-size:13px}
+.opt:hover{border-color:var(--mid)}
+.opt[disabled]{opacity:.55;cursor:default}
+.opt small{display:block;color:var(--mid);font-size:11px}
+.ln{display:grid;grid-template-columns:24px 1fr auto auto;gap:8px;align-items:center;font-size:12px;padding:3px 0;border-top:1px solid var(--ln)}
+.ln .btn{min-height:36px;padding:0 8px;font-size:12px}
+.meter{height:6px;background:var(--pan2);margin-top:3px}.meter i{display:block;height:100%;background:var(--parts)}
+svg{display:block}
+@media (max-width:760px){
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,48%) minmax(0,52%)}
+  aside{border-left:0;border-top:1px solid var(--ln)}
+}
+</style></head><body>
+<div id="app">
+  <div id="mapW"><canvas id="c" aria-label="Карта миров и линий"></canvas><div id="hint"></div><div id="over"></div></div>
+  <aside id="aside">
+    <div class="bar"><span class="yr" id="yr"></span>
+      <button class="btn" data-a="speed" data-v="0">❚❚</button><button class="btn" data-a="speed" data-v="2">2</button><button class="btn" data-a="speed" data-v="5">5</button><button class="btn" data-a="speed" data-v="15">15</button></div>
+    <div id="earth"></div>
+    <div class="tabs"><button data-a="tab" data-v="world">Мир</button><button data-a="tab" data-v="fleet">Флот</button><button data-a="tab" data-v="rules">Правила</button></div>
+    <div id="panel"></div>
+  </aside>
+</div>
+<script>/*CORE*/</script>
+<script>/*SNAP*/</script>
+<script>
+(function(){
+var $=function(i){ return document.getElementById(i) };
+var G=null, sel=null, picking=null, target=null, tab='rules', speed=0, timer=null, queue=[], hist=[], held=false, seam=1, scen='clean';
+var css=getComputedStyle(document.documentElement), col=function(n){ return css.getPropertyValue('--'+n).trim() };
+var KC={mine:col('metal'),farm:col('food'),well:col('fuel'),works:col('parts')}, RC={metal:col('metal'),food:col('food'),fuel:col('fuel'),parts:col('parts')};
+var RN={metal:'Металл',food:'Еда',fuel:'Топливо',parts:'Детали'}, KN={mine:'рудник',farm:'ферма',well:'скважина',works:'завод'};
+var CN={courier:'Курьер',hauler:'Тягач',freighter:'Грузовоз'}, CC={courier:'#45D4E8',hauler:'#FF6FB5',freighter:'#F2F1EC'}, CL=['courier','hauler','freighter'], FACE={courier:3,hauler:4,freighter:6};
+var WHY={range:'не хватает дальности',courierFar:'курьер не ходит к Земле с такого кольца',batch:'трюм меньше партии Земли',nochain:'цепочки выключены',samenode:'тот же мир',nocolony:'мир не заселён',works:'заводы только на линии к Земле',outward:'линия идёт только к Земле, не наружу',courierHop:'курьер ходит только на соседнее кольцо',loop:'получится петля',cost:'не хватает ресурсов',crew:'не хватает людей',locked:'закрыто',retired:'устарело',depleted:'мир выработан',people:'не хватает людей'};
+var f=function(n){ n=Math.round(n); var a=Math.abs(n); if(a>=1e6) return (n/1e6).toFixed(1)+'M'; if(a>=1e4) return Math.round(n/1e3)+'k'; return ''+n };
+var ring=function(p){ return ['I','II','III','IV','V','VI','VII','VIII','IX','X','XI','XII'][p.sec]||p.sec+1 };
+function icon(cls,sz){ sz=sz||20; var n=FACE[cls], c=sz/2, r=sz*0.44, pts=[]; for(var i=0;i<n;i++){ var a=2*Math.PI*i/n; pts.push((c+r*Math.cos(a)).toFixed(1)+','+(c+r*Math.sin(a)).toFixed(1)) }
+  return '<svg width="'+sz+'" height="'+sz+'" aria-hidden="true"><polygon points="'+pts.join(' ')+'" fill="'+CC[cls]+'"/><circle cx="'+(c+r*0.72)+'" cy="'+c+'" r="'+(sz*0.1)+'" fill="#F5C518"/></svg>' }
+
+/* ---------- старт ---------- */
+function start(sc){ scen=sc||scen; var S=JSON.parse(JSON.stringify(SNAP));
+  G=C.newGame(S.seed); while(C.SECTORS.length<S.nSec) C.openSector(G); C.ensureGen(S.gen);
+  var rnd=G.rnd, full={}; for(var k in G.reserves) full[k]=G.reserves[k];
+  for(var k2 in S) if(k2!=='nSec') G[k2]=S[k2]; G.rnd=rnd;
+  for(var r in G.reserves) G.reserves[r]=G.reserves[r]<0?Infinity:G.reserves[r];
+  C.K.NIGHT_TRIGGER_SECTORS=1e9; C.K.NIGHT_TRIGGER_YEAR=1e9; C.K.COLONY_LOSS=0;   // урезано: без Ночи и без убыли на мирах (людей по цепочке пока не возим)
+  if(scen==='clean'){ var E=G.earth; G.ships.forEach(function(s){ if(s.mode==='dead') return; var hd=C.HULLS[s.hull]; E.people+=s.crew||0; E.metal+=hd.metal; E.parts+=hd.parts||0; E.fuel+=hd.fuel }); for(var c in G.colonies) E.people+=G.colonies[c].pop;
+    G.colonies={}; G.ships=[]; G.ghost={}; G.settled={}; G.stats.founded=0; for(var x in full) G.reserves[x]=full[x] }
+  for(var w in G.reserves) if(G.reserves[w]!==Infinity) G.reserves[w]=Math.round(G.reserves[w]*seam);
+  sel=null; picking=null; target=null; queue=[]; hist=[]; note=''; lastSeq=G.logSeq||0; setSpeed(0); layout(); render() }
+
+/* ---------- время ---------- */
+function setSpeed(v){ speed=v; clearInterval(timer); timer=v?setInterval(step,1000/v):null;
+  document.querySelectorAll('[data-a=speed]').forEach(function(b){ b.classList.toggle('on',+b.dataset.v===v) }) }
+var note='', noteY=0, lastSeq=0;
+function readLog(){ G.log.forEach(function(l){ if((l.seq||0)<=lastSeq) return; lastSeq=l.seq;
+    var pn=l.d&&l.d.p&&C.planet(l.d.p)?C.planet(l.d.p).name:'';
+    var t=l.code==='colony_failed'?'Поселенцы погибли при высадке: '+pn:l.code==='ship_missing'?'Судно пропало по пути: '+pn:l.code==='depleted'?'Жила выработана: '+pn:'';
+    if(t){ note=t; noteY=G.day } }) }
+function step(){ if(G.over){ setSpeed(0); return } C.tick(G); G.pauseNow=false; readLog(); drainQueue();
+  G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)) s.waiting=false });
+  var E=G.earth; hist.push({metal:E.metal,food:E.food,fuel:E.fuel,parts:E.parts,d:Object.assign({},G.delivered)}); if(hist.length>41) hist.shift();
+  render() }
+function drainQueue(){ queue=queue.filter(function(q){ var s=C.shipById(G,q.ship); if(!s||s.mode==='dead') return false; if(G.colonies[q.pid]||C.enRoute(G,q.pid)) return false; if(s.mode!=='idle') return true;
+    var r=C.colonize(G,s.id,q.pid); return r!=='ok'&&r!=='taken'&&r!=='enroute' }) }
+
+/* ---------- подсчёт ---------- */
+function rate(key){ if(hist.length<2) return null; var a=hist[0], b=hist[hist.length-1]; return (b[key]-a[key])/(hist.length-1) }
+function inRate(key){ if(hist.length<2) return 0; var a=hist[0].d, b=hist[hist.length-1].d; return (b[key]-a[key])/(hist.length-1) }
+function liveShips(){ return G.ships.filter(function(s){ return s.mode!=='dead' }) }
+function shipKey(s){ return C.HULLS[s.hull].key }
+function stateOf(s){ if(s.mode==='building') return 'на верфи'; if(s.mode==='missing') return 'пропало'; if(s.hubWait) return 'склад полон'; if(s.batchWait) return 'ждёт партию'; if(s.crewWait) return 'нет экипажа'; if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)) return 'свободно'; if(s.job==='colonize') return 'заселяет'; if(!(s.from&&s.to)) return 'домой'; return 'в рейсе' }
+function hullFor(key){ var id=C.currentHull(G,key); return id==null?null:id }
+function haulYr(s){ return s.cap/Math.max(1,C.legDays(G,s.from,s.to,s)*2) }
+function worldFlow(pid){ var p=C.planet(pid), lr=C.lineRate(G,pid), out=0, inn=0; G.ships.forEach(function(s){ if(s.mode==='dead'||!s.from) return; if(s.from===pid) out+=haulYr(s); if(s.to===pid) inn+=haulYr(s) }); return {makes:lr?lr.makes:0,out:out,inn:inn} }
+
+/* ---------- панель ---------- */
+function setH(el,h){ if(el._h!==h){ el._h=h; el.innerHTML=h } }
+function render(){ if(held) return; $('yr').textContent='Год '+G.day;
+  var nd=G.need||{}, h='<table><tr><th></th><th>Склад</th><th>Привоз/г</th><th>Расход/г</th><th>Итог/г</th></tr>';
+  ['food','metal','fuel','parts'].forEach(function(k){ var r=rate(k), cs=r==null?'mid':(r<-0.05?'down':'up');
+    h+='<tr><td style="color:'+RC[k]+'">'+RN[k]+'</td><td>'+f(G.earth[k])+'</td><td>'+inRate(k).toFixed(1)+'</td><td>'+(nd[k]!=null?(+nd[k]).toFixed(1):'–')+'</td><td class="'+cs+'">'+(r==null?'–':(r>0?'+':'')+r.toFixed(1))+'</td></tr>' });
+  h+='</table><div class="sub">Людей на Земле: '+Math.round(G.earth.people)+(G.hungry?' · <span class="bad">голод '+(G.famine||0)+' из '+C.K.DEAD_DAYS+'</span>':'')+'</div>';
+  setH($('earth'),h);
+  document.querySelectorAll('[data-a=tab]').forEach(function(b){ b.classList.toggle('on',b.dataset.v===tab) });
+  setH($('panel'),tab==='world'?worldPanel():tab==='fleet'?fleetPanel():rulesPanel());
+  $('hint').textContent=picking?(target?'Выберите судно в панели':'Куда везти из '+C.planet(picking).name+'? Нажмите мир или Землю'):'';
+  $('over').textContent=G.over?'Земля замолчала. Партия окончена, начните заново в «Правилах».':(G.day-noteY<30?note:'');
+}
+function worldPanel(){ if(!sel) return '<div class="sub">Нажмите мир на карте.</div>';
+  var p=C.planet(sel), c=G.colonies[sel], h='<div><h2>'+p.name+'</h2><div class="sub">Кольцо '+ring(p)+' · <span style="color:'+KC[p.kind]+'">'+KN[p.kind]+'</span> · богатство '+p.rich+'</div></div>';
+  if(!c){ var going=C.enRoute(G,sel)||queue.some(function(q){ return q.pid===sel });
+    var res=G.reserves[sel]; h+='<div class="sub">Жила: '+(res===Infinity?'нет, перерабатывает':f(res))+'</div>';
+    if(going) return h+'<div class="warn">Поселенцы в пути</div>';
+    h+='<div class="sub">Заселить судном:</div>'; CL.forEach(function(key){ var id=hullFor(key); if(id==null) return; var hd=C.HULLS[id], fr=freeHull(key,sel), why=fr?'':(p.sec>C.shipRange({hull:id})?'range':C.buildShip.length&&costWhy(hd));
+      h+='<button class="opt" data-a="settle" data-v="'+key+'"'+(why?' disabled':'')+'>'+icon(key,26)+'<span>'+CN[key]+'<small>'+(why?WHY[why]:(fr?'свободное, на Земле':'построить: металл '+hd.metal+', дни '+hd.days))+'</small></span><span></span></button>' });
+    return h }
+  var fl=worldFlow(sel), own=p.kind==='works'?'parts':p.dep, hb=c.hub?C.hubSum(c):0, cap=C.hubCap(G), bm=C.batchM(G,p), left=G.reserves[sel];
+  h+='<table><tr><td>Людей</td><td>'+Math.round(c.pop)+'</td></tr><tr><td>Даёт в год</td><td>'+fl.makes.toFixed(1)+'</td></tr><tr><td>Жила</td><td>'+(left===Infinity?'–':f(Math.max(0,left))+(fl.makes>0&&left>0?' · на '+f(left/fl.makes)+' лет':' · выработана'))+'</td></tr><tr><td>Свой склад</td><td>'+f(c.store[own]||0)+'</td></tr><tr><td>Вывоз в год</td><td class="'+(fl.out+0.01<fl.makes+fl.inn?'warn':'')+'">'+fl.out.toFixed(1)+'</td></tr>'+(fl.inn?'<tr><td>Привоз с других</td><td>'+fl.inn.toFixed(1)+'</td></tr>':'')+(bm?'<tr><td>Партия Земли</td><td>'+f(bm)+'</td></tr>':'')+'</table>';
+  if(hb>0||fl.inn>0){ var pc=cap===Infinity?0:Math.min(100,100*hb/cap); h+='<div><div class="sub">Перевалка: '+f(hb)+(cap===Infinity?'':' из '+f(cap))+'</div><div class="meter"><i style="width:'+pc+'%"></i></div></div>' }
+  if(picking===sel&&target) h+=pickList(); else if(picking===sel) h+='<div class="row"><button class="btn" data-a="cancelPick">Отмена</button></div>';
+  else h+='<div class="row"><button class="btn pri" data-a="pick">Новая линия отсюда</button></div>';
+  var ss=liveShips().filter(function(s){ return s.from===sel||s.to===sel||(s.pend&&s.pend.from===sel) });
+  if(ss.length){ h+='<div>'; ss.forEach(function(s){ var key=shipKey(s), to=(s.pend?s.pend.to:s.to), from=(s.pend?s.pend.from:s.from), dir=from===sel?'→ '+(to==='earth'?'Земля':C.planet(to).name):'← '+C.planet(from).name;
+      h+='<div class="ln">'+icon(key)+'<span>'+dir+'<br><span class="mid">'+stateOf(s)+'</span></span><span class="mid">'+(s.fillE!=null?Math.round(s.fillE*100)+'%':'')+'</span><button class="btn" data-a="drop" data-v="'+s.id+'">Снять</button></div>' }); h+='</div>' }
+  return h }
+function costWhy(hd){ if(G.earth.metal<hd.metal||G.earth.fuel<hd.fuel||G.earth.parts<(hd.parts||0)) return 'cost'; if(G.earth.people-C.K.EARTH_KEEP<(hd.crew||0)) return 'crew'; return '' }
+function freeHull(key,pid){ var b=null; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.job&&shipKey(s)===key&&(!b||s.cap>b.cap)&&(!queue.some(function(q){ return q.ship===s.id }))&&(!pid||C.planet(pid).sec<=C.shipRange(s))) b=s }); return b }
+function pickList(){ var to=target, tn=to==='earth'?'Земля':C.planet(to).name, h='<div class="sub">'+C.planet(picking).name+' → '+tn+'</div>';
+  CL.forEach(function(key){ var id=hullFor(key); if(id==null) return; var hd=C.HULLS[id], why=C.lineCheck(G,{hull:id},picking,to), fr=freeHull(key), probe=fr||{hull:id,cap:hd.cap}; if(why==='ok') why=fr?'':costWhy(hd);
+    var days=C.legDays(G,picking,to,probe)*2, yr=probe.cap/Math.max(1,days);
+    h+='<button class="opt" data-a="place" data-v="'+key+'"'+(why?' disabled':'')+'>'+icon(key,26)+'<span>'+CN[key]+' · трюм '+f(probe.cap)+'<small>'+(why?WHY[why]:(fr?'свободное':'построить: металл '+hd.metal+(hd.parts?', детали '+hd.parts:'')+', экипаж '+hd.crew))+'</small></span><span class="num">'+yr.toFixed(1)+'/г</span></button>' });
+  return h+'<div class="row"><button class="btn" data-a="cancelPick">Отмена</button></div>' }
+function fleetPanel(){ var ls=liveShips(), h='<table><tr><th></th><th>Судов</th><th>Экипаж</th><th>Загрузка</th><th>Ждут</th></tr>', tw=0, tn=0;
+  CL.forEach(function(key){ var s=ls.filter(function(x){ return shipKey(x)===key }), fs=s.filter(function(x){ return x.fillE!=null }), wt=s.filter(function(x){ return x.batchWait||x.hubWait }).length, cr=s.reduce(function(a,x){ return a+(x.crew||0) },0), fl=fs.length?fs.reduce(function(a,x){ return a+x.fillE },0)/fs.length:null; tw+=wt; tn+=s.length;
+    h+='<tr><td>'+CN[key]+'</td><td>'+s.length+'</td><td>'+cr+'</td><td>'+(fl==null?'–':Math.round(fl*100)+'%')+'</td><td>'+wt+'</td></tr>' });
+  h+='</table>'; var free=ls.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend }), kicked=ls.filter(function(s){ return s.kicked&&!(s.from&&s.to) }).length;
+  if(kicked) h+='<div class="warn">Снято правилом: '+kicked+'</div>';
+  if(free.length){ h+='<div class="sub">Свободные на Земле</div><div>'; free.forEach(function(s){ h+='<div class="ln">'+icon(shipKey(s))+'<span>'+CN[shipKey(s)]+' · трюм '+f(s.cap)+'</span><span></span><button class="btn" data-a="scrap" data-v="'+s.id+'">На слом</button></div>' }); h+='</div>' }
+  var nodes=Object.keys(G.colonies).filter(function(k){ return C.inbound(G,k)||C.hubSum(G.colonies[k])>0 });
+  if(nodes.length){ h+='<table><tr><th>Узел</th><th>Перевалка</th><th>Привоз/г</th><th>Вывоз/г</th></tr>'; nodes.forEach(function(k){ var fl=worldFlow(k); h+='<tr><td>'+C.planet(k).name+'</td><td>'+f(C.hubSum(G.colonies[k]))+'</td><td>'+fl.inn.toFixed(1)+'</td><td>'+fl.out.toFixed(1)+'</td></tr>' }); h+='</table>' }
+  return h }
+function seg(label,key,opts){ var h='<div><div class="lbl">'+label+'</div><div class="seg">'; opts.forEach(function(o){ h+='<button class="btn'+(C.NP[key]===o[0]?' on':'')+'" data-a="np" data-k="'+key+'" data-v="'+o[0]+'">'+o[1]+'</button>' }); return h+'</div></div>' }
+function rulesPanel(){ var ha=C.HULLS[hullFor('hauler')], g=(G.gen||0)+1, bm=Math.round(C.NP.batchA*ha.cap), cap=C.hubCap(G), cc=C.HULLS[hullFor('courier')], fc=C.HULLS[hullFor('freighter')];
+  var h='<div class="sub">Поколение '+['I','II','III','IV','V','VI','VII','VIII'][g-1]+'. Трюм: курьер '+f(cc.cap)+', тягач '+f(ha.cap)+', грузовоз '+f(fc.cap)+'.<br>Партия сейчас '+(C.NP.batchA?f(bm):'нет')+', склад перевалки '+(cap===Infinity?'без потолка':f(cap))+'.</div>';
+  h+=seg('Партия Земли, доля трюма тягача','batchA',[[0,'Нет'],[0.25,'¼'],[0.5,'½'],[1,'1']]);
+  h+=seg('Партия с кольца','batchFrom',[[1,'II'],[2,'III'],[3,'IV'],[4,'V']]);
+  h+=seg('Склад перевалки, трюмов тягача','hubK',[[1,'1'],[2,'2'],[4,'4'],[99,'∞']]);
+  h+=seg('Курьер ходит к Земле до кольца','courierEarth',[[0,'I'],[1,'II'],[2,'III'],[99,'Все']]);
+  h+=seg('Прыжок курьера, колец','courierHop',[[0,'0'],[1,'1'],[2,'2'],[99,'Все']]);
+  h+='<div><div class="lbl">Заново</div><div class="sub" style="margin:4px 0">Жила при старте: ×'+seam+'</div><div class="seg" style="margin-bottom:6px">'+[[1,'×1'],[0.5,'×½'],[0.25,'×¼']].map(function(o){ return '<button class="btn'+(seam===o[0]?' on':'')+'" data-a="seam" data-v="'+o[0]+'">'+o[1]+'</button>' }).join('')+'</div>';
+  h+='<div class="row"><button class="btn pri" data-a="restart" data-v="clean">Чистый лист</button><button class="btn" data-a="restart" data-v="bot">Сеть бота</button></div></div>';
+  h+='<div class="sub">Настоящие ядро, суда и запасы: партия бота, год '+SNAP.day+'. Убраны Ночь, наука, заводская техника, эвакуация, обучение. Люди по цепочкам пока не ходят, поэтому убыль на мирах выключена.</div>';
+  return h }
+
+/* ---------- действия ---------- */
+function act(a,b){ var v=b.dataset.v;
+  if(a==='speed'){ setSpeed(+v); return }
+  if(a==='tab'){ tab=v } else if(a==='pick'){ picking=sel; target=null }
+  else if(a==='cancelPick'){ picking=null; target=null }
+  else if(a==='place'){ placeLine(v) }
+  else if(a==='settle'){ settle(v) }
+  else if(a==='drop'){ C.clearLine(G,+v); var s=C.shipById(G,+v); if(s) s.kicked=null }
+  else if(a==='scrap'){ C.scrap(G,+v) }
+  else if(a==='np'){ C.NP[b.dataset.k]=+v }
+  else if(a==='seam'){ seam=+v }
+  else if(a==='restart'){ start(v); return }
+  render() }
+function placeLine(key){ var fr=freeHull(key), id, r;
+  if(fr) id=fr.id; else { var hi=hullFor(key), r0=C.buildShip(G,hi); if(r0!=='ok') return; id=G.ships[G.ships.length-1].id }
+  r=C.setLine(G,id,picking,target); picking=null; target=null }
+function settle(key){ var fr=freeHull(key,sel), id; if(fr) id=fr.id; else { var r0=C.buildShip(G,hullFor(key)); if(r0!=='ok') return; id=G.ships[G.ships.length-1].id } queue.push({ship:id,pid:sel}); drainQueue() }
+document.addEventListener('click',function(e){ var b=e.target.closest('[data-a]'); if(!b||b.disabled) return; act(b.dataset.a,b) });
+$('aside').addEventListener('pointerdown',function(){ held=true });
+window.addEventListener('pointerup',function(){ setTimeout(function(){ held=false; if(G) render() },0) });
+window.addEventListener('pointercancel',function(){ held=false });
+
+/* ---------- карта ---------- */
+var cv=$('c'), ctx=cv.getContext('2d'), W=0,H=0,DPR=1,pos={};
+function scale(d){ var maxD=C.PLANETS.reduce(function(a,p){ return Math.max(a,p.dist) },1), R=Math.min(W,H)/2-26; return R*Math.sqrt(d/maxD) }
+function layout(){ var r=cv.getBoundingClientRect(); DPR=window.devicePixelRatio||1; W=r.width; H=r.height; cv.width=W*DPR; cv.height=H*DPR; pos={earth:{x:W/2,y:H/2}};
+  C.PLANETS.forEach(function(p){ var d=scale(p.dist); pos[p.id]={x:W/2+Math.cos(p.ang)*d,y:H/2+Math.sin(p.ang)*d} }) }
+function hit(x,y){ var best=null,bd=26*26; for(var k in pos){ var q=pos[k],d=(q.x-x)*(q.x-x)+(q.y-y)*(q.y-y); if(d<bd){ bd=d; best=k } } return best }
+function poly(x,y,n,r,a,c){ ctx.beginPath(); for(var i=0;i<n;i++){ var t=a+2*Math.PI*i/n; ctx.lineTo(x+r*Math.cos(t),y+r*Math.sin(t)) } ctx.closePath(); ctx.fillStyle=c; ctx.fill() }
+function draw(){ requestAnimationFrame(draw); if(!G||!W) return; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle=col('ln'); ctx.lineWidth=1; C.SECTORS.forEach(function(s,i){ var ds=C.PLANETS.filter(function(p){ return p.sec===i }); if(!ds.length) return; var m=Math.max.apply(null,ds.map(function(p){ return p.dist })); ctx.beginPath(); ctx.arc(W/2,H/2,scale(m)+3,0,7); ctx.stroke() });
+  // линии: толщина от проходимости
+  var edges={}; liveShips().forEach(function(s){ if(!s.from||!s.to||!pos[s.from]||!pos[s.to]) return; var k=s.from+'>'+s.to, e=edges[k]||(edges[k]={a:s.from,b:s.to,y:0}); e.y+=haulYr(s) });
+  for(var k in edges){ var e=edges[k], a=pos[e.a], b=pos[e.b]; ctx.strokeStyle=e.b==='earth'?'#6d6c67':col('ppl'); ctx.lineWidth=Math.min(7,1+Math.sqrt(e.y)/2); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke() }
+  if(drag){ ctx.strokeStyle=col('ppl'); ctx.lineWidth=2; ctx.setLineDash([5,5]); ctx.beginPath(); ctx.moveTo(pos[drag.from].x,pos[drag.from].y); ctx.lineTo(drag.x,drag.y); ctx.stroke(); ctx.setLineDash([]) }
+  // миры
+  C.PLANETS.forEach(function(p){ var q=pos[p.id], c=G.colonies[p.id], dry=c&&G.reserves[p.id]<=0, r=c?7:5; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,7);
+    if(c&&!dry){ ctx.fillStyle=KC[p.kind]; ctx.fill() } else { ctx.strokeStyle=dry?col('dim'):KC[p.kind]; ctx.lineWidth=1.5; ctx.stroke() }
+    if(c&&(c.hub&&C.hubSum(c)>0||C.inbound(G,p.id))){ var cp=C.hubCap(G), pc=cp===Infinity?0.15:Math.min(1,C.hubSum(c)/cp); ctx.strokeStyle='#3a3a40'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(q.x,q.y,r+5,0,7); ctx.stroke(); ctx.strokeStyle=col('ppl'); ctx.beginPath(); ctx.arc(q.x,q.y,r+5,-1.57,-1.57+6.283*pc); ctx.stroke() }
+    if(p.id===sel){ ctx.strokeStyle=col('ink'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(q.x,q.y,r+10,0,7); ctx.stroke() }
+    if(c||p.id===sel){ ctx.fillStyle=c?col('ink'):col('mid'); ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText(p.name,q.x,q.y-r-11) } });
+  ctx.beginPath(); ctx.arc(W/2,H/2,9,0,7); ctx.fillStyle=col('ink'); ctx.fill();
+  // суда
+  liveShips().forEach(function(s){ var key=shipKey(s), a,b,t,ang=0,x,y; if(s.mode==='transit'&&s.total>0){ a=pos[s.origin]; b=pos[s.dest]; if(!a||!b) return; t=1-s.t/s.total; x=a.x+(b.x-a.x)*t; y=a.y+(b.y-a.y)*t; ang=Math.atan2(b.y-a.y,b.x-a.x) }
+    else if(s.mode==='idle'&&s.at&&s.at!=='earth'){ a=pos[s.at]; if(!a) return; x=a.x+10; y=a.y+10+(s.id%4)*4 } else return;
+    var r={courier:4,hauler:5.5,freighter:7.5}[key]; poly(x,y,FACE[key],r,ang,CC[key]); ctx.beginPath(); ctx.arc(x+Math.cos(ang)*r*.7,y+Math.sin(ang)*r*.7,1.3,0,7); ctx.fillStyle='#F5C518'; ctx.fill();
+    if(s.batchWait||s.hubWait){ ctx.strokeStyle=s.hubWait?col('red'):col('ppl'); ctx.lineWidth=1; ctx.beginPath(); ctx.arc(x,y,r+2.5,0,7); ctx.stroke() } }) }
+var drag=null, downAt=null;
+function xy(e){ var r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
+cv.addEventListener('pointerdown',function(e){ var q=xy(e), k=hit(q.x,q.y); downAt={x:q.x,y:q.y,k:k}; if(k&&k!=='earth'&&G.colonies[k]&&!picking) drag={from:k,x:q.x,y:q.y,moved:false}; cv.setPointerCapture(e.pointerId) });
+cv.addEventListener('pointermove',function(e){ if(!drag) return; var q=xy(e); drag.x=q.x; drag.y=q.y; if(Math.abs(q.x-downAt.x)+Math.abs(q.y-downAt.y)>14) drag.moved=true });
+cv.addEventListener('pointerup',function(e){ var q=xy(e), k=hit(q.x,q.y);
+  if(drag&&drag.moved){ var fr=drag.from; drag=null; if(k&&k!==fr&&(k==='earth'||G.colonies[k])){ sel=fr; picking=fr; target=k; tab='world' } render(); return }
+  drag=null; if(picking&&!target){ if(k&&k!==picking&&(k==='earth'||G.colonies[k])){ target=k; sel=picking; tab='world' } render(); return }
+  if(k&&k!=='earth'){ sel=k; picking=null; target=null; tab='world' } render() });
+window.addEventListener('resize',layout);
+window.NS={C:C,get G(){ return G },start:start,step:step,setSpeed:setSpeed,pos:function(){ return pos }};
+start('clean'); tab='rules'; render(); draw();
+})();
+</script>
+</body></html>
