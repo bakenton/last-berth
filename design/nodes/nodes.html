@@ -1786,6 +1786,7 @@ function undismissAll(G){ G.dismissed={}; return 'ok' }
 <script>
 (function(){
 var $=function(i){ return document.getElementById(i) };
+var links={};   // схема сети: мир → куда он везёт. Живёт отдельно от судов: линию можно провести сразу, суда придут потом.
 var G=null, sel=null, picking=null, target=null, tab='rules', speed=0, timer=null, queue=[], hist=[], held=false, seam=1, scen='clean';
 var css=getComputedStyle(document.documentElement), col=function(n){ return css.getPropertyValue('--'+n).trim() };
 var KC={mine:col('metal'),farm:col('food'),well:col('fuel'),works:col('parts')}, RC={metal:col('metal'),food:col('food'),fuel:col('fuel'),parts:col('parts')};
@@ -1807,7 +1808,17 @@ function start(sc){ scen=sc||scen; var S=JSON.parse(JSON.stringify(SNAP));
   if(scen==='clean'){ var E=G.earth; G.ships.forEach(function(s){ if(s.mode==='dead') return; var hd=C.HULLS[s.hull]; E.people+=s.crew||0; E.metal+=hd.metal; E.parts+=hd.parts||0; E.fuel+=hd.fuel }); for(var c in G.colonies) E.people+=G.colonies[c].pop;
     G.colonies={}; G.ships=[]; G.ghost={}; G.settled={}; G.stats.founded=0; for(var x in full) G.reserves[x]=full[x] }
   for(var w in G.reserves) if(G.reserves[w]!==Infinity) G.reserves[w]=Math.round(G.reserves[w]*seam);
+  links={}; G.ships.forEach(function(s){ if(s.mode!=='dead'&&s.from&&s.to) links[s.from]=s.to });
   sel=null; picking=null; target=null; queue=[]; hist=[]; note=''; lastSeq=G.logSeq||0; setSpeed(0); layout(); render() }
+function hubIn(id){ return Object.keys(links).filter(function(k){ return links[k]===id }) }
+function linkWhy(a,b){ if(a===b) return 'samenode'; if(b==='earth') return ''; var pa=C.planet(a), pb=C.planet(b); if(pa.kind==='works'||pb.kind==='works') return 'works'; if(pb.sec>pa.sec) return 'outward';
+  var n=b, guard=0; while(n&&n!=='earth'&&guard++<99){ if(n===a) return 'loop'; n=links[n] } return '' }
+/* линия появляется сразу. Потянули наружу — разворачиваем: груз всегда идёт к Земле. */
+function makeLink(a,b){ if(a==='earth'){ a=b; b='earth' } else if(b!=='earth'&&C.planet(b).sec>C.planet(a).sec){ var t=a; a=b; b=t }
+  var why=linkWhy(a,b); if(why){ note='Линия не проведена: '+WHY[why]; noteY=G.day; return false }
+  links[a]=b; G.ships.forEach(function(s){ if(s.mode==='dead'||(s.pend?s.pend.from:s.from)!==a) return; var r=C.setLine(G,s.id,a,b); if(r!=='ok'&&r!=='queued'&&r!=='batch'&&r!=='hubfull'){ C.clearLine(G,s.id); note='Судно снято с линии: '+(WHY[r]||r); noteY=G.day } });
+  sel=a; tab='world'; picking=null; target=null; return true }
+function unlink(a){ delete links[a]; G.ships.forEach(function(s){ if(s.mode!=='dead'&&(s.from===a||(s.pend&&s.pend.from===a))) C.clearLine(G,s.id) }) }
 
 /* ---------- время ---------- */
 function setSpeed(v){ speed=v; clearInterval(timer); timer=v?setInterval(step,1000/v):null;
@@ -1847,13 +1858,13 @@ function render(){ if(held) return; $('yr').textContent='Год '+G.day;
   setH($('earth'),h);
   document.querySelectorAll('[data-a=tab]').forEach(function(b){ b.classList.toggle('on',b.dataset.v===tab) });
   setH($('panel'),tab==='world'?worldPanel():tab==='fleet'?fleetPanel():rulesPanel());
-  $('hint').textContent=picking?(target?'Выберите судно в панели':'Куда везти из '+C.planet(picking).name+'? Нажмите мир или Землю'):'';
+  $('hint').textContent=picking?'Куда везти из '+C.planet(picking).name+'? Нажмите мир или Землю':(Object.keys(links).length?'':'Потяните от мира к миру или к Земле, чтобы соединить');
   $('over').textContent=G.over?'Земля замолчала. Партия окончена, начните заново в «Правилах».':(G.day-noteY<30?note:'');
 }
 function worldPanel(){ if(!sel) return '<div class="sub">Нажмите мир на карте.</div>';
   var p=C.planet(sel), c=G.colonies[sel], h='<div><h2>'+p.name+'</h2><div class="sub">Кольцо '+ring(p)+' · <span style="color:'+KC[p.kind]+'">'+KN[p.kind]+'</span> · богатство '+p.rich+'</div></div>';
   if(!c){ var going=C.enRoute(G,sel)||queue.some(function(q){ return q.pid===sel });
-    var res=G.reserves[sel]; h+='<div class="sub">Жила: '+(res===Infinity?'нет, перерабатывает':f(res))+'</div>';
+    var res=G.reserves[sel]; h+='<div class="sub">Жила: '+(res===Infinity?'нет, перерабатывает':f(res))+'</div>'+linkBlock();
     if(going) return h+'<div class="warn">Поселенцы в пути</div>';
     h+='<div class="sub">Заселить судном:</div>'; CL.forEach(function(key){ var id=hullFor(key); if(id==null) return; var hd=C.HULLS[id], fr=freeHull(key,sel), why=fr?'':(p.sec>C.shipRange({hull:id})?'range':C.buildShip.length&&costWhy(hd));
       h+='<button class="opt" data-a="settle" data-v="'+key+'"'+(why?' disabled':'')+'>'+icon(key,26)+'<span>'+CN[key]+'<small>'+(why?WHY[why]:(fr?'свободное, на Земле':'построить: металл '+hd.metal+', дни '+hd.days))+'</small></span><span></span></button>' });
@@ -1861,19 +1872,24 @@ function worldPanel(){ if(!sel) return '<div class="sub">Нажмите мир �
   var fl=worldFlow(sel), own=p.kind==='works'?'parts':p.dep, hb=c.hub?C.hubSum(c):0, cap=C.hubCap(G), bm=C.batchM(G,p), left=G.reserves[sel];
   h+='<table><tr><td>Людей</td><td>'+Math.round(c.pop)+'</td></tr><tr><td>Даёт в год</td><td>'+fl.makes.toFixed(1)+'</td></tr><tr><td>Жила</td><td>'+(left===Infinity?'–':f(Math.max(0,left))+(fl.makes>0&&left>0?' · на '+f(left/fl.makes)+' лет':' · выработана'))+'</td></tr><tr><td>Свой склад</td><td>'+f(c.store[own]||0)+'</td></tr><tr><td>Вывоз в год</td><td class="'+(fl.out+0.01<fl.makes+fl.inn?'warn':'')+'">'+fl.out.toFixed(1)+'</td></tr>'+(fl.inn?'<tr><td>Привоз с других</td><td>'+fl.inn.toFixed(1)+'</td></tr>':'')+(bm?'<tr><td>Партия Земли</td><td>'+f(bm)+'</td></tr>':'')+'</table>';
   if(hb>0||fl.inn>0){ var pc=cap===Infinity?0:Math.min(100,100*hb/cap); h+='<div><div class="sub">Перевалка: '+f(hb)+(cap===Infinity?'':' из '+f(cap))+'</div><div class="meter"><i style="width:'+pc+'%"></i></div></div>' }
-  if(picking===sel&&target) h+=pickList(); else if(picking===sel) h+='<div class="row"><button class="btn" data-a="cancelPick">Отмена</button></div>';
-  else h+='<div class="row"><button class="btn pri" data-a="pick">Новая линия отсюда</button></div>';
+  h+=linkBlock()+shipAdd();
   var ss=liveShips().filter(function(s){ return s.from===sel||s.to===sel||(s.pend&&s.pend.from===sel) });
   if(ss.length){ h+='<div>'; ss.forEach(function(s){ var key=shipKey(s), to=(s.pend?s.pend.to:s.to), from=(s.pend?s.pend.from:s.from), dir=from===sel?'→ '+(to==='earth'?'Земля':C.planet(to).name):'← '+C.planet(from).name;
       h+='<div class="ln">'+icon(key)+'<span>'+dir+'<br><span class="mid">'+stateOf(s)+'</span></span><span class="mid">'+(s.fillE!=null?Math.round(s.fillE*100)+'%':'')+'</span><button class="btn" data-a="drop" data-v="'+s.id+'">Снять</button></div>' }); h+='</div>' }
   return h }
 function costWhy(hd){ if(G.earth.metal<hd.metal||G.earth.fuel<hd.fuel||G.earth.parts<(hd.parts||0)) return 'cost'; if(G.earth.people-C.K.EARTH_KEEP<(hd.crew||0)) return 'crew'; return '' }
-function freeHull(key,pid){ var b=null; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.job&&shipKey(s)===key&&(!b||s.cap>b.cap)&&(!queue.some(function(q){ return q.ship===s.id }))&&(!pid||C.planet(pid).sec<=C.shipRange(s))) b=s }); return b }
-function pickList(){ var to=target, tn=to==='earth'?'Земля':C.planet(to).name, h='<div class="sub">'+C.planet(picking).name+' → '+tn+'</div>';
-  CL.forEach(function(key){ var id=hullFor(key); if(id==null) return; var hd=C.HULLS[id], why=C.lineCheck(G,{hull:id},picking,to), fr=freeHull(key), probe=fr||{hull:id,cap:hd.cap}; if(why==='ok') why=fr?'':costWhy(hd);
-    var days=C.legDays(G,picking,to,probe)*2, yr=probe.cap/Math.max(1,days);
+function freeHull(key,pid,lineTo){ var b=null; G.ships.forEach(function(s){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.job&&shipKey(s)===key&&(!b||s.cap>b.cap)&&(!queue.some(function(q){ return q.ship===s.id }))&&(lineTo?C.lineCheck(G,s,pid,lineTo)==='ok':(!pid||C.planet(pid).sec<=C.shipRange(s)))) b=s }); return b }
+function linkBlock(){ var to=links[sel], inn=hubIn(sel), h='';
+  if(inn.length) h+='<div class="warn">Хаб: сюда везут '+inn.map(function(k){ return C.planet(k).name }).join(', ')+'</div>';
+  if(picking===sel) return h+'<div class="row"><button class="btn" data-a="cancelPick">Отмена</button></div>';
+  if(to) return h+'<div class="row" style="align-items:center"><span style="flex:1 1 auto">Линия → <b>'+nameOf(to)+'</b></span><button class="btn" data-a="pick">Изменить</button><button class="btn" data-a="unlink">Убрать</button></div>';
+  return h+'<div class="row"><button class="btn pri" data-a="pick">Провести линию</button></div>' }
+function shipAdd(){ var to=links[sel]; if(!to) return ''; if(to!=='earth'&&!G.colonies[to]) return '<div class="warn">Заселите '+nameOf(to)+', тогда сюда можно поставить суда</div>';
+  var h='<div class="lbl">Поставить судно</div>';
+  CL.forEach(function(key){ var id=hullFor(key); if(id==null) return; var hd=C.HULLS[id], why=C.lineCheck(G,{hull:id},sel,to), fr=freeHull(key,sel,to), probe=fr||{hull:id,cap:hd.cap}; if(why==='ok') why=fr?'':costWhy(hd);
+    var days=C.legDays(G,sel,to,probe)*2, yr=probe.cap/Math.max(1,days);
     h+='<button class="opt" data-a="place" data-v="'+key+'"'+(why?' disabled':'')+'>'+icon(key,26)+'<span>'+CN[key]+' · трюм '+f(probe.cap)+'<small>'+(why?WHY[why]:(fr?'свободное':'построить: металл '+hd.metal+(hd.parts?', детали '+hd.parts:'')+', экипаж '+hd.crew))+'</small></span><span class="num">'+yr.toFixed(1)+'/г</span></button>' });
-  return h+'<div class="row"><button class="btn" data-a="cancelPick">Отмена</button></div>' }
+  return h }
 function fleetPanel(){ var ls=liveShips(), h='<table><tr><th></th><th>Судов</th><th>Экипаж</th><th>Загрузка</th><th>Ждут</th></tr>', tw=0, tn=0;
   CL.forEach(function(key){ var s=ls.filter(function(x){ return shipKey(x)===key }), fs=s.filter(function(x){ return x.fillE!=null }), wt=s.filter(function(x){ return x.batchWait||x.hubWait }).length, cr=s.reduce(function(a,x){ return a+(x.crew||0) },0), fl=fs.length?fs.reduce(function(a,x){ return a+x.fillE },0)/fs.length:null; tw+=wt; tn+=s.length;
     h+='<tr><td>'+CN[key]+'</td><td>'+s.length+'</td><td>'+cr+'</td><td>'+(fl==null?'–':Math.round(fl*100)+'%')+'</td><td>'+wt+'</td></tr>' });
@@ -1901,6 +1917,7 @@ function act(a,b){ var v=b.dataset.v;
   if(a==='speed'){ setSpeed(+v); return }
   if(a==='tab'){ tab=v } else if(a==='pick'){ picking=sel; target=null }
   else if(a==='cancelPick'){ picking=null; target=null }
+  else if(a==='unlink'){ unlink(sel) }
   else if(a==='place'){ placeLine(v) }
   else if(a==='settle'){ settle(v) }
   else if(a==='drop'){ C.clearLine(G,+v); var s=C.shipById(G,+v); if(s) s.kicked=null }
@@ -1909,9 +1926,9 @@ function act(a,b){ var v=b.dataset.v;
   else if(a==='seam'){ seam=+v }
   else if(a==='restart'){ start(v); return }
   render() }
-function placeLine(key){ var fr=freeHull(key), id, r;
-  if(fr) id=fr.id; else { var hi=hullFor(key), r0=C.buildShip(G,hi); if(r0!=='ok') return; id=G.ships[G.ships.length-1].id }
-  r=C.setLine(G,id,picking,target); picking=null; target=null }
+function placeLine(key){ var to=links[sel], fr=freeHull(key,sel,to), id, r;
+  if(fr) id=fr.id; else { var r0=C.buildShip(G,hullFor(key)); if(r0!=='ok'){ note='Судно не построено: '+(WHY[r0]||r0); noteY=G.day; return } id=G.ships[G.ships.length-1].id }
+  r=C.setLine(G,id,sel,to); if(r!=='ok'&&r!=='queued'&&r!=='crew'&&r!=='fuel'){ note='Судно не встало на линию: '+(WHY[r]||r); noteY=G.day } }
 function settle(key){ var fr=freeHull(key,sel), id; if(fr) id=fr.id; else { var r0=C.buildShip(G,hullFor(key)); if(r0!=='ok') return; id=G.ships[G.ships.length-1].id } queue.push({ship:id,pid:sel}); drainQueue() }
 document.addEventListener('click',function(e){ var b=e.target.closest('[data-a]'); if(!b||b.disabled) return; act(b.dataset.a,b) });
 $('aside').addEventListener('pointerdown',function(){ held=true });
@@ -1928,39 +1945,49 @@ function poly(x,y,n,r,a,c){ ctx.beginPath(); for(var i=0;i<n;i++){ var t=a+2*Mat
 function draw(){ requestAnimationFrame(draw); if(!G||!W) return; ctx.setTransform(DPR,0,0,DPR,0,0); ctx.clearRect(0,0,W,H);
   ctx.strokeStyle=col('ln'); ctx.lineWidth=1; C.SECTORS.forEach(function(s,i){ var ds=C.PLANETS.filter(function(p){ return p.sec===i }); if(!ds.length) return; var m=Math.max.apply(null,ds.map(function(p){ return p.dist })); ctx.beginPath(); ctx.arc(W/2,H/2,scale(m)+3,0,7); ctx.stroke() });
   // линии: толщина от проходимости
-  // сплошная — судно на линии; штрих — судно ещё на верфи или в пути к ней
-  var edges={}; liveShips().forEach(function(s){ var fr=s.pend?s.pend.from:s.from, tt=s.pend?s.pend.to:s.to; if(!fr||!tt||!pos[fr]||!pos[tt]) return; var k=fr+'>'+tt, e=edges[k]||(edges[k]={a:fr,b:tt,y:0,live:false}); if(!s.pend&&s.mode!=='building'){ e.live=true; e.y+=haulYr(s) } });
-  for(var k in edges){ var e=edges[k], a=pos[e.a], b=pos[e.b]; ctx.strokeStyle=e.b==='earth'?'#8d8c86':col('ppl'); ctx.lineWidth=e.live?Math.min(8,2+Math.sqrt(e.y)/2):2; ctx.setLineDash(e.live?[]:[6,6]); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.setLineDash([]) }
-  if(picking&&target&&pos[target]){ ctx.strokeStyle=col('ppl'); ctx.lineWidth=2; ctx.setLineDash([3,5]); ctx.beginPath(); ctx.moveTo(pos[picking].x,pos[picking].y); ctx.lineTo(pos[target].x,pos[target].y); ctx.stroke(); ctx.setLineDash([]) }
+  // схема: линия есть сразу. Пока на ней нет судна — штрих; идут суда — сплошная, толщина от проходимости, бегущая штриховка показывает ход груза к Земле
+  var path={}, pn=sel, guard=0; while(pn&&pn!=='earth'&&guard++<99){ path[pn]=1; pn=links[pn] }
+  var flow={}; liveShips().forEach(function(s){ if(s.from&&s.to&&s.mode!=='building') flow[s.from]=(flow[s.from]||0)+haulYr(s) });
+  var clock=performance.now();
+  Object.keys(links).forEach(function(k){ var a=pos[k], b=pos[links[k]]; if(!a||!b) return; var y=flow[k]||0, on=path[k], base=links[k]==='earth'?'#C9C8C2':col('ppl');
+    ctx.globalAlpha=y?1:(on?1:0.75); ctx.strokeStyle=base; ctx.lineWidth=y?Math.min(9,3+Math.sqrt(y)/2):2.5; ctx.setLineDash(y?[]:[7,6]); ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.setLineDash([]);
+    if(y){ ctx.strokeStyle='#0B0B0C'; ctx.lineWidth=1.5; ctx.setLineDash([5,13]); ctx.lineDashOffset=speed?-(clock/60)%18:0; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); ctx.setLineDash([]); ctx.lineDashOffset=0 }
+    ctx.globalAlpha=1 });
   if(drag){ ctx.strokeStyle=col('ppl'); ctx.lineWidth=2; ctx.setLineDash([5,5]); ctx.beginPath(); ctx.moveTo(pos[drag.from].x,pos[drag.from].y); ctx.lineTo(drag.x,drag.y); ctx.stroke(); ctx.setLineDash([]) }
   // миры
-  C.PLANETS.forEach(function(p){ var q=pos[p.id], c=G.colonies[p.id], dry=c&&G.reserves[p.id]<=0, r=c?7:5; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,7);
-    if(c&&!dry){ ctx.fillStyle=KC[p.kind]; ctx.fill() } else { ctx.strokeStyle=dry?col('dim'):KC[p.kind]; ctx.lineWidth=1.5; ctx.stroke() }
-    if(c&&(c.hub&&C.hubSum(c)>0||C.inbound(G,p.id))){ var cp=C.hubCap(G), pc=cp===Infinity?0.15:Math.min(1,C.hubSum(c)/cp); ctx.strokeStyle='#3a3a40'; ctx.lineWidth=3; ctx.beginPath(); ctx.arc(q.x,q.y,r+5,0,7); ctx.stroke(); ctx.strokeStyle=col('ppl'); ctx.beginPath(); ctx.arc(q.x,q.y,r+5,-1.57,-1.57+6.283*pc); ctx.stroke() }
-    if(p.id===sel){ ctx.strokeStyle=col('ink'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(q.x,q.y,r+10,0,7); ctx.stroke() }
-    if(c||p.id===sel){ ctx.fillStyle=c?col('ink'):col('mid'); ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText(p.name,q.x,q.y-r-11) } });
+  C.PLANETS.forEach(function(p){ var q=pos[p.id], c=G.colonies[p.id], dry=c&&G.reserves[p.id]<=0, inn=hubIn(p.id).length, inChain=inn||links[p.id], r=c?7:5;
+    if(inn){ // хаб: жёлтый шестигранник, вокруг него заполнение перевалки
+      poly(q.x,q.y,6,15,0,'#0B0B0C'); ctx.strokeStyle=col('ppl'); ctx.lineWidth=2.5; ctx.stroke();
+      if(c){ var cp=C.hubCap(G), pc=cp===Infinity?0:Math.min(1,C.hubSum(c)/cp); if(pc>0){ ctx.lineWidth=4; ctx.beginPath(); ctx.arc(q.x,q.y,20,-1.57,-1.57+6.283*pc); ctx.stroke() } } }
+    ctx.beginPath(); ctx.arc(q.x,q.y,r,0,7);
+    if(c&&!dry){ ctx.fillStyle=KC[p.kind]; ctx.fill() } else { ctx.fillStyle='#0B0B0C'; ctx.fill(); ctx.strokeStyle=dry?col('dim'):KC[p.kind]; ctx.lineWidth=1.5; ctx.stroke() }
+    if(p.id===sel){ ctx.strokeStyle=col('ink'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(q.x,q.y,inn?25:r+8,0,7); ctx.stroke() }
+    if(c||inChain||p.id===sel){ ctx.textAlign='center'; ctx.font=inn?'600 12px sans-serif':'11px sans-serif'; var lab=(inn?'ХАБ ':'')+p.name, ly=q.y-(inn?24:r+8); ctx.strokeStyle='#0B0B0C'; ctx.lineWidth=4; ctx.lineJoin='round'; ctx.strokeText(lab,q.x,ly); ctx.fillStyle=inn?col('ppl'):(c?col('ink'):col('mid')); ctx.fillText(lab,q.x,ly) } });
   ctx.beginPath(); ctx.arc(W/2,H/2,9,0,7); ctx.fillStyle=col('ink'); ctx.fill();
   // суда
   var frac=speed?Math.min(1,(performance.now()-lastStep)*speed/1000):0;
-  liveShips().forEach(function(s){ var key=shipKey(s), a,b,t,ang=0,x,y; if(s.mode==='transit'&&s.total>0){ a=pos[s.origin]; b=pos[s.dest]; if(!a||!b) return; t=Math.min(1,Math.max(0,1-(s.t-frac)/s.total)); x=a.x+(b.x-a.x)*t; y=a.y+(b.y-a.y)*t; ang=Math.atan2(b.y-a.y,b.x-a.x) }
+  liveShips().forEach(function(s){ var key=shipKey(s), a,b,t,ang=0,x,y,ghost=false; ctx.globalAlpha=1; if(s.mode==='transit'&&s.total>0){ a=pos[s.origin]; b=pos[s.dest]; if(!a||!b) return; t=Math.min(1,Math.max(0,1-(s.t-frac)/s.total)); ang=Math.atan2(b.y-a.y,b.x-a.x);
+      // встречные расходятся по своим сторонам линии; перегон вне своей линии (с верфи, домой, с поселенцами) — бледнее
+      var onLine=s.from&&s.to&&((s.origin===s.from&&s.dest===s.to)||(s.origin===s.to&&s.dest===s.from)); ghost=!onLine;
+      x=a.x+(b.x-a.x)*t-Math.sin(ang)*5; y=a.y+(b.y-a.y)*t+Math.cos(ang)*5 }
     else if(s.mode==='idle'&&s.at&&(s.at!=='earth'||(s.from&&s.to))){ a=pos[s.at]; if(!a) return; x=a.x+12; y=a.y+12+(s.id%4)*5 } else return;
+    if(ghost) ctx.globalAlpha=0.4;
     var r={courier:6,hauler:8,freighter:10}[key], c=s.cargo||{}, full=(c.metal+c.food+c.fuel+c.parts+(c.people||0))>0;
     // с грузом — залитая, порожняя — контур
     if(full) poly(x,y,FACE[key],r,ang,CC[key]); else { poly(x,y,FACE[key],r,ang,'#0B0B0C'); ctx.strokeStyle=CC[key]; ctx.lineWidth=1.5; ctx.stroke() }
     ctx.beginPath(); ctx.arc(x+Math.cos(ang)*r*.7,y+Math.sin(ang)*r*.7,1.8,0,7); ctx.fillStyle='#F5C518'; ctx.fill();
     if(s.batchWait||s.hubWait){ ctx.strokeStyle=s.hubWait?col('red'):col('ppl'); ctx.lineWidth=1.5; ctx.beginPath(); ctx.arc(x,y,r+3,0,7); ctx.stroke();
-      ctx.fillStyle=s.hubWait?col('red'):col('ppl'); ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText(s.hubWait?'склад полон':'партия '+f(C.pileLeft(G,s.at))+'/'+f(C.batchM(G,C.planet(s.at))),a.x,a.y+r+26) } }) }
+      ctx.fillStyle=s.hubWait?col('red'):col('ppl'); ctx.font='11px sans-serif'; ctx.textAlign='center'; ctx.fillText(s.hubWait?'склад полон':'партия '+f(C.pileLeft(G,s.at))+'/'+f(C.batchM(G,C.planet(s.at))),a.x,a.y+r+26) } }); ctx.globalAlpha=1 }
 var drag=null, downAt=null;
 function xy(e){ var r=cv.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top} }
-cv.addEventListener('pointerdown',function(e){ var q=xy(e), k=hit(q.x,q.y); downAt={x:q.x,y:q.y,k:k}; if(k&&k!=='earth'&&G.colonies[k]&&!picking) drag={from:k,x:q.x,y:q.y,moved:false}; cv.setPointerCapture(e.pointerId) });
+cv.addEventListener('pointerdown',function(e){ var q=xy(e), k=hit(q.x,q.y); downAt={x:q.x,y:q.y,k:k}; if(k&&!picking) drag={from:k,x:q.x,y:q.y,moved:false}; cv.setPointerCapture(e.pointerId) });
 cv.addEventListener('pointermove',function(e){ if(!drag) return; var q=xy(e); drag.x=q.x; drag.y=q.y; if(Math.abs(q.x-downAt.x)+Math.abs(q.y-downAt.y)>14) drag.moved=true });
 cv.addEventListener('pointerup',function(e){ var q=xy(e), k=hit(q.x,q.y);
-  var refuse=function(){ note='Узлом может быть только заселённый мир'; noteY=G.day };
-  if(drag&&drag.moved){ var fr=drag.from; drag=null; if(k&&k!==fr&&(k==='earth'||G.colonies[k])){ sel=fr; picking=fr; target=k; tab='world' } else if(k&&k!==fr) refuse(); render(); return }
-  drag=null; if(picking&&!target){ if(k&&k!==picking&&(k==='earth'||G.colonies[k])){ target=k; sel=picking; tab='world' } else if(k&&k!==picking) refuse(); render(); return }
-  if(k&&k!=='earth'){ sel=k; picking=null; target=null; tab='world' } render() });
+  if(drag&&drag.moved){ var fr=drag.from; drag=null; if(k&&k!==fr) makeLink(fr,k); render(); return }
+  drag=null; if(picking){ if(k&&k!==picking) makeLink(picking,k); render(); return }
+  if(k&&k!=='earth'){ sel=k; tab='world' } render() });
 window.addEventListener('resize',layout);
-window.NS={C:C,get G(){ return G },start:start,step:step,setSpeed:setSpeed,pos:function(){ return pos }};
+window.NS={C:C,get G(){ return G },get links(){ return links },start:start,step:step,setSpeed:setSpeed,pos:function(){ return pos }};
 start('clean'); tab='rules'; render(); draw();
 })();
 </script>
