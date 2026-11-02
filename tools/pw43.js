@@ -9,7 +9,7 @@ const TMP=require('os').tmpdir();
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await UI.newPage(b); const U=UI.ui(p);
   const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() },n); await U.clear() };
-  const adv=id=>p.evaluate(id=>LNI.adv().filter(r=>r[3]===id).map(r=>({t:r[1]+' | '+r[2],b:r[4],f:r[5],c:r[0]})),id);
+  const adv=id=>p.evaluate(id=>LNI.adv().filter(r=>r[3]===id&&r[6]!=='seam').map(r=>({t:r[1]+' | '+r[2],b:r[4],f:r[5],c:r[0]})),id);
   // press the advisor row of world id whose focus starts with pre: open the list (top «!» button), then the row itself
   const pressRow=async(id,pre)=>{ await U.clear(); if(await p.evaluate(()=>!!LNU.win)) { await p.keyboard.press('Escape'); await p.waitForTimeout(60) }
     await p.evaluate(()=>{ LNU.pop='adv'; LNdraw() });
