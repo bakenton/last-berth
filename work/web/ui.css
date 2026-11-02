@@ -174,9 +174,11 @@ svg.gi{fill:currentColor}
 .advl button{display:grid;grid-template-columns:4px 1fr auto;grid-template-rows:auto auto;column-gap:12px;width:100%;text-align:left;padding:8px 10px 8px 0;background:var(--bg);margin-bottom:4px}
 .advl i{grid-row:1/3;align-self:stretch}.advl b{font-size:13px;font-weight:600}.advl span{grid-column:2;font-size:12px;color:var(--mid)}.advl em{grid-row:1/3;grid-column:3;align-self:center;font-style:normal;font-size:11px;letter-spacing:.12em;font-weight:600;border:1px solid var(--mid);padding:3px 8px;white-space:nowrap;text-transform:uppercase}
 .advl .none{padding:10px;color:var(--mid);font-size:12.5px}
+.advc{display:flex;gap:14px;padding:4px 8px 8px;border-bottom:1px solid var(--pan2);margin-bottom:6px}.advc span{display:inline-flex;gap:5px;align-items:center}.advc b{font:600 13px var(--n)}
+.advh{display:flex;gap:7px;align-items:center;padding:7px 4px 4px;font-size:10.5px;letter-spacing:.16em;font-weight:600;text-transform:uppercase}.advh b{font:600 11px var(--n);margin-left:auto;padding-right:6px}
 .menu{border-color:var(--mid)}.menu button{display:flex;gap:10px;align-items:center;width:100%;padding:8px 10px;font-size:13px;text-align:left}.menu button:hover{background:var(--pan2)}.menu b{margin-left:4px}.menu hr{border:0;border-top:1px solid var(--ln);margin:4px 0}
 .menu .seedrow{display:flex;gap:8px;align-items:center;padding:6px 10px;font-size:12px;color:var(--mid)}.menu input{width:110px;background:var(--bg);border:1px solid var(--ln);color:var(--ink);font:12px var(--n);padding:4px 6px}
-.pick{border-color:var(--ink);width:380px;padding:10px 14px}.pick button{display:flex;gap:10px;align-items:center;width:100%;padding:7px 4px;border-bottom:1px solid var(--pan2);font-size:13px}.pick button span{margin-left:auto;color:var(--mid);font-size:12px}.pick button.dis{opacity:.4;cursor:default}.pick .cancel{justify-content:center;color:var(--ink);letter-spacing:.14em;font-size:11px;border:1px solid var(--mid);margin-top:10px;padding:8px;text-transform:uppercase}
+.pick{border-color:var(--ink);width:520px;padding:10px 14px}.pick button i{font-style:normal;color:var(--mid);font-size:12px;white-space:nowrap}.pick button span.short{color:var(--ppl)}.pick button{display:flex;gap:10px;align-items:center;width:100%;padding:7px 4px;border-bottom:1px solid var(--pan2);font-size:13px}.pick button span{margin-left:auto;color:var(--mid);font-size:12px}.pick button.dis{opacity:.4;cursor:default}.pick .cancel{justify-content:center;color:var(--ink);letter-spacing:.14em;font-size:11px;border:1px solid var(--mid);margin-top:10px;padding:8px;text-transform:uppercase}
 .pick .lst{max-height:50vh}
 #toasts{position:absolute;right:12px;bottom:52px;display:flex;flex-direction:column;gap:6px;z-index:23;width:330px;pointer-events:none}
 .toast{background:var(--pan);border:1px solid var(--mid);padding:8px 12px;font-size:12.5px;display:block;animation:tin .25s;transition:opacity .4s}
@@ -197,7 +199,16 @@ svg.gi{fill:currentColor}
 #lang .nwin{width:520px}.langrow{display:flex;gap:10px}.langrow .b{flex:1;padding:12px;font-size:13px}
 /* personal files: a crew card at the foot of the map, or the whole screen for the moments that matter */
 #pfL{position:absolute;z-index:19;display:none}
-#pfL.low{display:block;left:104px;bottom:16px}#pfL.low.side{left:572px}
+#pfL.low,#pfL.arch{display:flex;flex-direction:column;gap:4px;align-items:flex-start;left:96px;bottom:12px;width:430px}#pfL.low.beside,#pfL.arch.beside{left:564px}
+.ltr{display:grid;grid-template-columns:36px 1fr;column-gap:10px;align-items:center;width:100%;text-align:left;background:rgba(20,20,23,.96);border:1px solid var(--ln);border-left:3px solid var(--dim);padding:4px 10px 4px 4px;margin-bottom:0}
+.ltr.unread{border-left-color:var(--ppl)}.ltr.fresh{animation:tin .3s,ltrp 1.2s ease-out 2}@keyframes ltrp{0%{background:rgba(255,210,63,.28)}100%{background:rgba(20,20,23,.96)}}
+.ltr canvas{grid-row:1/3;width:36px;height:36px;image-rendering:pixelated;border:1px solid var(--ln);align-self:start}
+.ltr .lth{display:flex;gap:8px;align-items:baseline;min-width:0}.ltr .lth b{font-size:12px;font-weight:600;letter-spacing:.08em}.ltr .lth i{font-style:normal;font-size:10.5px;color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:1}.ltr .lth em{font-style:normal;font:600 10px var(--n);color:var(--dim)}
+.ltr .ltl{grid-column:2;font-size:12.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.ltr.open .ltl{white-space:normal;overflow:visible;font-size:14px;line-height:1.4;margin:4px 0}.ltr u{grid-column:2;justify-self:end;text-decoration:none;font-size:10.5px;letter-spacing:.14em;font-weight:600;border:1px solid var(--mid);padding:2px 8px;text-transform:uppercase}
+.ltarch{display:flex;gap:7px;align-items:center;background:rgba(20,20,23,.96);border:1px solid var(--ln);padding:3px 8px;font-size:10.5px;letter-spacing:.14em;color:var(--mid);text-transform:uppercase}.ltarch b{font:600 11px var(--n);color:var(--ink)}.ltarch em{font-style:normal;color:#000;background:var(--ppl);padding:0 5px;font-weight:600;letter-spacing:.06em}.ltarch.on{border-color:var(--ink);color:var(--ink)}
+#pop.p-letters{left:96px;bottom:44px;width:460px}#app.sideon #pop.p-letters{left:564px}
+.ltrs{background:var(--pan);border:1px solid var(--ppl);padding:6px;max-height:calc(100vh - 170px);overflow:auto}.ltrs .ltr{margin-bottom:3px;background:var(--bg)}
 #pfL.full{display:flex;inset:0;z-index:29;background:rgba(5,5,6,.85);align-items:center;justify-content:center}
 .pfbox{display:grid;grid-template-columns:72px 1fr;gap:14px;width:560px;background:rgba(20,20,23,.96);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:12px 16px 12px 12px;animation:tin .3s}
 .pfbox canvas{width:72px;height:72px;image-rendering:pixelated;border:1px solid var(--ln)}
@@ -237,3 +248,4 @@ svg.gi{fill:currentColor}
 #ovl.on~#toasts .toast:not(:first-child){display:none}
 /* v4.42: an open side panel (Tech, Worlds, Fleet) pushes the chart right — the worlds under it were cut off */
 #app.sideon #mapbox{left:552px}
+.seg.ogen{display:flex;gap:2px;margin:3px 0 2px}.seg.ogen button{display:inline-flex;gap:4px;align-items:center;font:600 11px var(--n);padding:2px 7px;border:1px solid var(--ln);color:var(--mid)}.seg.ogen button.on{background:var(--ink);color:#000;border-color:var(--ink)}.oc .oh{display:flex;gap:5px;align-items:center;font:600 12px var(--n);color:var(--ink);margin-top:2px}

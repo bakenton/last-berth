@@ -686,3 +686,15 @@ UI	u_allHome	All hulls home · on lines: {n}	Все суда домой · на 
 UI	u_allHomeArm	Take {n} hulls off their lines? Press again	Снять с линий судов: {n}? Нажмите ещё раз
 UI	u_allHomeHint	The lines stop. Hulls on an evacuation or a landing finish first.	Линии останавливаются. Суда на эвакуации и посадке сначала закончат рейс.
 MSG	ok_allhome	{n} hulls called home.	Судов вызвано домой: {n}.
+UI	u_letters	Personal files	Личные дела
+UI	u_lettersNew	{n} new	новых: {n}
+UI	u_aSeam	{w}: the seam runs out in about {n} years	{w}: жила кончится, осталось лет: около {n}
+UI	u_aSeamC	Think about where the people and the hulls go next	Подумайте, куда потом людей и суда
+UI	u_aForge	{w}: the line brings {p}% of what the works burn	{w}: линия везёт {p}% того, что жжёт завод
+UI	u_aForgeC	The works stand part of the time. Add hold to the line	Завод часть времени стоит. Добавьте линии трюма
+UI	u_atEvac	Evacuate	Эвакуация
+UI	u_atForge	Works short of supply	Заводу не хватает
+UI	u_atNoLine	No hulls on the line	На линии нет судов
+UI	u_atSeam	Seam running out	Жила кончается
+UI	u_atLine	Line out of balance	Перевоз и недовоз
+UI	u_pickRate	{c} of {m}/yr · +{a}	{c} из {m}/год · +{a}

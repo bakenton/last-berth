@@ -41,7 +41,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('hazard takes a share over 200 years', loss[1]>=1, loss.join(' '));
   // 7. a_bigger advice with three couriers on a line
   await p.evaluate(id=>{ LN.reserves[id]=1e6; LN.colonies[id].dry=false; LN.earth.metal=1e5; LN.earth.parts=1e4; LN.earth.fuel=1e5; LN.earth.people=500; for(let k=0;k<3;k++){ const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)); if(s) setLine(LN,s.id,id,'earth') } LNdraw() },mine);
+  // Nikita, 26.10: a line a little short says nothing; it speaks under half of what it must, with a pile on the surface
+  const capsWere=await p.evaluate(id=>{ const l=onLine(LN,id), w=l.map(s=>s.cap); l.forEach(s=>{ s.cap=1 }); LN.colonies[id].store[planet(id).dep]=600; LNdraw(); return w },mine);
   ok('a_bigger: the advisor names this world (too small hulls on the line)', await p.evaluate(id=>LNI.adv().some(r=>r[3]===id),mine), await p.evaluate(id=>lineCount(LN,id,'courier'),mine));
+  await p.evaluate(a=>{ onLine(LN,a.id).forEach((s,i)=>{ s.cap=a.w[i] }); LNdraw() },{id:mine,w:capsWere});
   // 8. food warning once when rations are low and no farm is lined
   await p.evaluate(()=>{ LN.earth.food=1; LNU.foodWarnAt=null; for(const k in LN.colonies){ if(planet(k).kind==='farm') LN.colonies[k].dark=true } LNdraw() });
   await U.until(()=>p.evaluate(()=>LNU.foodWarnAt!=null),60,10); await U.pause();

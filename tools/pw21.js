@@ -55,8 +55,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('A quiet lines carry a role and a name in LN.log', await p.evaluate(()=>['seam_less','seam_more','seam_rich','wreck','disaster','written_off'].every(k=>window.LN.log.some(e=>e.code==='voice'&&e.d.k.indexOf(k+'.')===0&&e.d.role&&e.d.name))));
   await p.screenshot({path:'x3-journal.png',clip:{x:0,y:830,width:1600,height:170}});
   // a crash on landing -> captain window (gap allowing)
-  const cr=await p.evaluate(()=>{ const G=window.LN; LNU.voiceLast=-1000; const k=Object.keys(G.colonies)[0]; log(G,'colony_failed',{n:5,p:k}); LNdraw(); return {pf:LNU.pf?LNU.pf.role+'|'+LNU.pf.k+'|'+LNU.pf.sub:null} });
-  f=await p.pf();
+  const cr=await p.evaluate(()=>{ const G=window.LN; LNU.voiceLast=-1000; const k=Object.keys(G.colonies)[0]; log(G,'colony_failed',{n:5,p:k}); LNdraw(); const L=G.letters[G.letters.length-1]; return {pf:L.role+'|'+L.k+'|'+L.sub} });   // a quiet word is a strip now, the whole text is in it
+  await p.U.closeBig();
+  f=await p.evaluate(()=>{ LNdraw(); const e=[...document.querySelectorAll('#pfL.low .ltr')].pop(); return e?e.textContent.replace(/\s+/g,' '):null });
   ok('A crash on landing opens the captain\'s file', /role_captain\|crash/.test(cr.pf||'')&&!!f&&/Hull captain/.test(f)&&/hull 5/.test(f), f);
   await p.screenshot({path:'x4-crash.png'}); await p.U.clear();
   // the ark drive lands -> physicist window with wake %
