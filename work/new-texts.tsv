@@ -698,3 +698,5 @@ UI	u_atNoLine	No hulls on the line	На линии нет судов
 UI	u_atSeam	Seam running out	Жила кончается
 UI	u_atLine	Line out of balance	Перевоз и недовоз
 UI	u_pickRate	{c} of {m}/yr · +{a}	{c} из {m}/год · +{a}
+UI	u_feedRow	{n}/yr · line brings {b}	{n}/год · линия везёт {b}
+UI	u_feedShort	The line is {s} a year short. Add hold to it	Линии не хватает {s} в год. Добавьте трюма

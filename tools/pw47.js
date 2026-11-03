@@ -41,7 +41,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await hull(W.works,'courier');
   const fg=await p.evaluate(id=>{ const G=LN, f=lineFit(G,id); f.hulls[0].cap=Math.max(1,Math.round(f.hulls[0].cap*(f.need*0.4)/f.carries)); LNdraw(); const g=lineFit(G,id); return {share:g.carries/g.need,idle:G.colonies[id].idleWorks||0} },W.works);
   const fr=(await rows()).filter(q=>q.w===W.works&&q.k==='forge')[0];
-  ok('thin line to the works: a row with the percent, no idle years needed', fg.idle===0&&!!fr&&/\d+% of what the works burn/.test(fr.t)&&/\+[\d.,]+ a year/.test(fr.s),JSON.stringify(fg)+' '+JSON.stringify(fr));
+  ok('thin line to the works: a row with the percent, no idle years needed', fg.idle===0&&!!fr&&/the line brings [\d.,]+ a year, the works burn [\d.,]+/.test(fr.t)&&/\+[\d.,]+ a year/.test(fr.s),JSON.stringify(fg)+' '+JSON.stringify(fr));
 
   // === 3. the five kinds: noline (farm has no hull), seam, evac, forge, line
   await p.evaluate(a=>{ const G=LN; G.reserves[a.mine2]=lineRate(G,a.mine2).makes*40; G.reserves[a.dead]=0; G.colonies[a.dead].store={metal:0,food:0,fuel:0,parts:0}; LNdraw() },W);

@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'4.45'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'4.46'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -113,17 +113,20 @@ function survey(G){
 /* v4.5 (Nikita, 26.09, run 768210301: 'курьеры 5–6 поколений имбовые, тягачи и грузовозы бессмысленны'):
    every class used to grow its hold ×2.4 a generation, so a Generation V courier was a Generation II hauler
    with a courier's speed. Now the classes grow apart — grow: hold per generation; burn: fuel per departure
-   relative to a courier (a freighter drinks more per trip, far less per ton). */
+   relative to a courier (a freighter drinks more per trip, far less per ton).
+   v4.46 (Nikita, 03.11, run 316286103: «ёмкость оверкил, никакая планета столько не добывает»): one Freighter VI held 130 799
+   and carried ~1500 a year where a world makes 4–19 (up to ~120 with machines). Every class now grows GEN_CAP ×1.5 a
+   generation: a new generation buys speed and reach, the newest hull of a class carries about one world. */
 var HULL_BASE=[
-  {key:'courier',  cap:70,  speed:1.70, metal:40,  fuel:14,  parts:0,  days:7,  reach:0, crew:8,  grow:1.9, burn:1.0},
-  {key:'hauler',   cap:240, speed:1.05, metal:130, fuel:45,  parts:26, days:13, reach:3, crew:20, grow:2.4, burn:1.6},
-  {key:'freighter',cap:760, speed:0.80, metal:320, fuel:120, parts:85, days:21, reach:6, crew:45, grow:2.8, burn:2.2}
+  {key:'courier',  cap:70,  speed:1.70, metal:40,  fuel:14,  parts:0,  days:7,  reach:0, crew:8,  burn:1.0},
+  {key:'hauler',   cap:240, speed:1.05, metal:130, fuel:45,  parts:26, days:13, reach:3, crew:20, burn:1.6},
+  {key:'freighter',cap:760, speed:0.80, metal:320, fuel:120, parts:85, days:21, reach:6, crew:45, burn:2.2}
 ];
 var HULLS=[];
 function genHull(gen,j){
   var b=HULL_BASE[j], g=gen;
   return {id:HULLS.length, key:b.key, gen:g,
-    cap:Math.round(b.cap*Math.pow(b.grow||K.GEN_CAP,g)),   // v4.5: per class
+    cap:Math.round(b.cap*Math.pow(K.GEN_CAP,g)),
     burn:b.burn||1,
     speed:+(b.speed*Math.pow(K.GEN_SPEED,g)).toFixed(2),
     metal:Math.round(b.metal*Math.pow(K.GEN_COST,g)),
@@ -211,6 +214,10 @@ var K={
     {metal:6000, parts:900,  food:3750, fuel:2700, cap:{metal:1500, parts:1200, food:3000, fuel:3500}},
     {metal:13500,parts:1800, food:7500, fuel:5250, cap:{metal:3000, parts:2500, food:6000, fuel:6000}},
     {metal:27000,parts:3750, food:13500,fuel:9750, cap:{metal:6000, parts:5000, food:9000, fuel:10000}}],
+  /* v4.46 (Nikita, 03.11, run 316286103: all four levels bought in 1878 with ~1900 years to go — «ковчег супердешёвый»).
+     Each level's price above ×ARK_PRICE[level]; caps unchanged. ×5 was asked, ×3 chosen: at ×5 level IV (135k metal) was out of
+     that run's reach. Level I stays the ticket: at ×3 on it the serial and bank bots sailed 4/8 and 2/8 (were 7/8, 8/8), at ×1 — 7/8, 8/8 */
+  ARK_PRICE:[1,3,3,3],
   /* v4.29 (Nikita, 09.10): the yearly deposits ('the mortgage') are gone — a level is paid for in one go, in order 1→4,
      at full price. Bots (32 seeds): the even yearly share taxed the working stock in the growth years and starved
      Earth centuries later (level 4 — 13 of 32 dead; level 3 — 5–7 of 24); a one-off payment sails as often as the
@@ -244,8 +251,9 @@ var K={
   /* v4.2 (Nikita's run 820909096: "13k for a freighter is unreachable"): metal cost used to grow x3.2 a
      generation against x2.4 hold, so every new generation was a worse hull per metal and he bought
      couriers for 2800 years. Metal now grows with the hold; the gate on late generations is parts,
-     which sat at 12k unused in that run. Bots: pro 38.4 -> 46.9, invariant holds. Claude — awaiting review. */
-  GEN_CAP:2.4, GEN_SPEED:1.12, GEN_COST:2.4, GEN_FUEL:2.2, GEN_PARTS:3.4,   // hull generation scaling
+     which sat at 12k unused in that run. Bots: pro 38.4 -> 46.9, invariant holds. Claude — awaiting review.
+     v4.46 (Nikita, 03.11): the hold grows ×1.5 and metal with it (hold per metal stays flat); parts keep ×3.4 — the late sink. */
+  GEN_CAP:1.5, GEN_SPEED:1.12, GEN_COST:1.5, GEN_FUEL:2.2, GEN_PARTS:3.4,   // hull generation scaling
   SCRAP_METAL:0.5, SCRAP_PARTS:0.35,   // what the breakers pay
   GEN_OVERLAP:1,       // a generation stays buildable this many generations after the next one lands
   /* range now lives in CLASS_RANGE above: sector limit = class base + generation */
@@ -510,8 +518,10 @@ function legDist(a,b){
 function needsOf(G,node){
   if(node==='earth') return null;
   var p=planet(node), c=G.colonies[node], out=[];
+  /* v4.4: machines run on fuel. v4.46 (Nikita, 03.11: «постоянно не хватает топлива»): the hold is filled in this order and
+     fuel used to go last, so a thin line stopped the machines first. Fuel is 2–9 a year against tens of metal and food */
+  if(c&&kitTier(c)>0) out.push('fuel');
   if(p.kind==='works') out.push('metal','food');
-  if(c&&kitTier(c)>0) out.push('fuel');               // v4.4: machines run on fuel
   return out.length?out:null;
 }
 function exportsOf(G,node){
@@ -1095,7 +1105,7 @@ function driveForecast(G,target){
 }
 function nightLeft(G){ return G.night? Math.max(0,G.night-G.day) : null }
 var ARK_RES=['metal','parts','food','fuel'];
-function arkPrice(l){ var L=K.ARK_LEVELS[l-1]; return L?{metal:L.metal,parts:L.parts,food:L.food,fuel:L.fuel}:null }
+function arkPrice(l){ var L=K.ARK_LEVELS[l-1], m=K.ARK_PRICE[l-1]||1; return L?{metal:L.metal*m,parts:L.parts*m,food:L.food*m,fuel:L.fuel*m}:null }
 /* the highest level whose whole price has been paid in (credit, at full price) */
 function arkLevel(G){ var lv=0;
   for(var l=1;l<=K.ARK_LEVELS.length;l++){ var c=arkPrice(l), ok=true;

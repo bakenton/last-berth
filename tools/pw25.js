@@ -12,7 +12,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.start('en',309573272);
   // 1. classes grow apart
   const caps=await p.evaluate(()=>{ ensureGen(5); return HULLS.filter(h=>h.gen===5).map(h=>h.key+':'+h.cap).join(' ') });
-  ok('gen VI caps: courier 1733 · hauler 19110 · freighter 130k', /courier:1733 hauler:19110 freighter:1307\d\d/.test(caps), caps);
+  ok('gen VI caps: courier 532 · hauler 1823 · freighter 5771 (v4.46: ×1.5 a generation)', /courier:532 hauler:1823 freighter:5771/.test(caps), caps);
   ok('freighter speed 0.8', await p.evaluate(()=>HULLS[2].speed===0.8));
   // 2. fuel per departure by class: same distance, hauler burns 1.6×, freighter 2.2×
   const fuel=await p.evaluate(()=>{ const id=PLANETS[0].id; const r={};

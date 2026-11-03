@@ -483,6 +483,10 @@ function isDry(pid){ var p=planet(pid); return !!G.colonies[pid]&&p.kind!=='work
 function worksHungry(pid){ var p=planet(pid), c=G.colonies[pid]; if(!c||p.kind!=='works') return null;
   var fr=feedRates(G,pid), ym=(c.store.metal||0)/Math.max(0.01,fr.metal||0), yf=(c.store.food||0)/Math.max(0.01,fr.food||0);
   return {metal:ym, food:yf, low:Math.min(ym,yf), idle:(c.idleWorks||0)} }
+/* what the works burn a year and what the line brings of each, in the order the hold is filled (needsOf: fuel, metal, food) */
+function feedSplit(pid){ var fr=feedRates(G,pid), f=lineFit(G,pid), left=f?f.carries:0, out={};
+  (needsOf(G,pid)||[]).forEach(function(k){ var n=fr[k]||0, b=Math.min(n,left); left-=b; out[k]={need:n,brings:b} });
+  return out }
 function wst(pid){ var c=G.colonies[pid];
   if(G.ghost&&G.ghost[pid]) return 'ghost';
   if(!c) return enRoute(G,pid)?'settling':'free';
@@ -618,12 +622,10 @@ function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) retu
 function modal(){ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
 var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
-/* Nikita, 02.11 (run 221175121: 2361 sleepers lost, «я не знал, что от него зависит»): the number on the top bar is what would happen today. Shown once a level is paid and the drive is at the mark */
-function arkToday(){ var s=arkSouls(G), w=Math.floor(s*arkWake(G)); return {s:s,w:w,lost:s-w} }
+/* v4.46 (Nikita, 03.11: «уведомление вверху не нужно, удалить»): the WAKE number of v4.45 is gone from the top bar; the ark tab keeps it */
 function drawTop(){
   var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
-  if(can('ark')&&G.night&&arkLevel(G)>=1&&arkReady(G)){ var at=arkToday(), cvOk=arkConvoy(G).ok; h+='<button class="yr wake" type="button" data-act="tab" data-v="ark" title="'+attr(T('u_topWakeT'))+'"><small>'+ic('ark',11,C.ark)+esc(T('u_wake'))+'</small><b style="color:'+(!cvOk?C.red:(at.lost?C.people:C.food))+'">'+(cvOk?num(at.w):0)+'</b>'+(!cvOk?'<span>'+esc(T('u_topConvoy'))+'</span>':(at.lost?'<span>'+esc(fill(T('u_topLost'),{n:num(at.lost)}))+'</span>':''))+'</button>' }
   if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
@@ -664,7 +666,6 @@ function freeAtPier(){ return G.ships.filter(function(s){ return s.mode==='idle'
 function flags(){ var F={}, E=G.earth, nd=G.need||earthNeed(G);
   // Earth: hunger, then the larder, then metal and fuel
   if(G.hungry) F.earth=[T('u_flHungry'),C.red];
-  else if(G.night&&G.foodFc&&G.foodFc.y<G.night) F.earth=[fill(T('u_flFoodNight'),{y:G.foodFc.y}),C.red];
   else if(foodShort(G)) F.earth=[fill(T('u_flFood'),{y:G.foodFc.y}),C.red];
   else if(G.cold||E.metal/Math.max(0.1,nd.metal)<25) F.earth=[T('u_flMetal'),C.red];
   else if(E.fuel<60) F.earth=[T('u_flFuel'),C.people];
@@ -1060,7 +1061,7 @@ function focusFix(){ var now=Date.now();
   if(!U.focusK) return; if(now-U.focusT>3000){ U.focusK=null; return }
   var e=document.querySelector(U.focusK); if(e&&!e.classList.contains('focus')){ e.style.animationDelay=-(now-U.focusT)+'ms'; e.classList.add('focus') } }
 /* Nikita, 02.11: «хочется ближе к концу накала» — static and dark over the map for the last NIGHT_FX years, growing to the end. Looks only: the layer takes no clicks and lies under the cards */
-var NIGHT_FX=200, NIGHT_FX_LAST=50;
+var NIGHT_FX=300, NIGHT_FX_LAST=50;   // v4.46 (Nikita, 03.11): from 300 years out
 function drawNightFx(){ var e=el('mapbox'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, on=left<=NIGHT_FX, last=left<=NIGHT_FX_LAST;
   e.classList.toggle('nfon',on); e.classList.toggle('nflast',last); e.classList.toggle('nfstill',on&&halted()); if(!on) return;
   e.style.setProperty('--nf',(0.1+0.9*(1-Math.max(0,left)/NIGHT_FX)).toFixed(3));
@@ -1182,8 +1183,12 @@ function winWorld(pid){
   L0+=sec(esc(T('u_world')));
   if(p.kind==='works'){ var wh=worksHungry(pid), fr=feedRates(G,pid);
     L0+=row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
-    L0+=sec(esc(T('u_eats')))+row(resIc('metal',13)+esc(T('metal')),dec(fr.metal||0)+esc(T('u_perYr'))+' · '+esc(fill(T('u_yearsN'),{n:Math.floor(wh.metal)})),wh.metal<10?C.red:null)+
-      row(resIc('food',13)+esc(T('food')),dec(fr.food||0)+esc(T('u_perYr'))+' · '+esc(fill(T('u_yearsN'),{n:Math.floor(wh.food)})),wh.food<10?C.red:null);
+    /* v4.46 (Nikita, 03.11: «игра не говорит, сколько топлива нужно и сколько возится»): each thing the works burn, what the line brings of it and how long the stock lasts */
+    var fd=feedSplit(pid), ff=lineFit(G,pid), yr={metal:wh.metal,food:wh.food,fuel:(c.store.fuel||0)/Math.max(0.01,fr.fuel||0)};
+    L0+=sec(esc(T('u_eats')));
+    Object.keys(fd).forEach(function(k){ var f=fd[k];
+      L0+=row(resIc(k,13)+esc(T(k)),esc(fill(T('u_feedRow'),{n:dec(f.need),b:dec(f.brings)}))+' · '+esc(fill(T('u_yearsN'),{n:Math.floor(yr[k])})),yr[k]<10||f.brings<f.need*0.95?C.red:null) });
+    if(ff&&ff.carries<ff.need*0.95){ var fx=lineFix(pid,[]); L0+=hint(esc(fx?fx[0]:fill(T('u_feedShort'),{s:dec(ff.need-ff.carries)}))) }
     if(wh.idle>5) L0+=alertBox('starving',esc(T('u_worksIdle')));
     else if(wh.low<10) L0+=alertBox('starving',esc(fill(T('u_worksLow'),{n:Math.floor(wh.low)})));
     L0+=sec(esc(T('u_makes')))+'<div id="rw-carries">'+row(resIc('parts',13)+esc(T('parts')),wh.idle>5?'0':dec(lr.makes)+esc(T('u_perYr')))+row(esc(T('u_onSurface')),num(c.store.parts||0))+row(esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')))+'</div>';
@@ -1391,14 +1396,15 @@ function advRows(){ if(!G) return []; var out=[], used=[];   // v4.38: a hull na
     var sy=seamYears(pid); if(sy<SEAM_YEARS&&st!=='dead'&&st!=='cut') out.push([C.people,fill(T('u_aSeam'),{w:w,n:num(sy)}),T('u_aSeamC'),pid,T('u_fixSee'),'add','seam']);
     if(st==='noline') out.push([C.people,fill(T('u_aNoLine'),{w:w}),T('u_aNoLineC'),pid,T('u_fixAdd'),'add','noline']);
     else if(st==='half'&&p.kind==='works'){ var ff=lineFit(G,pid), fh=lineFix(pid,used);   // Nikita, 02.11 (forge-stat): the works say it the moment the line is thin
-      out.push([C.people,fill(T('u_aForge'),{w:w,p:Math.round(ff.carries/Math.max(0.01,ff.need)*100)}),fh?fh[0]:T('u_aForgeC'),pid,fh?fh[1]:T('u_fixAdd'),fh?fh[2]:'add','forge']) }
+      out.push([C.people,fill(T('u_aForge'),{w:w,c:dec(ff.carries),n:dec(ff.need)}),fh?fh[0]:T('u_aForgeC'),pid,fh?fh[1]:T('u_fixAdd'),fh?fh[2]:'add','forge']) }
     else if(st==='half'){ var lr=lineRate(G,pid), hp=lineFix(pid,used);
       out.push([C.people,fill(T('u_aHalf'),{w:w,c:dec(lr.carries),m:dec(lr.makes),r:T(dep).toLowerCase()}),hp?hp[0]:fill(T('u_aHalfC'),{n:num(lr.sitting)}),pid,hp?hp[1]:T('u_fixAdd'),hp?hp[2]:'add','line']) }
     else if(st==='ok'&&can('fleet')){ var sp=lineSpare(G,pid), sf=lineFit(G,pid);   // v4.38: a hull too many — last in the list, grey
       if(sp.length&&sf.carries>=sf.need*SPARE_WARN) out.push([C.mid,fill(T('u_aSpare'),{w:w,c:dec(sf.carries),m:dec(sf.need),r:T(dep).toLowerCase()}),sp.length>1?fill(T('u_aSpareN'),{n:sp.length,h:hname(sp[0])}):fill(T('u_aSpareC'),{h:hname(sp[0])}),pid,T('u_fixHull'),'hr:'+sp[0].id,'line']) }
     else if(st==='dry') out.push([C.people,fill(T('u_aDry'),{w:w,n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()}),T('u_aDryC'),pid,T('u_fixSee'),'add','seam']);
     if(can('machines')&&c.kit&&lineHold(G,pid)<c.kit.w) out.push([C.people,fill(T('u_aKit'),{w:w,t:roman(c.kit.tier-1),n:num(c.kit.w),h:num(lineHold(G,pid))}),T('u_aKitC'),pid,T('u_fixOrder'),'ord','line']);
-    if(can('machines')&&kitTier(c)>0&&!kitLive(c)) out.push([C.people,fill(T('u_aKitFuel'),{w:w}),T('u_aKitFuelC'),pid,T('u_fixSee'),'mach',p.kind==='works'?'forge':'line']);
+    // v4.46: a thin line already speaks for the machines — one card a world
+    if(can('machines')&&kitTier(c)>0&&!kitLive(c)&&st!=='half'&&st!=='starve') out.push([C.people,fill(T('u_aKitFuel'),{w:w}),T('u_aKitFuelC'),pid,T('u_fixSee'),'mach',p.kind==='works'?'forge':'line']);
   });
   var rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
   return out.sort(function(a,b){ return rk(a)-rk(b) }) }

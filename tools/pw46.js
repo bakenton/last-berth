@@ -28,28 +28,20 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ const G=LN; G.night=G.day+150; G.nightSeen=true; G.arkMark=2; G.driveLvl=3; G.gen=3; ensureGen(3);
     G.earth.people=4000; G.earth.metal=99999; G.earth.fuel=99999; G.earth.food=99999; G.earth.parts=99999; LNtut.off(); LNdraw() });
 
-  // 2. the top bar says what would happen today: nothing until a level is paid and the drive is at the mark, then the convoy, then the numbers
-  const has=()=>p.isVisible('#top .yr.wake');
-  ok('top: hidden while no level is paid', !(await has()));
-  await p.evaluate(()=>{ LN.ark.paid={metal:1e6,parts:1e6,food:1e6,fuel:1e6}; LN.driveLvl=1; LN.arkMark=2; LNdraw() });
-  ok('top: hidden while the drive is short of the mark', await p.evaluate(()=>arkLevel(LN)>=1&&!arkReady(LN))&&!(await has()));
-  await p.evaluate(()=>{ LN.driveLvl=3; LNdraw() });
-  let top=await p.innerText('#top .yr.wake');
-  ok('top: convoy short — 0 and the reason', await p.evaluate(()=>!arkConvoy(LN).ok)&&/WAKE\s*0\s*convoy short/.test(top),top);
-  await shot('top-convoy');
+  // 2. v4.46 (Nikita, 03.11: «уведомление вверху не нужно»): the top bar has no WAKE at any stage; the ark window keeps the verdict
+  const has=()=>p.evaluate(()=>/wake/i.test(document.getElementById('top').innerText));
+  await p.evaluate(()=>{ LN.ark.paid={metal:1e6,parts:1e6,food:1e6,fuel:1e6}; LN.driveLvl=3; LN.arkMark=2; LNdraw() });
+  ok('top: no WAKE with a level paid and the drive at the mark', await p.evaluate(()=>arkLevel(LN)>=1&&arkReady(LN))&&!(await has()));
   const hullsFor=()=>p.evaluate(()=>{ const G=LN, need=arkConvoy(G).need; ['courier','hauler','freighter'].forEach(c=>{ const hi=currentHull(G,c), h=HULLS[hi]; for(let i=0;i<need[c];i++){ const s=JSON.parse(JSON.stringify(G.ships[0])); s.id=Math.max(...G.ships.map(o=>o.id))+1; s.hull=hi; s.cap=h.cap; s.crew=h.crew; s.mode='idle'; s.at='earth'; s.from=null; s.to=null; s.pend=null; s.job=null; s.mutiny=false; G.ships.push(s) } }); LNdraw() });
   await hullsFor();
-  top=await p.innerText('#top .yr.wake');
   const want=await p.evaluate(()=>{ const s=arkSouls(LN), w=Math.floor(s*arkWake(LN)); return {s,w,l:s-w,pc:arkWake(LN),ok:arkConvoy(LN).ok} });
-  const n=x=>top.replace(/\s/g,'').includes(String(x));
-  ok('top: all ready — who wakes and who does not, the same as the ark window', want.ok&&want.pc===0.6&&n(want.w)&&n(want.l)&&/never wake/.test(top),top+' / '+JSON.stringify(want));
-  ok('top: the loss is red', await p.evaluate(()=>{ const c=getComputedStyle(document.querySelector('#top .yr.wake span')).color.match(/\d+/g).map(Number); return c[0]>180&&c[1]<110&&c[2]<110 }));
+  ok('top: still no WAKE with the convoy ready', want.ok&&want.pc===0.6&&!(await has()),JSON.stringify(want));
   await shot('top-bar');
   const ov=await p.evaluate(()=>{ const t=document.getElementById('top'); return t.scrollWidth-t.clientWidth });
   ok('top: fits at 1440', ov<=0,ov);
-  await U.tap('#top .yr.wake'); ok('top: a click opens the ark', await p.evaluate(()=>LNU.win==='ark'));
-  tx=await p.innerText('.verdict'); ok('top: the ark window agrees', tx.replace(/\s/g,'').includes(String(want.w)),tx);
-  await U.tap('#top .yr.wake');
+  await U.tap('#tabs [data-act="tab"][data-v="ark"]'); ok('the ark tab opens the ark', await p.evaluate(()=>LNU.win==='ark'));
+  tx=await p.innerText('.verdict'); ok('the ark window gives who wakes', tx.replace(/\s/g,'').includes(String(want.w)),tx);
+  await U.tap('#tabs [data-act="tab"][data-v="ark"]');
   await U.tap('#tabs [data-act="tab"][data-v="tech"]').catch(()=>{});
   if(!(await p.isVisible('.dhelp'))) await U.tap('#tabs [data-act="tab"][data-v="tech"]');
   tx=await p.innerText('.dhelp');
@@ -60,7 +52,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // 3. the static over the map
   const fx=()=>p.evaluate(()=>{ const m=document.getElementById('mapbox'), e=document.getElementById('nightfx'), s=getComputedStyle(e), c=getComputedStyle(m); return {d:s.display,pe:s.pointerEvents,nf:+c.getPropertyValue('--nf'),nl:+c.getPropertyValue('--nl')} });
   const frames=async n=>{ if(!SHOTS) return; const sp0=await p.evaluate(()=>{ const a=LNU.paused,b=LNU.speed; LNU.paused=false; LNU.speed=1; return [a,b] }); await p.evaluate(()=>LNdraw()); await p.waitForTimeout(200); for(let i=1;i<=3;i++){ await p.screenshot({path:path.join(SHOTS,'map-'+n+'-f'+i+'.png')}); await p.waitForTimeout(170) } await p.evaluate(a=>{ LNU.paused=a[0]; LNU.speed=a[1]; LNdraw() },sp0) };
-  let f=await fx(); ok('static: on, takes no clicks, 150 years out', f.d==='block'&&f.pe==='none'&&f.nf>0.2&&f.nf<0.5,JSON.stringify(f));
+  let f=await fx(); ok('static: on, takes no clicks, 150 years out', f.d==='block'&&f.pe==='none'&&f.nf>0.45&&f.nf<0.65,JSON.stringify(f));
   await shot('map-150');
   await p.evaluate(()=>{ LN.night=LN.day+5; LNdraw() }); const f2=await fx();
   ok('static: grows to the end', f2.nf>0.9,JSON.stringify(f2));

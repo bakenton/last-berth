@@ -58,7 +58,6 @@ svg.gi{fill:currentColor}
 @keyframes nfr{0%,100%{filter:brightness(.75)}50%{filter:brightness(1.25)}}
 @keyframes nft{0%{transform:translateY(-18%)}12%{transform:translateY(31%)}21%{transform:translateY(-44%)}37%{transform:translateY(9%)}52%{transform:translateY(58%)}61%{transform:translateY(-27%)}78%{transform:translateY(22%)}90%{transform:translateY(-6%)}}
 @keyframes nfj{0%,86%,100%{transform:none}87%{transform:translate(2px,-1px)}90%{transform:translate(-2px,1px)}93%{transform:none}95%{transform:translate(1px,1px)}}
-.yr.wake{background:none;border:0;padding:0;color:inherit;text-align:left;cursor:pointer;font:inherit}.yr.wake span{font-size:13px;font-weight:700;color:var(--red,#ff3b30)}
 .qm{margin-left:8px;width:18px;height:18px;padding:0;border:1px solid var(--mid);background:none;color:var(--mid);font:600 11px var(--n);line-height:16px;cursor:pointer}.qm:hover,.qm.on{background:var(--mid);color:#000}
 .dhelp{border:1px solid var(--ln);padding:8px 10px;margin:0 0 10px;font-size:12.5px;line-height:1.45;color:var(--mid)}.dhelp p{margin:0 0 6px}.dhelp p:last-child{margin:0}
 #evbar{position:absolute;left:50%;transform:translateX(-50%);top:10px;display:flex;flex-direction:column;gap:6px;z-index:2;pointer-events:none}
