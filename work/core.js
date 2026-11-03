@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'4.46'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'4.47'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -717,7 +717,12 @@ function forgeTally(G,k,c,p,want,made){
 }
 function forgeLoad(G,k,c,cuts){ var f=forgeOf(G,k), res; f.loads++; c.clip=null; for(res in cuts){ f.clips[res+'_'+cuts[res]]=(f.clips[res+'_'+cuts[res]]||0)+1; c.clip=cuts[res] } }
 /* player actions, kept whole for post-run analysis (exported from the UI) */
-function act(G,kind,d,res){ G.actions.push({day:G.day,k:kind,d:d||{},r:res||'ok'}) }
+function act(G,kind,d,res){ var a={day:G.day,k:kind,d:d||{},r:res||'ok'}; if(G.clock) a.s=Math.round(G.clock.ms/1000); G.actions.push(a) }
+/* v4.46 (Nikita, 03.11: «лог должен писать время партии с нажатия на New Game»): wall-clock of the run, kept by the interface
+   (G.clock: ms since the press, run = the calendar moving, sp = run by speed, menu/pause/windows count as stopped).
+   Actions and snapshots carry s — seconds since the press. None in the bots: they have no clock */
+function clockOut(G){ var c=G.clock; if(!c) return null; var sp={}, k; for(k in c.sp) sp[k+'x']=Math.round(c.sp[k]/1000);
+  return {from:c.from, at:c.at, fromYear:c.year||0, total:Math.round(c.ms/1000), running:Math.round(c.run/1000), stopped:Math.round((c.ms-c.run)/1000), bySpeed:sp} }
 function snap(G){
   var E=G.earth, cols=0, pop=0, dry=0;
   for(var k in G.colonies){ var c=G.colonies[k]; cols++; pop+=c.pop; if(G.reserves[k]<=0) dry++ }
@@ -740,7 +745,7 @@ function exportLog(G){
       colony:c?{pop:Math.round(c.pop),tier:c.tier||0,kit:c.kit?c.kit.tier:0,kitShip:c.kitShip||null,fuelOut:c.fuelOut||0,founded:c.founded||0,
         store:{m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0),p:Math.round(c.store.parts||0)}}:null } });
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
-  var J={game:'LAST BERTH', v:VERSION.v, constants:K, seed:G.seed, year:G.day, over:G.over||null,
+  var J={game:'LAST BERTH', v:VERSION.v, constants:K, seed:G.seed, year:G.day, over:G.over||null, clock:clockOut(G),
     night:G.night?{year:G.night,berths:arkSouls(G),arkLevel:arkLevel(G),convoy:arkConvoy(G),arkPaid:G.ark.paid,cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkSouls(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
     earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.map(function(l){return {day:l.day,code:l.code,d:l.d}}),
     forges:Object.keys(G.forge||{}).map(function(k){ var p=planet(k), f=G.forge[k], o={id:k,name:p.name,kind:p.kind,dist:p.dist,rich:p.rich}, a; for(a in f) o[a]=(a==='made'||a==='lostFeed'||a==='lostKit')?Math.round(f[a]):f[a]; return o }), forgeEv:G.forgeEv||[] };
@@ -1277,7 +1282,7 @@ function lineHelp(G,pid,opt){
 function tick(G){
   if(G.over) return;
   G.day++;
-  if(G.day%50===0){ G.snaps=G.snaps||[]; var sn=snap(G), adv=advice(G); sn.warn={}; for(var ai=0;ai<adv.length;ai++) if(adv[ai].sev!=='ok') sn.warn[adv[ai].code]=(sn.warn[adv[ai].code]||0)+1; G.snaps.push(sn) }
+  if(G.day%50===0){ G.snaps=G.snaps||[]; var sn=snap(G), adv=advice(G); sn.warn={}; for(var ai=0;ai<adv.length;ai++) if(adv[ai].sev!=='ok') sn.warn[adv[ai].code]=(sn.warn[adv[ai].code]||0)+1; if(G.clock) sn.s=Math.round(G.clock.ms/1000); G.snaps.push(sn) }
   G.inRate=G.inRate||{}; G._dl=G._dl||{};                 // v4.20: EMA of what arrives home per year, per resource
   ['metal','food','fuel','parts'].forEach(function(k){ var cur=(G.delivered&&G.delivered[k])||0, dd=cur-(G._dl[k]||0); G._dl[k]=cur; G.inRate[k]=(G.inRate[k]||0)*0.98+dd*0.02 });
   G.fuelRate=(G.fuelRate||0)*0.95+(G.fuelSpent||0)*0.05; G.fuelSpent=0;   // v4.4: EMA of fuel the fleet burns per year

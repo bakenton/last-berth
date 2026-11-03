@@ -80,7 +80,7 @@ function drawUI(){ if(!UI) return; var I=items(); if(I[SEL]&&I[SEL].off) SEL=fir
     '<button class="mtst" type="button" data-m="test">▶ '+esc(T('mn_test'))+'</button><div class="mver">v'+esc(O.v)+'</div>' }
 function select(i){ if(i===SEL) return; SEL=i; PULSE.at=performance.now(); UI.querySelectorAll('.mit').forEach(function(e){ e.classList.toggle('on',+e.dataset.i===SEL) }) }
 function act(i){ var it=items()[i]; if(!it||it.off||BUSY) return;
-  if(it.id==='new'){ diveThen(termPlay); return }
+  if(it.id==='new'){ if(O.pressNew) O.pressNew(); diveThen(termPlay); return }   // v4.46: the run's clock starts at the press, the terminal included
   if(it.id==='cont'){ diveThen(function(){ var why=O.cont(); if(why===true) fadeOut(); else { diveBack(); note(why) } }); return }
   if(it.id==='load'){ O.load(); return }
   if(it.id==='lang'){ O.setLang(O.lang()==='en'?'ru':'en'); drawUI(); return }

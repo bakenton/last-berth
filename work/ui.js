@@ -1443,8 +1443,9 @@ function menuOpen(){ U.menu=true; draw();
     setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
     cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return T('mn_contFail') },
     load:function(){ el('loadin').click() },
+    pressNew:function(){ clockOn('new') },
     newRun:function(){ U.langPicked=true; act(G,'menu',{go:'new'}) },
-    test:function(){ U.langPicked=true; tutMute(); act(G,'menu',{go:'test'}); if(window.LBdebug) window.LBdebug.on(true) },   // v4.43 (Nikita, 25.10): Test play opens the debug panel (web/debug.js)
+    test:function(){ U.langPicked=true; clockOn('test'); tutMute(); act(G,'menu',{go:'test'}); if(window.LBdebug) window.LBdebug.on(true) },   // v4.43 (Nikita, 25.10): Test play opens the debug panel (web/debug.js)
     closed:function(){ U.menu=false; draw() }}) }
 
 /* ---------- save and load: a file, and the last autosave in this browser ---------- */
@@ -1455,6 +1456,7 @@ function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinit
   if(!o||!o.G||!o.SECTORS) throw new Error('not a save');
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
   G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
+  if(!G.clock){ clockOn('save'); G.clock.year=G.day }   // a save from before v4.46: the clock counts from the load
   var u=o.U||{}; if(!U.langPicked&&u.lang) U.lang=u.lang; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] }); if(SPEEDS.indexOf(U.speed)<0) U.speed=4;   // a save from before v4.42 may hold 10×
   tutLoad(u.tut);
   U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; U.langPicked=true; HTMLCACHE={};
@@ -1551,7 +1553,7 @@ function doAct(a,b){
   else if(a==='load'){ U.pop=null; el('loadin').click() }
   else if(a==='loadauto'){ loadAuto(); return }
   else if(a==='texts'){ reloadTexts(); return }
-  else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); return }
+  else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); clockOn('new'); return }
   if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:null);
   tutAct(a,v,res); draw() }
 document.addEventListener('click',function(ev){
@@ -1609,9 +1611,14 @@ window.addEventListener('resize',function(){ fit(); if(G){ drawMap(); tutPlace()
 /* ---------- loop ---------- */
 /* v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year */
 var MS={1:1500,2:1000,4:600,10:200};   // v4.42: 10 has no button or key — only the scenarios reach it (LNU.speed=10)
+/* v4.46: the run's clock (G.clock, see clockOut in core.js) — starts at the New Game press, saved with the run. A hidden tab and a
+   frame gap over a second do not count: the player is away */
+function clockOn(from){ if(G) G.clock={from:from,at:new Date().toISOString(),ms:0,run:0,sp:{}} }
+function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
+  if(!halted()){ c.run+=dt; c.sp[U.speed]=(c.sp[U.speed]||0)+dt } }
 function frame(ts){
   if(!U.last) U.last=ts;
-  var dt=ts-U.last; U.last=ts;
+  var dt=ts-U.last; U.last=ts; clockTick(dt);
   if(G&&!halted()&&!G.over){
     U.acc+=dt; var step=MS[U.speed]||600, did=false;
     try{
