@@ -700,3 +700,17 @@ UI	u_atLine	Line out of balance	Перевоз и недовоз
 UI	u_pickRate	{c} of {m}/yr · +{a}	{c} из {m}/год · +{a}
 UI	u_feedRow	{n}/yr · line brings {b}	{n}/год · линия везёт {b}
 UI	u_feedShort	The line is {s} a year short. Add hold to it	Линии не хватает {s} в год. Добавьте трюма
+UI	u_birthTop	births {x}	рожд. {x}
+UI	u_births	Births	Рождаемость
+UI	u_birthsHint	{lo} with an empty larder, {hi} with food for {n} years in store · now {y} years	{lo} при пустых кладовых, {hi} при запасе еды на {n} лет · сейчас {y} лет
+UI	u_ws	Earth's workshop	Цех Земли
+UI	u_wsState	Workshop	Цех
+UI	u_wsOff	switched off	выключен
+UI	u_wsMakes	makes {n} parts a year	делает деталей в год: {n}
+UI	u_wsHeld	idle — Earth keeps its {r}	стоит — Земля бережёт: {r}
+UI	u_wsHint	A part from {m} metal and {f} rations — forty times a works' price. Up to {n} a year, only out of surplus: Earth keeps {km} metal and {kf} rations (at least {k} years of its burn).	Деталь из {m} металла и {f} провизии — в сорок раз дороже, чем на заводе. До {n} в год и только из излишка: Земля бережёт {km} металла и {kf} провизии (не меньше {k} лет расхода).
+UI	u_wsStart	Start the workshop	Запустить цех
+UI	u_wsStop	Stop the workshop	Остановить цех
+UI	u_wakeStores	Ark {l} stores	Запасы ковчега {l}
+UI	u_lvWake	+{n}% wake	+{n}% проснутся
+UI	u_lvTicket	the ticket: everyone at home boards	билет: садятся все, кто дома

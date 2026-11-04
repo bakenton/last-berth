@@ -30,12 +30,15 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // 2. v4.46 (Nikita, 03.11: «уведомление вверху не нужно»): the top bar has no WAKE at any stage; the ark window keeps the verdict
   const has=()=>p.evaluate(()=>/wake/i.test(document.getElementById('top').innerText));
-  await p.evaluate(()=>{ LN.ark.paid={metal:1e6,parts:1e6,food:1e6,fuel:1e6}; LN.driveLvl=3; LN.arkMark=2; LNdraw() });
+  await p.evaluate(()=>{ LN.ark.paid=arkPrice(1); LN.driveLvl=3; LN.arkMark=2; LNdraw() });   // v4.49: level I — the ticket, the drive's share alone
   ok('top: no WAKE with a level paid and the drive at the mark', await p.evaluate(()=>arkLevel(LN)>=1&&arkReady(LN))&&!(await has()));
   const hullsFor=()=>p.evaluate(()=>{ const G=LN, need=arkConvoy(G).need; ['courier','hauler','freighter'].forEach(c=>{ const hi=currentHull(G,c), h=HULLS[hi]; for(let i=0;i<need[c];i++){ const s=JSON.parse(JSON.stringify(G.ships[0])); s.id=Math.max(...G.ships.map(o=>o.id))+1; s.hull=hi; s.cap=h.cap; s.crew=h.crew; s.mode='idle'; s.at='earth'; s.from=null; s.to=null; s.pend=null; s.job=null; s.mutiny=false; G.ships.push(s) } }); LNdraw() });
   await hullsFor();
   const want=await p.evaluate(()=>{ const s=arkSouls(LN), w=Math.floor(s*arkWake(LN)); return {s,w,l:s-w,pc:arkWake(LN),ok:arkConvoy(LN).ok} });
   ok('top: still no WAKE with the convoy ready', want.ok&&want.pc===0.6&&!(await has()),JSON.stringify(want));
+  // v4.49 (Nikita 04.11): levels II–IV wake more — level IV adds 15 points to the drive's 60%
+  const w4=await p.evaluate(()=>{ const was=LN.ark.paid; LN.ark.paid=arkPrice(4); const w=arkWake(LN); LN.ark.paid=was; return w });
+  ok('ark level IV adds 15% to the wake', Math.abs(w4-0.75)<1e-9, w4);
   await shot('top-bar');
   const ov=await p.evaluate(()=>{ const t=document.getElementById('top'); return t.scrollWidth-t.clientWidth });
   ok('top: fits at 1440', ov<=0,ov);
@@ -96,7 +99,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ LNU.win=null; LNdraw() });
 
   // 5. the last screen: 60% wake, the reason in words, the number that was lost
-  await p.evaluate(()=>{ const G=LN; G.ark.paid={metal:1e6,parts:1e6,food:1e6,fuel:1e6}; G.ark.lv=4;
+  await p.evaluate(()=>{ const G=LN; G.ark.paid=arkPrice(1); G.ark.lv=1;   // v4.49: the ticket only — the drive's 60%
     G.night=G.day+1; LNdraw() });
   await U.until(()=>p.evaluate(()=>!!LN.over),200,10);
   const end=await p.evaluate(()=>({over:LN.over,b:LN.boarded,s:LN.souls,w:LN.wake,g:LN.driveLvl,gr:LN.grounded}));

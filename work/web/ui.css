@@ -78,7 +78,7 @@ svg.gi{fill:currentColor}
 #side.on{display:block}
 .side{height:100%;background:var(--pan);border-right:1px solid var(--ink);display:flex;flex-direction:column}
 /* windows */
-#ovl{position:absolute;left:82px;top:100px;right:0;bottom:0;background:rgba(5,5,6,.72);display:none;align-items:center;justify-content:center;z-index:5}
+#ovl{position:absolute;left:82px;top:100px;right:0;bottom:0;background:rgba(5,5,6,.72);display:none;align-items:flex-start;justify-content:center;padding-top:14px;z-index:5}   /* v4.49: windows hang from the top - centred, they moved their buttons whenever a row was added */
 #ovl.on{display:flex}
 .win{position:relative;width:1000px;max-width:calc(100% - 120px);max-height:calc(100% - 28px);background:var(--pan);border:1px solid var(--ink);display:flex;flex-direction:column}
 .win.sm{width:540px}.win.wide{width:1060px}

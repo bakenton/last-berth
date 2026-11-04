@@ -52,6 +52,7 @@ const TMP=require('os').tmpdir();
   const t3=await toasts();
   ok('pressing it tells why', /Too late for .{1,30}: a courier would not be home before the Night/.test(t3), t3.slice(0,200));
   ok('the rule itself refuses (abandon → evacLate)', await p.evaluate(id=>{ var s=LN.ships.filter(s=>HULLS[s.hull].key==='courier'&&s.mode==='idle'&&s.at==='earth'&&!s.mutiny)[0]; return s?abandon(LN,s.id,id):'no free courier' },mine)==='evacLate');
+  await p.keyboard.press('Escape');   // v4.49: a world window stops the clock — closed before time runs
   await p.evaluate(()=>{ LNU.paused=false; LNdraw() }); let seen='';
   for(let i=0;i<30&&!/CUT OFF|cut off/i.test(seen);i++){ await p.waitForTimeout(150); seen=await toasts()+' '+await p.evaluate(()=>document.getElementById('noteL').textContent) }
   await p.evaluate(()=>{ LNU.paused=true; LNdraw() }); await U.clear();

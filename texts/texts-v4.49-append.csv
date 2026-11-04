@@ -1,0 +1,14 @@
+UI,u_birthTop,births {x},рожд. {x},v4.49 iter5,live,new
+UI,u_births,Births,Рождаемость,v4.49 iter5,live,new
+UI,u_birthsHint,"{lo} with an empty larder, {hi} with food for {n} years in store · now {y} years","{lo} при пустых кладовых, {hi} при запасе еды на {n} лет · сейчас {y} лет",v4.49 iter5,live,new
+UI,u_ws,Earth's workshop,Цех Земли,v4.49 iter5,live,new
+UI,u_wsState,Workshop,Цех,v4.49 iter5,live,new
+UI,u_wsOff,switched off,выключен,v4.49 iter5,live,new
+UI,u_wsMakes,makes {n} parts a year,делает деталей в год: {n},v4.49 iter5,live,new
+UI,u_wsHeld,idle — Earth keeps its {r},стоит — Земля бережёт: {r},v4.49 iter5,live,new
+UI,u_wsHint,"A part from {m} metal and {f} rations — forty times a works' price. Up to {n} a year, only out of surplus: Earth keeps {km} metal and {kf} rations (at least {k} years of its burn).","Деталь из {m} металла и {f} провизии — в сорок раз дороже, чем на заводе. До {n} в год и только из излишка: Земля бережёт {km} металла и {kf} провизии (не меньше {k} лет расхода).",v4.49 iter5,live,new
+UI,u_wsStart,Start the workshop,Запустить цех,v4.49 iter5,live,new
+UI,u_wsStop,Stop the workshop,Остановить цех,v4.49 iter5,live,new
+UI,u_wakeStores,Ark {l} stores,Запасы ковчега {l},v4.49 iter5,live,new
+UI,u_lvWake,+{n}% wake,+{n}% проснутся,v4.49 iter5,live,new
+UI,u_lvTicket,the ticket: everyone at home boards,"билет: садятся все, кто дома",v4.49 iter5,live,new

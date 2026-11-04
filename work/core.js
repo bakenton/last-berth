@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'4.48'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'4.49'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -119,7 +119,7 @@ function survey(G){
    generation: a new generation buys speed and reach, the newest hull of a class carries about one world. */
 var HULL_BASE=[
   {key:'courier',  cap:70,  speed:1.70, metal:40,  fuel:14,  parts:0,  days:7,  reach:0, crew:8,  burn:1.0},
-  {key:'hauler',   cap:240, speed:1.05, metal:130, fuel:45,  parts:26, days:13, reach:3, crew:20, burn:1.6},
+  {key:'hauler',   cap:240, speed:1.05, metal:100, fuel:45,  parts:26, parts0:0, days:13, reach:3, crew:20, burn:1.6},   // v4.49 (Nikita 04.11): Generation I — 100 metal (was 130), no parts (parts0; was 26)
   {key:'freighter',cap:760, speed:0.80, metal:320, fuel:120, parts:85, days:21, reach:6, crew:45, burn:2.2}
 ];
 var HULLS=[];
@@ -131,7 +131,7 @@ function genHull(gen,j){
     speed:+(b.speed*Math.pow(K.GEN_SPEED,g)).toFixed(2),
     metal:Math.round(b.metal*Math.pow(K.GEN_COST,g)),
     fuel:Math.round(b.fuel*Math.pow(K.GEN_FUEL,g)),
-    parts:Math.round((b.parts||(g?12:0))*Math.pow(K.GEN_PARTS,g)),
+    parts:(g===0&&b.parts0!==undefined)?b.parts0:Math.round((b.parts||(g?12:0))*Math.pow(K.GEN_PARTS,g)),
     crew:Math.round(b.crew*Math.pow(K.GEN_CREW,g)),
     days:b.days+g*4, reach:g?0:b.reach};
 }
@@ -218,6 +218,12 @@ var K={
      Each level's price above ×ARK_PRICE[level]; caps unchanged. ×5 was asked, ×3 chosen: at ×5 level IV (135k metal) was out of
      that run's reach. Level I stays the ticket: at ×3 on it the serial and bank bots sailed 4/8 and 2/8 (were 7/8, 8/8), at ×1 — 7/8, 8/8 */
   ARK_PRICE:[1,3,3,3],
+  /* v4.49 (Nikita, 04.11, Claude's playtest of v4.47: levels II–IV changed nothing but a cargo line on the last screen): the stores
+     a level carries wake more of the sleepers — ARK_LVL_WAKE is added to the drive's share (to 100% at most), the day the ark sails.
+     Above level I the price leans on food (×ARK_FOOD_X) and spares the parts the drive needs (×ARK_PARTS_X): surplus food has a use
+     at the end (F-60). Bots (8 seeds): rush/ark +2–3%, serial/bank +15–17% (they no longer starve after buying level II) */
+  ARK_LVL_WAKE:[0,0.05,0.10,0.15],
+  ARK_FOOD_X:2, ARK_PARTS_X:0.5,
   /* v4.29 (Nikita, 09.10): the yearly deposits ('the mortgage') are gone — a level is paid for in one go, in order 1→4,
      at full price. Bots (32 seeds): the even yearly share taxed the working stock in the growth years and starved
      Earth centuries later (level 4 — 13 of 32 dead; level 3 — 5–7 of 24); a one-off payment sails as often as the
@@ -266,6 +272,12 @@ var K={
      already has; fuel and parts get a drain of the same size (half / a quarter of the metal burn). An unpaid drain kills hands. */
   DIR_FIRST:600, DIR_GAP_MIN:200, DIR_GAP_MAX:300, DIR_MAX:2, EV_WARN:20, CRISIS_WARN:30, CRISIS_LEN:40, FOLD_SPEED:2, DRAG_SPEED:0.6,
   PULSE_MULT:2, PULSE_SHARE:0.6,
+  /* v4.49 (Nikita 04.11, F-55: «из одной валюты детали делать, но по очень невыгодному курсу»): Earth's workshop, switched on by the
+     player. A part costs WS_METAL metal and WS_FOOD rations — what a works burns (1 + 0.4), forty times over — at most WS_MAX a year,
+     and never out of the last WS_KEEP years of Earth's own burn. Bots (8 seeds, metal + fuel at the same rate): 1–2% of the parts
+     the works make, souls within noise; a workshop that burns Earth's reserve down grounded serial and bank (0/8) — hence WS_KEEP */
+  WS_METAL:40, WS_FOOD:15, WS_MAX:2, WS_KEEP:100, WS_FLOOR:8000,   // WS_FLOOR: metal Earth always keeps — switched on in year 0 and left on, a
+  // floor of 3000 grounded serial 4/8 and bank 3/8 (yards starve); 8000: rush 8 · serial 5 · ark 8 · bank 7 of 8 (souls −25–30% for serial/bank)
   EARTH_METAL_KEEP:25, // v3.8.1: years of Earth's own burn a works line may not take away
   /* v4.0 — two dates (Nikita, 23.09: "why not just leave at once?" — the technology is not there).
      The ark sails only on a drive of generation ARK_DRIVE_MIN or better, and never on the drive you
@@ -959,6 +971,15 @@ function orderFor(G,pid,cls,hull){   // hull: v4.42 — the one orderHull offers
   return 'ok';
 }
 /* v4.34: a save from before manual lines — the standing orders are dropped, the hulls on the lines stay where they are */
+/* v4.49 (F-55): the workshop's year. G.ws: on/off; G.wsWhy: what holds it (metal, food) or null; G.stats.wsParts: parts made */
+function wsKeep(G){ var nd=G.need||earthNeed(G); return {metal:Math.max(K.WS_FLOOR,(nd.metal||0)*K.WS_KEEP), food:(nd.food||0)*K.WS_KEEP} }
+function workshop(G){ G.wsMade=0; if(!G.ws) { G.wsWhy=null; return } var E=G.earth, k=wsKeep(G); G.wsWhy=null;
+  for(var i=0;i<K.WS_MAX;i++){
+    if(E.metal-K.WS_METAL<k.metal){ G.wsWhy='metal'; break }
+    if(E.food-K.WS_FOOD<k.food){ G.wsWhy='food'; break }
+    E.metal-=K.WS_METAL; E.food-=K.WS_FOOD; E.parts+=1; G.wsMade++; G.stats.wsParts=(G.stats.wsParts||0)+1 }
+  if(G.wsMade) openRes(G,'parts') }
+function setWorkshop(G,on){ G.ws=!!on; return 'ok' }
 function upgradeSave(G){
   if(!G.opened) G.opened={food:0,metal:0,fuel:0,parts:0};   // v4.34: an older save burns as it did — every resource open from day 0
   if(G.lines===undefined) return;   // every save since v4.6 carries G.lines; a v4.34 game never does
@@ -1087,8 +1108,11 @@ function workAt(l){ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,l)
 function reachAt(l){ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*l }
 function arkReady(G){ return G.arkMark!==null&&G.arkMark!==undefined&&(G.driveLvl||0)>=G.arkMark }
 /* share of the sleepers who wake at the other end, on the drive you have now (0 = the ark cannot sail) */
-function arkWake(G){ if(!arkReady(G)) return 0; var i=Math.min(K.ARK_WAKE.length-1,(G.driveLvl||0)-G.arkMark); return K.ARK_WAKE[i] }
-function wakeAt(G,l){ if(G.arkMark===null||l<G.arkMark) return 0; return K.ARK_WAKE[Math.min(K.ARK_WAKE.length-1,l-G.arkMark)] }
+function arkWake(G){ if(!arkReady(G)) return 0; return wakeAt(G,G.driveLvl||0) }
+/* v4.49: the drive's share plus what the paid level adds (arkLvlWake), to 100% at most */
+function wakeAt(G,l){ if(G.arkMark===null||G.arkMark===undefined||l<G.arkMark) return 0; return Math.min(1,driveWakeAt(G,l)+arkLvlWake(G)) }
+function driveWakeAt(G,l){ if(G.arkMark===null||G.arkMark===undefined||l<G.arkMark) return 0; return K.ARK_WAKE[Math.min(K.ARK_WAKE.length-1,l-G.arkMark)] }
+function arkLvlWake(G){ return K.ARK_LVL_WAKE[Math.max(0,arkLevel(G)-1)]||0 }
 /* when the drive reaches generation index `target` at the pace the works keep now.
    st: done | ok (y = year) | reach (the next mark wants more worlds) | host (no works world can host) | stalled (no parts coming in).
    rn = the reach the last mark on the way will want; the date assumes you get there. */
@@ -1111,7 +1135,7 @@ function driveForecast(G,target){
 }
 function nightLeft(G){ return G.night? Math.max(0,G.night-G.day) : null }
 var ARK_RES=['metal','parts','food','fuel'];
-function arkPrice(l){ var L=K.ARK_LEVELS[l-1], m=K.ARK_PRICE[l-1]||1; return L?{metal:L.metal*m,parts:L.parts*m,food:L.food*m,fuel:L.fuel*m}:null }
+function arkPrice(l){ var L=K.ARK_LEVELS[l-1], m=K.ARK_PRICE[l-1]||1, fx=l>1?K.ARK_FOOD_X:1, px=l>1?K.ARK_PARTS_X:1; return L?{metal:L.metal*m,parts:Math.round(L.parts*m*px),food:L.food*m*fx,fuel:L.fuel*m}:null }
 /* the highest level whose whole price has been paid in (credit, at full price) */
 function arkLevel(G){ var lv=0;
   for(var l=1;l<=K.ARK_LEVELS.length;l++){ var c=arkPrice(l), ok=true;
@@ -1293,6 +1317,7 @@ function tick(G){
   E.crewF=ef;
   E.pMetal=K.EARTH_METAL*ef; E.pFood=K.EARTH_FOOD*ef; E.pFuel=K.EARTH_FUEL*ef;
   E.metal+=E.pMetal; E.food+=E.pFood; E.fuel+=E.pFuel;
+  workshop(G);
   if(!G.hungry) E.people+=handsRate(G);        // v4.7: a fed home world keeps turning out colonists, fewer every century
 
   upgradeSave(G);   // v4.34: a pre-manual-lines save loses its standing orders on the first tick
@@ -1330,6 +1355,7 @@ function tick(G){
     // arrived
     var node=s.dest;
     s.at=node; s.mode='idle'; s.dir=null;
+    if(s.job==='colonize'&&node==='earth') s.job=null;   // v4.49 (playtest bot 04.11, seed 309573272): a settler hull found by a search came home still on its founding job — 'haz' of null, clock held
     if(s.job==='colonize'){
       var p=planet(node);
       if(!G.safe&&R()<p.haz*0.5){ var cf=s.crew||0; s.mode='dead'; s.crew=0; G.stats.lost++;
@@ -1366,7 +1392,7 @@ function tick(G){
     if(s.job==='search'){
       var found=null;
       for(var q2=0;q2<G.ships.length;q2++){ var m2=G.ships[q2]; if(m2.id===s.searchFor&&m2.mode==='missing') found=m2 }
-      if(found&&R()<0.55){ found.mode='transit'; found.dir='in'; found.origin=node; found.dest='earth'; found.t=legDays(G,node,'earth',found); found.total=found.t; log(G,'search_found',{n:found.id}) }
+      if(found&&R()<0.55){ found.job=null; found.mode='transit'; found.dir='in'; found.origin=node; found.dest='earth'; found.t=legDays(G,node,'earth',found); found.total=found.t; log(G,'search_found',{n:found.id}) }
       else log(G,'search_empty2',{p:node});
       s.job=null; s.searchFor=null; s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;
       continue;
