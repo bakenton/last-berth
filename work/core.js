@@ -224,6 +224,7 @@ var K={
      at the end (F-60). Bots (8 seeds): rush/ark +2–3%, serial/bank +15–17% (they no longer starve after buying level II) */
   ARK_LVL_WAKE:[0,0.05,0.10,0.15],
   ARK_FOOD_X:2, ARK_PARTS_X:0.5,
+  HACK_TOP:6,          // the hack (web/hack.js): its level is the hack's number in the run, 1…HACK_TOP (Nikita, 04.11)
   /* v4.29 (Nikita, 09.10): the yearly deposits ('the mortgage') are gone — a level is paid for in one go, in order 1→4,
      at full price. Bots (32 seeds): the even yearly share taxed the working stock in the growth years and starved
      Earth centuries later (level 4 — 13 of 32 dead; level 3 — 5–7 of 24); a one-off payment sails as often as the
@@ -1073,6 +1074,7 @@ function search(G,shipId,missId){
    final mark, which is where the endless half of the progression lives. */
 function startDrive(G,pid){
   if(G.drive) return 'running';
+  if(hackWait(G,'drive')) return 'hack';
   if(settledCount(G)<driveReachFor(G)) return 'settled';
   var c=G.colonies[pid], p=planet(pid);
   if(!c) return 'nocolony';
@@ -1088,13 +1090,38 @@ function startDrive(G,pid){
   return 'ok';
 }
 function driveDone(G,pid){
-  G.driveWork=0; G.drive=null; G.driveLvl=(G.driveLvl||0)+1;
+  G.driveWork=0; G.drive=null;
+  if(G.hackGate){ hackPush(G,{k:'drive',p:pid,g:(G.driveLvl||0)+1}); return }
+  driveMark(G,pid) }
+function driveMark(G,pid){
+  G.driveLvl=(G.driveLvl||0)+1;
   G.gen=G.driveLvl; ensureGen(G.gen);
   G.pauseNow=true; log(G,'drive_mark',{p:pid,n:G.driveLvl+1,s:sectorLimit(G.gen)});
   if(G.arkMark!==null&&G.arkMark!==undefined&&G.driveLvl>=G.arkMark)
     log(G,'ark_drive',{g:G.driveLvl,w:Math.round(arkWake(G)*100),y:G.night});
 }
 function researchHyper(G){ return 'notworks' }
+
+/* ---------- the hack: the Helm wakes the crew that runs what was just won ----------
+   Nikita, 04.11: «мини игра, которая появляется, когда ты открываешь новое поколение двигателя + думаю за уровень ковчега надо
+   тоже». A finished drive mark and a paid ark level do not take hold until the hack is won (web/hack.js, the serpent). Losing
+   costs nothing and has no way around it (Nikita, 04.11: «обязателен, без обхода»); the clock stands while it is open.
+   The gate is on only in a run the interface started (G.hackGate) — the bots, fuzz and the core scenarios never meet it.
+   G.hackQ — the hacks waiting, oldest first: {k:'drive',p,g} (g — the generation index it opens) | {k:'ark',l};
+   G.hacks — hacks won this run; the next one is at level hacks+1, up to K.HACK_TOP */
+/* the ark levels that wait for a hack: now every one of I–IV. design/ARK.md (ark-design, 05.11): decks in tiers of 4, a hack on the
+   first deck of a tier — then this reads `return l<=16&&(l-1)%4===0` (decks 1, 5, 9, 13) and hackWho names the tier */
+function arkHackAt(l){ return l>=1 }
+function hackPush(G,h){ (G.hackQ=G.hackQ||[]).push(h); G.pauseNow=true }
+function hackNext(G){ return (G.hackQ&&G.hackQ[0])||null }
+function hackWait(G,k){ return (G.hackQ||[]).some(function(h){ return h.k===k }) }
+function hackLevel(G){ return Math.min(K.HACK_TOP,(G.hacks||0)+1) }
+function hackWin(G){
+  var h=hackNext(G); if(!h) return 'nohack';
+  G.hackQ.shift(); G.hacks=(G.hacks||0)+1;
+  if(h.k==='drive') driveMark(G,h.p);
+  else G.ark.woke=Math.max(G.ark.woke||0,h.l);
+  return 'ok' }
 
 /* ---------- the Long Night and the ark ---------- */
 function revealNight(G){
@@ -1141,7 +1168,7 @@ function arkLevel(G){ var lv=0;
   for(var l=1;l<=K.ARK_LEVELS.length;l++){ var c=arkPrice(l), ok=true;
     for(var i=0;i<4;i++){ if(G.ark.paid[ARK_RES[i]]+1e-6<c[ARK_RES[i]]) ok=false }
     if(!ok) break; lv=l }
-  return lv }
+  return G.hackGate? Math.min(lv,G.ark.woke||0) : lv }   // the hack: a paid level holds once its crew is woken
 /* what is still owed on the way to level l, at full price */
 function arkOwed(G,l){ var c=arkPrice(l), o={}; for(var i=0;i<4;i++){ var r=ARK_RES[i]; o[r]=Math.max(0,c[r]-G.ark.paid[r]) } return o }
 function arkCap(l){ var L=K.ARK_LEVELS[l-1]; return L?L.cap:{metal:0,parts:0,food:0,fuel:0} }
@@ -1150,6 +1177,7 @@ function arkCheck(G,l){
   if(!G.night) return 'night';
   if(!arkPrice(l)) return 'arklevel';
   if(l<=arkLevel(G)) return 'arkhave';
+  if(hackWait(G,'ark')) return 'hack';
   return 'ok' }
 function arkBuy(G,l){
   var w=arkCheck(G,l); if(w!=='ok') return w;
@@ -1157,6 +1185,8 @@ function arkBuy(G,l){
   for(i=0;i<4;i++){ r=ARK_RES[i]; cost[r]=Math.ceil(o[r]); if(E[r]<cost[r]) return r }
   var c=arkPrice(l); for(i=0;i<4;i++){ r=ARK_RES[i]; E[r]-=cost[r]; if(cost[r]>0) openRes(G,r); G.ark.paid[r]=Math.max(G.ark.paid[r],c[r]) }
   G.ark.lv=l;
+  if(G.hackGate){ var hk=false; for(var q=(G.ark.woke||0)+1;q<=l;q++) if(arkHackAt(q)) hk=true;   // one hack for the whole step bought
+    if(hk) hackPush(G,{k:'ark',l:l}); else G.ark.woke=l }
   log(G,'ark_bought',{l:l}); return 'ok' }
 /* v4.29: the convoy — hulls docked at Earth, of the ark drive's generation or ARK_CONVOY_BELOW under it. The ark does
    not sail without it. `gen` is the lowest generation that counts; have/need per class; ok when every class is met. */

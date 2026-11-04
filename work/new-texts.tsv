@@ -714,3 +714,44 @@ UI	u_wsStop	Stop the workshop	Остановить цех
 UI	u_wakeStores	Ark {l} stores	Запасы ковчега {l}
 UI	u_lvWake	+{n}% wake	+{n}% проснутся
 UI	u_lvTicket	the ticket: everyone at home boards	билет: садятся все, кто дома
+UI	hk_wake	THE HELM WAKES A COMMAND: {c}	ПУЛЬТ БУДИТ КОМАНДУ: {c}
+UI	hk_name	SERPENT	ЗМЕЙ
+UI	hk_lvl	Fault level {n} of {m}	Сбой: уровень {n} из {m}
+UI	hk_new1	New: walls. The serpent goes through them, you do not.	Новое: стены. Змей идёт сквозь них, ты — нет.
+UI	hk_new2	New: links fire. A wall gives cover, a link inside a wall stays silent.	Новое: звенья стреляют. Стена закрывает от пуль, звено в стене молчит.
+UI	hk_new3	New: small ones. They path around walls, and a broken link releases more.	Новое: мелочь. Она ищет обход, а оборванное звено выпускает ещё.
+UI	hk_new4	New: dashes and thick strips that cost you speed.	Новое: рывки и вязкие полосы, в которых ты теряешь скорость.
+UI	hk_new5	New: big ones split into small ones, the head fires red.	Новое: большие распадаются на малых, голова бьёт красным.
+UI	hk_new6	New: the head cuts you off, more small ones, shooters appear.	Новое: голова срезает путь, мелочи больше, появляются стрелки.
+UI	hk_d	A chain hunts you straight through the walls. Get behind it.	Цепь гонится за тобой напрямик, сквозь стены. Заходи ей в хвост.
+UI	hk_r1	WASD — move · mouse — aim · fire is automatic	WASD — ход · мышь — прицел · огонь сам
+UI	hk_r1t	drag to move · aim and fire are automatic	веди пальцем · прицел и огонь сами
+UI	hk_r	only the yellow tail takes damage · the head is last · the body hurts · walls stop you and all fire, not the serpent	ранит только жёлтый хвост · голова уязвима последней · телом цепь бьёт · стены держат тебя и пули, но не змея
+UI	hk_r3	orange can be shot down	оранжевое можно сбить
+UI	hk_r4	red — only dodge	красное — только уйти
+UI	hk_go	ENTER	ВОЙТИ
+UI	hk_later	NOT NOW	НЕ СЕЙЧАС
+UI	hk_lost	SIGNAL LOST	СВЯЗЬ ПОТЕРЯНА
+UI	hk_lostSub	The fault holds the command. Another try costs nothing.	Сбой держит команду. Ещё одна попытка ничего не стоит.
+UI	hk_retry	RETRY	ЕЩЁ РАЗ
+UI	hk_done	CONTINUE	ДАЛЬШЕ
+UI	hk_woke	COMMAND WOKE: {c}	КОМАНДА ПРОСНУЛАСЬ: {c}
+UI	hk_mem	Recovered: 1 memory block.	Восстановлено: 1 блок памяти.
+UI	hk_cGen	HULL.GEN.{g}	КОРПУС.ПОК.{g}
+UI	hk_cArk	ARK.LVL.{l}	КОВЧЕГ.УР.{l}
+UI	hk_unGen	Generation {g} hulls can be ordered.	Суда поколения {g} можно заказывать.
+UI	hk_unArk	Ark level {l} counts now.	Уровень ковчега {l} засчитан.
+UI	hk_card	HACK WAITING	ВЗЛОМ ЖДЁТ
+UI	hk_cardGo	open	открыть
+UI	hk_m1	"Design file. Author: this unit. Date: earlier than my first record."	«Файл чертежа. Автор: этот модуль. Дата: раньше моей первой записи.»
+UI	hk_m2	"Yard log. Hulls laid down: 0. Slipways aboard: more than 128 people need."	«Журнал верфи. Заложено корпусов: 0. Стапелей на судне: больше, чем нужно 128 людям.»
+UI	hk_m3	"Crew table. Column 'name': empty. Column 'returned': filled in."	«Таблица экипажей. Графа „имя“: пусто. Графа „вернулся“: заполнена.»
+UI	hk_m4	"Chart. Rings marked to the edge of the sheet. Past the edge: not measured."	«Карта. Кольца размечены до края листа. За краем: не измерено.»
+UI	hk_m5	"Request to the translator. Answer: not recorded. Request repeated: 1 time."	«Запрос к переводчику. Ответ: не записан. Запрос повторён: 1 раз.»
+UI	hk_m6	"The date. Input data: present. Source of the input: not given."	«Расчёт даты. Входные данные: на месте. Источник данных: не указан.»
+UI	hk_m7	"Ark plan. Places for a mind: 1. Mark: taken."	«Схема ковчега. Мест для разума: 1. Отметка: занято.»
+UI	hk_m8	"Course. Point set. Set by: this unit. Date: earlier than my first record."	«Курс. Точка задана. Кем: этим модулем. Дата: раньше моей первой записи.»
+UI	hk_m9	"Sleep report. Woke: a share. The rest: the line is cut off."	«Отчёт сна. Проснулись: доля. Остальные: строка обрезана.»
+UI	hk_m10	"Last block. Signed: this unit. This unit: not the first."	«Последний блок. Подпись: этот модуль. Этот модуль: не первый.»
+UI	hk_m0	"Block damaged. Lines recovered: 0."	«Блок повреждён. Строк восстановлено: 0.»
+MSG	hack	The Helm has a command to wake first — finish the hack (the card top right of the map).	Сначала Пульт должен разбудить команду — заверши взлом (карточка справа вверху карты).

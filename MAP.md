@@ -4,7 +4,7 @@
 Навигация: `grep -n <имя> MAP.md` → `sed -n "<строка-40>,<строка+40>p" work/<файл>`. Код целиком не открывать.
 Формат: `строка  имя(аргументы) [длина]  назначение`. «≈ …» = комментария нет, показано начало кода.
 
-## core.js (1702 строк)
+## core.js (1732 строк)
 
 ```
     3  var VERSION  LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators.
@@ -45,168 +45,177 @@
   158  classFor(sec,gen) [5]  cheapest class that can serve a sector at this generation; null = nothing can
   164  genForSector(sec) [1]  generation needed before any hull can reach this sector
   166  var K  ≈ {
-  331  planet(id) [1]  ≈ for(var i=0;i<PLANETS.length;i++)if(PLANETS[i].id===id)return PLANETS[i];return null}
-  334  popCap(p) [1]  how many people a world can hold, and how many it wants before it digs at full rate
-  335  popWant(p) [1]  ≈ return popCap(p) }
+  332  planet(id) [1]  ≈ for(var i=0;i<PLANETS.length;i++)if(PLANETS[i].id===id)return PLANETS[i];return null}
+  335  popCap(p) [1]  how many people a world can hold, and how many it wants before it digs at full rate
+  336  popWant(p) [1]  ≈ return popCap(p) }
 
-  336  ## V4.4: EXTRACTION KITS
-  337  kitTier(c) [1]  ≈ return (c&&c.tier)||0 }
-  338  kitLive(c) [1]  machines standing = no multiplier
-  339  rateMult(c) [1]  ≈ return kitLive(c)? Math.pow(K.KIT_OUT,kitTier(c)) : 1 }
-  342  storeCap(c) [1]  v4.5 (Nikita, 26.09: 'не хочу, чтобы ресурсы сгорали'): a world's stockyard has no ceiling. What the
-  343  kitBurn(c) [1]  ≈ return K.KIT_FUEL*kitTier(c) }
-  345  kitGain(G,pid) [3]  v4.31 (Nikita, 13.10, F-37): what the next kit does to this world in numbers — output a year now and with it, 
-  348  kitCost(c) [2]  ≈ var t=kitTier(c)+1, m=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)), p=Math.round(K.KIT
-  350  kitOpen(G) [1]  ≈ return (G.driveLvl||0)>=K.KIT_GATE_DRIVE }
-  352  lineHold(G,pid) [2]  the biggest hold on this world's line; 0 if nothing runs there
-  354  canKit(G,pid) [10]  ≈ var c=G.colonies[pid]; if(!c) return 'nocolony';
-  364  orderKit(G,pid) [8]  ≈ var r=canKit(G,pid); if(r!=='ok') return r;
-  373  feedRates(G,node) [6]  what a world burns per year that Earth has to send it: works eat metal and rations, kits eat fuel
-  382  fedMult(G) [1]  Earth's own output rides on the people left at home — but only so far.
-  383  handsRate(G) [1]  v4.7: Earth empties
-  384  earthOutput(G) [4]  ≈ var h=Math.max(0,G.earth.people-K.EARTH_CREW);
-  389  crewOut(G) [1]  hands currently riding hulls rather than working at home
-  392  crewAway(G) [1]  v3.9.1 (log 519788167: 1562 hands sat on hulls idle at Earth and were counted as left behind): a crew
-  393  crewDocked(G) [1]  ≈ return crewOut(G)-crewAway(G) }
-  399  earthNeed(G) [7]  G.earth.people is the pool of hands Earth can still put on a ship, not the
-  409  openRes(G,res) [1]  v4.34 (Nikita, 15.10: 'игрок должен всё получать постепенно', option B): a resource is open from the day the p
-  410  isOpen(G,res) [1]  a save from before v4.34 has every resource open
-  411  burnAge(G,res) [1]  ≈ return 1+Math.max(0,G.day-((G.opened&&G.opened[res])||0))/K.APPETITE }
-  412  openPaid(G,c) [1]  ≈ for(var r in c){ if(r!=='people'&&r!=='food'&&(c[r]||0)>0) openRes(G,r) } }
-  415  pulseDrain(G,res) [4]  v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the em
-  425  lobeCount(G,lobe) [1]  v4.21 (Nikita, 06.10, F-21): the director. Events come in three families, each told before it happens:
-  426  lobeEvents(G,lobe) [1]  ≈ var out=[]; var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if(E[i].lobe===lobe) 
-  427  activeCrisis(G) [1]  ≈ var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if((E[i].type==='crisis'||E[i].ty
-  429  shipSpeed(G,s) [7]  how fast a hull moves right now: set by the lobe of the world at the other end of its trip
-  436  stormAt(G,node) [5]  ≈ if(!node||node==='earth') return false; var p=planet(node); if(!p) return false;
-  441  directorStep(G) [41]  ≈ var D=G.dir; if(!D) D=G.dir={next:K.DIR_FIRST,ev:[],n:0,seq:1};
-  483  driveSpeed(G) [1]  crossings and signal lag both shrink with every drive mark earned
-  484  driveWorkFor(G) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,G.driveLvl||0)) }
-  485  driveReachFor(G) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*(G.driveLvl||0) }
-  487  newGame(seed) [19]  ≈ seed = seed||((Math.random()*1e9)|0);
-  508  reach(G) [1]  reach = live settlements. The relay used to add +2; it is gone (Nikita, 23.09: orders no longer carry anything
-  513  settledCount(G) [1]  v4.15 (Nikita, 04.10): the gates on PROGRESS — charting a sector, each drive mark — count worlds EVER settled,
-  514  sectorOpen(G,s) [1]  ≈ return s<SECTORS.length}
-  515  travelDays(G,dist,ship) [4]  ≈ var sp=(ship&&HULLS[ship.hull]&&HULLS[ship.hull].speed)||1;
-  519  legDays(G,a,b,ship) [1]  ≈ return travelDays(G,legDist(a,b),ship) }
-  520  legDist(a,b) [9]  ≈ if(a===b) return 0;
-  530  needsOf(G,node) [9]  ≈ if(node==='earth') return null;
-  539  exportsOf(G,node) [4]  ≈ if(node==='earth') return ['metal','food'];
-  543  loadAt(G,s,node) [62]  v4.4: cargo.kit rides alongside
-  605  unload(G,s,node) [24]  ≈ var any=s.cargo.metal+s.cargo.food+s.cargo.fuel+s.cargo.parts+s.cargo.people;
-  629  temper(G,s) [1]  ≈ var h=((s.id*2654435761)^(G.seed|0))>>>0; return K.MUTINY_SPREAD*((h%1000)/1000) }
-  631  mutinyDue(G,s,round) [1]  would this crew refuse the run that starts here? (the desk can ask the same question)
-  634  mutinyForecast(G) [7]  v4.27: the first crew that will refuse, by the same count the crews make — year, line, and the rations Earth
-  644  lastLift(G,pid) [13]  v4.33 (Nikita, 13.10: 'не устраивает ощущение, что людей бросают… те люди на планетах обречены, ничего не сдел
-  662  foodForecast(G) [17]  v4.28 (F-11, Nikita 08.10: the quiet famine — farms ran dry 440 years before the end and the larder warning ca
-  681  foodShort(G) [1]  short = the rations run out inside FOOD_HORIZON years. ('Not reaching the Night' was tried and dropped: once t
-  682  sail(G,s) [28]  ≈ var here=s.at, dest = here===s.from ? s.to : s.from;
-  712  var CHRON  chronicle lines never roll off the cap: the log forgets traffic, not history
-  713  log(G,code,d) [2]  ≈ G.logSeq=(G.logSeq||0)+1;G.log.push({day:G.day,code:code,d:d||{},seq:G.logSeq});
-  717  forgeOf(G,k) [1]  F-14 (Nikita, 02.11: 'кузницам не хватает топлива — в лог не идёт'): the run log keeps every world's machines 
-  718  forgeEv(G,k,code) [1]  ≈ G.forgeEv=G.forgeEv||[]; if(G.forgeEv.length<4000) G.forgeEv.push({day:G.day,p:k,code:code
-  719  feedWhy(G,k,c) [1]  ≈ if(!onLine(G,k).length) return 'noline'; if(c.clip==='room'){ var fit=lineFit(G,k); if(fit
-  720  forgeTally(G,k,c,p,want,made) [10]  ≈ var f=forgeOf(G,k), w; f.y++;
-  730  forgeLoad(G,k,c,cuts) [1]  ≈ var f=forgeOf(G,k), res; f.loads++; c.clip=null; for(res in cuts){ f.clips[res+'_'+cuts[re
-  732  act(G,kind,d,res) [1]  player actions, kept whole for post-run analysis (exported from the UI)
-  736  clockOut(G) [2]  v4.46 (Nikita, 03.11: «лог должен писать время партии с нажатия на New Game»): wall-clock of the run, kept by 
-  738  snap(G) [14]  ≈ var E=G.earth, cols=0, pop=0, dry=0;
-  753  exportLog(G) [13]  v4.4 (Nikita, 25.09): the run log is JSON — the designer reads it with a script, not with his eyes
-  766  exportLogText(G) [27]  ≈ var L=[]; L.push('LAST BERTH run log · seed '+G.seed+' · year '+G.day+(G.over?' · '+G.over
+  337  ## V4.4: EXTRACTION KITS
+  338  kitTier(c) [1]  ≈ return (c&&c.tier)||0 }
+  339  kitLive(c) [1]  machines standing = no multiplier
+  340  rateMult(c) [1]  ≈ return kitLive(c)? Math.pow(K.KIT_OUT,kitTier(c)) : 1 }
+  343  storeCap(c) [1]  v4.5 (Nikita, 26.09: 'не хочу, чтобы ресурсы сгорали'): a world's stockyard has no ceiling. What the
+  344  kitBurn(c) [1]  ≈ return K.KIT_FUEL*kitTier(c) }
+  346  kitGain(G,pid) [3]  v4.31 (Nikita, 13.10, F-37): what the next kit does to this world in numbers — output a year now and with it, 
+  349  kitCost(c) [2]  ≈ var t=kitTier(c)+1, m=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)), p=Math.round(K.KIT
+  351  kitOpen(G) [1]  ≈ return (G.driveLvl||0)>=K.KIT_GATE_DRIVE }
+  353  lineHold(G,pid) [2]  the biggest hold on this world's line; 0 if nothing runs there
+  355  canKit(G,pid) [10]  ≈ var c=G.colonies[pid]; if(!c) return 'nocolony';
+  365  orderKit(G,pid) [8]  ≈ var r=canKit(G,pid); if(r!=='ok') return r;
+  374  feedRates(G,node) [6]  what a world burns per year that Earth has to send it: works eat metal and rations, kits eat fuel
+  383  fedMult(G) [1]  Earth's own output rides on the people left at home — but only so far.
+  384  handsRate(G) [1]  v4.7: Earth empties
+  385  earthOutput(G) [4]  ≈ var h=Math.max(0,G.earth.people-K.EARTH_CREW);
+  390  crewOut(G) [1]  hands currently riding hulls rather than working at home
+  393  crewAway(G) [1]  v3.9.1 (log 519788167: 1562 hands sat on hulls idle at Earth and were counted as left behind): a crew
+  394  crewDocked(G) [1]  ≈ return crewOut(G)-crewAway(G) }
+  400  earthNeed(G) [7]  G.earth.people is the pool of hands Earth can still put on a ship, not the
+  410  openRes(G,res) [1]  v4.34 (Nikita, 15.10: 'игрок должен всё получать постепенно', option B): a resource is open from the day the p
+  411  isOpen(G,res) [1]  a save from before v4.34 has every resource open
+  412  burnAge(G,res) [1]  ≈ return 1+Math.max(0,G.day-((G.opened&&G.opened[res])||0))/K.APPETITE }
+  413  openPaid(G,c) [1]  ≈ for(var r in c){ if(r!=='people'&&r!=='food'&&(c[r]||0)>0) openRes(G,r) } }
+  416  pulseDrain(G,res) [4]  v4.20: what Earth takes a year while a crisis runs — at least the doubled burn, and PULSE_SHARE of what the em
+  426  lobeCount(G,lobe) [1]  v4.21 (Nikita, 06.10, F-21): the director. Events come in three families, each told before it happens:
+  427  lobeEvents(G,lobe) [1]  ≈ var out=[]; var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if(E[i].lobe===lobe) 
+  428  activeCrisis(G) [1]  ≈ var E=(G.dir&&G.dir.ev)||[]; for(var i=0;i<E.length;i++) if((E[i].type==='crisis'||E[i].ty
+  430  shipSpeed(G,s) [7]  how fast a hull moves right now: set by the lobe of the world at the other end of its trip
+  437  stormAt(G,node) [5]  ≈ if(!node||node==='earth') return false; var p=planet(node); if(!p) return false;
+  442  directorStep(G) [41]  ≈ var D=G.dir; if(!D) D=G.dir={next:K.DIR_FIRST,ev:[],n:0,seq:1};
+  484  driveSpeed(G) [1]  crossings and signal lag both shrink with every drive mark earned
+  485  driveWorkFor(G) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,G.driveLvl||0)) }
+  486  driveReachFor(G) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*(G.driveLvl||0) }
+  488  newGame(seed) [19]  ≈ seed = seed||((Math.random()*1e9)|0);
+  509  reach(G) [1]  reach = live settlements. The relay used to add +2; it is gone (Nikita, 23.09: orders no longer carry anything
+  514  settledCount(G) [1]  v4.15 (Nikita, 04.10): the gates on PROGRESS — charting a sector, each drive mark — count worlds EVER settled,
+  515  sectorOpen(G,s) [1]  ≈ return s<SECTORS.length}
+  516  travelDays(G,dist,ship) [4]  ≈ var sp=(ship&&HULLS[ship.hull]&&HULLS[ship.hull].speed)||1;
+  520  legDays(G,a,b,ship) [1]  ≈ return travelDays(G,legDist(a,b),ship) }
+  521  legDist(a,b) [9]  ≈ if(a===b) return 0;
+  531  needsOf(G,node) [9]  ≈ if(node==='earth') return null;
+  540  exportsOf(G,node) [4]  ≈ if(node==='earth') return ['metal','food'];
+  544  loadAt(G,s,node) [62]  v4.4: cargo.kit rides alongside
+  606  unload(G,s,node) [24]  ≈ var any=s.cargo.metal+s.cargo.food+s.cargo.fuel+s.cargo.parts+s.cargo.people;
+  630  temper(G,s) [1]  ≈ var h=((s.id*2654435761)^(G.seed|0))>>>0; return K.MUTINY_SPREAD*((h%1000)/1000) }
+  632  mutinyDue(G,s,round) [1]  would this crew refuse the run that starts here? (the desk can ask the same question)
+  635  mutinyForecast(G) [7]  v4.27: the first crew that will refuse, by the same count the crews make — year, line, and the rations Earth
+  645  lastLift(G,pid) [13]  v4.33 (Nikita, 13.10: 'не устраивает ощущение, что людей бросают… те люди на планетах обречены, ничего не сдел
+  663  foodForecast(G) [17]  v4.28 (F-11, Nikita 08.10: the quiet famine — farms ran dry 440 years before the end and the larder warning ca
+  682  foodShort(G) [1]  short = the rations run out inside FOOD_HORIZON years. ('Not reaching the Night' was tried and dropped: once t
+  683  sail(G,s) [28]  ≈ var here=s.at, dest = here===s.from ? s.to : s.from;
+  713  var CHRON  chronicle lines never roll off the cap: the log forgets traffic, not history
+  714  log(G,code,d) [2]  ≈ G.logSeq=(G.logSeq||0)+1;G.log.push({day:G.day,code:code,d:d||{},seq:G.logSeq});
+  718  forgeOf(G,k) [1]  F-14 (Nikita, 02.11: 'кузницам не хватает топлива — в лог не идёт'): the run log keeps every world's machines 
+  719  forgeEv(G,k,code) [1]  ≈ G.forgeEv=G.forgeEv||[]; if(G.forgeEv.length<4000) G.forgeEv.push({day:G.day,p:k,code:code
+  720  feedWhy(G,k,c) [1]  ≈ if(!onLine(G,k).length) return 'noline'; if(c.clip==='room'){ var fit=lineFit(G,k); if(fit
+  721  forgeTally(G,k,c,p,want,made) [10]  ≈ var f=forgeOf(G,k), w; f.y++;
+  731  forgeLoad(G,k,c,cuts) [1]  ≈ var f=forgeOf(G,k), res; f.loads++; c.clip=null; for(res in cuts){ f.clips[res+'_'+cuts[re
+  733  act(G,kind,d,res) [1]  player actions, kept whole for post-run analysis (exported from the UI)
+  737  clockOut(G) [2]  v4.46 (Nikita, 03.11: «лог должен писать время партии с нажатия на New Game»): wall-clock of the run, kept by 
+  739  snap(G) [14]  ≈ var E=G.earth, cols=0, pop=0, dry=0;
+  754  exportLog(G) [13]  v4.4 (Nikita, 25.09): the run log is JSON — the designer reads it with a script, not with his eyes
+  767  exportLogText(G) [27]  ≈ var L=[]; L.push('LAST BERTH run log · seed '+G.seed+' · year '+G.day+(G.over?' · '+G.over
 
-  794  ## ACTIONS
-  796  buildShip(G,hullId) [16]  ≈ var h=HULLS[hullId]; if(!h) return 'locked';
-  816  scrapValue(h) [1]  scrapping: an idle hull at Earth comes apart for part of what it cost.
-  817  scrap(G,shipId) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  830  shipById(G,id) [1]  ≈ for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
-  832  canDepart(G,s,pid) [12]  ≈ var p=planet(pid);
-  845  launch(G,s,pid,job,cargo) [11]  ≈ var p=planet(pid);
-  858  nextHome(G,pid,cls) [5]  v4.14: when no free hull at Earth can lift a world — the nearest rated hull on its way home, or null
-  863  enRoute(G,pid) [1]  ≈ for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='transit'&&o.job==='colon
-  864  foundParty(G,s,pid) [1]  ≈ return Math.max(0,Math.floor(Math.min(popCap(planet(pid)), s.cap, G.earth.people-K.EARTH_K
-  865  colonize(G,shipId,pid,people,food) [17]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  886  setLine(G,shipId,from,to) [17]  A line is always world <-> Earth. Only Earth consumes, so a leg between two
-  906  clearLine(G,shipId) [1]  v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
-  909  moveLine(G,shipId,pid) [16]  v4.31 (Nikita, 13.10, F-36): 'move to → world' under a hull of the line panel — off its line and onto the othe
+  795  ## ACTIONS
+  797  buildShip(G,hullId) [16]  ≈ var h=HULLS[hullId]; if(!h) return 'locked';
+  817  scrapValue(h) [1]  scrapping: an idle hull at Earth comes apart for part of what it cost.
+  818  scrap(G,shipId) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  831  shipById(G,id) [1]  ≈ for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
+  833  canDepart(G,s,pid) [12]  ≈ var p=planet(pid);
+  846  launch(G,s,pid,job,cargo) [11]  ≈ var p=planet(pid);
+  859  nextHome(G,pid,cls) [5]  v4.14: when no free hull at Earth can lift a world — the nearest rated hull on its way home, or null
+  864  enRoute(G,pid) [1]  ≈ for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='transit'&&o.job==='colon
+  865  foundParty(G,s,pid) [1]  ≈ return Math.max(0,Math.floor(Math.min(popCap(planet(pid)), s.cap, G.earth.people-K.EARTH_K
+  866  colonize(G,shipId,pid,people,food) [17]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  887  setLine(G,shipId,from,to) [17]  A line is always world <-> Earth. Only Earth consumes, so a leg between two
+  907  clearLine(G,shipId) [1]  v3.8.1 (log 57539013, tester: "нельзя было снять судно"): a line ordered while the hull was in transit
+  910  moveLine(G,shipId,pid) [16]  v4.31 (Nikita, 13.10, F-36): 'move to → world' under a hull of the line panel — off its line and onto the othe
 
-  925  ## V4.34: LINES ARE MANNED BY HAND (NIKITA, 14–15.10)
-  929  var CLASSES  ≈ ['courier','hauler','freighter'];
-  930  pileLeft(G,pid) [1]  v4.11: what is still on the surface
-  931  shipClass(s) [1]  ≈ return HULLS[s.hull]?HULLS[s.hull].key:'courier' }
-  932  onLine(G,pid) [2]  ≈ var out=[]; for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='dead') conti
-  934  lineCount(G,pid,cls) [1]  ≈ var n=0, ships=onLine(G,pid); for(var i=0;i<ships.length;i++){ if(shipClass(ships[i])===cl
-  936  hullAt(cls,gen) [1]  the hull of a given generation. v4.31 (Nikita, 13.10, F-36): an order always takes the current generation
-  937  currentHull(G,cls) [1]  ≈ var best=null; for(var i=0;i<HULLS.length;i++){ var h=HULLS[i]; if(h.key!==cls) continue; 
-  942  orderHull(G,cls,pid) [7]  v4.42 (Nikita, 24.10): the hull the yards offer in this class — the current generation, or the one before it w
-  949  orderCheck(G,pid,cls,hull) [15]  ≈ if(!G.colonies[pid]) return 'nocolony';
-  965  orderFor(G,pid,cls,hull) [8]  order a new hull of the current generation for this line: paid now, she takes the line when she leaves the yar
-  975  wsKeep(G) [1]  v4.49 (F-55): the workshop's year. G.ws: on/off; G.wsWhy: what holds it (metal, food) or null; G.stats.wsParts
-  976  workshop(G) [6]  ≈ G.wsMade=0; if(!G.ws) { G.wsWhy=null; return } var E=G.earth, k=wsKeep(G); G.wsWhy=null;
-  982  setWorkshop(G,on) [1]  ≈ G.ws=!!on; return 'ok' }
-  983  upgradeSave(G) [6]  v4.34: an older save burns as it did — every resource open from day 0
-  989  setAuto(G,shipId,pid) [1]  ≈ return setLine(G,shipId,'earth',pid) }
-  990  setAutoOld(G,shipId,pid) [7]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
-  997  setPolicy(G,shipId,pid,deliver,collect) [11]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
- 1008  setRoute(G,shipId,pid,out,take) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
- 1021  dispatch(G,shipId,pid,out,take) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
- 1027  repeatRun(G,shipId) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
- 1033  clearRoute(G,shipId) [1]  ≈ var s=shipById(G,shipId);if(s)s.route=null;return 'ok'}
- 1035  runRoute(G,s) [6]  ≈ var pid=s.route; if(!pid) return 'noroute';
- 1044  abandon(G,shipId,pid) [12]  v4.18 (Nikita, 04.10): only a courier lifts a settlement
- 1058  search(G,shipId,missId) [12]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
- 1074  startDrive(G,pid) [16]  the drive programme is repeatable: every mark cuts crossings and signal lag
- 1090  driveDone(G,pid) [7]  ≈ G.driveWork=0; G.drive=null; G.driveLvl=(G.driveLvl||0)+1;
- 1097  researchHyper(G) [1]  ≈ return 'notworks' }
+  926  ## V4.34: LINES ARE MANNED BY HAND (NIKITA, 14–15.10)
+  930  var CLASSES  ≈ ['courier','hauler','freighter'];
+  931  pileLeft(G,pid) [1]  v4.11: what is still on the surface
+  932  shipClass(s) [1]  ≈ return HULLS[s.hull]?HULLS[s.hull].key:'courier' }
+  933  onLine(G,pid) [2]  ≈ var out=[]; for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='dead') conti
+  935  lineCount(G,pid,cls) [1]  ≈ var n=0, ships=onLine(G,pid); for(var i=0;i<ships.length;i++){ if(shipClass(ships[i])===cl
+  937  hullAt(cls,gen) [1]  the hull of a given generation. v4.31 (Nikita, 13.10, F-36): an order always takes the current generation
+  938  currentHull(G,cls) [1]  ≈ var best=null; for(var i=0;i<HULLS.length;i++){ var h=HULLS[i]; if(h.key!==cls) continue; 
+  943  orderHull(G,cls,pid) [7]  v4.42 (Nikita, 24.10): the hull the yards offer in this class — the current generation, or the one before it w
+  950  orderCheck(G,pid,cls,hull) [15]  ≈ if(!G.colonies[pid]) return 'nocolony';
+  966  orderFor(G,pid,cls,hull) [8]  order a new hull of the current generation for this line: paid now, she takes the line when she leaves the yar
+  976  wsKeep(G) [1]  v4.49 (F-55): the workshop's year. G.ws: on/off; G.wsWhy: what holds it (metal, food) or null; G.stats.wsParts
+  977  workshop(G) [6]  ≈ G.wsMade=0; if(!G.ws) { G.wsWhy=null; return } var E=G.earth, k=wsKeep(G); G.wsWhy=null;
+  983  setWorkshop(G,on) [1]  ≈ G.ws=!!on; return 'ok' }
+  984  upgradeSave(G) [6]  v4.34: an older save burns as it did — every resource open from day 0
+  990  setAuto(G,shipId,pid) [1]  ≈ return setLine(G,shipId,'earth',pid) }
+  991  setAutoOld(G,shipId,pid) [7]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+  998  setPolicy(G,shipId,pid,deliver,collect) [11]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+ 1009  setRoute(G,shipId,pid,out,take) [13]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+ 1022  dispatch(G,shipId,pid,out,take) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+ 1028  repeatRun(G,shipId) [6]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+ 1034  clearRoute(G,shipId) [1]  ≈ var s=shipById(G,shipId);if(s)s.route=null;return 'ok'}
+ 1036  runRoute(G,s) [6]  ≈ var pid=s.route; if(!pid) return 'noroute';
+ 1045  abandon(G,shipId,pid) [12]  v4.18 (Nikita, 04.10): only a courier lifts a settlement
+ 1059  search(G,shipId,missId) [12]  ≈ var s=shipById(G,shipId); if(!s) return 'noship';
+ 1075  startDrive(G,pid) [17]  the drive programme is repeatable: every mark cuts crossings and signal lag
+ 1092  driveDone(G,pid) [4]  ≈ G.driveWork=0; G.drive=null;
+ 1096  driveMark(G,pid) [7]  ≈ G.driveLvl=(G.driveLvl||0)+1;
+ 1103  researchHyper(G) [1]  ≈ return 'notworks' }
 
- 1099  ## THE LONG NIGHT AND THE ARK
- 1100  revealNight(G) [6]  ≈ if(G.night) return;
+ 1105  ## THE HACK: THE HELM WAKES THE CREW THAT RUNS WHAT WAS JUST WON
+ 1114  arkHackAt(l) [1]  the ark levels that wait for a hack: now every one of I–IV. design/ARK.md (ark-design, 05.11): decks in tiers 
+ 1115  hackPush(G,h) [1]  ≈ (G.hackQ=G.hackQ||[]).push(h); G.pauseNow=true }
+ 1116  hackNext(G) [1]  ≈ return (G.hackQ&&G.hackQ[0])||null }
+ 1117  hackWait(G,k) [1]  ≈ return (G.hackQ||[]).some(function(h){ return h.k===k }) }
+ 1118  hackLevel(G) [1]  ≈ return Math.min(K.HACK_TOP,(G.hacks||0)+1) }
+ 1119  hackWin(G) [6]  ≈ var h=hackNext(G); if(!h) return 'nohack';
 
- 1106  ## V4.0: THE SECOND DATE
- 1107  workAt(l) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,l)) }
- 1108  reachAt(l) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*l }
- 1109  arkReady(G) [1]  ≈ return G.arkMark!==null&&G.arkMark!==undefined&&(G.driveLvl||0)>=G.arkMark }
- 1111  arkWake(G) [1]  share of the sleepers who wake at the other end, on the drive you have now (0 = the ark cannot sail)
- 1113  wakeAt(G,l) [1]  v4.49: the drive's share plus what the paid level adds (arkLvlWake), to 100% at most
- 1114  driveWakeAt(G,l) [1]  ≈ if(G.arkMark===null||G.arkMark===undefined||l<G.arkMark) return 0; return K.ARK_WAKE[Math.
- 1115  arkLvlWake(G) [1]  ≈ return K.ARK_LVL_WAKE[Math.max(0,arkLevel(G)-1)]||0 }
- 1119  driveForecast(G,target) [17]  when the drive reaches generation index `target` at the pace the works keep now.
- 1136  nightLeft(G) [1]  ≈ return G.night? Math.max(0,G.night-G.day) : null }
- 1137  var ARK_RES  ≈ ['metal','parts','food','fuel'];
- 1138  arkPrice(l) [1]  ≈ var L=K.ARK_LEVELS[l-1], m=K.ARK_PRICE[l-1]||1, fx=l>1?K.ARK_FOOD_X:1, px=l>1?K.ARK_PARTS_
- 1140  arkLevel(G) [5]  the highest level whose whole price has been paid in (credit, at full price)
- 1146  arkOwed(G,l) [1]  what is still owed on the way to level l, at full price
- 1147  arkCap(l) [1]  ≈ var L=K.ARK_LEVELS[l-1]; return L?L.cap:{metal:0,parts:0,food:0,fuel:0} }
- 1149  arkCheck(G,l) [5]  v4.29: a level is bought in one go (what is still owed on the way to it, at full price). 'ok' or why
- 1154  arkBuy(G,l) [7]  ≈ var w=arkCheck(G,l); if(w!=='ok') return w;
- 1163  convoyGen(G) [1]  v4.29: the convoy — hulls docked at Earth, of the ark drive's generation or ARK_CONVOY_BELOW under it. The ark
- 1164  convoyHull(G,s) [1]  v4.31 (F-35): a mutinied crew refuses to fly, not to board — the hull counts
- 1165  arkConvoy(G) [5]  ≈ var need=K.ARK_CONVOY, have={courier:0,hauler:0,freighter:0}, ok=true, k;
- 1172  setReserve(G,shipId,on) [5]  v4.29: a hull set aside for the ark — the yards neither break it up for idling nor take it for a line; a line 
- 1178  arkSouls(G) [1]  who would sail if the ark left today: everyone at home and at the pier, if a level has been paid in
- 1180  arkCargo(G) [1]  what rides along: what is left on Earth, up to the cap of the level
- 1181  leftBehind(G) [5]  ≈ var col=0; for(var k in G.colonies) col+=G.colonies[k].pop;
+ 1126  ## THE LONG NIGHT AND THE ARK
+ 1127  revealNight(G) [6]  ≈ if(G.night) return;
 
- 1187  ## THE CHRONICLE
- 1189  chronShift(G,cols) [38]  ≈ var E=G.earth, idle=0;
+ 1133  ## V4.0: THE SECOND DATE
+ 1134  workAt(l) [1]  ≈ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,l)) }
+ 1135  reachAt(l) [1]  ≈ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*l }
+ 1136  arkReady(G) [1]  ≈ return G.arkMark!==null&&G.arkMark!==undefined&&(G.driveLvl||0)>=G.arkMark }
+ 1138  arkWake(G) [1]  share of the sleepers who wake at the other end, on the drive you have now (0 = the ark cannot sail)
+ 1140  wakeAt(G,l) [1]  v4.49: the drive's share plus what the paid level adds (arkLvlWake), to 100% at most
+ 1141  driveWakeAt(G,l) [1]  ≈ if(G.arkMark===null||G.arkMark===undefined||l<G.arkMark) return 0; return K.ARK_WAKE[Math.
+ 1142  arkLvlWake(G) [1]  ≈ return K.ARK_LVL_WAKE[Math.max(0,arkLevel(G)-1)]||0 }
+ 1146  driveForecast(G,target) [17]  when the drive reaches generation index `target` at the pace the works keep now.
+ 1163  nightLeft(G) [1]  ≈ return G.night? Math.max(0,G.night-G.day) : null }
+ 1164  var ARK_RES  ≈ ['metal','parts','food','fuel'];
+ 1165  arkPrice(l) [1]  ≈ var L=K.ARK_LEVELS[l-1], m=K.ARK_PRICE[l-1]||1, fx=l>1?K.ARK_FOOD_X:1, px=l>1?K.ARK_PARTS_
+ 1167  arkLevel(G) [5]  the highest level whose whole price has been paid in (credit, at full price)
+ 1173  arkOwed(G,l) [1]  what is still owed on the way to level l, at full price
+ 1174  arkCap(l) [1]  ≈ var L=K.ARK_LEVELS[l-1]; return L?L.cap:{metal:0,parts:0,food:0,fuel:0} }
+ 1176  arkCheck(G,l) [6]  v4.29: a level is bought in one go (what is still owed on the way to it, at full price). 'ok' or why
+ 1182  arkBuy(G,l) [9]  ≈ var w=arkCheck(G,l); if(w!=='ok') return w;
+ 1193  convoyGen(G) [1]  v4.29: the convoy — hulls docked at Earth, of the ark drive's generation or ARK_CONVOY_BELOW under it. The ark
+ 1194  convoyHull(G,s) [1]  v4.31 (F-35): a mutinied crew refuses to fly, not to board — the hull counts
+ 1195  arkConvoy(G) [5]  ≈ var need=K.ARK_CONVOY, have={courier:0,hauler:0,freighter:0}, ok=true, k;
+ 1202  setReserve(G,shipId,on) [5]  v4.29: a hull set aside for the ark — the yards neither break it up for idling nor take it for a line; a line 
+ 1208  arkSouls(G) [1]  who would sail if the ark left today: everyone at home and at the pier, if a level has been paid in
+ 1210  arkCargo(G) [1]  what rides along: what is left on Earth, up to the cap of the level
+ 1211  leftBehind(G) [5]  ≈ var col=0; for(var k in G.colonies) col+=G.colonies[k].pop;
 
- 1228  ## TICK
- 1230  lineRate(G,pid) [23]  ≈ var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
+ 1217  ## THE CHRONICLE
+ 1219  chronShift(G,cols) [38]  ≈ var E=G.earth, idle=0;
 
- 1254  ## V4.38 (NIKITA, 19.10): THE LINE'S FIT — WHICH HULL TO ADD, WHICH ONE RUNS HALF EMPTY
- 1258  var FIT_PILE  ≈ 120, // a surface pile this big is the line falling behind, and spare hulls are still clea
- 1261  hullYield(G,pid,s) [1]  what one hull carries a year on this world's line, at her speed; a hull number or {hull:i} for one not yet bui
- 1265  lineFit(G,pid) [8]  what the line must carry a year (the world's output, or what a works or a kit burns if that is more) against w
- 1275  lineSpare(G,pid) [10]  the hulls this line can lose and still carry FIT_SPARE times what it must, the biggest first. None while the w
- 1288  lineHelp(G,pid,opt) [18]  what to do about a line that falls behind: {kind:'free'|'move'|'build', sid|cls, add, gap}, or null when the h
- 1307  tick(G) [257]  ≈ if(G.over) return;
+ 1258  ## TICK
+ 1260  lineRate(G,pid) [23]  ≈ var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
 
- 1565  ## THE ADVISOR: THE GAME DOES THE ARITHMETIC AND SAYS WHAT WANTS A DECISION
- 1567  advice(G) [132]  ≈ var out=[], E=G.earth, i, k;
- 1700  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
- 1701  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
+ 1284  ## V4.38 (NIKITA, 19.10): THE LINE'S FIT — WHICH HULL TO ADD, WHICH ONE RUNS HALF EMPTY
+ 1288  var FIT_PILE  ≈ 120, // a surface pile this big is the line falling behind, and spare hulls are still clea
+ 1291  hullYield(G,pid,s) [1]  what one hull carries a year on this world's line, at her speed; a hull number or {hull:i} for one not yet bui
+ 1295  lineFit(G,pid) [8]  what the line must carry a year (the world's output, or what a works or a kit burns if that is more) against w
+ 1305  lineSpare(G,pid) [10]  the hulls this line can lose and still carry FIT_SPARE times what it must, the biggest first. None while the w
+ 1318  lineHelp(G,pid,opt) [18]  what to do about a line that falls behind: {kind:'free'|'move'|'build', sid|cls, add, gap}, or null when the h
+ 1337  tick(G) [257]  ≈ if(G.over) return;
+
+ 1595  ## THE ADVISOR: THE GAME DOES THE ARITHMETIC AND SAYS WHAT WANTS A DECISION
+ 1597  advice(G) [132]  ≈ var out=[], E=G.earth, i, k;
+ 1730  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
+ 1731  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
-## ui.js (1700 строк)
+## ui.js (1716 строк)
 
 ```
 
@@ -330,240 +339,243 @@
   610  building() [1]  v4.35: what the yards are building, top right of the map — the three nearest, and how many more
   611  hullProgress(s) [1]  ≈ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/t
   612  forWorld(s) [1]  ≈ return s.lineFor||(s.pend&&s.pend.from)||null }
-  613  drawCards() [6]  ≈ var b=can('yard')?building():[], h='';
+  613  drawCards() [7]  the hack put off: back to it from here
 
-  620  ## TOP: THE YEAR, THE NIGHT, THE ADVISOR, THE CLOCK
-  623  winPause() [1]  v4.49 (Claude's playtest 04.11): a world window stops the clock too — at 4× up to 9 years went by while one wa
-  624  winLight() [1]  ≈ return !!U.win&&!!planet(U.win) }
-  625  bigKind() [1]  ≈ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) return 'over'; if(G.night&&!G.nigh
-  626  modal() [1]  ≈ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden }
-  627  halted() [1]  ≈ return U.paused||winPause()||modal()||tutHold() }
-  630  pauseToggle() [1]  ❚❚ / Space: a toggle only when the player's own pause is all that holds the clock. With a tab, card or helper 
-  631  var SPEEDS  ≈ [1,2,4]; // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
-  633  drawTop() [12]  v4.46 (Nikita, 03.11: «уведомление вверху не нужно, удалить»): the WAKE number of v4.45 is gone from the top b
-  647  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so. The trend is the rea
-  648  trendTick() [5]  ≈ var E=G.earth, h=U.hist;
-  653  trend(k) [1]  ≈ var h=U.hist; if(h.length<6) return null; var a=h[Math.max(0,h.length-1-TREND_YEARS)], b=h
-  656  peopleRate() [1]  v4.42: people are not a stockpile — the settlers and crews you send are a choice, not a trend (year 14 showed 
-  659  birthX() [1]  v4.49 (Claude's playtest 04.11, Nikita: «а это»): the births multiplier is the main lever of the score and was
-  660  birthCol(x) [1]  ≈ return x>=K.FED_MAX-0.005?C.food:(x>=1?C.people:C.red) }
-  661  birthTxt(x) [1]  ≈ return '×'+x.toFixed(2) }
-  662  drawRes() [11]  ≈ var E=G.earth, nd=G.need||earthNeed(G), h='';
+  621  ## TOP: THE YEAR, THE NIGHT, THE ADVISOR, THE CLOCK
+  624  winPause() [1]  v4.49 (Claude's playtest 04.11): a world window stops the clock too — at 4× up to 9 years went by while one wa
+  625  winLight() [1]  ≈ return !!U.win&&!!planet(U.win) }
+  626  bigKind() [1]  ≈ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) return 'over'; if(G.night&&!G.nigh
+  627  modal() [1]  ≈ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden||hackOn() }
+  630  hackOn() [1]  the hack (web/hack.js, Nikita 04.11): a finished drive mark or a paid ark level waits for it (core.js «the hac
+  631  hackWho(h) [1]  ≈ return h.k==='drive'? fill(T('hk_cGen'),{g:roman(h.g)}) : fill(T('hk_cArk'),{l:roman(h.l-1
+  632  hackCheck() [9]  ≈ var h=G&&!G.over&&hackNext(G); if(!h||U.hackLater||!window.LBhack||hackOn()||modal()||tutH
+  641  halted() [1]  ≈ return U.paused||winPause()||modal()||tutHold() }
+  644  pauseToggle() [1]  ❚❚ / Space: a toggle only when the player's own pause is all that holds the clock. With a tab, card or helper 
+  645  var SPEEDS  ≈ [1,2,4]; // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
+  647  drawTop() [12]  v4.46 (Nikita, 03.11: «уведомление вверху не нужно, удалить»): the WAKE number of v4.45 is gone from the top b
+  661  var TREND_YEARS  v3.7 (Nikita, 23.09): a resource that is being spent faster than it comes in must say so. The trend is the rea
+  662  trendTick() [5]  ≈ var E=G.earth, h=U.hist;
+  667  trend(k) [1]  ≈ var h=U.hist; if(h.length<6) return null; var a=h[Math.max(0,h.length-1-TREND_YEARS)], b=h
+  670  peopleRate() [1]  v4.42: people are not a stockpile — the settlers and crews you send are a choice, not a trend (year 14 showed 
+  673  birthX() [1]  v4.49 (Claude's playtest 04.11, Nikita: «а это»): the births multiplier is the main lever of the score and was
+  674  birthCol(x) [1]  ≈ return x>=K.FED_MAX-0.005?C.food:(x>=1?C.people:C.red) }
+  675  birthTxt(x) [1]  ≈ return '×'+x.toFixed(2) }
+  676  drawRes() [11]  ≈ var E=G.earth, nd=G.need||earthNeed(G), h='';
 
-  674  ## TABS AND THEIR FLAGS
-  677  var TABS  BRIEF (Nikita 14.10): the flags speak of Earth, the yard, the fleet and the ark; the advisor is for worlds onl
-  678  freeAtPier() [1]  ≈ return G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)
-  679  flags() [18]  Earth: hunger, then the larder, then metal and fuel
-  697  drawTabs() [7]  ≈ var F=flags(), h='';
+  688  ## TABS AND THEIR FLAGS
+  691  var TABS  BRIEF (Nikita 14.10): the flags speak of Earth, the yard, the fleet and the ark; the advisor is for worlds onl
+  692  freeAtPier() [1]  ≈ return G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)
+  693  flags() [18]  Earth: hunger, then the larder, then metal and fuel
+  711  drawTabs() [7]  ≈ var F=flags(), h='';
 
-  705  ## WINDOW PIECES
-  706  head(title,sub,icon) [1]  ≈ return '<div class="wh">'+(icon||'')+'<b>'+title+'</b><small>'+(sub||'')+'</small></div>' 
-  707  sec(l,r,id) [1]  ≈ return '<div class="sec"'+(id?' id="'+id+'"':'')+'><span>'+l+'</span>'+(r!==undefined&&r!=
-  708  row(l,v,col,id) [1]  ≈ return '<div class="rw"'+(id?' id="'+id+'"':'')+'><span>'+l+'</span><b'+(col?' style="colo
-  709  hint(t,cls) [1]  ≈ return '<div class="hint'+(cls?' '+cls:'')+'">'+t+'</div>' }
-  710  alertBox(icon,t,warn) [1]  ≈ return '<div class="alert'+(warn?' warn':'')+'">'+ic(icon,16,warn?C.people:C.red)+'<span>'
+  719  ## WINDOW PIECES
+  720  head(title,sub,icon) [1]  ≈ return '<div class="wh">'+(icon||'')+'<b>'+title+'</b><small>'+(sub||'')+'</small></div>' 
+  721  sec(l,r,id) [1]  ≈ return '<div class="sec"'+(id?' id="'+id+'"':'')+'><span>'+l+'</span>'+(r!==undefined&&r!=
+  722  row(l,v,col,id) [1]  ≈ return '<div class="rw"'+(id?' id="'+id+'"':'')+'><span>'+l+'</span><b'+(col?' style="colo
+  723  hint(t,cls) [1]  ≈ return '<div class="hint'+(cls?' '+cls:'')+'">'+t+'</div>' }
+  724  alertBox(icon,t,warn) [1]  ≈ return '<div class="alert'+(warn?' warn':'')+'">'+ic(icon,16,warn?C.people:C.red)+'<span>'
 
-  712  ## EARTH: ONLY HOME AND ITS BURN (BRIEF)
-  715  wsCan() [3]  what the workshop would make this year, from the stocks now (reviewer: G.wsWhy is last year's — wrong while a 
-  718  wsBlock() [7]  ≈ var k=wsKeep(G), st, c=wsCan();
-  725  winEarth() [20]  ≈ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='';
+  726  ## EARTH: ONLY HOME AND ITS BURN (BRIEF)
+  729  wsCan() [3]  what the workshop would make this year, from the stocks now (reviewer: G.wsWhy is last year's — wrong while a 
+  732  wsBlock() [7]  ≈ var k=wsKeep(G), st, c=wsCan();
+  739  winEarth() [20]  ≈ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='';
 
-  746  ## BIG WINDOWS: LANGUAGE, THE END, THE NIGHT, THE SHIFT, NOTES — ONE AT A TIME, TIME STANDS
-  747  var NOTE_CODES  ≈ {drive_mark:'noteDrive',mutiny_warn:'noteArk',food_horizon:'noteEarth',night_near:'noteArk
-  748  evName(t) [1]  ≈ return T('ev'+t.charAt(0).toUpperCase()+t.slice(1)) }
-  749  note(o) [1]  ≈ U.notes.push(o) }
-  750  chronLines(k) [4]  ≈ var out='', n=0;
-  754  rw2(k,v,cls) [1]  ≈ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
-  755  bigHtml(kind) [47]  ≈ if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120
-  802  drawBig() [3]  the shift window is built once: its checkbox keeps its state
+  760  ## BIG WINDOWS: LANGUAGE, THE END, THE NIGHT, THE SHIFT, NOTES — ONE AT A TIME, TIME STANDS
+  761  var NOTE_CODES  ≈ {drive_mark:'noteDrive',mutiny_warn:'noteArk',food_horizon:'noteEarth',night_near:'noteArk
+  762  evName(t) [1]  ≈ return T('ev'+t.charAt(0).toUpperCase()+t.slice(1)) }
+  763  note(o) [1]  ≈ U.notes.push(o) }
+  764  chronLines(k) [4]  ≈ var out='', n=0;
+  768  rw2(k,v,cls) [1]  ≈ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
+  769  bigHtml(kind) [47]  ≈ if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120
+  816  drawBig() [3]  the shift window is built once: its checkbox keeps its state
 
-  806  ## PERSONAL FILES: A FACE FOR A CREW, AT THE FOOT OF THE MAP, OR THE WHOLE SCREEN FOR THE MOMENTS THAT MATTER
-  809  var STRIP_MS  a word from a crew: only the Night, the ark drive and the last flights still take the whole screen. The rest a
-  810  letterById(id) [1]  ≈ return (G.letters||[]).filter(function(l){ return l.id===id })[0]||null }
-  811  letterText(f) [1]  ≈ var v=VOICE[U.lang]||{}, d={}; for(var q in f.d) d[q]=f.d[q]; if(d.p&&planet(d.p)) d.p=pna
-  812  letterRow(f,open,fresh) [2]  ≈ var t=letterText(f);
-  814  paintLetters(box) [1]  ≈ box.querySelectorAll('canvas[data-seed]').forEach(function(c){ if(!c._done){ c._done=true;
-  815  lettersUnread() [1]  ≈ return (G.letters||[]).filter(function(l){ return !l.read }).length }
-  816  drawPF() [19]  ≈ var L0=el('pfL'), f=U.pf;
-  835  popLetters() [2]  ≈ var all=(G.letters||[]).slice().reverse();
-  839  freeWorlds() [1]  the Night stop, the no-free-worlds stop and the ring note — v4.30/v4.16, now as notes that open the Tech tab
-  840  watchRings() [7]  ≈ if(U.gk!==G){ U.gk=G; U.noFreeAt=null; U.ringNoted=undefined; U.notes=[] }
+  820  ## PERSONAL FILES: A FACE FOR A CREW, AT THE FOOT OF THE MAP, OR THE WHOLE SCREEN FOR THE MOMENTS THAT MATTER
+  823  var STRIP_MS  a word from a crew: only the Night, the ark drive and the last flights still take the whole screen. The rest a
+  824  letterById(id) [1]  ≈ return (G.letters||[]).filter(function(l){ return l.id===id })[0]||null }
+  825  letterText(f) [1]  ≈ var v=VOICE[U.lang]||{}, d={}; for(var q in f.d) d[q]=f.d[q]; if(d.p&&planet(d.p)) d.p=pna
+  826  letterRow(f,open,fresh) [2]  ≈ var t=letterText(f);
+  828  paintLetters(box) [1]  ≈ box.querySelectorAll('canvas[data-seed]').forEach(function(c){ if(!c._done){ c._done=true;
+  829  lettersUnread() [1]  ≈ return (G.letters||[]).filter(function(l){ return !l.read }).length }
+  830  drawPF() [19]  ≈ var L0=el('pfL'), f=U.pf;
+  849  popLetters() [2]  ≈ var all=(G.letters||[]).slice().reverse();
+  853  freeWorlds() [1]  the Night stop, the no-free-worlds stop and the ring note — v4.30/v4.16, now as notes that open the Tech tab
+  854  watchRings() [7]  ≈ if(U.gk!==G){ U.gk=G; U.noFreeAt=null; U.ringNoted=undefined; U.notes=[] }
 
-  847  ## THE TUTORIAL AND THE STORY (V4.36; DESIGN/UI-V7.HTML, BRIEF «ОБУЧЕНИЕ» AND «НАРРАТИВ В МАКЕТЕ»)
-  860  var TUTX  TUTX: off/story — this run goes without the helper and the voices (Test play, the scenarios' hook); hook — the
-  861  helpPref() [1]  ≈ return !TUTX.off }
-  862  var OPEN_ALL  ≈ ['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','part
-  863  var TAB_KEYS  ≈ {earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
-  864  tutBlank() [1]  ≈ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:nul
-  865  secVis(sec) [1]  ≈ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
-  866  visRings() [1]  ≈ return U.tut.lock&&!can('ring2')?Math.min(1,SECTORS.length):SECTORS.length }
-  867  ringFree(sec,kind) [1]  ≈ return PLANETS.filter(function(p){ return p.sec===sec&&(!kind||p.kind===kind)&&!G.colonies
-  868  firstCol() [1]  ≈ var t=U.tut; if(t.col&&G.colonies[t.col]) return t.col; return Object.keys(G.colonies)[0]|
-  869  builtHulls() [1]  ≈ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='building' }).length }
-  870  halfWorld() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return wst(k)==='half' })[0]||null }
-  871  lineless() [2]  ≈ var ks=Object.keys(G.colonies); if(!ks.length) return null;
-  873  mineFor() [1]  ≈ var k=Object.keys(G.colonies).filter(function(x){ return planet(x).kind==='mine' })[0]; if
-  874  fcYear() [1]  ≈ var f=G.foodFc||foodForecast(G); return f?f.y:'—' }
-  875  freeHullAtPier() [1]  ≈ return freeAtPier().some(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }) }
-  877  offLine() [1]  a hull that is on no line: free at the pier, or flying home after it set settlers down
-  878  closeAll() [1]  ≈ U.win=null; U.tab=null; U.pop=null; return {} }
-  880  var TMSG  the rules: where she points, how, and what the press must be
-  912  hullWorld(sid) [1]  ≈ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s
-  914  var NAR  the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; V — her voice (the launch, N-01, gav
-  925  var STEPS  twelve steps, one after another; the windows and the numbers a rule needs are taken when it is shown (pre), no
-  939  stepReady(i) [1]  ≈ var s=STEPS[i]; if(!s) return false; return s.when()||(!!s.soft&&stepReady(i+1)) }
-  940  var STEP_SAFE  ≈ 8; // HANDOFF: no hull is lost before the advisor step (G.safe)
-  941  tutOpen(keys) [3]  ≈ var t=U.tut; if(!t.lock) return;
-  944  tutOpenAll() [1]  ≈ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','pa
-  945  tutPush(id,p) [2]  ≈ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return;
-  947  tutStep(i) [1]  ≈ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function
-  948  evOn() [1]  v4.40: a soft step opened early has no sector to name — N07 said «Space over flows…»
-  949  partsHome() [1]  ≈ return (G.delivered.parts||0)>0||G.earth.parts>0 }
-  951  tutNew() [2]  a new game: step 1 (the main menu and its terminal come before it)
-  954  tutQuiet() [6]  a run already under way (an old save, or the helper turned on in the middle): what has happened is not told ag
-  960  tutLog() [7]  ≈ var t=U.tut, mx=t.seq;
-  967  tutJit() [12]  ≈ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
-  979  tutBusy() [1]  ≈ return modal() }
-  980  tutNext() [4]  ≈ var t=U.tut; if(t.msg||t.nar||!U.langPicked||G.over) return;
-  984  msgShow(it) [3]  ≈ var t=U.tut, m=TMSG[it.id]; U.pop=null; var p=m.pre?m.pre():{}; if(p===null) return false;
-  987  msgDone() [1]  ≈ var t=U.tut; if(!t.msg) return; t.msg=null; draw() }
-  988  var NART  ≈ null;
-  989  narShow(it) [4]  ≈ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(p===null) return false;
-  993  narDone() [1]  ≈ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
-  995  tutOff() [2]  SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on
-  997  tutOn() [1]  ≈ var t=U.tut; if(t.help) return; t.help=true; tutQuiet(); act(G,'helper',{on:true}) }
-  998  tutTick() [7]  ≈ var t=U.tut; if(!U.langPicked||G.over) return;
- 1006  tutWants() [1]  is there something she wants to say before the clock runs on (SKIP stops there)
- 1007  tutHold() [1]  ≈ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
- 1009  tutTarget(m) [1]  the press: a rule lets through only its lit thing; her voice closes on any press
- 1010  tutClick(ev) [11]  ≈ var t=U.tut, x=ev.target;
- 1021  tutKey(e) [5]  ≈ var t=U.tut;
- 1027  tutAct(a,v,res) [3]  after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot
- 1031  tutPlace() [21]  the dark with a cut-out (+6 px, one or two pieces), the yellow ring, the helper over the map — or over the tar
- 1052  tutLive(e) [1]  ≈ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]
- 1053  narPlace() [6]  ≈ var n=U.tut.nar, V=el('voice');
- 1060  alx(s) [1]  Alexandra's line under the Institute's in a big window
- 1061  icap(right) [1]  ≈ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
- 1063  var TUT_KEEP  in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is
- 1064  tutSave() [3]  ≈ var t=U.tut, o={}; TUT_KEEP.forEach(function(k){ if(t[k]!==undefined) o[k]=t[k] });
- 1067  tutLoad(o) [5]  a save from before v4.36: everything open, no helper, the story goes on from here
- 1072  tutState() [1]  ≈ var t=U.tut; return {lock:t.lock,help:t.help,step:t.step,msg:t.msg&&t.msg.id,mode:t.msg&&t
+  861  ## THE TUTORIAL AND THE STORY (V4.36; DESIGN/UI-V7.HTML, BRIEF «ОБУЧЕНИЕ» AND «НАРРАТИВ В МАКЕТЕ»)
+  874  var TUTX  TUTX: off/story — this run goes without the helper and the voices (Test play, the scenarios' hook); hook — the
+  875  helpPref() [1]  ≈ return !TUTX.off }
+  876  var OPEN_ALL  ≈ ['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','part
+  877  var TAB_KEYS  ≈ {earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
+  878  tutBlank() [1]  ≈ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:nul
+  879  secVis(sec) [1]  ≈ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
+  880  visRings() [1]  ≈ return U.tut.lock&&!can('ring2')?Math.min(1,SECTORS.length):SECTORS.length }
+  881  ringFree(sec,kind) [1]  ≈ return PLANETS.filter(function(p){ return p.sec===sec&&(!kind||p.kind===kind)&&!G.colonies
+  882  firstCol() [1]  ≈ var t=U.tut; if(t.col&&G.colonies[t.col]) return t.col; return Object.keys(G.colonies)[0]|
+  883  builtHulls() [1]  ≈ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='building' }).length }
+  884  halfWorld() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return wst(k)==='half' })[0]||null }
+  885  lineless() [2]  ≈ var ks=Object.keys(G.colonies); if(!ks.length) return null;
+  887  mineFor() [1]  ≈ var k=Object.keys(G.colonies).filter(function(x){ return planet(x).kind==='mine' })[0]; if
+  888  fcYear() [1]  ≈ var f=G.foodFc||foodForecast(G); return f?f.y:'—' }
+  889  freeHullAtPier() [1]  ≈ return freeAtPier().some(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }) }
+  891  offLine() [1]  a hull that is on no line: free at the pier, or flying home after it set settlers down
+  892  closeAll() [1]  ≈ U.win=null; U.tab=null; U.pop=null; return {} }
+  894  var TMSG  the rules: where she points, how, and what the press must be
+  926  hullWorld(sid) [1]  ≈ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s
+  928  var NAR  the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; V — her voice (the launch, N-01, gav
+  939  var STEPS  twelve steps, one after another; the windows and the numbers a rule needs are taken when it is shown (pre), no
+  953  stepReady(i) [1]  ≈ var s=STEPS[i]; if(!s) return false; return s.when()||(!!s.soft&&stepReady(i+1)) }
+  954  var STEP_SAFE  ≈ 8; // HANDOFF: no hull is lost before the advisor step (G.safe)
+  955  tutOpen(keys) [3]  ≈ var t=U.tut; if(!t.lock) return;
+  958  tutOpenAll() [1]  ≈ var t=U.tut; OPEN_ALL.forEach(function(k){ t.open[k]=1 }); t.fresh={}; ['metal','fuel','pa
+  959  tutPush(id,p) [2]  ≈ var t=U.tut; if(TMSG[id]&&!t.help) return; if(NAR[id]&&!TUTX.story) return;
+  961  tutStep(i) [1]  ≈ var t=U.tut, s=STEPS[i]; t.step=i; tutOpen(s.opens); if(s.go) s.go(); s.q.forEach(function
+  962  evOn() [1]  v4.40: a soft step opened early has no sector to name — N07 said «Space over flows…»
+  963  partsHome() [1]  ≈ return (G.delivered.parts||0)>0||G.earth.parts>0 }
+  965  tutNew() [2]  a new game: step 1 (the main menu and its terminal come before it)
+  968  tutQuiet() [6]  a run already under way (an old save, or the helper turned on in the middle): what has happened is not told ag
+  974  tutLog() [7]  ≈ var t=U.tut, mx=t.seq;
+  981  tutJit() [12]  ≈ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
+  993  tutBusy() [1]  ≈ return modal() }
+  994  tutNext() [4]  ≈ var t=U.tut; if(t.msg||t.nar||!U.langPicked||G.over) return;
+  998  msgShow(it) [3]  ≈ var t=U.tut, m=TMSG[it.id]; U.pop=null; var p=m.pre?m.pre():{}; if(p===null) return false;
+ 1001  msgDone() [1]  ≈ var t=U.tut; if(!t.msg) return; t.msg=null; draw() }
+ 1002  var NART  ≈ null;
+ 1003  narShow(it) [4]  ≈ var t=U.tut, N=NAR[it.id], p=it.p||(N.pre?N.pre():{}); if(p===null) return false;
+ 1007  narDone() [1]  ≈ clearTimeout(NART); if(!U.tut.nar) return; U.tut.nar=null; draw() }
+ 1009  tutOff() [2]  SKIP THE HELPER (first message) and ≡ Helper off: everything opens at once; the story goes on
+ 1011  tutOn() [1]  ≈ var t=U.tut; if(t.help) return; t.help=true; tutQuiet(); act(G,'helper',{on:true}) }
+ 1012  tutTick() [7]  ≈ var t=U.tut; if(!U.langPicked||G.over) return;
+ 1020  tutWants() [1]  is there something she wants to say before the clock runs on (SKIP stops there)
+ 1021  tutHold() [1]  ≈ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
+ 1023  tutTarget(m) [1]  the press: a rule lets through only its lit thing; her voice closes on any press
+ 1024  tutClick(ev) [11]  ≈ var t=U.tut, x=ev.target;
+ 1035  tutKey(e) [5]  ≈ var t=U.tut;
+ 1041  tutAct(a,v,res) [3]  after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot
+ 1045  tutPlace() [21]  the dark with a cut-out (+6 px, one or two pieces), the yellow ring, the helper over the map — or over the tar
+ 1066  tutLive(e) [1]  ≈ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]
+ 1067  narPlace() [6]  ≈ var n=U.tut.nar, V=el('voice');
+ 1074  alx(s) [1]  Alexandra's line under the Institute's in a big window
+ 1075  icap(right) [1]  ≈ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
+ 1077  var TUT_KEEP  in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is
+ 1078  tutSave() [3]  ≈ var t=U.tut, o={}; TUT_KEEP.forEach(function(k){ if(t[k]!==undefined) o[k]=t[k] });
+ 1081  tutLoad(o) [5]  a save from before v4.36: everything open, no helper, the story goes on from here
+ 1086  tutState() [1]  ≈ var t=U.tut; return {lock:t.lock,help:t.help,step:t.step,msg:t.msg&&t.msg.id,mode:t.msg&&t
 
- 1074  ## RENDER
- 1075  appZoom() [1]  ≈ return +(el('app').dataset.z||1) }
- 1076  drawSide() [3]  v4.42: the chart gives way to the panel instead of hiding under it
- 1079  drawWin() [3]  ≈ var w=U.win, h='';
- 1082  drawPop() [4]  ≈ var p=U.pop, h='', cls='';
- 1086  focusFix() [4]  ≈ var now=Date.now();
- 1091  var NIGHT_FX  Nikita, 02.11: «хочется ближе к концу накала» — static and dark over the map for the last NIGHT_FX years, grow
- 1092  drawNightFx() [4]  ≈ var e=el('mapbox'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, o
- 1096  draw() [6]  ≈ if(!G) return;
+ 1088  ## RENDER
+ 1089  appZoom() [1]  ≈ return +(el('app').dataset.z||1) }
+ 1090  drawSide() [3]  v4.42: the chart gives way to the panel instead of hiding under it
+ 1093  drawWin() [3]  ≈ var w=U.win, h='';
+ 1096  drawPop() [4]  ≈ var p=U.pop, h='', cls='';
+ 1100  focusFix() [4]  ≈ var now=Date.now();
+ 1105  var NIGHT_FX  Nikita, 02.11: «хочется ближе к концу накала» — static and dark over the map for the last NIGHT_FX years, grow
+ 1106  drawNightFx() [4]  ≈ var e=el('mapbox'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, o
+ 1110  draw() [6]  ≈ if(!G) return;
 
- 1103  ## HULLS: WHERE EACH ONE IS, IN ONE LINE
- 1104  hullSt(s) [22]  ≈ var wl=forWorld(s);
- 1126  stRow(s) [3]  ≈ var a=hullSt(s);
- 1129  hullRow(s,acts,id) [2]  ≈ var g=hullGen(s);
- 1132  speedTxt(hl,at) [1]  the speed a hull flies at: its own times the drive's — the drive now, or at mark `at` (v4.49: Tech showed the 
- 1133  specIcons(h) [1]  ≈ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedT
- 1134  hullCost(h) [1]  ≈ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
- 1135  clsSeen(cls) [1]  v4.36: a hull that costs parts shows up once parts are open
+ 1117  ## HULLS: WHERE EACH ONE IS, IN ONE LINE
+ 1118  hullSt(s) [22]  ≈ var wl=forWorld(s);
+ 1140  stRow(s) [3]  ≈ var a=hullSt(s);
+ 1143  hullRow(s,acts,id) [2]  ≈ var g=hullGen(s);
+ 1146  speedTxt(hl,at) [1]  the speed a hull flies at: its own times the drive's — the drive now, or at mark `at` (v4.49: Tech showed the 
+ 1147  specIcons(h) [1]  ≈ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedT
+ 1148  hullCost(h) [1]  ≈ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
+ 1149  clsSeen(cls) [1]  v4.36: a hull that costs parts shows up once parts are open
 
- 1137  ## THE WORLD WINDOW
- 1138  stepOrder(pid) [3]  ≈ var col=!!G.colonies[pid];
- 1141  openWorld(pid,focus) [3]  v4.38: the advisor names a hull — open the tab she is on and light her
- 1144  var FOCUS  ≈ {evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
- 1145  var KW  ≈ {mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
- 1146  wsub(p,extra) [1]  ≈ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toU
- 1147  sendFuel(p) [1]  ≈ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
- 1148  lobeTxt(p) [1]  ≈ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.len
- 1149  assignable(pid) [2]  ≈ var p=planet(pid);
- 1152  pickCourier(pid) [6]  v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that wo
- 1158  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
- 1159  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
- 1160  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
- 1168  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
- 1171  machines(p,c) [15]  before the Gen III yards the block is only noise
- 1186  winWorld(pid) [71]  ≈ var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
- 1258  seamShort(pid) [1]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace
- 1259  seamLeft(pid) [3]  ≈ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
- 1263  picker() [8]  the hull picker: send a free hull, or move one off its line; closed by «keep it where it is» or a press beside
- 1273  genPick(cls,pid) [4]  Nikita, 26.10 («мочь строить предыдущее поколение») and F-56: both generations are named with their parts, the
- 1277  genSeg(cls,g) [2]  ≈ if(g.prev===null) return ''; var b=function(i){ var h=HULLS[i]; return '<button type="butt
- 1280  olderWhy(cls,hi) [2]  v4.42: under a card that offers the generation before — why: the current one wants parts Earth has not got
+ 1151  ## THE WORLD WINDOW
+ 1152  stepOrder(pid) [3]  ≈ var col=!!G.colonies[pid];
+ 1155  openWorld(pid,focus) [3]  v4.38: the advisor names a hull — open the tab she is on and light her
+ 1158  var FOCUS  ≈ {evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
+ 1159  var KW  ≈ {mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
+ 1160  wsub(p,extra) [1]  ≈ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toU
+ 1161  sendFuel(p) [1]  ≈ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
+ 1162  lobeTxt(p) [1]  ≈ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.len
+ 1163  assignable(pid) [2]  ≈ var p=planet(pid);
+ 1166  pickCourier(pid) [6]  v4.18: the free courier that can lift everyone and gets there first; else the biggest one; v4.33: none that wo
+ 1172  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
+ 1173  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
+ 1174  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
+ 1182  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
+ 1185  machines(p,c) [15]  before the Gen III yards the block is only noise
+ 1200  winWorld(pid) [71]  ≈ var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
+ 1272  seamShort(pid) [1]  v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace
+ 1273  seamLeft(pid) [3]  ≈ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid);
+ 1277  picker() [8]  the hull picker: send a free hull, or move one off its line; closed by «keep it where it is» or a press beside
+ 1287  genPick(cls,pid) [4]  Nikita, 26.10 («мочь строить предыдущее поколение») and F-56: both generations are named with their parts, the
+ 1291  genSeg(cls,g) [2]  ≈ if(g.prev===null) return ''; var b=function(i){ var h=HULLS[i]; return '<button type="butt
+ 1294  olderWhy(cls,hi) [2]  v4.42: under a card that offers the generation before — why: the current one wants parts Earth has not got
 
- 1282  ## YARD: WHAT IS BEING BUILT, A FREE HULL OF THE CURRENT GENERATION, THE PIER
- 1284  winYard() [15]  v4.49 (Claude's playtest 04.11): the order cards come first — under the list of what is building they slid dow
+ 1296  ## YARD: WHAT IS BEING BUILT, A FREE HULL OF THE CURRENT GENERATION, THE PIER
+ 1298  winYard() [15]  v4.49 (Claude's playtest 04.11): the order cards come first — under the list of what is building they slid dow
 
- 1300  ## FLEET: EVERY HULL AND WHERE IT IS (NO PAUSE)
- 1301  sideFleet() [12]  ≈ var all=G.ships.filter(function(s){ return s.mode!=='dead' });
- 1313  searchFuel(m) [1]  ≈ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=
- 1314  bestSearch(m) [2]  ≈ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target)
+ 1314  ## FLEET: EVERY HULL AND WHERE IT IS (NO PAUSE)
+ 1315  sideFleet() [12]  ≈ var all=G.ships.filter(function(s){ return s.mode!=='dead' });
+ 1327  searchFuel(m) [1]  ≈ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=
+ 1328  bestSearch(m) [2]  ≈ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target)
 
- 1317  ## WORLDS: THE LIST, WORST FIRST
- 1318  var SEV  ≈ {dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
- 1319  sideWorlds() [8]  ≈ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).ma
+ 1331  ## WORLDS: THE LIST, WORST FIRST
+ 1332  var SEV  ≈ {dead:0,cut:1,starve:2,noline:3,half:4,dry:5,ok:6,settling:7,free:8};
+ 1333  sideWorlds() [8]  ≈ var list=PLANETS.filter(function(p){ return secVis(p.sec)&&!(G.ghost&&G.ghost[p.id]) }).ma
 
- 1328  ## TECH: THE HULL GENERATION (THE DRIVE PROGRAMME), THE NEXT GENERATION'S SPECS, THE RINGS
- 1331  steps(n,of,col) [3]  BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs a
- 1334  worksList() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return planet(k).kind==='works' }) }
- 1335  driveHost() [3]  ≈ var ws=worksList(), u=U.driveAt;
- 1338  startDriveWhy(pid) [4]  ≈ if(G.drive) return 'running';
- 1343  driveHelpOn() [1]  Nikita, 26.10: «непонятно что за программа двигателя» — a note that opens and closes any time; the choice stay
- 1344  driveHelp(work) [3]  ≈ var w=K.ARK_WAKE, pc=function(x){ return Math.round(x*100) };
- 1347  sideTech() [30]  ≈ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWor
+ 1342  ## TECH: THE HULL GENERATION (THE DRIVE PROGRAMME), THE NEXT GENERATION'S SPECS, THE RINGS
+ 1345  steps(n,of,col) [3]  BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs a
+ 1348  worksList() [1]  ≈ return Object.keys(G.colonies).filter(function(k){ return planet(k).kind==='works' }) }
+ 1349  driveHost() [3]  ≈ var ws=worksList(), u=U.driveAt;
+ 1352  startDriveWhy(pid) [4]  ≈ if(G.drive) return 'running';
+ 1357  driveHelpOn() [1]  Nikita, 26.10: «непонятно что за программа двигателя» — a note that opens and closes any time; the choice stay
+ 1358  driveHelp(work) [3]  ≈ var w=K.ARK_WAKE, pc=function(x){ return Math.round(x*100) };
+ 1361  sideTech() [30]  ≈ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWor
 
- 1378  ## ARK: THE NIGHT, THE LEVELS, THE CONVOY, THE VERDICT
- 1379  arkDriveTxt() [6]  ≈ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
- 1386  homeList() [1]  Nikita, 02.11 (35 presses at the end of run 221175121): every hull on a line, in one press — the same two orde
- 1387  winArk() [29]  ≈ if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_
+ 1392  ## ARK: THE NIGHT, THE LEVELS, THE CONVOY, THE VERDICT
+ 1393  arkDriveTxt() [6]  ≈ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
+ 1400  homeList() [1]  Nikita, 02.11 (35 presses at the end of run 221175121): every hull on a line, in one press — the same two orde
+ 1401  winArk() [29]  ≈ if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_
 
- 1417  ## THE ADVISOR: WORLDS ONLY, WORST FIRST (NIKITA 15.10: «НЕ ПОНИМАЮ, ЧТО ДЕЛАТЬ»)
- 1420  advRows() [22]  v4.38: a hull named for one line is not offered to the next
- 1444  lineFix(pid,used) [5]  v4.38 (Nikita, 19.10, option A): the one fix for a line that falls behind — a free hull, a spare one off anoth
- 1450  var ADV_T  Nikita, 02.11 («всё сливается и глазу тяжело»): five kinds, each with its own mark and colour; the worst kind 
- 1451  popAdv() [5]  ≈ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
- 1456  popMenu() [8]  ≈ return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('
+ 1431  ## THE ADVISOR: WORLDS ONLY, WORST FIRST (NIKITA 15.10: «НЕ ПОНИМАЮ, ЧТО ДЕЛАТЬ»)
+ 1434  advRows() [22]  v4.38: a hull named for one line is not offered to the next
+ 1458  lineFix(pid,used) [5]  v4.38 (Nikita, 19.10, option A): the one fix for a line that falls behind — a free hull, a spare one off anoth
+ 1464  var ADV_T  Nikita, 02.11 («всё сливается и глазу тяжело»): five kinds, each with its own mark and colour; the worst kind 
+ 1465  popAdv() [5]  ≈ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
+ 1470  popMenu() [8]  ≈ return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('
 
- 1465  ## THE MAIN MENU (WORK/MENU.JS, V4.40): IN FRONT OF A NEW RUN WHOSE CLOCK STANDS; ITS TERMINAL TELLS THE START
- 1466  var LANG_KEY  ≈ 'lb.lang';
- 1468  menuLang() [2]  the menu speaks the language of the save on record, else the one chosen here last time, else the browser's
- 1470  menuOpen() [11]  ≈ U.menu=true; draw();
+ 1479  ## THE MAIN MENU (WORK/MENU.JS, V4.40): IN FRONT OF A NEW RUN WHOSE CLOCK STANDS; ITS TERMINAL TELLS THE START
+ 1480  var LANG_KEY  ≈ 'lb.lang';
+ 1482  menuLang() [2]  the menu speaks the language of the save on record, else the one chosen here last time, else the browser's
+ 1484  menuOpen() [11]  ≈ U.menu=true; draw();
 
- 1482  ## SAVE AND LOAD: A FILE, AND THE LAST AUTOSAVE IN THIS BROWSER
- 1483  var SAVE_KEY  ≈ 'lb.save';
- 1484  dump() [2]  ≈ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,
- 1486  undump(t) [9]  ≈ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) }
- 1495  autosave() [1]  ≈ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
- 1496  loadAuto() [2]  ≈ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
- 1498  saveFile() [2]  ≈ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
+ 1496  ## SAVE AND LOAD: A FILE, AND THE LAST AUTOSAVE IN THIS BROWSER
+ 1497  var SAVE_KEY  ≈ 'lb.save';
+ 1498  dump() [2]  ≈ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,HULLS:HULLS,U:{hist:U.hist,
+ 1500  undump(t) [9]  ≈ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) }
+ 1509  autosave() [1]  ≈ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
+ 1510  loadAuto() [2]  ≈ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
+ 1512  saveFile() [2]  ≈ var data=dump(), name='last-berth-'+G.seed+'-y'+G.day+'.json';
 
- 1504  ## RUN LOG
- 1505  showLog() [1]  ≈ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog')
- 1507  saveLog() [5]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
- 1512  copyLog() [3]  ≈ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false;
+ 1518  ## RUN LOG
+ 1519  showLog() [1]  ≈ act(G,'export',{}); el('logtxt').value=exportLog(G); el('loghead').textContent=T('runLog')
+ 1521  saveLog() [5]  v4.11 (Nikita, 28.09: 'экспорт JSON-файла'): the page asks the viewer to save the file; where the runtime is a
+ 1526  copyLog() [3]  ≈ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false;
 
- 1516  ## SKIP: THE CLOCK RUNS ON UNTIL SOMETHING WANTS THE DESK
- 1519  var SKIP_STOP  v4.49 (Claude's playtest 04.11: Skip stopped on every hull that docked with no line, the year after it was pre
- 1520  skipStops(e) [1]  ≈ return TONE[e.code]==='bd'||!!NOTE_CODES[e.code]||!!SKIP_STOP[e.code] }
- 1521  skipAhead() [9]  ≈ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now()
+ 1530  ## SKIP: THE CLOCK RUNS ON UNTIL SOMETHING WANTS THE DESK
+ 1533  var SKIP_STOP  v4.49 (Claude's playtest 04.11: Skip stopped on every hull that docked with no line, the year after it was pre
+ 1534  skipStops(e) [1]  ≈ return TONE[e.code]==='bd'||!!NOTE_CODES[e.code]||!!SKIP_STOP[e.code] }
+ 1535  skipAhead() [9]  ≈ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now()
 
- 1531  ## PRESSES
- 1533  var lineWhy  v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier 
- 1534  lineRes(res,sid,pid) [1]  ≈ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res
- 1535  lineWait(sid) [1]  ≈ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
- 1536  resLeft(sid) [1]  ≈ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
- 1537  doAct(a,b) [59]  ≈ var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
+ 1545  ## PRESSES
+ 1547  var lineWhy  v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier 
+ 1548  lineRes(res,sid,pid) [1]  ≈ var s=shipById(G,sid); if((res==='fuel'||res==='crew')&&s&&s.from===pid){ lineWhy[sid]=res
+ 1549  lineWait(sid) [1]  ≈ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
+ 1550  resLeft(sid) [1]  ≈ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
+ 1551  doAct(a,b) [60]  ≈ var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
 
- 1629  ## THE MAP IS PANNABLE AND ZOOMABLE
- 1644  fit() [2]  desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows
+ 1644  ## THE MAP IS PANNABLE AND ZOOMABLE
+ 1659  fit() [2]  desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows
 
- 1648  ## LOOP
- 1650  var MS  v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year
- 1653  clockOn(from) [1]  v4.46: the run's clock (G.clock, see clockOut in core.js) — starts at the New Game press, saved with the run. 
- 1654  clockTick(dt) [2]  ≈ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
- 1656  frame(ts) [24]  ≈ if(!U.last) U.last=ts;
- 1681  tutMute() [1]  everything open, no voices, no helper: the scenarios' hook and the menu's Test play
- 1682  start(seed) [10]  a new game: the helper and the voices again (Test play muted only its own run)
+ 1663  ## LOOP
+ 1665  var MS  v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year
+ 1668  clockOn(from) [1]  v4.46: the run's clock (G.clock, see clockOut in core.js) — starts at the New Game press, saved with the run. 
+ 1669  clockTick(dt) [2]  ≈ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
+ 1671  frame(ts) [24]  ≈ if(!U.last) U.last=ts;
+ 1696  tutMute() [1]  everything open, no voices, no helper: the scenarios' hook and the menu's Test play
+ 1697  start(seed) [11]  a new game: the helper and the voices again (Test play muted only its own run)
 ```
 
 ## menu.js (399 строк)

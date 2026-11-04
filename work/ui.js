@@ -610,7 +610,8 @@ function drawEvBar(){
 function building(){ return G.ships.filter(function(s){ return s.mode==='building' }).sort(function(a,b){ return a.t-b.t }) }
 function hullProgress(s){ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/tot)) }
 function forWorld(s){ return s.lineFor||(s.pend&&s.pend.from)||null }
-function drawCards(){ var b=can('yard')?building():[], h='';
+function drawCards(){ var b=can('yard')?building():[], h='', hk=hackNext(G);
+  if(hk&&U.hackLater) h+='<button class="bcard hk" type="button" data-act="hack"><b>'+esc(T('hk_card'))+'</b><span>'+esc(hackWho(hk))+'</span><i>'+esc(T('hk_cardGo'))+'</i></button>';   // the hack put off: back to it from here
   b.slice(0,3).forEach(function(s){ var w=forWorld(s);
     h+='<button class="bcard" type="button" data-act="tab" data-v="yard">'+shipIc(shipClass(s),26)+'<b>'+esc(T(shipClass(s))+' '+roman(hullGen(s)))+'</b><span>→ '+esc(w?pname(w):T('u_freeHull'))+'</span><i>'+s.t+' '+yrs(s.t)+'</i><u style="width:'+Math.round(hullProgress(s)*100)+'%"></u></button>' });
   if(b.length>3) h+='<div class="more">'+esc(fill(T('u_moreYard'),{n:b.length-3}))+'</div>';
@@ -623,7 +624,20 @@ function drawCards(){ var b=can('yard')?building():[], h='';
 function winPause(){ return !!U.win }
 function winLight(){ return !!U.win&&!!planet(U.win) }
 function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) return 'over'; if(G.night&&!G.nightSeen) return 'night'; if(G.shiftOpen) return 'shift'; if(U.notes.length) return 'note'; return null }
-function modal(){ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden }
+function modal(){ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden||hackOn() }
+/* the hack (web/hack.js, Nikita 04.11): a finished drive mark or a paid ark level waits for it (core.js «the hack»). It opens by
+   itself once no other window stands; the clock stands while it is open; NOT NOW leaves a card top right (drawCards) */
+function hackOn(){ return !!(window.LBhack&&window.LBhack.isOpen()) }
+function hackWho(h){ return h.k==='drive'? fill(T('hk_cGen'),{g:roman(h.g)}) : fill(T('hk_cArk'),{l:roman(h.l-1)}) }
+function hackCheck(){ var h=G&&!G.over&&hackNext(G); if(!h||U.hackLater||!window.LBhack||hackOn()||modal()||tutHold()) return;
+  var n=hackLevel(G), m=(G.hacks||0)+1;
+  act(G,'hack_open',{k:h.k,lv:n});
+  window.LBhack.open({T:T,level:n,who:hackWho(h),seed:G.seed+m*7919,
+    lore:T(L[U.lang]['hk_m'+m]!==undefined?'hk_m'+m:'hk_m0'),
+    unlock:h.k==='drive'? fill(T('hk_unGen'),{g:roman(h.g)}) : fill(T('hk_unArk'),{l:roman(h.l-1)}),
+    onTry:function(r){ if(r.k!=='start') act(G,'hack_'+r.k,{lv:r.lv,t:r.t,hp:r.hp}) },
+    onWin:function(){ hackWin(G); autosave(); draw() },
+    onLater:function(){ U.hackLater=true; act(G,'hack_later',{lv:n}); draw() } }) }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
 /* ❚❚ / Space: a toggle only when the player's own pause is all that holds the clock. With a tab, card or helper holding it
    too the press pins the pause — it used to flip a hidden U.paused, so closing the tab set the clock running (playtest 04.11) */
@@ -1543,6 +1557,7 @@ function doAct(a,b){
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
   else if(a==='spd'){ if(v==='0') pauseToggle(); else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
   else if(a==='skip') { skipAhead(); return }
+  else if(a==='hack'){ U.hackLater=false }   // the put-off hack: hackCheck opens it on the next frame
   else if(a==='zoom'){ if(v==='fit'){ VFIT=true; viewFit() } else viewZoom(v==='in'?0.75:1.35) }
   else if(a==='addtab') U.addTab=v;
   else if(a==='filter') U.filter=v;
@@ -1655,7 +1670,7 @@ function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return
   if(!halted()){ c.run+=dt; c.sp[U.speed]=(c.sp[U.speed]||0)+dt } }
 function frame(ts){
   if(!U.last) U.last=ts;
-  var dt=ts-U.last; U.last=ts; clockTick(dt);
+  var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
   if(G&&!halted()&&!G.over){
     U.acc+=dt; var step=MS[U.speed]||600, did=false;
     try{
@@ -1682,11 +1697,12 @@ function tutMute(){ TUTX.off=true; TUTX.story=false; clearTimeout(NART); var t=U
 function start(seed){
   if(!TUTX.hook){ TUTX.off=false; TUTX.story=true }   // a new game: the helper and the voices again (Test play muted only its own run)
   G=newGame(seed||undefined); tutNew();
+  G.hackGate=!TUTX.hook||!!window.LBHACKTEST; U.hackLater=false;   // the hack (Nikita 04.11): a player's run; the scenarios' hook «всё открыто» skips it unless a scenario asks
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
-  window.LNtut={off:function(){ TUTX.hook=true; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
+  window.LNtut={off:function(){ TUTX.hook=true; if(!window.LBHACKTEST) G.hackGate=false; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
   draw();
 }
 (function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en';

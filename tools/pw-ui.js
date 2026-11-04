@@ -59,8 +59,10 @@ function ui(p){
   const day=()=>p.evaluate(()=>LN.day);
   // язык и новая игра с сидом через меню ≡ (как игрок)
   // v4.36: обучение и нарратив выключены хуком «всё открыто» (LNtut.off): без экрана запуска, голоса и помощника; сценарий обучения — pw41
-  const start=async(lang,seed,{tut=false}={})=>{ await p.goto(URL()+'/'+p.file); await p.waitForTimeout(300);
+  // hack:true — взлом Пульта включён и при «всё открыто» (сценарий pw51); без него сценарии взлома не видят
+  const start=async(lang,seed,{tut=false,hack=false}={})=>{ await p.goto(URL()+'/'+p.file); await p.waitForTimeout(300);
     if(!tut) await p.evaluate(()=>window.LNtut&&LNtut.off());
+    if(hack) await p.evaluate(()=>{ window.LBHACKTEST=true });
     if(lang) await tap('[data-lang="'+lang+'"]');
     if(seed!==undefined){ await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin',String(seed)); await tap('[data-act="new"]') }
     await p.evaluate(()=>{ LNU.shiftStop=false }) };
