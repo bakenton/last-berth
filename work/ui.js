@@ -621,6 +621,9 @@ function winPause(){ return U.win==='earth'||U.win==='yard'||U.win==='ark' }
 function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) return 'over'; if(G.night&&!G.nightSeen) return 'night'; if(G.shiftOpen) return 'shift'; if(U.notes.length) return 'note'; return null }
 function modal(){ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
+/* ❚❚ / Space: a toggle only when the player's own pause is all that holds the clock. With a tab, card or helper holding it
+   too the press pins the pause — it used to flip a hidden U.paused, so closing the tab set the clock running (playtest 04.11) */
+function pauseToggle(){ U.paused=!(U.paused&&!winPause()&&!modal()&&!tutHold()) }
 var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
 /* v4.46 (Nikita, 03.11: «уведомление вверху не нужно, удалить»): the WAKE number of v4.45 is gone from the top bar; the ark tab keeps it */
 function drawTop(){
@@ -1505,7 +1508,7 @@ function doAct(a,b){
   else if(a==='world'){ openWorld(v,d.f) }
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
-  else if(a==='spd'){ if(v==='0') U.paused=!U.paused; else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
+  else if(a==='spd'){ if(v==='0') pauseToggle(); else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
   else if(a==='skip') { skipAhead(); return }
   else if(a==='zoom'){ if(v==='fit'){ VFIT=true; viewFit() } else viewZoom(v==='in'?0.75:1.35) }
   else if(a==='addtab') U.addTab=v;
@@ -1585,7 +1588,7 @@ document.addEventListener('keydown',function(e){
   if(k) return;
   if(e.key==='Escape'){ if(U.pop) U.pop=null; else if(U.win&&!winPause()) U.win=null; else if(U.win) U.win=null; else if(U.tab) U.tab=null; draw(); return }
   if(U.win&&planet(U.win)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){ var O=stepOrder(U.win), i=O.indexOf(U.win); U.win=O[(i+(e.key==='ArrowLeft'?-1:1)+O.length)%O.length]; draw(); return }
-  if(e.code==='Space'){ e.preventDefault(); U.paused=!U.paused; draw() }
+  if(e.code==='Space'){ e.preventDefault(); pauseToggle(); draw() }
   var sp={'1':1,'2':2,'3':4}[e.key]; if(sp){ U.speed=sp; U.paused=false; draw() } });
 document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.target.closest('#map .wd[data-p]'); drawTip(g) });
 

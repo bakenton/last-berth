@@ -1,0 +1,17 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "play",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-3", "-m", "http.server", "8765", "--directory", "play"],
+      "port": 8765
+    },
+    {
+      "name": "work",
+      "runtimeExecutable": "py",
+      "runtimeArgs": ["-3", "-m", "http.server", "8766", "--directory", "work"],
+      "port": 8766
+    }
+  ]
+}

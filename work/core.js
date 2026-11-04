@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'4.47'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'4.48'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -794,6 +794,7 @@ function buildShip(G,hullId){
   var s={id:G.nextShip++, hull:hullId, cap:h.cap, gen:h.gen, crew:(h.crew||0), mode:'building', t:h.days, at:'earth',
          target:null, route:null, auto:true, cargo:{metal:0,food:0,fuel:0,parts:0,people:0}, out:{metal:0,food:0,parts:0,people:0}, take:{metal:0,food:0,fuel:0,parts:0}, missDays:0, bearing:null, job:null};
   G.ships.push(s); log(G,'ship_ordered',{n:s.id});
+  G.stats.yardBuilt=(G.stats.yardBuilt||0)+1;     // every hull laid down — free ones from the ВЕРФЬ tab too (was only orderFor; playtest 04.11)
   return 'ok';
 }
 
@@ -954,7 +955,7 @@ function orderFor(G,pid,cls,hull){   // hull: v4.42 — the one orderHull offers
   var r=orderCheck(G,pid,cls,hi); if(r!=='ok') return r;
   r=buildShip(G,hi); if(r!=='ok') return r;
   var ns=G.ships[G.ships.length-1]; ns.lineFor=pid; ns.pend={from:pid,to:'earth'};
-  log(G,'yard_line',{n:ns.id,p:pid,g:hullGen(ns)}); G.stats.yardBuilt=(G.stats.yardBuilt||0)+1;
+  log(G,'yard_line',{n:ns.id,p:pid,g:hullGen(ns)});
   return 'ok';
 }
 /* v4.34: a save from before manual lines — the standing orders are dropped, the hulls on the lines stay where they are */
