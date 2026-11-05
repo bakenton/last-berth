@@ -40,6 +40,15 @@ const V={
   D:{BERTHS:250, M0:2000, F0:0, GROW:1.10, BUILD:0, RATION:4, SURV:SV, P:{fuel:[0,.3], parts:[0,0,.05], food:[0,0,0,.25]}},
   /* Dp — D без топлива: топливо в цене снова уронило serial 44 в голод (как в 1-м заходе) и заперло bank (металл лежит, топлива нет) */
   Dp:{BERTHS:250, M0:2000, F0:0, GROW:1.10, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05], food:[0,0,0,.25]}},
+  /* 3-й заход (05.11, Никита: «сначала строишь ковчег, а потом загружаешь в него припасы соразмерные с кол-вом мест»):
+     еды в цене нет. LOAD — бот грузит припасы заранее (каждые 10 лет после первого отсека: до мест × паёк, оставляя Земле
+     KEEPY лет её расхода), погруженное уходит с Земли. TOPUP=false — в Ночь остаток Земли не догружается.
+     Кривые калибруются от населения к Ночи: средняя партия ~75% мест, сильная ~100% */
+  K3n:{BERTHS:250, M0:2000, F0:0, GROW:1.03, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}},                      // погрузка в Ночь сама
+  K3l:{BERTHS:250, M0:2000, F0:0, GROW:1.03, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}, LOAD:1, KEEPY:150},   // грузит заранее + остаток в Ночь
+  K3o:{BERTHS:250, M0:2000, F0:0, GROW:1.03, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}, LOAD:1, KEEPY:150, TOPUP:false}, // только погруженное
+  K3g:{BERTHS:250, M0:2000, F0:0, GROW:1.03, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}, LOAD:1, KEEPY:30},    // жадная погрузка: Земле 30 лет
+  K5n:{BERTHS:250, M0:2000, F0:0, GROW:1.05, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}},
   /* M — мегапроект «на будущее» (Никита: «если займёт лет 500 и будет стоить реально очень дорого»): D ×1.5, отсек 25 лет, док один */
   M:{BERTHS:250, M0:3000, F0:0, GROW:1.10, BUILD:25, RATION:4, SURV:SV, P:{fuel:[0,.3], parts:[0,0,.05], food:[0,0,0,.25]}},
 };
@@ -73,7 +82,8 @@ function arkPeople(G){ return Math.max(0,Math.floor(G.earth.people)+crewDocked(G
 function arkSouls(G){ return arkBuilt(G)>=1 ? Math.min(arkPeople(G),arkSeats(G)) : 0 }
 function arkSurv(G){ if(!arkReady(G)) return 0; var X=arkX(); return X.SURV[Math.min(X.SURV.length-1,(G.driveLvl||0)-G.arkMark)] }
 /* share of the boarded who wake: the crossing (drive) and the stores (food on Earth on the day / RATION) */
-function arkWake(G){ var b=arkSouls(G); if(!b) return arkSurv(G); var s=b*arkSurv(G), f=Math.floor(G.earth.food/arkX().RATION); return Math.min(s,f)/b }
+function arkWake(G){ var b=arkSouls(G); if(!b) return arkSurv(G); var X=arkX(), s=b*arkSurv(G),
+    f=Math.floor(((G.ark.food||0)+(X.TOPUP===false?0:G.earth.food))/X.RATION); return Math.min(s,f)/b }
 function arkCargo(G){ return null }
 `;
 /* sim.load reads a path; feed it a temp file so its export list stays the single source */
@@ -100,6 +110,12 @@ function hoardStep(C,G,d){
     if(E.metal-o.metal>=need.metal*150+500&&E.fuel-o.fuel>=500&&E.parts-o.parts>=0&&E.food-o.food>=keepFood){ if(C.arkBuy(G,l)==='ok') break } }
 }
 
+/* погрузка припасов заранее: каждые 10 лет до мест × паёк, Земле остаётся KEEPY лет её расхода еды */
+function loadStep(C,G,d,X){
+  if(!G.night||d%10||C.arkLevel(G)<1) return; const E=G.earth, need=G.need||{food:5};
+  const want=C.arkLevel(G)*X.BERTHS*X.RATION-(G.ark.food||0), amt=Math.min(want,E.food-need.food*X.KEEPY);
+  if(amt>0){ E.food-=amt; G.ark.food=(G.ark.food||0)+amt }
+}
 function run(vn,bot,seed,years){
   const C=coreFor(vn), X=V[vn];
   const G=C.newGame(seed); const st={idleY:{},fuelHist:[]};
@@ -112,6 +128,7 @@ function run(vn,bot,seed,years){
     if(G.night&&C.nightLeft(G)===1) snap=snapOf(C,G,X);
     C.tick(G); G.pauseNow=false; SIM.step(C,G,style,d,st);
     if(bot==='hoard'&&X) hoardStep(C,G,d);
+    if(X&&X.LOAD) loadStep(C,G,d,X);
     if(!ready&&G.night&&C.arkReady(G)&&C.arkConvoy(G).ok&&C.arkLevel(G)>=1) ready=G.day;
   }
   const s=snap||snapOf(C,G,X);
@@ -123,7 +140,7 @@ function snapOf(C,G,X){
   const E=G.earth, nd=G.need||{food:1,metal:1};
   const people=Math.max(0,Math.floor(E.people)+crewDockedOf(C,G));
   const seats=X? C.arkLevel(G)*X.BERTHS : (C.arkLevel(G)>=1?people:0);
-  return {people, seats, blocks:C.arkLevel(G), dg:G.arkMark!=null?(G.driveLvl||0)-G.arkMark:-9,
+  return {people, seats, cap:G.arkCapSeats||0, loaded:Math.round(G.ark.food||0), blocks:C.arkLevel(G), dg:G.arkMark!=null?(G.driveLvl||0)-G.arkMark:-9,
     food:Math.round(E.food), foodYrs:Math.round(E.food/Math.max(0.1,nd.food)), metal:Math.round(E.metal), parts:Math.round(E.parts), fuel:Math.round(E.fuel),
     paidM:Math.round(G.ark.paid.metal||0), paidP:Math.round(G.ark.paid.parts||0), paidF:Math.round(G.ark.paid.food||0), paidU:Math.round(G.ark.paid.fuel||0)};
 }
@@ -142,15 +159,16 @@ else if(require.main===module){
   const seeds=ss.split(',').map(Number), rows=[];
   const avg=(R,f)=>Math.round(R.reduce((a,r)=>a+f(r),0)/Math.max(1,R.length));
   const med=(R,f)=>{ const a=R.map(f).sort((x,y)=>x-y); return a.length?a[a.length>>1]:0 };
-  console.log(['var','bot','sailed','souls','min','max','boarded','people','seats','blocks','dgen','food@N','foodYrs','woken/food','metal@N','parts@N','fuel@N','paidM','paidFuel','paidParts','paidFood','night','ready','ready-N'].join('\t'));
+  console.log(['var','bot','sailed','souls','min','max','boarded','people','seats','blocks','dgen','food@N','foodYrs','woken/food','metal@N','parts@N','fuel@N','paidM','paidFuel','paidParts','paidFood','night','ready','ready-N','seats/people','cap','loaded','famine'].join('\t'));
   for(const vn of vs.split(',')) for(const b of bs.split(',')){
     const R=seeds.map(sd=>run(vn,b,sd,+ys)); rows.push(...R);
     const X=V[vn], sl=R.filter(r=>r.sailed);
     console.log([vn,b,sl.length+'/'+R.length,avg(R,r=>r.souls),Math.min(...R.map(r=>r.souls)),Math.max(...R.map(r=>r.souls)),avg(R,r=>r.boarded),avg(R,r=>r.people),avg(R,r=>r.seats),
       avg(R,r=>r.blocks),(R.reduce((a,r)=>a+Math.max(-1,r.dg),0)/R.length).toFixed(1),med(R,r=>r.food),med(R,r=>r.foodYrs),
-      X?Math.round(100*R.reduce((a,r)=>a+Math.min(1,r.food/X.RATION/Math.max(1,r.boarded)),0)/R.length)+'%':'-',
+      X?Math.round(100*R.reduce((a,r)=>a+Math.min(1,((r.loaded||0)+(X.TOPUP===false?0:r.food))/X.RATION/Math.max(1,r.boarded)),0)/R.length)+'%':'-',
       med(R,r=>r.metal),med(R,r=>r.parts),med(R,r=>r.fuel),avg(R,r=>r.paidM),avg(R,r=>r.paidU),avg(R,r=>r.paidP),avg(R,r=>r.paidF),avg(R,r=>r.night),
-      sl.length?avg(sl.filter(r=>r.ready),r=>r.ready):0, sl.length?avg(sl.filter(r=>r.ready),r=>r.night-r.ready):0].join('\t'));
+      sl.length?avg(sl.filter(r=>r.ready),r=>r.ready):0, sl.length?avg(sl.filter(r=>r.ready),r=>r.night-r.ready):0,
+      Math.round(100*R.reduce((a,r)=>a+Math.min(1,r.seats/Math.max(1,r.people)),0)/R.length)+'%',avg(R,r=>r.cap),med(R,r=>r.loaded),R.filter(r=>r.people<1000).length].join('\t'));
   }
   if(process.env.ARK_CSV){ const K=Object.keys(rows[0]); fs.writeFileSync(process.env.ARK_CSV,[K.join('\t')].concat(rows.map(r=>K.map(k=>r[k]).join('\t'))).join('\n')+'\n') }
 }
