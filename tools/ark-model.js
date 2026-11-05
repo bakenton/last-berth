@@ -49,6 +49,13 @@ const V={
   K3o:{BERTHS:250, M0:2000, F0:0, GROW:1.03, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}, LOAD:1, KEEPY:150, TOPUP:false}, // только погруженное
   K3g:{BERTHS:250, M0:2000, F0:0, GROW:1.03, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}, LOAD:1, KEEPY:30},    // жадная погрузка: Земле 30 лет
   K5n:{BERTHS:250, M0:2000, F0:0, GROW:1.05, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05]}},
+  /* 4-й заход (05.11, Никита: «места строятся по кол-ву людей и скейлится от кол-ва всего населения… чтобы сели не все — не очень»):
+     садятся ВСЕ (люди Земли + экипажи у причала), строятся капсулы пробуждения. Капсула стоит P0·e^(K·s) металла, s — доля
+     уже покрытых людей (первые дешёвые, последние дорогие); с доли PARTS_AT ещё детали 5% от металла. Покупка шагами STEP
+     (5% нынешнего населения); население растёт — доля падает сама, бот докупает. Проснутся = min(капсулы, припасы, на борту) × выживание.
+     Цена всех капсул на 100% = P·P0·(e^K−1)/K — линейна по населению (на человека одна и та же при любом размере империи) */
+  S:{SHARE:1, P0:4.6, K:1.8, STEP:0.05, PARTS_AT:0.4, BERTHS:1, BUILD:0, RATION:4, SURV:SV},
+  S2:{SHARE:1, P0:6.0, K:1.8, STEP:0.05, PARTS_AT:0.4, BERTHS:1, BUILD:0, RATION:4, SURV:SV},   // дороже на 30%
   /* M — мегапроект «на будущее» (Никита: «если займёт лет 500 и будет стоить реально очень дорого»): D ×1.5, отсек 25 лет, док один */
   M:{BERTHS:250, M0:3000, F0:0, GROW:1.10, BUILD:25, RATION:4, SURV:SV, P:{fuel:[0,.3], parts:[0,0,.05], food:[0,0,0,.25]}},
 };
@@ -86,10 +93,31 @@ function arkWake(G){ var b=arkSouls(G); if(!b) return arkSurv(G); var X=arkX(), 
     f=Math.floor(((G.ark.food||0)+(X.TOPUP===false?0:G.earth.food))/X.RATION); return Math.min(s,f)/b }
 function arkCargo(G){ return null }
 `;
+/* «садятся все»: капсулы пробуждения по доле населения (вариант S) — дописывается после RULES */
+const RULES_SHARE=`
+function arkPods(G){ return G.ark.pods||0 }
+/* доля считается от всего населения империи (Земля + все экипажи + колонии) — оно не скачет с судами у причала */
+function sharePop(G){ return Math.max(1,G.arkCapSeats||arkPeople(G)) }
+function podCost(n0,n1,P){ var X=arkX(); if(n1<=n0) return {metal:0,parts:0,food:0,fuel:0};
+  var f=function(n){ return P*X.P0*Math.exp(X.K*n/P)/X.K }, m=f(n1)-f(n0), a=Math.max(n0,X.PARTS_AT*P), pm=n1>a?f(n1)-f(a):0;
+  return {metal:Math.round(m), parts:Math.round(pm*0.05), food:0, fuel:0} }
+function arkLevel(G){ var n=arkPods(G); if(n<=0) return 0; var P=sharePop(G); return Math.max(1,Math.floor(n/P/arkX().STEP+1e-9)) }
+function arkSeats(G){ return arkPods(G) }
+function arkOwed(G,l){ var X=arkX(), o={metal:0,parts:0,food:0,fuel:0}; if(l*X.STEP>1+1e-9) return {metal:1e12,parts:0,food:0,fuel:1e12};
+  var P=sharePop(G), t=Math.ceil(l*X.STEP*P); return t<=arkPods(G)?o:podCost(arkPods(G),t,P) }
+function arkCheck(G,l){ if(!G.night) return 'night'; if(arkOwed(G,l).metal<=0) return 'arkhave'; return 'ok' }
+function arkBuy(G,l){ var w=arkCheck(G,l); if(w!=='ok') return w;
+  var X=arkX(), o=arkOwed(G,l), E=G.earth; for(var r in o) if(E[r]<o[r]) return r;
+  for(var r2 in o){ E[r2]-=o[r2]; G.ark.paid[r2]=(G.ark.paid[r2]||0)+o[r2] }
+  G.ark.pods=Math.ceil(l*X.STEP*sharePop(G)); G.ark.lv=arkLevel(G); log(G,'ark_bought',{l:l}); return 'ok' }
+function arkSouls(G){ return arkPods(G)>0 ? arkPeople(G) : 0 }
+function arkWake(G){ var b=arkSouls(G); if(!b) return arkSurv(G); var X=arkX(),
+    f=Math.floor(((G.ark.food||0)+(X.TOPUP===false?0:G.earth.food))/X.RATION); return Math.min(b,arkPods(G),f)*arkSurv(G)/b }
+`;
 /* sim.load reads a path; feed it a temp file so its export list stays the single source */
 const os=require('os');
 function coreFor(vn){
-  const X=V[vn]; const src=X? CORE+'\n'+RULES : CORE;
+  const X=V[vn]; const src=X? CORE+'\n'+RULES+(X.SHARE?'\n'+RULES_SHARE:'') : CORE;
   const f=path.join(os.tmpdir(),'ark-model-'+vn+'-'+process.pid+'.js'); fs.writeFileSync(f,src);
   const C=SIM.load(f); fs.unlinkSync(f);
   if(X){ C.K.ARK_X=X; C.K.ARK_LEVELS=new Array(60).fill({}); C.K.ARK_LVL_WAKE=[0] }
@@ -139,7 +167,7 @@ function crewDockedOf(C,G){ let n=0; for(const s of G.ships){ if(s.mode!=='dead'
 function snapOf(C,G,X){
   const E=G.earth, nd=G.need||{food:1,metal:1};
   const people=Math.max(0,Math.floor(E.people)+crewDockedOf(C,G));
-  const seats=X? C.arkLevel(G)*X.BERTHS : (C.arkLevel(G)>=1?people:0);
+  const seats=X? (X.SHARE? (G.ark.pods||0) : C.arkLevel(G)*X.BERTHS) : (C.arkLevel(G)>=1?people:0);
   return {people, seats, cap:G.arkCapSeats||0, loaded:Math.round(G.ark.food||0), blocks:C.arkLevel(G), dg:G.arkMark!=null?(G.driveLvl||0)-G.arkMark:-9,
     food:Math.round(E.food), foodYrs:Math.round(E.food/Math.max(0.1,nd.food)), metal:Math.round(E.metal), parts:Math.round(E.parts), fuel:Math.round(E.fuel),
     paidM:Math.round(G.ark.paid.metal||0), paidP:Math.round(G.ark.paid.parts||0), paidF:Math.round(G.ark.paid.food||0), paidU:Math.round(G.ark.paid.fuel||0)};
