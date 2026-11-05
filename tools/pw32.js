@@ -14,7 +14,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const run=async n=>{ await p.evaluate(n=>{ for(let i=0;i<n;i++){ tick(LN); LN.pauseNow=false } LNdraw() },n); await U.clear() };
   await U.start('en',398763448);
   const ver=await p.evaluate(()=>JSON.parse(exportLog(LN)).v);
-  ok('version string 4.xx in the run log', /^4\.[1-9]\d$/.test(ver), ver);   // by format, as in pw31: the number moves every iteration; v4.20+ accepts 4.2x
+  ok('version string 4.xx/5.xx in the run log', /^(4\.[1-9]\d|[5-9]\.\d\d)$/.test(ver), ver);   // v5.00: the major moved   // by format, as in pw31: the number moves every iteration; v4.20+ accepts 4.2x
 
   // 1. evacuation takes a free hull on its own, another hull than the one that founded
   const W=await p.evaluate(()=>{ const m=PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist); return {a:m[0].id,b:m[1].id} });

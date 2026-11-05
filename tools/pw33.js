@@ -64,7 +64,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // JSON log carries both numbers
   const log=await p.evaluate(()=>{ var J=JSON.parse(exportLog(LN)); return {v:J.v, reach:J.earth.reach, settled:J.earth.settled} });
   // v4.30: the version check was a regexp that stopped at 4.29 (4.30 failed it); now a numeric 'minor >= 15'
-  const vm=/^4\.(\d+)$/.exec(log.v||''); ok('JSON log: version 4.15+ with reach and settled', !!vm&&+vm[1]>=15&&log.reach===3&&log.settled>=6, JSON.stringify(log));
+  const vm=/^(\d+)\.(\d+)$/.exec(log.v||''); ok('JSON log: version 4.15+ with reach and settled', !!vm&&(+vm[1]>4||+vm[2]>=15)&&log.reach===3&&log.settled>=6, JSON.stringify(log));
 
   ok('no page errors', p.errs.length===0, p.errs.join(' | '));
   await b.close();
