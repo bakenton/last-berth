@@ -223,15 +223,16 @@ svg.gi{fill:currentColor}
 #tutRing.shk,#tutRing2.shk{animation:tsh .3s 2}@keyframes tsh{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 #helper{position:absolute;z-index:26;width:640px;display:none;grid-template-columns:72px 1fr;gap:14px;background:var(--pan);border:1px solid var(--ppl);padding:12px 14px 12px 12px;animation:tin .25s}
 #helper.on{display:grid}
-.hav{width:72px;height:72px;border:1px solid var(--ln);flex:none}
+.hav{width:72px;height:90px;border:1px solid var(--ln);flex:none}
+.fc{background:#202024 center top/cover no-repeat}.afull{background:center bottom/contain no-repeat}.hav.afull{border:0}
 .hnm{font-size:10px;letter-spacing:.2em;color:var(--ppl);font-weight:700}
 .htx{font-size:16px;line-height:1.35;margin:5px 0 8px}
 .hbt{display:flex;gap:8px;justify-content:flex-end}.hbt .b{padding:6px 14px}
-#voice{position:absolute;z-index:19;left:104px;bottom:16px;width:560px;display:none;grid-template-columns:48px 1fr;gap:12px;background:rgba(20,20,23,.95);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:10px 16px 14px 10px;cursor:pointer;animation:tin .3s;overflow:hidden}
-#voice.on{display:grid}#voice.side{left:572px}#voice .hav{width:48px;height:48px}
+#voice{position:absolute;z-index:19;left:104px;bottom:16px;width:600px;display:none;grid-template-columns:96px 1fr;gap:12px;background:rgba(20,20,23,.95);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:10px 16px 14px 10px;cursor:pointer;animation:tin .3s;overflow:hidden}
+#voice.on{display:grid}#voice.side{left:572px}#voice .hav{width:96px;height:120px}
 .vtx{font-size:15px;line-height:1.4;margin-top:4px}
 .vbar{position:absolute;left:0;bottom:0;height:2px;background:var(--ppl);opacity:.7;animation:vb 8s linear forwards}@keyframes vb{from{width:100%}to{width:0}}
-.alx{display:grid;grid-template-columns:40px 1fr;gap:12px;align-items:center;border-top:1px solid var(--ln);padding-top:12px;margin-top:2px}.alx .hav{width:40px;height:40px}.alx p{font-size:15px}
+.alx{display:grid;grid-template-columns:72px 1fr;gap:12px;align-items:center;border-top:1px solid var(--ln);padding-top:12px;margin-top:2px}.alx .hav{width:72px;height:90px}.alx.full{grid-template-columns:84px 1fr}.alx.full .hav{width:84px;height:148px}.alx p{font-size:15px}
 /* run log */
 #logbox{position:fixed;inset:0;z-index:40;background:rgba(5,5,6,.85);display:flex;align-items:center;justify-content:center}#logbox[hidden]{display:none}
 #logpane{width:min(900px,92vw);height:min(640px,86vh);background:var(--pan);border:1px solid var(--ink);display:flex;flex-direction:column;padding:12px;gap:10px}

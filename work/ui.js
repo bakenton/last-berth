@@ -1051,12 +1051,20 @@ function tutPlace(){ var t=U.tut, Lr=el('tutL'), Rg=el('tutRing'), Rg2=el('tutRi
 function tutLive(e){ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]')) return true; return !!e.querySelector('[data-act]:not([aria-disabled="true"])') }
 function narPlace(){ var n=U.tut.nar, V=el('voice');
   if(n&&n.f==='V'){ if(V._k!==n.k+U.lang){ V._k=n.k+U.lang; var N2=NAR[n.id];
-      V.innerHTML='<div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="vtx">'+N2.k.map(function(k){ return esc(fill(T(k),n.p)) }).join('<br>')+'</div></div><i class="vbar"></i>';
+      V.innerHTML='<div class="'+faceCls(faceOf(N2.k))+'"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="vtx">'+N2.k.map(function(k){ return esc(fill(T(k),n.p)) }).join('<br>')+'</div></div><i class="vbar"></i>';
       V.className=''; void V.offsetWidth; V.className='on' }
     V.classList.toggle('side',!!U.tab); var pf=el('pfL'); V.style.bottom=pf.classList.contains('low')?(pf.offsetHeight+24)+'px':'' }   // a crew card at the foot of the map: her voice stands above it
   else if(V._k){ V._k=''; V.className=''; V.innerHTML='' } }
-/* Alexandra's line under the Institute's in a big window */
-function alx(s){ return '<div class="alx"><div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><p>'+esc(s)+'</p></div></div>' }
+/* Alexandra's line under the Institute's in a big window; her face — by the key whose text it is (the callers pass the text) */
+function alx(s){ var k=''; for(var q in FACE) if(T(q)===s){ k=q; break } var f=faceOf([k]);
+  return '<div class="alx'+(f==='full'?' full':'')+'"><div class="'+faceCls(f)+'"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><p>'+esc(s)+'</p></div></div>' }
+/* her face (Nikita 04.11, design/ALEXANDRA-FACES.md): the pose by the key of her line — the last line with a pose wins (N05: calm,
+   then grief); a key not here is talk. The pictures are web/alexandra (build.py: .fc-<pose>, .afull — full height, the finale).
+   The helper keeps the bust (.ava): a rule has no face. N04 and N13 are not in FACES.md — Claude's choice, awaits Nikita. */
+var FACE={nar_N02:'happy',nar_N03:'happy',nar_N05_2:'grief',nar_N06_2:'sad',nar_N07:'surprised',nar_N08:'confused',nar_N10_1:'smile',nar_N10_2:'smile',
+  nar_N11:'crossed',nar_N12b:'crossed',nar_N12c:'alarm',nar_N04a_a:'smile',nar_N13a_a:'full',nar_N13b_a:'full',nar_N13c_a:'full',nar_N13d_a:'full'};
+function faceOf(keys){ var f='talk'; keys.forEach(function(k){ if(FACE[k]) f=FACE[k] }); return f }
+function faceCls(f){ return f==='full'?'hav afull':'hav fc fc-'+f }
 function icap(right){ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
 /* in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is said again */
 var TUT_KEEP=['lock','help','open','fresh','seen','step','seq','farm','col','dead','late','mut','r2'];

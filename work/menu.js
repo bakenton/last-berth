@@ -359,7 +359,7 @@ function termPlay(){ maDuck(true); ROOT.classList.remove('diving'); termClear();
     else if(t==='mem') q.push(function(n){ memtest(n) });
     else if(t==='loc') q.push(function(n){ ov.setAttribute('data-loc',p[1]); auLoc(p[1]); BT.timers.push(setTimeout(n,p[2])) }) });
   SYS.forEach(function(s){ q.push(function(n){ auLine('f'); btype('f','■ '+T(sk(s,'f')),n) }); [1,2,3].forEach(function(j){ q.push(function(n){ btype('',(j===3?'└─ ':'├─ ')+T(sk(s,'d',j)),n,4) }) }); q.push(function(n){ BT.timers.push(setTimeout(n,300)) }); q.push(function(n){ termAsk(s,n) }) });
-  q.push(function(n){ btype('cm',T('tm_her'),n) }); q.push(function(){ BT.timers.push(setTimeout(termEnd,1800)) });
+  q.push(function(n){ ov.insertAdjacentHTML('beforeend','<div class="mfull afull"></div>'); btype('cm',T('tm_her'),n) }); q.push(function(){ BT.timers.push(setTimeout(termEnd,1800)) });   // v4.51: at her line she steps in, full height (web/alexandra)
   var k=0; (function go(){ if(run!==BT.run) return; var f=q[k++]; if(f) f(go) })() }
 /* the end of the terminal, by its last line, SKIP or Esc: the run begins, the black lifts off the map */
 function termEnd(){ if(BT.done||!BT.ov) return; BT.done=true; termClear(); O.newRun(); fadeOut() }
