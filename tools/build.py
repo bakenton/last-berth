@@ -235,15 +235,32 @@ patch('.blk.hl{border-color:var(--ink)}',
 # (Jost + Geist Mono, base64, tools/fonts-embed.js) — around the same texts block, core and ui. The old markup and CSS of
 # live.html are not used any more; live.html stays the source of the baked texts and of the lb-tools block.
 # v4.40 (Nikita, 24.10): web/debug.js — the developer panel, in every page (start window → TEST PLAY); no god build any more.
+# v4.51 (Nikita 04.11): Alexandra's portraits — web/alexandra/*.webp (tools/art-embed.py) become CSS, base64: .ava — the bust
+# (the helper), .fc-<pose> — a pose by the waist (ui.js FACE picks it by the line's key), .afull — full height.
+def art():
+    d='web/alexandra'
+    if not os.path.isdir(d): return rd('web/art.css') if os.path.exists('web/art.css') else ''
+    import base64
+    u=lambda f:'url(data:image/webp;base64,'+base64.b64encode(open(os.path.join(d,f),'rb').read()).decode('ascii')+')'
+    fs=sorted(f for f in os.listdir(d) if f.endswith('.webp'))
+    out=['/* Alexandra: web/alexandra (tools/art-embed.py) */','.ava{background:#202024 '+u('avatar.webp')+' center top/cover no-repeat}']
+    for f in fs:
+        n=f[:-5]
+        if n=='avatar': continue
+        out.append(('.afull' if n=='full' else '.fc-'+n)+'{background-image:'+u(f)+'}')
+    return '\n'.join(out)+'\n'
 if os.path.exists('web/shell.html'):
     tm=re.search(r'<script type="application/json" id="lb-texts" data-url="[^"]*">.*?</script>',s,re.S).group(0)
     tools=re.search(r'<script type="application/octet-stream" id="lb-tools".*?</script>',s,re.S)
     # v4.40: the main menu and its terminal — menu.css is written in u (1u = a design pixel of 1280×760), here it becomes calc(var(--u) * N)
     mcss=re.sub(r'(-?\d*\.?\d+)u(?![\w-])',lambda m:'calc(var(--u) * '+m.group(1)+')',rd('web/menu.css')) if os.path.exists('web/menu.css') else ''
     menu=('<script>\n'+rd('menu.js')+'</script>') if os.path.exists('menu.js') else ''
+    # the hack (Nikita, 04.11): web/hack.js + hack.css, the mini-game a new generation and an ark level wait for; after ui.js
+    hcss=rd('web/hack.css') if os.path.exists('web/hack.css') else ''
+    hack=('<script>\n'+rd('web/hack.js')+'</script>') if os.path.exists('web/hack.js') else ''
     s=('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n'
-       '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+(rd('web/art.css') if os.path.exists('web/art.css') else '')+mcss+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
-       '<script>\n'+core+'</script>'+menu+'<script>\n'+ui+'</script>'+('<script>\n'+rd('web/debug.js')+'</script>' if os.path.exists('web/debug.js') else '')+(tools.group(0) if tools else '')+'\n</body></html>')
+       '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+art()+mcss+hcss+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
+       '<script>\n'+core+'</script>'+menu+'<script>\n'+ui+'</script>'+hack+('<script>\n'+rd('web/debug.js')+'</script>' if os.path.exists('web/debug.js') else '')+(tools.group(0) if tools else '')+'\n</body></html>')
 wr('page.html',s); wr('long-night.html',s)
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)

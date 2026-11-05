@@ -52,7 +52,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('SKIP in the terminal goes to the map and the first rule', await q.evaluate(()=>LNI.tut().nar===null&&LNI.tut().msg==='m0'));
   ok('SKIP THE HELPER only on the first rule', await q.evaluate(()=>!!document.querySelector('#helper [data-act="tutskip"]')));
   await V.tap('#helper [data-act="tutskip"]');
-  ok('helper skipped: everything open at once, nothing said', await q.evaluate(()=>{ const t=LNI.tut(); return !t.lock&&!t.help&&!t.msg&&document.querySelectorAll('#res .rc[data-r]').length===5&&document.querySelectorAll('#tabs [data-act="tab"]').length===6&&!!document.querySelector('#top [data-act="skip"]') }));
+  ok('helper skipped: everything open at once, nothing said', await q.evaluate(()=>{ const t=LNI.tut(); return !t.lock&&!t.help&&!t.msg&&document.querySelectorAll('#res .rc[data-r]').length===5&&document.querySelectorAll('#tabs [data-act="tab"]').length===6&&!document.querySelector('#top [data-act="skip"]')&&!!document.querySelector('#top [data-act="spd"]') }));   // v4.50: no Skip, the speeds are there
   ok('…and the core opened every resource', await q.evaluate(()=>['metal','fuel','parts'].every(k=>LN.opened[k]===0)&&LN.safe===false));
   ok('…the clock still stands until the player starts it', await q.evaluate(()=>LNU.paused===true));
   // the story goes on without the helper: the first landing is still told

@@ -38,9 +38,9 @@ const TMP=require('os').tmpdir();
   const bought=await p.evaluate(()=>({lv:arkLevel(LN), metal:LN.earth.metal, paid:LN.ark.paid.metal, log:LN.log.filter(e=>e.code==='ark_bought').length}));
   ok('level 1 bought: paid 2250 metal, log line', bought.lv===1&&bought.paid===2250&&bought.metal===9e4-2250&&bought.log===1, JSON.stringify(bought));
   const r2=await ark();
-  ok('level 2 is the next, and its owed price is the difference (3 750)', await p.evaluate(()=>!!document.querySelector('#ovl [data-act="arkbuy"][data-l="2"]'))&&/3 750/.test(r2), (r2.match(/.{0,30}3 750.{0,10}/)||[''])[0]);   // v4.35: «Still to pay» — текст цены уровня
+  ok('level 2 is the next, and its owed price is the difference (15 750, v4.46: level II ×3)', await p.evaluate(()=>!!document.querySelector('#ovl [data-act="arkbuy"][data-l="2"]'))&&/15 750/.test(r2), (r2.match(/.{0,30}15 750.{0,10}/)||[''])[0]);   // v4.35: «Still to pay» — текст цены уровня
   const owed=await p.evaluate(()=>arkOwed(LN,2).metal);
-  ok('owed to level 2 = 6000 − 2250', owed===3750, owed);
+  ok('owed to level 2 = 18000 − 2250', owed===15750, owed);
 
   // === hulls at the pier: set one aside for the ark with a real click (Yard)
   const ids=await p.evaluate(()=>{ const G=LN, g=convoyGen(G), made=[]; G.driveLvl=Math.max(G.driveLvl||0,G.arkMark); G.gen=G.driveLvl; ensureGen(G.gen); G.earth.people=Math.max(G.earth.people,400);

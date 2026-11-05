@@ -1,0 +1,616 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HELM — контур (прототип)</title>
+<!-- Прототип мини-игры «контур Пульта», v3 (31.10.2026, по слову Никиты: стиль игры, не слишком по-настоящему, механизмы не земные).
+     Черновик вне игры: work/, лист текстов и Notion не тронуты. Пока контур открыт, игра на паузе.
+     Правила те же, что в circuit-v2 (петля, разрыв, ограничение, одна сторона, запас, пробой), вид и слова другие:
+     вместо деталей — механизмы Пульта, плоские фигуры в цветах игры. Сторона читается одинаково у всех:
+     закрашенный порт смотрит к выходу истока, полый — к возврату. ?lv=1..7 — урок. Прогресс — в localStorage (только удобство). -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600;700&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--food:#3DDC84;--ppl:#FFD23F;--ark:#B48CFF;--metal:#C9CFD6;--fuel:#FF8A1F;--earth:#4FA3FF;--h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace}
+html,body{margin:0;height:100%;background:#050506;color:var(--ink);font-family:var(--n);overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:12px 16px;font-size:12px;letter-spacing:.06em;pointer-events:none;box-sizing:border-box}
+.top{top:0}.bot{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.bar .ttl{font-family:var(--h);font-weight:700;letter-spacing:.22em;font-size:13px}
+.bar .m{color:var(--dim)}
+#goals{position:fixed;left:0;right:0;top:38px;padding:0 16px;font-size:12px;line-height:1.65;letter-spacing:.03em;pointer-events:none}
+#goals .ok{color:var(--food)}#goals .no{color:var(--mid)}
+#status{position:fixed;left:16px;right:16px;text-align:center;font-size:12px;letter-spacing:.03em;pointer-events:none;min-height:1.4em}
+#status.bad{color:var(--red)}#status.hint{color:var(--ppl)}
+.ctl{pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ctl button{background:none;border:1px solid var(--ln);color:var(--mid);font:inherit;font-size:12px;min-width:32px;height:32px;padding:0 8px;cursor:pointer}
+.ctl button:hover{border-color:var(--dim);color:var(--ink)}
+.ctl button.on{border-color:var(--ppl);color:var(--ppl)}
+.ctl button.done{color:var(--food)}
+.ctl button.on.done{color:var(--ppl)}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:rgba(11,11,12,.94);text-align:center;padding:24px 16px;box-sizing:border-box;overflow:auto}
+.ov.hide{display:none}
+h1{font-family:var(--h);font-weight:700;letter-spacing:.22em;color:var(--ink);font-size:19px;margin:0;line-height:1.35}
+.sub{color:var(--mid);font-size:13px}
+.cards{display:flex;flex-direction:column;gap:8px;max-width:520px;width:100%}
+.card{display:flex;gap:12px;align-items:center;text-align:left;background:var(--pan);border:1px solid var(--ln);padding:8px 10px}
+.card canvas{flex:none;width:112px;height:56px}
+.card b{font-family:var(--h);font-weight:600;letter-spacing:.16em;font-size:13px;display:block}
+.card .mk{color:var(--ppl);font-size:11px;margin:2px 0}
+.card .ds{color:var(--mid);font-size:12px;line-height:1.45}
+.how{color:var(--mid);font-size:11px;max-width:520px;line-height:1.6}
+.go{background:none;border:1px solid var(--ink);color:var(--ink);font-family:var(--h);font-weight:600;font-size:14px;letter-spacing:.22em;padding:11px 30px;cursor:pointer;margin-top:4px}
+.go:hover{background:var(--ink);color:var(--bg)}
+.lore{max-width:380px;width:100%;text-align:left;font-size:13px;line-height:1.65;min-height:8em;white-space:pre-wrap}
+.lore .y{color:var(--ppl)}.lore .m{color:var(--mid)}.lore .g{color:var(--food)}
+#tip{position:fixed;max-width:260px;background:var(--pan);border:1px solid var(--ln);padding:6px 9px;font-size:11px;line-height:1.45;color:var(--mid);pointer-events:none;display:none;z-index:3}
+#tip b{color:var(--ink);font-family:var(--h);font-weight:600;letter-spacing:.14em}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="bar top">
+  <span><span class="ttl" id="hno"></span> <span class="m">· <span data-k="paused"></span></span></span>
+</div>
+<div id="goals"></div>
+<div id="status"></div>
+<div class="bar bot">
+  <span class="ctl"><button id="reset" data-k="reset"></button></span>
+  <span class="ctl" id="lvls"></span>
+  <span class="ctl"><button id="lang">EN</button></span>
+</div>
+<div id="tip"></div>
+
+<div class="ov" id="ovIntro">
+  <h1 id="iTitle"></h1>
+  <div class="sub" id="iGoal"></div>
+  <div class="cards" id="iCards"></div>
+  <div class="how" data-k="how"></div>
+  <button class="go" id="bGo" data-k="go"></button>
+</div>
+<div class="ov hide" id="ovDone">
+  <div class="lore" id="lore"></div>
+  <button class="go" id="bNext" style="visibility:hidden"></button>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Тексты прототипа. В игре они уйдут в лист (texts-add); здесь — только чтобы смотреть.
+var T={
+ ru:{paused:'игра на паузе',reset:'СБРОС',go:'ВОЙТИ',next:'ДАЛЬШЕ',back:'К ПУЛЬТУ',
+  how:'Тяни от порта — жила. Тап по жиле — убрать. Тап по затвору — вкл/выкл. ◉ — работает, ○ — нет.',
+  title:'КОНТУР {n} · {s}',done:'КОНТУР ЗАМКНУТ',learned:'Записано:',
+  on:'вкл',allOff:'всё выкл',off:'выкл',longOff:'{s} выкл давно',justOff:'{s} только что выкл',
+  fromPad:'веди от порта или от жилы',body:'сквозь механизм жилу не провести',
+  short:'ПРОБОЙ: поток идёт мимо потребителей. Всё погасло.',
+  burnt:'{s} СГОРЕЛА: на её пути нужен гаситель. СБРОС — новая.',
+  burst:'{s} ЛОПНУЛ: выход и возврат перепутаны. СБРОС — новый.',
+  rev:'{s}: против потока. Закрашенный порт — к выходу истока.',
+  names:['ПЕТЛЯ','ЗАТВОР','ИСКРА','ВЕТВИ','КЛАПАН','ЗАПАС','ПУЛЬТ'],
+  goal:['Зажги маяк.','Маяк должен слушаться затвора.','Зажги искру и не сожги её.','У каждого затвора — свой маяк.','Затвор I зажигает оба маяка, затвор II — только второй.','Затвор выключен — маяк ещё горит.','Разбуди команду и не дай ей забыть.'],
+  learn:['Поток идёт по кругу: из истока через потребителя обратно. Разрыв где угодно — всё гаснет.',
+         'Затвор — разрыв, которым можно управлять.',
+         'Искра горит только по потоку и без гасителя сгорает.',
+         'У каждой ветви свой путь от выхода до возврата. Ветви друг другу не мешают.',
+         'Клапан пускает поток в одну сторону и никогда обратно.',
+         'Запас копит поток и держит потребителя, когда исток отрезан.',
+         'Так Пульт не теряет память, когда пропадает поток.'],
+  lore:['КОМАНДА ПРОСНУЛАСЬ: ПУЛЬТ.ПАМЯТЬ','Восстановлено: 1 блок памяти.','','[заглушка: запись блока, до двух строк — пишет Никита]'],
+  part:{bat:['ИСТОК','закрашенный порт — выход, полый — возврат','Поток выходит из закрашенного порта и должен вернуться в полый.'],
+        lamp:['МАЯК','порты равны','Горит, пока через него идёт поток. Сторона ему не важна.'],
+        sw:['ЗАТВОР','планка легла — вкл, поднята — выкл','Разрывает контур. Тап — переключить.'],
+        res:['ГАСИТЕЛЬ','сжатая фигура, порты равны','Сдерживает поток. Ставится на пути искры.'],
+        led:['ИСКРА','треугольник смотрит по потоку','Горит только по потоку. Без гасителя на пути сгорает.'],
+        dio:['КЛАПАН','шевроны смотрят по потоку','Пускает поток только в одну сторону.'],
+        cap:['ЗАПАС','закрашенный порт — к выходу истока','Копит поток и отдаёт, когда исток отрезан. Насквозь не пускает. Наоборот — лопнет.'],
+        cmd:['КОМАНДА','закрашенный порт — к выходу истока','Просыпается только при верной стороне.']}},
+ en:{paused:'game paused',reset:'RESET',go:'ENTER',next:'NEXT',back:'BACK TO HELM',
+  how:'Drag from a port — a line. Tap a line — remove. Tap a gate — on/off. ◉ — running, ○ — not.',
+  title:'CIRCUIT {n} · {s}',done:'CIRCUIT CLOSED',learned:'Recorded:',
+  on:'on',allOff:'all off',off:'off',longOff:'{s} off long ago',justOff:'{s} just switched off',
+  fromPad:'start from a port or a line',body:'a line cannot pass through a mechanism',
+  short:'BREACH: the flow runs past the consumers. All dark.',
+  burnt:'{s} BURNT OUT: its path needs a damper. RESET — a new one.',
+  burst:'{s} BURST: outlet and return swapped. RESET — a new one.',
+  rev:'{s}: against the flow. Filled port — toward the source outlet.',
+  names:['LOOP','GATE','SPARK','BRANCHES','VALVE','RESERVE','HELM'],
+  goal:['Light the beacon.','The beacon must obey the gate.','Light the spark without burning it.','Each gate gets its own beacon.','Gate I lights both beacons, gate II only the second.','Gate off — the beacon still lit.','Wake the command and do not let it forget.'],
+  learn:['The flow runs in a loop: out of the source, through a consumer, back. A break anywhere — all dark.',
+         'A gate is a break you control.',
+         'A spark lights only with the flow and burns out without a damper.',
+         'Each branch has its own path from outlet to return. Branches do not interfere.',
+         'A valve passes the flow one way and never back.',
+         'A reserve stores flow and holds the consumer when the source is cut.',
+         'This is how the Helm keeps its memory when the flow drops.'],
+  lore:['COMMAND WOKE: HELM.MEMORY','Recovered: 1 memory block.','','[placeholder: the block\'s entry, two lines max — Nikita writes it]'],
+  part:{bat:['SOURCE','filled port — outlet, hollow — return','The flow leaves the filled port and must return to the hollow one.'],
+        lamp:['BEACON','ports are equal','Lit while the flow passes. Either way round.'],
+        sw:['GATE','bar down — on, bar up — off','Breaks the circuit. Tap to flip.'],
+        res:['DAMPER','pinched shape, ports are equal','Holds the flow back. Goes on a spark\'s path.'],
+        led:['SPARK','the triangle points with the flow','Lights only with the flow. Burns out without a damper.'],
+        dio:['VALVE','the chevrons point with the flow','Passes the flow one way only.'],
+        cap:['RESERVE','filled port — toward the source outlet','Stores flow, gives it back when the source is cut. No flow straight through. Backwards — it bursts.'],
+        cmd:['COMMAND','filled port — toward the source outlet','Wakes only the right way round.']}}
+};
+var lang='ru';
+function tx(s,o){ return s.replace(/\{(\w)\}/g,function(_,k){ return o&&o[k]!==undefined?o[k]:'{'+k+'}' }) }
+
+// Уроки. Механизм — [имя, тип, порт a, порт b] (клетки [столбец, строка]), корпус — клетка между ними.
+// a — выход у истока; у остальных со стороной — порт к выходу истока. Типы и имена — внутренние, игрок видит T.part.
+// rows — цель: при каких затворах что работает; after — «только что выключили»: запасы, заряженные в этом положении, полны.
+var SIDES=[['BAT1','bat',[2,9],[4,9]],['SW1','sw',[1,7],[1,5]],['SW2','sw',[6,7],[6,5]],['L1','lamp',[1,3],[1,1]],['L2','lamp',[6,3],[6,1]]];
+var LEVELS=[
+ {parts:[['BAT1','bat',[2,8],[4,8]],['L1','lamp',[2,2],[4,2]]],rows:[{want:{L1:1}}],fresh:['bat','lamp']},
+ {parts:[['BAT1','bat',[1,8],[3,8]],['SW1','sw',[1,3],[1,5]],['L1','lamp',[3,1],[5,1]]],
+  rows:[{sw:{},want:{L1:0}},{sw:{SW1:1},want:{L1:1}}],fresh:['sw']},
+ {parts:[['BAT1','bat',[1,8],[3,8]],['D1','led',[4,2],[2,2]],['R1','res',[6,4],[6,6]]],rows:[{want:{D1:1}}],fresh:['led','res']},
+ {parts:SIDES,rows:[{sw:{},want:{L1:0,L2:0}},{sw:{SW1:1},want:{L1:1,L2:0}},{sw:{SW2:1},want:{L1:0,L2:1}}],fresh:[]},
+ {parts:SIDES.concat([['D1','dio',[2,4],[4,4]]]),rows:[{sw:{},want:{L1:0,L2:0}},{sw:{SW1:1},want:{L1:1,L2:1}},{sw:{SW2:1},want:{L1:0,L2:1}}],fresh:['dio']},
+ {parts:[['BAT1','bat',[1,9],[3,9]],['SW1','sw',[1,7],[1,5]],['C1','cap',[3,3],[3,5]],['L1','lamp',[5,3],[5,5]]],
+  rows:[{sw:{},want:{L1:0}},{sw:{SW1:1},want:{L1:1}},{sw:{},after:{SW1:1},want:{L1:1}}],fresh:['cap']},
+ {parts:[['BAT1','bat',[1,9],[3,9]],['SW1','sw',[1,7],[1,5]],['U1','cmd',[3,2],[3,4]],['C1','cap',[5,2],[5,4]],['R1','res',[7,2],[7,4]],['D1','led',[7,5],[7,7]]],
+  rows:[{sw:{},want:{U1:0,D1:0}},{sw:{SW1:1},want:{U1:1,D1:1}},{sw:{},after:{SW1:1},want:{U1:1}}],fresh:['cmd']}
+];
+var COLS=8, ROWS=10, N=COLS*ROWS, ROMAN=['I','II','III'];
+function ci(p){ return p[1]*COLS+p[0] }
+function polar(t){ return t==='bat'||t==='led'||t==='dio'||t==='cap'||t==='cmd' }
+
+var G=null, qs=new URLSearchParams(location.search), lv=Math.min(LEVELS.length,Math.max(1,+qs.get('lv')||1));
+var prog={}; try{ prog=JSON.parse(localStorage.getItem('lb-circuit-v3')||'{}') }catch(e){ prog={} }
+function saveProg(){ try{ localStorage.setItem('lb-circuit-v3',JSON.stringify(prog)) }catch(e){} }
+
+function newBoard(){
+  var L=LEVELS[lv-1], seen={};
+  G={parts:[],cellPart:new Int16Array(N).fill(-1),pad:{},trace:new Uint8Array(N),adj:[],net:null,
+     sw:{},burned:{},q:{},live:null,rowsOk:[],won:false,winAt:0,burnAt:{},state:'intro',hover:-1,litPrev:{}};
+  for(var i=0;i<N;i++) G.adj.push({});
+  L.parts.forEach(function(p,k){
+    var a=ci(p[2]), b=ci(p[3]), body=(a+b)/2;
+    seen[p[1]]=(seen[p[1]]||0)+1;
+    G.parts.push({id:p[0],t:p[1],a:a,b:b,body:body,no:seen[p[1]]-1});
+    G.cellPart[a]=G.cellPart[b]=G.cellPart[body]=k; G.pad[a]={k:k,end:'a'}; G.pad[b]={k:k,end:'b'};
+    if(p[1]==='sw') G.sw[p[0]]=0;
+  });
+  G.parts.forEach(function(c){ c.many=seen[c.t]>1 });
+  changed();
+}
+function nameOf(c){ return T[lang].part[c.t][0]+(c.many?' '+ROMAN[c.no]:'') }
+function nameId(id){ return nameOf(G.parts.filter(function(c){ return c.id===id })[0]) }
+
+// ——— контур ———
+function nets(){
+  var p=new Int16Array(N), i; for(i=0;i<N;i++) p[i]=i;
+  function f(x){ while(p[x]!==x){ p[x]=p[p[x]]; x=p[x] } return x }
+  for(i=0;i<N;i++) for(var j in G.adj[i]){ var a=f(i), b=f(+j); if(a!==b) p[a]=b }
+  var n=new Int16Array(N); for(i=0;i<N;i++) n[i]=f(i); return n;
+}
+// Разбор по смыслу. st: {sw, q, burned}. Ответ: lit (сила 0..1 по имени), short — пробой, burn/burst — что погибнет,
+// rev — стоит против потока (подсказка), charging/drain — запасы, hot — сети, где идёт поток.
+function analyze(st){
+  var net=G.net, E=[], res={lit:{},short:false,burn:{},burst:{},rev:{},charging:{},drain:{},hot:{}};
+  G.parts.forEach(function(c,k){
+    if(st.burned[c.id]) return;
+    var e={k:k,A:net[c.a],B:net[c.b],dir:0,load:0,led:0};
+    if(c.t==='res'||c.t==='lamp') e.load=1;
+    else if(c.t==='cmd'){ e.load=1; e.dir=1 }
+    else if(c.t==='led'){ e.led=1; e.dir=1 }
+    else if(c.t==='dio') e.dir=1;
+    else if(c.t!=='sw'||!st.sw[c.id]) return;
+    if(e.A!==e.B) E.push(e);
+  });
+  function paths(P,M,rev,cb){
+    var seen={}, used=[];
+    (function go(n){
+      if(n===M){ cb(used.slice()); return }
+      seen[n]=1;
+      E.forEach(function(e){
+        var to=-1, back=false;
+        if(e.A===n) to=e.B; else if(e.B===n){ if(e.dir&&!rev) return; to=e.A; back=!!e.dir }
+        if(to<0||seen[to]) return;
+        used.push({e:e,back:back}); go(to); used.pop();
+      });
+      seen[n]=0;
+    })(P);
+  }
+  function reach(from,to){ if(from===to) return true; var seen={}, q=[from]; seen[from]=1;
+    while(q.length){ var n=q.shift(); for(var x=0;x<E.length;x++){ var e=E[x], m=e.A===n?e.B:(e.B===n&&!e.dir?e.A:-1);
+      if(m<0||seen[m]) continue; if(m===to) return true; seen[m]=1; q.push(m) } } return false }
+  function feed(P,M,power){
+    var f={short:false,act:[],burn:[]};
+    paths(P,M,false,function(p){
+      var load=p.some(function(x){ return x.e.load }), leds=p.filter(function(x){ return x.e.led });
+      if(!load&&!leds.length) f.short=true;
+      else if(!load) leds.forEach(function(x){ f.burn.push(x.e.k) });
+      else p.forEach(function(x){ f.act.push(x.e) });
+    });
+    if(f.short) return f;
+    f.act.forEach(function(e){ var id=G.parts[e.k].id; res.lit[id]=Math.max(res.lit[id]||0,power); res.hot[e.A]=Math.max(res.hot[e.A]||0,power); res.hot[e.B]=Math.max(res.hot[e.B]||0,power) });
+    if(f.act.length){ res.hot[P]=Math.max(res.hot[P]||0,power); res.hot[M]=Math.max(res.hot[M]||0,power) }
+    return f;
+  }
+  var bat=G.parts.filter(function(c){ return c.t==='bat' })[0], P=net[bat.a], M=net[bat.b];
+  var f=feed(P,M,1);
+  if(f.short){ res.short=true; res.hot[P]=res.hot[M]=-1 }
+  f.burn.forEach(function(k){ res.burn[G.parts[k].id]=1 });
+  if(!res.short){
+    // против потока: путь с потребителем нашёлся бы, если развернуть механизм
+    paths(P,M,true,function(p){ if(!p.some(function(x){ return x.e.load||x.e.led })) return;
+      p.forEach(function(x){ if(x.back){ var id=G.parts[x.e.k].id; if(!res.lit[id]) res.rev[id]=1 } }) });
+    G.parts.forEach(function(c){
+      if(c.t!=='cap'||st.burned[c.id]) return; var A=net[c.a], B=net[c.b];
+      if(A===B) return;
+      if(reach(P,A)&&reach(B,M)) res.charging[c.id]=1;
+      else if(reach(P,B)&&reach(A,M)) res.burst[c.id]=1;
+    });
+  }
+  G.parts.forEach(function(c){
+    var q=st.q[c.id]||0; if(c.t!=='cap'||st.burned[c.id]||res.charging[c.id]||q<.05) return;
+    var g=feed(net[c.a],net[c.b],q); res.drain[c.id]=g.short?2:(g.act.length?1:0);
+  });
+  return res;
+}
+function rowState(row){ var sw={}; for(var s in G.sw) sw[s]=row&&row[s]?1:0; return sw }
+function evalRows(){
+  var L=LEVELS[lv-1];
+  G.rowsOk=L.rows.map(function(row){
+    var q={};
+    if(row.after){ var pre=analyze({sw:rowState(row.after),q:{},burned:G.burned}); for(var c in pre.charging) q[c]=1 }
+    var r=analyze({sw:rowState(row.sw),q:q,burned:G.burned});
+    if(r.short||Object.keys(r.burn).length||Object.keys(r.burst).length) return false;
+    for(var id in row.want) if(((r.lit[id]||0)>.3?1:0)!==row.want[id]) return false;
+    return true;
+  });
+}
+function changed(){ G.net=nets(); evalRows(); hud() }
+
+// Живой контур: каждый кадр. Погибшее остаётся погибшим до СБРОСА.
+var statusMsg=null;
+function tick(dt,now){
+  if(!G||!G.net) return;
+  var r=analyze({sw:G.sw,q:G.q,burned:G.burned}), fresh=false, id;
+  for(id in r.burn) if(!G.burned[id]){ G.burned[id]=1; G.burnAt[id]=now; fresh=true; statusMsg=['bad','burnt',id]; pop() }
+  for(id in r.burst) if(!G.burned[id]){ G.burned[id]=1; G.burnAt[id]=now; fresh=true; statusMsg=['bad','burst',id]; pop() }
+  if(fresh){ r=analyze({sw:G.sw,q:G.q,burned:G.burned}); evalRows(); hud() }
+  G.parts.forEach(function(c){ if(c.t!=='cap') return; var q=G.q[c.id]||0;
+    if(G.burned[c.id]) q=0; else if(r.charging[c.id]) q=Math.min(1,q+dt*2.5);
+    else if(r.drain[c.id]===2) q=0; else if(r.drain[c.id]===1) q=Math.max(0,q-dt*.4); else q=Math.max(0,q-dt*.01);
+    G.q[c.id]=q });
+  for(id in r.lit) if(r.lit[id]>.3&&!(G.litPrev[id]>.3)&&G.parts.some(function(c){ return c.id===id&&c.t!=='sw'&&c.t!=='res'&&c.t!=='dio' })) chime();
+  G.litPrev=r.lit;
+  if(r.short&&!(G.live&&G.live.short)) beep(90,.25,.05,'sawtooth');
+  G.live=r;
+  status(r);
+  if(!G.won&&G.state==='play'&&G.rowsOk.every(Boolean)&&!r.short){ G.won=true; G.winAt=now; prog[lv]=1; saveProg(); hud(); setTimeout(win,1100) }
+}
+function status(r){
+  var el=document.getElementById('status'), L=T[lang], cls='', s='';
+  if(Date.now()<holdStatus&&!r.short) return;
+  if(r.short){ cls='bad'; s=L.short }
+  else if(statusMsg&&G.burned[statusMsg[2]]){ cls=statusMsg[0]; s=tx(L[statusMsg[1]],{s:nameId(statusMsg[2])}) }
+  else { var rv=Object.keys(r.rev)[0]; if(rv){ cls='hint'; s=tx(L.rev,{s:nameId(rv)}) } }
+  if(el.textContent!==s) el.textContent=s; el.className=cls;
+}
+
+// ——— жилы ———
+var drag=null, holdStatus=0, bodyT=0;
+function extend(h,j){
+  if(G.cellPart[j]>=0&&!G.pad[j]){ var now=Date.now(); if(now-bodyT>1500){ bodyT=now; flash(T[lang].body) } return }
+  if(!G.trace[j]&&!G.pad[j]) G.trace[j]=1;
+  if(!G.adj[h][j]){ G.adj[h][j]=1; G.adj[j][h]=1; changed(); beep(820,.025,.02) }
+  drag.head=j;
+}
+function cut(i){
+  var had=Object.keys(G.adj[i]).length||G.trace[i];
+  for(var u in G.adj[i]) delete G.adj[+u][i];
+  G.adj[i]={}; G.trace[i]=0; if(had){ beep(260,.05,.03); changed() }
+}
+function flash(s){ var el=document.getElementById('status'); el.textContent=s; el.className='hint'; holdStatus=Date.now()+1200 }
+
+// ——— звук ———
+var AC=null;
+function audio(){ if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)() }catch(e){} }
+function beep(f,d,g,type){
+  if(!AC) return; var o=AC.createOscillator(), a=AC.createGain(), t=AC.currentTime;
+  o.type=type||'square'; o.frequency.value=f; a.gain.setValueAtTime(g,t); a.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(a); a.connect(AC.destination); o.start(t); o.stop(t+d);
+}
+function chime(){ beep(660,.14,.04,'triangle'); setTimeout(function(){ beep(990,.18,.03,'triangle') },70) }
+function pop(){ beep(70,.3,.07,'sawtooth'); beep(1800,.05,.03) }
+
+// ——— рисунок: плоские фигуры в цветах игры ———
+var cv=document.getElementById('c'), cx=cv.getContext('2d'), DPR=1, W=0, H=0, S=40, OX=0, OY=0;
+var BG='#0B0B0C', INK='#F2F1EC', MID='#9C9B95', DIM='#5E5D58', LN='#2E2E33', RED='#FF2A1A', PPL='#FFD23F', ARK='#B48CFF', METAL='#C9CFD6', FUEL='#FF8A1F', EARTH='#4FA3FF';
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+  var st=document.getElementById('status'), botTop=document.querySelector('.bot').getBoundingClientRect().top;
+  st.style.bottom=(H-botTop+4)+'px';
+  var top=document.getElementById('goals').getBoundingClientRect().bottom+12, bot=H-botTop+30;
+  S=Math.floor(Math.min(66,(W-40)/COLS,(H-top-bot)/ROWS));
+  OX=Math.round((W-S*COLS)/2); OY=Math.round(top+(H-top-bot-S*ROWS)/2);
+}
+function cxy(i){ return [OX+(i%COLS+.5)*S, OY+(((i/COLS)|0)+.5)*S] }
+function cellAt(x,y){ var c=Math.floor((x-OX)/S), r=Math.floor((y-OY)/S); return c<0||r<0||c>=COLS||r>=ROWS?-1:r*COLS+c }
+function poly(ctx,pts){ ctx.beginPath(); pts.forEach(function(p,i){ ctx[i?'lineTo':'moveTo'](p[0],p[1]) }); ctx.closePath() }
+function ngon(ctx,n,r,rot){ var pts=[]; for(var i=0;i<n;i++){ var a=rot+i*Math.PI*2/n; pts.push([r*Math.cos(a),r*Math.sin(a)]) } poly(ctx,pts) }
+// порт: закрашенный — к выходу истока, полый — к возврату, серый — стороны нет
+function port(ctx,kind,x,y,S){
+  var r=S*.15;
+  ctx.beginPath(); ctx.arc(x,y,r,0,7);
+  if(kind==='a'){ ctx.fillStyle=INK; ctx.fill() }
+  else if(kind==='b'){ ctx.fillStyle=BG; ctx.fill(); ctx.strokeStyle=INK; ctx.lineWidth=Math.max(1.5,S*.04); ctx.stroke() }
+  else { ctx.fillStyle=DIM; ctx.fill() }
+}
+function halo(ctx,r,col,al){ var g=ctx.createRadialGradient(0,0,r*.25,0,0,r); g.addColorStop(0,col.replace('A',al)); g.addColorStop(1,col.replace('A','0')); ctx.fillStyle=g; ctx.beginPath(); ctx.arc(0,0,r,0,7); ctx.fill() }
+
+// Механизм в локальных осях: порт a в (-S,0), порт b в (S,0). st: {on, lit 0..1, dead, q, short, t}
+function part(ctx,t,x,y,ang,S,st){
+  ctx.save(); ctx.translate(x,y); ctx.rotate(ang);
+  var lw=Math.max(1.5,S*.04), lit=st.lit||0, now=st.t||0;
+  function lead(g){ ctx.strokeStyle=lit>0?PPL:DIM; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(-g*S,0); ctx.moveTo(g*S,0); ctx.lineTo(S,0); ctx.stroke() }
+  if(t==='bat'){ // шар в кольце с разрывом — как знак игры
+    lead(.56);
+    ctx.strokeStyle=st.short?RED:EARTH; ctx.lineWidth=Math.max(1.5,S*.05); ctx.beginPath(); ctx.arc(0,0,.56*S,-Math.PI/2+.55,-Math.PI/2-.55+Math.PI*2); ctx.stroke();
+    ctx.fillStyle=st.short?RED:EARTH; ctx.beginPath(); ctx.arc(0,0,.34*S,0,7); ctx.fill();
+  }
+  else if(t==='lamp'){ // шестигранник: загорается целиком
+    lead(.46);
+    if(lit>0) halo(ctx,S*1.3,'rgba(255,210,63,A)',.42*lit);
+    ngon(ctx,6,.46*S,0);
+    if(lit>0){ ctx.globalAlpha=.25+.75*lit; ctx.fillStyle=PPL; ctx.fill(); ctx.globalAlpha=1 } else { ctx.fillStyle=BG; ctx.fill(); ctx.strokeStyle=MID; ctx.lineWidth=lw; ctx.stroke();
+      ngon(ctx,6,.16*S,0); ctx.fillStyle=DIM; ctx.fill() }
+  }
+  else if(t==='sw'){ // планка: легла — поток идёт, поднята — разрыв
+    ctx.strokeStyle=st.on?PPL:DIM; ctx.lineWidth=lw; ctx.beginPath(); ctx.moveTo(-S,0); ctx.lineTo(-.5*S,0); ctx.moveTo(.5*S,0); ctx.lineTo(S,0); ctx.stroke();
+    ctx.setLineDash([2,4]); ctx.strokeStyle=LN; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(0,0,.66*S,0,7); ctx.stroke(); ctx.setLineDash([]);
+    ctx.fillStyle=st.on?PPL:INK; ctx.fillRect(-.56*S,-.06*S,.12*S,.12*S); ctx.fillRect(.44*S,-.06*S,.12*S,.12*S);
+    ctx.save(); ctx.translate(-.5*S,0); ctx.rotate(st.on?0:-.72); ctx.strokeStyle=st.on?PPL:INK; ctx.lineCap='butt'; ctx.lineWidth=Math.max(2.5,S*.09); ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(S,0); ctx.stroke(); ctx.restore();
+  }
+  else if(t==='res'){ // сжатая фигура: два клина навстречу
+    lead(.46); var hh=.3*S;
+    ctx.fillStyle=lit>0?PPL:METAL;
+    poly(ctx,[[-.46*S,-hh],[-.46*S,hh],[-.07*S,.05*S],[-.07*S,-.05*S]]); ctx.fill();
+    poly(ctx,[[.46*S,-hh],[.46*S,hh],[.07*S,.05*S],[.07*S,-.05*S]]); ctx.fill();
+  }
+  else if(t==='led'){ // треугольник по потоку
+    lead(.4);
+    if(lit>0&&!st.dead) halo(ctx,S*1.2,'rgba(255,138,31,A)',.5*lit);
+    poly(ctx,[[-.4*S,-.38*S],[-.4*S,.38*S],[.42*S,0]]);
+    if(st.dead){ ctx.fillStyle='#202024'; ctx.fill(); ctx.strokeStyle=RED; ctx.lineWidth=lw; ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(-.2*S,-.14*S); ctx.lineTo(.1*S,.14*S); ctx.moveTo(.1*S,-.14*S); ctx.lineTo(-.2*S,.14*S); ctx.stroke() }
+    else if(lit>0){ ctx.fillStyle=FUEL; ctx.fill() }
+    else { ctx.fillStyle=BG; ctx.fill(); ctx.strokeStyle=FUEL; ctx.lineWidth=lw; ctx.stroke() }
+  }
+  else if(t==='dio'){ // два шеврона по потоку
+    lead(.36);
+    ctx.strokeStyle=lit>0?PPL:INK; ctx.lineWidth=Math.max(2.5,S*.09); ctx.lineCap='butt'; ctx.lineJoin='miter';
+    [-.3,.04].forEach(function(o){ ctx.beginPath(); ctx.moveTo(o*S,-.26*S); ctx.lineTo((o+.26)*S,0); ctx.lineTo(o*S,.26*S); ctx.stroke() });
+  }
+  else if(t==='cap'){ // кольцо, внутри копится заряд
+    var R=.48*S, q=st.q||0;
+    lead(.48);
+    if(st.dead){ ctx.strokeStyle=RED; ctx.lineWidth=lw*1.3; for(var k=0;k<4;k++){ ctx.beginPath(); ctx.arc(0,0,R*1.1,k*Math.PI/2+.2,k*Math.PI/2+1.1); ctx.stroke() } }
+    else {
+      ctx.fillStyle=BG; ctx.beginPath(); ctx.arc(0,0,R,0,7); ctx.fill();
+      ctx.strokeStyle=ARK; ctx.lineWidth=Math.max(1.5,S*.05); ctx.stroke();
+      if(q>.02){ ctx.fillStyle=ARK; ctx.globalAlpha=.35+.65*q; ctx.beginPath(); ctx.arc(0,0,R*.74*Math.sqrt(q),0,7); ctx.fill(); ctx.globalAlpha=1 }
+      else { ctx.fillStyle=LN; ctx.beginPath(); ctx.arc(0,0,R*.16,0,7); ctx.fill() }
+    }
+  }
+  else if(t==='cmd'){ // восьмигранник, вокруг бежит кольцо с разрывом
+    lead(.58);
+    if(lit>0) halo(ctx,S*1.5,'rgba(255,210,63,A)',.32*lit);
+    ngon(ctx,8,.58*S,Math.PI/8); ctx.fillStyle=BG; ctx.fill(); ctx.strokeStyle=lit>0?PPL:MID; ctx.lineWidth=Math.max(1.5,S*.05); ctx.stroke();
+    ctx.save(); ctx.rotate(lit>0?now/700:0); ctx.strokeStyle=lit>0?PPL:DIM; ctx.lineWidth=Math.max(2,S*.07); ctx.beginPath(); ctx.arc(0,0,.34*S,.6,Math.PI*2-.6); ctx.stroke(); ctx.restore();
+    ctx.fillStyle=lit>0?PPL:DIM; ctx.fillRect(-.07*S,-.07*S,.14*S,.14*S);
+  }
+  ctx.restore();
+  if(st.dead&&st.burnAt){ var age=(Date.now()-st.burnAt)/600; if(age<1){ ctx.strokeStyle=RED; ctx.globalAlpha=1-age; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(x,y,S*(.4+age*.9),0,7); ctx.stroke(); ctx.globalAlpha=1 } }
+}
+// подпись в цвете механизма: так она не прилипает к соседу
+var LABEL={bat:EARTH,lamp:PPL,sw:INK,res:METAL,led:FUEL,dio:INK,cap:ARK,cmd:PPL};
+function label(s,t,x,y,al){
+  var fs=Math.max(9,Math.round(S*.17));
+  cx.font='600 '+fs+'px Jost,system-ui,sans-serif'; cx.textAlign=al||'center'; cx.textBaseline='middle';
+  cx.strokeStyle=BG; cx.lineWidth=3; cx.lineJoin='round'; cx.strokeText(s,x,y); cx.fillStyle=LABEL[t]; cx.fillText(s,x,y);
+}
+function mix(a,b,k){ var A=parseInt(a.slice(1),16), B=parseInt(b.slice(1),16), o=[16,8,0].map(function(s){ var x=(A>>s)&255, y=(B>>s)&255; return Math.round(x+(y-x)*Math.min(1,k)) }); return 'rgb('+o.join(',')+')' }
+
+// Куда идёт поток: шаги от выхода истока (и опустошаемых запасов) — по жилам и сквозь работающие механизмы.
+function flowSteps(r){
+  var d=new Int16Array(N).fill(-1), q=[], net=G.net;
+  function put(i,v){ if(d[i]<0){ d[i]=v; q.push(i) } }
+  G.parts.forEach(function(c){
+    if(c.t==='bat'&&r.hot[net[c.a]]>0) put(c.a,0);
+    if(c.t==='cap'&&r.drain&&r.drain[c.id]===1) put(c.a,0);
+  });
+  while(q.length){ var v=q.shift();
+    for(var u in G.adj[v]) put(+u,d[v]+1);
+    var pd=G.pad[v]; if(!pd) continue;
+    var c=G.parts[pd.k]; if(c.t==='bat'||c.t==='cap'||!r.lit[c.id]) continue;
+    if(pd.end==='a') put(c.b,d[v]+2); else if(!polar(c.t)) put(c.a,d[v]+2);
+  }
+  return d;
+}
+function mid(a,b){ return [(a[0]+b[0])/2,(a[1]+b[1])/2] }
+// Жила клетки: угол срезан 45°, как у линий карты; развилка и конец — к центру.
+function pieces(i){
+  var nb=Object.keys(G.adj[i]).map(Number), c=cxy(i);
+  if(G.trace[i]&&nb.length===2) return [{from:nb[0],to:nb[1],p:[mid(c,cxy(nb[0])),mid(c,cxy(nb[1]))]}];
+  return nb.map(function(u){ return {from:u,to:i,p:[mid(c,cxy(u)),c]} });
+}
+function draw(now){
+  cx.clearRect(0,0,W,H);
+  cx.fillStyle='#050506'; cx.fillRect(0,0,W,H);
+  if(!G) return;
+  var i, p, r=G.live||{lit:{},hot:{}}, t=Date.now(), bw=S*COLS, bh=S*ROWS;
+  // поле: чёрная панель, пунктирные кольца от истока — как на карте
+  cx.fillStyle=BG; cx.fillRect(OX,OY,bw,bh); cx.strokeStyle=LN; cx.lineWidth=1; cx.strokeRect(OX+.5,OY+.5,bw-1,bh-1);
+  var src=cxy(G.parts.filter(function(c){ return c.t==='bat' })[0].body);
+  cx.save(); cx.beginPath(); cx.rect(OX,OY,bw,bh); cx.clip();
+  cx.strokeStyle='rgba(156,155,149,.2)'; cx.lineWidth=1; cx.setLineDash([1,6]);
+  for(var ring=1;ring<=5;ring++){ cx.beginPath(); cx.arc(src[0],src[1],ring*S*2.1,0,7); cx.stroke() }
+  cx.setLineDash([]);
+  if(G.winAt){ var w=(t-G.winAt)/1100; if(w<1){ cx.strokeStyle=PPL; cx.globalAlpha=1-w; cx.lineWidth=2; cx.beginPath(); cx.arc(src[0],src[1],w*S*11,0,7); cx.stroke(); cx.globalAlpha=1 } }
+  cx.restore();
+  for(i=0;i<N;i++){ if(G.cellPart[i]>=0||G.trace[i]) continue; p=cxy(i); cx.fillStyle=LN; cx.fillRect(p[0]-1,p[1]-1,2,2) }
+  if(G.hover>=0&&G.state==='play'&&!(G.cellPart[G.hover]>=0&&!G.pad[G.hover])){ p=cxy(G.hover); var e=S*.3, o=S*.46; cx.strokeStyle=DIM; cx.lineWidth=1; cx.beginPath();
+    [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(function(s){ cx.moveTo(p[0]+s[0]*o,p[1]+s[1]*(o-e*.4)); cx.lineTo(p[0]+s[0]*o,p[1]+s[1]*o); cx.lineTo(p[0]+s[0]*(o-e*.4),p[1]+s[1]*o) }); cx.stroke() }
+  // жилы: тонкие, серые; где идёт поток — жёлтые и по ним бежит ток; при пробое — красное мигание
+  var tw=Math.max(2.5,S*.075), sh=.5+.5*Math.sin(t/70), steps=flowSteps(r);
+  function colOf(n){ var h=r.hot[n]; if(h===-1) return 'rgba(255,42,26,'+(.45+.5*sh)+')'; return h>0?mix(DIM,PPL,h):DIM }
+  cx.lineCap='round'; cx.lineJoin='round'; cx.lineWidth=tw;
+  for(i=0;i<N;i++){
+    if(!G.trace[i]&&!G.pad[i]) continue;
+    pieces(i).forEach(function(k){ cx.strokeStyle=colOf(G.net[i]); cx.beginPath(); cx.moveTo(k.p[0][0],k.p[0][1]); cx.lineTo(k.p[1][0],k.p[1][1]); cx.stroke() });
+    if(G.trace[i]&&Object.keys(G.adj[i]).length!==2){ p=cxy(i); cx.fillStyle=colOf(G.net[i]); cx.beginPath(); cx.arc(p[0],p[1],tw*.9,0,7); cx.fill() }
+  }
+  cx.strokeStyle='#FFF6D0'; cx.lineWidth=tw; cx.lineCap='butt'; cx.setLineDash([S*.12,S*.38]);
+  var vt=t*S/340;
+  for(i=0;i<N;i++){
+    if(steps[i]<0||!(r.hot[G.net[i]]>0)) continue;
+    pieces(i).forEach(function(k){
+      var df=steps[k.from], dt=k.to===i?steps[i]:steps[k.to], a=k.p[0], b=k.p[1], x0;
+      if(df<0||dt<0||df===dt) return;
+      if(df>dt){ var tmp=a; a=b; b=tmp; x0=(k.to===i?steps[i]:steps[i]-.5)*S } else x0=(steps[i]-.5)*S;
+      cx.lineDashOffset=x0-vt; cx.beginPath(); cx.moveTo(a[0],a[1]); cx.lineTo(b[0],b[1]); cx.stroke();
+    });
+  }
+  cx.setLineDash([]); cx.lineDashOffset=0; cx.lineCap='round';
+  // механизмы, порты, подписи
+  G.parts.forEach(function(c){
+    var a=cxy(c.a), b=cxy(c.b), m=cxy(c.body), ang=Math.atan2(b[1]-a[1],b[0]-a[0]);
+    part(cx,c.t,m[0],m[1],ang,S,{on:G.sw[c.id],lit:G.burned[c.id]?0:(r.lit[c.id]||0),dead:G.burned[c.id],burnAt:G.burnAt[c.id],q:G.q[c.id],short:r.short,t:t});
+  });
+  G.parts.forEach(function(c){
+    var a=cxy(c.a), b=cxy(c.b), m=cxy(c.body), vert=Math.abs(a[0]-b[0])<1, pol=polar(c.t);
+    port(cx,pol?'a':'n',a[0],a[1],S); port(cx,pol?'b':'n',b[0],b[1],S);
+    var round=c.t==='cap'||c.t==='lamp'||c.t==='cmd'||c.t==='bat'||c.t==='sw';
+    if(vert) label(nameOf(c),c.t,m[0]-S*(round?.72:.56),m[1],'right'); else label(nameOf(c),c.t,m[0],m[1]-S*(round?.78:.54));
+  });
+}
+
+// ——— интерфейс ———
+var goalsEl=document.getElementById('goals');
+function rowText(row){
+  var L=T[lang], sws=G.parts.filter(function(c){ return c.t==='sw' }), head='', cap=G.parts.some(function(c){ return c.t==='cap' });
+  if(sws.length){
+    if(row.after) head=tx(L.justOff,{s:Object.keys(row.after).map(nameId).join(', ')});
+    else { var on=sws.filter(function(c){ return row.sw&&row.sw[c.id] });
+      head=on.length?on.map(nameOf).join(' + ')+' '+L.on:(cap?tx(L.longOff,{s:sws.map(nameOf).join(', ')}):(sws.length>1?L.allOff:nameOf(sws[0])+' '+L.off)) }
+  }
+  var w=Object.keys(row.want).map(function(id){ return nameId(id)+' '+(row.want[id]?'◉':'○') });
+  return (head?head+' → ':'')+w.join(' · ');
+}
+function applyLang(){
+  document.documentElement.lang=lang; var L=T[lang];
+  [].forEach.call(document.querySelectorAll('[data-k]'),function(e){ e.textContent=L[e.getAttribute('data-k')] });
+  document.getElementById('lang').textContent=lang==='ru'?'EN':'RU';
+  document.getElementById('hno').textContent=tx(L.title,{n:lv,s:L.names[lv-1]});
+  document.getElementById('iTitle').textContent=tx(L.title,{n:lv,s:L.names[lv-1]});
+  document.getElementById('iGoal').textContent=L.goal[lv-1];
+  var box=document.getElementById('iCards'); box.innerHTML='';
+  LEVELS[lv-1].fresh.forEach(function(t){
+    var d=document.createElement('div'), P=L.part[t]; d.className='card';
+    var c=document.createElement('canvas'); c.width=224; c.height=112; d.appendChild(c);
+    var tx2=document.createElement('div'); tx2.innerHTML='<b></b><div class="mk"></div><div class="ds"></div>';
+    tx2.children[0].textContent=P[0]; tx2.children[1].textContent=P[1]; tx2.children[2].textContent=P[2]; d.appendChild(tx2);
+    box.appendChild(d);
+    var k=c.getContext('2d'); k.scale(2,2); k.fillStyle=BG; k.fillRect(0,0,112,56);
+    var s=24, x=56, y=28, pol=polar(t); part(k,t,x,y,0,s,{lit:t==='lamp'||t==='led'||t==='cmd'?.9:0,on:1,q:t==='cap'?.7:0,t:0}); port(k,pol?'a':'n',x-s,y,s); port(k,pol?'b':'n',x+s,y,s);
+  });
+  hud();
+}
+function hud(){
+  if(!G) return;
+  goalsEl.innerHTML=LEVELS[lv-1].rows.map(function(row,ix){ var ok=G.rowsOk[ix];
+    return '<div class="'+(ok?'ok':'no')+'">'+(ok?'✓ ':'· ')+rowText(row).replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</div>' }).join('');
+  var lb=document.getElementById('lvls');
+  if(!lb.children.length){ LEVELS.forEach(function(_,ix){ var b=document.createElement('button'); b.textContent=ix+1; b.onclick=function(){ lv=ix+1; restart() }; lb.appendChild(b) }) }
+  [].forEach.call(lb.children,function(b,ix){ b.classList.toggle('on',ix+1===lv); b.classList.toggle('done',!!prog[ix+1]) });
+}
+function show(id){ ['ovIntro','ovDone'].forEach(function(o){ document.getElementById(o).classList.toggle('hide',o!==id) }) }
+
+var loreTimer=0;
+function typeLines(lines,btn){
+  var box=document.getElementById('lore'), total=0, n=0;
+  lines.forEach(function(l){ total+=l.s.length+1 });
+  btn.style.visibility='hidden'; clearInterval(loreTimer);
+  loreTimer=setInterval(function(){
+    n+=2; var left=n, out=[];
+    lines.forEach(function(l){ if(left<=0) return; var s=l.s.slice(0,left); left-=l.s.length+1;
+      out.push('<span class="'+l.cl+'">'+s.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>') });
+    box.innerHTML=out.join('\n')+(n<total?'<span class="y">▌</span>':'');
+    if(n>=total){ clearInterval(loreTimer); btn.style.visibility='visible' }
+  },20);
+}
+function win(){
+  if(!G.won) return;
+  G.state='done'; show('ovDone'); hud();
+  var L=T[lang], last=lv===LEVELS.length, lines=[{cl:'g',s:L.done},{cl:'m',s:L.learned},{cl:'',s:L.learn[lv-1]}];
+  if(last){ lines.push({cl:'',s:''}); L.lore.forEach(function(s,ix){ lines.push({cl:ix===0?'y':ix===1?'m':'',s:s}) }) }
+  var btn=document.getElementById('bNext'); btn.textContent=last?L.back:L.next;
+  typeLines(lines,btn);
+}
+
+function step(j){
+  if(j<0||j===drag.head) return;
+  var h=drag.head, hc=h%COLS, hr=(h/COLS)|0, jc=j%COLS, jr=(j/COLS)|0;
+  if(Math.abs(hc-jc)===1&&Math.abs(hr-jr)===1){ // срезал угол — через соседнюю клетку
+    var a=hr*COLS+jc, b=jr*COLS+hc, ok=function(x){ return !(G.cellPart[x]>=0&&!G.pad[x]) }, m=ok(a)?a:b;
+    step(m); if(drag.head!==m) return; h=m;
+  }
+  if(Math.abs(h%COLS-jc)+Math.abs(((h/COLS)|0)-jr)!==1) return;
+  drag.moved=true; extend(h,j);
+}
+var tip=document.getElementById('tip');
+function showTip(e){
+  var i=cellAt(e.clientX,e.clientY), k=i>=0?G.cellPart[i]:-1;
+  if(k<0||drag||G.state!=='play'){ tip.style.display='none'; return }
+  var c=G.parts[k], P=T[lang].part[c.t];
+  tip.innerHTML='<b></b><br><span></span>'; tip.children[0].textContent=nameOf(c); tip.children[2].textContent=P[2];
+  tip.style.display='block';
+  var x=Math.min(W-270,e.clientX+14), y=e.clientY+18; if(y>H-80) y=e.clientY-70; tip.style.left=x+'px'; tip.style.top=y+'px';
+}
+cv.addEventListener('pointerdown',function(e){
+  audio(); if(!G||G.state!=='play') return;
+  var i=cellAt(e.clientX,e.clientY); if(i<0) return;
+  var k=G.cellPart[i];
+  if(k>=0&&!G.pad[i]){ var c=G.parts[k]; if(c.t==='sw'){ G.sw[c.id]=G.sw[c.id]?0:1; beep(G.sw[c.id]?1200:700,.04,.04); hud() } return }
+  if(!G.trace[i]&&!G.pad[i]){ flash(T[lang].fromPad); return }
+  try{ cv.setPointerCapture(e.pointerId) }catch(_){}
+  drag={head:i,start:i,moved:false,x:e.clientX,y:e.clientY};
+  tip.style.display='none';
+});
+cv.addEventListener('pointermove',function(e){
+  if(!G) return; G.hover=cellAt(e.clientX,e.clientY);
+  if(!drag){ if(e.pointerType==='mouse') showTip(e); return }
+  var dx=e.clientX-drag.x, dy=e.clientY-drag.y, n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/(S/4)));
+  for(var s=1;s<=n;s++) step(cellAt(drag.x+dx*s/n,drag.y+dy*s/n));
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+cv.addEventListener('pointerup',function(){ if(drag&&!drag.moved) cut(drag.start); drag=null });
+cv.addEventListener('pointercancel',function(){ drag=null });
+cv.addEventListener('pointerleave',function(){ if(G) G.hover=-1; tip.style.display='none' });
+
+function restart(){ clearInterval(loreTimer); statusMsg=null; newBoard(); applyLang(); show('ovIntro'); resize() }
+document.getElementById('bGo').onclick=function(){ audio(); G.state='play'; show(null); hud(); resize() };
+document.getElementById('bNext').onclick=function(){ if(lv<LEVELS.length) lv++; restart() };
+document.getElementById('reset').onclick=function(){ if(G.state!=='play') return; statusMsg=null; newBoard(); G.state='play'; hud() };
+document.getElementById('lang').onclick=function(){ lang=lang==='ru'?'en':'ru'; applyLang(); resize(); if(G.state==='done') win() };
+
+addEventListener('resize',resize);
+newBoard(); applyLang(); resize();
+if(document.fonts&&document.fonts.ready) document.fonts.ready.then(resize);
+window.BOARD={get G(){return G},cxy:cxy,cellAt:cellAt,LEVELS:LEVELS}; // для проверки из Playwright
+var last=0;
+(function frame(now){ var dt=Math.min(.05,(now-(last||now))/1000); last=now;
+  if(G&&G.state==='play') tick(dt,Date.now());
+  draw(now); requestAnimationFrame(frame) })(0);
+})();
+</script>
+</body>
+</html>

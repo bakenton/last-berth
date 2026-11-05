@@ -1,0 +1,41 @@
+UI,hk_wake,THE HELM WAKES A COMMAND: {c},ПУЛЬТ БУДИТ КОМАНДУ: {c},v5.00 hack,live,new
+UI,hk_name,SERPENT,ЗМЕЙ,v5.00 hack,live,new
+UI,hk_lvl,Fault level {n} of {m},Сбой: уровень {n} из {m},v5.00 hack,live,new
+UI,hk_new1,"New: walls. The serpent goes through them, you do not.","Новое: стены. Змей идёт сквозь них, ты — нет.",v5.00 hack,live,new
+UI,hk_new2,"New: links fire. A wall gives cover, a link inside a wall stays silent.","Новое: звенья стреляют. Стена закрывает от пуль, звено в стене молчит.",v5.00 hack,live,new
+UI,hk_new3,"New: small ones. They path around walls, and a broken link releases more.","Новое: мелочь. Она ищет обход, а оборванное звено выпускает ещё.",v5.00 hack,live,new
+UI,hk_new4,New: dashes and thick strips that cost you speed.,"Новое: рывки и вязкие полосы, в которых ты теряешь скорость.",v5.00 hack,live,new
+UI,hk_new5,"New: big ones split into small ones, the head fires red.","Новое: большие распадаются на малых, голова бьёт красным.",v5.00 hack,live,new
+UI,hk_new6,"New: the head cuts you off, more small ones, shooters appear.","Новое: голова срезает путь, мелочи больше, появляются стрелки.",v5.00 hack,live,new
+UI,hk_d,A chain hunts you straight through the walls. Get behind it.,"Цепь гонится за тобой напрямик, сквозь стены. Заходи ей в хвост.",v5.00 hack,live,new
+UI,hk_r1,WASD — move · mouse — aim · fire is automatic,WASD — ход · мышь — прицел · огонь сам,v5.00 hack,live,new
+UI,hk_r1t,drag to move · aim and fire are automatic,веди пальцем · прицел и огонь сами,v5.00 hack,live,new
+UI,hk_r,"only the yellow tail takes damage · the head is last · the body hurts · walls stop you and all fire, not the serpent","ранит только жёлтый хвост · голова уязвима последней · телом цепь бьёт · стены держат тебя и пули, но не змея",v5.00 hack,live,new
+UI,hk_r3,orange can be shot down,оранжевое можно сбить,v5.00 hack,live,new
+UI,hk_r4,red — only dodge,красное — только уйти,v5.00 hack,live,new
+UI,hk_go,ENTER,ВОЙТИ,v5.00 hack,live,new
+UI,hk_later,NOT NOW,НЕ СЕЙЧАС,v5.00 hack,live,new
+UI,hk_lost,SIGNAL LOST,СВЯЗЬ ПОТЕРЯНА,v5.00 hack,live,new
+UI,hk_lostSub,The fault holds the command. Another try costs nothing.,Сбой держит команду. Ещё одна попытка ничего не стоит.,v5.00 hack,live,new
+UI,hk_retry,RETRY,ЕЩЁ РАЗ,v5.00 hack,live,new
+UI,hk_done,CONTINUE,ДАЛЬШЕ,v5.00 hack,live,new
+UI,hk_woke,COMMAND WOKE: {c},КОМАНДА ПРОСНУЛАСЬ: {c},v5.00 hack,live,new
+UI,hk_mem,Recovered: 1 memory block.,Восстановлено: 1 блок памяти.,v5.00 hack,live,new
+UI,hk_cGen,HULL.GEN.{g},КОРПУС.ПОК.{g},v5.00 hack,live,new
+UI,hk_cArk,ARK.LVL.{l},КОВЧЕГ.УР.{l},v5.00 hack,live,new
+UI,hk_unGen,Generation {g} hulls can be ordered.,Суда поколения {g} можно заказывать.,v5.00 hack,live,new
+UI,hk_unArk,Ark level {l} counts now.,Уровень ковчега {l} засчитан.,v5.00 hack,live,new
+UI,hk_card,HACK WAITING,ВЗЛОМ ЖДЁТ,v5.00 hack,live,new
+UI,hk_cardGo,open,открыть,v5.00 hack,live,new
+UI,hk_m1,"""Design file. Author: this unit. Date: earlier than my first record.""",«Файл чертежа. Автор: этот модуль. Дата: раньше моей первой записи.»,v5.00 hack,live,new
+UI,hk_m2,"""Yard log. Hulls laid down: 0. Slipways aboard: more than 128 people need.""","«Журнал верфи. Заложено корпусов: 0. Стапелей на судне: больше, чем нужно 128 людям.»",v5.00 hack,live,new
+UI,hk_m3,"""Crew table. Column 'name': empty. Column 'returned': filled in.""",«Таблица экипажей. Графа „имя“: пусто. Графа „вернулся“: заполнена.»,v5.00 hack,live,new
+UI,hk_m4,"""Chart. Rings marked to the edge of the sheet. Past the edge: not measured.""",«Карта. Кольца размечены до края листа. За краем: не измерено.»,v5.00 hack,live,new
+UI,hk_m5,"""Request to the translator. Answer: not recorded. Request repeated: 1 time.""",«Запрос к переводчику. Ответ: не записан. Запрос повторён: 1 раз.»,v5.00 hack,live,new
+UI,hk_m6,"""The date. Input data: present. Source of the input: not given.""",«Расчёт даты. Входные данные: на месте. Источник данных: не указан.»,v5.00 hack,live,new
+UI,hk_m7,"""Ark plan. Places for a mind: 1. Mark: taken.""",«Схема ковчега. Мест для разума: 1. Отметка: занято.»,v5.00 hack,live,new
+UI,hk_m8,"""Course. Point set. Set by: this unit. Date: earlier than my first record.""",«Курс. Точка задана. Кем: этим модулем. Дата: раньше моей первой записи.»,v5.00 hack,live,new
+UI,hk_m9,"""Sleep report. Woke: a share. The rest: the line is cut off.""",«Отчёт сна. Проснулись: доля. Остальные: строка обрезана.»,v5.00 hack,live,new
+UI,hk_m10,"""Last block. Signed: this unit. This unit: not the first.""",«Последний блок. Подпись: этот модуль. Этот модуль: не первый.»,v5.00 hack,live,new
+UI,hk_m0,"""Block damaged. Lines recovered: 0.""",«Блок повреждён. Строк восстановлено: 0.»,v5.00 hack,live,new
+MSG,hack,The Helm has a command to wake first — finish the hack (the card top right of the map).,Сначала Пульт должен разбудить команду — заверши взлом (карточка справа вверху карты).,v5.00 hack,live,new

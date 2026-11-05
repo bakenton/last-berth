@@ -19,11 +19,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ LNU.paused=true; LNU.shiftStop=true; LN.day=79; LNU.paused=false }); await p.waitForTimeout(400);
   ok('shift stops the clock', await p.evaluate(()=>LNU.paused===false&&LN.shiftOpen===true&&LNI.halted()===true));
   await U.tap('#noteL [data-act="shiftok"]');
-  // 3. SKIP passes shifts when the stop is off (v4.35: the SKIP button replaces FF)
-  await p.evaluate(()=>{ LNU.shiftStop=false; LNU.paused=true });
-  const d0=await p.evaluate(()=>LN.day);
-  await U.tap('[data-act="skip"]'); await p.waitForTimeout(200);
-  ok('SKIP: shift does not stop the skip', await p.evaluate(d=>LN.day>d+1&&LNU.paused===true,d0), d0+' → '+(await p.evaluate(()=>LN.day)));
+  // 3. v4.50 (Nikita 05.11): no Skip — the clock has only its speeds
+  ok('no Skip button on the top bar', !(await p.$('[data-act="skip"]')) && await p.isVisible('#top [data-act="spd"]'));
   // 4. the Night still stops the clock
   await U.clear();
   await p.evaluate(()=>{ LN.driveLvl=2; LN.gen=2; ensureGen(2); revealNight(LN); LNU.paused=false; LNdraw() }); await p.waitForTimeout(400);

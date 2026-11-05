@@ -74,3 +74,4 @@ GUIDE	p2.b4	You never load a ship by hand. If a line cannot keep up, put another
 UI	noFreeAny	No free hull at Earth. Order one in the dock, or with + on a world’s line.	У Земли нет свободных корпусов. Закажи корпус в доке или кнопкой + на линии мира.
 UI	evacW_orderC	Build a courier in the dock, or take one off a line.	Заложи курьер в доке или сними один с линии.
 UI	shIdle	(idle at the pier: {n})	(корпусов без дела: {n})
+UI	u_aForge	{w}: the line brings {c} a year, the works burn {n}	{w}: линия везёт {c} в год, завод жжёт {n}

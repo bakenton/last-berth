@@ -1,0 +1,28 @@
+UI,u_topLost,{n} never wake,{n} не проснутся,v4.45 finale + interface,live,new
+UI,u_topWakeT,"If the ark sailed today, on this drive, with everyone at Earth and at the pier. Opens the ark.","Если бы ковчег улетел сегодня, на этом двигателе, со всеми на Земле и у причала. Открывает ковчег.",v4.45 finale + interface,live,new
+UI,u_topConvoy,"convoy short, the ark stays","конвой неполон, ковчег не улетит",v4.45 finale + interface,live,new
+UI,statNoWake,Never woke,Не проснулись,v4.45 finale + interface,live,new
+UI,nar_rsWake,{n} sleepers never woke: on a generation {g} drive the crossing was too long. Generation {h} would have woken {p}%.,{n} спящих не проснулись: на двигателе поколения {g} перелёт оказался слишком долгим. Поколение {h} разбудило бы {p}%.,v4.45 finale + interface,live,new
+UI,u_dhQ,What is the drive programme?,Что такое программа двигателя?,v4.45 finale + interface,live,new
+UI,u_dh1,The drive programme builds the next generation of engine. Every new hull and the ark fly on it.,Программа двигателя создаёт следующее поколение двигателя. На нём летают все новые суда и ковчег.,v4.45 finale + interface,live,new
+UI,u_dh2,"It needs worlds ever settled and parts. Parts are made only at works worlds, from the metal and rations your lines bring them.","Для неё нужны заселённые миры и детали. Детали делают только заводы, из металла и рационов, которые привозят линии.",v4.45 finale + interface,live,new
+UI,u_dh3,"START spends them: everything stored at the works and up to {n} from Earth goes in. While it runs, the works make no parts for the yards.","СТАРТ их тратит: в программу уходит всё со складов заводов и до {n} с Земли. Пока она идёт, заводы не делают детали для верфей.",v4.45 finale + interface,live,new
+UI,u_dh4,"When it is done, the yards offer the new hulls listed below, and crossings and signals get faster.","Когда она закончится, верфи предложат новые суда из списка ниже, а перелёты и сигнал станут быстрее.",v4.45 finale + interface,live,new
+UI,u_dh5,"The ark needs generation {g}. On it {a}% of the sleepers wake, one generation newer {b}%, two {c}%, three {d}%.","Ковчегу нужно поколение {g}. На нём просыпаются {a}% спящих, на поколение новее {b}%, на два {c}%, на три {d}%.",v4.45 finale + interface,live,new
+UI,u_convoyOver,+{n} crew souls · hulls over the convoy: {k},+{n} душ экипажа · судов сверх конвоя: {k},v4.45 finale + interface,live,new
+UI,u_allHome,All hulls home · on lines: {n},Все суда домой · на линиях: {n},v4.45 finale + interface,live,new
+UI,u_allHomeArm,Take {n} hulls off their lines? Press again,Снять с линий судов: {n}? Нажмите ещё раз,v4.45 finale + interface,live,new
+UI,u_allHomeHint,The lines stop. Hulls on an evacuation or a landing finish first.,Линии останавливаются. Суда на эвакуации и посадке сначала закончат рейс.,v4.45 finale + interface,live,new
+MSG,ok_allhome,{n} hulls called home.,Судов вызвано домой: {n}.,v4.45 finale + interface,live,new
+UI,u_letters,Personal files,Личные дела,v4.45 finale + interface,live,new
+UI,u_lettersNew,{n} new,новых: {n},v4.45 finale + interface,live,new
+UI,u_aSeam,{w}: the seam runs out in about {n} years,"{w}: жила кончится, осталось лет: около {n}",v4.45 finale + interface,live,new
+UI,u_aSeamC,Think about where the people and the hulls go next,"Подумайте, куда потом людей и суда",v4.45 finale + interface,live,new
+UI,u_aForge,{w}: the line brings {p}% of what the works burn,"{w}: линия везёт {p}% того, что жжёт завод",v4.45 finale + interface,live,new
+UI,u_aForgeC,The works stand part of the time. Add hold to the line,Завод часть времени стоит. Добавьте линии трюма,v4.45 finale + interface,live,new
+UI,u_atEvac,Evacuate,Эвакуация,v4.45 finale + interface,live,new
+UI,u_atForge,Works short of supply,Заводу не хватает,v4.45 finale + interface,live,new
+UI,u_atNoLine,No hulls on the line,На линии нет судов,v4.45 finale + interface,live,new
+UI,u_atSeam,Seam running out,Жила кончается,v4.45 finale + interface,live,new
+UI,u_atLine,Line out of balance,Перевоз и недовоз,v4.45 finale + interface,live,new
+UI,u_pickRate,{c} of {m}/yr · +{a},{c} из {m}/год · +{a},v4.45 finale + interface,live,new

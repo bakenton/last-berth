@@ -1,0 +1,3 @@
+UI,u_feedRow,{n}/yr · line brings {b},{n}/год · линия везёт {b},v4.46 run 316286103,live,new
+UI,u_feedShort,The line is {s} a year short. Add hold to it,Линии не хватает {s} в год. Добавьте трюма,v4.46 run 316286103,live,new
+UI,u_aForge,"{w}: the line brings {c} a year, the works burn {n}","{w}: линия везёт {c} в год, завод жжёт {n}",v4.46 run 316286103,live,changed

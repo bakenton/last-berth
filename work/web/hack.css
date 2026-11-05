@@ -1,0 +1,24 @@
+/* the hack (web/hack.js): over everything, the game below stands still. From design/hack-v4.html */
+#hack{position:fixed;inset:0;z-index:70;background:#050506;color:var(--ink,#F2F1EC);font-family:'Geist Mono',ui-monospace,Consolas,monospace;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#hack[hidden]{display:none}
+#hack canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#hack .hk-ov{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(11,11,12,.92);text-align:center;padding:24px 16px 56px;box-sizing:border-box;overflow-y:auto;touch-action:pan-y}
+#hack .hk-ov[hidden]{display:none}
+#hack h1{font-family:'Jost',system-ui,sans-serif;font-weight:700;letter-spacing:.22em;font-size:20px;margin:0;line-height:1.35}
+#hack .hk-who{color:#9C9B95;font-size:12px;letter-spacing:.16em}
+#hack .hk-lv{color:#5E5D58;font-size:12px}
+#hack .hk-fresh{color:#FFD23F;font-size:14px;line-height:1.5;max-width:520px}
+#hack .hk-fresh:empty{display:none}
+#hack .lost h1{color:#FF2A1A}
+#hack .hk-sub{color:#9C9B95;font-size:13px}
+#hack .hk-rules{color:#9C9B95;font-size:13px;line-height:1.9;max-width:520px}
+#hack .hk-rules .o{color:#FF8A1F}#hack .hk-rules .r{color:#FF2A1A}#hack .hk-rules .y{color:#F2F1EC}
+#hack .hk-go{background:none;border:1px solid #F2F1EC;color:#F2F1EC;font-family:'Jost',system-ui,sans-serif;font-weight:600;font-size:14px;letter-spacing:.22em;padding:11px 30px;cursor:pointer;margin-top:4px}
+#hack .hk-go:hover,#hack .hk-go:focus-visible{background:#F2F1EC;color:#0B0B0C;outline:none}
+#hack .hk-go.q{border-color:#2E2E33;color:#9C9B95;font-size:12px;padding:8px 20px}
+#hack .hk-go.q:hover{background:#2E2E33;color:#F2F1EC}
+#hack .lost .hk-go.m{border-color:#FF2A1A;color:#FF2A1A}#hack .lost .hk-go.m:hover{background:#FF2A1A;color:#0B0B0C}
+#hack .hk-lore{max-width:420px;width:100%;text-align:left;font-size:13px;line-height:1.7;min-height:5em;white-space:pre-wrap}
+#hack .hk-lore .y{color:#FFD23F}#hack .hk-lore .m{color:#9C9B95}
+/* the waiting hack, a card among the yard's (top right of the map) */
+#cards .bcard.hk{border-color:#FFD23F}#cards .bcard.hk b{color:#FFD23F}

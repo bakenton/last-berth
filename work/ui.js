@@ -236,7 +236,8 @@ function logText(e){ var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return '';
   if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
   if(e.code==='voice'){ var v=voiceLine(e); return v.who+' '+v.name+': '+v.line }
   return fill(tpl,d) }
-function toastLast(){ var e=G.log[G.log.length-1]; if(!e) return;
+function toastLast(){ toastOne(G.log[G.log.length-1]) }
+function toastOne(e){ if(!e) return;
   if(NOTE_CODES[e.code]&&!U.ff) return;   // v4.30: these stop the desk with a full-screen notice (voiceWatch)
   var t=logText(e); if(!t) return;
   if(e.code==='depleted'){ toast('<b>'+esc(T('alertDepleted'))+'</b>&nbsp;'+esc(t),'bad',9000,'bad'); return }
@@ -310,9 +311,11 @@ function voice(trigger,role,d,o){
     /* v4.30 (Nikita, 11.10: 'уведомления от экипажей норм, но пусть они не перекрывают весь экран, внизу вылазят'):
        a crew's word is a card at the foot of the chart and the clock runs on; only the Night, the ark drive and
        the last flights (force) still take the whole screen. */
-    if(!o.force&&U.pf&&!U.pf.low) return;
+    if(!o.force&&U.pf) return;
     U.voiceLast=G.day;
-    U.pf={k:k,role:role,name:name,no:no,d:d||{},seed:seed,sub:o.sub||'',low:!o.force,day:G.day};
+    /* Nikita, 26.10 («занимают пол-экрана… появлялось только в своём месте»): a quiet word is a strip in its own corner, every word stays in the archive */
+    G.letters=G.letters||[]; var L0={id:G.letters.length+1,k:k,role:role,name:name,no:no,d:d||{},seed:seed,sub:o.sub||'',day:G.day,read:!!o.force}; G.letters.push(L0);
+    if(o.force) U.pf=L0; else { U.strips=(U.strips||[]).concat([{id:L0.id,until:Date.now()+STRIP_MS}]).slice(-STRIPS); setTimeout(function(){ if(G) drawPF() },STRIP_MS+50) }
     SFX.play('voice');
   }
 }
@@ -481,6 +484,10 @@ function isDry(pid){ var p=planet(pid); return !!G.colonies[pid]&&p.kind!=='work
 function worksHungry(pid){ var p=planet(pid), c=G.colonies[pid]; if(!c||p.kind!=='works') return null;
   var fr=feedRates(G,pid), ym=(c.store.metal||0)/Math.max(0.01,fr.metal||0), yf=(c.store.food||0)/Math.max(0.01,fr.food||0);
   return {metal:ym, food:yf, low:Math.min(ym,yf), idle:(c.idleWorks||0)} }
+/* what the works burn a year and what the line brings of each, in the order the hold is filled (needsOf: fuel, metal, food) */
+function feedSplit(pid){ var fr=feedRates(G,pid), f=lineFit(G,pid), left=f?f.carries:0, out={};
+  (needsOf(G,pid)||[]).forEach(function(k){ var n=fr[k]||0, b=Math.min(n,left); left-=b; out[k]={need:n,brings:b} });
+  return out }
 function wst(pid){ var c=G.colonies[pid];
   if(G.ghost&&G.ghost[pid]) return 'ghost';
   if(!c) return enRoute(G,pid)?'settling':'free';
@@ -489,8 +496,17 @@ function wst(pid){ var c=G.colonies[pid];
   var wh=worksHungry(pid); if(wh&&wh.idle>5) return 'starve';
   if(!onLine(G,pid).length) return 'noline';
   if(isDry(pid)) return 'dry';
-  var lr=lineRate(G,pid); if(lr&&lr.piling&&lr.sitting>FIT_PILE&&lineFit(G,pid).gap>0.01) return 'half';   // v4.38: a hull in the yards for the line counts
+  if(lineThin(pid)) return 'half';
   return 'ok' }
+/* Nikita, 26.10 («линия возит меньше или больше на 1 единицу, а уже уведомление»): a line speaks when it matters. Short: it carries
+   under half of what it must, or Earth's stock of this resource runs out soon at today's pace. Works: under FORGE_WARN of what they burn,
+   at once and not after 90 idle years (forge-stat, 02.11: a thin line is the main reason the works stand). Too many hulls: SPARE_WARN times the need */
+var THIN_WARN=0.5, RUNOUT_YEARS=100, FORGE_WARN=0.75, SPARE_WARN=2, SEAM_YEARS=80;
+function earthRunout(res){ var t=trend(res); return t!==null&&t<-0.05&&G.earth[res]/-t<RUNOUT_YEARS }
+function lineThin(pid){ var f=lineFit(G,pid), lr=lineRate(G,pid); if(!f||!lr||f.gap<=0.01) return false;
+  if(planet(pid).kind==='works') return f.carries<f.need*FORGE_WARN;   // v4.38: a hull in the yards for the line counts
+  return lr.piling&&lr.sitting>FIT_PILE&&(f.carries<f.need*THIN_WARN||earthRunout(lr.dep)) }
+function seamYears(pid){ var c=G.colonies[pid], p=planet(pid); if(!c||p.kind==='works'||G.reserves[pid]===Infinity||G.reserves[pid]<=0) return Infinity; var r=c.pop*p.rich*K.PROD*rateMult(c); return r>0.001?G.reserves[pid]/r:Infinity }
 var BAD_ST={dead:1,cut:1,starve:1};
 
 /* ---------- the map ---------- */
@@ -594,7 +610,8 @@ function drawEvBar(){
 function building(){ return G.ships.filter(function(s){ return s.mode==='building' }).sort(function(a,b){ return a.t-b.t }) }
 function hullProgress(s){ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/tot)) }
 function forWorld(s){ return s.lineFor||(s.pend&&s.pend.from)||null }
-function drawCards(){ var b=can('yard')?building():[], h='';
+function drawCards(){ var b=can('yard')?building():[], h='', hk=hackNext(G);
+  if(hk&&U.hackLater) h+='<button class="bcard hk" type="button" data-act="hack"><b>'+esc(T('hk_card'))+'</b><span>'+esc(hackWho(hk))+'</span><i>'+esc(T('hk_cardGo'))+'</i></button>';   // the hack put off: back to it from here
   b.slice(0,3).forEach(function(s){ var w=forWorld(s);
     h+='<button class="bcard" type="button" data-act="tab" data-v="yard">'+shipIc(shipClass(s),26)+'<b>'+esc(T(shipClass(s))+' '+roman(hullGen(s)))+'</b><span>→ '+esc(w?pname(w):T('u_freeHull'))+'</span><i>'+s.t+' '+yrs(s.t)+'</i><u style="width:'+Math.round(hullProgress(s)*100)+'%"></u></button>' });
   if(b.length>3) h+='<div class="more">'+esc(fill(T('u_moreYard'),{n:b.length-3}))+'</div>';
@@ -602,11 +619,31 @@ function drawCards(){ var b=can('yard')?building():[], h='';
   setHTML('zoom',can('zoom')?'<button type="button" data-act="zoom" data-v="out">−</button><button type="button" data-act="zoom" data-v="in">+</button><button type="button" data-act="zoom" data-v="fit">'+esc(T('u_fit'))+'</button>':'') }
 
 /* ---------- top: the year, the Night, the advisor, the clock ---------- */
-function winPause(){ return U.win==='earth'||U.win==='yard'||U.win==='ark' }
+/* v4.49 (Claude's playtest 04.11): a world window stops the clock too — at 4× up to 9 years went by while one was read, and the
+   redraw every year ate presses in it. A world window still closes on a click outside it (winLight); the tabs do not */
+function winPause(){ return !!U.win }
+function winLight(){ return !!U.win&&!!planet(U.win) }
 function bigKind(){ if(!U.langPicked) return U.menu?null:'lang'; if(G.over) return 'over'; if(G.night&&!G.nightSeen) return 'night'; if(G.shiftOpen) return 'shift'; if(U.notes.length) return 'note'; return null }
-function modal(){ return !!U.menu||!!bigKind()||!!(U.pf&&!U.pf.low)||!el('logbox').hidden }
+function modal(){ return !!U.menu||!!bigKind()||!!U.pf||!el('logbox').hidden||hackOn() }
+/* the hack (web/hack.js, Nikita 04.11): a finished drive mark or a paid ark level waits for it (core.js «the hack»). It opens by
+   itself once no other window stands; the clock stands while it is open; NOT NOW leaves a card top right (drawCards) */
+function hackOn(){ return !!(window.LBhack&&window.LBhack.isOpen()) }
+function hackWho(h){ return h.k==='drive'? fill(T('hk_cGen'),{g:roman(h.g)}) : fill(T('hk_cArk'),{l:roman(h.l-1)}) }
+function hackCheck(){ var h=G&&!G.over&&hackNext(G); if(!h||U.hackLater||!window.LBhack||hackOn()||modal()||tutHold()) return;
+  var n=hackLevel(G), m=(G.hacks||0)+1;
+  act(G,'hack_open',{k:h.k,lv:n});
+  window.LBhack.open({T:T,level:n,who:hackWho(h),seed:G.seed+m*7919,
+    lore:T(L[U.lang]['hk_m'+m]!==undefined?'hk_m'+m:'hk_m0'),
+    unlock:h.k==='drive'? fill(T('hk_unGen'),{g:roman(h.g)}) : fill(T('hk_unArk'),{l:roman(h.l-1)}),
+    onTry:function(r){ if(r.k!=='start') act(G,'hack_'+r.k,{lv:r.lv,t:r.t,hp:r.hp}) },
+    onWin:function(){ hackWin(G); autosave(); draw() },
+    onLater:function(){ U.hackLater=true; act(G,'hack_later',{lv:n}); draw() } }) }
 function halted(){ return U.paused||winPause()||modal()||tutHold() }
+/* ❚❚ / Space: a toggle only when the player's own pause is all that holds the clock. With a tab, card or helper holding it
+   too the press pins the pause — it used to flip a hidden U.paused, so closing the tab set the clock running (playtest 04.11) */
+function pauseToggle(){ U.paused=!(U.paused&&!winPause()&&!modal()&&!tutHold()) }
 var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to the redraw at that pace
+/* v4.46 (Nikita, 03.11: «уведомление вверху не нужно, удалить»): the WAKE number of v4.45 is gone from the top bar; the ark tab keeps it */
 function drawTop(){
   var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
@@ -615,7 +652,6 @@ function drawTop(){
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
   if(can('speed')){ h+='<button type="button" data-act="spd" data-v="0" class="'+(hz?'on pzb':'')+'" title="Space">❚❚</button>';
     SPEEDS.forEach(function(v,i){ h+='<button type="button" data-act="spd" data-v="'+v+'" class="'+(!hz&&U.speed===v?'on':'')+'" title="'+(i+1)+'">'+v+'×</button>' }) }
-  if(can('skip')) h+='<button type="button" data-act="skip">'+esc(T('u_skip'))+'</button>';
   h+='<button type="button" data-act="pop" data-v="menu" class="'+(U.pop==='menu'?'on':'')+'" aria-label="menu">≡</button></div>';
   setHTML('top',h);
 }
@@ -631,6 +667,11 @@ function trend(k){ var h=U.hist; if(h.length<6) return null; var a=h[Math.max(0,
 /* v4.42: people are not a stockpile — the settlers and crews you send are a choice, not a trend (year 14 showed «▼ −2.3» while
    Earth grew). The strip and the Earth window show what Earth raises a year, as the shift report does. */
 function peopleRate(){ return G.hungry?0:handsRate(G) }
+/* v4.49 (Claude's playtest 04.11, Nikita: «а это»): the births multiplier is the main lever of the score and was invisible —
+   ×FED_MIN on an empty larder up to ×FED_MAX with FED_YEARS of food in store; 0 while Earth starves */
+function birthX(){ return G.hungry?0:fedMult(G) }
+function birthCol(x){ return x>=K.FED_MAX-0.005?C.food:(x>=1?C.people:C.red) }
+function birthTxt(x){ return '×'+x.toFixed(2) }
 function drawRes(){ var E=G.earth, nd=G.need||earthNeed(G), h='';
   trendTick();
   RES.forEach(function(k){
@@ -639,6 +680,7 @@ function drawRes(){ var E=G.earth, nd=G.need||earthNeed(G), h='';
     if(t!==null){ var up=t>=0.05, dn=t<=-0.05; tt='<span class="'+(up?'up':(dn?'dn':'fl'))+'">'+(up?'▲ +':(dn?'▼ −':'— '))+Math.abs(t).toFixed(1)+esc(T('u_perYr'))+'</span>' }
     var bad=(k==='food'&&(G.hungry||E.food/Math.max(0.1,nd.food)<25))||(k==='metal'&&(G.cold||E.metal/Math.max(0.1,nd.metal)<25))||(k==='fuel'&&E.fuel<30);
     var fc=k==='food'?(G.foodFc||(G.day<200?foodForecast(G):null)):null, ends=fc?'<em>'+esc(fill(T('u_ends'),{y:fc.y}))+'</em>':'';   // v4.36: the core forecasts from year 200; the strip shows the end from year 0
+    if(k==='people'){ var bx=birthX(); ends='<em style="color:'+birthCol(bx)+'" title="'+attr(fill(T('u_birthsHint'),{lo:birthTxt(K.FED_MIN),hi:birthTxt(K.FED_MAX),n:K.FED_YEARS,y:Math.floor(E.food/Math.max(0.1,nd.food||1))}))+'">'+esc(fill(T('u_birthTop'),{x:birthTxt(bx)}))+'</em>' }
     h+='<div class="rc'+(bad?' bad':'')+'" data-r="'+k+'"><small>'+resIc(k,13)+esc(T(k).toUpperCase())+ends+'</small><b style="color:'+C[k]+'">'+num(E[k])+'</b>'+tt+'</div>' });
   setHTML('res',h) }
 
@@ -650,7 +692,6 @@ function freeAtPier(){ return G.ships.filter(function(s){ return s.mode==='idle'
 function flags(){ var F={}, E=G.earth, nd=G.need||earthNeed(G);
   // Earth: hunger, then the larder, then metal and fuel
   if(G.hungry) F.earth=[T('u_flHungry'),C.red];
-  else if(G.night&&G.foodFc&&G.foodFc.y<G.night) F.earth=[fill(T('u_flFoodNight'),{y:G.foodFc.y}),C.red];
   else if(foodShort(G)) F.earth=[fill(T('u_flFood'),{y:G.foodFc.y}),C.red];
   else if(G.cold||E.metal/Math.max(0.1,nd.metal)<25) F.earth=[T('u_flMetal'),C.red];
   else if(E.fuel<60) F.earth=[T('u_flFuel'),C.people];
@@ -682,8 +723,21 @@ function hint(t,cls){ return '<div class="hint'+(cls?' '+cls:'')+'">'+t+'</div>'
 function alertBox(icon,t,warn){ return '<div class="alert'+(warn?' warn':'')+'">'+ic(icon,16,warn?C.people:C.red)+'<span>'+t+'</span></div>' }
 
 /* ---------- Earth: only home and its burn (BRIEF) ---------- */
+/* v4.49 (F-55, Nikita 04.11): Earth's workshop — surplus metal and rations into parts at forty times a works' price, switched by hand */
+/* what the workshop would make this year, from the stocks now (reviewer: G.wsWhy is last year's — wrong while a window stands the clock) */
+function wsCan(){ var E=G.earth, k=wsKeep(G), n=0, m=E.metal, f=E.food;
+  while(n<K.WS_MAX&&m-K.WS_METAL>=k.metal&&f-K.WS_FOOD>=k.food){ m-=K.WS_METAL; f-=K.WS_FOOD; n++ }
+  return {n:n, why:E.metal-K.WS_METAL<k.metal?'metal':'food'} }
+function wsBlock(){ var k=wsKeep(G), st, c=wsCan();
+  if(!G.ws) st=[T('u_wsOff'),C.mid];
+  else if(c.n) st=[fill(T('u_wsMakes'),{n:c.n}),C.parts];
+  else st=[fill(T('u_wsHeld'),{r:T(c.why).toLowerCase()}),C.people];
+  return sec(esc(T('u_ws')))+row(resIc('parts',13)+esc(T('u_wsState')),esc(st[0]),st[1])+
+    hint(esc(fill(T('u_wsHint'),{m:K.WS_METAL,f:K.WS_FOOD,n:K.WS_MAX,k:K.WS_KEEP,km:num(k.metal),kf:num(k.food)})))+
+    btn(esc(T(G.ws?'u_wsStop':'u_wsStart')),'ws',{on:G.ws?0:1},G.ws?'full':'pri full','works') }
 function winEarth(){ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='';
   h+=sec(esc(T('u_home')))+'<div class="hero" style="color:'+C.people+'">'+num(E.people)+'<span>'+esc(T('u_peopleW'))+(t!==null?' · '+(t>=0?'+':'−')+Math.abs(t).toFixed(1)+esc(T('u_perYr')):'')+'</span></div>';
+  var bx=birthX(); h+=row(resIc('people',13)+esc(T('u_births')),birthTxt(bx),birthCol(bx))+hint(esc(fill(T('u_birthsHint'),{lo:birthTxt(K.FED_MIN),hi:birthTxt(K.FED_MAX),n:K.FED_YEARS,y:Math.floor(E.food/Math.max(0.1,nd.food||1))})));
   h+=row(resIc('food',13)+esc(T('u_foodUntil')),G.foodFc?'≈ '+G.foodFc.y:esc(T(G.night?'u_foodPastNight':'u_foodLong')),G.foodFc?C.red:null);
   if(can('night')&&G.night) h+=row(ic('night',13,C.red)+esc(T('u_night')),G.night+' · '+esc(fill(T('u_yearsN'),{n:nightLeft(G)})),C.red);
   h+=row(esc(T('u_liveWorlds')),reach(G))+row(esc(T('u_crossings')),'×'+driveSpeed(G).toFixed(2));
@@ -699,6 +753,7 @@ function winEarth(){ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='
     var y=E[k]/Math.max(0.01,v);
     h+=row(resIc(k,13)+esc(T(k)),dec(v)+esc(T('u_perYr'))+' · '+(v>0?esc(fill(T('u_yearsN'),{n:Math.floor(y)})):'—'),C[k]) });
   var ap=activeCrisis(G); if(ap) h+=alertBox('warn',esc(fill(T('u_alCrisis'),{r:T(ap.res),n:Math.max(0,ap.end-G.day)})),true);
+  if(can('parts')) h+=wsBlock();
   return '<div class="win sm">'+head(esc(T('u_tabEarth').toUpperCase()),esc(T('u_timePaused')),ic('tEarth',18,C.earth))+'<div class="bd">'+h+'</div></div>' }
 
 /* ---------- big windows: language, the end, the Night, the shift, notes — one at a time, time stands ---------- */
@@ -716,14 +771,14 @@ function bigHtml(kind){
   /* v4.36: the end, the Night and the shift speak in the Institute's voice, Alexandra's line under it (NAR N-13, N-09, N-04) */
   if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
     if(G.over==='night'){ var sl=G.souls||0, lb=G.left||leftBehind(G), tier=sl<=0?0:(sl<300?1:(sl<1200?2:3)), behind=lb.home+lb.hulls+lb.colonies+lb.transit;
-      var sailed=!G.grounded&&(G.boarded||0)>0, why='';
+      var sailed=!G.grounded&&(G.boarded||0)>0, why='', noWake=sailed?G.boarded-sl:0;
       if(!sailed){ if(G.grounded&&G.groundedWhy==='convoy'){ var cv=arkConvoy(G), sh=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) sh.push(d+' × '+T(c)) }); why=fill(T('nar_rsConvoy'),{s:sh.join(', '),g:roman(convoyGen(G))}) }
         else if(G.grounded) why=fill(T('nar_rsDrive'),{g:roman(G.arkMark)}); else why=T('nar_rsLevel') }
       return '<div class="nwin '+(sailed&&tier?'good':'bad')+'">'+icap(T('u_year')+' '+G.day+' · '+T('u_theNight'))+
         (sailed?'<div class="nbig" style="color:'+C.ark+'"><small>'+esc(T('nar_aboard'))+'</small><b>'+num(G.boarded)+'</b></div><p>'+esc(fill(T('nar_N13a'),{n:num(G.boarded)}))+'</p>'
-               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+'<div class="rws">'+
+               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+(noWake>0?'<p style="color:'+C.red+'">'+esc(fill(T('nar_rsWake'),{n:num(noWake),g:roman(G.driveLvl||0),h:roman((G.driveLvl||0)+1),p:Math.round(wakeAt(G,(G.driveLvl||0)+1)*100)}))+'</p>':'')+'<div class="rws">'+
         rw2(esc(T('statSouls')),num(G.boarded||0),(G.boarded||0)?'good':'bad')+
-        rw2(esc(T('statWoke')),G.grounded?esc(T(G.groundedWhy==='convoy'?'arkNoConvoy':'arkNoDrive')):num(sl)+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+
+        rw2(esc(T('statWoke')),G.grounded?esc(T(G.groundedWhy==='convoy'?'arkNoConvoy':'arkNoDrive')):num(sl)+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+(noWake>0?rw2(esc(T('statNoWake')),num(noWake),'bad'):'')+
         rw2(esc(T('statBerths')),arkLevel(G)+' / '+K.ARK_LEVELS.length)+(G.cargo?rw2(esc(T('statCargo')),price(G.cargo,null)):'')+
         rw2(esc(T('statLeft')),num(behind)+' · '+lb.hulls+' '+esc(T('lbHulls'))+' · '+lb.colonies+' '+esc(T('lbCol')),'warn')+
         rw2(esc(T('statDay')),G.day)+rw2(esc(T('statSec')),SECTORS.length)+rw2(esc(T('statPeak')),G.stats.peak)+rw2(esc(T('statDrive')),G.driveLvl||0)+(G.stats.mutinies?rw2(esc(T('statMutiny')),G.stats.mutinies,'warn'):'')+'</div>'+
@@ -762,17 +817,36 @@ function drawBig(){ var k=bigKind(), L0=el('noteL'), key=k==='shift'?'shift'+G.d
   var h=k?bigHtml(k):''; L0.dataset.k=key||''; setHTML('noteL',h); L0.className=h?'on':'' }
 
 /* ---------- personal files: a face for a crew, at the foot of the map, or the whole screen for the moments that matter ---------- */
+/* a word from a crew: only the Night, the ark drive and the last flights still take the whole screen. The rest are strips
+   in the corner of the chart: a face, a name, the first line. A press opens the strip where it is; unread ones wait in the archive */
+var STRIP_MS=30000, STRIPS=3;
+function letterById(id){ return (G.letters||[]).filter(function(l){ return l.id===id })[0]||null }
+function letterText(f){ var v=VOICE[U.lang]||{}, d={}; for(var q in f.d) d[q]=f.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); return {who:v[f.role]||f.role,line:fill(v[f.k]||f.k,d)} }
+function letterRow(f,open,fresh){ var t=letterText(f);
+  return '<button type="button" class="ltr'+(open?' open':'')+(fresh?' fresh':'')+(f.read?'':' unread')+'" data-act="ltr" data-v="'+f.id+'"><canvas width="64" height="64" data-seed="'+f.seed+'"></canvas><span class="lth"><b>'+esc(f.name)+'</b><i>'+esc(t.who)+' · '+esc(fill(T('pfNo'),{n:f.no}))+(f.sub?' · '+esc(f.sub):'')+'</i><em>'+String(f.day).padStart(4,'0')+'</em></span><span class="ltl">'+esc(t.line)+'</span>'+(open?'<u>'+esc(T('pfOk'))+'</u>':'')+'</button>' }
+function paintLetters(box){ box.querySelectorAll('canvas[data-seed]').forEach(function(c){ if(!c._done){ c._done=true; drawPortrait(c,+c.getAttribute('data-seed')) } }) }
+function lettersUnread(){ return (G.letters||[]).filter(function(l){ return !l.read }).length }
 function drawPF(){
   var L0=el('pfL'), f=U.pf;
-  if(!f||(!f.low&&bigKind())||(f.low&&U.win)){ if(L0._f){ L0._f=null; L0.innerHTML='' } L0.className=''; return }
-  if(L0._f===f&&L0._lang===U.lang&&L0._tab===!!U.tab) return;   // v4.30: the card is built once, or a press on it would be lost to the redraw
-  L0._f=f; L0._lang=U.lang; L0._tab=!!U.tab; L0.className=f.low?'low'+(U.tab?' side':''):'full';
-  if(f.low&&!f.timer) f.timer=setTimeout(function(){ if(U.pf===f){ U.pf=null; drawPF() } },20000);
-  var v=VOICE[U.lang]||{}, d={}; for(var q in f.d) d[q]=f.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p);
-  L0.innerHTML='<div class="pfbox"><canvas width="64" height="64"></canvas><div><div class="pfk"><span>'+esc(T('pfTitle'))+'</span><span>'+String(f.day!==undefined?f.day:G.day).padStart(4,'0')+'</span></div>'+
-    '<div class="pfn">'+esc(f.name)+'</div><div class="pfm">'+esc(v[f.role]||f.role)+' · '+esc(fill(T('pfNo'),{n:f.no}))+(f.sub?' · '+esc(f.sub):'')+'</div>'+
-    '<div class="pfl">'+esc(fill(v[f.k]||f.k,d))+'</div>'+btn(esc(T('pfOk')),'pfok',null,f.low?'':'pri')+'</div></div>';
-  drawPortrait(L0.querySelector('canvas'),f.seed) }
+  if(f&&!bigKind()){
+    if(L0._f===f&&L0._lang===U.lang) return;
+    L0._f=f; L0._k=null; L0._lang=U.lang; L0.className='full';
+    var t=letterText(f);
+    L0.innerHTML='<div class="pfbox"><canvas width="64" height="64"></canvas><div><div class="pfk"><span>'+esc(T('pfTitle'))+'</span><span>'+String(f.day!==undefined?f.day:G.day).padStart(4,'0')+'</span></div>'+
+      '<div class="pfn">'+esc(f.name)+'</div><div class="pfm">'+esc(t.who)+' · '+esc(fill(T('pfNo'),{n:f.no}))+(f.sub?' · '+esc(f.sub):'')+'</div>'+
+      '<div class="pfl">'+esc(t.line)+'</div>'+btn(esc(T('pfOk')),'pfok',null,'pri')+'</div></div>';
+    drawPortrait(L0.querySelector('canvas'),f.seed); return }
+  L0._f=null;
+  var now=Date.now(), all=G.letters||[]; U.strips=(U.strips||[]).filter(function(s){ return s.until>now||s.id===U.ltOpen });
+  if(f||U.win||bigKind()||!all.length){ if(L0.innerHTML){ L0.innerHTML=''; L0._k=null } L0.className=''; return }
+  var un=lettersUnread(), key=[U.lang,!!U.tab,un,all.length,U.ltOpen,U.pop==='letters',U.strips.map(function(s){ return s.id }).join()].join('|');
+  if(L0._k===key) return;   // built only when something changed, or a press on a strip would be lost to the redraw
+  L0._k=key; L0.className=(U.strips.length?'low':'arch')+(U.tab?' beside':'');   // not «side»: the panel's own rule would stretch it to the full height (the card cut off under the top bar, 26.10)
+  L0.innerHTML=U.strips.map(function(s){ var l=letterById(s.id); return l?letterRow(l,U.ltOpen===l.id,now-(s.until-STRIP_MS)<2400):'' }).join('')+
+    '<button type="button" class="ltarch'+(un?' new':'')+(U.pop==='letters'?' on':'')+'" data-act="pop" data-v="letters">'+ic('peopleA',14)+'<span>'+esc(T('u_letters'))+'</span><b>'+all.length+'</b>'+(un?'<em>'+esc(fill(T('u_lettersNew'),{n:un}))+'</em>':'')+'</button>';
+  paintLetters(L0) }
+function popLetters(){ var all=(G.letters||[]).slice().reverse();
+  return '<div class="ltrs">'+sec(esc(T('u_letters')),all.length)+all.map(function(l){ return letterRow(l,U.ltOpen===l.id) }).join('')+'</div>' }
 
 /* the Night stop, the no-free-worlds stop and the ring note — v4.30/v4.16, now as notes that open the Tech tab */
 function freeWorlds(){ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) continue; if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])) continue; out.push(p) } return out }
@@ -798,7 +872,7 @@ function watchRings(){
    (LNtut.off): it holds for every next run of the page, Test play only for its own */
 var TUTX={story:true,off:false,hook:false};
 function helpPref(){ return !TUTX.off }
-var OPEN_ALL=['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
+var OPEN_ALL=['people','food','line','speed','fuel','earth','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
 var TAB_KEYS={earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
 function tutBlank(){ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:null} }
 function secVis(sec){ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
@@ -865,7 +939,7 @@ var STEPS=[
  {t:'hunger',opens:['people','food','line'],q:['m0','m1','m2']},
  {t:'time',opens:['speed'],q:['m3'],when:function(){ return reach(G)>0||G.ships.some(function(s){ return s.job==='colonize' })||G.day>0 }},
  {t:'line',opens:['fuel'],q:['N02','m4'],when:function(){ return reach(G)>0||G.day>=40 },go:function(){ U.tut.col=Object.keys(G.colonies)[0] }},
- {t:'home',opens:['earth','skip'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
+ {t:'home',opens:['earth'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
  {t:'yard',opens:['metal','order','yard'],q:['m8','mM','m9'],when:function(){ return (reach(G)>=2&&Object.keys(G.colonies).some(function(k){ return !onLine(G,k).length })&&!freeHullAtPier())||(reach(G)>0&&!offLine())||G.day>=150 }},
  {t:'fleet',opens:['fleet'],q:['m10'],soft:1,when:function(){ return builtHulls()>=4||G.day>=300 }},
  {t:'slow',opens:[],q:['m11'],soft:1,when:function(){ return !!halfWorld()||G.day>=400 }},
@@ -941,8 +1015,6 @@ function tutTick(){ var t=U.tut; if(!U.langPicked||G.over) return;
   tutJit();
   if(t.lock) G.safe=t.step<STEP_SAFE;
   tutNext() }
-/* is there something she wants to say before the clock runs on (SKIP stops there) */
-function tutWants(){ var t=U.tut; return !!t.q.length||(t.step>=0&&stepReady(t.step+1)) }
 function tutHold(){ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
 /* the press: a rule lets through only its lit thing; her voice closes on any press */
 function tutTarget(m){ var s=typeof m.at==='function'?m.at():m.at, e=s?document.querySelector(s):null; return e&&e.getClientRects().length?e:null }
@@ -959,7 +1031,9 @@ function tutClick(ev){ var t=U.tut, x=ev.target;
   return false }
 function tutKey(e){ var t=U.tut;
   var mine=e.code==='Space'||e.key==='Enter'||e.key==='Escape'||/^[1-4]$/.test(e.key);
-  if(t.msg){ if(mine) e.preventDefault(); if(!e.repeat&&t.msg.mode==='see'&&mine&&!/^[1-4]$/.test(e.key)&&Date.now()-t.msg.at>300) msgDone(); return true }
+  if(t.msg){ if(mine) e.preventDefault(); if(!e.repeat&&t.msg.mode==='see'&&mine&&!/^[1-4]$/.test(e.key)&&Date.now()-t.msg.at>300) msgDone();
+    else if(!e.repeat&&t.msg.mode!=='see'&&e.code==='Space'&&can('speed')){ pauseToggle(); draw() }   // v4.50: Space under a held step pins the pause, as under a window
+    return true }
   if(t.lock&&!can('speed')&&(e.code==='Space'||/^[1-4]$/.test(e.key))) return true;
   return false }
 /* after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot */
@@ -991,12 +1065,20 @@ function tutPlace(){ var t=U.tut, Lr=el('tutL'), Rg=el('tutRing'), Rg2=el('tutRi
 function tutLive(e){ if(e.getAttribute('aria-disabled')==='true') return false; if(!e.querySelector('[data-act]')) return true; return !!e.querySelector('[data-act]:not([aria-disabled="true"])') }
 function narPlace(){ var n=U.tut.nar, V=el('voice');
   if(n&&n.f==='V'){ if(V._k!==n.k+U.lang){ V._k=n.k+U.lang; var N2=NAR[n.id];
-      V.innerHTML='<div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="vtx">'+N2.k.map(function(k){ return esc(fill(T(k),n.p)) }).join('<br>')+'</div></div><i class="vbar"></i>';
+      V.innerHTML='<div class="'+faceCls(faceOf(N2.k))+'"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><div class="vtx">'+N2.k.map(function(k){ return esc(fill(T(k),n.p)) }).join('<br>')+'</div></div><i class="vbar"></i>';
       V.className=''; void V.offsetWidth; V.className='on' }
     V.classList.toggle('side',!!U.tab); var pf=el('pfL'); V.style.bottom=pf.classList.contains('low')?(pf.offsetHeight+24)+'px':'' }   // a crew card at the foot of the map: her voice stands above it
   else if(V._k){ V._k=''; V.className=''; V.innerHTML='' } }
-/* Alexandra's line under the Institute's in a big window */
-function alx(s){ return '<div class="alx"><div class="hav ava"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><p>'+esc(s)+'</p></div></div>' }
+/* Alexandra's line under the Institute's in a big window; her face — by the key whose text it is (the callers pass the text) */
+function alx(s){ var k=''; for(var q in FACE) if(T(q)===s){ k=q; break } var f=faceOf([k]);
+  return '<div class="alx'+(f==='full'?' full':'')+'"><div class="'+faceCls(f)+'"></div><div><div class="hnm">'+esc(T('tut_name'))+'</div><p>'+esc(s)+'</p></div></div>' }
+/* her face (Nikita 04.11, design/ALEXANDRA-FACES.md): the pose by the key of her line — the last line with a pose wins (N05: calm,
+   then grief); a key not here is talk. The pictures are web/alexandra (build.py: .fc-<pose>, .afull — full height, the finale).
+   The helper keeps the bust (.ava): a rule has no face. N04 and N13 are not in FACES.md — Claude's choice, awaits Nikita. */
+var FACE={nar_N02:'happy',nar_N03:'happy',nar_N05_2:'grief',nar_N06_2:'sad',nar_N07:'surprised',nar_N08:'confused',nar_N10_1:'smile',nar_N10_2:'smile',
+  nar_N11:'crossed',nar_N12b:'crossed',nar_N12c:'alarm',nar_N04a_a:'smile',nar_N13a_a:'full',nar_N13b_a:'full',nar_N13c_a:'full',nar_N13d_a:'full'};
+function faceOf(keys){ var f='talk'; keys.forEach(function(k){ if(FACE[k]) f=FACE[k] }); return f }
+function faceCls(f){ return f==='full'?'hav afull':'hav fc fc-'+f }
 function icap(right){ return '<div class="icap">'+esc(T('tut_inst'))+'<span>'+esc(right)+'</span></div>' }
 /* in the save: what is open and what was said; the queue is not kept — what the current step has not said yet is said again */
 var TUT_KEEP=['lock','help','open','fresh','seen','step','seq','farm','col','dead','late','mut','r2'];
@@ -1019,17 +1101,23 @@ function drawWin(){ var w=U.win, h='';
   if(w==='earth') h=winEarth(); else if(w==='yard') h=winYard(); else if(w==='ark') h=winArk(); else if(w&&planet(w)) h=winWorld(w);
   setHTML('ovl',h,w); el('ovl').className=h?'on':'' }
 function drawPop(){ var p=U.pop, h='', cls='';
-  if(p==='adv'){ h=popAdv(); cls='p-adv' } else if(p==='menu'){ h=popMenu(); cls='p-menu' } else if(p&&p.indexOf('pick:')===0){ h=picker(); cls='p-center' }
+  if(p==='adv'){ h=popAdv(); cls='p-adv' } else if(p==='menu'){ h=popMenu(); cls='p-menu' } else if(p&&p.indexOf('pick:')===0){ h=picker(); cls='p-center' } else if(p==='letters'&&G.letters&&G.letters.length){ h=popLetters(); cls='p-letters' }
   if(!h) U.pop=null;
-  setHTML('pop',h,p); el('pop').className=h?'on '+cls:'' }
+  if(setHTML('pop',h,p)&&p==='letters') paintLetters(el('pop')); el('pop').className=h?'on '+cls:'' }
 function focusFix(){ var now=Date.now();
   if(U.focus){ U.focusK=U.focus; U.focusT=now; U.focus=null; var e0=document.querySelector(U.focusK); if(e0) e0.scrollIntoView({block:'nearest'}) }
   if(!U.focusK) return; if(now-U.focusT>3000){ U.focusK=null; return }
   var e=document.querySelector(U.focusK); if(e&&!e.classList.contains('focus')){ e.style.animationDelay=-(now-U.focusT)+'ms'; e.classList.add('focus') } }
+/* Nikita, 02.11: «хочется ближе к концу накала» — static and dark over the map for the last NIGHT_FX years, growing to the end. Looks only: the layer takes no clicks and lies under the cards */
+var NIGHT_FX=300, NIGHT_FX_LAST=50;   // v4.46 (Nikita, 03.11): from 300 years out
+function drawNightFx(){ var e=el('mapbox'); if(!e) return; var left=G.night&&can('night')?nightLeft(G):Infinity, on=left<=NIGHT_FX, last=left<=NIGHT_FX_LAST;
+  e.classList.toggle('nfon',on); e.classList.toggle('nflast',last); e.classList.toggle('nfstill',on&&halted()); if(!on) return;
+  e.style.setProperty('--nf',(0.1+0.9*(1-Math.max(0,left)/NIGHT_FX)).toFixed(3));
+  e.style.setProperty('--nl',(last?Math.pow(1-Math.max(0,left)/NIGHT_FX_LAST,0.7):0).toFixed(3)) }
 function draw(){
   if(!G) return;
   voiceWatch(); watchRings(); tutTick();
-  drawTop(); drawRes(); drawTabs(); drawMap(); drawEvBar(); drawCards(); drawSide(); drawWin(); drawPop(); drawBig(); drawPF(); focusFix(); tutPlace();
+  drawTop(); drawRes(); drawTabs(); drawMap(); drawNightFx(); drawEvBar(); drawCards(); drawSide(); drawWin(); drawPop(); drawBig(); drawPF(); focusFix(); tutPlace();
   var m=el('map'); if(m.pauseAnimations){ if(halted()) m.pauseAnimations(); else m.unpauseAnimations() }
 }
 
@@ -1061,7 +1149,8 @@ function stRow(s){ var a=hullSt(s);
     (s.moveTo&&planet(s.moveTo)?'<span class="hst" style="color:'+C.ink+'">'+ic('movesTo',15)+esc(fill(T('u_stMoveTo'),{p:pname(s.moveTo)}))+'</span>':'') }
 function hullRow(s,acts,id){ var g=hullGen(s);
   return '<div class="hr"'+(id?' id="'+id+'"':'')+'>'+shipIc(shipClass(s),30)+genB(g,g<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+stRow(s)+'</span><span class="ha">'+(acts||'')+'</span></div>' }
-function speedTxt(hl){ return (hl.speed*driveSpeed(G)).toFixed(2) }
+/* the speed a hull flies at: its own times the drive's — the drive now, or at mark `at` (v4.49: Tech showed the bare hull speed, the Yard this one) */
+function speedTxt(hl,at){ return (hl.speed*(at===undefined?driveSpeed(G):driveSpeed({driveLvl:at}))).toFixed(2) }
 function specIcons(h){ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedTxt(h)+'</span><span>'+ic('range',15,C.mid)+esc(fill(T('u_ringN'),{n:hullRange(h)+1}))+'</span>' }
 function hullCost(h){ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
 function clsSeen(cls){ return cls==='courier'||can('parts') }   // v4.36: a hull that costs parts shows up once parts are open
@@ -1084,9 +1173,10 @@ function assignable(pid){ var p=planet(pid);
 function pickCourier(pid){ var c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
   var list=assignable(pid).filter(function(s){ return shipClass(s)==='courier'&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });
   if(!list.length) return null;
-  var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
+  var rs=function(s){ return s.reserve?1:0 };   // v4.50 (Claude's playtest 04.11): a hull kept for the ark goes last (Claude — awaiting review)
+  var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return rs(a)-rs(b)||legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
   if(fit.length) return fit[0];
-  return list.sort(function(a,b){ return b.cap-a.cap })[0] }
+  return list.sort(function(a,b){ return rs(a)-rs(b)||b.cap-a.cap })[0] }
 function evacGoing(pid){ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }) }
 function evacW(pid){ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id}); return nh?fill(T('u_evacW_wait'),{n:nh.id,l:nh.t}):T('u_evacW_orderC') }
 function evacBlock(p){ var c=G.colonies[p.id];
@@ -1143,8 +1233,12 @@ function winWorld(pid){
   L0+=sec(esc(T('u_world')));
   if(p.kind==='works'){ var wh=worksHungry(pid), fr=feedRates(G,pid);
     L0+=row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
-    L0+=sec(esc(T('u_eats')))+row(resIc('metal',13)+esc(T('metal')),dec(fr.metal||0)+esc(T('u_perYr'))+' · '+esc(fill(T('u_yearsN'),{n:Math.floor(wh.metal)})),wh.metal<10?C.red:null)+
-      row(resIc('food',13)+esc(T('food')),dec(fr.food||0)+esc(T('u_perYr'))+' · '+esc(fill(T('u_yearsN'),{n:Math.floor(wh.food)})),wh.food<10?C.red:null);
+    /* v4.46 (Nikita, 03.11: «игра не говорит, сколько топлива нужно и сколько возится»): each thing the works burn, what the line brings of it and how long the stock lasts */
+    var fd=feedSplit(pid), ff=lineFit(G,pid), yr={metal:wh.metal,food:wh.food,fuel:(c.store.fuel||0)/Math.max(0.01,fr.fuel||0)};
+    L0+=sec(esc(T('u_eats')));
+    Object.keys(fd).forEach(function(k){ var f=fd[k];
+      L0+=row(resIc(k,13)+esc(T(k)),esc(fill(T('u_feedRow'),{n:dec(f.need),b:dec(f.brings)}))+' · '+esc(fill(T('u_yearsN'),{n:Math.floor(yr[k])})),yr[k]<10||f.brings<f.need*0.95?C.red:null) });
+    if(ff&&ff.carries<ff.need*0.95){ var fx=lineFix(pid,[]); L0+=hint(esc(fx?fx[0]:fill(T('u_feedShort'),{s:dec(ff.need-ff.carries)}))) }
     if(wh.idle>5) L0+=alertBox('starving',esc(T('u_worksIdle')));
     else if(wh.low<10) L0+=alertBox('starving',esc(fill(T('u_worksLow'),{n:Math.floor(wh.low)})));
     L0+=sec(esc(T('u_makes')))+'<div id="rw-carries">'+row(resIc('parts',13)+esc(T('parts')),wh.idle>5?'0':dec(lr.makes)+esc(T('u_perYr')))+row(esc(T('u_onSurface')),num(c.store.parts||0))+row(esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')))+'</div>';
@@ -1173,12 +1267,12 @@ function winWorld(pid){
   R+='</div></div>';
   if(can('order')){
     R+='<div id="ordblk">'+sec(esc(T('u_orderNew')),esc(fill(T('u_yardGen'),{g:roman(G.gen||0)})))+'<div class="ord">';
-    CLASSES.forEach(function(cls){ var hi=orderHull(G,cls,pid); if(hi===null||!clsSeen(cls)) return; var h=HULLS[hi];   // v4.42: the generation before while the current one wants parts Earth has not got
+    CLASSES.forEach(function(cls){ var gp=genPick(cls,pid); if(!gp||!clsSeen(cls)) return; var hi=gp.hi, h=HULLS[hi];   // v4.42: the generation before while the current one wants parts Earth has not got
       if(reach(G)<h.reach){ R+='<div class="oc dis">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="why dim">'+esc(fill(T('u_needLive'),{n:h.reach}))+'</div></div>'; return }
       var w=orderCheck(G,pid,cls,hi); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth);
       var okb=(typeof w==='string'?w:w[0])==='ok';
-      R+='<div class="oc'+(okb?'':' dis')+'" id="oc-'+cls+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b>'+
-        (w==='range'?'':'<div class="oy">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,{hull:hi}))}))+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
+      R+='<div class="oc'+(okb?'':' dis')+'" id="oc-'+cls+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b>'+genSeg(cls,gp)+
+        '<div class="oh">'+ic('hold',14,C.mid)+num(h.cap)+'</div>'+(w==='range'?'':'<div class="oy">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,{hull:hi}))}))+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
         (w==='range'?'<div class="why">'+esc(fill(T('u_tooShort'),{n:hullRange(h)+1}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:h.days})),'order',{p:pid,c:cls,h:hi},'pri','build',offW(w)))+olderWhy(cls,hi)+'</div>' });
     R+='</div></div>' }
   return '<div class="win">'+head(esc(pname(pid)),wsub(p),wmark(p.kind,true,16))+'<div class="bd two"><div>'+L0+'</div><div>'+R+'</div></div>'+nav+'</div>' }
@@ -1193,22 +1287,31 @@ function picker(){ var a=U.pop.split(':'), kind=a[1], s=shipById(G,+a[2]); if(!s
   var ws=Object.keys(G.colonies).filter(function(k){ return k!==here&&!isDead(k)&&!evacGoing(k) }).sort(function(x,y){ return planet(x).sec-planet(y).sec||planet(x).ang-planet(y).ang });
   return '<div class="pick">'+sec(esc(fill(T(kind==='move'?'u_moveTo':'u_sendTo'),{h:hname(s)})).toUpperCase())+'<div class="lst">'+
     (ws.length?ws.map(function(k){ var p=planet(k), ok=canReachSector(s,p.sec);
-      return '<button type="button" '+(ok?'data-act="pickgo" data-v="'+kind+':'+s.id+':'+k+'"':'class="dis"')+'>'+wmark(p.kind,true)+'<b>'+esc(pname(k))+'</b><span>'+esc(ok?fill(T('u_ringN'),{n:p.sec+1})+' · '+fill(T('u_hullsN'),{n:onLine(G,k).length}):T('u_outReach'))+'</span></button>' }).join(''):'<div class="why">'+esc(T('u_noWorlds'))+'</div>')+
+      var f=lineFit(G,k), gap=f&&f.gap>0.01;   // Nikita, 02.11: what the line carries, what it must, what this hull would add; ring and kind right by the name
+      return '<button type="button" '+(ok?'data-act="pickgo" data-v="'+kind+':'+s.id+':'+k+'"':'class="dis"')+'>'+wmark(p.kind,true)+'<b>'+esc(pname(k))+'</b><i>'+esc(fill(T('u_ringN'),{n:p.sec+1})+' · '+kindWord(p.kind).toLowerCase())+'</i><span'+(ok&&gap?' class="short"':'')+'>'+esc(ok&&f?fill(T('u_pickRate'),{c:dec(f.carries),m:dec(f.need),a:dec(hullYield(G,k,s))}):T('u_outReach'))+'</span></button>' }).join(''):'<div class="why">'+esc(T('u_noWorlds'))+'</div>')+
     '</div><button type="button" class="cancel" data-act="pop" data-v="">'+esc(T('u_keep'))+'</button></div>' }
 
+/* Nikita, 26.10 («мочь строить предыдущее поколение») and F-56: both generations are named with their parts, the player chooses. Until then the yards offer what orderHull offers */
+function genPick(cls,pid){ var ci=currentHull(G,cls); if(ci===null) return null; var c=HULLS[ci], prev=null;
+  for(var i=0;i<HULLS.length;i++){ var o=HULLS[i]; if(o.key===cls&&o.gen===c.gen-1&&o.gen>=(G.gen||0)-K.GEN_OVERLAP&&reach(G)>=o.reach) prev=i }
+  var sel=U.ordSel&&U.ordSel[cls], hi=(sel===ci||(prev!==null&&sel===prev))?sel:orderHull(G,cls,pid);
+  return {hi:hi,ci:ci,prev:prev} }
+function genSeg(cls,g){ if(g.prev===null) return ''; var b=function(i){ var h=HULLS[i]; return '<button type="button" data-act="ordgen" data-v="'+cls+':'+i+'" class="'+(g.hi===i?'on':'')+'">'+roman(h.gen)+' '+resIc('parts',11)+num(h.parts||0)+'</button>' };
+  return '<div class="seg ogen">'+b(g.ci)+b(g.prev)+'</div>' }
 /* v4.42: under a card that offers the generation before — why: the current one wants parts Earth has not got */
-function olderWhy(cls,hi){ var ci=currentHull(G,cls); if(ci===null||ci===hi) return ''; var c=HULLS[ci];
+function olderWhy(cls,hi){ var ci=currentHull(G,cls); if(ci===null||ci===hi) return ''; var c=HULLS[ci]; if(G.earth.parts>=(c.parts||0)) return '';
   return '<div class="why dim">'+esc(fill(T('u_olderGen'),{g:roman(c.gen),n:num(Math.ceil((c.parts||0)-G.earth.parts))}))+'</div>' }
 /* ---------- Yard: what is being built, a free hull of the current generation, the pier ---------- */
+/* v4.49 (Claude's playtest 04.11): the order cards come first — under the list of what is building they slid down a row with every order */
 function winYard(){ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
-  h+=sec(esc(T('u_inYards')),b.length);
-  h+=b.length?b.map(function(s){ var w=forWorld(s); return '<div class="yr2">'+shipIc(shipClass(s),30)+'<b>'+esc(T(shipClass(s))+' '+roman(hullGen(s))+' '+fill(T('hullNo'),{n:s.id}))+'</b><span>→ '+esc(w?fill(T('u_lineOf'),{p:pname(w)}):T('u_freeHull'))+'</span><div class="bar"><u style="width:'+Math.round(hullProgress(s)*100)+'%"></u></div><i>'+esc(fill(T('u_yearsN'),{n:s.t}))+'</i></div>' }).join(''):hint(esc(T('u_yardsIdle')));
   h+=sec(esc(T('u_buildFree')))+'<div class="ord big">';
-  CLASSES.forEach(function(cls){ var hi=orderHull(G,cls); if(hi===null||!clsSeen(cls)) return; var hl=HULLS[hi], c=hullCost(hl);   // v4.42: see orderHull
+  CLASSES.forEach(function(cls){ var gp=genPick(cls); if(!gp||!clsSeen(cls)) return; var hi=gp.hi, hl=HULLS[hi], c=hullCost(hl);   // v4.42: see orderHull
     var w=reach(G)<hl.reach?['needreach',{n:hl.reach,r:reach(G)}]:shortWhy(c,G.earth), okb=w[0]==='ok';
-    h+='<div class="oc'+(okb?'':' dis')+'">'+shipIc(cls,64)+'<b>'+esc(T(cls)+' '+roman(hl.gen))+'</b><div class="ico3">'+specIcons(hl)+'</div><div class="prow">'+price(c,G.earth)+'</div>'+
+    h+='<div class="oc'+(okb?'':' dis')+'">'+shipIc(cls,64)+'<b>'+esc(T(cls)+' '+roman(hl.gen))+'</b>'+genSeg(cls,gp)+'<div class="ico3">'+specIcons(hl)+'</div><div class="prow">'+price(c,G.earth)+'</div>'+
       (reach(G)<hl.reach?'<div class="why dim">'+esc(fill(T('u_needLive'),{n:hl.reach}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:hl.days})),'build',{h:hi},'pri','build',offW(w)))+olderWhy(cls,hi)+'</div>' });
-  h+='</div>'+sec(esc(T('u_atPier')),esc(fill(T('u_hullsN'),{n:pier.length})).toUpperCase());
+  h+='</div>'+sec(esc(T('u_inYards')),b.length);
+  h+=b.length?b.map(function(s){ var w=forWorld(s); return '<div class="yr2">'+shipIc(shipClass(s),30)+'<b>'+esc(T(shipClass(s))+' '+roman(hullGen(s))+' '+fill(T('hullNo'),{n:s.id}))+'</b><span>→ '+esc(w?fill(T('u_lineOf'),{p:pname(w)}):T('u_freeHull'))+'</span><div class="bar"><u style="width:'+Math.round(hullProgress(s)*100)+'%"></u></div><i>'+esc(fill(T('u_yearsN'),{n:s.t}))+'</i></div>' }).join(''):hint(esc(T('u_yardsIdle')));
+  h+=sec(esc(T('u_atPier')),esc(fill(T('u_hullsN'),{n:pier.length})).toUpperCase());
   h+=pier.length?'<div class="pier">'+pier.sort(function(a,b){ return (b.reserve?1:0)-(a.reserve?1:0)||hullGen(b)-hullGen(a)||a.id-b.id }).map(function(s){ var v=scrapValue(HULLS[s.hull]), arm=U.scrapArm===s.id;
     return '<div class="pc'+(s.reserve?' res':'')+(s.mutiny?' mut':'')+'">'+shipIc(shipClass(s),34)+genB(hullGen(s),hullGen(s)<g-1)+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+
       (s.reserve?'<em>'+ic('reserve',14,C.ark)+esc(T('u_stReserve').toUpperCase())+'</em>':(s.mutiny?'<em>'+ic('mutiny',14,C.red)+esc(T('u_stMutiny').toUpperCase())+'</em>':''))+
@@ -1258,8 +1361,14 @@ function startDriveWhy(pid){ if(G.drive) return 'running';
   if(settledCount(G)<driveReachFor(G)) return ['needsettled',{n:driveReachFor(G),r:settledCount(G)}];
   if(!pid) return worksList().length?['nohost',{n:K.DRIVE_POP}]:['nohost',{n:K.DRIVE_POP}];
   return 'ok' }
+/* Nikita, 26.10: «непонятно что за программа двигателя» — a note that opens and closes any time; the choice stays between runs */
+function driveHelpOn(){ if(U.driveHelp===undefined){ U.driveHelp=false; try{ U.driveHelp=localStorage.getItem('lb.driveHelp')==='1' }catch(e){} } return U.driveHelp }
+function driveHelp(work){ var w=K.ARK_WAKE, pc=function(x){ return Math.round(x*100) };
+  return '<div class="dhelp"><p>'+esc(T('u_dh1'))+'</p><p>'+esc(T('u_dh2'))+'</p><p>'+esc(fill(T('u_dh3'),{n:num(work)}))+'</p><p>'+esc(T('u_dh4'))+'</p>'+
+    (can('ark')&&G.night&&G.arkMark!==null?'<p style="color:'+C.ark+'">'+esc(fill(T('u_dh5'),{g:roman(G.arkMark),a:pc(w[0]),b:pc(w[1]),c:pc(w[2]),d:pc(w[3])}))+'</p>':'')+'</div>' }
 function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWorkFor(G), h='';
-  h+=sec(esc(T('u_hullGen')),roman(g)+' → '+roman(g+1));
+  h+=sec(esc(T('u_hullGen'))+'<button type="button" class="qm'+(driveHelpOn()?' on':'')+'" data-act="drivehelp" aria-expanded="'+driveHelpOn()+'" title="'+attr(T('u_dhQ'))+'" aria-label="'+attr(T('u_dhQ'))+'">?</button>',roman(g)+' → '+roman(g+1));
+  if(driveHelpOn()) h+=driveHelp(work);
   h+='<div class="gnow"><span class="gen big">'+roman(g)+'</span>'+ic('tTech',18,C.mid)+'<span class="gen big nx">'+roman(g+1)+'</span>'+(G.drive?'<span class="gtx">'+esc(fill(T('u_driveAt'),{p:pname(G.drive)}))+'</span>':'')+'</div>';
   h+='<div class="lab">'+esc(fill(T('u_step1'),{n:Math.min(s,need),m:need}))+'</div>'+steps(s,need,C.food);
   var ws=worksList(), have=G.drive?G.driveWork:G.earth.parts+ws.reduce(function(a,k){ return a+(G.colonies[k].store.parts||0) },0);
@@ -1274,7 +1383,7 @@ function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=
   // the next generation
   h+='<div class="lab">'+esc(fill(T('u_genGives'),{g:roman(g+1)}))+'</div><div class="spec"><div class="sh"><span></span><span>'+ic('hold',13,C.mid)+esc(T('u_hold'))+'</span><span>'+ic('speed',13,C.mid)+esc(T('u_speedH'))+'</span><span>'+ic('range',13,C.mid)+esc(T('u_reachH'))+'</span></div>';
   CLASSES.forEach(function(cls,j){ var a=HULLS[currentHull(G,cls)], b=genHull(g+1,j);
-    h+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span><i>'+a.speed.toFixed(2)+'</i>'+b.speed.toFixed(2)+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
+    h+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span><i>'+speedTxt(a)+'</i>'+speedTxt(b,lvl+1)+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
   h+='</div>';
   if(G.night&&can('ark')&&G.arkMark!==null){ var wn=Math.round(wakeAt(G,lvl)*100), wx=Math.round(wakeAt(G,lvl+1)*100); if(wx>wn) h+=hint('<span style="color:'+C.ark+'">'+ic('ark',14,C.ark)+' '+esc(fill(T('u_arkWakeNext'),{a:wn,b:wx}))+'</span>') }
   // rings
@@ -1295,15 +1404,19 @@ function arkDriveTxt(){ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.
   if(f.st==='settled') return [fill(T('u_arkNeedW'),{g:roman(G.arkMark),n:f.n,r:f.r}),C.red];
   if(f.st==='host') return [fill(T('u_arkNoHost'),{g:roman(G.arkMark)}),C.red];
   return [fill(T('u_arkStall'),{g:roman(G.arkMark)}),C.red] }
+/* Nikita, 02.11 (35 presses at the end of run 221175121): every hull on a line, in one press — the same two orders the hull rows give. A hull on an evacuation or a landing finishes first */
+function homeList(){ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!s.mutiny&&!s.job&&(s.from||s.pend) }) }
 function winArk(){
   if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_timePaused')),ic('ark',18,C.ark))+'<div class="bd"><div class="big mid">'+ic('night',22,C.mid)+esc(T('u_noDate'))+'</div>'+hint(esc(fill(T('u_noDateHint'),{n:K.NIGHT_TRIGGER_SECTORS,y:K.NIGHT_TRIGGER_YEAR})))+'</div></div>';
   var lv=arkLevel(G), top=K.ARK_LEVELS.length, ad=arkDriveTxt(), lvl=G.driveLvl||0, h='';
   h+='<div class="arktop"><div>'+sec(esc(T('u_theNight')))+'<div class="hero" style="color:'+C.red+'">'+G.night+'<span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>'+
-    row(ic('drive',13,C.ark)+esc(T('u_arkDrive')),esc(ad[0]),ad[1])+row(esc(T('u_wake')),arkReady(G)?Math.round(arkWake(G)*100)+'%':'—');
+    row(ic('drive',13,C.ark)+esc(T('u_arkDrive')),esc(ad[0]),ad[1])+row(esc(T('u_wake')),arkReady(G)?Math.round(arkWake(G)*100)+'%':'—')+
+    (arkLvlWake(G)>0?row(ic('ark',13,C.ark)+esc(fill(T('u_wakeStores'),{l:roman(lv-1)})),'+'+Math.round(arkLvlWake(G)*100)+'%',C.ark):'');   // v4.49: what the paid level adds
   if(lvl+1>=G.arkMark&&wakeAt(G,lvl+1)>arkWake(G)){ var f2=driveForecast(G,lvl+1); h+=row(esc(fill(T('u_withGen'),{g:roman(lvl+1),y:f2.st==='ok'?'≈ '+f2.y:'—'})),Math.round(wakeAt(G,lvl+1)*100)+'%',C.ark) }
   h+='</div><div>'+sec(esc(T('u_levels')),lv+' / '+top)+'<div class="lv">';
   for(var l=1;l<=top;l++){ var cap=arkCap(l), cls=l<=lv?'paid':(l===lv+1?'next':'');
-    h+='<div class="lc '+cls+'"><b>'+roman(l-1)+'</b><span>'+esc(T('u_takesAlong'))+'</span><div class="prow">'+price(cap,null,11)+'</div>';
+    var lw=K.ARK_LVL_WAKE[l-1]||0;   // v4.49: levels II–IV wake more of the sleepers
+    h+='<div class="lc '+cls+'"><b>'+roman(l-1)+'</b>'+(lw?'<span'+(l<=lv?'':' style="color:'+C.ark+'"')+'>'+esc(fill(T('u_lvWake'),{n:Math.round(lw*100)}))+'</span>':'<span>'+esc(T('u_lvTicket'))+'</span>')+'<span>'+esc(T('u_takesAlong'))+'</span><div class="prow">'+price(cap,null,11)+'</div>';
     if(l<=lv) h+='<em>'+esc(T('u_paid'))+'</em>';
     else { var owed=arkOwed(G,l), w=arkCheck(G,l); if(w==='ok') w=shortWhy(owed,G.earth);
       h+='<span>'+esc(T('u_price'))+'</span><div class="prow">'+price(owed,G.earth,11)+'</div>'+(l===lv+1||(typeof w!=='string'&&w[0]==='ok')?btn(esc(fill(T('u_buyLv'),{l:roman(l-1)})),'arkbuy',{l:l},(typeof w!=='string'&&w[0]==='ok')?'pri':'',null,offW(w)):'') }
@@ -1314,7 +1427,10 @@ function winArk(){
   CLASSES.forEach(function(cls){ var mine=pier.filter(function(s){ return shipClass(s)===cls }); h+='<div class="cg">';
     for(var i=0;i<cv.need[cls];i++){ var s=mine[i]; h+='<div class="slot'+(s?' on':'')+'">'+shipIc(cls,40)+'<span>'+esc(s?T(cls)+' '+roman(hullGen(s))+' '+fill(T('hullNo'),{n:s.id}):T('u_empty').toUpperCase())+'</span></div>' }
     h+='</div>' });
-  h+='</div>'+hint(esc(fill(T('u_convoyHint'),{g:roman(cv.gen)})))+btn(esc(T('u_toYard')),'tab',{v:'yard'},'','tYard')+'</div>';
+  var over=[]; CLASSES.forEach(function(c){ over=over.concat(pier.filter(function(s){ return shipClass(s)===c }).slice(cv.need[c])) });
+  var hl=can('reserve')?homeList():[];
+  h+='</div>'+(over.length?hint('<span style="color:'+C.ark+'">'+ic('reserve',14,C.ark)+' '+esc(fill(T('u_convoyOver'),{n:num(over.reduce(function(a,s){ return a+(s.crew||0) },0)),k:over.length}))+'</span>'):'')+hint(esc(fill(T('u_convoyHint'),{g:roman(cv.gen)})))+btn(esc(T('u_toYard')),'tab',{v:'yard'},'','tYard')+
+    (hl.length?btn(esc(fill(T(U.homeArm?'u_allHomeArm':'u_allHome'),{n:hl.length})),'allhome',null,U.homeArm?'red':'','reserve')+hint(esc(T('u_allHomeHint'))):'')+'</div>';
   var short=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) short.push(d+' × '+T(c)) });
   var lb=leftBehind(G), souls=arkSouls(G), wk=arkWake(G), stays=lv<1?T('u_vNoLevel'):(!arkReady(G)?fill(T('u_vNoDrive'),{g:roman(G.arkMark)}):(!cv.ok?fill(T('u_vConvoy'),{s:short.join(', ')}):null));
   h+=sec(esc(T('u_ifToday')))+'<div class="verdict'+(stays?'':' ok')+'"><b>'+esc(T(stays?'u_arkStays':'u_arkSails'))+'</b><span>'+esc(stays||fill(T('u_vSails'),{s:num(souls),w:num(Math.floor(souls*wk)),l:num(lb.home+lb.hulls+lb.colonies+lb.transit)}))+'</span><i>'+esc(fill(T('u_vBoard'),{s:num(souls)}))+'</i></div>';
@@ -1323,21 +1439,31 @@ function winArk(){
 /* ---------- the advisor: worlds only, worst first (Nikita 15.10: «не понимаю, что делать») ----------
    A row says the problem in numbers, what follows, and a button that names the fix; the button opens the world with the
    place of the fix lit (a yellow ring that fades in ~3 s). */
+/* v4.50 (Nikita 05.11, «Да»): a mine, farm or well with no line is grey and out of the count while Earth's stock of what it digs lasts
+   QUIET_YEARS — at Earth's own burn or at the real fall of the stock, whichever is faster (fuel has no burn of its own: at least QUIET_FUEL).
+   The works always count — parts are always short (Claude — awaiting review) */
+var QUIET_YEARS=200, QUIET_FUEL=1000;
+function quietDep(p,dep){ if(p.kind==='works') return false; var t=trend(dep)||0, nd=G.need||earthNeed(G);   // no trend yet (first years, after a load): Earth's own burn alone
+  return G.earth[dep]>=QUIET_YEARS*Math.max(nd[dep]||0,-t,dep==='fuel'?QUIET_FUEL/QUIET_YEARS:0.1) }
 function advRows(){ if(!G) return []; var out=[], used=[];   // v4.38: a hull named for one line is not offered to the next
   Object.keys(G.colonies).forEach(function(pid){ var p=planet(pid), c=G.colonies[pid], st=wst(pid), w=pname(pid), dep=p.kind==='works'?'parts':p.dep, going=evacGoing(pid);
     if(going) return;
-    if(st==='dead') out.push([C.red,fill(T('u_aDead'),{w:w}),fill(T('u_aDeadC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac']);
-    else if(st==='cut') out.push([C.red,fill(T('u_aCut'),{w:w}),fill(T('u_aCutC'),{n:num(c.pop)}),pid,T('u_fixSee'),'lift']);
-    else if(st==='starve'){ var wh=worksHungry(pid); out.push([C.red,fill(T('u_aStarve'),{w:w,r:T(wh.food<wh.metal?'food':'metal').toLowerCase()}),T('u_aStarveC'),pid,T('u_fixAdd'),'add']) }
-    var ll=lastLift(G,pid); if(can('lift')&&ll&&ll.st==='open'&&ll.n<=K.LIFT_WARN) out.push([ll.n<=25?C.red:C.people,fill(T('u_aLift'),{w:w,n:ll.n,y:ll.y}),fill(T('u_aLiftC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac']);
-    if(st==='noline') out.push([C.people,fill(T('u_aNoLine'),{w:w}),T('u_aNoLineC'),pid,T('u_fixAdd'),'add']);
+    if(st==='dead') out.push([C.red,fill(T('u_aDead'),{w:w}),fill(T('u_aDeadC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac','evac']);
+    else if(st==='cut') out.push([C.red,fill(T('u_aCut'),{w:w}),fill(T('u_aCutC'),{n:num(c.pop)}),pid,T('u_fixSee'),'lift','evac']);
+    else if(st==='starve'){ var wh=worksHungry(pid); out.push([C.red,fill(T('u_aStarve'),{w:w,r:T(wh.food<wh.metal?'food':'metal').toLowerCase()}),T('u_aStarveC'),pid,T('u_fixAdd'),'add','forge']) }
+    var ll=lastLift(G,pid); if(can('lift')&&ll&&ll.st==='open'&&ll.n<=K.LIFT_WARN) out.push([ll.n<=25?C.red:C.people,fill(T('u_aLift'),{w:w,n:ll.n,y:ll.y}),fill(T('u_aLiftC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac','evac']);
+    var sy=seamYears(pid); if(sy<SEAM_YEARS&&st!=='dead'&&st!=='cut') out.push([C.people,fill(T('u_aSeam'),{w:w,n:num(sy)}),T('u_aSeamC'),pid,T('u_fixSee'),'add','seam']);
+    if(st==='noline') out.push([quietDep(p,dep)?C.mid:C.people,fill(T('u_aNoLine'),{w:w}),T('u_aNoLineC'),pid,T('u_fixAdd'),'add','noline']);
+    else if(st==='half'&&p.kind==='works'){ var ff=lineFit(G,pid), fh=lineFix(pid,used);   // Nikita, 02.11 (forge-stat): the works say it the moment the line is thin
+      out.push([C.people,fill(T('u_aForge'),{w:w,c:dec(ff.carries),n:dec(ff.need)}),fh?fh[0]:T('u_aForgeC'),pid,fh?fh[1]:T('u_fixAdd'),fh?fh[2]:'add','forge']) }
     else if(st==='half'){ var lr=lineRate(G,pid), hp=lineFix(pid,used);
-      out.push([C.people,fill(T('u_aHalf'),{w:w,c:dec(lr.carries),m:dec(lr.makes),r:T(dep).toLowerCase()}),hp?hp[0]:fill(T('u_aHalfC'),{n:num(lr.sitting)}),pid,hp?hp[1]:T('u_fixAdd'),hp?hp[2]:'add']) }
-    else if(st==='ok'&&can('fleet')){ var sp=lineSpare(G,pid);   // v4.38: a hull too many — last in the list, grey
-      if(sp.length){ var sf=lineFit(G,pid); out.push([C.mid,fill(T('u_aSpare'),{w:w,c:dec(sf.carries),m:dec(sf.need),r:T(dep).toLowerCase()}),sp.length>1?fill(T('u_aSpareN'),{n:sp.length,h:hname(sp[0])}):fill(T('u_aSpareC'),{h:hname(sp[0])}),pid,T('u_fixHull'),'hr:'+sp[0].id]) } }
-    else if(st==='dry') out.push([C.people,fill(T('u_aDry'),{w:w,n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()}),T('u_aDryC'),pid,T('u_fixSee'),'add']);
-    if(can('machines')&&c.kit&&lineHold(G,pid)<c.kit.w) out.push([C.people,fill(T('u_aKit'),{w:w,t:roman(c.kit.tier-1),n:num(c.kit.w),h:num(lineHold(G,pid))}),T('u_aKitC'),pid,T('u_fixOrder'),'ord']);
-    if(can('machines')&&kitTier(c)>0&&!kitLive(c)) out.push([C.people,fill(T('u_aKitFuel'),{w:w}),T('u_aKitFuelC'),pid,T('u_fixSee'),'mach']);
+      out.push([C.people,fill(T('u_aHalf'),{w:w,c:dec(lr.carries),m:dec(lr.makes),r:T(dep).toLowerCase()}),hp?hp[0]:fill(T('u_aHalfC'),{n:num(lr.sitting)}),pid,hp?hp[1]:T('u_fixAdd'),hp?hp[2]:'add','line']) }
+    else if(st==='ok'&&can('fleet')){ var sp=lineSpare(G,pid), sf=lineFit(G,pid);   // v4.38: a hull too many — last in the list, grey
+      if(sp.length&&sf.carries>=sf.need*SPARE_WARN) out.push([C.mid,fill(T('u_aSpare'),{w:w,c:dec(sf.carries),m:dec(sf.need),r:T(dep).toLowerCase()}),sp.length>1?fill(T('u_aSpareN'),{n:sp.length,h:hname(sp[0])}):fill(T('u_aSpareC'),{h:hname(sp[0])}),pid,T('u_fixHull'),'hr:'+sp[0].id,'line']) }
+    else if(st==='dry') out.push([C.people,fill(T('u_aDry'),{w:w,n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()}),T('u_aDryC'),pid,T('u_fixSee'),'add','seam']);
+    if(can('machines')&&c.kit&&lineHold(G,pid)<c.kit.w) out.push([C.people,fill(T('u_aKit'),{w:w,t:roman(c.kit.tier-1),n:num(c.kit.w),h:num(lineHold(G,pid))}),T('u_aKitC'),pid,T('u_fixOrder'),'ord','line']);
+    // v4.46: a thin line already speaks for the machines — one card a world
+    if(can('machines')&&kitTier(c)>0&&!kitLive(c)&&st!=='half'&&st!=='starve') out.push([C.people,fill(T('u_aKitFuel'),{w:w}),T('u_aKitFuelC'),pid,T('u_fixSee'),'mach',p.kind==='works'?'forge':'line']);
   });
   var rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
   return out.sort(function(a,b){ return rk(a)-rk(b) }) }
@@ -1348,8 +1474,13 @@ function lineFix(pid,used){ var h=lineHelp(G,pid,{noMove:!can('fleet'),cls:clsSe
   if(h.kind==='free'){ d.h=hname(s); return [fill(T('u_aFixFree'),d),T('u_assign'),'free:'+s.id] }
   if(h.kind==='move'){ d.h=hname(s); d.p=pname(h.from); return [fill(T('u_aFixMove'),d),T('u_moveHere'),'other:'+s.id] }
   d.h=T(h.cls)+' '+roman(HULLS[h.hull].gen); return [fill(T('u_aFixBuild'),d),T('u_fixOrder'),can('order')?'oc:'+h.cls:'add'] }
-function popAdv(){ var a=advRows();
-  return '<div class="advl">'+(a.length?a.map(function(r){ return '<button type="button" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+r[0]+'"></i><b>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join(''):'<div class="none">'+esc(T('u_advNone'))+'</div>')+'</div>' }
+/* Nikita, 02.11 («всё сливается и глазу тяжело»): five kinds, each with its own mark and colour; the worst kind first, a count for each. Red still means urgent, grey means it can wait */
+var ADV_T=[{k:'evac',i:'send',c:'#FF2A1A',l:'u_atEvac'},{k:'forge',i:'kit',c:'#FF8A1F',l:'u_atForge'},{k:'noline',i:'takeoff',c:'#FFD23F',l:'u_atNoLine'},{k:'seam',i:'survey',c:'#4FA3FF',l:'u_atSeam'},{k:'line',i:'hold',c:'#B48CFF',l:'u_atLine'}];
+function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
+  if(!a.length) return '<div class="advl"><div class="none">'+esc(T('u_advNone'))+'</div></div>';
+  var gs=ADV_T.map(function(t,i){ var rows=a.filter(function(r){ return r[6]===t.k }); var w=rows.reduce(function(m,r){ return Math.min(m,rk(r)) },9), live=rows.filter(function(r){ return r[0]!==C.mid }).length; return {t:t,i:i,rows:rows,w:w,c:w===2?C.mid:t.c,n:live||rows.length} })   // v4.50: a group of grey rows is grey, its count is the top bar's.filter(function(g){ return g.rows.length }).sort(function(x,y){ return x.w-y.w||x.i-y.i });
+  return '<div class="advl"><div class="advc">'+gs.map(function(g){ return '<span style="color:'+g.c+'">'+ic(g.t.i,14,g.c)+'<b>'+g.n+'</b></span>' }).join('')+'</div>'+gs.map(function(g){
+    return '<div class="advh" style="color:'+g.c+'">'+ic(g.t.i,15,g.c)+'<span>'+esc(T(g.t.l))+'</span><b>'+g.n+'</b></div>'+g.rows.map(function(r){ return '<button type="button" data-t="'+g.t.k+'" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+(r[0]===C.mid?C.mid:g.t.c)+'"></i><b'+(r[0]===C.red?' style="color:'+C.red+'"':(r[0]===C.mid?' style="color:'+C.mid+'"':''))+'>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join('') }).join('')+'</div>' }
 function popMenu(){
   return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('u_mLang'))+' <b>'+(U.lang==='en'?'EN':'RU')+'</b> · '+(U.lang==='en'?'RU':'EN')+'</button>'+
     '<button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
@@ -1371,8 +1502,9 @@ function menuOpen(){ U.menu=true; draw();
     setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
     cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return T('mn_contFail') },
     load:function(){ el('loadin').click() },
+    pressNew:function(){ clockOn('new') },
     newRun:function(){ U.langPicked=true; act(G,'menu',{go:'new'}) },
-    test:function(){ U.langPicked=true; tutMute(); act(G,'menu',{go:'test'}); if(window.LBdebug) window.LBdebug.on(true) },   // v4.43 (Nikita, 25.10): Test play opens the debug panel (web/debug.js)
+    test:function(){ U.langPicked=true; clockOn('test'); tutMute(); act(G,'menu',{go:'test'}); if(window.LBdebug) window.LBdebug.on(true) },   // v4.43 (Nikita, 25.10): Test play opens the debug panel (web/debug.js)
     closed:function(){ U.menu=false; draw() }}) }
 
 /* ---------- save and load: a file, and the last autosave in this browser ---------- */
@@ -1383,9 +1515,10 @@ function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinit
   if(!o||!o.G||!o.SECTORS) throw new Error('not a save');
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
   G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
+  if(!G.clock){ clockOn('save'); G.clock.year=G.day }   // a save from before v4.46: the clock counts from the load
   var u=o.U||{}; if(!U.langPicked&&u.lang) U.lang=u.lang; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] }); if(SPEEDS.indexOf(U.speed)<0) U.speed=4;   // a save from before v4.42 may hold 10×
   tutLoad(u.tut);
-  U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; lineWhy={}; U.langPicked=true; HTMLCACHE={};
+  U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; U.langPicked=true; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; window.LN=G; draw() }
 function autosave(){ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
 function loadAuto(){ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
@@ -1408,15 +1541,7 @@ function copyLog(){ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(function(){ say('copied') },function(){ say('copyfail') }); done=true } }catch(e){}
   if(!done){ try{ done=document.execCommand('copy') }catch(e){} say(done?'copied':'copyfail') } }
 
-/* ---------- skip: the clock runs on until something wants the desk ---------- */
-function skipAhead(){ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now(), d0=G.day;
-  for(var i=0;i<500&&!G.over;i++){ tick(G);
-    if(G.shiftOpen){ if(!U.shiftStop) G.shiftOpen=false; else break }
-    if(G.night&&!G.nightSeen) break;
-    if(G.pauseNow){ G.pauseNow=false; toastLast(); break }
-    if(tutWants()) break;   // v4.36: she has something to say
-    if(performance.now()-t0>1500) break }
-  act(G,'skip',{from:d0,to:G.day}); U.paused=true; toast(esc(fill(T('u_skipped'),{n:G.day-d0,y:G.day})),'',4000); autosave(); draw() }
+/* v4.50 (Nikita 05.11: «пропуск целиком, нельзя проматывать время, можно только его скорость менять»): Skip is gone — the clock has only its speeds */
 
 /* ---------- presses ---------- */
 /* v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier on the line, which is not a refusal */
@@ -1426,12 +1551,13 @@ function lineWait(sid){ return lineWhy[sid]?whyText(lineWhy[sid]):'' }
 function resLeft(sid){ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false) }
 function doAct(a,b){
   var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
+  if(a!=='allhome') U.homeArm=false;
   if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null } else U.win=U.win===v?null:v; SFX.play('tab') }
   else if(a==='world'){ openWorld(v,d.f) }
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
-  else if(a==='spd'){ if(v==='0') U.paused=!U.paused; else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
-  else if(a==='skip') { skipAhead(); return }
+  else if(a==='spd'){ if(v==='0') pauseToggle(); else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
+  else if(a==='hack'){ U.hackLater=false }   // the put-off hack: hackCheck opens it on the next frame
   else if(a==='zoom'){ if(v==='fit'){ VFIT=true; viewFit() } else viewZoom(v==='in'?0.75:1.35) }
   else if(a==='addtab') U.addTab=v;
   else if(a==='filter') U.filter=v;
@@ -1445,6 +1571,8 @@ function doAct(a,b){
     else { var wr2=(shipById(G,sid)||{}).reserve; res=setLine(G,sid,pid,'earth'); act(G,'line',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)}; res=lineRes(res,sid,pid); if(res==='ok'&&lineWait(sid)){ okc='ok_assignWait'; okp.w=lineWait(sid) } if(wr2&&res==='ok') resLeft(sid) } }
   else if(a==='order'){ var ohi=d.h!==undefined?+d.h:null; res=orderFor(G,d.p,d.c,ohi); act(G,'order',{p:d.p,c:d.c,h:ohi},res); if(res==='ok'){ var oh=HULLS[ohi!==null?ohi:currentHull(G,d.c)]; okc='ok_order'; okp={p:pname(d.p),c:hullName(oh),y:oh.days} } }
   else if(a==='build'){ var bh=HULLS[+d.h]; res=buildShip(G,+d.h); act(G,'build',{hull:bh.key,gen:bh.gen},res); okc='ok_build'; okp={n:G.nextShip-1,h:hullName(bh),y:bh.days} }
+  else if(a==='drivehelp'){ U.driveHelp=!driveHelpOn(); try{ localStorage.setItem('lb.driveHelp',U.driveHelp?'1':'0') }catch(e){} }
+  else if(a==='allhome'){ if(!U.homeArm) U.homeArm=true; else { U.homeArm=false; var hl=homeList(), cg=convoyGen(G); hl.forEach(function(s){ if(hullGen(s)>=cg){ res=setReserve(G,s.id,true); act(G,'reserve',{hull:s.id,on:true},res) } else { res=clearLine(G,s.id); act(G,'release',{hull:s.id},res) } }); okc='ok_allhome'; okp={n:hl.length} } }
   else if(a==='reserve'){ var ron=d.on==='1'; res=setReserve(G,+d.s,ron); act(G,'reserve',{hull:+d.s,on:ron},res); okc=ron?'ok_reserve':'ok_unreserve'; okp={n:+d.s} }
   else if(a==='scrap'){ var sid2=+d.s; if(U.scrapArm!==sid2){ U.scrapArm=sid2 } else { U.scrapArm=null; res=scrap(G,sid2); act(G,'scrap',{hull:sid2},res); okc='ok_scrap' } }
   else if(a==='evac'){ var ep=d.p, ec=pickCourier(ep), ecol=G.colonies[ep];
@@ -1456,13 +1584,16 @@ function doAct(a,b){
   else if(a==='driveat') U.driveAt=v;
   else if(a==='drive'){ var dp=d.p||driveHost(); res=startDrive(G,dp); act(G,'drive',{p:dp,mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={p:pname(dp)} }
   else if(a==='survey'){ var nsec=secName(SECTORS.length); res=survey(G); act(G,'survey',{sector:SECTORS.length},res); okc='ok_survey'; okp={s:nsec} }
+  else if(a==='ws'){ res=setWorkshop(G,d.on==='1'); act(G,'ws',{on:d.on==='1'},res) }
   else if(a==='arkbuy'){ res=arkBuy(G,+d.l); act(G,'arkbuy',{l:+d.l},res); okc='ok_arkbuy'; okp={n:roman(+d.l-1)}; if(res==='metal'||res==='parts'||res==='food'||res==='fuel'){ var sw=shortWhy(arkOwed(G,+d.l),G.earth); say(sw[0],sw[1]); draw(); return } }
   else if(a==='search'){ var m=shipById(G,+d.m), hs=m?bestSearch(m):null; res=hs?search(G,hs.id,+d.m):'nofree'; act(G,'search',{m:+d.m},res); okc='ok_search'; okp={n:+d.m} }
   else if(a==='nightok'){ G.nightSeen=true }
   else if(a==='shiftok'){ var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; act(G,'shift_go',{stop:U.shiftStop}); autosave() }
   else if(a==='noteok') U.notes.shift();
-  else if(a==='notego'){ U.notes.shift(); U.win=null; U.tab=v||null }
+  else if(a==='notego'){ U.notes.shift(); U.win=null; U.tab=v||null; if(U.tab) U.paused=true }   // v4.50 (Claude's playtest 04.11): a side tab does not hold the clock — the note's way there pins the pause (~80 years lost at 4×)
   else if(a==='pfok') U.pf=null;
+  else if(a==='ltr'){ var lid=+v, lt=letterById(lid); if(lt){ lt.read=true; if(U.ltOpen===lid){ U.ltOpen=null; U.strips=(U.strips||[]).filter(function(s){ return s.id!==lid }) } else U.ltOpen=lid } }
+  else if(a==='ordgen'){ var og=v.split(':'); U.ordSel=U.ordSel||{}; U.ordSel[og[0]]=+og[1] }
   else if(a==='export'){ U.pop=null; showLog(); draw(); return }
   else if(a==='savelog'){ saveLog(); return }
   else if(a==='copylog'){ copyLog(); return }
@@ -1474,7 +1605,7 @@ function doAct(a,b){
   else if(a==='load'){ U.pop=null; el('loadin').click() }
   else if(a==='loadauto'){ loadAuto(); return }
   else if(a==='texts'){ reloadTexts(); return }
-  else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); return }
+  else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); clockOn('new'); return }
   if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:null);
   tutAct(a,v,res); draw() }
 document.addEventListener('click',function(ev){
@@ -1492,8 +1623,8 @@ document.addEventListener('click',function(ev){
   var b=t.closest('[data-act]');
   if(b&&b.dataset.act!=='pop'&&U.pop&&!b.closest('#pop')&&b.dataset.act!=='tab'&&b.dataset.act!=='world'){ U.pop=null }
   if(!b){
-    if(U.pop&&!t.closest('#pop .advl,#pop .menu,#pop .pick')){ U.pop=null; U.scrapArm=null; draw(); return }
-    if(t.id==='ovl'&&U.win&&!winPause()){ U.win=null; U.scrapArm=null; draw(); return }
+    if(U.pop&&!t.closest('#pop .advl,#pop .menu,#pop .pick,#pop .ltrs')){ U.pop=null; U.scrapArm=null; draw(); return }
+    if(t.id==='ovl'&&winLight()){ U.win=null; U.scrapArm=null; draw(); return }
     if(U.scrapArm&&!t.closest('.pc')){ U.scrapArm=null; draw() }
     return }
   doAct(b.dataset.act,b) });
@@ -1504,9 +1635,9 @@ document.addEventListener('keydown',function(e){
   if(k==='shift'&&(e.code==='Space'||e.key==='Enter')){ e.preventDefault(); var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; draw(); return }
   if(k==='note'&&e.key==='Enter'){ e.preventDefault(); U.notes.shift(); draw(); return }
   if(k) return;
-  if(e.key==='Escape'){ if(U.pop) U.pop=null; else if(U.win&&!winPause()) U.win=null; else if(U.win) U.win=null; else if(U.tab) U.tab=null; draw(); return }
+  if(e.key==='Escape'){ if(U.pop) U.pop=null; else if(U.win) U.win=null; else if(U.tab) U.tab=null; draw(); return }
   if(U.win&&planet(U.win)&&(e.key==='ArrowLeft'||e.key==='ArrowRight')){ var O=stepOrder(U.win), i=O.indexOf(U.win); U.win=O[(i+(e.key==='ArrowLeft'?-1:1)+O.length)%O.length]; draw(); return }
-  if(e.code==='Space'){ e.preventDefault(); U.paused=!U.paused; draw() }
+  if(e.code==='Space'){ e.preventDefault(); pauseToggle(); draw() }
   var sp={'1':1,'2':2,'3':4}[e.key]; if(sp){ U.speed=sp; U.paused=false; draw() } });
 document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.target.closest('#map .wd[data-p]'); drawTip(g) });
 
@@ -1532,9 +1663,14 @@ window.addEventListener('resize',function(){ fit(); if(G){ drawMap(); tutPlace()
 /* ---------- loop ---------- */
 /* v4.31 (Nikita, 13.10, F-45: '4x too fast'): 1x 1.5 s, 2x 1.0 s, 4x 0.6 s, 10x 0.2 s a year */
 var MS={1:1500,2:1000,4:600,10:200};   // v4.42: 10 has no button or key — only the scenarios reach it (LNU.speed=10)
+/* v4.46: the run's clock (G.clock, see clockOut in core.js) — starts at the New Game press, saved with the run. A hidden tab and a
+   frame gap over a second do not count: the player is away */
+function clockOn(from){ if(G) G.clock={from:from,at:new Date().toISOString(),ms:0,run:0,sp:{}} }
+function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
+  if(!halted()){ c.run+=dt; c.sp[U.speed]=(c.sp[U.speed]||0)+dt } }
 function frame(ts){
   if(!U.last) U.last=ts;
-  var dt=ts-U.last; U.last=ts;
+  var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
   if(G&&!halted()&&!G.over){
     U.acc+=dt; var step=MS[U.speed]||600, did=false;
     try{
@@ -1561,11 +1697,12 @@ function tutMute(){ TUTX.off=true; TUTX.story=false; clearTimeout(NART); var t=U
 function start(seed){
   if(!TUTX.hook){ TUTX.off=false; TUTX.story=true }   // a new game: the helper and the voices again (Test play muted only its own run)
   G=newGame(seed||undefined); tutNew();
-  U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; lineWhy={}; HTMLCACHE={};
+  G.hackGate=!TUTX.hook||!!window.LBHACKTEST; U.hackLater=false;   // the hack (Nikita 04.11): a player's run; the scenarios' hook «всё открыто» skips it unless a scenario asks
+  U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; HTMLCACHE={};
   VFIT=true; VSECS=-1; POSN=-1; viewFit();
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
-  window.LNtut={off:function(){ TUTX.hook=true; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
+  window.LNtut={off:function(){ TUTX.hook=true; if(!window.LBHACKTEST) G.hackGate=false; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
   draw();
 }
 (function(){ U.saveDay=null; try{ var t0=localStorage.getItem(SAVE_KEY); if(t0){ var m=/"G":\{"seed":-?\d+,"day":(\d+)/.exec(t0); if(m) U.saveDay=+m[1]; var lg=/"lang":"(en|ru)"/.exec(t0); U.saveLang=lg?lg[1]:'en';

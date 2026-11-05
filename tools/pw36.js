@@ -77,8 +77,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ buildShip(LN,hullAt('courier',0)) }); await run(12);
   await show(farm); await U.tap('#ovl [data-act="send"][data-p="'+farm+'"]'); await run(45);
   await p.evaluate(()=>{ LN.gen=1; ensureGen(1); buildShip(LN,hullAt('courier',1)) }); await run(14);
-  await p.evaluate(id=>{ LN.colonies[id].pop=95; LNdraw() },farm); await show(farm);
-  ok('with a Courier II (hold 133) free: "everyone fits"', /everyone fits/.test(await win())||/133/.test(await win()), (await win()).match(/[^.]*fits[^.]*/)?.[0]);
+  await p.evaluate(id=>{ LN.colonies[id].pop=80; LNdraw() },farm); await show(farm);
+  ok('with a Courier II (hold 105, v4.46) free: "everyone fits"', /everyone fits/.test(await win())||/105/.test(await win()), (await win()).match(/[^.]*fits[^.]*/)?.[0]);
   await p.evaluate(()=>{ document.getElementById('toasts').innerHTML=''; });   // старые тосты не должны попасть в проверку
   await U.tap('#ovl [data-act="evac"]');
   ok('…and the plain message: "on its way"', /on its way to lift/.test(await toast())&&!/stay behind/.test(await toast()), await toast());

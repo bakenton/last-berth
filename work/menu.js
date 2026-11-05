@@ -80,7 +80,7 @@ function drawUI(){ if(!UI) return; var I=items(); if(I[SEL]&&I[SEL].off) SEL=fir
     '<button class="mtst" type="button" data-m="test">▶ '+esc(T('mn_test'))+'</button><div class="mver">v'+esc(O.v)+'</div>' }
 function select(i){ if(i===SEL) return; SEL=i; PULSE.at=performance.now(); UI.querySelectorAll('.mit').forEach(function(e){ e.classList.toggle('on',+e.dataset.i===SEL) }) }
 function act(i){ var it=items()[i]; if(!it||it.off||BUSY) return;
-  if(it.id==='new'){ diveThen(termPlay); return }
+  if(it.id==='new'){ if(O.pressNew) O.pressNew(); diveThen(termPlay); return }   // v4.46: the run's clock starts at the press, the terminal included
   if(it.id==='cont'){ diveThen(function(){ var why=O.cont(); if(why===true) fadeOut(); else { diveBack(); note(why) } }); return }
   if(it.id==='load'){ O.load(); return }
   if(it.id==='lang'){ O.setLang(O.lang()==='en'?'ru':'en'); drawUI(); return }
@@ -359,7 +359,7 @@ function termPlay(){ maDuck(true); ROOT.classList.remove('diving'); termClear();
     else if(t==='mem') q.push(function(n){ memtest(n) });
     else if(t==='loc') q.push(function(n){ ov.setAttribute('data-loc',p[1]); auLoc(p[1]); BT.timers.push(setTimeout(n,p[2])) }) });
   SYS.forEach(function(s){ q.push(function(n){ auLine('f'); btype('f','■ '+T(sk(s,'f')),n) }); [1,2,3].forEach(function(j){ q.push(function(n){ btype('',(j===3?'└─ ':'├─ ')+T(sk(s,'d',j)),n,4) }) }); q.push(function(n){ BT.timers.push(setTimeout(n,300)) }); q.push(function(n){ termAsk(s,n) }) });
-  q.push(function(n){ btype('cm',T('tm_her'),n) }); q.push(function(){ BT.timers.push(setTimeout(termEnd,1800)) });
+  q.push(function(n){ ov.insertAdjacentHTML('beforeend','<div class="mfull afull"></div>'); btype('cm',T('tm_her'),n) }); q.push(function(){ BT.timers.push(setTimeout(termEnd,1800)) });   // v4.51: at her line she steps in, full height (web/alexandra)
   var k=0; (function go(){ if(run!==BT.run) return; var f=q[k++]; if(f) f(go) })() }
 /* the end of the terminal, by its last line, SKIP or Esc: the run begins, the black lifts off the map */
 function termEnd(){ if(BT.done||!BT.ov) return; BT.done=true; termClear(); O.newRun(); fadeOut() }

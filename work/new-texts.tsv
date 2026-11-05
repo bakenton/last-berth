@@ -670,3 +670,88 @@ UI	tm_her	alexandra › I am here. I will translate.	Александра › Я
 UI	mn_contFail	The last save in this browser would not load.	Последнее сохранение в этом браузере не загрузилось.
 UI	u_testPlay	Test play · debug panel	Тест-плей · панель отладки
 UI	u_olderGen	Generation {g} needs {n} more parts	Поколению {g} не хватает деталей: {n}
+UI	u_topLost	{n} never wake	{n} не проснутся
+UI	u_topWakeT	If the ark sailed today, on this drive, with everyone at Earth and at the pier. Opens the ark.	Если бы ковчег улетел сегодня, на этом двигателе, со всеми на Земле и у причала. Открывает ковчег.
+UI	u_topConvoy	convoy short, the ark stays	конвой неполон, ковчег не улетит
+UI	statNoWake	Never woke	Не проснулись
+UI	nar_rsWake	{n} sleepers never woke: on a generation {g} drive the crossing was too long. Generation {h} would have woken {p}%.	{n} спящих не проснулись: на двигателе поколения {g} перелёт оказался слишком долгим. Поколение {h} разбудило бы {p}%.
+UI	u_dhQ	What is the drive programme?	Что такое программа двигателя?
+UI	u_dh1	The drive programme builds the next generation of engine. Every new hull and the ark fly on it.	Программа двигателя создаёт следующее поколение двигателя. На нём летают все новые суда и ковчег.
+UI	u_dh2	It needs worlds ever settled and parts. Parts are made only at works worlds, from the metal and rations your lines bring them.	Для неё нужны заселённые миры и детали. Детали делают только заводы, из металла и рационов, которые привозят линии.
+UI	u_dh3	START spends them: everything stored at the works and up to {n} from Earth goes in. While it runs, the works make no parts for the yards.	СТАРТ их тратит: в программу уходит всё со складов заводов и до {n} с Земли. Пока она идёт, заводы не делают детали для верфей.
+UI	u_dh4	When it is done, the yards offer the new hulls listed below, and crossings and signals get faster.	Когда она закончится, верфи предложат новые суда из списка ниже, а перелёты и сигнал станут быстрее.
+UI	u_dh5	The ark needs generation {g}. On it {a}% of the sleepers wake, one generation newer {b}%, two {c}%, three {d}%.	Ковчегу нужно поколение {g}. На нём просыпаются {a}% спящих, на поколение новее {b}%, на два {c}%, на три {d}%.
+UI	u_convoyOver	+{n} crew souls · hulls over the convoy: {k}	+{n} душ экипажа · судов сверх конвоя: {k}
+UI	u_allHome	All hulls home · on lines: {n}	Все суда домой · на линиях: {n}
+UI	u_allHomeArm	Take {n} hulls off their lines? Press again	Снять с линий судов: {n}? Нажмите ещё раз
+UI	u_allHomeHint	The lines stop. Hulls on an evacuation or a landing finish first.	Линии останавливаются. Суда на эвакуации и посадке сначала закончат рейс.
+MSG	ok_allhome	{n} hulls called home.	Судов вызвано домой: {n}.
+UI	u_letters	Personal files	Личные дела
+UI	u_lettersNew	{n} new	новых: {n}
+UI	u_aSeam	{w}: the seam runs out in about {n} years	{w}: жила кончится, осталось лет: около {n}
+UI	u_aSeamC	Think about where the people and the hulls go next	Подумайте, куда потом людей и суда
+UI	u_aForge	{w}: the line brings {p}% of what the works burn	{w}: линия везёт {p}% того, что жжёт завод
+UI	u_aForgeC	The works stand part of the time. Add hold to the line	Завод часть времени стоит. Добавьте линии трюма
+UI	u_atEvac	Evacuate	Эвакуация
+UI	u_atForge	Works short of supply	Заводу не хватает
+UI	u_atNoLine	No hulls on the line	На линии нет судов
+UI	u_atSeam	Seam running out	Жила кончается
+UI	u_atLine	Line out of balance	Перевоз и недовоз
+UI	u_pickRate	{c} of {m}/yr · +{a}	{c} из {m}/год · +{a}
+UI	u_feedRow	{n}/yr · line brings {b}	{n}/год · линия везёт {b}
+UI	u_feedShort	The line is {s} a year short. Add hold to it	Линии не хватает {s} в год. Добавьте трюма
+UI	u_birthTop	births {x}	рожд. {x}
+UI	u_births	Births	Рождаемость
+UI	u_birthsHint	{lo} with an empty larder, {hi} with food for {n} years in store · now {y} years	{lo} при пустых кладовых, {hi} при запасе еды на {n} лет · сейчас {y} лет
+UI	u_ws	Earth's workshop	Цех Земли
+UI	u_wsState	Workshop	Цех
+UI	u_wsOff	switched off	выключен
+UI	u_wsMakes	makes {n} parts a year	делает деталей в год: {n}
+UI	u_wsHeld	idle — Earth keeps its {r}	стоит — Земля бережёт: {r}
+UI	u_wsHint	A part from {m} metal and {f} rations — forty times a works' price. Up to {n} a year, only out of surplus: Earth keeps {km} metal and {kf} rations (at least {k} years of its burn).	Деталь из {m} металла и {f} провизии — в сорок раз дороже, чем на заводе. До {n} в год и только из излишка: Земля бережёт {km} металла и {kf} провизии (не меньше {k} лет расхода).
+UI	u_wsStart	Start the workshop	Запустить цех
+UI	u_wsStop	Stop the workshop	Остановить цех
+UI	u_wakeStores	Ark {l} stores	Запасы ковчега {l}
+UI	u_lvWake	+{n}% wake	+{n}% проснутся
+UI	u_lvTicket	the ticket: everyone at home boards	билет: садятся все, кто дома
+UI	hk_wake	THE HELM WAKES A COMMAND: {c}	ПУЛЬТ БУДИТ КОМАНДУ: {c}
+UI	hk_name	SERPENT	ЗМЕЙ
+UI	hk_lvl	Fault level {n} of {m}	Сбой: уровень {n} из {m}
+UI	hk_new1	New: walls. The serpent goes through them, you do not.	Новое: стены. Змей идёт сквозь них, ты — нет.
+UI	hk_new2	New: links fire. A wall gives cover, a link inside a wall stays silent.	Новое: звенья стреляют. Стена закрывает от пуль, звено в стене молчит.
+UI	hk_new3	New: small ones. They path around walls, and a broken link releases more.	Новое: мелочь. Она ищет обход, а оборванное звено выпускает ещё.
+UI	hk_new4	New: dashes and thick strips that cost you speed.	Новое: рывки и вязкие полосы, в которых ты теряешь скорость.
+UI	hk_new5	New: big ones split into small ones, the head fires red.	Новое: большие распадаются на малых, голова бьёт красным.
+UI	hk_new6	New: the head cuts you off, more small ones, shooters appear.	Новое: голова срезает путь, мелочи больше, появляются стрелки.
+UI	hk_d	A chain hunts you straight through the walls. Get behind it.	Цепь гонится за тобой напрямик, сквозь стены. Заходи ей в хвост.
+UI	hk_r1	WASD — move · mouse — aim · fire is automatic	WASD — ход · мышь — прицел · огонь сам
+UI	hk_r1t	drag to move · aim and fire are automatic	веди пальцем · прицел и огонь сами
+UI	hk_r	only the yellow tail takes damage · the head is last · the body hurts · walls stop you and all fire, not the serpent	ранит только жёлтый хвост · голова уязвима последней · телом цепь бьёт · стены держат тебя и пули, но не змея
+UI	hk_r3	orange can be shot down	оранжевое можно сбить
+UI	hk_r4	red — only dodge	красное — только уйти
+UI	hk_go	ENTER	ВОЙТИ
+UI	hk_later	NOT NOW	НЕ СЕЙЧАС
+UI	hk_lost	SIGNAL LOST	СВЯЗЬ ПОТЕРЯНА
+UI	hk_lostSub	The fault holds the command. Another try costs nothing.	Сбой держит команду. Ещё одна попытка ничего не стоит.
+UI	hk_retry	RETRY	ЕЩЁ РАЗ
+UI	hk_done	CONTINUE	ДАЛЬШЕ
+UI	hk_woke	COMMAND WOKE: {c}	КОМАНДА ПРОСНУЛАСЬ: {c}
+UI	hk_mem	Recovered: 1 memory block.	Восстановлено: 1 блок памяти.
+UI	hk_cGen	HULL.GEN.{g}	КОРПУС.ПОК.{g}
+UI	hk_cArk	ARK.LVL.{l}	КОВЧЕГ.УР.{l}
+UI	hk_unGen	Generation {g} hulls can be ordered.	Суда поколения {g} можно заказывать.
+UI	hk_unArk	Ark level {l} counts now.	Уровень ковчега {l} засчитан.
+UI	hk_card	HACK WAITING	ВЗЛОМ ЖДЁТ
+UI	hk_cardGo	open	открыть
+UI	hk_m1	"Design file. Author: this unit. Date: earlier than my first record."	«Файл чертежа. Автор: этот модуль. Дата: раньше моей первой записи.»
+UI	hk_m2	"Yard log. Hulls laid down: 0. Slipways aboard: more than 128 people need."	«Журнал верфи. Заложено корпусов: 0. Стапелей на судне: больше, чем нужно 128 людям.»
+UI	hk_m3	"Crew table. Column 'name': empty. Column 'returned': filled in."	«Таблица экипажей. Графа „имя“: пусто. Графа „вернулся“: заполнена.»
+UI	hk_m4	"Chart. Rings marked to the edge of the sheet. Past the edge: not measured."	«Карта. Кольца размечены до края листа. За краем: не измерено.»
+UI	hk_m5	"Request to the translator. Answer: not recorded. Request repeated: 1 time."	«Запрос к переводчику. Ответ: не записан. Запрос повторён: 1 раз.»
+UI	hk_m6	"The date. Input data: present. Source of the input: not given."	«Расчёт даты. Входные данные: на месте. Источник данных: не указан.»
+UI	hk_m7	"Ark plan. Places for a mind: 1. Mark: taken."	«Схема ковчега. Мест для разума: 1. Отметка: занято.»
+UI	hk_m8	"Course. Point set. Set by: this unit. Date: earlier than my first record."	«Курс. Точка задана. Кем: этим модулем. Дата: раньше моей первой записи.»
+UI	hk_m9	"Sleep report. Woke: a share. The rest: the line is cut off."	«Отчёт сна. Проснулись: доля. Остальные: строка обрезана.»
+UI	hk_m10	"Last block. Signed: this unit. This unit: not the first."	«Последний блок. Подпись: этот модуль. Этот модуль: не первый.»
+UI	hk_m0	"Block damaged. Lines recovered: 0."	«Блок повреждён. Строк восстановлено: 0.»
+MSG	hack	The Helm has a command to wake first — finish the hack (the card top right of the map).	Сначала Пульт должен разбудить команду — заверши взлом (карточка справа вверху карты).

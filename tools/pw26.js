@@ -37,6 +37,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await run(12); await showWorld(mine);
   ok('finished hull sails the line', await p.evaluate(id=>lineCount(LN,id,'courier')===2&&LN.ships.filter(s=>s.from===id).length>=1,mine));
   ok('shift report counts yard builds', await p.evaluate(()=>(LN.stats.yardBuilt||0)>=1));
+  // playtest 04.11: a free hull from the yard tab (buildShip, no line) counts too — it used to be left out
+  ok('a free yard hull counts too', await p.evaluate(()=>{ LN.earth.metal=600; LN.earth.fuel=500; LN.earth.people=200; const b=LN.stats.yardBuilt||0; return buildShip(LN,currentHull(LN,'courier'))==='ok'&&LN.stats.yardBuilt===b+1 }));
   // 4. v4.34: no metal — the order button is off and says why (data-why=cost); the a_yard_cost advice is gone
   await p.evaluate(()=>{ LN.earth.metal=10; LNdraw() }); await showWorld(mine);
   const why=await p.evaluate(()=>{ const b=document.querySelector('#ovl [data-act="order"][data-c="courier"]'); return b?{off:b.getAttribute('aria-disabled'),why:b.getAttribute('data-why')}:null });

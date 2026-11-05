@@ -59,12 +59,14 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   ok('world window of the farm '+farm, await p.isVisible('#ovl .win'), farm);
   await tap('[data-act="send"][data-p="'+farm+'"]');
   ok('settlers sent', await p.evaluate(f=>LN.ships.some(s=>s.job==='colonize'&&s.dest===f),farm));
-  // 3. ждать посадки (колония появилась), время на ×4
+  // 3. ждать посадки (колония появилась), время на ×4. v4.49: окно мира стоит время — игрок его закрывает
+  await p.keyboard.press('Escape'); await p.waitForTimeout(120);
+  ok('world window stops the clock — closed to wait', await p.evaluate(()=>!LNU.win));
   const landed=await until(()=>p.evaluate(f=>!!LN.colonies[f],farm),150);
   ok('colony landed', landed, await day());
   // 4. второе судно на линию: пауза, окно мира, первая свободная строка «Добавить судно» → Назначить на линию
   await tap(PAUSE); await clear();
-  // окно мира ещё открыто с отправки; клик мимо окна (на #ovl) закрыл бы его, поэтому открываем, только если закрыто
+  // окно мира закрыто перед ожиданием (v4.49) — открываем снова; клик мимо окна (на #ovl) закрыл бы открытое
   if(!(await p.evaluate(()=>LNU.win))){ await p.mouse.click(pick.pt.x,pick.pt.y); await p.waitForTimeout(120) }
   await tap('#addblk [data-act="assign"]');
   ok('hull assigned to the line', await p.evaluate(f=>LN.ships.some(s=>s.from===f&&s.mode!=='dead'),farm));

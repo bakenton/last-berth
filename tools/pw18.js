@@ -8,7 +8,7 @@ const BOT=fs.readFileSync('pw11.js','utf8').split('const BOT=`')[1].split('`;')[
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await UI.newPage(b); const U=UI.ui(p);
   // личное дело: закрыть смену (если открыта) и прочитать карточку; read — текст и число «засвеченных» пикселей портрета
-  const pf=async()=>{ await U.closeBig(); return p.evaluate(()=>{ const e=document.getElementById('pfL'); if(!e||!e.querySelector('.pfbox')) return null; const c=e.querySelector('canvas'); const ctx=c.getContext('2d'); const d=ctx.getImageData(0,0,64,64).data; let lit=0; for(let i=0;i<d.length;i+=4) if(d[i]>100) lit++; return {text:e.textContent.replace(/\s+/g,' ').trim().slice(0,160), lit} }) };
+  const pf=async()=>{ await U.closeBig(); return p.evaluate(()=>{ const e=document.getElementById('pfL'); if(!e||!e.querySelector('.pfbox,.ltr')) return null; const c=e.querySelector('canvas'); const ctx=c.getContext('2d'); const d=ctx.getImageData(0,0,64,64).data; let lit=0; for(let i=0;i<d.length;i+=4) if(d[i]>100) lit++; return {text:e.textContent.replace(/\s+/g,' ').trim().slice(0,160), lit} }) };
   const pfOk=async()=>{ for(let i=0;i<4&&await p.isVisible('#pfL [data-act="pfok"]');i++) await U.tap('#pfL [data-act="pfok"]') };
   const redraw=async()=>{ await p.evaluate(()=>LNdraw()) };
   await U.start('ru',519788167); await p.addScriptTag({content:BOT});
