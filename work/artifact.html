@@ -20,7 +20,7 @@
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'4.49'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'4.50'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -2759,7 +2759,6 @@ function drawTop(){
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
   if(can('speed')){ h+='<button type="button" data-act="spd" data-v="0" class="'+(hz?'on pzb':'')+'" title="Space">❚❚</button>';
     SPEEDS.forEach(function(v,i){ h+='<button type="button" data-act="spd" data-v="'+v+'" class="'+(!hz&&U.speed===v?'on':'')+'" title="'+(i+1)+'">'+v+'×</button>' }) }
-  if(can('skip')) h+='<button type="button" data-act="skip">'+esc(T('u_skip'))+'</button>';
   h+='<button type="button" data-act="pop" data-v="menu" class="'+(U.pop==='menu'?'on':'')+'" aria-label="menu">≡</button></div>';
   setHTML('top',h);
 }
@@ -2980,7 +2979,7 @@ function watchRings(){
    (LNtut.off): it holds for every next run of the page, Test play only for its own */
 var TUTX={story:true,off:false,hook:false};
 function helpPref(){ return !TUTX.off }
-var OPEN_ALL=['people','food','line','speed','fuel','earth','skip','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
+var OPEN_ALL=['people','food','line','speed','fuel','earth','metal','order','yard','fleet','parts','machines','tech','advisor','worlds','sectors','events','ring2','zoom','ring3','night','ark','reserve','lift','evac'];
 var TAB_KEYS={earth:1,worlds:1,tech:1,yard:1,fleet:1,ark:1};
 function tutBlank(){ return {lock:false,help:false,open:{},fresh:{},seen:{},step:-1,seq:0,q:[],msg:null,nar:null} }
 function secVis(sec){ return sectorOpen(G,sec)&&(!U.tut.lock||can('ring2')||sec<1) }
@@ -3047,7 +3046,7 @@ var STEPS=[
  {t:'hunger',opens:['people','food','line'],q:['m0','m1','m2']},
  {t:'time',opens:['speed'],q:['m3'],when:function(){ return reach(G)>0||G.ships.some(function(s){ return s.job==='colonize' })||G.day>0 }},
  {t:'line',opens:['fuel'],q:['N02','m4'],when:function(){ return reach(G)>0||G.day>=40 },go:function(){ U.tut.col=Object.keys(G.colonies)[0] }},
- {t:'home',opens:['earth','skip'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
+ {t:'home',opens:['earth'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
  {t:'yard',opens:['metal','order','yard'],q:['m8','mM','m9'],when:function(){ return (reach(G)>=2&&Object.keys(G.colonies).some(function(k){ return !onLine(G,k).length })&&!freeHullAtPier())||(reach(G)>0&&!offLine())||G.day>=150 }},
  {t:'fleet',opens:['fleet'],q:['m10'],soft:1,when:function(){ return builtHulls()>=4||G.day>=300 }},
  {t:'slow',opens:[],q:['m11'],soft:1,when:function(){ return !!halfWorld()||G.day>=400 }},
@@ -3123,8 +3122,6 @@ function tutTick(){ var t=U.tut; if(!U.langPicked||G.over) return;
   tutJit();
   if(t.lock) G.safe=t.step<STEP_SAFE;
   tutNext() }
-/* is there something she wants to say before the clock runs on (SKIP stops there) */
-function tutWants(){ var t=U.tut; return !!t.q.length||(t.step>=0&&stepReady(t.step+1)) }
 function tutHold(){ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
 /* the press: a rule lets through only its lit thing; her voice closes on any press */
 function tutTarget(m){ var s=typeof m.at==='function'?m.at():m.at, e=s?document.querySelector(s):null; return e&&e.getClientRects().length?e:null }
@@ -3141,7 +3138,9 @@ function tutClick(ev){ var t=U.tut, x=ev.target;
   return false }
 function tutKey(e){ var t=U.tut;
   var mine=e.code==='Space'||e.key==='Enter'||e.key==='Escape'||/^[1-4]$/.test(e.key);
-  if(t.msg){ if(mine) e.preventDefault(); if(!e.repeat&&t.msg.mode==='see'&&mine&&!/^[1-4]$/.test(e.key)&&Date.now()-t.msg.at>300) msgDone(); return true }
+  if(t.msg){ if(mine) e.preventDefault(); if(!e.repeat&&t.msg.mode==='see'&&mine&&!/^[1-4]$/.test(e.key)&&Date.now()-t.msg.at>300) msgDone();
+    else if(!e.repeat&&t.msg.mode!=='see'&&e.code==='Space'&&can('speed')){ pauseToggle(); draw() }   // v4.50: Space under a held step pins the pause, as under a window
+    return true }
   if(t.lock&&!can('speed')&&(e.code==='Space'||/^[1-4]$/.test(e.key))) return true;
   return false }
 /* after a press went through: a 'do' is done when its press succeeded, a 'see' on any press; a tab loses its dot */
@@ -3273,9 +3272,10 @@ function assignable(pid){ var p=planet(pid);
 function pickCourier(pid){ var c=G.colonies[pid], pop=c?Math.floor(c.pop):0;
   var list=assignable(pid).filter(function(s){ return shipClass(s)==='courier'&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });
   if(!list.length) return null;
-  var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
+  var rs=function(s){ return s.reserve?1:0 };   // v4.50 (Claude's playtest 04.11): a hull kept for the ark goes last (Claude — awaiting review)
+  var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return rs(a)-rs(b)||legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
   if(fit.length) return fit[0];
-  return list.sort(function(a,b){ return b.cap-a.cap })[0] }
+  return list.sort(function(a,b){ return rs(a)-rs(b)||b.cap-a.cap })[0] }
 function evacGoing(pid){ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }) }
 function evacW(pid){ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id}); return nh?fill(T('u_evacW_wait'),{n:nh.id,l:nh.t}):T('u_evacW_orderC') }
 function evacBlock(p){ var c=G.colonies[p.id];
@@ -3538,6 +3538,12 @@ function winArk(){
 /* ---------- the advisor: worlds only, worst first (Nikita 15.10: «не понимаю, что делать») ----------
    A row says the problem in numbers, what follows, and a button that names the fix; the button opens the world with the
    place of the fix lit (a yellow ring that fades in ~3 s). */
+/* v4.50 (Nikita 05.11, «Да»): a mine, farm or well with no line is grey and out of the count while Earth's stock of what it digs lasts
+   QUIET_YEARS — at Earth's own burn or at the real fall of the stock, whichever is faster (fuel has no burn of its own: at least QUIET_FUEL).
+   The works always count — parts are always short (Claude — awaiting review) */
+var QUIET_YEARS=200, QUIET_FUEL=1000;
+function quietDep(p,dep){ if(p.kind==='works') return false; var t=trend(dep)||0, nd=G.need||earthNeed(G);   // no trend yet (first years, after a load): Earth's own burn alone
+  return G.earth[dep]>=QUIET_YEARS*Math.max(nd[dep]||0,-t,dep==='fuel'?QUIET_FUEL/QUIET_YEARS:0.1) }
 function advRows(){ if(!G) return []; var out=[], used=[];   // v4.38: a hull named for one line is not offered to the next
   Object.keys(G.colonies).forEach(function(pid){ var p=planet(pid), c=G.colonies[pid], st=wst(pid), w=pname(pid), dep=p.kind==='works'?'parts':p.dep, going=evacGoing(pid);
     if(going) return;
@@ -3546,7 +3552,7 @@ function advRows(){ if(!G) return []; var out=[], used=[];   // v4.38: a hull na
     else if(st==='starve'){ var wh=worksHungry(pid); out.push([C.red,fill(T('u_aStarve'),{w:w,r:T(wh.food<wh.metal?'food':'metal').toLowerCase()}),T('u_aStarveC'),pid,T('u_fixAdd'),'add','forge']) }
     var ll=lastLift(G,pid); if(can('lift')&&ll&&ll.st==='open'&&ll.n<=K.LIFT_WARN) out.push([ll.n<=25?C.red:C.people,fill(T('u_aLift'),{w:w,n:ll.n,y:ll.y}),fill(T('u_aLiftC'),{n:num(c.pop)}),pid,T('u_fixEvac'),'evac','evac']);
     var sy=seamYears(pid); if(sy<SEAM_YEARS&&st!=='dead'&&st!=='cut') out.push([C.people,fill(T('u_aSeam'),{w:w,n:num(sy)}),T('u_aSeamC'),pid,T('u_fixSee'),'add','seam']);
-    if(st==='noline') out.push([C.people,fill(T('u_aNoLine'),{w:w}),T('u_aNoLineC'),pid,T('u_fixAdd'),'add','noline']);
+    if(st==='noline') out.push([quietDep(p,dep)?C.mid:C.people,fill(T('u_aNoLine'),{w:w}),T('u_aNoLineC'),pid,T('u_fixAdd'),'add','noline']);
     else if(st==='half'&&p.kind==='works'){ var ff=lineFit(G,pid), fh=lineFix(pid,used);   // Nikita, 02.11 (forge-stat): the works say it the moment the line is thin
       out.push([C.people,fill(T('u_aForge'),{w:w,c:dec(ff.carries),n:dec(ff.need)}),fh?fh[0]:T('u_aForgeC'),pid,fh?fh[1]:T('u_fixAdd'),fh?fh[2]:'add','forge']) }
     else if(st==='half'){ var lr=lineRate(G,pid), hp=lineFix(pid,used);
@@ -3571,9 +3577,9 @@ function lineFix(pid,used){ var h=lineHelp(G,pid,{noMove:!can('fleet'),cls:clsSe
 var ADV_T=[{k:'evac',i:'send',c:'#FF2A1A',l:'u_atEvac'},{k:'forge',i:'kit',c:'#FF8A1F',l:'u_atForge'},{k:'noline',i:'takeoff',c:'#FFD23F',l:'u_atNoLine'},{k:'seam',i:'survey',c:'#4FA3FF',l:'u_atSeam'},{k:'line',i:'hold',c:'#B48CFF',l:'u_atLine'}];
 function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
   if(!a.length) return '<div class="advl"><div class="none">'+esc(T('u_advNone'))+'</div></div>';
-  var gs=ADV_T.map(function(t,i){ var rows=a.filter(function(r){ return r[6]===t.k }); return {t:t,i:i,rows:rows,w:rows.reduce(function(m,r){ return Math.min(m,rk(r)) },9)} }).filter(function(g){ return g.rows.length }).sort(function(x,y){ return x.w-y.w||x.i-y.i });
-  return '<div class="advl"><div class="advc">'+gs.map(function(g){ return '<span style="color:'+g.t.c+'">'+ic(g.t.i,14,g.t.c)+'<b>'+g.rows.length+'</b></span>' }).join('')+'</div>'+gs.map(function(g){
-    return '<div class="advh" style="color:'+g.t.c+'">'+ic(g.t.i,15,g.t.c)+'<span>'+esc(T(g.t.l))+'</span><b>'+g.rows.length+'</b></div>'+g.rows.map(function(r){ return '<button type="button" data-t="'+g.t.k+'" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+g.t.c+'"></i><b'+(r[0]===C.red?' style="color:'+C.red+'"':(r[0]===C.mid?' style="color:'+C.mid+'"':''))+'>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join('') }).join('')+'</div>' }
+  var gs=ADV_T.map(function(t,i){ var rows=a.filter(function(r){ return r[6]===t.k }); var w=rows.reduce(function(m,r){ return Math.min(m,rk(r)) },9), live=rows.filter(function(r){ return r[0]!==C.mid }).length; return {t:t,i:i,rows:rows,w:w,c:w===2?C.mid:t.c,n:live||rows.length} })   // v4.50: a group of grey rows is grey, its count is the top bar's.filter(function(g){ return g.rows.length }).sort(function(x,y){ return x.w-y.w||x.i-y.i });
+  return '<div class="advl"><div class="advc">'+gs.map(function(g){ return '<span style="color:'+g.c+'">'+ic(g.t.i,14,g.c)+'<b>'+g.n+'</b></span>' }).join('')+'</div>'+gs.map(function(g){
+    return '<div class="advh" style="color:'+g.c+'">'+ic(g.t.i,15,g.c)+'<span>'+esc(T(g.t.l))+'</span><b>'+g.n+'</b></div>'+g.rows.map(function(r){ return '<button type="button" data-t="'+g.t.k+'" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+(r[0]===C.mid?C.mid:g.t.c)+'"></i><b'+(r[0]===C.red?' style="color:'+C.red+'"':(r[0]===C.mid?' style="color:'+C.mid+'"':''))+'>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join('') }).join('')+'</div>' }
 function popMenu(){
   return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('u_mLang'))+' <b>'+(U.lang==='en'?'EN':'RU')+'</b> · '+(U.lang==='en'?'RU':'EN')+'</button>'+
     '<button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
@@ -3634,20 +3640,7 @@ function copyLog(){ var ta=el('logtxt'); ta.focus(); ta.select(); var done=false
   try{ if(navigator.clipboard&&navigator.clipboard.writeText){ navigator.clipboard.writeText(ta.value).then(function(){ say('copied') },function(){ say('copyfail') }); done=true } }catch(e){}
   if(!done){ try{ done=document.execCommand('copy') }catch(e){} say(done?'copied':'copyfail') } }
 
-/* ---------- skip: the clock runs on until something wants the desk ---------- */
-/* v4.49 (Claude's playtest 04.11: Skip stopped on every hull that docked with no line, the year after it was pressed): it stops only
-   on what wants a decision — a red line (TONE 'bd'), a full-screen notice, or one of SKIP_STOP. The rest is the log, as on the running clock */
-var SKIP_STOP={surveyed:1,depleted:1,nothing_left:1,pulse_short:1,crisis_start:1,ark_drive:1};
-function skipStops(e){ return TONE[e.code]==='bd'||!!NOTE_CODES[e.code]||!!SKIP_STOP[e.code] }
-function skipAhead(){ if(modal()||tutHold()||G.over) return; if(winPause()) U.win=null; var t0=performance.now(), d0=G.day;
-  for(var i=0;i<500&&!G.over;i++){ var s0=G.logSeq||0, stop=null; tick(G); G.pauseNow=false;
-    if(G.shiftOpen){ if(!U.shiftStop) G.shiftOpen=false; else break }
-    if(G.night&&!G.nightSeen) break;
-    for(var j=G.log.length-1;j>=0&&(G.log[j].seq||0)>s0;j--){ if(skipStops(G.log[j])) stop=G.log[j] }   // the first of this year's
-    if(stop){ toastOne(stop); break }
-    if(tutWants()) break;   // v4.36: she has something to say
-    if(performance.now()-t0>1500) break }
-  act(G,'skip',{from:d0,to:G.day}); U.paused=true; toast(esc(fill(T('u_skipped'),{n:G.day-d0,y:G.day})),'',4000); autosave(); draw() }
+/* v4.50 (Nikita 05.11: «пропуск целиком, нельзя проматывать время, можно только его скорость менять»): Skip is gone — the clock has only its speeds */
 
 /* ---------- presses ---------- */
 /* v4.35 (reviewer): setLine puts the hull on the line and then sails it — no fuel or crew keeps her at the pier on the line, which is not a refusal */
@@ -3663,7 +3656,6 @@ function doAct(a,b){
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
   else if(a==='spd'){ if(v==='0') pauseToggle(); else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
-  else if(a==='skip') { skipAhead(); return }
   else if(a==='zoom'){ if(v==='fit'){ VFIT=true; viewFit() } else viewZoom(v==='in'?0.75:1.35) }
   else if(a==='addtab') U.addTab=v;
   else if(a==='filter') U.filter=v;
@@ -3696,7 +3688,7 @@ function doAct(a,b){
   else if(a==='nightok'){ G.nightSeen=true }
   else if(a==='shiftok'){ var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; act(G,'shift_go',{stop:U.shiftStop}); autosave() }
   else if(a==='noteok') U.notes.shift();
-  else if(a==='notego'){ U.notes.shift(); U.win=null; U.tab=v||null }
+  else if(a==='notego'){ U.notes.shift(); U.win=null; U.tab=v||null; if(U.tab) U.paused=true }   // v4.50 (Claude's playtest 04.11): a side tab does not hold the clock — the note's way there pins the pause (~80 years lost at 4×)
   else if(a==='pfok') U.pf=null;
   else if(a==='ltr'){ var lid=+v, lt=letterById(lid); if(lt){ lt.read=true; if(U.ltOpen===lid){ U.ltOpen=null; U.strips=(U.strips||[]).filter(function(s){ return s.id!==lid }) } else U.ltOpen=lid } }
   else if(a==='ordgen'){ var og=v.split(':'); U.ordSel=U.ordSel||{}; U.ordSel[og[0]]=+og[1] }

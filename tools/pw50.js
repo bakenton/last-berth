@@ -1,5 +1,5 @@
 // pw50 — v4.49 (итерация 5, ручной плейтест Claude 04.11 и решения Никиты): окно мира стоит время; Пропуск не встаёт на рутине;
-// верфь — заказ наверху, «Строить» не съезжает; множитель рождаемости на экране; цех Земли (F-55); тягач I без деталей;
+// (Пропуск убран в v4.50) верфь — заказ наверху, «Строить» не съезжает; множитель рождаемости на экране; цех Земли (F-55); тягач I без деталей;
 // уровни ковчега II–IV будят больше спящих. Клики — мышью по видимым кнопкам; состояние ставится через хуки.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js');
@@ -22,20 +22,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('the clock runs again', (await U.day())>d1, d1+' → '+(await U.day()));
   await U.pause();
 
-  // 2. Skip: routine does not stop it (a settler hull comes home with no line), the shift report does; a depleted seam does
-  const sid=await p.evaluate(id=>{ const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); return colonize(LN,s.id,id,40,40)==='ok'?s.id:null },wid);
-  await p.evaluate(()=>{ LNU.shiftStop=true; LNdraw() });
-  const s0=await U.day();
-  await U.tap('#top [data-act="skip"]'); await p.waitForTimeout(300);   // the first landfall is a story beat — it stops the skip (v4.36)
-  for(let i=0;i<4&&!(await p.evaluate(()=>LN.shiftOpen));i++){ await p.evaluate(()=>{ LNU.tut.msg=null; LNU.tut.q=[] }); await U.closeBig(); await U.tap('#top [data-act="skip"]'); await p.waitForTimeout(300) }
-  const s1=await U.day(), back=await p.evaluate(()=>LN.log.filter(e=>e.code==='awaiting').length), tail=await p.evaluate(()=>LN.log.slice(-5).map(e=>e.day+':'+e.code).join(' '));
-  ok('Skip runs past a hull home with no line, to the shift', s1%80===0&&s1>s0&&back>0&&await p.evaluate(()=>LN.shiftOpen), s0+' → '+s1+' · awaiting '+back+' · hull '+sid+' · '+tail);
-  await U.clear(); await p.evaluate(()=>{ LNU.shiftStop=false });
-  const has=await p.evaluate(id=>{ if(!LN.colonies[id]) return false; LN.reserves[id]=1; LNdraw(); return true },wid);
-  await U.tap('#top [data-act="skip"]'); await p.waitForTimeout(300);
-  const s2=await U.day(), dep=await p.evaluate(id=>LN.log.slice(-8).some(e=>e.code==='depleted'&&e.d.p===id),wid);
-  ok('Skip stops on a depleted seam', has&&dep&&s2-s1<=5, s1+' → '+s2);
-  await U.clear();
+  // 2. v4.50 (Nikita 05.11: «пропуск целиком»): no Skip button — only the speeds
+  ok('no Skip button', !(await p.$('#top [data-act="skip"]')) && (await p.$$('#top [data-act="spd"]')).length>=3);
 
   // 3. the births multiplier: the strip and the Earth window
   await p.evaluate(()=>{ LN.earth.food=LN.need.food*40; LNdraw() });

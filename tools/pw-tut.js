@@ -1,7 +1,8 @@
 // pw-tut — проводник по обучению v4.36 для pw41 (EN) и pw42 (RU): новый игрок с экрана запуска до Ночи, мышью.
 // Подсказки «сделай» нажимаются по подсвеченному месту, «смотри» — GOT IT, голос — нажатием, большие окна — их кнопками.
 // Остальная игра (поселить свободный мир, поставить свободное судно на линию, подкормить Землю) — через ядро, чтобы забег дожил до Ночи;
-// время — кнопкой SKIP (она останавливается, когда помощнику есть что сказать) или ×4.
+// время — ×10 хуком, а с шага «home» (где была кнопка SKIP) — прокрутка ядром по FF лет (кнопки Пропуска нет с v4.50).
+const FF=20;   // years per wind of the clock (v4.50, instead of Skip)
 async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
   const seen=[], marks={};   // seen — что показано по порядку; marks — проверки по ходу
   const box=sel=>p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
@@ -45,7 +46,9 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
     if(s.win){ await p.keyboard.press('Escape'); await p.waitForTimeout(80); continue }
     if(s.step>=10&&marks.ring2After===undefined) marks.ring2After=await p.evaluate(()=>document.querySelectorAll('#map .wd[data-p]').length);
     await play();
-    if(s.open.includes('skip')){ await click('#top [data-act="skip"]'); await p.waitForTimeout(80) }
+    // v4.50: no Skip any more. Where it was open (from the step 'home'), the guide winds the clock through the core by FF years at a time,
+    // stopping as Skip did on a shift, the Night or the end; the helper's next word comes on the next frame and stops the loop above
+    if(s.open.includes('earth')){ await p.evaluate(n=>{ LNU.paused=true; for(let i=0;i<n&&!LN.over;i++){ tick(LN); LN.pauseNow=false; if(LN.shiftOpen){ if(LNU.shiftStop) break; LN.shiftOpen=false } if(LN.night&&!LN.nightSeen) break } LNdraw() },FF); await p.waitForTimeout(150) }
     else { if(await p.evaluate(()=>LNU.paused||LNU.speed!==10)) await p.evaluate(()=>{ LNU.speed=10; LNU.paused=false }); await p.waitForTimeout(400) }   // v4.42: the scenario's 10× is a hook (no button)
   }
   marks.final=await st();

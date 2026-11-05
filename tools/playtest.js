@@ -2,7 +2,7 @@
    Играет МЫШЬЮ по видимому интерфейсу: p.mouse.click по координатам элементов (не element.click()), закрывает большие окна,
    читает то, что видит игрок (тосты, строки советника, подписи кнопок), и пишет отчёт + лог + скриншоты.
      node tools/playtest.js [--minutes 4] [--seed 309573272] [--viewport 1500x950] [--god] [--out dir] [--shots]
-                            [--style default|serial|rush] [--skip] [--rich] [--brain sim]
+                            [--style default|serial|rush] [--rich] [--brain sim]
    Что делает бот: заселяет миры через окно мира («Send settlers»), ставит свободные суда на линии («Assign»), заказывает суда
    под линию («Order new»), строит в Yard, ведёт программу двигателя и разведку колец во вкладке Tech, чинит то, что говорит
    советник (#top .adv → строка → кнопка в окне мира, в том числе эвакуация), после даты Ночи покупает уровни ковчега (Ark) и
@@ -11,7 +11,6 @@
    --style rush   — «рашер»: по две линии на мир, крупные суда, ковчег — вабанк на лучший уровень.
    --god   GOD.skip (панель отладки, с v4.40 в каждой странице) в «пустых» местах: доходит дальше за те же минуты
            (это уже не чистое время игрока — в отчёте помечено).
-   --skip  без --god: когда делать нечего, жмёт настоящую кнопку SKIP (промотка до события).
    --rich  только с --god: добивает недостающие ресурсы ковчега и держит Землю сытой через GOD.res (бот — плохой фермер; в отчёте помечено).
    --brain sim — решения принимает голова бота ядра (tools/sim.js step()) через API ядра, а не кликами; экран при этом рисуется,
            большие окна закрываются мышью, аудит идёт.
@@ -23,7 +22,7 @@ const fs=require('fs'),path=require('path'),url=require('url');
 const argv=process.argv.slice(2); const arg=(n,d)=>{ const i=argv.indexOf('--'+n); return i<0?d:(argv[i+1]&&!argv[i+1].startsWith('--')?argv[i+1]:true) };
 const MIN=+arg('minutes',4), SEED=String(arg('seed','309573272')), VP=String(arg('viewport','1500x950')).split('x').map(Number);
 const GOD=!!arg('god',false), SHOTS_ALL=!!arg('shots',false), STYLE=String(arg('style','default')), BRAIN=String(arg('brain','ui'));
-const REAL_SKIP=!!arg('skip',false), RICH=!!arg('rich',false);
+const RICH=!!arg('rich',false);   // v4.50: --skip ушёл вместе с кнопкой Пропуска
 if(!/^(default|serial|rush|ark|bank)$/.test(STYLE)){ console.error('--style: default | serial | rush | ark | bank'); process.exit(2) }
 if(BRAIN==='sim'&&STYLE==='default'){ console.error('--brain sim needs --style rush|serial|ark|bank'); process.exit(2) }
 const ROOT=path.resolve(__dirname,'..');
@@ -429,7 +428,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
 
   /* ---------- главный цикл ---------- */
   const deadline=Date.now()+MIN*60000; let step=0, lastTour=-999, lastShotYear=-999, seenOver=false, lastDay=-1, stuckSince=Date.now(), lastBig=null, bigSince=0;
-  let richTops=0; const trace=[]; let lastTrace=-999; let skipYears=0, godSkips=0, realSkips=0, idleRounds=0; const GOD_ACT=+arg('god-act',15), GOD_IDLE=+arg('god-idle',100);
+  let richTops=0; const trace=[]; let lastTrace=-999; let skipYears=0, godSkips=0, idleRounds=0; const GOD_ACT=+arg('god-act',15), GOD_IDLE=+arg('god-idle',100);
   while(Date.now()<deadline){
     step++;
     let tq=Date.now(); const n0=await dismiss(); if(n0) rec('modals',{n:n0}); tm.dismiss+=Date.now()-tq;
@@ -469,7 +468,6 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
       if(s.night&&s.nightLeft>20&&s.nightLeft<2500){ const rem=Math.max(5,(deadline-Date.now())/1000-MIN*60*0.12), it=(Date.now()-t0)/1000/Math.max(1,step); n=Math.max(n,Math.min(300,Math.ceil(s.nightLeft/(rem/Math.max(0.2,it))))) }
       if(s.hungry||s.food<400) n=Math.min(n,8);   // nobody winds the clock while Earth goes hungry
       await p.evaluate(n=>GOD.skip(n),n); godSkips++; skipYears+=n; rec('god-skip',{from:d0,n}); if(!acted) idleRounds=0 }
-    else if(REAL_SKIP&&!GOD&&idleRounds>=3&&!s.big){ await home(); const d0=s.day; if(await okTap('#top [data-act="skip"]')){ await wait(1800); const s2=await S(); if(s2){ realSkips++; skipYears+=Math.max(0,s2.day-d0); rec('real-skip',{from:d0,to:s2.day}) } } idleRounds=0 }
     await wait(80);
   }
 
@@ -491,7 +489,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   const L=[];
   const overTxt=finO.over?('конец игры: '+finO.over+(finO.over==='night'?' · на ковчеге '+(finO.boarded||0)+' · разбужено (души) '+finO.souls+' · уровень ковчега '+finO.arkLv+(finO.grounded?' · ковчег не отплыл ('+finO.groundedWhy+')':''):'')):'жива';
   L.push('# Плейтест LAST BERTH — '+stamp,'',
-    '**Страница:** '+path.basename(page)+(GOD?' (режим бога — часть лет промотана GOD.skip ×'+godSkips+', это не чистое время игрока'+(RICH?'; --rich: ресурсы ковчега и еда/топливо Земли добиты через GOD (подкормок ×'+richTops+')':'')+')':'')+(REAL_SKIP&&!GOD?' · кнопка SKIP ×'+realSkips:'')+' · **окно:** '+VP.join('×')+(VP[0]<1180?' (интерфейс масштабируется целиком, цели нажатия мелкие)':'')+' · **seed:** '+SEED+' · **стиль:** '+STYLE,
+    '**Страница:** '+path.basename(page)+(GOD?' (режим бога — часть лет промотана GOD.skip ×'+godSkips+', это не чистое время игрока'+(RICH?'; --rich: ресурсы ковчега и еда/топливо Земли добиты через GOD (подкормок ×'+richTops+')':'')+')':'')+' · **окно:** '+VP.join('×')+(VP[0]<1180?' (интерфейс масштабируется целиком, цели нажатия мелкие)':'')+' · **seed:** '+SEED+' · **стиль:** '+STYLE,
     '**Итог:** '+overTxt+(BRAIN==='sim'?' · **голова: sim ('+STYLE+')** — действия через API ядра, не кликами':'')+' · год '+yrs+' за '+secs+' с ('+(yrs/Math.max(1,secs)).toFixed(1)+' лет/с'+(skipYears?', из них промотано '+skipYears:'')+') · колоний '+(fin&&fin.cols)+' · людей на Земле '+(fin&&fin.people)+' · колец '+(fin&&fin.sectors)+' · привод '+(fin&&fin.drive)+' · уровень ковчега '+(fin&&fin.arkLv),'');
   L.push('## Найденное ('+iss.length+')','');
   if(!iss.length) L.push('Механических проблем не поймано.','');
