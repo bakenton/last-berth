@@ -1,0 +1,332 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HELM — сбой, лабиринт (прототип)</title>
+<!-- Прототип 3 мини-игры «сбой Пульта» (24.10.2026): лабиринт как Pac-Man, на гексах. Черновик вне игры: work/, лист текстов и Notion не тронуты.
+     Пока идёт сбой, игра на паузе. Собрать все данные, потом в ядро. Глюки ведут себя по-разному;
+     импульс делает их уязвимыми. Три контура (жизни). ?lv=1..3 -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0d;--y:#FFD23F;--r:#FF2A1A;--t:#F2F1EC;--m:#9C9B95;--d:#5E5D58}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--t);font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:12px 16px;font-size:13px;letter-spacing:.06em;pointer-events:none}
+.top{top:0}.bot{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.bar .m{color:var(--m)}
+.bar b{color:var(--y);font-weight:normal}
+.ctl{pointer-events:auto;display:flex;gap:6px;align-items:center}
+.ctl button{background:none;border:1px solid var(--d);color:var(--m);font:inherit;font-size:13px;min-width:32px;height:32px;padding:0 8px;cursor:pointer}
+.ctl button.on{border-color:var(--y);color:var(--y)}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(11,11,13,.88);text-align:center;padding:24px 16px;box-sizing:border-box}
+.ov.hide{display:none}
+h1{font-family:Jost,sans-serif;font-weight:600;letter-spacing:.16em;color:var(--y);font-size:19px;margin:0;line-height:1.35}
+.ov.lost h1{color:var(--r)}
+.sub{color:var(--t);font-size:14px}
+.rules{color:var(--m);font-size:14px;line-height:1.8}
+.go{background:none;border:1px solid var(--y);color:var(--y);font:inherit;font-size:15px;letter-spacing:.2em;padding:12px 30px;cursor:pointer;margin-top:6px}
+.lost .go{border-color:var(--r);color:var(--r)}
+.lore{max-width:340px;width:100%;text-align:left;font-size:14px;line-height:1.65;min-height:9.5em;white-space:pre-wrap}
+.lore .y{color:var(--y)}.lore .m{color:var(--m)}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="bar top">
+  <span class="m"><span data-k="tag"></span> · <span data-k="paused"></span></span>
+  <span><span class="m" data-k="data"></span> <b id="hd">0</b></span>
+</div>
+<div class="bar bot">
+  <span><span class="m" data-k="lives"></span> <b id="hl"></b></span>
+  <span class="ctl"><span class="m" data-k="lvl"></span><button data-lv="1">1</button><button data-lv="2">2</button><button data-lv="3">3</button><button id="lang">EN</button></span>
+</div>
+
+<div class="ov" id="ovIntro">
+  <h1 data-k="title"></h1>
+  <div class="sub" data-k="sub"></div>
+  <div class="rules"><div data-k="r1"></div><div data-k="r2"></div><div data-k="r3"></div><div data-k="r4"></div></div>
+  <button class="go" id="bGo" data-k="go"></button>
+</div>
+<div class="ov lost hide" id="ovLost">
+  <h1 data-k="lost"></h1>
+  <div class="sub" data-k="lostSub"></div>
+  <button class="go" id="bRetry" data-k="retry"></button>
+</div>
+<div class="ov hide" id="ovWon">
+  <div class="lore" id="lore"></div>
+  <button class="go" id="bBack" data-k="back" style="visibility:hidden"></button>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Тексты прототипа. В игре они уйдут в лист (texts-add); здесь — только чтобы смотреть.
+var T={
+ ru:{tag:'ПУЛЬТ · СБОЙ 01',paused:'игра на паузе',data:'данные',lives:'контуры',lvl:'ур.',
+  title:'СБОЙ: КОРПУС.ПОК.II',sub:'Команда не просыпается.',
+  r1:'· собери все данные',r2:'⬢ потом — в ядро',r3:'◇ импульс — глюки уязвимы',r4:'тап — куда свернуть',
+  go:'ВОЙТИ',lost:'СВЯЗЬ ПОТЕРЯНА',lostSub:'Все контуры сгорели.',retry:'ЕЩЁ РАЗ',back:'К ПУЛЬТУ',
+  won:['КОМАНДА ПРОСНУЛАСЬ: КОРПУС.ПОК.II','Восстановлено: 1 блок памяти.','','«Файл чертежа. Автор: этот модуль.\nДата: раньше моей первой записи.»','','Суда второго поколения можно заказывать.']},
+ en:{tag:'HELM · FAULT 01',paused:'game paused',data:'data',lives:'circuits',lvl:'lvl',
+  title:'FAULT: HULL.GEN.II',sub:'The command will not wake.',
+  r1:'· collect all data',r2:'⬢ then — into the core',r3:'◇ pulse — glitches go weak',r4:'tap — where to turn',
+  go:'ENTER',lost:'SIGNAL LOST',lostSub:'All circuits burned out.',retry:'RETRY',back:'BACK TO HELM',
+  won:['COMMAND WOKE: HULL.GEN.II','Recovered: 1 memory block.','','"Design file. Author: this unit.\nDate: earlier than my first record."','','Generation II hulls can be ordered.']}
+};
+var lang='ru';
+function applyLang(){
+  document.documentElement.lang=lang;
+  [].forEach.call(document.querySelectorAll('[data-k]'),function(e){e.textContent=T[lang][e.getAttribute('data-k')]});
+  document.getElementById('lang').textContent=lang==='ru'?'EN':'RU';
+}
+
+// Уровни: 1 — первое улучшение, 3 — ковчег. Поле растёт, глюков больше, они быстрее, импульс короче.
+// me/gh — мс на клетку у игрока и глюка; scared — сколько длится импульс.
+var LV={1:{cols:7,rows:13,ch:2,me:200,gh:290,scared:6000},
+        2:{cols:8,rows:16,ch:3,me:190,gh:255,scared:5000},
+        3:{cols:9,rows:19,ch:4,me:180,gh:230,scared:4000}};
+var LIVES=3, DEATH=900, EATEN_BACK=2500;
+var DIRS=[[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]], S3=Math.sqrt(3); // В, СВ, СЗ, З, ЮЗ, ЮВ
+var DANG=DIRS.map(function(d){ return Math.atan2(1.5*d[1],S3*(d[0]+d[1]/2)) });
+
+// ---- поле и лабиринт (строятся на уровень)
+var COLS,ROWS,cells,idx,N,XC,YC,NB,open,START,CORE,HOUSE,POWERS,CORNERS;
+function key(q,r){return q+','+r}
+function at(q,r){return idx[key(q,r)]}
+function off(c,r){return at(c-Math.floor(r/2),r)}
+function step(i,d){ var c=cells[i]; return at(c.q+DIRS[d][0],c.r+DIRS[d][1]) }
+function isOpen(i,d){ return (open[i]>>d)&1 }
+function hdist(a,b){ var A=cells[a],B=cells[b], dq=A.q-B.q, dr=A.r-B.r; return (Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2 }
+function rng(seed){ var s=(seed>>>0)||1; return function(){ s^=s<<13; s>>>=0; s^=s>>>17; s^=s<<5; s>>>=0; return s/4294967296 } }
+function pick(a,rnd){ return a[Math.floor(rnd()*a.length)] }
+
+function build(lv){
+  var P=LV[lv]; COLS=P.cols; ROWS=P.rows; cells=[]; idx={};
+  for(var r=0;r<ROWS;r++)for(var c=0;c<COLS;c++){ var q=c-Math.floor(r/2); idx[key(q,r)]=cells.length; cells.push({q:q,r:r}) }
+  N=cells.length; XC=(COLS-.5)/2; YC=1.5*(ROWS-1)/2;
+  NB=cells.map(function(_,i){ var o=[]; for(var d=0;d<6;d++) if(step(i,d)!==undefined) o.push(d); return o });
+  var mid=Math.floor(COLS/2), MR=Math.floor(ROWS/2);
+  START=off(mid,ROWS-1); CORE=off(mid,0); HOUSE=off(mid,MR);
+  POWERS=[off(0,1),off(COLS-1,1),off(0,ROWS-2),off(COLS-1,ROWS-2)];
+  CORNERS=[off(0,0),off(COLS-1,0),off(0,ROWS-1),off(COLS-1,ROWS-1)];
+  // лабиринт: обход в глубину, потом петли и ни одного тупика (как у Pac-Man)
+  var rnd=rng(7919*lv+29), seen=new Uint8Array(N), st=[START];
+  open=new Uint8Array(N); seen[START]=1;
+  function link(i,d){ var j=step(i,d); open[i]|=1<<d; open[j]|=1<<((d+3)%6) }
+  while(st.length){
+    var i=st[st.length-1], ds=NB[i].filter(function(d){return !seen[step(i,d)]});
+    if(!ds.length){ st.pop(); continue }
+    var d=pick(ds,rnd), j=step(i,d); link(i,d); seen[j]=1; st.push(j);
+  }
+  for(i=0;i<N;i++) NB[i].forEach(function(d){ if(d<3&&!isOpen(i,d)&&rnd()<.22) link(i,d) });
+  for(i=0;i<N;i++){
+    var n=NB[i].filter(function(d){return isOpen(i,d)}).length;
+    if(n<2){ var shut=NB[i].filter(function(d){return !isOpen(i,d)}); if(shut.length) link(i,pick(shut,rnd)) }
+  }
+}
+
+var G=null, lv=+(new URLSearchParams(location.search).get('lv'))||1, built=0;
+if(!LV[lv]) lv=1;
+
+function newRun(){
+  if(built!==lv){ build(lv); built=lv; resize() }
+  var P=LV[lv];
+  G={P:P,t:0,state:'play',rnd:rng(Date.now()&0xffff),lives:LIVES,bits:new Uint8Array(N),left:0,power:{},
+     me:{i:START,from:START,t0:0,dir:-1},qa:null,gh:[],freeze:0};
+  for(var i=0;i<N;i++) if(i!==HOUSE&&i!==START&&i!==CORE){ G.bits[i]=1; G.left++ }
+  POWERS.forEach(function(i){ G.power[i]=1 });
+  // характеры глюков: 0 — гонится, 1 — заходит наперёд, 2 — трусит вблизи, 3 — бродит
+  for(var k=0;k<P.ch;k++) G.gh.push({type:k,i:HOUSE,from:HOUSE,t0:0,dir:-1,release:1500+k*3000,scared:0,wander:HOUSE,wt:0});
+  hud();
+}
+function resetPositions(){
+  var t=G.t; G.me={i:START,from:START,t0:t,dir:-1}; G.qa=null;
+  G.gh.forEach(function(g,k){ g.i=g.from=HOUSE; g.dir=-1; g.t0=t; g.release=t+1200+k*1800; g.scared=0 });
+}
+
+function exitsOf(i){ return NB[i].filter(function(d){return isOpen(i,d)}) }
+function angDiff(a,b){ return Math.abs(Math.atan2(Math.sin(a-b),Math.cos(a-b))) }
+
+function update(dt){
+  if(G.state==='dying'){ G.t+=dt; if(G.t>=G.freeze){ G.lives--; hud(); if(G.lives>0){ resetPositions(); G.state='play' } else { G.state='lost'; setTimeout(function(){ show('ovLost') },200) } } return }
+  if(G.state!=='play') return;
+  G.t+=dt; var t=G.t, P=G.P, me=G.me;
+
+  // игрок: поворот по тапу, если есть проход в пределах 60°; иначе дальше прямо; в коридоре — сам по изгибу
+  if(t-me.t0>=P.me){
+    var ex=exitsOf(me.i), d=-1;
+    if(G.qa!==null){ var best=-1,bd=9; ex.forEach(function(e){ var df=angDiff(DANG[e],G.qa); if(df<bd){bd=df;best=e} }); if(bd<=Math.PI/3+.01){ d=best; G.qa=null } }
+    if(d<0&&me.dir>=0&&isOpen(me.i,me.dir)) d=me.dir;
+    if(d<0&&me.dir>=0){ var fw=ex.filter(function(e){return e!==(me.dir+3)%6}); if(fw.length===1) d=fw[0] }
+    if(d>=0){ me.dir=d; me.from=me.i; me.i=step(me.i,d); me.t0=t; eat() ; if(G.state!=='play') return }
+    else { me.from=me.i }
+  }
+
+  // глюки
+  G.gh.forEach(function(g){
+    if(t<g.release) return;
+    var sc=t<g.scared, sp=sc?P.gh*1.6:P.gh;
+    if(t-g.t0<sp) return;
+    var ex=exitsOf(g.i), fw=ex.filter(function(e){return e!==(g.dir+3)%6});
+    if(!fw.length) fw=ex;
+    var d;
+    if(sc) d=pick(fw,G.rnd);
+    else {
+      var tg=target(g);
+      var bd=1e9,best=[]; fw.forEach(function(e){ var dd=hdist(step(g.i,e),tg); if(dd<bd){bd=dd;best=[e]} else if(dd===bd) best.push(e) });
+      d=pick(best,G.rnd);
+    }
+    g.dir=d; g.from=g.i; g.i=step(g.i,d); g.t0=t;
+  });
+
+  // столкновения — по видимым позициям
+  var mp=pos(me,P.me);
+  for(var k=0;k<G.gh.length;k++){
+    var g=G.gh[k]; if(t<g.release) continue;
+    var gp=pos(g,t<g.scared?P.gh*1.6:P.gh);
+    if(Math.hypot(gp[0]-mp[0],gp[1]-mp[1])<.95){
+      if(t<g.scared){ g.i=g.from=HOUSE; g.dir=-1; g.scared=0; g.release=t+EATEN_BACK; buzz(20) }
+      else { G.state='dying'; G.freeze=t+DEATH; buzz([60,40,60]); return }
+    }
+  }
+  hud();
+}
+function target(g){
+  var me=G.me;
+  if(g.type===1){ var i=me.i; if(me.dir>=0) for(var k=0;k<3;k++){ var j=step(i,me.dir); if(j===undefined) break; i=j } return i }
+  if(g.type===2) return hdist(g.i,me.i)>4?me.i:CORNERS[2];
+  if(g.type===3){ if(G.t>=g.wt){ g.wander=Math.floor(G.rnd()*N); g.wt=G.t+4000 } return g.wander }
+  return me.i;
+}
+function eat(){
+  var i=G.me.i;
+  if(G.bits[i]){ G.bits[i]=0; G.left-- }
+  if(G.power[i]){ delete G.power[i]; buzz(25); G.gh.forEach(function(g){ if(G.t>=g.release){ g.scared=G.t+G.P.scared; g.dir=(g.dir+3)%6 } }) }
+  if(i===CORE&&G.left===0) win();
+}
+function win(){ G.state='won'; hud(); setTimeout(function(){ show('ovWon'); typeLore() },350) }
+function buzz(p){ try{ navigator.vibrate&&navigator.vibrate(p) }catch(e){} }
+
+function hxy(i){ var c=cells[i]; return [S3*(c.q+c.r/2-XC),1.5*c.r-YC] }
+function pos(o,stepMs){ var a=hxy(o.from),b=hxy(o.i),k=Math.max(0,Math.min(1,(G.t-o.t0)/stepMs)); return [a[0]+(b[0]-a[0])*k,a[1]+(b[1]-a[1])*k] }
+
+// ---- рисование
+var cv=document.getElementById('c'), cx=cv.getContext('2d'), W=0,H=0,S=20,OX=0,OY=0,DPR=1;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+  if(COLS) S=Math.min((W-32)/((COLS+.5)*S3),(H-130)/(1.5*(ROWS-1)+2)); OX=W/2; OY=56+(H-56-64)/2;
+}
+function hexPath(x,y,s){ cx.beginPath(); for(var k=0;k<6;k++){ var a=Math.PI/180*(60*k-30); cx[k?'lineTo':'moveTo'](x+s*Math.cos(a),y+s*Math.sin(a)) } cx.closePath() }
+function px(p){ return [OX+p[0]*S,OY+p[1]*S] }
+
+function draw(now){
+  cx.fillStyle='#0b0b0d'; cx.fillRect(0,0,W,H);
+  if(!G) return;
+  var t=G.t, i, p, k, d;
+  cx.strokeStyle='rgba(255,210,63,.035)'; cx.lineWidth=1;
+  for(k=-H;k<W;k+=34){ cx.beginPath(); cx.moveTo(k,0); cx.lineTo(k+H*.58,H); cx.stroke() }
+
+  // стены: ребро гекса в сторону d — между углами (−60d−30)° и (−60d+30)°
+  cx.save(); cx.strokeStyle='rgba(255,210,63,.7)'; cx.lineWidth=2.2; cx.lineCap='round'; cx.shadowColor='#FFD23F'; cx.shadowBlur=6;
+  cx.beginPath();
+  for(i=0;i<N;i++){
+    p=px(hxy(i));
+    for(d=0;d<6;d++){
+      if(isOpen(i,d)) continue;
+      if(step(i,d)!==undefined&&d>=3) continue;
+      var a1=(-60*d-30)*Math.PI/180, a2=(-60*d+30)*Math.PI/180, s=S*1.0;
+      cx.moveTo(p[0]+s*Math.cos(a1),p[1]+s*Math.sin(a1)); cx.lineTo(p[0]+s*Math.cos(a2),p[1]+s*Math.sin(a2));
+    }
+  }
+  cx.stroke(); cx.restore();
+
+  // данные и импульсы
+  cx.fillStyle='rgba(255,210,63,.75)';
+  for(i=0;i<N;i++) if(G.bits[i]&&!G.power[i]){ p=px(hxy(i)); cx.fillRect(p[0]-1.75,p[1]-1.75,3.5,3.5) }
+  Object.keys(G.power).forEach(function(f){
+    p=px(hxy(+f)); var s=S*(.32+.06*Math.sin(now/150));
+    cx.save(); cx.shadowColor='#FFD23F'; cx.shadowBlur=12; hexPath(p[0],p[1],s); cx.strokeStyle='#FFD23F'; cx.lineWidth=2; cx.stroke(); cx.restore();
+  });
+  // ядро
+  p=px(hxy(CORE)); var opened=G.left===0;
+  cx.save(); if(opened){ cx.shadowColor='#FFD23F'; cx.shadowBlur=18+8*Math.sin(now/180) }
+  hexPath(p[0],p[1],S*.62); cx.strokeStyle=opened?'#FFD23F':'rgba(255,210,63,.4)'; cx.lineWidth=2; cx.stroke();
+  hexPath(p[0],p[1],S*.32); cx.fillStyle=opened?'#FFD23F':'rgba(255,210,63,.15)'; cx.fill(); cx.restore();
+  // дом глюков
+  p=px(hxy(HOUSE)); hexPath(p[0],p[1],S*.7); cx.strokeStyle='rgba(255,42,26,.35)'; cx.lineWidth=1; cx.setLineDash([3,3]); cx.stroke(); cx.setLineDash([]);
+
+  // глюки
+  G.gh.forEach(function(g,k){
+    var sc=t<g.scared, q=px(t<g.release?hxy(HOUSE):pos(g,sc?G.P.gh*1.6:G.P.gh)), s=S*.5;
+    if(t<g.release){ q=[q[0]+Math.cos(k*1.6+now/400)*S*.25,q[1]+Math.sin(k*1.6+now/400)*S*.25]; cx.globalAlpha=.55 }
+    var ending=sc&&g.scared-t<1200&&Math.floor(now/120)%2;
+    cx.save(); cx.translate(q[0]+(sc?0:(Math.random()-.5)*2),q[1]+(sc?0:(Math.random()-.5)*2));
+    cx.beginPath(); var n=5+k; for(var m=0;m<n*2;m++){ var a=m/(n*2)*Math.PI*2+now/(300+k*90), rr=s*(m%2?.55:1)*(sc?1:(.85+Math.random()*.3)); cx[m?'lineTo':'moveTo'](Math.cos(a)*rr,Math.sin(a)*rr) } cx.closePath();
+    cx.fillStyle=sc?(ending?'#F2F1EC':'#4FA3FF'):['#FF2A1A','#FF8A1F','#B48CFF','#FF5A44'][k%4]; cx.fill();
+    cx.restore(); cx.globalAlpha=1;
+  });
+  // Пульт
+  var dying=G.state==='dying'||G.state==='lost';
+  if(!dying||Math.floor(now/80)%2){
+    p=px(pos(G.me,G.P.me));
+    var a=G.me.dir>=0?DANG[G.me.dir]:-Math.PI/2;
+    cx.save(); cx.shadowColor='#FFD23F'; cx.shadowBlur=14;
+    hexPath(p[0],p[1],S*.5); cx.fillStyle='#141417'; cx.fill(); cx.strokeStyle=dying?'#FF2A1A':'#FFD23F'; cx.lineWidth=2; cx.stroke();
+    cx.translate(p[0],p[1]); cx.rotate(a); cx.beginPath(); cx.moveTo(S*.28,0); cx.lineTo(-S*.16,S*.22); cx.lineTo(-S*.16,-S*.22); cx.closePath(); cx.fillStyle='#FFD23F'; cx.fill();
+    cx.restore();
+  }
+}
+
+// ---- интерфейс
+var hd=document.getElementById('hd'), hl=document.getElementById('hl');
+function hud(){
+  if(!G) return;
+  hd.textContent=G.left;
+  hl.textContent='⬢'.repeat(Math.max(0,G.lives))+'⬡'.repeat(LIVES-Math.max(0,G.lives));
+  [].forEach.call(document.querySelectorAll('[data-lv]'),function(b){ b.classList.toggle('on',+b.getAttribute('data-lv')===lv) });
+}
+function show(id){ ['ovIntro','ovLost','ovWon'].forEach(function(o){ document.getElementById(o).classList.toggle('hide',o!==id) }) }
+
+var loreTimer=0;
+function typeLore(){
+  var box=document.getElementById('lore'), text=T[lang].won.join('\n'), n=0, back=document.getElementById('bBack');
+  back.style.visibility='hidden'; clearInterval(loreTimer);
+  loreTimer=setInterval(function(){
+    n+=2; var out=text.slice(0,n).split('\n').map(function(l,ix){ var cl=ix===0?'y':ix===1?'m':''; return '<span class="'+cl+'">'+l.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>' }).join('\n');
+    box.innerHTML=out+(n<text.length?'<span class="y">▌</span>':'');
+    if(n>=text.length){ clearInterval(loreTimer); back.style.visibility='visible' }
+  },28);
+}
+
+// тап — направление от Пульта к пальцу; свернёт на ближайшем проходе в эту сторону
+cv.addEventListener('pointerdown',function(e){
+  if(!G||G.state!=='play') return;
+  var p=px(pos(G.me,G.P.me)); G.qa=Math.atan2(e.clientY-p[1],e.clientX-p[0]);
+});
+var KA={ArrowRight:0,d:0,ArrowLeft:Math.PI,a:Math.PI,ArrowUp:-Math.PI/2,w:-Math.PI/2,ArrowDown:Math.PI/2,s:Math.PI/2};
+addEventListener('keydown',function(e){
+  if(!G||G.state!=='play') return;
+  var k=e.key.length===1?e.key.toLowerCase():e.key;
+  if(KA[k]!==undefined){ G.qa=KA[k]; e.preventDefault() }
+});
+
+document.getElementById('bGo').onclick=function(){ newRun(); show(null) };
+document.getElementById('bRetry').onclick=function(){ newRun(); show(null) };
+document.getElementById('bBack').onclick=function(){ clearInterval(loreTimer); newRun(); G.state='intro'; show('ovIntro') };
+document.getElementById('lang').onclick=function(){ lang=lang==='ru'?'en':'ru'; applyLang(); if(G&&G.state==='won') typeLore() };
+[].forEach.call(document.querySelectorAll('[data-lv]'),function(b){ b.onclick=function(){ lv=+b.getAttribute('data-lv'); newRun(); G.state='intro'; show('ovIntro') } });
+
+addEventListener('resize',resize);
+var last=0;
+function frame(now){ var dt=Math.min(50,now-(last||now)); last=now; update(dt); draw(now); requestAnimationFrame(frame) }
+applyLang(); resize(); newRun(); G.state='intro'; hud();
+window.HACK={get G(){return G},hxy:hxy,px:px,step:step,isOpen:isOpen,get N(){return N},get CORE(){return CORE},DANG:DANG,pos:pos}; // для проверки из Playwright
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>HELM — плата (прототип)</title>
+<!-- Прототип мини-игры «плата Пульта» (26.10.2026), замена hack-v1. Черновик вне игры: work/, лист текстов и Notion не тронуты.
+     Пока плата открыта, игра на паузе. Проигрыша нет: от питания тянешь дорожки, команду запитать обязательно,
+     блоки памяти — по выбору, припоя хватает на k из m. Блоки, до которых не дотянулся, перегорают (в этом забеге).
+     Бюджет считается точно: минимальное дерево Штейнера по клеткам (Dreyfus–Wagner), поэтому «k из m» всегда решаемо
+     и «все m» — никогда. ?lv=1..3 — уровень (1 — первое улучшение, 3 — ковчег), ?seed=N — плата. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b0b0d;--y:#FFD23F;--r:#FF2A1A;--a:#B48CFF;--t:#F2F1EC;--m:#9C9B95;--d:#5E5D58;--ln:#2E2E33}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--t);font-family:"Share Tech Mono",monospace;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px 10px;padding:12px 16px;font-size:13px;letter-spacing:.06em;pointer-events:none;box-sizing:border-box}
+.top{top:0}.bot{bottom:0;padding-bottom:max(12px,env(safe-area-inset-bottom))}
+.bar .m{color:var(--m)}
+.bar b{color:var(--y);font-weight:normal}
+.bar b.low{color:var(--r)}
+#legend{position:fixed;left:0;right:0;top:38px;padding:0 16px;display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;letter-spacing:.05em;pointer-events:none}
+#legend .cmd{color:var(--y)}#legend .on{color:var(--a)}#legend .off{color:var(--d)}
+.ctl{pointer-events:auto;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.ctl button{background:none;border:1px solid var(--d);color:var(--m);font:inherit;font-size:13px;min-width:32px;height:32px;padding:0 8px;cursor:pointer}
+.ctl button.on{border-color:var(--y);color:var(--y)}
+.ctl button:disabled{opacity:.35;cursor:default}
+#run{border-color:var(--y);color:var(--y);letter-spacing:.16em;padding:0 16px}
+.ov{position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(11,11,13,.9);text-align:center;padding:24px 16px;box-sizing:border-box}
+.ov.hide{display:none}
+h1{font-family:Jost,sans-serif;font-weight:600;letter-spacing:.16em;color:var(--y);font-size:19px;margin:0;line-height:1.35}
+.sub{color:var(--t);font-size:14px}
+.rules{color:var(--m);font-size:14px;line-height:1.8;max-width:520px;text-wrap:balance}
+.go{background:none;border:1px solid var(--y);color:var(--y);font:inherit;font-size:15px;letter-spacing:.2em;padding:12px 30px;cursor:pointer;margin-top:6px}
+.go.alt{border-color:var(--d);color:var(--m);font-size:13px;padding:8px 18px;margin-top:0}
+.note{color:var(--d);font-size:12px;max-width:340px}
+.lore{max-width:360px;width:100%;text-align:left;font-size:14px;line-height:1.65;min-height:12em;white-space:pre-wrap}
+.lore .y{color:var(--y)}.lore .m{color:var(--m)}.lore .a{color:var(--a)}.lore .d{color:var(--d)}
+#toast{position:fixed;left:50%;transform:translateX(-50%);color:var(--r);font-size:13px;letter-spacing:.06em;opacity:0;transition:opacity .25s;pointer-events:none}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="bar top">
+  <span class="m"><span data-k="tag"></span> <span id="hno"></span> · <span data-k="paused"></span></span>
+  <span><span class="m" data-k="solder"></span> <b id="hs">0/0</b></span>
+</div>
+<div id="legend"></div>
+<div class="bar bot">
+  <span class="ctl"><button id="reset" data-k="reset"></button><button id="reroll" data-k="reroll"></button></span>
+  <span class="ctl"><span class="m" data-k="lvl"></span><button data-lv="1">1</button><button data-lv="2">2</button><button data-lv="3">3</button><button id="lang">EN</button><button id="run" data-k="run" disabled></button></span>
+</div>
+<div id="toast"></div>
+
+<div class="ov" id="ovIntro">
+  <h1 id="iTitle"></h1>
+  <div class="sub" data-k="sub"></div>
+  <div class="rules"><div data-k="r1"></div><div data-k="r2"></div><div data-k="r3"></div><div data-k="r4"></div></div>
+  <button class="go" id="bGo" data-k="go"></button>
+  <button class="go alt" id="bSkip" data-k="skip"></button>
+  <div class="note" data-k="skipNote"></div>
+</div>
+<div class="ov hide" id="ovDone">
+  <div class="lore" id="lore"></div>
+  <button class="go" id="bBack" data-k="back" style="visibility:hidden"></button>
+</div>
+
+<script>
+(function(){
+'use strict';
+// Тексты прототипа. В игре они уйдут в лист (texts-add); здесь — только чтобы смотреть.
+// Блоки памяти, кроме ЧЕРТЕЖА (строка из hack-v1), — заглушки: лор пишет Никита, правила подачи — LORE-BIBLE 7.3.
+var T={
+ ru:{tag:'ПУЛЬТ · ПЛАТА',paused:'игра на паузе',solder:'припой',lvl:'ур.',
+  title:'ПЛАТА: {c}',sub:'Команда не просыпается. Дорожки выгорели.',
+  r1:'⏚ тяни дорожку от питания — мышью или пальцем',
+  r2:'▣ запитай команду — без неё запуска нет',
+  r3:'◇ блоки памяти — по выбору: припоя хватит на {k} из {m}',
+  r4:'тап по дорожке — снять · ×2 — порченая медь · ✕ — выгорело',
+  go:'ВОЙТИ',skip:'ПРОПУСТИТЬ',skipNote:'Команда проснётся сама через ~100 лет. Блоки памяти перегорят.',
+  reset:'СБРОС',reroll:'ДРУГАЯ ПЛАТА',run:'ЗАПУСК',back:'К ПУЛЬТУ',
+  fromPower:'веди от питания или от дорожки',noSolder:'припой кончился',burnt:'выгорело',
+  woke:'КОМАНДА ПРОСНУЛАСЬ: {c}',used:'Припой: {u}/{b}',clean:' · чистая пайка',lost:'перегорел',
+  sleep:'КОМАНДА СПИТ: {c}',sleepT:'Проснётся сама: через ~100 лет.',allLost:'Блоки памяти перегорели.',
+  cmd:['КОРПУС.ПОК.II','КОРПУС.ПОК.III','КОВЧЕГ.КИЛЬ'],
+  eff:['Суда второго поколения можно заказывать.','Суда третьего поколения можно заказывать.','Киль ковчега можно закладывать.'],
+  mem:[['ЧЕРТЁЖ','«Файл чертежа. Автор: этот модуль.\nДата: раньше моей первой записи.»'],
+       ['ЖУРНАЛ СМЕНЫ','[заглушка: запись старшего смены, до двух строк]'],
+       ['ГОЛОС','[заглушка: реплика Александры, до двух строк]'],
+       ['БАЗА МИРОВ','[заглушка: строка из базы миров Пульта]']]},
+ en:{tag:'HELM · BOARD',paused:'game paused',solder:'solder',lvl:'lvl',
+  title:'BOARD: {c}',sub:'The command will not wake. The traces are burnt.',
+  r1:'⏚ draw a trace from power — mouse or finger',
+  r2:'▣ power the command — no launch without it',
+  r3:'◇ memory blocks — your pick: solder for {k} of {m}',
+  r4:'tap a trace — remove · ×2 — corroded copper · ✕ — burnt',
+  go:'ENTER',skip:'SKIP',skipNote:'The command wakes on its own in ~100 years. Memory blocks burn out.',
+  reset:'RESET',reroll:'OTHER BOARD',run:'LAUNCH',back:'BACK TO HELM',
+  fromPower:'start from power or a trace',noSolder:'out of solder',burnt:'burnt',
+  woke:'COMMAND WOKE: {c}',used:'Solder: {u}/{b}',clean:' · clean joint',lost:'burnt out',
+  sleep:'COMMAND ASLEEP: {c}',sleepT:'Wakes on its own: in ~100 years.',allLost:'Memory blocks burnt out.',
+  cmd:['HULL.GEN.II','HULL.GEN.III','ARK.KEEL'],
+  eff:['Generation II hulls can be ordered.','Generation III hulls can be ordered.','The ark keel can be laid.'],
+  mem:[['DESIGN FILE','"Design file. Author: this unit.\nDate: earlier than my first record."'],
+       ['SHIFT LOG','[placeholder: a shift chief\'s entry, two lines max]'],
+       ['VOICE','[placeholder: a line from Alexandra, two lines max]'],
+       ['WORLD BASE','[placeholder: a line from the Helm\'s world base]']]}
+};
+var lang='ru';
+function tx(s,o){ return s.replace(/\{(\w)\}/g,function(_,k){ return o&&o[k]!==undefined?o[k]:'{'+k+'}' }) }
+
+// Уровни: m — блоков памяти, k — сколько из них влезает в припой, slack — запас припоя сверх точного минимума,
+// burn/rust — доли выгоревших и порченых (×2) клеток.
+var LV={1:{m:2,k:1,slack:1,burn:.12,rust:.08},
+        2:{m:3,k:2,slack:0,burn:.14,rust:.10},
+        3:{m:4,k:2,slack:0,burn:.15,rust:.12}};
+var COLS=7, ROWS=10, N=COLS*ROWS, SRC=(ROWS-1)*COLS+3;
+var NB=[];
+for(var i0=0;i0<N;i0++){ var c0=i0%COLS, r0=(i0/COLS)|0, nb=[];
+  if(c0>0) nb.push(i0-1); if(c0<COLS-1) nb.push(i0+1); if(r0>0) nb.push(i0-COLS); if(r0<ROWS-1) nb.push(i0+COLS); NB.push(nb) }
+function md(a,b){ return Math.abs(a%COLS-b%COLS)+Math.abs(((a/COLS)|0)-((b/COLS)|0)) }
+function rng(seed){ var s=(seed>>>0)||1; return function(){ s^=s<<13; s>>>=0; s^=s>>>17; s^=s<<5; s>>>=0; return s/4294967296 } }
+
+// Минимальное дерево Штейнера по весам клеток (Dreyfus–Wagner): st[mask] — меньше всего припоя,
+// чтобы связать терминалы из mask. Вес клетки входит в дерево один раз; терминалы весят 0.
+function steiner(terms,w,pass){
+  var T=terms.length, FULL=1<<T, dp=[], st=new Float64Array(FULL).fill(Infinity), mask, v, sub;
+  for(mask=0;mask<FULL;mask++) dp.push(new Float64Array(N).fill(Infinity));
+  for(var t=0;t<T;t++) dp[1<<t][terms[t]]=w[terms[t]];
+  for(mask=1;mask<FULL;mask++){
+    var d=dp[mask], q=[], inq=new Uint8Array(N);
+    for(v=0;v<N;v++){
+      if(!pass[v]) continue;
+      for(sub=(mask-1)&mask;sub>0;sub=(sub-1)&mask){
+        var s2=mask^sub; if(sub<s2) continue;
+        var val=dp[sub][v]+dp[s2][v]-w[v]; if(val<d[v]) d[v]=val;
+      }
+      if(d[v]<Infinity){ q.push(v); inq[v]=1 }
+    }
+    while(q.length){ v=q.shift(); inq[v]=0;
+      NB[v].forEach(function(u){ if(!pass[u]) return; var nv=d[v]+w[u]; if(nv<d[u]){ d[u]=nv; if(!inq[u]){ inq[u]=1; q.push(u) } } }) }
+    for(v=0;v<N;v++) if(d[v]<st[mask]) st[mask]=d[v];
+  }
+  return st;
+}
+function subsets(m,k){ var out=[]; for(var s=0;s<(1<<m);s++){ var n=0; for(var b=0;b<m;b++) if(s>>b&1) n++; if(n===k) out.push(s) } return out }
+
+// Плата уровня: терминалы 0 — питание, 1 — команда, 2.. — блоки памяти.
+// Припой = самый дорогой из наборов «команда + k блоков» (+slack); ни один набор из k+1 блоков в него не влезает.
+function genBoard(lv,seed){
+  var P=LV[lv];
+  for(var tries=0;tries<500;tries++){
+    var rnd=rng(seed*7919+lv*104729+tries*31+1), terms=[SRC];
+    var place=function(r0,r1){ for(var n=0;n<80;n++){ var i=((r0+rnd()*(r1-r0+1))|0)*COLS+((rnd()*COLS)|0);
+      if(terms.every(function(t){ return md(i,t)>=3 })){ terms.push(i); return true } } return false };
+    if(!place(0,2)) continue;
+    var ok=true; for(var k=0;k<P.m;k++) if(!place(0,ROWS-3)){ ok=false; break }
+    if(!ok) continue;
+    var w=new Float64Array(N), pass=new Uint8Array(N), burn=new Uint8Array(N);
+    for(var i=0;i<N;i++){
+      pass[i]=1; w[i]=1;
+      if(terms.indexOf(i)>=0){ w[i]=0; continue }
+      if(NB[SRC].indexOf(i)>=0) continue;
+      var r=rnd(); if(r<P.burn){ burn[i]=1; pass[i]=0 } else if(r<P.burn+P.rust) w[i]=2;
+    }
+    var st=steiner(terms,w,pass), B=0;
+    subsets(P.m,P.k).forEach(function(s){ B=Math.max(B,st[3|(s<<2)]) });
+    if(!(B<Infinity)) continue;
+    B+=P.slack;
+    if(B<7||subsets(P.m,P.k+1).some(function(s){ return st[3|(s<<2)]<=B })) continue;
+    return {lv:lv,seed:seed,terms:terms,w:w,pass:pass,burn:burn,st:st,B:B};
+  }
+  return null;
+}
+
+var G=null, qs=new URLSearchParams(location.search), lv=+qs.get('lv')||1, seed=+qs.get('seed')||1;
+if(!LV[lv]) lv=1;
+function newBoard(){
+  var b=genBoard(lv,seed); while(!b){ seed++; b=genBoard(lv,seed) }
+  G={b:b,state:'intro',tree:new Uint8Array(N),adj:[],used:0,depth:new Int16Array(N).fill(-1),hover:-1,flash:{}};
+  for(var i=0;i<N;i++) G.adj.push({});
+  G.tree[SRC]=1; relink();
+}
+function isTerm(i){ return G.b.terms.indexOf(i)>=0 }
+function link(a,b){ G.adj[a][b]=1; G.adj[b][a]=1 }
+// Дерево — только то, что связано с питанием: глубина от питания (для бегущего тока), отрезанное — снимается.
+function relink(){
+  var d=G.depth; d.fill(-1); d[SRC]=0; var q=[SRC];
+  while(q.length){ var v=q.shift(); for(var u in G.adj[v]){ u=+u; if(d[u]<0){ d[u]=d[v]+1; q.push(u) } } }
+  G.used=0;
+  for(var i=0;i<N;i++){
+    if(G.tree[i]&&d[i]<0){ G.tree[i]=0; for(var u2 in G.adj[i]) delete G.adj[+u2][i]; G.adj[i]={} }
+    if(G.tree[i]) G.used+=G.b.w[i];
+  }
+}
+function powered(t){ return !!G.tree[G.b.terms[t]] }
+function mask(){ var m=0; G.b.terms.forEach(function(t,ix){ if(G.tree[t]) m|=1<<ix }); return m }
+
+function extend(from,j){
+  if(G.tree[j]){ drag.head=j; return }
+  if(!G.b.pass[j]){ toast(T[lang].burnt); return }
+  if(G.used+G.b.w[j]>G.b.B){ toast(T[lang].noSolder); beep(110,.14,.05,'sawtooth'); return }
+  link(from,j); G.tree[j]=1; relink(); drag.head=j;
+  if(isTerm(j)){ G.flash[j]=performance.now(); beep(660,.12,.05,'triangle'); setTimeout(function(){ beep(990,.16,.04,'triangle') },70) }
+  else beep(700+G.depth[j]*25,.03,.025);
+  hud();
+}
+function cut(i){
+  for(var u in G.adj[i]) delete G.adj[+u][i];
+  G.adj[i]={}; G.tree[i]=0; relink(); beep(260,.05,.03); hud();
+}
+
+// ——— звук: щелчок пайки, аккорд терминала ———
+var AC=null;
+function audio(){ if(AC) return; try{ AC=new (window.AudioContext||window.webkitAudioContext)() }catch(e){} }
+function beep(f,d,g,type){
+  if(!AC) return; var o=AC.createOscillator(), a=AC.createGain(), t=AC.currentTime;
+  o.type=type||'square'; o.frequency.value=f; a.gain.setValueAtTime(g,t); a.gain.exponentialRampToValueAtTime(.0001,t+d);
+  o.connect(a); a.connect(AC.destination); o.start(t); o.stop(t+d);
+}
+
+// ——— рисунок ———
+var cv=document.getElementById('c'), cx=cv.getContext('2d'), DPR=1, W=0, H=0, S=40, OX=0, OY=0;
+function resize(){
+  DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight;
+  cv.width=W*DPR; cv.height=H*DPR; cx.setTransform(DPR,0,0,DPR,0,0);
+  var top=document.getElementById('legend').getBoundingClientRect().bottom+10,
+      bot=H-document.querySelector('.bot').getBoundingClientRect().top+10;
+  S=Math.floor(Math.min(64,(W-32)/COLS,(H-top-bot)/ROWS));
+  OX=Math.round((W-S*COLS)/2); OY=Math.round(top+(H-top-bot-S*ROWS)/2);
+  document.getElementById('toast').style.bottom=(bot+6)+'px';
+}
+function cxy(i){ return [OX+(i%COLS+.5)*S, OY+(((i/COLS)|0)+.5)*S] }
+function cellAt(x,y){ var c=Math.floor((x-OX)/S), r=Math.floor((y-OY)/S); return c<0||r<0||c>=COLS||r>=ROWS?-1:r*COLS+c }
+function box(x,y,s){ cx.beginPath(); cx.rect(x-s/2,y-s/2,s,s) }
+
+function draw(now){
+  cx.clearRect(0,0,W,H);
+  if(!G) return;
+  var b=G.b, i, p;
+  cx.fillStyle='#111114'; cx.fillRect(OX-6,OY-6,S*COLS+12,S*ROWS+12);
+  cx.strokeStyle='#2E2E33'; cx.lineWidth=1; cx.strokeRect(OX-6.5,OY-6.5,S*COLS+13,S*ROWS+13);
+  for(i=0;i<N;i++){
+    p=cxy(i);
+    if(b.burn[i]){
+      cx.fillStyle='#1c0f0e'; box(p[0],p[1],S*.86); cx.fill();
+      cx.strokeStyle='rgba(255,42,26,.38)'; cx.lineWidth=1.5; var e=S*.16;
+      cx.beginPath(); cx.moveTo(p[0]-e,p[1]-e); cx.lineTo(p[0]+e,p[1]+e); cx.moveTo(p[0]+e,p[1]-e); cx.lineTo(p[0]-e,p[1]+e); cx.stroke();
+    } else if(b.w[i]===2){
+      cx.fillStyle='rgba(126,150,92,.13)'; box(p[0],p[1],S*.86); cx.fill();
+      cx.fillStyle='rgba(156,155,149,.55)'; cx.font=Math.round(S*.2)+'px "Share Tech Mono",monospace'; cx.textAlign='right'; cx.textBaseline='bottom';
+      cx.fillText('×2',p[0]+S*.4,p[1]+S*.42);
+    } else if(!isTerm(i)){
+      cx.fillStyle='rgba(94,93,88,.55)'; cx.beginPath(); cx.arc(p[0],p[1],1.6,0,7); cx.fill();
+    }
+  }
+  if(G.hover>=0&&G.state==='play'){ p=cxy(G.hover); cx.strokeStyle='rgba(242,241,236,.18)'; cx.lineWidth=1; box(p[0],p[1],S*.92); cx.stroke() }
+
+  // дорожки и бегущий от питания ток
+  cx.lineCap='round'; cx.strokeStyle='#C9A42E'; cx.lineWidth=Math.max(3,S*.2);
+  var edges=[];
+  for(i=0;i<N;i++) for(var u in G.adj[i]){ u=+u; if(i<u) edges.push(G.depth[i]<G.depth[u]?[i,u]:[u,i]) }
+  cx.beginPath(); edges.forEach(function(e){ var a=cxy(e[0]),c=cxy(e[1]); cx.moveTo(a[0],a[1]); cx.lineTo(c[0],c[1]) }); cx.stroke();
+  for(i=0;i<N;i++) if(G.tree[i]&&!isTerm(i)){ p=cxy(i); cx.fillStyle='#FFD23F'; cx.beginPath(); cx.arc(p[0],p[1],S*.14,0,7); cx.fill() }
+  var ph=now/320;
+  cx.fillStyle='rgba(255,246,200,.95)';
+  edges.forEach(function(e){ var f=ph-G.depth[e[0]]; f-=Math.floor(f); if(f>.5) return; f*=2;
+    var a=cxy(e[0]),c=cxy(e[1]); cx.beginPath(); cx.arc(a[0]+(c[0]-a[0])*f,a[1]+(c[1]-a[1])*f,Math.max(1.5,S*.06),0,7); cx.fill() });
+
+  // терминалы
+  cx.textAlign='center'; cx.textBaseline='middle';
+  b.terms.forEach(function(t,ix){
+    var q=cxy(t), on=!!G.tree[t], fl=G.flash[t]?Math.max(0,1-(now-G.flash[t])/600):0, col=ix<=1?'#FFD23F':'#B48CFF';
+    if(ix===0){ cx.fillStyle=col; box(q[0],q[1],S*.72); cx.fill(); cx.fillStyle='#0b0b0d'; cx.font='600 '+Math.round(S*.2)+'px Jost,sans-serif'; cx.fillText('PWR',q[0],q[1]); return }
+    if(fl){ cx.strokeStyle=col; cx.globalAlpha=fl; cx.lineWidth=2; box(q[0],q[1],S*(.8+.5*(1-fl))); cx.stroke(); cx.globalAlpha=1 }
+    cx.fillStyle=on?col:'#111114'; box(q[0],q[1],S*.74); cx.fill();
+    cx.strokeStyle=col; cx.globalAlpha=on?1:.75; cx.lineWidth=2; box(q[0],q[1],S*.74); cx.stroke(); cx.globalAlpha=1;
+    // ножки микросхемы
+    cx.fillStyle=col; for(var k=-1;k<=1;k++){ cx.fillRect(q[0]-S*.45,q[1]+k*S*.2-1,S*.08,2); cx.fillRect(q[0]+S*.37,q[1]+k*S*.2-1,S*.08,2) }
+    cx.fillStyle=on?'#0b0b0d':col; cx.font='600 '+Math.round(S*(ix===1?.2:.3))+'px Jost,sans-serif';
+    cx.fillText(ix===1?'CMD':String.fromCharCode(63+ix),q[0],q[1]+1);
+  });
+}
+
+// ——— интерфейс ———
+var hs=document.getElementById('hs'), legend=document.getElementById('legend'), runB=document.getElementById('run');
+function applyLang(){
+  document.documentElement.lang=lang; var L=T[lang], P=LV[lv];
+  [].forEach.call(document.querySelectorAll('[data-k]'),function(e){ e.textContent=tx(L[e.getAttribute('data-k')],{k:P.k,m:P.m}) });
+  document.getElementById('iTitle').textContent=tx(L.title,{c:L.cmd[lv-1]});
+  document.getElementById('lang').textContent=lang==='ru'?'EN':'RU';
+  document.getElementById('hno').textContent='0'+lv;
+  hud();
+}
+function hud(){
+  if(!G) return; var L=T[lang], b=G.b;
+  hs.textContent=G.used+'/'+b.B; hs.classList.toggle('low',b.B-G.used<=1);
+  var h='<span class="cmd">'+(powered(1)?'■':'□')+' '+L.cmd[lv-1]+'</span>';
+  for(var k=2;k<b.terms.length;k++) h+='<span class="'+(powered(k)?'on':'off')+'">'+(powered(k)?'◆':'◇')+' '+String.fromCharCode(63+k)+' '+L.mem[k-2][0]+'</span>';
+  legend.innerHTML=h;
+  runB.disabled=!(G.state==='play'&&powered(1));
+  [].forEach.call(document.querySelectorAll('[data-lv]'),function(e){ e.classList.toggle('on',+e.getAttribute('data-lv')===lv) });
+}
+function show(id){ ['ovIntro','ovDone'].forEach(function(o){ document.getElementById(o).classList.toggle('hide',o!==id) }) }
+var toastT=0, toastLast='';
+function toast(s){ var el=document.getElementById('toast'); if(s===toastLast&&el.style.opacity==='1') return; toastLast=s; el.textContent=s; el.style.opacity='1'; clearTimeout(toastT); toastT=setTimeout(function(){ el.style.opacity='0' },1100) }
+
+var loreTimer=0;
+function typeLines(lines){
+  var box=document.getElementById('lore'), back=document.getElementById('bBack'), total=0, n=0;
+  lines.forEach(function(l){ total+=l.s.length+1 });
+  back.style.visibility='hidden'; clearInterval(loreTimer);
+  loreTimer=setInterval(function(){
+    n+=2; var left=n, out=[];
+    lines.forEach(function(l){ if(left<=0) return; var s=l.s.slice(0,left); left-=l.s.length+1;
+      out.push('<span class="'+l.cl+'">'+s.replace(/&/g,'&amp;').replace(/</g,'&lt;')+'</span>') });
+    box.innerHTML=out.join('\n')+(n<total?'<span class="y">▌</span>':'');
+    if(n>=total){ clearInterval(loreTimer); back.style.visibility='visible' }
+  },22);
+}
+function result(){
+  var L=T[lang], b=G.b, lines=[], c=L.cmd[lv-1];
+  if(G.state==='done'){
+    var clean=G.used===b.st[mask()];
+    lines.push({cl:'y',s:tx(L.woke,{c:c})},{cl:'m',s:tx(L.used,{u:G.used,b:b.B})+(clean?L.clean:'')},{cl:'m',s:L.eff[lv-1]},{cl:'',s:''});
+    for(var k=2;k<b.terms.length;k++){
+      var nm=String.fromCharCode(63+k)+' · '+L.mem[k-2][0];
+      if(powered(k)) lines.push({cl:'a',s:nm},{cl:'',s:L.mem[k-2][1]},{cl:'',s:''});
+      else lines.push({cl:'d',s:nm+' — '+L.lost});
+    }
+  } else lines.push({cl:'y',s:tx(L.sleep,{c:c})},{cl:'m',s:L.sleepT},{cl:'',s:''},{cl:'d',s:L.allLost});
+  typeLines(lines);
+}
+
+var drag=null;
+function step(j){
+  if(j<0||j===drag.head) return;
+  var h=drag.head;
+  if(md(h,j)===2&&(h%COLS)!==(j%COLS)&&((h/COLS)|0)!==((j/COLS)|0)){ // срезал угол — через соседнюю клетку
+    var a=((h/COLS)|0)*COLS+j%COLS, c=((j/COLS)|0)*COLS+h%COLS, mid=G.tree[a]||G.b.pass[a]?a:c;
+    step(mid); if(drag.head!==mid) return; h=mid;
+  }
+  if(md(h,j)!==1) return;
+  drag.moved=true; extend(h,j);
+}
+cv.addEventListener('pointerdown',function(e){
+  audio(); if(!G||G.state!=='play') return;
+  var i=cellAt(e.clientX,e.clientY); if(i<0) return;
+  if(!G.tree[i]){ toast(T[lang].fromPower); return }
+  try{ cv.setPointerCapture(e.pointerId) }catch(_){}
+  drag={head:i,start:i,moved:false,x:e.clientX,y:e.clientY};
+});
+cv.addEventListener('pointermove',function(e){
+  if(!G) return; G.hover=cellAt(e.clientX,e.clientY);
+  if(!drag) return;
+  var dx=e.clientX-drag.x, dy=e.clientY-drag.y, n=Math.max(1,Math.ceil(Math.hypot(dx,dy)/(S/4)));
+  for(var s=1;s<=n;s++) step(cellAt(drag.x+dx*s/n,drag.y+dy*s/n));
+  drag.x=e.clientX; drag.y=e.clientY;
+});
+function up(){ if(drag&&!drag.moved&&drag.start!==SRC&&!isTerm(drag.start)) cut(drag.start); drag=null }
+cv.addEventListener('pointerup',up); cv.addEventListener('pointercancel',function(){ drag=null });
+cv.addEventListener('pointerleave',function(){ if(G) G.hover=-1 });
+
+function restart(){ clearInterval(loreTimer); newBoard(); applyLang(); show('ovIntro') }
+document.getElementById('bGo').onclick=function(){ audio(); G.state='play'; show(null); hud() };
+document.getElementById('bSkip').onclick=function(){ G.state='skipped'; show('ovDone'); result() };
+document.getElementById('run').onclick=function(){ if(runB.disabled) return; G.state='done';
+  beep(523,.3,.04,'triangle'); beep(659,.3,.03,'triangle'); beep(784,.4,.03,'triangle'); show('ovDone'); result() };
+document.getElementById('bBack').onclick=restart;
+document.getElementById('reset').onclick=function(){ if(G.state!=='play') return; var s=G.state; newBoard(); G.state=s; hud() };
+document.getElementById('reroll').onclick=function(){ seed++; restart() };
+document.getElementById('lang').onclick=function(){ lang=lang==='ru'?'en':'ru'; applyLang(); if(G.state==='done'||G.state==='skipped') result() };
+[].forEach.call(document.querySelectorAll('[data-lv]'),function(e){ e.onclick=function(){ lv=+e.getAttribute('data-lv'); restart() } });
+
+addEventListener('resize',resize);
+newBoard(); applyLang(); resize();
+window.BOARD={get G(){return G},cxy:cxy,cellAt:cellAt,steiner:steiner,genBoard:genBoard,SRC:SRC}; // для проверки из Playwright
+(function frame(now){ draw(now); requestAnimationFrame(frame) })(0);
+})();
+</script>
+</body>
+</html>
