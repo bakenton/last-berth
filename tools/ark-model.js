@@ -2,7 +2,7 @@
    поверх work/core.js (функции, объявленные в конце исходника, перекрывают прежние), боты — tools/sim.js без правок.
 
    node tools/ark-model.js [variants=base,A,B,C] [bots=idle,greedy,rush,serial,ark,bank] [years=4500] [seeds=11,...,88]
-   ARK_CSV=f.tsv — строки по забегам.
+   ARK_CSV=f.tsv — строки по забегам.   node tools/ark-model.js --prices B4,Dp 24 — таблица «отсек → цена».
 
    Модель «воронка» (ARK.md §2):
      места      = отсеки × BERTHS          ← металл + топливо, цена k-го отсека растёт ×GROW
@@ -31,13 +31,26 @@ const V={
   /* 1-й заход (топливо в цене, F0 = M0/2): у serial к 2800 году кончалось топливо, рейсы вставали, Земля голодала к Ночи —
      serial 5/8 на B и C; см. ARK.md §4 */
   Af:{BERTHS:250, M0:2000, F0:1000, GROW:1.05, BUILD:0, RATION:3, SURV:SV},
+  /* 2-й заход (05.11, ответы Никиты): паёк 4 — масштаб живой партии (21 712 еды к 2500 году на ~5000 душ); стройки нет.
+     P — доля от металла отсека в других ресурсах по ярусам (I 1–4, II 5–8, III 9–12, IV 13–16, дальше как IV) */
+  B4:{BERTHS:250, M0:2000, F0:0, GROW:1.10, BUILD:0, RATION:4, SURV:SV},   // B, паёк 4: 20 отсеков = 115k металла
+  C4:{BERTHS:250, M0:2000, F0:0, GROW:1.15, BUILD:0, RATION:4, SURV:SV},   // C, паёк 4: 20 отсеков = 205k
+  E4:{BERTHS:250, M0:2000, F0:0, GROW:1.20, BUILD:0, RATION:4, SURV:SV},   // круче C: 20 отсеков = 373k
+  /* D — ярусы дорожают не только металлом: II+ топливо 30%, III+ детали 5%, IV+ еда 25% от металла отсека */
+  D:{BERTHS:250, M0:2000, F0:0, GROW:1.10, BUILD:0, RATION:4, SURV:SV, P:{fuel:[0,.3], parts:[0,0,.05], food:[0,0,0,.25]}},
+  /* Dp — D без топлива: топливо в цене снова уронило serial 44 в голод (как в 1-м заходе) и заперло bank (металл лежит, топлива нет) */
+  Dp:{BERTHS:250, M0:2000, F0:0, GROW:1.10, BUILD:0, RATION:4, SURV:SV, P:{parts:[0,0,.05], food:[0,0,0,.25]}},
+  /* M — мегапроект «на будущее» (Никита: «если займёт лет 500 и будет стоить реально очень дорого»): D ×1.5, отсек 25 лет, док один */
+  M:{BERTHS:250, M0:3000, F0:0, GROW:1.10, BUILD:25, RATION:4, SURV:SV, P:{fuel:[0,.3], parts:[0,0,.05], food:[0,0,0,.25]}},
 };
 for(const k of Object.keys(V)) if(process.env['ARK_'+k]) Object.assign(V[k],JSON.parse(process.env['ARK_'+k]));
 
 /* новые правила — исходник дописывается в конец core.js; X — параметры варианта */
 const RULES=`
 function arkX(){ return K.ARK_X }
-function arkPrice(l){ var X=arkX(), g=Math.pow(X.GROW,l-1); return {metal:Math.round(X.M0*g), parts:0, food:0, fuel:Math.round(X.F0*g)} }
+function arkPrice(l){ var X=arkX(), g=Math.pow(X.GROW,l-1), m=Math.round(X.M0*g), c={metal:m, parts:0, food:0, fuel:Math.round(X.F0*g)};
+  if(X.P){ var dk=Math.ceil(l/4); for(var r in X.P){ var a=X.P[r], s=a[Math.min(a.length,dk)-1]||0; c[r]+=Math.round(m*s) } }
+  return c }
 function arkBuilt(G){ var d=G.ark.done||[], n=0; for(var i=0;i<d.length;i++) if(d[i]<=G.day) n++; return n }
 function arkPaidN(G){ return (G.ark.done||[]).length }
 function arkLevel(G){ return arkBuilt(G) }
@@ -48,12 +61,12 @@ function arkOwed(G,l){ var n=arkPaidN(G), o={metal:0,parts:0,food:0,fuel:0};
   if(l<=n) return o;
   if(G.night&&arkNextDone(G,l-n)>G.night) return {metal:1e12,parts:0,food:0,fuel:1e12};
   if(G.arkCapSeats!==undefined&&(l-1)*arkX().BERTHS>=G.arkCapSeats) return {metal:1e12,parts:0,food:0,fuel:1e12};
-  for(var k=n+1;k<=l;k++){ var c=arkPrice(k); o.metal+=c.metal; o.fuel+=c.fuel } return o }
+  for(var k=n+1;k<=l;k++){ var c=arkPrice(k); for(var r in o) o[r]+=c[r] } return o }
 function arkCheck(G,l){ if(!G.night) return 'night'; if(l<=arkPaidN(G)) return 'arkhave';
   if(arkNextDone(G,l-arkPaidN(G))>G.night) return 'arklate'; return 'ok' }
 function arkBuy(G,l){ var w=arkCheck(G,l); if(w!=='ok') return w;
-  var o=arkOwed(G,l), E=G.earth; if(E.metal<o.metal) return 'metal'; if(E.fuel<o.fuel) return 'fuel';
-  E.metal-=o.metal; E.fuel-=o.fuel; G.ark.paid.metal+=o.metal; G.ark.paid.fuel+=o.fuel;
+  var o=arkOwed(G,l), E=G.earth; for(var r in o) if(E[r]<o[r]) return r;
+  for(var r2 in o){ E[r2]-=o[r2]; G.ark.paid[r2]=(G.ark.paid[r2]||0)+o[r2] }
   G.ark.done=G.ark.done||[]; while(arkPaidN(G)<l){ G.ark.done.push(arkNextDone(G,1)) }
   G.ark.lv=arkPaidN(G); log(G,'ark_bought',{l:l}); return 'ok' }
 function arkPeople(G){ return Math.max(0,Math.floor(G.earth.people)+crewDocked(G)) }
@@ -80,8 +93,11 @@ const HOARD_LEFT=+(process.env.HOARD_LEFT||1500);   // за сколько ле�
 function hoardStep(C,G,d){
   if(!G.night) return; const left=C.nightLeft(G); if(left>HOARD_LEFT||d%5) return;
   const E=G.earth, need=G.need||{food:5,metal:3};
+  const X=C.K.ARK_X;
   for(let l=60;l>C.arkLevel(G);l--){ const o=C.arkOwed(G,l);
-    if(E.metal-o.metal>=need.metal*150+500&&E.fuel-o.fuel>=500){ if(C.arkBuy(G,l)==='ok') break } }
+    // еду держит на паёк всем, кого посадит (виден на экране), + 150 лет своего расхода
+    const keepFood=need.food*150+X.RATION*Math.min(l*X.BERTHS,G.arkCapSeats||1e9);
+    if(E.metal-o.metal>=need.metal*150+500&&E.fuel-o.fuel>=500&&E.parts-o.parts>=0&&E.food-o.food>=keepFood){ if(C.arkBuy(G,l)==='ok') break } }
 }
 
 function run(vn,bot,seed,years){
@@ -112,21 +128,30 @@ function snapOf(C,G,X){
     paidM:Math.round(G.ark.paid.metal||0), paidP:Math.round(G.ark.paid.parts||0), paidF:Math.round(G.ark.paid.food||0), paidU:Math.round(G.ark.paid.fuel||0)};
 }
 
-if(require.main===module){
+/* node tools/ark-model.js --prices B4,D,M [n=24] — таблица «отсек → цена, нарастающим итогом» */
+function prices(vs,n){
+  const out=[['var','bay','deck','metal','fuel','parts','food','sum metal','sum fuel','sum parts','sum food','seats'].join('\t')];
+  for(const vn of vs){ const C=coreFor(vn); const s={metal:0,fuel:0,parts:0,food:0}, G0={ark:{done:[]},day:0,night:0};
+    for(let k=1;k<=n;k++){ const a=C.arkOwed(G0,k), b=k>1?C.arkOwed(G0,k-1):{}, c={}; for(const r in s){ c[r]=a[r]-(b[r]||0); s[r]+=c[r] }
+      out.push([vn,k,Math.ceil(k/4),c.metal,c.fuel,c.parts,c.food,s.metal,s.fuel,s.parts,s.food,k*V[vn].BERTHS].join('\t')) } }
+  return out.join('\n');
+}
+if(require.main===module&&process.argv[2]==='--prices'){ console.log(prices(process.argv[3].split(','),+(process.argv[4]||24))); }
+else if(require.main===module){
   const [vs='base,A,B,C',bs='idle,greedy,rush,serial,ark,bank',ys='4500',ss='11,22,33,44,55,66,77,88']=process.argv.slice(2);
   const seeds=ss.split(',').map(Number), rows=[];
   const avg=(R,f)=>Math.round(R.reduce((a,r)=>a+f(r),0)/Math.max(1,R.length));
   const med=(R,f)=>{ const a=R.map(f).sort((x,y)=>x-y); return a.length?a[a.length>>1]:0 };
-  console.log(['var','bot','sailed','souls','min','max','boarded','people','seats','blocks','dgen','food@N','foodYrs','woken/food','metal@N','parts@N','fuel@N','paidM','paidFuel','night','ready','ready-N'].join('\t'));
+  console.log(['var','bot','sailed','souls','min','max','boarded','people','seats','blocks','dgen','food@N','foodYrs','woken/food','metal@N','parts@N','fuel@N','paidM','paidFuel','paidParts','paidFood','night','ready','ready-N'].join('\t'));
   for(const vn of vs.split(',')) for(const b of bs.split(',')){
     const R=seeds.map(sd=>run(vn,b,sd,+ys)); rows.push(...R);
     const X=V[vn], sl=R.filter(r=>r.sailed);
     console.log([vn,b,sl.length+'/'+R.length,avg(R,r=>r.souls),Math.min(...R.map(r=>r.souls)),Math.max(...R.map(r=>r.souls)),avg(R,r=>r.boarded),avg(R,r=>r.people),avg(R,r=>r.seats),
       avg(R,r=>r.blocks),(R.reduce((a,r)=>a+Math.max(-1,r.dg),0)/R.length).toFixed(1),med(R,r=>r.food),med(R,r=>r.foodYrs),
       X?Math.round(100*R.reduce((a,r)=>a+Math.min(1,r.food/X.RATION/Math.max(1,r.boarded)),0)/R.length)+'%':'-',
-      med(R,r=>r.metal),med(R,r=>r.parts),med(R,r=>r.fuel),avg(R,r=>r.paidM),avg(R,r=>r.paidU),avg(R,r=>r.night),
+      med(R,r=>r.metal),med(R,r=>r.parts),med(R,r=>r.fuel),avg(R,r=>r.paidM),avg(R,r=>r.paidU),avg(R,r=>r.paidP),avg(R,r=>r.paidF),avg(R,r=>r.night),
       sl.length?avg(sl.filter(r=>r.ready),r=>r.ready):0, sl.length?avg(sl.filter(r=>r.ready),r=>r.night-r.ready):0].join('\t'));
   }
   if(process.env.ARK_CSV){ const K=Object.keys(rows[0]); fs.writeFileSync(process.env.ARK_CSV,[K.join('\t')].concat(rows.map(r=>K.map(k=>r[k]).join('\t'))).join('\n')+'\n') }
 }
-module.exports={V,run,coreFor};
+module.exports={V,run,coreFor,prices};
