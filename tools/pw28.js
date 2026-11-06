@@ -52,12 +52,12 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('top strip not rewritten when unchanged', same);
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('ru',309573272);
+  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);   // v5.05: English only
   const mru=await q.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
   await q.evaluate(id=>{ LNU.shiftStop=false; LN.earth.people=300; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); colonize(LN,s.id,id,26,0); LNdraw() },mru);
   await V.openWorld(mru); await q.evaluate(()=>LNdraw());
-  ok('RU enroute text', /Поселенцы в пути/.test(await q.evaluate(()=>document.getElementById('ovl').textContent)), (await q.evaluate(()=>document.getElementById('ovl').textContent)).slice(0,160));
-  ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
+  ok('en-route text: Settlers on the way', /Settlers on the way/.test(await q.evaluate(()=>document.getElementById('ovl').textContent)), (await q.evaluate(()=>document.getElementById('ovl').textContent)).slice(0,160));
+  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

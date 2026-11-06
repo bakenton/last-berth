@@ -31,7 +31,6 @@ function ui(p){
   // v4.40: главное меню как игрок — язык пунктом «Язык» (если нужен другой), «Новая игра» → нырок → терминал → SKIP.
   // Возвращает, что видели: меню, терминал, его первую строку; после — меню закрыто, язык выбран.
   const menuNew=async(lang)=>{ const seen={menu:await p.isVisible('#menu .mit[data-id="new"]')};
-    if(lang&&await p.evaluate(()=>LNU.lang)!==lang) await tap('#menu .mit[data-id="lang"]');
     seen.lang=await p.evaluate(()=>LNU.lang);
     await tap('#menu .mit[data-id="new"]');
     for(let i=0;i<80&&!(await p.isVisible('#menu .mterm'));i++) await p.waitForTimeout(150);
@@ -63,7 +62,7 @@ function ui(p){
   const start=async(lang,seed,{tut=false,hack=false}={})=>{ await p.goto(URL()+'/'+p.file); await p.waitForTimeout(300);
     if(!tut) await p.evaluate(()=>window.LNtut&&LNtut.off());
     if(hack) await p.evaluate(()=>{ window.LBHACKTEST=true });
-    if(lang) await tap('[data-lang="'+lang+'"]');
+    if(lang) await tap('[data-lang]');   // v5.05: English only — the start window has one button; lang is kept for the callers
     if(seed!==undefined){ await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin',String(seed)); await tap('[data-act="new"]') }
     await p.evaluate(()=>{ LNU.shiftStop=false }) };
   return {tap,at,closeBig,clear,speed,pause,play,until,years,point,openWorld,closeWin,tab,tabOn,day,start,menuNew} }

@@ -1,5 +1,5 @@
 // pw44 — v4.40 главное меню и стартовый терминал (work/menu.js, design/menu-v1.html вариант 5): меню перед игрой, время стоит;
-// клавиши; «Язык» и «Звук»; «Тест-плей» (всё открыто, без помощника); «Продолжить» из автосохранения (год · миры);
+// клавиши; «Звук» (v5.05: пункта «Язык» нет, игра только на английском); «Тест-плей» (всё открыто, без помощника); «Продолжить» из автосохранения (год · миры);
 // «Загрузить из файла»; терминал: отказ на неверный глагол, верный подключает систему, Esc пропускает; хук LNtut.off;
 // без WebGL2 — плоский фон и терминал без нырка; телефон 390 px. Мышь настоящая, файл — через filechooser.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
@@ -17,20 +17,19 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.goto(require('url').pathToFileURL(process.env.LB_WORK||require('path').resolve(__dirname,'..','work')).href+'/page.html'); await p.waitForTimeout(600);
   ok('the menu stands in front of the game, the clock stands', await menuOn(p)&&await p.evaluate(()=>LNI.halted()&&!LNU.langPicked&&LNI.big()===null));
   let L=await labels(p);
-  // v5.03: a sixth item, Interface size (ui.js UI_STEPS)
-  ok('six items; Continue is dim with no record; New game is chosen', L.length===6&&L[0]==='Continue|no record|off'&&/^New game\|\|on$/.test(L[1])&&L[3]==='Language|English'&&/^Sound\|(on|off)$/.test(L[4])&&/^Interface size\|\d+%$/.test(L[5]), L.join(' · '));
+  // v5.05: no Language item (the game is English only) — five items: Continue, New game, Load, Sound, Interface size
+  ok('five items; Continue is dim with no record; New game is chosen', L.length===5&&L[0]==='Continue|no record|off'&&/^New game\|\|on$/.test(L[1])&&/^Load from file\|/.test(L[2])&&/^Sound\|(on|off)$/.test(L[3])&&/^Interface size\|\d+%$/.test(L[4]), L.join(' · '));
+  ok('no Language item in the menu (v5.05)', !L.some(x=>/^Language/.test(x))&&await p.evaluate(()=>!document.querySelector('#menu .mit[data-id="lang"]')));
   ok('the mark, the name, Test play and the version', await p.evaluate(()=>!!document.querySelector('#menu .mtop use')&&document.querySelector('#menu .mname').textContent==='LAST BERTH'&&/Test play/.test(document.querySelector('#menu .mtst').textContent)&&/^v\d+\.\d+$/.test(document.querySelector('#menu .mver').textContent)));
   ok('the scene is drawn (WebGL2 or the flat field)', await p.evaluate(()=>{ const c=document.querySelector('#menu .mcv'); return !!c&&c.width>2 }));
   await p.keyboard.press('ArrowDown'); ok('arrow down: Load from file', (await labels(p))[2].endsWith('|on'));
   await p.keyboard.press('ArrowUp'); await p.keyboard.press('ArrowUp');
-  ok('arrows skip the dim Continue (wraps to Sound)', (await labels(p))[4].endsWith('|on'), (await labels(p)).join(' · '));
+  ok('arrows skip the dim Continue (wraps to Interface size)', (await labels(p))[4].endsWith('|on'), (await labels(p)).join(' · '));
   ok('a key does not reach the game under the menu', await p.evaluate(()=>LNU.paused===true&&!LNU.tab));
-  await U.tap('#menu .mit[data-id="lang"]');
-  L=await labels(p); ok('Language: the menu speaks Russian at once', L[1].startsWith('Новая игра')&&L[3].startsWith('Язык|Русский')&&await p.evaluate(()=>LNU.lang==='ru'&&localStorage.getItem('lb.lang')==='ru'), L.join(' · '));
-  await U.tap('#menu .mit[data-id="lang"]'); ok('…and back', (await labels(p))[1].startsWith('New game'));
+  ok('the menu is English; the language is fixed to en (v5.05)', await p.evaluate(()=>LNU.lang==='en'), await p.evaluate(()=>LNU.lang));
   const s0=await p.evaluate(()=>localStorage.getItem('lb.sfx'));
   await U.tap('#menu .mit[data-id="sound"]'); const s1=await p.evaluate(()=>localStorage.getItem('lb.sfx'));
-  ok('Sound: the game\'s sound setting flips and the item says so', s1!==s0&&(await labels(p))[4].startsWith(s1==='0'?'Sound|off':'Sound|on'), s0+' → '+s1);
+  ok('Sound: the game\'s sound setting flips and the item says so', s1!==s0&&(await labels(p))[3].startsWith(s1==='0'?'Sound|off':'Sound|on'), s0+' → '+s1);
   await U.tap('#menu .mit[data-id="sound"]');
 
   // 2. the terminal: a wrong verb is refused with its reason, the right one starts the system; Esc goes to the game
@@ -109,10 +108,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('phone: the terminal', await waitTerm(ph));
   await ph.close();
 
-  // 9. a Russian browser: the first start speaks Russian, the terminal still asks for its four verbs
+  // 9. a Russian browser: the game ignores the browser language (v5.05), the terminal still asks for its four verbs
   const ru=await b.newPage({locale:'ru-RU',viewport:{width:1440,height:900}}); const R=UI.ui(ru); ru.errs=[]; ru.on('pageerror',e=>ru.errs.push(String(e)));
   await ru.goto(require('url').pathToFileURL(process.env.LB_WORK||require('path').resolve(__dirname,'..','work')).href+'/page.html'); await ru.waitForTimeout(600);
-  L=await labels(ru); ok('a Russian browser: the menu speaks Russian at the first start', L[1].startsWith('Новая игра')&&L[3].startsWith('Язык|Русский')&&await ru.evaluate(()=>LNU.lang==='ru'), L.join(' · '));
+  L=await labels(ru); ok('a Russian browser: the menu stays in English at the first start', L[1].startsWith('New game')&&await ru.evaluate(()=>LNU.lang==='en'), L.join(' · '));
   await R.tap('#menu .mit[data-id="new"]'); ok('…the terminal opens', await waitTerm(ru));
   for(let i=0;i<400&&!(await ru.isVisible('#menu .vb'));i++){ await ru.keyboard.press('Space'); await ru.waitForTimeout(60) }
   ok('…and asks for a verb: four of them', await ru.evaluate(()=>document.querySelectorAll('#menu .vb').length===4));

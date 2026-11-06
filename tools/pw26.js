@@ -80,14 +80,14 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('manual line: the hull is on the line (lineCount 1), nothing ordered for it', await p.evaluate(id=>lineCount(LN,id,'courier')===1&&!LN.ships.some(s=>s.mode==='building'&&s.lineFor===id),mine2));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  // 10. RU: the same world window in Russian
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('ru',309573272);
+  // 10. the same world window in a second run (v5.05: English only)
+  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);
   const mineRu=await q.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
   await q.evaluate(id=>{ LN.colonies[id]={pid:id,pop:30,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; LNdraw() },mineRu);
   await V.openWorld(mineRu); await q.evaluate(()=>LNdraw());
   const ru=await q.evaluate(()=>document.getElementById('ovl').textContent.replace(/\s+/g,' '));
-  ok('RU block of the line', /На этой линии/.test(ru), ru.match(/На этой линии.{0,60}/)?.[0]);
-  ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
+  ok('block of the line: On this line', /On this line/.test(ru), ru.match(/On this line.{0,60}/)?.[0]);
+  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.stack.split('\n').slice(0,2).join(' ')) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

@@ -36,7 +36,7 @@ svg.gi{fill:currentColor}
 .flag:before{content:'';position:absolute;left:-7px;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:currentColor;border-left:0}
 /* map */
 #mapbox{position:absolute;left:82px;top:100px;right:0;bottom:0;overflow:hidden}
-#map{width:100%;height:100%;display:block;cursor:grab}#map.drag{cursor:grabbing}
+#map3d{position:absolute;inset:0;width:100%;height:100%;display:block}#map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}#map.drag{cursor:grabbing}
 #map .wd{cursor:pointer}#map .nm{font-family:var(--h);font-weight:600}
 @keyframes al{50%{stroke-opacity:.15}}.alarm{animation:al 1.4s infinite}
 @keyframes blk{0%,100%{opacity:1}50%{opacity:.25}}.evwarn{animation:blk 1.6s infinite}.evearth{animation:blk .9s infinite}
@@ -51,8 +51,8 @@ svg.gi{fill:currentColor}
 #nightfx .nfb{top:-14%;bottom:auto;height:14%;background:linear-gradient(180deg,transparent,rgba(255,255,255,.1) 50%,transparent);opacity:var(--nf);animation:nfb 11s linear infinite}
 #nightfx .nft{display:none;background:linear-gradient(180deg,transparent 0 12%,rgba(255,255,255,.3) 12% 12.7%,transparent 12.7% 41%,rgba(255,60,40,.3) 41% 43%,transparent 43% 67%,rgba(255,255,255,.22) 67% 67.5%,transparent 67.5% 83%,rgba(0,0,0,.7) 83% 88%,transparent 88%);opacity:calc(.3 + var(--nl)*.7);animation:nft 1.7s steps(1) infinite}
 #mapbox.nflast #nightfx .nft{display:block}
-#mapbox.nflast #map{animation:nfj 2.3s steps(1) infinite}
-#mapbox.nfstill #nightfx i,#mapbox.nfstill #map{animation-play-state:paused}
+#mapbox.nflast #map,#mapbox.nflast #map3d{animation:nfj 2.3s steps(1) infinite}
+#mapbox.nfstill #nightfx i,#mapbox.nfstill #map,#mapbox.nfstill #map3d{animation-play-state:paused}
 @keyframes nfn{0%{transform:translate(0,0)}20%{transform:translate(-90px,50px)}40%{transform:translate(70px,-110px)}60%{transform:translate(-40px,-70px)}80%{transform:translate(110px,90px)}100%{transform:translate(0,0)}}
 @keyframes nfb{to{top:100%}}
 @keyframes nfr{0%,100%{filter:brightness(.75)}50%{filter:brightness(1.25)}}

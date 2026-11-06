@@ -99,14 +99,14 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('JSON action kit recorded', !!(J&&J.actions.some(a=>a.k==='kit')));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  // 9. RU
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('ru',309573272);
+  // 9. the same window in a second run (v5.05: English only; the Russian kit block is now the English one)
+  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);
   const mineRu=await q.evaluate(()=>PLANETS.filter(q=>q.sec===0&&q.kind==='mine').sort((a,b)=>a.dist-b.dist)[0].id);
   await q.evaluate(id=>{ LN.driveLvl=2; LN.gen=2; ensureGen(2); LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:2,fuelOut:0}; LNdraw() },mineRu);
   await V.openWorld(mineRu); await q.evaluate(()=>LNdraw());
   const ru=await q.evaluate(()=>document.getElementById('ovl').textContent.replace(/\s+/g,' '));
-  ok('RU kit block', /Техника/.test(ru)&&/ЯРУС/.test(ru)&&/Заказать ярус III/.test(ru), ru.match(/Техника.{0,80}/)?.[0]);   // v4.35: блок «Техника», «ЯРУС II · РАБОТАЕТ», «Заказать ярус III»
-  ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
+  ok('kit block: Machines, TIER II · RUNNING, Order tier III', /Machines/.test(ru)&&/TIER II · RUNNING/.test(ru)&&/Order tier III/.test(ru), ru.match(/Machines.{0,80}/)?.[0]);   // v4.35: блок «Техника», «ЯРУС II · РАБОТАЕТ», «Заказать ярус III» (EN: u_machines, TIER, u_kitOrder)
+  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   finally{ if(b) await b.close().catch(()=>{}) }   // v4.32: a failed run used to leave the browser open
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

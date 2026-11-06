@@ -67,7 +67,9 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   // 4. второе судно на линию: пауза, окно мира, первая свободная строка «Добавить судно» → Назначить на линию
   await tap(PAUSE); await clear();
   // окно мира закрыто перед ожиданием (v4.49) — открываем снова; клик мимо окна (на #ovl) закрыл бы открытое
-  if(!(await p.evaluate(()=>LNU.win))){ await p.mouse.click(pick.pt.x,pick.pt.y); await p.waitForTimeout(120) }
+  // v5.05: the 3D chart moves a world when the map box narrows (a side panel) or its people grow — find it again before the click
+  if(!(await p.evaluate(()=>LNU.win))){ const pt2=await p.evaluate(id=>{ const c=document.querySelector('#map .wd[data-p="'+id+'"] circle[fill="transparent"]'); if(!c) return null; const bb=c.getBoundingClientRect(); return {x:bb.left+bb.width/2,y:bb.top+bb.height/2} },farm)||pick.pt;
+    await p.mouse.click(pt2.x,pt2.y); await p.waitForTimeout(120) }
   await tap('#addblk [data-act="assign"]');
   ok('hull assigned to the line', await p.evaluate(f=>LN.ships.some(s=>s.from===f&&s.mode!=='dead'),farm));
   await p.keyboard.press('Escape');   // окно мира закрывается Escape (крестика нет)

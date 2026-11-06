@@ -41,18 +41,18 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('rations cell: "ends ≈ YEAR"', /ends ≈ \d{3,4}/.test(cell), cell);
   await p.screenshot({path:'v428-horizon-en.png'});
 
-  // === RU: the same desk in Russian (own run)
+  // === the same desk in a second run (v5.05: English only; the Russian larder line and cell are the English ones above)
   const q=await UI.newPage(b,{file:page}); const V=UI.ui(q);
-  await V.start('ru',11);
+  await V.start('en',11);
   const notesRu=[]; let gotRu=false;
   for(let i=0;i<16&&!gotRu;i++){ await q.evaluate(()=>{ for(let k=0;k<100;k++){ if(LN.over) break; tick(LN); LN.pauseNow=false } LNdraw() });
-    for(let j=0;j<12;j++){ const k=await q.evaluate(()=>LNI.big()); if(k==='note'){ const t=await q.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' ')); notesRu.push(t); if(/У КЛАДОВЫХ/.test(t)) gotRu=true; await V.tap('#noteL [data-act="noteok"]') } else if(k==='shift') await V.tap('#noteL [data-act="shiftok"]'); else if(k==='night') await V.tap('#noteL [data-act="nightok"]'); else break } }
+    for(let j=0;j<12;j++){ const k=await q.evaluate(()=>LNI.big()); if(k==='note'){ const t=await q.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' ')); notesRu.push(t); if(/THE LARDERS HAVE A DATE/.test(t)) gotRu=true; await V.tap('#noteL [data-act="noteok"]') } else if(k==='shift') await V.tap('#noteL [data-act="shiftok"]'); else if(k==='night') await V.tap('#noteL [data-act="nightok"]'); else break } }
   const t2=notesRu.join(' ');
-  ok('RU larder line shown in a notice', /У КЛАДОВЫХ ПОЯВИЛАСЬ ДАТА/.test(t2), (t2.match(/У КЛАДОВЫХ.{0,160}/)||[t2.slice(0,160)])[0]);
+  ok('larder line shown in a notice (second run)', /THE LARDERS HAVE A DATE/.test(t2), (t2.match(/THE LARDERS HAVE A DATE.{0,160}/)||[t2.slice(0,160)])[0]);
   const advRu=await q.evaluate(()=>LNI.adv().map(r=>r[1]+' '+r[2]).join(' | '));
-  ok('RU advisor lists worlds only (Nikita 15.10)', await q.evaluate(()=>LNI.adv().every(r=>!!planet(r[3]))), advRu.slice(0,200));
+  ok('advisor lists worlds only, second run (Nikita 15.10)', await q.evaluate(()=>LNI.adv().every(r=>!!planet(r[3]))), advRu.slice(0,200));
   const cellRu=await q.evaluate(()=>{ var e=document.querySelector('#res .rc[data-r="food"]'); return e?e.textContent.replace(/\s+/g,' '):'' });
-  ok('RU rations cell: "кончится ≈ YEAR"', /кончится ≈ \d{3,4}/.test(cellRu), cellRu);
+  ok('rations cell, second run: "ends ≈ YEAR"', /ends ≈ \d{3,4}/.test(cellRu), cellRu);
   await q.close();
 
   // === the famine really comes later: the warning was ahead of it, not after

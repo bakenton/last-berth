@@ -67,13 +67,13 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('advisor speaks when the last build is near (a_lastbuild → advisor row)', await p.evaluate(()=>LNI.adv().length>0), await p.evaluate(()=>JSON.stringify(LNI.adv().map(r=>r[1]))));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  // 9. RU report
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('ru',309573272);
+  // 9. the shift report in a second run (v5.05: English only; the Russian report row is the English one)
+  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);
   await q.evaluate(()=>{ LNU.shiftStop=true; for(let i=0;i<80;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
   const ru=await q.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' '));
-  ok('RU report', /Смена 1 сдаёт пульт/.test(ru)&&/Принять пульт/.test(ru), ru.slice(0,120));
-  await q.screenshot({path:'shift-ru.png'});
-  ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
+  ok('shift report: Shift 1 hands over the desk, the button is there', /Shift 1 hands over the desk/.test(ru)&&await q.evaluate(()=>!!document.querySelector('#noteL [data-act="shiftok"]')), ru.slice(0,120));
+  await q.screenshot({path:'shift-en-2.png'});
+  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

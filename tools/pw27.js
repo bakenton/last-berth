@@ -40,10 +40,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('report shows attrition and the hands rate', await p.evaluate(()=>{ const t=document.getElementById('noteL').textContent; return /Hands lost on the crossings/.test(t)&&/Earth still raises/.test(t) }), await p.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' ').slice(0,300)));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('ru',309573272);
+  // v5.05: English only — the second run checks the same report row in English
+  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);
   await q.evaluate(()=>{ LNU.shiftStop=true; for(let i=0;i<80;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
-  ok('RU report row', await q.evaluate(()=>/Земля ещё даёт/.test(document.getElementById('noteL').textContent)));
-  ok('no page errors (RU)', q.errs.length===0, q.errs.join(' | '));
+  ok('report row: Earth still raises', await q.evaluate(()=>/Earth still raises/.test(document.getElementById('noteL').textContent)));
+  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

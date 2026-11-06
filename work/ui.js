@@ -421,64 +421,60 @@ function drawPortrait(cv,seed){
   ctx.putImageData(img,0,0);
 }
 
-/* ---------- map geometry ---------- */
-var STARS=null;
-function starfield(){
-  if(STARS) return STARS;
-  var r=mulberry32(9137), o='';
-  for(var i=0;i<190;i++){
-    var x=(r()*1000).toFixed(1), y=(r()*700).toFixed(1), q=r();
-    o+='<rect x="'+x+'" y="'+y+'" width="'+(q>0.93?1.6:1)+'" height="'+(q>0.93?1.6:1)+'" fill="#F2F1EC" opacity="'+(0.08+q*0.22).toFixed(2)+'"/>';
-  }
-  STARS=o; return o;
-}
-var CX=500, CY=350;
-function nodeXY(n){ if(!n) return null; if(n==='earth') return {x:CX,y:CY}; var pp=planet(n); return pp?pos(pp):null }
-/* v4.35 (regress, seed 309573272: BRINE sat under SOLACE — a world stands on its ring at its angle, and two worlds of one ring
-   can share an angle): worlds closer than POS_GAP are pushed apart, once per chart */
-var POSC={}, POSN=-1, POS_GAP=28;
-function pos(p){ if(POSN!==PLANETS.length||!POSC[p.id]) layoutPos(); return POSC[p.id] }
-function layoutPos(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; return {id:q.id,x:CX+Math.cos(q.ang)*R*1.32,y:CY+Math.sin(q.ang)*R*0.90} });
+/* ---------- the chart in 3D (v5.05, Nikita 06.11: «каркас», «переноси в игру» — design/map3d/e-hybrid.html v3) ----------
+   A canvas (#map3d) under the SVG (#map): space, a floor of hex plates with the rings and the lobes on it, the lines foot to foot, the hulls,
+   the worlds on stems (height = people) with wire spheres. The SVG on top keeps what the player clicks and reads: one .wd per world at its
+   sphere, its name and its people, its alarms — the tip, the tutorial's cut-outs and the scenarios find the worlds where they always did.
+   Plane: X right, Z toward the viewer (the old chart's y), Y up; Earth at 0. A world stands on a circle of its ring at its angle, pushed
+   apart at POS_GAP (v4.35). The camera: a target on the plane, yaw, pitch (90° = straight down), distance; it fits the visible rings by itself
+   until the player turns, moves or zooms it (− + ALL: ALL fits again). */
+var CAM={tx:0,tz:0,yaw:0,pitch:52,dist:1700,fov:38}, CFIT=true, CFITK='', MAPDRAGGED=false;
+var M3D={W:1,H:1,VP:null,dpr:1,fk:'',fl:null,HX:null,HXR:0,LAY:null,NEB:null,last:0};
+var P3={}, P3N=-1, POS_GAP=28, H0=14, HK=1.0, HPOP=160, HTICK=25, RS=11, RF=8, HEXR=46, HUBC='#E040FB', PARTS_BODY='#2F5BD3';
+function p3(p){ if(P3N!==PLANETS.length||!P3[p.id]) layout3(); return P3[p.id] }
+function layout3(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; return {id:q.id,x:Math.cos(q.ang)*R,z:Math.sin(q.ang)*R} });
   for(var it=0;it<40;it++){ var moved=false;
-    for(var i=0;i<Ls.length;i++) for(var j=i+1;j<Ls.length;j++){ var a=Ls[i], b=Ls[j], dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||0.01;
-      if(d<POS_GAP){ var k=(POS_GAP-d)/2/d; a.x-=dx*k; a.y-=dy*k; b.x+=dx*k; b.y+=dy*k; moved=true } }
+    for(var i=0;i<Ls.length;i++) for(var j=i+1;j<Ls.length;j++){ var a=Ls[i], b=Ls[j], dx=b.x-a.x, dz=b.z-a.z, d=Math.hypot(dx,dz)||0.01;
+      if(d<POS_GAP){ var k=(POS_GAP-d)/2/d; a.x-=dx*k; a.z-=dz*k; b.x+=dx*k; b.z+=dz*k; moved=true } }
     if(!moved) break }
-  POSC={}; Ls.forEach(function(o){ POSC[o.id]={x:o.x,y:o.y} }); POSN=PLANETS.length }
+  P3={}; Ls.forEach(function(o){ P3[o.id]={x:o.x,z:o.z} }); P3N=PLANETS.length }
+/* a settled world stands on its people (capped at HPOP), a free one lies low over its footprint */
+function wH(pid){ var c=G.colonies[pid]; return c?H0+Math.min(c.pop,HPOP)*HK+RS:RF }
+function node3(n){ if(!n) return null; if(n==='earth') return [0,0,0]; var pp=planet(n); if(!pp) return null; var q=p3(pp); return [q.x,0,q.z] }
+function outerR(){ return secRadius(Math.max(0,visRings()-1)) }
 
-/* ---------- the viewport ----------
-   The chart grows without end but the viewBox used to be a fixed 1000x700, so
-   everything past sector 2 (ring radius 346, half-height 350) was drawn outside
-   it and simply clipped — Nikita, 22.09: "on ring 4 you cannot see any of the
-   following ones". The view now fits the whole chart by itself, and the wheel
-   and a drag are there for when it is crowded. Marks are scaled by Z so text
-   stays the same size on screen however far out the chart runs. */
-var VIEW={x:0,y:0,w:1000,h:700}, VFIT=true, VSECS=-1, MAPDRAGGED=false;
-function viewFit(){
-  var R=secRadius(Math.max(0,visRings()-1))+58;
-  var W0=visRings()<SECTORS.length?640:1000;   // v4.36: while the tutorial shows one ring, the chart comes closer (ui-v7)
-  var w=Math.max(W0, R*1.32*2, R*0.90*2*(1000/700));
-  for(var it=0;it<4;it++){            // the pad is screen-sized, so it scales with the fit: iterate
-    var Z=w/1000;
-    var w2=Math.max(W0, (R*1.32+128*Z)*2, (R*0.90+44*Z)*2*(1000/700));
-    if(Math.abs(w2-w)<1){ w=w2; break } w=w2;
-  }
-  VIEW={x:CX-w/2, y:CY-w*0.35, w:w, h:w*0.7};
-  VSECS=visRings();
-}
-function viewZoom(f,ax,ay){
-  var w=Math.max(280,Math.min(9000,VIEW.w*f));
-  f=w/VIEW.w;
-  if(ax===undefined){ax=VIEW.x+VIEW.w/2; ay=VIEW.y+VIEW.h/2}
-  VIEW={x:ax-(ax-VIEW.x)*f, y:ay-(ay-VIEW.y)*f, w:w, h:w*0.7};
-  VFIT=false;
-}
-function viewPt(ev){
-  var m=el('map'), r=m.getBoundingClientRect();
-  // the viewBox is letterboxed by preserveAspectRatio=meet: find the real scale
-  var sc=Math.min(r.width/VIEW.w, r.height/VIEW.h);
-  var ox=(r.width-VIEW.w*sc)/2, oy=(r.height-VIEW.h*sc)/2;
-  return {x:VIEW.x+(ev.clientX-r.left-ox)/sc, y:VIEW.y+(ev.clientY-r.top-oy)/sc, sc:sc};
-}
+/* matrices, column-major as GL */
+function m3persp(fov,asp,n,f){ var t=1/Math.tan(fov/2), nf=1/(n-f); return [t/asp,0,0,0, 0,t,0,0, 0,0,(f+n)*nf,-1, 0,0,2*f*n*nf,0] }
+function m3sub(a,b){ return [a[0]-b[0],a[1]-b[1],a[2]-b[2]] } function m3dot(a,b){ return a[0]*b[0]+a[1]*b[1]+a[2]*b[2] }
+function m3cross(a,b){ return [a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]] } function m3norm(a){ var l=Math.hypot(a[0],a[1],a[2])||1; return [a[0]/l,a[1]/l,a[2]/l] }
+function m3look(e,c,u){ var z=m3norm(m3sub(e,c)), x=m3norm(m3cross(u,z)), y=m3cross(z,x);
+  return [x[0],y[0],z[0],0, x[1],y[1],z[1],0, x[2],y[2],z[2],0, -m3dot(x,e),-m3dot(y,e),-m3dot(z,e),1] }
+function m3mul(a,b){ var o=new Array(16); for(var c=0;c<4;c++) for(var r=0;r<4;r++){ var s=0; for(var k=0;k<4;k++) s+=a[k*4+r]*b[c*4+k]; o[c*4+r]=s } return o }
+function camUpdate(){ var ph=CAM.pitch*Math.PI/180, th=CAM.yaw*Math.PI/180;
+  var e=[CAM.tx+CAM.dist*Math.cos(ph)*Math.sin(th), CAM.dist*Math.sin(ph), CAM.tz+CAM.dist*Math.cos(ph)*Math.cos(th)];
+  var up=CAM.pitch>89?[-Math.sin(th),0,-Math.cos(th)]:[0,1,0];
+  M3D.VP=m3mul(m3persp(CAM.fov*Math.PI/180,M3D.W/M3D.H,20,30000),m3look(e,[CAM.tx,0,CAM.tz],up)) }
+/* a point of the plane's space → desk px inside the map box (w: the depth, for sizes) */
+function prj(p){ var m=M3D.VP, x=p[0],y=p[1],z=p[2];
+  var cx=m[0]*x+m[4]*y+m[8]*z+m[12], cy=m[1]*x+m[5]*y+m[9]*z+m[13], cw=m[3]*x+m[7]*y+m[11]*z+m[15];
+  if(cw<=1) return null; return {x:(cx/cw+1)/2*M3D.W, y:(1-cy/cw)/2*M3D.H, w:cw} }
+function pxPer(w){ return M3D.H/(2*w*Math.tan(CAM.fov*Math.PI/360)) }
+function m3size(){ var mb=el('mapbox'), cv=el('map3d'), W=Math.max(1,mb.clientWidth), H=Math.max(1,mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();
+  if(W!==M3D.W||H!==M3D.H||Math.abs(dpr-M3D.dpr)>0.01||cv.width!==Math.round(W*dpr)){ M3D.W=W; M3D.H=H; M3D.dpr=dpr; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); M3D.fk=''; M3D.NEB=null } }
+/* the visible chart in the frame with room for the names: aim at its middle, back off until every world and its footprint sit inside */
+function camFit(){ var vis=PLANETS.filter(function(q){ return secVis(q.sec) }), R=outerR();
+  var xs=[0,-R*0.6,R*0.6], zs=[0,-R*0.6,R*0.6]; vis.forEach(function(q){ var a=p3(q); xs.push(a.x); zs.push(a.z) });
+  CAM.tx=(Math.min.apply(null,xs)+Math.max.apply(null,xs))/2; CAM.tz=(Math.min.apply(null,zs)+Math.max.apply(null,zs))/2;
+  CAM.yaw=0; CAM.pitch=M3D.W/M3D.H<0.8?70:52; CAM.dist=300;
+  var side=Math.min(110,M3D.W*0.1), top=40, bot=30;
+  for(var it=0;it<120;it++){ camUpdate(); var ok=true;
+    vis.forEach(function(q){ if(!ok) return; var a=p3(q); [prj([a.x,wH(q.id),a.z]),prj([a.x,0,a.z])].forEach(function(s){ if(!s||s.x<side||s.x>M3D.W-side||s.y<top||s.y>M3D.H-bot) ok=false }) });
+    if(ok) break; CAM.dist*=1.05 } }
+function camTurn(dx,dy){ CAM.yaw-=dx*0.25; CAM.pitch=Math.max(14,Math.min(89.5,CAM.pitch+dy*0.25)); CFIT=false }
+function camPan(dx,dy){ camUpdate(); var s=1/pxPer(CAM.dist), th=CAM.yaw*Math.PI/180, sp=Math.max(0.35,Math.sin(CAM.pitch*Math.PI/180));
+  CAM.tx-=(dx*Math.cos(th)+dy*Math.sin(th)/sp)*s; CAM.tz-=(-dx*Math.sin(th)+dy*Math.cos(th)/sp)*s;
+  var r=Math.hypot(CAM.tx,CAM.tz), lim=outerR()+200; if(r>lim){ CAM.tx*=lim/r; CAM.tz*=lim/r } CFIT=false }
+function camZoom(f){ CAM.dist=Math.max(220,Math.min(12000,CAM.dist*f)); CFIT=false }
 
 /* ---------- the state of a world, as the map, the list and the advisor see it ---------- */
 function isDead(pid){ var p=planet(pid); return !!G.colonies[pid]&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0&&pileLeft(G,pid)<1 }
@@ -512,89 +508,144 @@ function seamYears(pid){ var c=G.colonies[pid], p=planet(pid); if(!c||p.kind==='
 var BAD_ST={dead:1,cut:1,starve:1};
 
 /* ---------- the map ---------- */
+function m3rgb(h){ return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16) }
+function m3ring(cx,cy,cz,rad,n,a0,a1){ var p=[]; a0=a0||0; a1=a1===undefined?Math.PI*2:a1; for(var i=0;i<=n;i++){ var a=a0+(a1-a0)*i/n; p.push([cx+Math.cos(a)*rad,cy,cz+Math.sin(a)*rad]) } return p }
+function m3path(x,pts,close){ x.beginPath(); var on=false; pts.forEach(function(p){ var s=prj(p); if(!s){ on=false; return } if(on) x.lineTo(s.x,s.y); else x.moveTo(s.x,s.y); on=true }); if(close) x.closePath() }
+function m3glow(x,col,b){ x.shadowColor='rgba('+col+',.9)'; x.shadowBlur=b }
+/* space: three star layers and a nebula, made once per size; drawn each frame with a little parallax on turning */
+function m3rnd(seed){ return function(){ seed=(seed*16807)%2147483647; return seed/2147483647 } }
+function m3space(){ var T=1024;
+  if(!M3D.LAY) M3D.LAY=[{k:.10,n:420,a:.35,sz:.8,seed:11},{k:.22,n:160,a:.55,sz:1.2,seed:23},{k:.40,n:45,a:.85,sz:1.7,seed:37}].map(function(L){
+    var c=document.createElement('canvas'); c.width=c.height=T; var g=c.getContext('2d'), r=m3rnd(L.seed*7919);
+    for(var i=0;i<L.n;i++){ var px=r()*T, py=r()*T, q=r(), a=L.a*(.4+q*.6), s=L.sz*(q>.9?1.6:1), tint=r();
+      g.fillStyle=tint<.15?'rgba(190,205,255,'+a+')':(tint<.25?'rgba(255,225,190,'+a+')':'rgba(242,241,236,'+a+')'); g.fillRect(px,py,s,s);
+      if(L.k>.3&&q>.8){ var gr=g.createRadialGradient(px,py,0,px,py,s*4); gr.addColorStop(0,'rgba(242,241,236,'+(a*.25)+')'); gr.addColorStop(1,'rgba(242,241,236,0)'); g.fillStyle=gr; g.fillRect(px-s*4,py-s*4,s*8,s*8) } }
+    return {c:c,k:L.k,T:T} });
+  var W=M3D.W, H=M3D.H, N=M3D.NEB=document.createElement('canvas'); N.width=Math.round(W*1.4); N.height=Math.round(H*1.4); var n=N.getContext('2d'), r=m3rnd(4242);
+  n.fillStyle='#050506'; n.fillRect(0,0,N.width,N.height);
+  [['70,40,120',.13],['40,70,130',.10],['90,40,110',.08],['30,50,90',.10],['60,30,100',.07]].forEach(function(c){ var cx=r()*N.width, cy=r()*N.height*.8, rad=(.25+r()*.35)*Math.max(N.width,N.height);
+    var g=n.createRadialGradient(cx,cy,0,cx,cy,rad); g.addColorStop(0,'rgba('+c[0]+','+c[1]+')'); g.addColorStop(.5,'rgba('+c[0]+','+(c[1]*.4)+')'); g.addColorStop(1,'rgba('+c[0]+',0)'); n.fillStyle=g; n.fillRect(0,0,N.width,N.height) }) }
+function m3sky(x){ if(!M3D.NEB) m3space(); var W=M3D.W, H=M3D.H, span=W*0.4;
+  x.drawImage(M3D.NEB,-(((CAM.yaw*1.2)%span)+span)%span-W*0.05,-(H*0.2)+(CAM.pitch-50)*0.6,M3D.NEB.width,M3D.NEB.height);
+  M3D.LAY.forEach(function(L){ var ox=((-CAM.yaw*L.k*12)%L.T+L.T)%L.T, oy=((CAM.pitch*L.k*8)%L.T+L.T)%L.T;
+    for(var tx=-ox;tx<W;tx+=L.T) for(var ty=-oy;ty<H;ty+=L.T) x.drawImage(L.c,tx,ty) }) }
+/* the floor: dark hex plates with thin edges sinking into space at the rim, the rings, the lobes — drawn once per camera onto its own canvas */
+function m3hexes(FR){ if(M3D.HX&&M3D.HXR>=FR) return M3D.HX; var L=[], n=Math.ceil(FR/(HEXR*1.5))+2;
+  for(var r=-n;r<=n;r++) for(var q=-2*n;q<=2*n;q++){ var hx=Math.sqrt(3)*HEXR*(q+r/2), hz=1.5*HEXR*r, d=Math.hypot(hx,hz); if(d<FR) L.push([hx,hz,d]) }
+  M3D.HX=L; M3D.HXR=FR; return L }
+function m3floor(){ var cv=el('map3d'), key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM.dist].map(function(v){ return v.toFixed(2) }).join()+'|'+cv.width+'|'+cv.height+'|'+visRings()+'|'+(can('sectors')?1:0);
+  if(key===M3D.fk&&M3D.fl) return; M3D.fk=key; var fl=M3D.fl||(M3D.fl=document.createElement('canvas')), fx=fl.getContext('2d'), W=M3D.W, H=M3D.H;
+  fl.width=cv.width; fl.height=cv.height; fx.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); fx.clearRect(0,0,W,H);
+  var OUT=outerR(), FR=OUT+420, k, i;
+  for(k=0;k<10;k++){ m3path(fx,m3ring(0,0,0,FR*(1-k*0.075),72),true); fx.fillStyle='rgba(7,7,8,.16)'; fx.fill() }
+  m3hexes(FR).forEach(function(h){ if(h[2]>=FR) return; var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); if(f<0.02) return; var pts=[];
+    for(var j=0;j<6;j++){ var a=Math.PI/3*j+Math.PI/6, s=prj([h[0]+Math.cos(a)*HEXR*.94,0,h[1]+Math.sin(a)*HEXR*.94]); if(!s) return; pts.push(s) }
+    fx.beginPath(); pts.forEach(function(p,j){ if(j) fx.lineTo(p.x,p.y); else fx.moveTo(p.x,p.y) }); fx.closePath();
+    fx.fillStyle='rgba(26,26,30,'+(0.9*f).toFixed(3)+')'; fx.fill(); fx.strokeStyle='rgba(165,162,155,'+(0.32*f).toFixed(3)+')'; fx.lineWidth=1.1; fx.stroke() });
+  fx.setLineDash([2,5]); for(i=0;i<visRings();i++){ m3path(fx,m3ring(0,0,0,SECTORS[i].r,140)); fx.strokeStyle='rgba(235,220,170,.30)'; fx.lineWidth=1; fx.stroke() }
+  if(can('sectors')) for(i=0;i<LOBES;i++){ var e=lobeEdge(i); m3path(fx,[[Math.cos(e)*34,0,Math.sin(e)*34],[Math.cos(e)*(OUT+44),0,Math.sin(e)*(OUT+44)]]); fx.strokeStyle='rgba(235,220,170,.18)'; fx.stroke() }
+  fx.setLineDash([]) }
+/* a world's sphere, wire (Nikita 06.11: «каркас»): three parallels, four meridians turning slowly, a dark body, a glowing limb */
+function m3sphere(x,cx,cy,cz,rad,col,spin,alpha,bl,body){ var s=prj([cx,cy,cz]); if(!s) return null; var pr=rad*pxPer(s.w), i, m;
+  m3glow(x,col,bl); x.strokeStyle='rgba('+col+','+alpha+')'; x.lineWidth=1;
+  [-0.55,0,0.55].forEach(function(la){ m3path(x,m3ring(cx,cy+Math.sin(la*1.2)*rad,cz,Math.cos(la*1.2)*rad,24)); x.stroke() });
+  for(m=0;m<4;m++){ var a0=spin+m*Math.PI/4, pts=[]; for(i=0;i<=20;i++){ var b=-Math.PI/2+i/20*Math.PI; pts.push([cx+Math.cos(b)*Math.cos(a0)*rad,cy+Math.sin(b)*rad,cz+Math.cos(b)*Math.sin(a0)*rad]) } m3path(x,pts); x.stroke() }
+  x.shadowBlur=0; x.beginPath(); x.arc(s.x,s.y,pr,0,7); x.fillStyle=body!==col?'rgba('+body+',.28)':'rgba(7,7,6,.55)'; x.fill();
+  m3glow(x,col,bl*1.4); x.strokeStyle='rgba('+col+','+Math.min(1,alpha*1.5)+')'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0;
+  return {x:s.x,y:s.y,r:pr,w:s.w} }
+/* the works' orbital ring, tilted: the half behind the sphere before it, the half in front after it */
+function m3orbit(x,a,h,front,col){ var rr=RS*1.75, tilt=0.38, c=prj([a.x,h,a.z]), P=[], i; if(!c) return;
+  for(i=0;i<=40;i++){ var an=Math.PI*2*i/40, ox=Math.cos(an)*rr, oz=Math.sin(an)*rr; P.push(prj([a.x+ox,h+oz*Math.sin(tilt),a.z+oz*Math.cos(tilt)])) }
+  m3glow(x,col,6); x.strokeStyle='rgba('+col+',.9)'; x.lineWidth=1.5; x.beginPath();
+  for(i=0;i<40;i++){ var p=P[i], q=P[i+1]; if(!p||!q) continue; if(((p.w+q.w)/2<c.w)!==front) continue; x.moveTo(p.x,p.y); x.lineTo(q.x,q.y) }
+  x.stroke(); x.shadowBlur=0 }
+/* a double line on the floor: a hub's (to Earth, magenta) and a feeder's (to its hub, in its trade's colour) */
+function m3dbl(x,a,b,col,wd){ var p=prj(a), q=prj(b); if(!p||!q) return; var dx=q.x-p.x, dy=q.y-p.y, l=Math.hypot(dx,dy)||1, nx=-dy/l*2.2, ny=dx/l*2.2;
+  m3glow(x,col,6); x.strokeStyle='rgba('+col+',.95)'; x.lineWidth=wd;
+  x.beginPath(); x.moveTo(p.x+nx,p.y+ny); x.lineTo(q.x+nx,q.y+ny); x.moveTo(p.x-nx,p.y-ny); x.lineTo(q.x-nx,q.y-ny); x.stroke(); x.shadowBlur=0 }
+function m3wcol(kind){ return m3rgb(KCOL[kind]) }
+/* the whole scene; the SVG on top is drawn by drawMap from the same camera */
+function draw3d(now){ if(!G||!el('map3d')) return; m3size();
+  if(CFIT){ var fk=visRings()+'|'+M3D.W+'|'+M3D.H; if(fk!==CFITK){ CFITK=fk; camFit() } } camUpdate();
+  var cv=el('map3d'), x=cv.getContext('2d'), t=(now||performance.now())/1000, OUT=outerR(), hubc=m3rgb(HUBC), i, k, p, a;
+  x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); m3sky(x); m3floor(); x.setTransform(1,0,0,1,0,0); x.drawImage(M3D.fl,0,0); x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
+  // the quiet wave: one soft ring out of Earth every 9 s
+  var wr=((t%9)/9)*(OUT+200); m3path(x,m3ring(0,0,0,wr,90)); x.strokeStyle='rgba(255,210,63,'+(0.10*(1-wr/(OUT+200))).toFixed(3)+')'; x.lineWidth=6; x.stroke();
+  // v4.21 (F-21): an event lights its lobe — dashed while announced (blinking), a translucent wedge while it runs
+  if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){ if(ev.lobe===undefined) return; var ec=EVCOL[ev.type]||'255,42,26', a0=lobeEdge(ev.lobe), pts=[[0,0,0]].concat(m3ring(0,0,0,OUT+44,16,a0,a0+LOBE_ARC));
+    var bl=ev.state==='warn'?0.45+0.55*Math.abs(Math.sin(t*Math.PI/1.6)):1; m3path(x,pts,true);
+    if(ev.state==='active'){ x.fillStyle='rgba('+ec+',.10)'; x.fill() } x.setLineDash(ev.state==='warn'?[6,5]:[3,4]); x.strokeStyle='rgba('+ec+','+(0.7*bl).toFixed(3)+')'; x.lineWidth=1.4; x.stroke(); x.setLineDash([]) });
+  // footprints: settled — two rings in the trade's colour; free — dashed grey; settling — dashed yellow; abandoned — ×
+  var vis=PLANETS.filter(function(q){ return secVis(q.sec) });
+  vis.forEach(function(q){ var st=wst(q.id), on=!!G.colonies[q.id], col=on?m3wcol(q.kind):(st==='settling'?m3rgb(C.people):'156,155,149'); a=p3(q);
+    if(st==='ghost'){ var g=prj([a.x,0,a.z]); if(g){ x.font='13px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle='rgba(94,93,88,.8)'; x.fillText('×',g.x,g.y+4) } return }
+    if(!on) x.setLineDash([3,3]); if(on) m3glow(x,col,6); m3path(x,m3ring(a.x,0,a.z,13,32)); x.strokeStyle='rgba('+col+','+(on||st==='settling'?.85:.45)+')'; x.lineWidth=1.3; x.stroke();
+    if(on){ m3path(x,m3ring(a.x,0,a.z,19,32)); x.strokeStyle='rgba('+col+',.25)'; x.lineWidth=1; x.stroke() } x.setLineDash([]); x.shadowBlur=0;
+    if(on&&G.colonies[q.id].hub){ var hp=[]; for(k=0;k<=6;k++){ var ha=Math.PI/3*k; hp.push([a.x+Math.cos(ha)*27,0,a.z+Math.sin(ha)*27]) } x.setLineDash([5,3]); m3glow(x,hubc,8); m3path(x,hp); x.strokeStyle='rgba('+hubc+',.95)'; x.lineWidth=1.8; x.stroke(); x.setLineDash([]); x.shadowBlur=0 } });
+  // lines, still: Earth → a world in its trade's colour; Earth → a hub double magenta; a hub → its feeder double in the feeder's colour
+  for(k in G.colonies){ p=planet(k); if(!secVis(p.sec)) continue; var lt=lineTo(G,k), A=node3(lt==='earth'?'earth':lt), B=node3(k); if(!A||!B) continue;
+    var L=Math.hypot(B[0]-A[0],B[2]-A[2])||1, hubA=lt!=='earth', hubB=!!G.colonies[k].hub, ua=(lt==='earth'?26:27)/L, ub=1-(hubB?27:14)/L; if(ua>=ub) continue;
+    var A2=[A[0]+(B[0]-A[0])*ua,0,A[2]+(B[2]-A[2])*ua], B2=[A[0]+(B[0]-A[0])*ub,0,A[2]+(B[2]-A[2])*ub], col=m3wcol(p.kind);
+    if(hubA) m3dbl(x,A2,B2,col,1.3); else if(hubB) m3dbl(x,A2,B2,hubc,1.3);
+    else { m3path(x,[A2,B2]); m3glow(x,col,4); x.strokeStyle='rgba('+col+',.45)'; x.lineWidth=1.3; x.stroke(); x.shadowBlur=0 } }
+  // hulls: the figure of the class (3, 4, 6 sides) in its colour, the yellow nose along the leg; a missing one — a red ring with ?
+  for(i=0;i<G.ships.length;i++){ var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
+    var SA=node3(sh.origin), SB=node3(sh.dest||sh.target); if(!SA||!SB) continue;
+    var f=sh.total?(1-sh.t/sh.total):0; if(sh.mode==='missing') f=sh.lastT!==undefined?sh.lastT:0.55; else sh.lastT=f;
+    var f2=Math.min(1,f+0.01), sp=prj([SA[0]+(SB[0]-SA[0])*f,0,SA[2]+(SB[2]-SA[2])*f]), sq=prj([SA[0]+(SB[0]-SA[0])*f2,0,SA[2]+(SB[2]-SA[2])*f2]); if(!sp||!sq) continue;
+    var kk=Math.max(.5,Math.min(1,pxPer(sp.w)*1.4));
+    if(sh.mode==='missing'){ x.setLineDash([2,3]); x.beginPath(); x.arc(sp.x,sp.y,8*kk,0,7); x.strokeStyle=C.red; x.lineWidth=1; x.stroke(); x.setLineDash([]); x.font='10px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle=C.red; x.fillText('?',sp.x,sp.y+3.5); continue }
+    var scls=shipClass(sh), n=scls==='courier'?3:(scls==='hauler'?4:6), ang=Math.atan2(sq.y-sp.y,sq.x-sp.x); x.beginPath();
+    for(k=0;k<n;k++){ var aa=ang+Math.PI*2*k/n+(n===4?Math.PI/4:0), rr=(k===0&&n===3?7.5:5.5)*kk, px=sp.x+Math.cos(aa)*rr, py=sp.y+Math.sin(aa)*rr; if(k) x.lineTo(px,py); else x.moveTo(px,py) } x.closePath();
+    x.fillStyle='rgba(7,7,6,.8)'; x.fill(); m3glow(x,m3rgb(CLSCOL[scls]),6); x.strokeStyle=CLSCOL[scls]; x.lineWidth=1.5; x.stroke(); x.shadowBlur=0; x.fillStyle=C.people; x.fillRect(sp.x+Math.cos(ang)*7*kk-1.5,sp.y+Math.sin(ang)*7*kk-1.5,3,3) }
+  // Earth and the worlds, far first: stems with a tick for every HTICK people, the works' orbit, the sphere
+  var list=vis.filter(function(q){ return wst(q.id)!=='ghost' }).map(function(q){ var b=p3(q), s=prj([b.x,wH(q.id),b.z]); return s?{q:q,s:s}:null }).filter(Boolean);
+  var es=prj([0,22,0]); if(es) list.push({earth:1,s:es}); list.sort(function(u,v){ return v.s.w-u.s.w });
+  list.forEach(function(o){
+    if(o.earth){ m3sphere(x,0,22,0,22,m3rgb(C.earth),t*0.3,.8,10); m3path(x,m3ring(0,0,0,26,40)); m3glow(x,'255,210,63',8); x.strokeStyle='rgba(255,210,63,.7)'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0; return }
+    var q=o.q, b=p3(q), on=!!G.colonies[q.id], h=wH(q.id), col=on?m3wcol(q.kind):'156,155,149', body=on&&q.kind==='works'?m3rgb(PARTS_BODY):col, rad=on?RS:RF, works=on&&q.kind==='works';
+    if(on){ m3glow(x,col,6); m3path(x,[[b.x,0,b.z],[b.x,h-rad,b.z]]); x.strokeStyle='rgba('+col+',.75)'; x.lineWidth=1.6; x.stroke(); x.shadowBlur=0;
+      for(var tk=HTICK;tk<=Math.min(G.colonies[q.id].pop,HPOP);tk+=HTICK){ var tp=prj([b.x,H0+tk*HK,b.z]); if(!tp) continue; var tl=4*pxPer(tp.w)+2.5; x.beginPath(); x.moveTo(tp.x-tl,tp.y); x.lineTo(tp.x+tl,tp.y); x.strokeStyle='rgba('+col+',.85)'; x.lineWidth=1.2; x.stroke() } }
+    if(works) m3orbit(x,b,h,false,col);
+    m3sphere(x,b.x,h,b.z,rad,col,t*0.5+(q.ang*7%6.28),on?.85:.38,on?9:0,body);
+    if(works) m3orbit(x,b,h,true,col) }) }
+/* the SVG on top: a .wd per world at its sphere (hit, alarms, the open one, its name and people), Earth's, the lobe and ring names */
 function drawMap(){
-  var s='', i, p, xy;
-  if(VFIT&&VSECS!==visRings()) viewFit();
-  var Z=VIEW.w/1000, F=function(n){ return (n*Z).toFixed(2) };
-  el('map').setAttribute('viewBox',VIEW.x.toFixed(1)+' '+VIEW.y.toFixed(1)+' '+VIEW.w.toFixed(1)+' '+VIEW.h.toFixed(1));
-  s+='<rect x="'+(VIEW.x-VIEW.w)+'" y="'+(VIEW.y-VIEW.h)+'" width="'+(VIEW.w*3)+'" height="'+(VIEW.h*3)+'" fill="none" pointer-events="all"/>';
-  s+=starfield();
-  // v4.25 (Nikita, 07.10): labels must not sit on each other — world names pick a free corner, ring names slide along the arc
-  var LBL={}, boxes=[], hit=function(a,b){ return a.x0<b.x1&&b.x0<a.x1&&a.y0<b.y1&&b.y0<a.y1 }, nHit=function(b){ var n=0; boxes.forEach(function(o){ if(hit(b,o)) n++ }); return n };
-  boxes.push({x0:CX-30*Z,x1:CX+30*Z,y0:CY-30*Z,y1:CY+30*Z});
-  PLANETS.filter(function(q){ return secVis(q.sec) }).sort(function(a,b){ return (G.colonies[b.id]?1:0)-(G.colonies[a.id]?1:0) }).forEach(function(q){
-    var c=pos(q), rr=8*Z, w=q.name.length*8*Z, best=null, bn=1e9;
-    [[1,-10],[-1,-10],[1,16],[-1,16]].forEach(function(v){
-      var lx=c.x+v[0]*(rr+4*Z), ly=c.y+v[1]*Z, bx=v[0]>0?lx:lx-w;
-      var b={x0:bx-2*Z,x1:bx+w+2*Z,y0:ly-10*Z,y1:ly+3*Z,L:{x:lx,y:ly,a:v[0]<0?1:0}}, n=nHit(b);
-      if(n<bn){ bn=n; best=b } });
-    LBL[q.id]=best.L; boxes.push(best) });
-  for(i=0;i<visRings();i++){
-    var rxN=SECTORS[i].r*1.32, ryN=SECTORS[i].r*0.90;
-    s+='<ellipse cx="'+CX+'" cy="'+CY+'" rx="'+rxN+'" ry="'+ryN+'" fill="none" stroke="rgba(242,241,236,.28)" stroke-width="'+F(1)+'" stroke-dasharray="'+F(1)+' '+F(5)+'"/>';
-    s+='<path id="rn'+i+'" d="M'+(CX-rxN)+' '+CY+' A'+rxN+' '+ryN+' 0 0 1 '+(CX+rxN)+' '+CY+'" fill="none" stroke="none"/>';
-    var tw=SECTORS[i].name.length*7*Z, tab=[0], tk, tl=0, ptx=function(u){ return {x:CX-rxN*Math.cos(u),y:CY-ryN*Math.sin(u)} };
-    for(tk=1;tk<=120;tk++){ var pa=ptx(Math.PI*(tk-1)/120), pb=ptx(Math.PI*tk/120); tl+=Math.hypot(pb.x-pa.x,pb.y-pa.y); tab.push(tl) }
-    var atLen=function(l){ var k=1; while(k<120&&tab[k]<l) k++; var u=Math.PI*((k-1)+(l-tab[k-1])/Math.max(1e-6,tab[k]-tab[k-1]))/120; return ptx(u) };
-    var bestF=0.6, bestN=1e9, fc;
-    for(fc=0;fc<=40;fc++){ var f=0.6+((fc%2)?1:-1)*Math.ceil(fc/2)*0.02; if(f<0.05||f+tw/tl>0.97) continue;
-      var nn=0, kk; for(kk=0;kk<=5;kk++){ var q2=atLen(f*tl+tw*kk/5); nn+=nHit({x0:q2.x-tw/10-1*Z,x1:q2.x+tw/10+1*Z,y0:q2.y-14*Z,y1:q2.y+2*Z}) }
-      if(nn<bestN){ bestN=nn; bestF=f; if(!nn) break } }
-    for(tk=0;tk<=5;tk++){ var q3=atLen(bestF*tl+tw*tk/5); boxes.push({x0:q3.x-tw/10,x1:q3.x+tw/10,y0:q3.y-14*Z,y1:q3.y+2*Z}) }
-    s+='<text fill="'+C.dim+'" font-size="'+F(9)+'" letter-spacing="'+F(1.6)+'" class="nm" dy="'+F(-4)+'" pointer-events="none"><textPath href="#rn'+i+'" startOffset="'+(bestF*100).toFixed(1)+'%">'+esc(SECTORS[i].name)+'</textPath></text>';
-  }
-  var rO=secRadius(visRings()-1)+44;
-  // v4.21 (F-21): the six lobes, the sides of the world — a dotted edge each, a name at the rim
-  if(can('sectors')) for(i=0;i<LOBES;i++){
-    var e=lobeEdge(i), ca=Math.cos(e), sa=Math.sin(e);
-    s+='<line x1="'+(CX+ca*34*Z)+'" y1="'+(CY+sa*34*Z)+'" x2="'+(CX+ca*rO*1.32)+'" y2="'+(CY+sa*rO*0.90)+'" stroke="'+C.dim+'" stroke-width="'+F(1.2)+'" stroke-dasharray="'+F(1.5)+' '+F(5)+'" pointer-events="none"/>';
-    var me=lobeMid(i); ca=Math.cos(me); sa=Math.sin(me);
-    var le=lobeEvents(G,i), lit=le.length?'rgb('+(EVCOL[le[0].type]||'255,42,26')+')':null;
-    s+='<text x="'+(CX+ca*rO*1.32+ca*24*Z)+'" y="'+(CY+sa*rO*0.90+sa*24*Z+(sa>0.9?6*Z:0))+'" fill="'+(lit||C.mid)+'" font-size="'+F(12)+'" letter-spacing="'+F(2.4)+'" text-anchor="'+(ca>0.1?'start':(ca<-0.1?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>';
-  }
-  // v4.21 (F-21): an event lights its lobe — a dashed outline while it is announced, a translucent wedge while it runs; Earth blinks for a crisis
-  if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){
-    var ec=EVCOL[ev.type]||'255,42,26';
-    if(ev.lobe!==undefined){
-      var a0=lobeEdge(ev.lobe), a1=a0+LOBE_ARC, pts=CX+','+CY, jj;
-      for(jj=0;jj<=14;jj++){ var aa=a0+(a1-a0)*jj/14; pts+=' '+(CX+Math.cos(aa)*rO*1.32)+','+(CY+Math.sin(aa)*rO*0.90) }
-      s+='<polygon points="'+pts+'" fill="'+(ev.state==='active'?'rgba('+ec+',.10)':'none')+'" stroke="rgba('+ec+',.7)" stroke-width="'+F(1.4)+'" stroke-dasharray="'+(ev.state==='warn'?F(6)+' '+F(5):F(3)+' '+F(4))+'"'+(ev.state==='warn'?' class="evwarn"':'')+' pointer-events="none"/>';
-    } else s+='<circle class="evearth" cx="'+CX+'" cy="'+CY+'" r="'+(30*Z)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(2)+'" pointer-events="none"/>';
-  });
-  for(var k in G.colonies){ p=planet(k); xy=pos(p); var lt=lineTo(G,k);
-    if(lt!=='earth'){ var hxy=pos(planet(lt));   // nodes-1.01: a feeder's line runs to its hub — dashed, brighter
-      s+='<line x1="'+hxy.x+'" y1="'+hxy.y+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity=".9" stroke-width="'+F(1.8)+'" stroke-dasharray="'+F(5)+' '+F(3)+'" pointer-events="none"/>' }
-    else s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity="'+(isHub(G,k)?'.7':'.45')+'" stroke-width="'+F(isHub(G,k)?3.2:1.6)+'" pointer-events="none"/>' }
-  // ships: the figure of the class in its colour (3, 4, 6 sides), the yellow nose along the route
-  for(i=0;i<G.ships.length;i++){
-    var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
-    var A=nodeXY(sh.origin), B=nodeXY(sh.dest||sh.target); if(!A||!B) continue;
-    var f = sh.total? (1-sh.t/sh.total) : 0;
-    if(sh.mode==='missing') f = sh.lastT!==undefined?sh.lastT:0.55; else sh.lastT=f;
-    var x=A.x+(B.x-A.x)*f, y=A.y+(B.y-A.y)*f;
-    if(sh.mode==='missing'){
-      s+='<circle cx="'+x+'" cy="'+y+'" r="'+F(8)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(1)+'" stroke-dasharray="'+F(2)+' '+F(3)+'"/><text x="'+x+'" y="'+(y+3.5*Z)+'" fill="'+C.red+'" font-size="'+F(10)+'" text-anchor="middle" class="nm">?</text>';
-    } else { var scls=shipClass(sh), sw=36*Z, shz=sw*0.625, turn=Math.atan2(B.y-A.y,B.x-A.x)*180/Math.PI;
-      s+='<use href="#i-'+scls+'" x="'+(-sw/2)+'" y="'+(-shz/2)+'" width="'+sw+'" height="'+shz+'" fill="'+CLSCOL[scls]+'" pointer-events="none" transform="translate('+x+' '+y+') rotate('+turn.toFixed(1)+')"/>' }
-  }
-  // worlds
-  for(i=0;i<PLANETS.length;i++){
-    p=PLANETS[i]; if(!secVis(p.sec)) continue; xy=pos(p);
-    var st=wst(p.id), on=!!G.colonies[p.id], LB=LBL[p.id];
-    if(st==='ghost'){ s+='<g pointer-events="none"><text x="'+xy.x+'" y="'+(xy.y+4*Z)+'" fill="'+C.dim+'" font-size="'+F(13)+'" text-anchor="middle">×</text><text x="'+LB.x+'" y="'+LB.y+'" fill="'+C.dim+'" font-size="'+F(10)+'" letter-spacing="'+F(1)+'" class="nm"'+(LB.a?' text-anchor="end"':'')+'>'+esc(p.name.toUpperCase())+'</text></g>'; continue }
-    s+='<g class="wd" data-p="'+p.id+'" transform="translate('+xy.x+' '+xy.y+')">';
-    if(BAD_ST[st]) s+='<circle r="'+F(15)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(2)+'" class="alarm"/>';
-    else if(st==='noline'||st==='half') s+='<circle r="'+F(15)+'" fill="none" stroke="'+C.people+'" stroke-width="'+F(1.6)+'" class="alarm"/>';
-    if(U.win===p.id) s+='<circle r="'+F(19)+'" fill="none" stroke="'+C.ink+'" stroke-width="'+F(2)+'"/>';
-    if(on&&G.colonies[p.id].hub){ var hx=''; for(var hk=0;hk<6;hk++){ var ha=Math.PI/3*hk; hx+=(hk?' ':'')+(Math.cos(ha)*16*Z).toFixed(2)+','+(Math.sin(ha)*16*Z).toFixed(2) }   // nodes-1.01: a hub wears a hexagon
-      s+='<polygon class="hubmk" points="'+hx+'" fill="none" stroke="'+C.ink+'" stroke-width="'+F(1.8)+'"/>' }
-    s+='<circle r="'+F(13)+'" fill="transparent"/>';
-    s+='<g transform="scale('+Z.toFixed(3)+')" '+(on?'fill="'+KCOL[p.kind]+'"':'fill="'+C.bg+'" stroke="'+(st==='settling'?C.people:C.mid)+'" stroke-width="1.6" stroke-dasharray="3 2.5"')+'>'+({mine:'<circle r="7"/>',farm:'<rect x="-6.5" y="-6.5" width="13" height="13"/>',well:'<path d="M0-8L8 0L0 8L-8 0Z"/>',works:'<path d="M0-8L8 6.5H-8Z"/>'}[p.kind])+'</g>';
-    s+='<text x="'+(LB.x-xy.x)+'" y="'+(LB.y-xy.y)+'" fill="'+(on?C.ink:C.mid)+'" font-size="'+F(10.5)+'" letter-spacing="'+F(1)+'" class="nm"'+(LB.a?' text-anchor="end"':'')+'>'+esc(p.name.toUpperCase())+'</text></g>';
-  }
+  if(!G) return; draw3d(); var s='', i, W=M3D.W, H=M3D.H;
+  el('map').setAttribute('viewBox','0 0 '+W+' '+H);
+  s+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="none" pointer-events="all"/>';
+  var OUT=outerR(), es=prj([0,22,0]), ef=prj([0,0,0]), er=es?22*pxPer(es.w):20;
+  // v4.21 (F-21): the six lobes, a name at the rim, lit by its event
+  if(can('sectors')) for(i=0;i<LOBES;i++){ var me=lobeMid(i), lp=prj([Math.cos(me)*(OUT+70),0,Math.sin(me)*(OUT+70)]); if(!lp) continue;
+    var le=lobeEvents(G,i), lit=le.length?'rgb('+(EVCOL[le[0].type]||'255,42,26')+')':null, ddx=ef?lp.x-ef.x:0;
+    s+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+4).toFixed(1)+'" fill="'+(lit||C.mid)+'" font-size="12" letter-spacing="2.4" text-anchor="'+(ddx>20?'start':(ddx<-20?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>' }
+  // ring names, on the near side of each ring
+  var th=CAM.yaw*Math.PI/180;
+  for(i=0;i<visRings();i++){ var rq=prj([Math.sin(th)*SECTORS[i].r,0,Math.cos(th)*SECTORS[i].r]); if(rq) s+='<text x="'+rq.x.toFixed(1)+'" y="'+(rq.y+13).toFixed(1)+'" fill="'+C.dim+'" font-size="9" letter-spacing="1.6" text-anchor="middle" class="nm" pointer-events="none">'+esc(SECTORS[i].name)+'</text>' }
+  // the worlds: where their spheres are; names never over a world, never off the map, never on each other (v4.25)
+  var boxes=[], L=[];
+  if(es) boxes.push({x0:es.x-er,x1:es.x+er,y0:es.y-er,y1:es.y+er+6});
+  PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost') return;
+    var sp=prj([b.x,wH(q.id),b.z]); if(!sp) return; var sr=(on?RS:RF)*pxPer(sp.w), rr=sr*(on&&q.kind==='works'?1.8:1);
+    boxes.push({x0:sp.x-rr,x1:sp.x+rr,y0:sp.y-sr,y1:sp.y+sr}); L.push({q:q,s:sp,r:sr,rr:rr,on:on,st:st}) });
+  L.sort(function(u,v){ return (v.on-u.on)||(u.s.w-v.s.w) }).forEach(function(o){
+    var q=o.q, nm=q.name.toUpperCase(), pop=o.on?' '+num(G.colonies[q.id].pop):'', tw=(nm.length*7.2+pop.length*6.6), g=(U.win===q.id?9:5)+(o.rr-o.r), ok=null, sx=o.s.x, sy=o.s.y;
+    var cs=[[sx+o.r+g,sy+4],[sx-o.r-g-tw,sy+4],[sx-tw/2,sy-o.r-g-4],[sx-tw/2,sy+o.r+16]];
+    for(var j=0;j<cs.length&&!ok;j++){ var bx={x0:cs[j][0]-2,x1:cs[j][0]+tw+2,y0:cs[j][1]-11,y1:cs[j][1]+3}; if(bx.x0<2||bx.x1>W-2) continue;
+      if(!boxes.some(function(z){ return bx.x0<z.x1&&z.x0<bx.x1&&bx.y0<z.y1&&z.y0<bx.y1 })) ok=bx }
+    o.lab=ok||{x0:cs[0][0]-2,y1:cs[0][1]+3,hidden:true}; if(ok) boxes.push(ok) });
+  L.forEach(function(o){ var q=o.q, st=o.st, lab=o.lab;
+    s+='<g class="wd" data-p="'+q.id+'" transform="translate('+o.s.x.toFixed(1)+' '+o.s.y.toFixed(1)+')">';
+    s+='<circle r="'+Math.max(12,o.rr+4).toFixed(1)+'" fill="transparent"/>';
+    if(BAD_ST[st]) s+='<circle r="'+(o.rr+7).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>';
+    else if(st==='noline'||st==='half') s+='<circle r="'+(o.rr+7).toFixed(1)+'" fill="none" stroke="'+C.people+'" stroke-width="1.6" class="alarm"/>';
+    if(U.win===q.id) s+='<circle r="'+(o.rr+11).toFixed(1)+'" fill="none" stroke="'+C.people+'" stroke-width="2"/>';
+    if(!lab.hidden) s+='<text x="'+(lab.x0+2-o.s.x).toFixed(1)+'" y="'+(lab.y1-3-o.s.y).toFixed(1)+'" fill="'+(o.on?C.ink:C.mid)+'" font-size="10.5" letter-spacing="1" class="nm">'+esc(q.name.toUpperCase())+(o.on?'<tspan fill="'+C.people+'">'+esc(' '+num(G.colonies[q.id].pop))+'</tspan>':'')+'</text>';
+    s+='</g>' });
   // earth
-  var nearNight=G.night&&nightLeft(G)<=K.NIGHT_NEAR;
-  s+='<g class="wd" data-act="tab" data-v="earth" transform="translate('+CX+' '+CY+') scale('+Z.toFixed(3)+')">'+(nearNight?'<circle r="21" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>':'')+'<circle r="15" fill="'+C.earth+'"/><path d="M-15 0H15M0-15C-7-8-7 8 0 15C7 8 7-8 0-15" stroke="#0B0B0C" stroke-width="1.4" fill="none"/></g>';
+  var nearNight=G.night&&nightLeft(G)<=K.NIGHT_NEAR, crisis=can('events')&&(G.dir&&G.dir.ev||[]).some(function(ev){ return ev.lobe===undefined });
+  if(es) s+='<g class="wd" data-act="tab" data-v="earth" transform="translate('+es.x.toFixed(1)+' '+es.y.toFixed(1)+')"><circle r="'+(er+5).toFixed(1)+'" fill="transparent"/>'+
+    (nearNight?'<circle r="'+(er+8).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>':'')+(crisis?'<circle class="evearth" r="'+(er+12).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" pointer-events="none"/>':'')+'</g>';
   el('map').innerHTML=s;
   if(el('tip').className) drawTip(document.querySelector('#map .wd[data-p]:hover'));   // the node under the pointer was just replaced
 }
@@ -778,8 +829,8 @@ function chronLines(k){ var out='', n=0;
   return out?'<div class="chron">'+out+'</div>':'' }
 function rw2(k,v,cls){ return '<div class="rw"><span>'+k+'</span><b class="'+(cls||'')+'">'+v+'</b></div>' }
 function bigHtml(kind){
-  if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-markf"/></svg><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><p>Choose a language.<br>Выберите язык.</p><div class="langrow"><button class="b pri" type="button" data-lang="en">English</button><button class="b pri" type="button" data-lang="ru">Русский</button></div>'+
-    (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(L[U.saveLang||'en'].u_continue||'',{y:U.saveDay}))+'</button>':'')+'</div>';
+  if(kind==='lang') return '<div class="nwin" id="lang"><svg class="lmark2" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-markf"/></svg><div class="icap">LAST BERTH<span>'+(U.saveDay!==null&&U.saveDay!==undefined?'':'')+'</span></div><div class="langrow"><button class="b pri" type="button" data-lang="en">Start</button></div>'+
+    (U.saveDay!==null&&U.saveDay!==undefined?'<button class="b full" type="button" data-act="loadauto">'+esc(fill(L.en.u_continue||'',{y:U.saveDay}))+'</button>':'')+'</div>';
   /* v4.36: the end, the Night and the shift speak in the Institute's voice, Alexandra's line under it (NAR N-13, N-09, N-04) */
   if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
     if(G.over==='night'){ var sl=G.souls||0, lb=G.left||leftBehind(G), tier=sl<=0?0:(sl<300?1:(sl<1200?2:3)), behind=lb.home+lb.hulls+lb.colonies+lb.transit;
@@ -922,7 +973,7 @@ var TMSG={
  m15:{at:'#top .adv',mode:'see',k:'tut_m15',pre:closeAll},
  m17:{at:'#evbar',mode:'see',k:'tut_m17',pre:closeAll},
  m16:{at:function(){ return '#map .wd[data-p="'+U.tut.r2+'"]' },mode:'see',k:'tut_m16',
-   pre:function(){ closeAll(); var w=PLANETS.filter(function(p){ return p.sec===1&&!(G.ghost&&G.ghost[p.id]) }).sort(function(a,b){ return a.dist-b.dist })[0]; U.tut.r2=w?w.id:null; VFIT=true; VSECS=-1; return {} }},
+   pre:function(){ closeAll(); var w=PLANETS.filter(function(p){ return p.sec===1&&!(G.ghost&&G.ghost[p.id]) }).sort(function(a,b){ return a.dist-b.dist })[0]; U.tut.r2=w?w.id:null; CFIT=true; CFITK=''; return {} }},
  m18:{at:'#top .night',mode:'see',k:'tut_m18',pre:closeAll},
  m19:{at:'#tabs [data-v="ark"]',mode:'see',k:'tut_m19',pre:function(){ closeAll(); return {g:roman(convoyGen(G))} }},
  /* by occasion: once each, when the thing first happens */
@@ -1522,8 +1573,7 @@ function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]==
   return '<div class="advl"><div class="advc">'+gs.map(function(g){ return '<span style="color:'+g.c+'">'+ic(g.t.i,14,g.c)+'<b>'+g.n+'</b></span>' }).join('')+'</div>'+gs.map(function(g){
     return '<div class="advh" style="color:'+g.c+'">'+ic(g.t.i,15,g.c)+'<span>'+esc(T(g.t.l))+'</span><b>'+g.n+'</b></div>'+g.rows.map(function(r){ return '<button type="button" data-t="'+g.t.k+'" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+(r[0]===C.mid?C.mid:g.t.c)+'"></i><b'+(r[0]===C.red?' style="color:'+C.red+'"':(r[0]===C.mid?' style="color:'+C.mid+'"':''))+'>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join('') }).join('')+'</div>' }
 function popMenu(){
-  return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('u_mLang'))+' <b>'+(U.lang==='en'?'EN':'RU')+'</b> · '+(U.lang==='en'?'RU':'EN')+'</button>'+
-    '<button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
+  return '<div class="menu"><button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
     '<button type="button" data-act="uisize">'+ic('tWorlds',15)+esc(T('u_mSize'))+' <b>'+Math.round(uiScale()*100)+'%</b></button>'+
     '<button type="button" data-act="help">'+ic('peopleA',15)+esc(T('u_mHelp'))+' <b>'+esc(T(U.tut.help?'u_on':'u_off'))+'</b></button><hr>'+
     '<button type="button" data-act="save">'+ic('unloading',15)+esc(T('u_mSave'))+'</button><button type="button" data-act="load">'+ic('loading',15)+esc(T('u_mLoad'))+'</button>'+
@@ -1532,16 +1582,14 @@ function popMenu(){
     '<div class="seedrow">'+esc(T('seed'))+' <input id="seedin" value="'+G.seed+'"></div><button type="button" data-act="new">'+ic('free',15)+esc(T('newGame'))+'</button></div>' }
 
 /* ---------- the main menu (work/menu.js, v4.40): in front of a new run whose clock stands; its terminal tells the start ---------- */
-var LANG_KEY='lb.lang';
-/* the menu speaks the language of the save on record, else the one chosen here last time, else the browser's */
-function menuLang(){ var l=null; try{ l=localStorage.getItem(LANG_KEY) }catch(e){} if(U.saveLang&&U.saveDay!==null) return U.saveLang; if(l==='en'||l==='ru') return l;
-  return /^ru\b/i.test((navigator.language||'')+'')?'ru':'en' }
+/* v5.05 (Nikita 06.11: «удали смену языка в игре, пусть интерфейс будет только на английском»): the game speaks English only — no language
+   item in the menu or in ≡, a save in Russian loads in English. The RU column stays in the sheet and the build; nothing in the game switches to it */
+function menuLang(){ return 'en' }
 function menuOpen(){ U.menu=true; draw();
   LBMENU.open({T:function(k,p){ return T(k,p) }, v:VERSION.v, lang:function(){ return U.lang },
     save:function(){ return U.saveDay!==null&&U.saveDay!==undefined?{y:U.saveDay,w:U.saveWorlds||0}:null },
     sound:function(){ return SFX.isOn() }, setSound:function(on){ SFX.set(on) },
     size:function(){ return uiScale() }, sizeNext:function(){ return uiScaleNext() },
-    setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
     cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return T('mn_contFail') },
     load:function(){ el('loadin').click() },
     pressNew:function(){ clockOn('new') },
@@ -1558,10 +1606,10 @@ function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinit
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
   G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
   if(!G.clock){ clockOn('save'); G.clock.year=G.day }   // a save from before v4.46: the clock counts from the load
-  var u=o.U||{}; if(!U.langPicked&&u.lang) U.lang=u.lang; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] }); if(SPEEDS.indexOf(U.speed)<0) U.speed=4;   // a save from before v4.42 may hold 10×
+  var u=o.U||{}; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] }); if(SPEEDS.indexOf(U.speed)<0) U.speed=4;   // a save from before v4.42 may hold 10×
   tutLoad(u.tut);
   U.win=null; U.tab=null; U.pop=null; U.notes=[]; U.pf=null; U.paused=true; U.acc=0; U.gk=G; U.noFreeAt=SECTORS.length; U.ringNoted=undefined; U.foodWarnAt=null; U.worksSeen=true; U.who={}; U.driveAt=null; U.focusK=null; U.scrapArm=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; U.langPicked=true; HTMLCACHE={};
-  VFIT=true; VSECS=-1; POSN=-1; window.LN=G; draw() }
+  CFIT=true; CFITK=''; P3N=-1; window.LN=G; draw() }
 function autosave(){ try{ localStorage.setItem(SAVE_KEY,dump()) }catch(e){} }
 function loadAuto(){ var t0=null; try{ t0=localStorage.getItem(SAVE_KEY) }catch(e){} if(!t0) return false;
   try{ undump(t0); say('ok_loadgame',{y:G.day}); return true }catch(e){ say('loadfail'); return false } }
@@ -1600,7 +1648,7 @@ function doAct(a,b){
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
   else if(a==='spd'){ if(v==='0') pauseToggle(); else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
   else if(a==='hack'){ U.hackLater=false }   // the put-off hack: hackCheck opens it on the next frame
-  else if(a==='zoom'){ if(v==='fit'){ VFIT=true; viewFit() } else viewZoom(v==='in'?0.75:1.35) }
+  else if(a==='zoom'){ if(v==='fit'){ CFIT=true; CFITK='' } else camZoom(v==='in'?0.75:1.35) }
   else if(a==='addtab') U.addTab=v;
   else if(a==='filter') U.filter=v;
   else if(a==='who') U.who[d.p]=+d.s;
@@ -1650,7 +1698,6 @@ function doAct(a,b){
   else if(a==='savelog'){ saveLog(); return }
   else if(a==='copylog'){ copyLog(); return }
   else if(a==='closelog'){ el('logbox').hidden=true }
-  else if(a==='lang'){ U.lang=U.lang==='en'?'ru':'en' }
   else if(a==='sfx'){ SFX.set(!SFX.isOn()); if(SFX.isOn()) SFX.play('ok') }
   else if(a==='uisize'){ uiScaleNext() }   // v5.03: the desk's size; the ≡ list stays open, its number follows
   else if(a==='help'){ if(U.tut.help) tutOff(); else tutOn() }
@@ -1674,7 +1721,7 @@ document.addEventListener('click',function(ev){
     pressFx(ev.clientX,ev.clientY,'bad'); say(hitb.dataset.why||'off',wp); hitb.classList.remove('shake'); void hitb.offsetWidth; hitb.classList.add('shake'); return }
   if(hitb&&hitb.tagName==='BUTTON'){ if(!hitb.classList.contains('tab')) SFX.play('click'); pressFx(ev.clientX,ev.clientY) }
   var lb=t.closest('[data-lang]');
-  if(lb){ U.lang=lb.dataset.lang; U.langPicked=true; draw(); return }
+  if(lb){ U.lang='en'; U.langPicked=true; draw(); return }   // v5.05: English only — the start window has one button
   var g=t.closest('#map .wd[data-p]'); if(g){ try{ window.getSelection().removeAllRanges() }catch(e){} openWorld(g.dataset.p); SFX.play('click'); tutAct('world',g.dataset.p); draw(); return }
   var b=t.closest('[data-act]');
   if(b&&b.dataset.act!=='pop'&&U.pop&&!b.closest('#pop')&&b.dataset.act!=='tab'&&b.dataset.act!=='world'){ U.pop=null }
@@ -1697,18 +1744,23 @@ document.addEventListener('keydown',function(e){
   var sp={'1':1,'2':2,'3':4}[e.key]; if(sp){ U.speed=sp; U.paused=false; draw() } });
 document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.target.closest('#map .wd[data-p]'); drawTip(g) });
 
-/* ---------- the map is pannable and zoomable ---------- */
+/* ---------- the map turns, moves and zooms (v5.05): drag = turn, right drag / shift / two fingers = move, wheel / pinch = zoom ----------
+   No setPointerCapture: capturing on the <svg> retargets the following click to the <svg> itself and worlds stop being clickable
+   (Nikita, 22.09: «не могу играть»). Move and up live on window, so a drag that leaves the map ends cleanly; a drag is not a click (MAPDRAGGED). */
 (function(){
-  var m=el('map');
-  m.addEventListener('wheel',function(e){ e.preventDefault(); var pt=viewPt(e); viewZoom(e.deltaY>0?1.12:0.89,pt.x,pt.y); drawMap(); tutPlace() },{passive:false});
-  /* No setPointerCapture: capturing on the <svg> retargets the following click to the <svg> itself and worlds stop being
-     clickable (Nikita, 22.09: «не могу играть»). Move and up live on window, so a drag that leaves the map ends cleanly. */
-  var drag=null;
-  m.addEventListener('pointerdown',function(e){ if(e.button!==0) return; drag={x:e.clientX,y:e.clientY,vx:VIEW.x,vy:VIEW.y,moved:false,sc:viewPt(e).sc} });
-  window.addEventListener('pointermove',function(e){ if(!drag) return; var dx=e.clientX-drag.x, dy=e.clientY-drag.y;
-    if(!drag.moved&&Math.abs(dx)+Math.abs(dy)<5) return; drag.moved=true; m.classList.add('drag'); VFIT=false;
-    VIEW.x=drag.vx-dx/drag.sc; VIEW.y=drag.vy-dy/drag.sc; drawMap(); tutPlace() });
-  function end(){ if(!drag) return; if(drag.moved) MAPDRAGGED=true; drag=null; m.classList.remove('drag') }
+  var m=el('map'), P={}, drag=null, pinch=null;
+  function moved(){ drawMap(); tutPlace() }
+  m.addEventListener('contextmenu',function(e){ e.preventDefault() });
+  m.addEventListener('wheel',function(e){ e.preventDefault(); camZoom(e.deltaY>0?1.12:0.89); moved() },{passive:false});
+  m.addEventListener('pointerdown',function(e){ P[e.pointerId]={x:e.clientX,y:e.clientY}; if(!drag) MAPDRAGGED=false; if(!drag) drag={x0:e.clientX,y0:e.clientY,moved:false,pan:e.button===2||e.shiftKey}; pinch=null });
+  window.addEventListener('pointermove',function(e){ var p=P[e.pointerId]; if(!p||!drag) return; var z=appZoom(), dx=(e.clientX-p.x)/z, dy=(e.clientY-p.y)/z; p.x=e.clientX; p.y=e.clientY;
+    if(!drag.moved){ if(Math.abs(e.clientX-drag.x0)+Math.abs(e.clientY-drag.y0)<5) return; drag.moved=true; m.classList.add('drag') }
+    var ids=Object.keys(P);
+    if(ids.length>=2){ var a=P[ids[0]], b=P[ids[1]], d=Math.hypot(a.x-b.x,a.y-b.y)||1; if(pinch) camZoom(pinch/d); pinch=d; camPan(dx/2,dy/2) }
+    else if(drag.pan) camPan(dx,dy); else camTurn(dx,dy);
+    moved() });
+  function end(e){ if(!P[e.pointerId]) return; delete P[e.pointerId]; pinch=null; if(Object.keys(P).length) return;
+    if(drag&&drag.moved) MAPDRAGGED=true; drag=null; m.classList.remove('drag') }
   window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
 })();
 /* desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows.
@@ -1736,6 +1788,7 @@ function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return
 function frame(ts){
   if(!U.last) U.last=ts;
   var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
+  if(G&&ts-M3D.last>50){ M3D.last=ts; try{ draw3d(ts) }catch(e){} }   // v5.05: the 3D chart turns its spheres and sends its wave between the years
   if(G&&!halted()&&!G.over){
     U.acc+=dt; var step=MS[U.speed]||600, did=false;
     try{
@@ -1764,7 +1817,7 @@ function start(seed){
   G=newGame(seed||undefined); tutNew();
   G.hackGate=!TUTX.hook||!!window.LBHACKTEST; U.hackLater=false;   // the hack (Nikita 04.11): a player's run; the scenarios' hook «всё открыто» skips it unless a scenario asks
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.driveAt=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; HTMLCACHE={};
-  VFIT=true; VSECS=-1; POSN=-1; viewFit();
+  CFIT=true; CFITK=''; P3N=-1;
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
   window.LNtut={off:function(){ TUTX.hook=true; if(!window.LBHACKTEST) G.hackGate=false; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead

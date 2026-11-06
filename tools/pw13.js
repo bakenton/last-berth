@@ -50,8 +50,8 @@ const DIR=UI.WORK+'/', URL='https://sheet.test/pub?output=csv';
   ok('draft row ignored (Earth tab)', !/DRAFT/.test(await tabsTxt(r.p)), (await tabsTxt(r.p)).slice(0,80));
   ok('row that lost {n} falls back to the build', /\d/.test(await nightTxt(r.p)), night0+' → '+(await nightTxt(r.p)));
   if(await r.p.evaluate(()=>LNU.pop!=='menu')) await openMenu(r.U,r.p);
-  await r.U.tap('[data-act="lang"]'); await r.p.waitForTimeout(150);
-  ok('RU column applied', (await label(r.p)).trim()==='Год-X', await label(r.p));
+  // v5.05: the game is English only — no language button in ≡; the sheet's rows show on the English page
+  ok('no language button in ≡ (v5.05); the sheet rows stay on the English page', await r.p.evaluate(()=>!document.querySelector('[data-act="lang"]'))&&(await label(r.p)).trim()==='Year-X', await label(r.p));
   ok('sheet case: no page errors', r.p.errs.length===0, r.p.errs[0]); await r.p.close();
   // 4. ссылка есть, лист недоступен → тост об ошибке, встроенные тексты на месте
   r=await open('long-night-url.html', route=>route.abort());

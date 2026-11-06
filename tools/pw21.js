@@ -81,19 +81,19 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('A dusk lines are in the chronicle (LN.log)', await p.evaluate(()=>window.LN.log.some(e=>e.code==='shift'&&/dusk/.test(e.d.k))));
   ok('A no page errors', !p.errs.length, p.errs.join(' | '));
   await p.close();
-  // ---- B: Russian, the grounded ending mentions the collapse ----
-  p=await open('ru');
+  // ---- B: the grounded ending mentions the collapse (v5.05: English only — the Russian modal and physicist checks are now English) ----
+  p=await open('en');
   await p.evaluate(()=>{ botRun(200); const G=window.LN; revealNight(G); LNdraw(); });
   const mru=await p.big();
-  ok('B RU modal: collapse (N-09)', /наша галактика схлопнется/.test(mru)&&/увести людей в другую галактику/.test(mru), mru.slice(0,160));
+  ok('B modal: collapse (N-09)', /our galaxy collapses/.test(mru)&&/build an ark and take people to another galaxy/.test(mru), mru.slice(0,160));
   await p.U.tap('[data-act="nightok"]'); await p.waitForTimeout(150);
   f=await p.pf();
-  ok('B RU physicist', !!f&&/Физик Института/.test(f)&&/поколения IV/.test(f), f);
-  await p.screenshot({path:'x7-ru-physicist.png'}); await p.U.clear();
+  ok('B physicist', !!f&&/Institute physicist/.test(f)&&/generation IV/i.test(f), f);
+  await p.screenshot({path:'x7-physicist-b.png'}); await p.U.clear();
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; window.LN.night=window.LN.day+2; LNdraw(); });
   await p.U.until(()=>p.evaluate(()=>!!window.LN.over),200,10); await p.U.pause();
   const ovB=await p.big();
-  ok('B RU ending: the ark did not sail (N-13)', /Ковчег не ушёл/.test(ovB)&&/АЛЕКСАНДРА/i.test(ovB), ovB.slice(0,200));
+  ok('B ending: the ark did not sail (N-13)', /The ark did not sail/.test(ovB)&&/ALEXANDRA/i.test(ovB), ovB.slice(0,200));
   ok('B no page errors', !p.errs.length, p.errs.join(' | '));
   await b.close();
   } catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }

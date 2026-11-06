@@ -90,15 +90,15 @@ const TMP=require('os').tmpdir();
   ok('verdict: the convoy never gathered, convoy generation named (v4.36: N-13 b)', /convoy of generation [IVX]+ is short of/.test(ov)&&/no convoy/.test(ov), ov.slice(0,200));
   ok('no page errors (EN)', !p.errs.length, p.errs.join(' | '));
 
-  // === RU strings (own desk)
+  // === strings on a second desk (v5.05: English only; the Russian strings are the English ones)
   const q=await UI.newPage(b,{file:page}); const V=UI.ui(q);
-  await V.start('ru',11);
+  await V.start('en',11);
   await q.evaluate(()=>{ const E=LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; LN.driveLvl=0; LN.gen=0; if(!LN.night) revealNight(LN); LN.nightSeen=true; LNdraw() });
   await V.clear(); await q.evaluate(()=>{ LNU.win='ark'; LNdraw() });
   const ru=await q.evaluate(()=>document.getElementById('ovl').textContent.replace(/\s+/g,' '));
-  ok('RU: convoy row and buy button', /Конвой/.test(ru)&&/Купить/.test(ru), ru.slice(0,160));
-  ok('RU: no raw placeholders', !/\{[a-z]\}/.test(ru), (ru.match(/.{0,40}\{[a-z]\}.{0,40}/)||[''])[0]);
-  ok('RU: no page errors', q.errs.length===0, q.errs.join(' | '));
+  ok('strings: convoy row and buy button', /Convoy/.test(ru)&&/Buy level/.test(ru), ru.slice(0,160));
+  ok('strings: no raw placeholders', !/\{[a-z]\}/.test(ru), (ru.match(/.{0,40}\{[a-z]\}.{0,40}/)||[''])[0]);
+  ok('strings: no page errors (second desk)', q.errs.length===0, q.errs.join(' | '));
   await q.close(); await b.close();
 }catch(e){ out.push('FAIL exception — '+String(e&&e.stack||e).slice(0,400)) }
   console.log(out.join('\n')); const f=out.filter(l=>l.startsWith('FAIL')).length; console.log('pw38 '+(out.length-f)+'/'+out.length); process.exit(f?1:0);

@@ -66,23 +66,23 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   ok('A no page errors', !p.errs.length, p.errs.join(' | '));
   await p.close();
 
-  // ---------- B: Russian, the drive never comes ----------
-  p=await open('ru');
+  // ---------- B: the drive never comes (v5.05: the game is English only; the Russian run is gone) ----------
+  p=await open('en');
   await p.evaluate(()=>{ botRun(200); const G=window.LN; G.driveLvl=0; G.gen=0; revealNight(G); LNdraw(); });
   await p.U.tap('[data-act="nightok"]'); await p.pf();
   const hr=await p.evaluate(()=>({night:(document.querySelector('#top .yr.night')||{textContent:''}).textContent,year:(document.querySelector('#top .yr')||{textContent:''}).textContent,G:{night:LN.night}}));
-  ok('B RU header: the Night date', !!hr.night&&hr.night.indexOf(String(hr.G.night))>=0, JSON.stringify(hr));
+  ok('B header: the Night date', !!hr.night&&hr.night.indexOf(String(hr.G.night))>=0, JSON.stringify(hr));
   await p.screenshot({path:'w6-ru-header.png',clip:{x:0,y:0,width:1600,height:70}});
   const ruArk=await p.arkTxt();
-  ok('B RU ark tab: drive title and generation', /Двигатель ковчега/i.test(ruArk)&&/IV/.test(ruArk), ruArk.match(/Двигатель ковчега.{0,60}/i)?.[0]);
-  ok('B RU advisor lists worlds only (Nikita 15.10)', await p.advWorlds(), JSON.stringify(await p.evaluate(()=>LNI.adv().map(r=>r[3]))));
+  ok('B ark tab: drive title and generation', /Ark drive/i.test(ruArk)&&/IV/.test(ruArk), ruArk.match(/Ark drive.{0,60}/i)?.[0]);
+  ok('B advisor lists worlds only (Nikita 15.10)', await p.advWorlds(), JSON.stringify(await p.evaluate(()=>LNI.adv().map(r=>r[3]))));
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; LNdraw(); });
   await p.U.tab('ark'); await p.U.tap('#ovl [data-act="arkbuy"][data-l="1"]'); await p.U.tab('ark');
   await p.evaluate(()=>{ window.LN.night=window.LN.day+2; LNdraw() });
   await p.U.until(()=>p.evaluate(()=>!!window.LN.over),200,10); await p.U.pause();
   const endB=await p.evaluate(()=>({over:LN.over,souls:LN.souls,grounded:LN.grounded,arkLevel:arkLevel(LN),log:LN.log.filter(e=>e.code==='ark_grounded').length}));
   const ovB=await p.big();
-  ok('B grounded: 0 souls, grounded log, verdict text', endB.grounded&&endB.souls===0&&endB.log===1&&/НОЧЬ/.test(ovB), JSON.stringify(endB)+' | '+ovB.slice(0,300));
+  ok('B grounded: 0 souls, grounded log, verdict text', endB.grounded&&endB.souls===0&&endB.log===1&&/The Night/.test(ovB)&&/The ark did not sail/.test(ovB), JSON.stringify(endB)+' | '+ovB.slice(0,300));
   await p.screenshot({path:'w7-grounded.png'});
   ok('B no page errors', !p.errs.length, p.errs.join(' | '));
   await b.close();
