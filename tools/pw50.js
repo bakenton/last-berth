@@ -73,6 +73,41 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('ark: level I — the drive alone, level IV +15%', a.w1===0.6&&Math.abs(a.w4-0.75)<1e-9, JSON.stringify(a));
   ok('ark level II: food ×2, parts ×0.5', a.f2===3750*3*2&&a.p2===900*3*0.5, JSON.stringify(a));
 
+  // 8. v5.02: the hub is evacuated while a feeder hull flies into it with a hold — the hold comes home, the line goes to Earth, one log line
+  await U.clear();
+  const W=await p.evaluate(()=>{ GOD.maxAll(); GOD.drive(); GOD.drive(); LN.gen=1; LN.driveLvl=1;
+    const nw=PLANETS.filter(x=>x.kind!=='works'&&!LN.colonies[x.id]);
+    const hub=nw.filter(x=>x.sec===1).sort((a,b)=>a.dist-b.dist)[0];
+    const fd=nw.filter(x=>x.sec===2&&x.dist>hub.dist).sort((a,b)=>a.dist-b.dist)[0];
+    return {hub:hub.id, fd:fd.id} });
+  for(const k of [W.hub,W.fd]) await p.evaluate(k=>{ LNU.win=k; GOD.settle(); LNU.win=null },k);
+  const H=await p.evaluate(W=>{ for(let i=0;i<3000&&!(LN.colonies[W.hub]&&LN.colonies[W.fd]);i++) tick(LN);
+    LN.earth.metal=LN.earth.parts=LN.earth.fuel=LN.earth.food=50000;
+    const r1=buildHub(LN,W.hub), r2=setVia(LN,W.fd,W.hub);
+    const hi=HULLS.findIndex(h=>h.key==='hauler'&&h.gen===LN.gen), s=GOD.hull(hi), r3=setLine(LN,s.id,W.fd,'earth');
+    const dep=planet(W.fd).dep;   // she is half-way from her world to the hub, the hold full of its trade
+    s.cargo={metal:0,food:0,fuel:0,parts:0,people:0}; s.cargo[dep]=123; s.mode='transit'; s.at=null; s.origin=W.fd; s.dest=W.hub; s.dir='out'; s.total=500; s.t=400;
+    LN.ships.filter(o=>o!==s&&o.mode==='transit'&&o.dest===W.hub).forEach(o=>{ o.dest='earth' });
+    const ci=HULLS.findIndex(h=>h.key==='courier'&&h.gen===LN.gen); GOD.hull(ci); LNdraw();
+    return {r:[r1,r2,r3].join(','), sid:s.id, dep, to:s.to} },W);
+  ok('setup: hub, feeder via the hub, a hauler on the feeder line', H.r==='ok,ok,ok'&&H.to===W.hub, JSON.stringify(H));
+  await U.openWorld(W.hub); await p.waitForTimeout(300);
+  const ev=await p.$('#ovl [data-act="evac"]');
+  if(ev){ await U.tap('#ovl [data-act="evac"]'); await p.waitForTimeout(300) }
+  ok('evacuation ordered with the mouse', await p.evaluate(W=>LN.ships.some(o=>o.job==='evac'&&o.dest===W.hub),W), ev?'button found':'no evac button');
+  await U.closeWin();
+  const gone=await U.until(async()=>await p.evaluate(W=>!LN.colonies[W.hub],W),400,10);
+  const toastT=await p.evaluate(()=>{ const e=document.querySelector('#toasts'); return e?e.innerText:'' });
+  await U.pause();
+  const A=await p.evaluate(([W,H])=>{ const s=shipById(LN,H.sid), L=LN.log.filter(e=>e.code==='hub_lost');
+    return {n:L.length, d:L[0]&&L[0].d, via:LN.colonies[W.fd]&&LN.colonies[W.fd].via, from:s.from, to:s.to, hold:s.cargo[H.dep], mode:s.mode, dest:s.dest} },[W,H]);
+  ok('hub evacuated: one hub_lost entry, 1 line', gone&&A.n===1&&A.d.p===W.hub&&A.d.n===1, JSON.stringify(A));
+  ok('the hub_lost toast is on screen', /The hub at .+ is gone\. Lines back to Earth: 1\./.test(toastT), toastT.replace(/\n/g,' | '));
+  ok('the feeder ships to Earth, the hauler keeps her line and her hold', A.via===null&&A.from===W.fd&&A.to==='earth'&&A.hold===123, JSON.stringify(A));
+  const home=await p.evaluate(H=>{ const i0=LN.log.length; for(let i=0;i<1500;i++){ tick(LN); const e=LN.log.slice(i0).find(e=>e.code==='delivered'&&e.d.n===H.sid); if(e) return e.d } return null },H);
+  const dk={metal:'m',food:'f',fuel:'u',parts:'t'}[H.dep];
+  ok('the hold is delivered to Earth', !!home&&home[dk]===123, JSON.stringify(home));
+
   ok('no page errors', !p.errs.length, p.errs.join(' | '));
   await b.close();
  }catch(e){ out.push('ERROR '+String(e&&e.stack||e).slice(0,600)) }

@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.01'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.02'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -1498,8 +1498,15 @@ function tick(G){
         // whatever was on the surface goes with them, as far as the hold allows
         var roomE=Math.max(0,s.cap-lift);
         ['metal','food','fuel','parts'].forEach(function(kk){ var g=Math.min(roomE,Math.floor(ce.store[kk]||0)); if(g>0){ s.cargo[kk]=g; roomE-=g } });
+        var fdr=feedersOf(G,node);
         delete G.colonies[node];
-        for(var vk in G.colonies){ if(G.colonies[vk].via===node) G.colonies[vk].via=null }   // nodes-1.00
+        /* v5.02 (reviewer v5.01, Nikita 06.11 «Да, чини»): the feeders' lines go back to Earth with their hulls, as setVia does;
+           a hull that cannot fly to Earth stands down. A hull already flying into the hub brings her hold home (below, on arrival). */
+        for(var fi=0;fi<fdr.length;fi++){ var fk=fdr[fi]; G.colonies[fk].via=null;
+          for(var fq=0;fq<G.ships.length;fq++){ var fo=G.ships[fq]; if(fo.mode==='dead') continue;
+            if(fo.from===fk){ fo.to='earth'; if(!lineOk(G,fo,fk)){ fo.from=null; fo.to=null } }
+            if(fo.pend&&fo.pend.from===fk){ fo.pend.to='earth'; if(!lineOk(G,fo,fk)) fo.pend=null } } }
+        if(ce.hub) log(G,'hub_lost',{p:node,n:fdr.length});
         if(G.reserves[node]!==Infinity&&G.reserves[node]<=0){ G.ghost[node]=G.day }
         for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.from===node||o.to===node){ o.from=null; o.to=null } if(o.pend&&o.pend.from===node) o.pend=null; if(o.lineFor===node) o.lineFor=null; if(o.moveTo===node) o.moveTo=null }
         if(G.drive===node){ G.drive=null; log(G,'drive_lost',{p:node}) }
@@ -1516,6 +1523,12 @@ function tick(G){
       if(found&&R()<0.55){ found.job=null; found.mode='transit'; found.dir='in'; found.origin=node; found.dest='earth'; found.t=legDays(G,node,'earth',found); found.total=found.t; log(G,'search_found',{n:found.id}) }
       else log(G,'search_empty2',{p:node});
       s.job=null; s.searchFor=null; s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;
+      continue;
+    }
+    /* v5.02: the world was abandoned while she was on the way — nobody to take the hold; she turns home with it, her line kept */
+    if(node!=='earth'&&!G.colonies[node]){
+      if(s.cargo.kit){ log(G,'kit_lost',{p:node,t:s.cargo.kit.tier}); delete s.cargo.kit }
+      s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;
       continue;
     }
     unload(G,s,node);
