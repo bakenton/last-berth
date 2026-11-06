@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Карта в движении · 2</title>
+<style>
+:root{--bg:#050506;--fg:#F2F1EC;--dim:#5E5D58;--mid:#9C9B95;--y:#FFD23F;--line:#2E2E33}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.bar{position:fixed;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 18px;background:linear-gradient(#050506f0 60%,#05050600)}
+.bar button{background:#0c0c0e;color:var(--mid);border:1px solid var(--line);padding:7px 10px;font:inherit;font-size:13px;border-radius:3px;cursor:pointer;letter-spacing:.02em}
+.bar button.on{color:var(--bg);background:var(--y);border-color:var(--y)}
+.cap{position:fixed;left:16px;right:16px;bottom:14px;color:var(--mid);font-size:13px;max-width:620px;background:#050506cc;padding:6px 0}
+.cap b{color:var(--fg);font-weight:600}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="bar" id="bar"></div>
+<div class="cap" id="cap"></div>
+<script>
+/* Черновик, раунд 2: как карта может жить, не трогая правил. Миры везде стоят на месте. Номера продолжают v1 (1–4).
+   Карта та же, что в v1 (тот же сид), чтобы сравнивать. События (доставка, погрузка) берутся из хода судов. */
+var V=[
+ {n:'5 · Отклик колец', c:'<b>Кольцо отзывается на рейс.</b> Судно забрало груз — от мира по его кольцу в обе стороны бежит свет цвета ресурса и гаснет. Видно, какие кольца работают, а какие молчат. Риск: на 4× кольца светятся почти всё время и сигнал тонет — нужен порог или только на 1×.'},
+ {n:'6 · Волна от базы', c:'<b>База отвечает волной.</b> Доставка — тонкая волна цвета груза, до того кольца, откуда он пришёл. Новое поколение (здесь раз в 20 с) — жёлтая волна до края, кольца и миры вспыхивают, когда она проходит. Риск: на густой карте волны пересекают линии и суда — каша; доставку можно оставить только крупным грузам.'},
+ {n:'7 · Прилив', c:'<b>Секторы дышат грузопотоком.</b> Каждый из шести секторов медленно наливается светом от доставок из него и остывает, когда там тихо; у края — доставок в минуту. Это сводка, а не украшение: где густо, где пусто. Риск: похоже на новый элемент интерфейса — игрок будет ждать, что сектор можно выбрать.'},
+ {n:'8 · Глубина', c:'<b>Под картой — глубина.</b> Три слоя звёзд и «пол» из сот и теней колец смещаются с разной скоростью, ближняя пыль — навстречу; сама карта стоит. Тяни пальцем — отпустишь, вернётся. В игре сдвиг может идти от наклона телефона или сдвига карты. Риск: на телефоне эффект слабый, а наклон на iPhone требует разрешения.'},
+ {n:'9 · Помехи Пульта', c:'<b>Края экрана шумят.</b> Вне колец мерцают обрывки сот, изредка полоса сдвигается, как сбой развёртки; центр с числами чистый. Пульт держит картинку с трудом. Шум можно усиливать перед Ночью или при взломе. Риск: постоянный шум утомляет — лучше как состояние, чем как фон.'},
+ {n:'10 · Нити', c:'<b>Линии — натянутые нити.</b> Судно уходит с базы или причаливает к миру — его линия вздрагивает и затихает, суда едут по дрожащей нити. Пока ничего не происходит, всё неподвижно. Риск: на 4× дрожат все нити сразу; амплитуду ограничить, длинные линии не раскачивать сильнее коротких.'}
+];
+var cv=document.getElementById('c'), x=cv.getContext('2d'), W=0,H=0,DPR=1, mode=0, t0=performance.now(), lastT=0;
+var bar=document.getElementById('bar'), cap=document.getElementById('cap');
+V.forEach(function(v,i){ var b=document.createElement('button'); b.textContent=v.n; b.onclick=function(){ setMode(i) }; bar.appendChild(b) });
+function setMode(i){ mode=i; t0=performance.now(); lastT=0; EV=[]; ships.forEach(function(sh){ sh.k=null }); initTide(); upd() }
+function upd(){ [].forEach.call(bar.children,function(b,i){ b.className=i===mode?'on':'' }); cap.innerHTML=V[mode].c }
+function rnd32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296 } }
+function hash(n){ n=Math.imul(n^n>>>16,0x45d9f3b); n=Math.imul(n^n>>>16,0x45d9f3b); return ((n^n>>>16)>>>0)/4294967296 }
+var TAU=Math.PI*2; function wrap(a){ return ((a%TAU)+TAU)%TAU } function ease(u){ return 1-Math.pow(1-u,3) }
+var R=rnd32(77);
+var COL={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#B48CFF'}, KIND={mine:'metal',farm:'food',well:'fuel',works:'parts'};
+var RINGS=5, worlds=[], lines=[], stars=[], dust=[];
+function RR(i){ return 170+i*88 }
+for(var i=0;i<RINGS;i++){ var kinds=['mine','mine','farm','well','works']; if(R()<0.62) kinds.push(R()<0.62?'mine':'farm');
+  for(var j=0;j<kinds.length;j++){ var tt=(j+R()*0.7)/kinds.length;
+    worlds.push({ring:i, a:(tt*Math.PI*2+R()*0.4+i*0.35)%(Math.PI*2), rr:RR(i)+(R()-0.5)*44, kind:kinds[j], live:i<4&&R()<0.62}) } }
+var perRing={}; worlds.forEach(function(w){ if(w.live&&(perRing[w.ring]=(perRing[w.ring]||0)+1)<=3) lines.push({w:w, cls:w.ring<2?'courier':(w.ring<3?'hauler':'freighter'), n:w.ring<2?2:1, ph:R()*2, per:6+w.ring*3}) });
+for(i=0;i<240;i++) stars.push({a:R()*Math.PI*2, d:Math.sqrt(R()), z:R(), tw:R()*6.28});
+for(i=0;i<34;i++) dust.push({x:R(), y:R(), r:1+R()*1.6, v:0.004+R()*0.01});
+var ships=[]; lines.forEach(function(L){ for(var m=0;m<L.n;m++) ships.push({L:L, m:m, k:null}) });
+var EV=[];
+function shipAt(sh,t){ var c=t/sh.L.per+sh.L.ph+sh.m, ph=c%2, out=ph<1, u=out?ph:2-ph; return {out:out, u:u*u*(3-2*u)} }
+// ship crosses an integer of its cycle: even = at the base (delivery, leaves again), odd = at the world (loads)
+function detect(t){ ships.forEach(function(sh){ var k=Math.floor(t/sh.L.per+sh.L.ph+sh.m);
+    if(sh.k!==null&&k>sh.k){ var at=k%2===0?'base':'world'; EV.push({at:at, L:sh.L, w:sh.L.w, t:t}); if(at==='base') tide[secOf(sh.L.w.a)]+=1 }
+    sh.k=k });
+  EV=EV.filter(function(e){ return t-e.t<4 }) }
+function secOf(a){ return Math.floor(wrap(a-0.2)/(Math.PI/3))%6 }
+// 7: tide per sector, smoothed deliveries (time constant TT seconds)
+var TT=12, tide=[0,0,0,0,0,0], tideRef=1, tideExp=[0,0,0,0,0,0];
+ships.forEach(function(sh){ tideExp[secOf(sh.L.w.a)]+=1/(2*sh.L.per) });
+tideRef=Math.max.apply(null,tideExp)*TT*1.4;
+function initTide(){ for(var q=0;q<6;q++) tide[q]=tideExp[q]*TT }
+initTide();
+function size(){ DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; x.setTransform(DPR,0,0,DPR,0,0); cells=null }
+addEventListener('resize',size); size();
+var OUT=170+(RINGS-1)*88+44;
+function S(){ return Math.max(0.08, Math.min(W*0.0006, H*0.0006), Math.min((W-32)/(2*OUT*1.32), (H-150)/(2*OUT*0.9))) }
+function pos(a,r,s){ return {x:W/2+Math.cos(a)*r*1.32*s, y:H/2+15+Math.sin(a)*r*0.9*s} }
+function hex(cx,cy,r,rot){ x.beginPath(); for(var k=0;k<6;k++){ var a=rot+k*Math.PI/3; x[k?'lineTo':'moveTo'](cx+Math.cos(a)*r,cy+Math.sin(a)*r) } x.closePath() }
+function poly(cx,cy,r,n,ang){ x.beginPath(); for(var k=0;k<n;k++){ var a=ang+k*Math.PI*2/n; x[k?'lineTo':'moveTo'](cx+Math.cos(a)*r*(k?0.8:1.25),cy+Math.sin(a)*r*(k?0.8:1.25)) } x.closePath() }
+function ell(cx,cy,r,s,a1,a2){ x.beginPath(); x.ellipse(cx,cy,Math.max(0.1,r*1.32*s),Math.max(0.1,r*0.9*s),0,a1===undefined?0:a1,a2===undefined?TAU:a2) }
+var SHIP={courier:{n:3,c:'#4FA3FF',r:4},hauler:{n:4,c:'#C9CFD6',r:5.5},freighter:{n:6,c:'#B48CFF',r:7}};
+function rgba(hexc,a){ var n=parseInt(hexc.slice(1),16); return 'rgba('+(n>>16)+','+(n>>8&255)+','+(n&255)+','+Math.max(0,Math.min(1,a)).toFixed(3)+')' }
+
+// 8: camera for parallax — slow sway plus finger drag, springs back
+var D={x:0,y:0,held:false,px:0,py:0};
+cv.addEventListener('pointerdown',function(e){ D.held=true; D.px=e.clientX; D.py=e.clientY; cv.setPointerCapture(e.pointerId) });
+cv.addEventListener('pointermove',function(e){ if(!D.held) return; D.x=Math.max(-70,Math.min(70,D.x+(e.clientX-D.px)*0.6)); D.y=Math.max(-70,Math.min(70,D.y+(e.clientY-D.py)*0.6)); D.px=e.clientX; D.py=e.clientY });
+['pointerup','pointercancel'].forEach(function(ev){ cv.addEventListener(ev,function(){ D.held=false }) });
+function camera(t,dt){ if(!D.held){ var k=Math.exp(-dt*2.2); D.x*=k; D.y*=k }
+  return {x:Math.sin(t*0.23)*9+Math.sin(t*0.061+1)*7+D.x, y:Math.cos(t*0.17)*6+Math.sin(t*0.09)*4+D.y} }
+
+// 9: edge noise cells, outside the map ellipse only
+var cells=null, cellKey='';
+function buildCells(cx,cy,s){ cells=[]; var hs=12, rx=OUT*1.32*s*1.06, ry=OUT*0.9*s*1.06, n=0;
+  for(var gy=-hs, row=0; gy<H+hs; gy+=hs*1.5, row++) for(var gx=-hs; gx<W+hs; gx+=hs*Math.sqrt(3)){ var px=gx+(row%2?hs*Math.sqrt(3)/2:0);
+    var q=Math.hypot((px-cx)/rx,(gy-cy)/ry); n++; if(q>1) cells.push({x:px,y:gy,q:q,i:n}) } }
+function drawNoise(t,cx,cy,s){ var key=W+'x'+H; if(!cells||cellKey!==key){ buildCells(cx,cy,s); cellKey=key }
+  x.lineWidth=1;
+  cells.forEach(function(c){ var p=Math.min(0.5,(c.q-1)*0.8), tick=Math.floor(t*5+hash(c.i)*7);
+    if(hash(c.i*7919+tick*104729)>p) return;
+    var h2=hash(c.i*31+tick*17), a0=Math.floor(h2*6), ne=2+Math.floor(hash(c.i+tick*3)*3), r=10;
+    x.beginPath(); for(var k=0;k<=ne;k++){ var a=(a0+k)*Math.PI/3+Math.PI/6; x[k?'lineTo':'moveTo'](c.x+Math.cos(a)*r,c.y+Math.sin(a)*r) }
+    var al=(0.07+0.22*Math.min(1,c.q-1))*(0.5+0.5*hash(c.i*13+tick));
+    x.strokeStyle=h2<0.16?rgba('#FFD23F',al*1.2):rgba('#F2F1EC',al); x.stroke() }) }
+function glitch(t,cy,s){ var P=4.7, n=Math.floor(t/P), lt=t-n*P; if(lt>0.2||hash(n+3)>0.8) return;
+  var top=cy-OUT*0.9*s*1.06, bot=cy+OUT*0.9*s*1.06, zt=[bar.offsetHeight+4,top-6], zb=[bot+6,cap.getBoundingClientRect().top-4], z=(zt[1]-zt[0])>(zb[1]-zb[0])?zt:zb;
+  if(z[1]-z[0]<20) return;
+  var h=4+hash(n*5)*14, y=z[0]+hash(n*7)*(z[1]-z[0]-h), dx=(hash(n*11+Math.floor(lt*30))-0.5)*28;
+  x.drawImage(cv,0,y*DPR,W*DPR,h*DPR,dx,y,W,h);
+  x.fillStyle='rgba(242,241,236,.04)'; x.fillRect(0,y,W,h);
+  x.fillStyle='rgba(255,210,63,.45)'; x.fillRect(0,y,W,1) }
+
+function frame(now){
+  var t=Math.max(0,(now-t0)/1000), dt=Math.min(0.25,Math.max(0,t-lastT)); lastT=t;
+  var s=S(), cx=W/2, cy=H/2+15, ws=Math.max(3.5,7*s*1.6);
+  detect(t);
+  if(mode===2){ var dk=Math.exp(-dt/TT); for(var q=0;q<6;q++) tide[q]*=dk }
+  x.fillStyle='#050506'; x.fillRect(0,0,W,H);
+  var cam=mode===3?camera(t,dt):{x:0,y:0};
+  // stars: in 8 three layers at different depth
+  stars.forEach(function(st){ var d=st.d*Math.hypot(W,H)*0.62, k=mode===3?(st.z<0.5?0.12:st.z<0.85?0.35:0.7):0;
+    var px=cx+Math.cos(st.a)*d+cam.x*k, py=cy+Math.sin(st.a)*d*0.8+cam.y*k; if(px<0||py<0||px>W||py>H) return;
+    var al=0.18+st.z*0.35; x.fillStyle='rgba(242,241,236,'+al.toFixed(3)+')'; x.fillRect(px,py,st.z>0.85?1.6:1,st.z>0.85?1.6:1) });
+  // 8: the floor under the map — hex grid and ring shadows, half the camera shift
+  if(mode===3){ var fx=cx+cam.x*0.5, fy=cy+cam.y*0.5, hs=30, md=Math.hypot(W,H)*0.55; x.lineWidth=1;
+    for(var gy=-hs*2, row=0; gy<H+hs*2; gy+=hs*1.5, row++) for(var gx=-hs*2; gx<W+hs*2; gx+=hs*Math.sqrt(3)){
+      var ox=gx+(row%2?hs*Math.sqrt(3)/2:0)+(cam.x*0.5%(hs*Math.sqrt(3))), oy=gy+(cam.y*0.5%(hs*3));
+      var dd=Math.hypot(ox-fx,(oy-fy)*1.3), al=0.055*(1-dd/md); if(al<=0.004) continue;
+      hex(ox,oy,hs*0.94,Math.PI/6); x.strokeStyle='rgba(242,241,236,'+al.toFixed(3)+')'; x.stroke() }
+    x.strokeStyle='rgba(242,241,236,.07)'; for(i=0;i<RINGS;i++){ x.beginPath(); x.ellipse(fx,fy+10*s*1.5,RR(i)*1.32*s,RR(i)*0.9*s,0,0,TAU); x.stroke() } }
+  if(mode===4) drawNoise(t,cx,cy,s);
+  // 7: sector wedges fill with traffic
+  if(mode===2){ for(q=0;q<6;q++){ var a1=0.2+q*Math.PI/3, a2=a1+Math.PI/3, rel=Math.min(1,tide[q]/tideRef);
+      x.beginPath(); x.ellipse(cx,cy,OUT*1.32*s*1.04,OUT*0.9*s*1.04,0,a1,a2); x.ellipse(cx,cy,40*1.32*s,40*0.9*s,0,a2,a1,true); x.closePath();
+      x.fillStyle='rgba(242,241,236,'+(0.012+0.085*rel*rel).toFixed(3)+')'; x.fill();
+      x.beginPath(); x.ellipse(cx,cy,OUT*1.32*s*1.04,OUT*0.9*s*1.04,0,a1+0.03,a2-0.03); x.strokeStyle='rgba(242,241,236,'+(0.1+0.6*rel).toFixed(3)+')'; x.lineWidth=1+rel*1.5; x.stroke() } }
+  // lobes
+  x.setLineDash([1.5,5]); x.lineWidth=1; x.strokeStyle='rgba(94,93,88,.8)';
+  for(i=0;i<6;i++){ var la=i*Math.PI/3+0.2, p1=pos(la,40,s), p2=pos(la,OUT,s); x.beginPath(); x.moveTo(p1.x,p1.y); x.lineTo(p2.x,p2.y); x.stroke() }
+  x.setLineDash([]);
+  // 6: the generation wave (every 20 s, first at 1.5 s)
+  var gen=-1, Rw=0; if(mode===1){ var gn=Math.floor((t-1.5)/20), tg=1.5+gn*20; if(gn>=0&&t-tg<3.4){ gen=(t-tg)/3.4; Rw=OUT*1.15*(1-Math.pow(1-gen,1.6)) } }
+  // rings
+  x.lineWidth=1;
+  for(i=0;i<RINGS;i++){ var boost=gen>=0?Math.exp(-Math.pow((Rw-RR(i))/26,2))*(1-gen):0; x.setLineDash([1.2,5.5]);
+    x.strokeStyle=boost>0.02?'rgba(255,210,63,'+(0.28+boost*0.6).toFixed(3)+')':'rgba(242,241,236,.28)'; x.lineWidth=1+boost;
+    ell(cx,cy,RR(i),s); x.stroke() }
+  x.setLineDash([]); x.lineWidth=1;
+  // 5: light runs along the ring from the world that loaded
+  if(mode===0) EV.forEach(function(e){ if(e.at!=='world') return; var age=t-e.t, D=2.6; if(age>D) return;
+    var u=age/D, sp=ease(u)*1.5, a=e.w.a, r=RR(e.w.ring), col=COL[KIND[e.w.kind]], f=1-u;
+    x.lineWidth=1.4; x.strokeStyle=rgba(col,0.32*f); ell(cx,cy,r,s,a-sp,a+sp); x.stroke();
+    x.lineWidth=2; x.strokeStyle=rgba(col,0.9*f); ell(cx,cy,r,s,a+sp-0.1,a+sp); x.stroke(); ell(cx,cy,r,s,a-sp,a-sp+0.1); x.stroke();
+    var p=pos(a,e.w.rr,s), pr=pos(a,r,s); x.beginPath(); x.moveTo(p.x,p.y); x.lineTo(pr.x,pr.y); x.strokeStyle=rgba(col,0.6*f); x.lineWidth=1; x.stroke() });
+  // 6: delivery waves, out to the ring the cargo came from; generation wave in yellow
+  if(mode===1){ EV.forEach(function(e){ if(e.at!=='base') return; var age=t-e.t, D=1.8; if(age>D) return; var u=age/D;
+      x.strokeStyle=rgba(COL[KIND[e.w.kind]],0.45*(1-u)); x.lineWidth=1; ell(cx,cy,e.w.rr*ease(u),s); x.stroke() });
+    if(gen>=0){ x.strokeStyle=rgba('#FFD23F',0.75*(1-gen)); x.lineWidth=2; ell(cx,cy,Rw,s); x.stroke();
+      x.strokeStyle=rgba('#FFD23F',0.25*(1-gen)); x.lineWidth=1; ell(cx,cy,Rw*0.93,s); x.stroke(); ell(cx,cy,Rw*0.86,s); x.stroke() } }
+  // 10: string displacement of a line at fraction u (0 = base, 1 = world)
+  function disp(L,u){ var v=0; EV.forEach(function(e){ if(e.L!==L) return; var age=t-e.t; if(age>2.6) return;
+      var dmp=Math.exp(-age*2.3); v+=dmp*(Math.sin(age*15)*Math.sin(Math.PI*u)+0.35*Math.sin(age*26)*Math.sin(TAU*u)) }); return v }
+  function lineGeo(L){ var p=pos(L.w.a,L.w.rr,s), dx=p.x-cx, dy=p.y-cy, len=Math.hypot(dx,dy); return {p:p, nx:-dy/len, ny:dx/len, amp:Math.min(9,3+len*0.03)} }
+  function energy(L){ var v=0; EV.forEach(function(e){ if(e.L===L&&t-e.t<2.6) v+=Math.exp(-(t-e.t)*2.3) }); return Math.min(1,v) }
+  function onLine(L,g,u){ var d=mode===5?disp(L,u)*g.amp:0; return {x:cx+(g.p.x-cx)*u+g.nx*d, y:cy+(g.p.y-cy)*u+g.ny*d} }
+  // lines
+  lines.forEach(function(L){ var g=lineGeo(L); x.beginPath();
+    if(mode===5){ for(var k=0;k<=28;k++){ var pp=onLine(L,g,k/28); x[k?'lineTo':'moveTo'](pp.x,pp.y) } } else { x.moveTo(cx,cy); x.lineTo(g.p.x,g.p.y) }
+    x.strokeStyle='rgba(242,241,236,'+(0.22+(mode===5?0.4*energy(L):0)).toFixed(3)+')'; x.lineWidth=1.2; x.stroke() });
+  // the base
+  var pulse=0; if(mode===1){ if(gen>=0&&gen<0.25) pulse=1-gen/0.25; EV.forEach(function(e){ if(e.at==='base'&&t-e.t<0.4) pulse=Math.max(pulse,(1-(t-e.t)/0.4)*0.5) }) }
+  x.beginPath(); x.arc(cx,cy,(13+pulse*8)*Math.max(0.7,s*2),0,TAU); x.strokeStyle='rgba(255,210,63,'+(0.35+pulse*0.5).toFixed(3)+')'; x.lineWidth=1.4; x.stroke();
+  hex(cx,cy,7*Math.max(0.8,s*2),Math.PI/6); x.fillStyle='#F2F1EC'; x.fill();
+  // worlds
+  worlds.forEach(function(w){ var p=pos(w.a,w.rr,s), col=COL[KIND[w.kind]], lit=0;
+    if(gen>=0) lit=Math.exp(-Math.pow((Rw-w.rr)/22,2))*(1-gen);
+    hex(p.x,p.y,ws,0);
+    if(w.live){ x.fillStyle=col; x.globalAlpha=0.85; x.fill(); x.globalAlpha=1 }
+    x.strokeStyle=w.live?col:'rgba(156,155,149,'+(0.45+lit*0.55).toFixed(3)+')'; x.lineWidth=1.2; x.stroke();
+    if(lit>0.05){ hex(p.x,p.y,ws+3+lit*5,0); x.strokeStyle=rgba('#FFD23F',lit*0.7); x.stroke() } });
+  // ships
+  ships.forEach(function(sh){ var L=sh.L, g=lineGeo(L), st=shipAt(sh,t), sd=SHIP[L.cls], pp=onLine(L,g,st.u);
+    var ang=Math.atan2(g.p.y-cy,g.p.x-cx)+(st.out?0:Math.PI), sr=sd.r*Math.max(0.75,s*1.9);
+    poly(pp.x,pp.y,sr,sd.n,ang); x.fillStyle=sd.c; x.fill();
+    x.beginPath(); x.arc(pp.x+Math.cos(ang)*sr*1.25,pp.y+Math.sin(ang)*sr*1.25,1.4,0,TAU); x.fillStyle='#FFD23F'; x.fill() });
+  // 7: numbers at the rim — deliveries per minute, smoothed
+  if(mode===2){ x.font='12px system-ui,sans-serif'; x.textBaseline='middle';
+    for(q=0;q<6;q++){ var am=0.2+(q+0.5)*Math.PI/3, rel2=Math.min(1,tide[q]/tideRef), lp=pos(am,OUT*1.13,s);
+      x.textAlign='center'; var tx=Math.max(18,Math.min(W-18,lp.x));
+      x.fillStyle='rgba(242,241,236,'+(0.35+0.6*rel2).toFixed(3)+')'; x.fillText(String(Math.round(tide[q]/TT*60)),tx,Math.max(bar.offsetHeight+8,Math.min(cap.getBoundingClientRect().top-8,lp.y))) } }
+  // 8: near dust drifts against the camera
+  if(mode===3) dust.forEach(function(d){ var px=((d.x*W-cam.x*1.3+t*d.v*W)%W+W)%W, py=((d.y*H-cam.y*1.3)%H+H)%H;
+    x.fillStyle='rgba(242,241,236,.22)'; x.beginPath(); x.arc(px,py,d.r,0,TAU); x.fill() });
+  if(mode===4) glitch(t,cy,s);
+}
+function loop(now){ frame(now); requestAnimationFrame(loop) }
+upd(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>

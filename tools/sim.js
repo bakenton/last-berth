@@ -22,7 +22,9 @@ function load(path){
     'setLine','survey','canSurvey','startDrive','scrap','shipById','canDepart','canReachSector',
     'sectorLimit','hullGen','popCap','surveyCost','driveReachFor','driveWorkFor','lineRate','snap','ensureGen',
     'arkBuy','arkLevel','arkSouls','arkOwed','arkReady','arkConvoy','setReserve','nightLeft','abandon','clearLine','leftBehind',
-    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','orderHull','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort'];
+    'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','orderHull','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort',
+    'setVia','lineOk','isHub','lineTo','hubCheck','feedersOf','buildHub','hubBuildCheck','hubCount','hubCap','hubCost',   // hubs (nodes-1.00, in work/ since v5.01)
+    'exchange','exchangeCheck','exchangeCost'];   // exchange (nodes-1.02, in work/ since v5.01)
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }
@@ -30,6 +32,77 @@ function freeHulls(G){return G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&
 const CLS=['courier','hauler','freighter'];
 let noFreeWellNow=G=>true;
 function lined(G,pid){return G.ships.some(s=>s.mode!=='dead'&&s.from===pid)}
+/* nodes-1.00: with hubs in the core, whether a hull can serve a line is the core's lineOk (a feeder's range counts from her hub,
+   no courier on a hub's line to Earth); a dead hub with feeders is not spent. Without hubs both are the old checks. */
+const lineFits=(C,G,s,k)=>C.lineOk?C.lineOk(G,s,k):C.canReachSector(s,C.planet(k).sec);
+const notHub=(C,G,k)=>!(C.isHub&&C.isHub(G,k));
+/* nodes-1.01 (Nikita 05.11): the network. A hub is built (dear, HUB_BASE + drive generation of them) on the world that would gather the most
+   neighbours of any trade (at least HUB_MIN): a nearer world, a courier hop away, the leg at most HUB_HALF of the way to Earth. Then each world that
+   fits goes to its nearest hub. With HUB_NO_COURIER the hub is built only when its line to Earth keeps a big hull (one there, or a hauler the yards
+   can build now — the plan asks for it). NOHUB=1: the same core and bot without hubs (the control). */
+const HUB_FROM=+(process.env.HUB_FROM||2), HUB_HALF=+(process.env.HUB_HALF||0.75), HUB_MIN=+(process.env.HUB_MIN||2);   // nodes-1.01: a hub is built for at least HUB_MIN feeders
+function hubPlan(C,G,st){
+  if(!C.setVia||process.env.NOHUB) return;
+  const E=G.earth, need=G.need||{}, big=h=>C.onLine(G,h).some(s=>C.HULLS[s.hull].key!=='courier');
+  const alive=k=>G.reserves[k]>0||C.pileLeft(G,k)>=1;
+  // would world k feed hub h: a nearer hub, a courier hop away, the leg at most HUB_HALF of the way to Earth
+  const fits=(k,h)=>{ const p=C.planet(k), hp=C.planet(h), ck=G.colonies[k];
+    if(k===h||!ck||ck.via||ck.hub||p.kind==='works'||p.sec<HUB_FROM||!alive(k)) return false;
+    if(hp.dist>=p.dist||p.sec-hp.sec>C.K.HUB_HOP) return false;
+    return C.legDays(G,k,h,{hull:0})<=HUB_HALF*C.legDays(G,k,'earth',{hull:0}) };
+  // 1. build: when a hub is allowed and Earth keeps YARD_KEEP years of metal after paying, the world that gathers the most neighbours
+  st.hubShort=null;
+  if(C.hubCount(G)<C.hubCap(G)){ const k0=C.hubCost(G);
+    if(C.exchange&&!(E.metal-k0.metal>=(need.metal||0)*YARD_KEEP+500&&E.parts>=k0.parts+PARTS_KEEP)){   // nodes-1.02: Earth cannot pay — is there a site worth it?
+      for(const h in G.colonies){ const r=C.hubBuildCheck(G,h); if((r!=='ok'&&r!=='metal'&&r!=='parts')||!alive(h)) continue;
+        if(C.K.HUB_NO_COURIER&&!big(h)&&yardOk(C,G,h,'hauler')!=='ok') continue;
+        let n=0; for(const k in G.colonies) if(fits(k,h)) n++;
+        if(n>=HUB_MIN){ st.hubShort={metal:k0.metal+(need.metal||0)*YARD_KEEP+500-E.metal, parts:k0.parts+PARTS_KEEP-E.parts}; break } } }   // what the exchange would have to bring
+    else if(E.metal-k0.metal>=(need.metal||0)*YARD_KEEP+500&&E.parts>=k0.parts+PARTS_KEEP){
+      let best=null, bn=0;
+      for(const h in G.colonies){ if(C.hubBuildCheck(G,h)!=='ok'||!alive(h)) continue;
+        if(C.K.HUB_NO_COURIER&&!big(h)&&yardOk(C,G,h,'hauler')!=='ok') continue;   // its line to Earth must keep a big hull
+        let n=0; for(const k in G.colonies) if(fits(k,h)) n++;
+        if(n>bn){ bn=n; best=h } }
+      if(best&&bn>=HUB_MIN&&C.buildHub(G,best)==='ok'&&C.K.HUB_NO_COURIER&&!big(best)){ setW(C,G,st,best,'courier',0); setW(C,G,st,best,'hauler',Math.max(1,wantN(st,best,'hauler'))) } } }
+  // 2. send each world that fits to the nearest hub
+  for(const k in G.colonies){ let best=null, bd=1e9;
+    for(const h in G.colonies){ if(!G.colonies[h].hub||!fits(k,h)) continue; const d=C.legDays(G,k,h,{hull:0}); if(d<bd){ bd=d; best=h } }
+    if(best) C.setVia(G,k,best) }
+}
+/* nodes-1.02 (Nikita 05.11): Earth's exchange — get one resource for two others. The bot trades only what it has above EX_YEARS of
+   Earth's burn (and its own floors), and only for what the next hull on a line or the next hub lacks; one exchange a year, as a player
+   would click it. The first want it finds wins: lines in plan order, then the hub. NOEX=1: the same core without the exchange. */
+const EX_YEARS=+(process.env.EX_YEARS||100);
+/* the floor counts the bot's other plans too (EX_NAIVE=1: without them): the next ring's survey and, once the Night is known, the next ark
+   level over the reserve the ark buyer itself demands — a bot that traded them away reached the Night with no ark (k=3: rush 4/8, serial
+   2/8, bank 2/8 sailed; with the level alone but not the reserve bank still 3/8: its insurance level never came) */
+function exFloor(C,G,r){ const nd=G.need||{};
+  let f=r==='metal'?(nd.metal||0)*(EX_YEARS+YARD_KEEP)+500:r==='food'?(nd.food||0)*EX_YEARS:r==='fuel'?(G.fuelRate||0)*EX_YEARS+C.K.FEED_FUEL_FLOOR+500:PARTS_KEEP;
+  if(process.env.EX_NAIVE) return f;
+  f+=C.surveyCost(C.SECTORS.length)[r]||0;
+  if(G.night&&C.arkOwed){ const lv=C.arkLevel(G), sc=C.surveyCost(C.SECTORS.length), nl=C.nightLeft(G);
+    // the ark buyer's own rule (step 7): a level is bought only if the larder keeps keepAfter after it — the exchange keeps it too
+    const keep=r==='metal'?Math.max(500,sc.metal+200)+(nd.metal||0)*300:r==='food'?sc.food+(nd.food||0)*((nl<=600?nl+30:30)+300):r==='fuel'?sc.fuel+300:0;
+    f=Math.max(f,keep);
+    if(lv<C.K.ARK_LEVELS.length){ const o=C.arkOwed(G,lv+1); f+=Math.ceil((o&&o[r])||0) } }
+  return f }
+function exNeed(C,G,st){ const E=G.earth, nd=G.need||{};
+  for(const k in st.want){ const L=st.want[k]; if(!G.colonies[k]) continue;
+    for(const cls of CLS){ if(C.lineCount(G,k,cls)>=(L[cls]||0)) continue; const y=yardOk(C,G,k,cls), hi=C.orderHull(G,cls,k); if(hi===null) continue; const h=C.HULLS[hi];
+      if(y==='parts'||y==='keep') return {r:'parts',n:(h.parts||0)+(y==='keep'?PARTS_KEEP:0)-E.parts};
+      if(y==='metal') return {r:'metal',n:h.metal+(nd.metal||0)*YARD_KEEP-E.metal};
+      if(y==='fuel') return {r:'fuel',n:h.fuel+C.K.FEED_FUEL_FLOOR-E.fuel} } }
+  const hs=st.hubShort; if(hs){ if(hs.parts>0) return {r:'parts',n:hs.parts}; if(hs.metal>0) return {r:'metal',n:hs.metal} }
+  return null }
+function exPlan(C,G,st){ const w=exNeed(C,G,st); if(!w||w.n<1) return; const n=Math.ceil(w.n), E=G.earth;
+  let best=null, bm=-1;
+  const R=['metal','food','fuel','parts'].filter(r=>r!==w.r);
+  for(let i=0;i<R.length;i++) for(let j=i+1;j<R.length;j++){ const a=R[i], b=R[j];
+    if(C.exchangeCheck(G,w.r,a,b,n)!=='ok') continue; const c=C.exchangeCost(G,w.r,a,b,n);
+    const m=Math.min(E[a]-c[a]-exFloor(C,G,a), E[b]-c[b]-exFloor(C,G,b)); if(m>=0&&m>bm){ bm=m; best=[a,b,c] } }
+  if(!best) return;
+  if(C.exchange(G,w.r,best[0],best[1],n)==='ok') (st.ex||(st.ex=[])).push({d:G.day,r:w.r,n,a:best[0],x:best[2][best[0]],b:best[1],y:best[2][best[1]]}) }
 /* v4.34 (Nikita, 14–15.10): the core has no standing orders — lines are manned by hand. The planner keeps its own plan per
    world (st.want: what the v4.6 standing order used to hold) and each year does by hand what the yards did on their own:
    a free hull at Earth goes first (the newest generation), else a new hull is ordered for the line — never below YARD_KEEP
@@ -43,7 +116,7 @@ function wantSum(L){ return L?(L.courier||0)+(L.hauler||0)+(L.freighter||0):0 }
 /* the plan for one class on one world; fewer than on the line — the oldest come off (they come home free) */
 function setW(C,G,st,k,cls,n){
   if(!G.colonies[k]) return 'nocolony';
-  if(n>0&&G.reserves[k]<=0&&C.planet(k).kind!=='works'&&C.pileLeft(G,k)<1) return 'depleted';
+  if(n>0&&G.reserves[k]<=0&&C.planet(k).kind!=='works'&&C.pileLeft(G,k)<1&&notHub(C,G,k)) return 'depleted';
   n=Math.max(0,Math.min(12,Math.round(n)));
   const L=st.want[k]||(st.want[k]={courier:0,hauler:0,freighter:0});
   const had=C.lineCount(G,k,cls); L[cls]=n;
@@ -58,9 +131,9 @@ function setW(C,G,st,k,cls,n){
 function yardOk(C,G,k,cls){
   const hi=C.orderHull(G,cls,k); if(hi===null) return 'locked';
   const h=C.HULLS[hi], p=C.planet(k); if(!p) return 'noplanet';
-  if(!C.canReachSector({hull:hi},p.sec)) return 'range';
+  if(!lineFits(C,G,{hull:hi},k)) return 'range';
   if(C.reach(G)<h.reach) return 'locked';
-  if(G.night&&C.nightLeft(G)<h.days+C.K.MUTINY_MIN*C.legDays(G,k,'earth',{hull:hi})*2) return 'mutiny';
+  if(G.night&&C.nightLeft(G)<h.days+C.K.MUTINY_MIN*C.legDays(G,k,C.lineTo?C.lineTo(G,k):'earth',{hull:hi})*2) return 'mutiny';
   const nd=G.need||{};
   if(G.earth.metal-h.metal<(nd.metal||0)*YARD_KEEP) return 'metal';
   if(G.earth.fuel-h.fuel<C.K.FEED_FUEL_FLOOR) return 'fuel';
@@ -75,8 +148,8 @@ function fillLines(C,G,st){
     if(!G.colonies[k]){ delete st.want[k]; continue }
     const p=C.planet(k);
     for(const cls of CLS){ const want=L[cls]||0; if(C.lineCount(G,k,cls)>=want) continue;
-      if(G.reserves[k]<=0&&p.kind!=='works'&&C.pileLeft(G,k)<1) continue;
-      let idle=null; for(const o of G.ships){ if(o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.pend&&!o.mutiny&&!o.job&&!o.reserve&&C.HULLS[o.hull].key===cls&&C.canReachSector(o,p.sec)&&(!idle||C.hullGen(o)>C.hullGen(idle))) idle=o }
+      if(G.reserves[k]<=0&&p.kind!=='works'&&C.pileLeft(G,k)<1&&notHub(C,G,k)) continue;
+      let idle=null; for(const o of G.ships){ if(o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.pend&&!o.mutiny&&!o.job&&!o.reserve&&C.HULLS[o.hull].key===cls&&lineFits(C,G,o,k)&&(!idle||C.hullGen(o)>C.hullGen(idle))) idle=o }
       if(idle){ const r=C.setLine(G,idle.id,k,'earth'); if(r==='ok'||r==='queued') continue }
       if(yardOk(C,G,k,cls)==='ok') C.orderFor(G,k,cls,C.orderHull(G,cls,k)) } }
 }
@@ -123,7 +196,7 @@ function step(C,G,bot,d,st){
       const inc={food:0,fuel:0,metal:0}, lasting={food:0,fuel:0,metal:0};
       for(const k in G.colonies){ const p=C.planet(k), lr=C.lineRate(G,k); if(!lr||lr.dry||!lined(G,k)) continue;
         const dep=p.kind==='farm'?'food':p.kind==='well'?'fuel':p.kind==='mine'?'metal':null; if(!dep) continue;
-        inc[dep]+=lr.makes; if(G.reserves[k]>Math.max(3000,lr.makes*300)) lasting[dep]++ }
+        inc[dep]+=(lr.own!=null?lr.own:lr.makes); if(G.reserves[k]>Math.max(3000,lr.makes*300)) lasting[dep]++ }   // nodes-1.00: a hub's line also carries its feeders — count each world once
       const nl=G.night?C.nightLeft(G):9999, late=nl<=600;
       const worksLined=Object.keys(G.colonies).some(k=>C.planet(k).kind==='works'&&lined(G,k));
       farmNeed=inc.food<need.food*1.5||!lasting.food;
@@ -142,13 +215,14 @@ function step(C,G,bot,d,st){
       if(E.metal<resv.metal||E.fuel<resv.fuel){ for(const k in G.colonies){ const L=plan(st,k); if(!L) continue; const p=C.planet(k);
         const helps=(E.metal<resv.metal&&p.kind==='mine')||(E.fuel<resv.fuel&&p.kind==='well'); if(helps) continue;
         for(const c of CLS){ const have=C.lineCount(G,k,c); if((L[c]||0)>have) setW(C,G,st,k,c,have) } } }
+      hubPlan(C,G,st);
       const order=[];
       for(const k in G.colonies){ const p=C.planet(k), lr=C.lineRate(G,k); if(!lr) continue; let L=plan(st,k);
         if(lr.dry&&lr.sitting<1){ if(L){ for(const c of CLS) if(L[c]) setW(C,G,st,k,c,0) } continue }
         if(L){ for(const c of CLS){ const w=L[c]||0, have=C.lineCount(G,k,c); if(w>have){ const yc=yardOk(C,G,k,c);
           if(yc==='range'||yc==='locked'||yc==='mutiny'||yc==='keep') setW(C,G,st,k,c,have); else unfilled+=w-have } } }   // v4.43: a hull held back for the convoy is not a debt of the yards
         L=plan(st,k);
-        if(!wantSum(L)){ setW(C,G,st,k,'courier',1); if(plan(st,k)) unfilled++; continue }
+        if(!wantSum(L)){ setW(C,G,st,k,(C.setVia&&CLS.find(c=>{ const y=yardOk(C,G,k,c); return y!=='range'&&y!=='locked' }))||'courier',1); if(plan(st,k)) unfilled++; continue }   // nodes-1.00: no courier on a hub's line
         const pri=(p.kind==='well'&&fuelShort?3:0)+(p.kind==='farm'&&foodShort?3:0)+(p.kind==='mine'&&metalShort?2.5:0)+(p.kind==='works'?2:0)+Math.min(1,lr.sitting/3000);
         if(lr.piling&&(lr.sitting>1500||lr.hulls===0)) order.push({k,pri}) }
       order.sort((a,b)=>b.pri-a.pri);
@@ -166,7 +240,7 @@ function step(C,G,bot,d,st){
         const fits=c=>E.people-K.EARTH_KEEP-P.hands>2*crewOf(c)&&crewOut+crewOf(c)<=crewBudget;
         // v4.43: no more «the class it cannot pay parts for» — the big styles ordered freighters with no parts in sight, the order
         // hung for centuries, `unfilled` stayed at 3+ and shut the rest (seeds 103/118/132: Earth starved by a full farm)
-        const cls=classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='ok')||(fits('courier')?'courier':null);
+        const cls=classes.find(c=>fits(c)&&yardOk(C,G,k,c)==='ok')||(fits('courier')&&!(C.setVia&&yardOk(C,G,k,'courier')==='range')?'courier':null);
         if(cls&&wantSum(L)<8) setW(C,G,st,k,cls,(L[cls]||0)+1) }
     } else for(const k in G.colonies){
       if(lined(G,k)) continue;
@@ -285,7 +359,7 @@ function step(C,G,bot,d,st){
     // 4b. v4.15 'tidy': a spent world (seam dry, stockyard empty) is evacuated — people come home, the ghost stays on the chart
     if(P.evac&&per(25)){
       for(const k in G.colonies){ const c=G.colonies[k]; const p=C.planet(k);
-        if(p.kind==='works'||!(G.reserves[k]<=0)) continue;
+        if(p.kind==='works'||!(G.reserves[k]<=0)||!notHub(C,G,k)) continue;   // nodes-1.00: a dead hub still takes its feeders
         const dep=p.dep; if(((c.store&&c.store[dep])||0)>=1) continue;
         const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s){ C.abandon(G,s.id,k); break } }   // v4.18: only a courier lifts a settlement
     }
@@ -344,6 +418,7 @@ function step(C,G,bot,d,st){
     // 6. break up hulls the yards no longer build (legacy bots; the planner scraps by idle years)
     if(pro&&P.legacy&&per(120)) G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.reserve&&C.hullGen(s)===(G.gen||0)-2).forEach(s=>C.scrap(G,s.id));   // v4.34: no 'scrap idle Gen N' — hull by hull
     }
+    if(pro&&C.exchange&&!process.env.NOEX) exPlan(C,G,st);   // nodes-1.02
     if(pro) fillLines(C,G,st);   // v4.34: what the yards did at the start of the next year, by hand at the end of this one
 }
 

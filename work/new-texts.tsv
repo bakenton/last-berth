@@ -703,14 +703,6 @@ UI	u_feedShort	The line is {s} a year short. Add hold to it	Линии не хв
 UI	u_birthTop	births {x}	рожд. {x}
 UI	u_births	Births	Рождаемость
 UI	u_birthsHint	{lo} with an empty larder, {hi} with food for {n} years in store · now {y} years	{lo} при пустых кладовых, {hi} при запасе еды на {n} лет · сейчас {y} лет
-UI	u_ws	Earth's workshop	Цех Земли
-UI	u_wsState	Workshop	Цех
-UI	u_wsOff	switched off	выключен
-UI	u_wsMakes	makes {n} parts a year	делает деталей в год: {n}
-UI	u_wsHeld	idle — Earth keeps its {r}	стоит — Земля бережёт: {r}
-UI	u_wsHint	A part from {m} metal and {f} rations — forty times a works' price. Up to {n} a year, only out of surplus: Earth keeps {km} metal and {kf} rations (at least {k} years of its burn).	Деталь из {m} металла и {f} провизии — в сорок раз дороже, чем на заводе. До {n} в год и только из излишка: Земля бережёт {km} металла и {kf} провизии (не меньше {k} лет расхода).
-UI	u_wsStart	Start the workshop	Запустить цех
-UI	u_wsStop	Stop the workshop	Остановить цех
 UI	u_wakeStores	Ark {l} stores	Запасы ковчега {l}
 UI	u_lvWake	+{n}% wake	+{n}% проснутся
 UI	u_lvTicket	the ticket: everyone at home boards	билет: садятся все, кто дома
@@ -755,3 +747,38 @@ UI	hk_m9	"Sleep report. Woke: a share. The rest: the line is cut off."	«Отч�
 UI	hk_m10	"Last block. Signed: this unit. This unit: not the first."	«Последний блок. Подпись: этот модуль. Этот модуль: не первый.»
 UI	hk_m0	"Block damaged. Lines recovered: 0."	«Блок повреждён. Строк восстановлено: 0.»
 MSG	hack	The Helm has a command to wake first — finish the hack (the card top right of the map).	Сначала Пульт должен разбудить команду — заверши взлом (карточка справа вверху карты).
+UI	u_hub	Hub	Хаб
+UI	u_hubN	{n} / {m}	{n} / {m}
+UI	u_hubBuild	Build a hub	Построить хаб
+UI	u_hubWait	Waiting for feeders	Ждут отправки к питателям
+UI	u_hubFeeders	Feeders	Питатели
+UI	u_viaTo	Ship goods to	Везти груз
+UI	u_viaEarth	Earth	Земля
+UI	u_lw_courierLine	Line full: {n} couriers	Линия полна: {n} курьера
+UI	u_lw_hubCourier	No couriers hub → Earth	Курьер не ходит с хаба на Землю
+UI	u_lw_hubHop	Courier: hub too far	Курьеру далеко до хаба
+MSG	hubKind	A hub takes no goods from a works, and a works cannot be one; build the hub first.	Завод не возит в хаб и сам хабом не бывает; сначала хаб надо построить.
+MSG	hubRing	A hub must be nearer Earth than this world.	Хаб должен быть ближе к Земле, чем этот мир.
+MSG	hubChain	A hub feeds only Earth: a hub cannot ship to a hub, and a feeder cannot be one.	Хаб возит только на Землю: хаб не везёт в хаб, питатель хабом не станет.
+MSG	hubCap	Hub limit {m} reached. A Gen {g} drive gives one more.	Предел хабов: {m}. Двигатель поколения {g} даст ещё один.
+MSG	courierLine	This line already has {n} couriers — the most past ring II. Send a bigger hull.	На линии уже {n} курьера — больше за II кольцом нельзя. Нужно судно крупнее.
+MSG	hubCourier	Couriers do not fly a hub's run to Earth. Send a hauler or bigger.	Курьер не ходит с хаба на Землю. Нужен грузовик или крупнее.
+MSG	hubHop	A courier feeds a hub only from the next ring out. A bigger hull, or a nearer hub.	Курьер возит в хаб только с соседнего кольца. Нужно судно крупнее или хаб ближе.
+MSG	ok_hub	Hub built at {p}.	Хаб на {p} построен.
+MSG	ok_hubDrop	Hub built at {p}. {n} couriers left its line: they do not fly hub → Earth.	Хаб на {p} построен. С линии сняты курьеры ({n}): с хаба на Землю они не ходят.
+MSG	ok_via	{p} ships to {h}.	{p} везёт груз: {h}.
+MSG	ok_viaDrop	{p} ships to {h}. {n} hulls cannot fly the new line and come home.	{p} везёт груз: {h}. Снято с линии (не долетят): {n}.
+LOG	hub_built	A hub stands at {p}: {m} metal, {t} parts.	На {p} построен хаб: {m} металла, {t} деталей.
+LOG	hub_set	{p} now ships to the hub at {h}.	{p} теперь везёт груз в хаб на {h}.
+LOG	hub_clear	{p} ships to Earth again.	{p} снова везёт груз на Землю.
+UI	u_ex	Exchange	Обменник
+UI	u_exGet	Get	Получить
+UI	u_exPay	Pay with	Платить
+MSG	exSame	Pay with two other resources.	Платить нужно двумя другими ресурсами.
+MSG	exClosed	Earth does not trade this yet.	Этим Земля пока не торгует.
+MSG	exNone	Nothing to exchange.	Нечего менять.
+MSG	exRes	No such resource.	Нет такого ресурса.
+MSG	ok_ex	+{n} {r}.	+{n}: {r}.
+LOG	exchange	Exchange: {r} +{n} · {a} −{x} · {b} −{y}.	Обмен: {r} +{n} · {a} −{x} · {b} −{y}.
+UI	tut_m25	A hub gathers the goods of farther worlds; its own line carries it all to Earth. The first comes with a Gen II drive.	Хаб собирает груз дальних миров, а его линия везёт всё на Землю. Первый — с двигателем поколения II.
+UI	tut_m26	Exchange: two resources for a third, at a loss. To close a gap, not to trade.	Обменник: два ресурса за третий, в убыток. Чтобы закрыть нехватку, а не торговать.

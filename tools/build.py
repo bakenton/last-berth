@@ -11,7 +11,8 @@
 import re,json,os
 rd=lambda p:open(p,encoding='utf-8',newline='').read()
 wr=lambda p,t:open(p,'w',encoding='utf-8',newline='').write(t)   # utf-8 and LF on any platform: builds are compared byte for byte
-live=rd('live.html')
+# nodes-1.01: a working copy without its own live.html (as the nodes-game/ branch was) takes LB_LIVE, else ../work/live.html
+live=rd(os.environ.get('LB_LIVE') or ('live.html' if os.path.exists('live.html') else os.path.join('..','work','live.html')))
 core=rd('core.js'); ui=rd('ui.js')
 parts=re.split(r'(<script>\n.*?</script>)',live,flags=re.S)
 idx=[i for i,x in enumerate(parts) if x.startswith('<script>\n')]

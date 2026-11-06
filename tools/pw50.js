@@ -1,5 +1,5 @@
 // pw50 — v4.49 (итерация 5, ручной плейтест Claude 04.11 и решения Никиты): окно мира стоит время; Пропуск не встаёт на рутине;
-// (Пропуск убран в v4.50) верфь — заказ наверху, «Строить» не съезжает; множитель рождаемости на экране; цех Земли (F-55); тягач I без деталей;
+// (Пропуск убран в v4.50) верфь — заказ наверху, «Строить» не съезжает; множитель рождаемости на экране; обменник Земли (v5.01, вместо цеха F-55); тягач I без деталей;
 // уровни ковчега II–IV будят больше спящих. Клики — мышью по видимым кнопкам; состояние ставится через хуки.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js');
@@ -33,22 +33,27 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const ew=await p.evaluate(()=>document.querySelector('#ovl .win').innerText);
   ok('the Earth window shows births and the 80-year mark', /Births\s+×1\.00/.test(ew)&&/×1\.50 with food for 80 years/.test(ew), (ew.match(/Births[^\n]*\n[^\n]*/)||[''])[0]);
 
-  // 4. Earth's workshop: off by default, on by the button, two parts a year at 40 metal + 15 rations, idle under the floor
-  ok('the workshop is off at start', /Workshop\s+switched off/.test(ew)&&await p.evaluate(()=>!LN.ws));
-  await p.evaluate(()=>{ LN.earth.metal=9000; LN.earth.food=5000; LNdraw() });
-  await U.tap('#ovl [data-act="ws"]');
-  ok('Start the workshop switches it on', await p.evaluate(()=>LN.ws===true));
-  await p.keyboard.press('Escape');
-  const w0=await p.evaluate(()=>({p:LN.earth.parts,n:LN.stats.wsParts||0}));
-  await U.play(4); await p.waitForTimeout(1500); await U.pause();
-  const w1=await p.evaluate(()=>({p:LN.earth.parts,n:LN.stats.wsParts||0,y:LN.day}));
-  ok('the workshop makes two parts a year', w1.n-w0.n>=2&&(w1.n-w0.n)%2===0, JSON.stringify([w0,w1]));
-  await p.evaluate(()=>{ LN.earth.metal=K.WS_FLOOR+10; tick(LN); LNdraw() });
-  ok('it stands under the metal floor', await p.evaluate(()=>LN.wsWhy==='metal'&&LN.wsMade===0));
-  // reviewer v4.49: with metal above the floor and rations under it, the window names the rations at once, not last year's reason
-  await p.evaluate(()=>{ LN.earth.metal=K.WS_FLOOR+2000; LN.earth.food=LN.need.food*50; LN.wsWhy=null; LNU.win='earth'; LNdraw() }); await p.waitForTimeout(200);
-  const held=await p.evaluate(()=>document.querySelector('#ovl .win').innerText);
-  ok('idle for want of rations says rations', /idle — Earth keeps its rations/i.test(held), (held.match(/Workshop.*/)||[''])[0]);
+  // 4. v5.01 (F-55 → exchange, Nikita 05.11): Earth's exchange — get one resource for two others; mouse on the visible buttons
+  await p.evaluate(()=>{ LN.earth.metal=9000; LN.earth.food=5000; LN.earth.fuel=5000; LN.earth.parts=0; ['metal','fuel','parts'].forEach(k=>openRes(LN,k)); LNU.win='earth'; LNdraw() }); await p.waitForTimeout(250);
+  ok('no workshop on the Earth tab', !(await p.$('#ovl [data-act="ws"]')) && await p.evaluate(()=>typeof workshop==='undefined'&&typeof setWorkshop==='undefined'));
+  ok('the exchange block is on the Earth tab', !!(await p.$('#ovl #exblk [data-act="exgo"]')));
+  await U.tap('#ovl [data-act="exget"][data-v="parts"]'); await U.tap('#ovl [data-act="expay"][data-v="metal+fuel"]'); await U.tap('#ovl [data-act="exn"][data-v="10"]');
+  const c=await p.evaluate(()=>Object.assign(exchangeCost(LN,'parts','metal','fuel',10),{k:K.EX_K}));
+  const e0=await p.evaluate(()=>({m:LN.earth.metal,f:LN.earth.fuel,p:LN.earth.parts}));
+  await U.tap('#ovl [data-act="exgo"]'); await p.waitForTimeout(200);
+  const e1=await p.evaluate(()=>({m:LN.earth.metal,f:LN.earth.fuel,p:LN.earth.parts}));
+  ok('10 parts for metal + fuel at the exchange rate', e1.p-e0.p===10&&e0.m-e1.m===c.metal&&e0.f-e1.f===c.fuel&&c.metal===Math.ceil(10*4*c.k/2), JSON.stringify([c,e0,e1]));
+  ok('the exchange is in the log', await p.evaluate(()=>LN.log.some(e=>e.code==='exchange')));
+  // not enough to pay: the button refuses with the reason, nothing moves
+  await p.evaluate(()=>{ LN.earth.fuel=10; LNdraw() }); await p.waitForTimeout(150);
+  await U.tap('#ovl [data-act="exn"][data-v="200"]');
+  const why=await p.evaluate(()=>{ const b=document.querySelector('#ovl [data-act="exgo"]'); return b&&(b.getAttribute('data-why')||'') });
+  const e2=await p.evaluate(()=>({m:LN.earth.metal,f:LN.earth.fuel,p:LN.earth.parts}));
+  await U.tap('#ovl [data-act="exgo"]'); await p.waitForTimeout(200);
+  const e3=await p.evaluate(()=>({m:LN.earth.metal,f:LN.earth.fuel,p:LN.earth.parts}));
+  ok('200 parts without the fuel: refused, stores unchanged', /fuel/i.test(why)&&JSON.stringify(e2)===JSON.stringify(e3), why);
+  ok('the same resource cannot pay for itself', await p.evaluate(()=>exchangeCheck(LN,'parts','parts','metal',1)==='exSame'));
+  await p.evaluate(()=>{ LN.earth.fuel=5000; LNdraw() });   // the yard step below orders hulls that burn fuel
   await p.keyboard.press('Escape');
 
   // 5. the yard: the order cards come first and Build stays put after an order

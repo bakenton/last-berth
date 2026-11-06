@@ -231,9 +231,10 @@ function say(code,p){ var good=GOOD_CODES[code]||/^ok_/.test(code);
   toast(esc(whyText(code,p)), good?'good':(code==='halted'?'':'bad'), 3600, false);
   SFX.play(good?'ok':(code==='halted'?'info':'deny')) }
 function logText(e){ var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return '';
-  var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(e.code==='drive_mark'&&typeof d.n==='number') d.n=roman(d.n-1);
+  var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(typeof d.h==='string'&&planet(d.h)) d.h=pname(d.h); if(e.code==='drive_mark'&&typeof d.n==='number') d.n=roman(d.n-1);
   ['s','b','w','h'].forEach(function(k){ if(typeof d[k]==='number'&&Math.abs(d[k])>=1000) d[k]=num(d[k]) });   // v4.42: head counts as on the end window («4 151», not «4151»); years stay as they are
   if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
+  if(e.code==='exchange'){ d.r=T(d.r); d.a=T(d.a); d.b=T(d.b); d.n=num(d.n); d.x=num(d.x); d.y=num(d.y) }   // nodes-1.02
   if(e.code==='voice'){ var v=voiceLine(e); return v.who+' '+v.name+': '+v.line }
   return fill(tpl,d) }
 function toastLast(){ toastOne(G.log[G.log.length-1]) }
@@ -559,8 +560,10 @@ function drawMap(){
       s+='<polygon points="'+pts+'" fill="'+(ev.state==='active'?'rgba('+ec+',.10)':'none')+'" stroke="rgba('+ec+',.7)" stroke-width="'+F(1.4)+'" stroke-dasharray="'+(ev.state==='warn'?F(6)+' '+F(5):F(3)+' '+F(4))+'"'+(ev.state==='warn'?' class="evwarn"':'')+' pointer-events="none"/>';
     } else s+='<circle class="evearth" cx="'+CX+'" cy="'+CY+'" r="'+(30*Z)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(2)+'" pointer-events="none"/>';
   });
-  for(var k in G.colonies){ p=planet(k); xy=pos(p);
-    s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity=".45" stroke-width="'+F(1.6)+'" pointer-events="none"/>' }
+  for(var k in G.colonies){ p=planet(k); xy=pos(p); var lt=lineTo(G,k);
+    if(lt!=='earth'){ var hxy=pos(planet(lt));   // nodes-1.01: a feeder's line runs to its hub — dashed, brighter
+      s+='<line x1="'+hxy.x+'" y1="'+hxy.y+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity=".9" stroke-width="'+F(1.8)+'" stroke-dasharray="'+F(5)+' '+F(3)+'" pointer-events="none"/>' }
+    else s+='<line x1="'+CX+'" y1="'+CY+'" x2="'+xy.x+'" y2="'+xy.y+'" stroke="'+KCOL[p.kind]+'" stroke-opacity="'+(isHub(G,k)?'.7':'.45')+'" stroke-width="'+F(isHub(G,k)?3.2:1.6)+'" pointer-events="none"/>' }
   // ships: the figure of the class in its colour (3, 4, 6 sides), the yellow nose along the route
   for(i=0;i<G.ships.length;i++){
     var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
@@ -582,6 +585,8 @@ function drawMap(){
     if(BAD_ST[st]) s+='<circle r="'+F(15)+'" fill="none" stroke="'+C.red+'" stroke-width="'+F(2)+'" class="alarm"/>';
     else if(st==='noline'||st==='half') s+='<circle r="'+F(15)+'" fill="none" stroke="'+C.people+'" stroke-width="'+F(1.6)+'" class="alarm"/>';
     if(U.win===p.id) s+='<circle r="'+F(19)+'" fill="none" stroke="'+C.ink+'" stroke-width="'+F(2)+'"/>';
+    if(on&&G.colonies[p.id].hub){ var hx=''; for(var hk=0;hk<6;hk++){ var ha=Math.PI/3*hk; hx+=(hk?' ':'')+(Math.cos(ha)*16*Z).toFixed(2)+','+(Math.sin(ha)*16*Z).toFixed(2) }   // nodes-1.01: a hub wears a hexagon
+      s+='<polygon class="hubmk" points="'+hx+'" fill="none" stroke="'+C.ink+'" stroke-width="'+F(1.8)+'"/>' }
     s+='<circle r="'+F(13)+'" fill="transparent"/>';
     s+='<g transform="scale('+Z.toFixed(3)+')" '+(on?'fill="'+KCOL[p.kind]+'"':'fill="'+C.bg+'" stroke="'+(st==='settling'?C.people:C.mid)+'" stroke-width="1.6" stroke-dasharray="3 2.5"')+'>'+({mine:'<circle r="7"/>',farm:'<rect x="-6.5" y="-6.5" width="13" height="13"/>',well:'<path d="M0-8L8 0L0 8L-8 0Z"/>',works:'<path d="M0-8L8 6.5H-8Z"/>'}[p.kind])+'</g>';
     s+='<text x="'+(LB.x-xy.x)+'" y="'+(LB.y-xy.y)+'" fill="'+(on?C.ink:C.mid)+'" font-size="'+F(10.5)+'" letter-spacing="'+F(1)+'" class="nm"'+(LB.a?' text-anchor="end"':'')+'>'+esc(p.name.toUpperCase())+'</text></g>';
@@ -723,18 +728,24 @@ function hint(t,cls){ return '<div class="hint'+(cls?' '+cls:'')+'">'+t+'</div>'
 function alertBox(icon,t,warn){ return '<div class="alert'+(warn?' warn':'')+'">'+ic(icon,16,warn?C.people:C.red)+'<span>'+t+'</span></div>' }
 
 /* ---------- Earth: only home and its burn (BRIEF) ---------- */
-/* v4.49 (F-55, Nikita 04.11): Earth's workshop — surplus metal and rations into parts at forty times a works' price, switched by hand */
-/* what the workshop would make this year, from the stocks now (reviewer: G.wsWhy is last year's — wrong while a window stands the clock) */
-function wsCan(){ var E=G.earth, k=wsKeep(G), n=0, m=E.metal, f=E.food;
-  while(n<K.WS_MAX&&m-K.WS_METAL>=k.metal&&f-K.WS_FOOD>=k.food){ m-=K.WS_METAL; f-=K.WS_FOOD; n++ }
-  return {n:n, why:E.metal-K.WS_METAL<k.metal?'metal':'food'} }
-function wsBlock(){ var k=wsKeep(G), st, c=wsCan();
-  if(!G.ws) st=[T('u_wsOff'),C.mid];
-  else if(c.n) st=[fill(T('u_wsMakes'),{n:c.n}),C.parts];
-  else st=[fill(T('u_wsHeld'),{r:T(c.why).toLowerCase()}),C.people];
-  return sec(esc(T('u_ws')))+row(resIc('parts',13)+esc(T('u_wsState')),esc(st[0]),st[1])+
-    hint(esc(fill(T('u_wsHint'),{m:K.WS_METAL,f:K.WS_FOOD,n:K.WS_MAX,k:K.WS_KEEP,km:num(k.metal),kf:num(k.food)})))+
-    btn(esc(T(G.ws?'u_wsStop':'u_wsStart')),'ws',{on:G.ws?0:1},G.ws?'full':'pri full','works') }
+/* nodes-1.02 (Nikita 05.11): Earth's exchange — what to get, which two resources pay, how much; the price in numbers, the refusal with its reason */
+var EX_N={parts:[10,50,200],metal:[50,200,1000],food:[50,200,1000],fuel:[50,200,1000]};
+function exOpen(){ return EX_RES.filter(function(k){ return can(k)&&isOpen(G,k) }) }
+function exBlock(){ var rs=exOpen(); if(rs.length<3) return '';
+  if(rs.indexOf(U.exGet)<0) U.exGet=rs.indexOf('parts')>=0?'parts':rs[0];
+  var get=U.exGet, pay=rs.filter(function(k){ return k!==get }), pairs=[];
+  for(var i=0;i<pay.length;i++) for(var j=i+1;j<pay.length;j++) pairs.push(pay[i]+'+'+pay[j]);
+  if(pairs.indexOf(U.exPay)<0) U.exPay=pairs[0];
+  var ns=EX_N[get]; if(ns.indexOf(U.exN)<0) U.exN=ns[0];
+  var ab=U.exPay.split('+'), n=U.exN, c=exchangeCost(G,get,ab[0],ab[1],n), w=exchangeCheck(G,get,ab[0],ab[1],n);
+  if(w===ab[0]||w===ab[1]) w=shortWhy(c,G.earth);
+  var segB=function(act,v,on,lab){ return '<button type="button" data-act="'+act+'" data-v="'+v+'" class="'+(on?'on':'')+'">'+lab+'</button>' };
+  var h=sec(esc(T('u_ex')),'');
+  h+='<div class="lab">'+esc(T('u_exGet'))+'</div><div class="seg wide exs" id="exget" style="padding:2px 0 6px">'+rs.map(function(k){ return segB('exget',k,k===get,resIc(k,13)) }).join('')+'</div>';
+  h+='<div class="lab">'+esc(T('u_exPay'))+'</div><div class="seg wide exs" id="expay" style="padding:2px 0 6px">'+pairs.map(function(pr){ var q=pr.split('+'); return segB('expay',pr,pr===U.exPay,resIc(q[0],13)+'+'+resIc(q[1],13)) }).join('')+'</div>';
+  h+='<div class="seg wide exs" id="exn" style="padding:2px 0 6px">'+ns.map(function(x){ return segB('exn',x,x===n,'+'+num(x)) }).join('')+'</div>';
+  h+='<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(c,G.earth)+'</div>';
+  return h+btn(resIc(get,13)+' +'+num(n),'exgo',{r:get,a:ab[0],b:ab[1],n:n},'pri full',null,offW(w)) }
 function winEarth(){ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='';
   h+=sec(esc(T('u_home')))+'<div class="hero" style="color:'+C.people+'">'+num(E.people)+'<span>'+esc(T('u_peopleW'))+(t!==null?' · '+(t>=0?'+':'−')+Math.abs(t).toFixed(1)+esc(T('u_perYr')):'')+'</span></div>';
   var bx=birthX(); h+=row(resIc('people',13)+esc(T('u_births')),birthTxt(bx),birthCol(bx))+hint(esc(fill(T('u_birthsHint'),{lo:birthTxt(K.FED_MIN),hi:birthTxt(K.FED_MAX),n:K.FED_YEARS,y:Math.floor(E.food/Math.max(0.1,nd.food||1))})));
@@ -753,7 +764,7 @@ function winEarth(){ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='
     var y=E[k]/Math.max(0.01,v);
     h+=row(resIc(k,13)+esc(T(k)),dec(v)+esc(T('u_perYr'))+' · '+(v>0?esc(fill(T('u_yearsN'),{n:Math.floor(y)})):'—'),C[k]) });
   var ap=activeCrisis(G); if(ap) h+=alertBox('warn',esc(fill(T('u_alCrisis'),{r:T(ap.res),n:Math.max(0,ap.end-G.day)})),true);
-  if(can('parts')) h+=wsBlock();
+  var xb=exBlock(); if(xb) h+='<div id="exblk">'+xb+'</div>';   // v5.01: the tutorial points here (m26)
   return '<div class="win sm">'+head(esc(T('u_tabEarth').toUpperCase()),esc(T('u_timePaused')),ic('tEarth',18,C.earth))+'<div class="bd">'+h+'</div></div>' }
 
 /* ---------- big windows: language, the end, the Night, the shift, notes — one at a time, time stands ---------- */
@@ -919,6 +930,8 @@ var TMSG={
  m20:{at:'#convoy',mode:'see',k:'tut_m20'},
  m21:{at:'#rw-lift',mode:'see',k:'tut_m21'},
  m22:{at:'#ovl [data-act="evac"]',mode:'see',k:'tut_m22',pre:function(){ var d=U.tut.dead; if(d&&G.colonies[d]) openWorld(d); return {} }},
+ m25:{at:'#hubblk',mode:'see',k:'tut_m25'},   // v5.01: the hub, the first time a world card shows it
+ m26:{at:'#exblk',mode:'see',k:'tut_m26'},   // v5.01: Earth's exchange, the first time the Earth tab shows it
  m24:{at:function(){ return '#hr-'+U.tut.late },mode:'see',k:'tut_m24',pre:function(){ hullWorld(U.tut.late); return {} }},
  m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }}
 };
@@ -988,7 +1001,9 @@ function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
   if(w==='earth'||w==='yard'||w==='ark') tutPush('m7');
   if(w==='ark'&&G.night&&can('ark')) tutPush('m20');
   if(c&&can('machines')&&(kitOpen(G)||kitTier(c))) tutPush('m13');
-  if(c&&can('lift')&&ll&&ll.st!=='going') tutPush('m21') }
+  if(c&&can('lift')&&ll&&ll.st!=='going') tutPush('m21');
+  if(c&&can('parts')&&planet(w).kind!=='works') tutPush('m25');
+  if(w==='earth'&&exOpen().length>=3) tutPush('m26') }
 function tutBusy(){ return modal() }
 function tutNext(){ var t=U.tut; if(t.msg||t.nar||!U.langPicked||G.over) return;
   while(t.q.length&&!tutBusy()){ var it=t.q.shift();
@@ -1190,6 +1205,29 @@ function evacBlock(p){ var c=G.colonies[p.id];
 function liftRow(p){ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
   var v=ll.st==='cut'?T('u_liftCut'):(ll.st==='none'?T('u_liftNone'):ll.y+' · '+fill(T('u_yearsN'),{n:ll.n}));
   return row(ic('lift',13,C.people)+esc(T('u_lastLift')),esc(v),ll.st==='cut'?C.red:(ll.st==='none'||ll.n<=25?C.red:(ll.n<=K.LIFT_WARN?C.people:null)),'rw-lift') }
+/* nodes-1.01 (Nikita 05.11): the hub — build one here, or send this world's goods to one; on a hub, its depot and the hands waiting for its feeders */
+var HUB_RES=['metal','food','fuel','parts'];
+function hubCapP(){ return {m:hubCap(G),g:roman((G.gen||0)+1)} }
+function hubBlock(p,c){ if(p.kind==='works') return '';
+  var pid=p.id, h='', hubs=Object.keys(G.colonies).filter(function(k){ return k!==pid&&isHub(G,k)&&!isDead(k) });
+  var head2=sec(esc(T('u_hub')),esc(fill(T('u_hubN'),{n:hubCount(G),m:hubCap(G)})));
+  if(c.hub){ var f=feedersOf(G,pid);
+    h+=head2+'<div id="hubstore">';
+    HUB_RES.forEach(function(k){ if(can(k)) h+=row(resIc(k,13)+esc(T(k)),num(Math.floor(c.store[k]||0)),C[k]) });
+    h+=row(resIc('people',13)+esc(T('u_hubWait')),num(Math.floor(c.wait||0)),C.people)+row(esc(T('u_hubFeeders')),f.length?esc(f.map(pname).join(', ')):'0')+'</div>';
+    return h }
+  if(!c.via){ var k2=hubCost(G), w=hubBuildCheck(G,pid);
+    if(w==='metal'||w==='parts') w=shortWhy(k2,G.earth); else if(w==='hubCap') w=['hubCap',hubCapP()];
+    h+=head2+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(k2,G.earth)+'</div>'+btn(esc(T('u_hubBuild')),'hubbuild',{p:pid},'full','build',offW(w)) }
+  if(hubs.length){ var cur=c.via||'earth';
+    if(c.via) h+=head2;
+    h+='<div class="lab">'+esc(T('u_viaTo'))+'</div><div class="seg wide" id="viaseg" style="padding:2px 0 6px">'+
+      '<button type="button" data-act="via" data-p="'+pid+'" data-v="earth" class="'+(cur==='earth'?'on':'')+'">'+esc(T('u_viaEarth'))+'</button>'+
+      hubs.map(function(k){ var r=hubCheck(G,pid,k); return '<button type="button" data-act="via" data-p="'+pid+'" data-v="'+k+'" class="'+(cur===k?'on':'')+'"'+off(r)+'>'+esc(pname(k))+'</button>' }).join('')+'</div>' }
+  return h }
+/* nodes-1.01: a hull a line will not take says why — the courier limit, a hub's run to Earth, a hub too far for a courier, or range */
+function lineWhyP(code){ return code==='courierLine'?{n:K.COURIER_LINE}:null }
+function lineWhyShort(code){ return code==='range'?T('u_outReach'):fill(T('u_lw_'+code),lineWhyP(code)) }
 function machines(p,c){ if(!can('machines')||(!kitOpen(G)&&!kitTier(c))) return '';   // before the Gen III yards the block is only noise
   var kt=kitTier(c), kc=kitCost(c), kr=canKit(G,p.id), hold=lineHold(G,p.id), h='';
   h+=sec(esc(T('u_machines')),esc(kt?fill(T(kitLive(c)?'u_tierRun':'u_tierStand'),{t:roman(kt-1)}):T('u_tierNone')).toUpperCase());
@@ -1249,6 +1287,7 @@ function winWorld(pid){
       row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
     if(dry) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
   }
+  var hb=can('parts')?hubBlock(p,c):''; if(hb) L0+='<div id="hubblk">'+hb+'</div>';   // v5.01: the hub's price takes parts — not before the player sees them; the tutorial points here (m25)
   L0+=machines(p,c);
   if(can('evac')) L0+=evacBlock(p);
   // the line: the hulls on it, a free hull or one from another line, or a new one from the yards
@@ -1258,10 +1297,10 @@ function winWorld(pid){
   var free=freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }), other=G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&!s.mutiny&&((s.from&&s.to&&s.from!==pid)||(s.pend&&s.pend.from!==pid))&&s.mode!=='building'&&s.moveTo!==pid });
   var tab=U.addTab==='other'&&can('fleet')?'other':'free', pool=tab==='free'?free:other;
   R+='<div id="addblk"><div class="sec"><span>'+esc(T('u_addHull'))+'</span><span class="seg"><button type="button" data-act="addtab" data-v="free" class="'+(tab==='free'?'on':'')+'">'+esc(fill(T('u_segFree'),{n:free.length}))+'</button>'+(can('fleet')?'<button type="button" data-act="addtab" data-v="other" class="'+(tab==='other'?'on':'')+'">'+esc(fill(T('u_segOther'),{n:other.length}))+'</button>':'')+'</span></div><div class="lst">';
-  R+=pool.length?pool.sort(function(a,b){ return hullGen(b)-hullGen(a)||b.cap-a.cap }).map(function(s){ var ok=canReachSector(s,p.sec), wl=s.from||(s.pend&&s.pend.from);
+  R+=pool.length?pool.sort(function(a,b){ return hullGen(b)-hullGen(a)||b.cap-a.cap }).map(function(s){ var lw=lineRefuse(G,s,pid), ok=lw==='ok', wl=s.from||(s.pend&&s.pend.from);
     return '<div class="hr'+(ok?'':' dis')+'" id="ah-'+s.id+'">'+shipIc(shipClass(s),30)+genB(hullGen(s),hullGen(s)<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+
       (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+' · '+ic('speed',15,C.mid)+esc(fill(T('u_roundTrip'),{n:legDays(G,pid,'earth',s)*2}))+'</span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
-         :'<span class="hst" style="color:'+C.red+'">'+ic('range',15,C.red)+esc(fill(T('u_tooShort'),{n:shipRange(s)+1}))+'</span>')+
+         :'<span class="hst" style="color:'+C.red+'">'+ic('range',15,C.red)+esc(lw==='range'?fill(T('u_tooShort'),{n:shipRange(s)+1}):lineWhyShort(lw))+'</span>')+
       '</span><span class="ha">'+(ok?btn(esc(T(tab==='free'?'u_assign':'u_moveHere')),tab==='free'?'assign':'move',{s:s.id,p:pid},'pri','assign'):'')+'</span></div>' }).join('')
     :'<div class="why dim">'+esc(T(tab==='free'?'u_noFreePier':'u_noOther'))+'</div>';
   R+='</div></div>';
@@ -1269,11 +1308,11 @@ function winWorld(pid){
     R+='<div id="ordblk">'+sec(esc(T('u_orderNew')),esc(fill(T('u_yardGen'),{g:roman(G.gen||0)})))+'<div class="ord">';
     CLASSES.forEach(function(cls){ var gp=genPick(cls,pid); if(!gp||!clsSeen(cls)) return; var hi=gp.hi, h=HULLS[hi];   // v4.42: the generation before while the current one wants parts Earth has not got
       if(reach(G)<h.reach){ R+='<div class="oc dis">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b><div class="why dim">'+esc(fill(T('u_needLive'),{n:h.reach}))+'</div></div>'; return }
-      var w=orderCheck(G,pid,cls,hi); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth);
+      var w=orderCheck(G,pid,cls,hi); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth); if(w==='range') w=lineRefuse(G,{hull:hi},pid); var lwo=(w==='courierLine'||w==='hubCourier'||w==='hubHop');
       var okb=(typeof w==='string'?w:w[0])==='ok';
       R+='<div class="oc'+(okb?'':' dis')+'" id="oc-'+cls+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b>'+genSeg(cls,gp)+
-        '<div class="oh">'+ic('hold',14,C.mid)+num(h.cap)+'</div>'+(w==='range'?'':'<div class="oy">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,{hull:hi}))}))+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
-        (w==='range'?'<div class="why">'+esc(fill(T('u_tooShort'),{n:hullRange(h)+1}))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:h.days})),'order',{p:pid,c:cls,h:hi},'pri','build',offW(w)))+olderWhy(cls,hi)+'</div>' });
+        '<div class="oh">'+ic('hold',14,C.mid)+num(h.cap)+'</div>'+(w==='range'||lwo?'':'<div class="oy">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,{hull:hi}))}))+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
+        (w==='range'?'<div class="why">'+esc(fill(T('u_tooShort'),{n:hullRange(h)+1}))+'</div>':lwo?'<div class="why">'+esc(lineWhyShort(w))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:h.days})),'order',{p:pid,c:cls,h:hi},'pri','build',offW(w)))+olderWhy(cls,hi)+'</div>' });
     R+='</div></div>' }
   return '<div class="win">'+head(esc(pname(pid)),wsub(p),wmark(p.kind,true,16))+'<div class="bd two"><div>'+L0+'</div><div>'+R+'</div></div>'+nav+'</div>' }
 /* v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace */
@@ -1286,9 +1325,9 @@ function picker(){ var a=U.pop.split(':'), kind=a[1], s=shipById(G,+a[2]); if(!s
   var here=s.from||(s.pend&&s.pend.from);
   var ws=Object.keys(G.colonies).filter(function(k){ return k!==here&&!isDead(k)&&!evacGoing(k) }).sort(function(x,y){ return planet(x).sec-planet(y).sec||planet(x).ang-planet(y).ang });
   return '<div class="pick">'+sec(esc(fill(T(kind==='move'?'u_moveTo':'u_sendTo'),{h:hname(s)})).toUpperCase())+'<div class="lst">'+
-    (ws.length?ws.map(function(k){ var p=planet(k), ok=canReachSector(s,p.sec);
+    (ws.length?ws.map(function(k){ var p=planet(k), lw=lineRefuse(G,s,k), ok=lw==='ok';
       var f=lineFit(G,k), gap=f&&f.gap>0.01;   // Nikita, 02.11: what the line carries, what it must, what this hull would add; ring and kind right by the name
-      return '<button type="button" '+(ok?'data-act="pickgo" data-v="'+kind+':'+s.id+':'+k+'"':'class="dis"')+'>'+wmark(p.kind,true)+'<b>'+esc(pname(k))+'</b><i>'+esc(fill(T('u_ringN'),{n:p.sec+1})+' · '+kindWord(p.kind).toLowerCase())+'</i><span'+(ok&&gap?' class="short"':'')+'>'+esc(ok&&f?fill(T('u_pickRate'),{c:dec(f.carries),m:dec(f.need),a:dec(hullYield(G,k,s))}):T('u_outReach'))+'</span></button>' }).join(''):'<div class="why">'+esc(T('u_noWorlds'))+'</div>')+
+      return '<button type="button" '+(ok?'data-act="pickgo" data-v="'+kind+':'+s.id+':'+k+'"':'class="dis"'+off(lw,lineWhyP(lw)))+'>'+wmark(p.kind,true)+'<b>'+esc(pname(k))+'</b><i>'+esc(fill(T('u_ringN'),{n:p.sec+1})+' · '+kindWord(p.kind).toLowerCase())+'</i><span'+(ok&&gap?' class="short"':'')+'>'+esc(ok&&f?fill(T('u_pickRate'),{c:dec(f.carries),m:dec(f.need),a:dec(hullYield(G,k,s))}):lineWhyShort(lw))+'</span></button>' }).join(''):'<div class="why">'+esc(T('u_noWorlds'))+'</div>')+
     '</div><button type="button" class="cancel" data-act="pop" data-v="">'+esc(T('u_keep'))+'</button></div>' }
 
 /* Nikita, 26.10 («мочь строить предыдущее поколение») and F-56: both generations are named with their parts, the player chooses. Until then the yards offer what orderHull offers */
@@ -1570,6 +1609,12 @@ function doAct(a,b){
     if(pk[0]==='move'){ res=moveLine(G,sid,pid); act(G,'move',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)}; if(res==='queued'){ res='ok'; okc='ok_moveDock' } }
     else { var wr2=(shipById(G,sid)||{}).reserve; res=setLine(G,sid,pid,'earth'); act(G,'line',{p:pid,hull:sid},res); okc='ok_assign'; okp={n:sid,p:pname(pid)}; res=lineRes(res,sid,pid); if(res==='ok'&&lineWait(sid)){ okc='ok_assignWait'; okp.w=lineWait(sid) } if(wr2&&res==='ok') resLeft(sid) } }
   else if(a==='order'){ var ohi=d.h!==undefined?+d.h:null; res=orderFor(G,d.p,d.c,ohi); act(G,'order',{p:d.p,c:d.c,h:ohi},res); if(res==='ok'){ var oh=HULLS[ohi!==null?ohi:currentHull(G,d.c)]; okc='ok_order'; okp={p:pname(d.p),c:hullName(oh),y:oh.days} } }
+  else if(a==='hubbuild'){ var hc0=onLine(G,d.p).length; res=buildHub(G,d.p); act(G,'hub',{p:d.p},res); okc='ok_hub'; okp={p:pname(d.p)};
+    if(res==='ok'){ var hd=hc0-onLine(G,d.p).length; if(hd>0){ okc='ok_hubDrop'; okp.n=hd } }
+    else if(res==='metal'||res==='parts'){ var hw=shortWhy(hubCost(G),G.earth); say(hw[0],hw[1]); draw(); return }
+    else if(res==='hubCap'){ say('hubCap',hubCapP()); draw(); return } }
+  else if(a==='via'){ var vc0=onLine(G,d.p).length; res=setVia(G,d.p,v); act(G,'via',{p:d.p,h:v},res); okc='ok_via'; okp={p:pname(d.p),h:v==='earth'?T('u_viaEarth'):pname(v)};
+    if(res==='ok'){ var vd=vc0-onLine(G,d.p).length; if(vd>0){ okc='ok_viaDrop'; okp.n=vd } } }
   else if(a==='build'){ var bh=HULLS[+d.h]; res=buildShip(G,+d.h); act(G,'build',{hull:bh.key,gen:bh.gen},res); okc='ok_build'; okp={n:G.nextShip-1,h:hullName(bh),y:bh.days} }
   else if(a==='drivehelp'){ U.driveHelp=!driveHelpOn(); try{ localStorage.setItem('lb.driveHelp',U.driveHelp?'1':'0') }catch(e){} }
   else if(a==='allhome'){ if(!U.homeArm) U.homeArm=true; else { U.homeArm=false; var hl=homeList(), cg=convoyGen(G); hl.forEach(function(s){ if(hullGen(s)>=cg){ res=setReserve(G,s.id,true); act(G,'reserve',{hull:s.id,on:true},res) } else { res=clearLine(G,s.id); act(G,'release',{hull:s.id},res) } }); okc='ok_allhome'; okp={n:hl.length} } }
@@ -1584,7 +1629,11 @@ function doAct(a,b){
   else if(a==='driveat') U.driveAt=v;
   else if(a==='drive'){ var dp=d.p||driveHost(); res=startDrive(G,dp); act(G,'drive',{p:dp,mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={p:pname(dp)} }
   else if(a==='survey'){ var nsec=secName(SECTORS.length); res=survey(G); act(G,'survey',{sector:SECTORS.length},res); okc='ok_survey'; okp={s:nsec} }
-  else if(a==='ws'){ res=setWorkshop(G,d.on==='1'); act(G,'ws',{on:d.on==='1'},res) }
+  else if(a==='exget') U.exGet=v;
+  else if(a==='expay') U.exPay=v;
+  else if(a==='exn') U.exN=+v;
+  else if(a==='exgo'){ var xn=+d.n; res=exchange(G,d.r,d.a,d.b,xn); act(G,'exchange',{r:d.r,n:xn,a:d.a,b:d.b},res); okc='ok_ex'; okp={n:num(xn),r:T(d.r)};
+    if(res===d.a||res===d.b){ var xw=shortWhy(exchangeCost(G,d.r,d.a,d.b,xn),G.earth); say(xw[0],xw[1]); draw(); return } }
   else if(a==='arkbuy'){ res=arkBuy(G,+d.l); act(G,'arkbuy',{l:+d.l},res); okc='ok_arkbuy'; okp={n:roman(+d.l-1)}; if(res==='metal'||res==='parts'||res==='food'||res==='fuel'){ var sw=shortWhy(arkOwed(G,+d.l),G.earth); say(sw[0],sw[1]); draw(); return } }
   else if(a==='search'){ var m=shipById(G,+d.m), hs=m?bestSearch(m):null; res=hs?search(G,hs.id,+d.m):'nofree'; act(G,'search',{m:+d.m},res); okc='ok_search'; okp={n:+d.m} }
   else if(a==='nightok'){ G.nightSeen=true }
@@ -1606,7 +1655,10 @@ function doAct(a,b){
   else if(a==='loadauto'){ loadAuto(); return }
   else if(a==='texts'){ reloadTexts(); return }
   else if(a==='new'){ var sv=el('seedin'); start(sv?(parseInt(sv.value,10)||0):0); clockOn('new'); return }
-  if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:null);
+  if(res==='range'){ var rp=d.p, rs=null, rh=null;   // nodes-1.01: 'range' from lineOk may be the courier limit or a hub — say which
+    if(a==='pickgo'){ var pk2=v.split(':'); rp=pk2[2]; rs=shipById(G,+pk2[1]) } else if(a==='order') rh={hull:d.h!==undefined?+d.h:currentHull(G,d.c)}; else if(d.s) rs=shipById(G,+d.s);
+    var rr=(rs||rh)&&rp?lineRefuse(G,rs||rh,rp):'range'; if(rr!=='ok') res=rr }
+  if(res) say(res==='ok'?(okc||'ok'):(res==='queued'?'queued':res), res==='ok'?okp:lineWhyP(res));
   tutAct(a,v,res); draw() }
 document.addEventListener('click',function(ev){
   if(MAPDRAGGED){ MAPDRAGGED=false; return }

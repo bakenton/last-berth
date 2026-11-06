@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Карта в движении</title>
+<style>
+:root{--bg:#050506;--fg:#F2F1EC;--dim:#5E5D58;--mid:#9C9B95;--y:#FFD23F;--line:#2E2E33}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--fg);font:14px/1.4 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.bar{position:fixed;left:0;right:0;top:0;display:flex;flex-wrap:wrap;gap:6px;padding:10px 16px 18px;background:linear-gradient(#050506f0 60%,#05050600)}
+.bar button{background:#0c0c0e;color:var(--mid);border:1px solid var(--line);padding:7px 10px;font:inherit;font-size:13px;border-radius:3px;cursor:pointer;letter-spacing:.02em}
+.bar button.on{color:var(--bg);background:var(--y);border-color:var(--y)}
+.cap{position:fixed;left:16px;right:16px;bottom:14px;color:var(--mid);font-size:13px;max-width:620px;background:#050506cc;padding:6px 0}
+.cap b{color:var(--fg);font-weight:600}
+.cap i{color:#FF2A1A;font-style:normal}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="bar" id="bar"></div>
+<div class="cap" id="cap"></div>
+<script>
+/* Черновик: как карта может жить, не трогая правил. Миры в 1–3 стоят на месте (время рейса считается от их угла);
+   в 4 они едут по орбитам — это показ ловушки, а не предложение. Данные карты выдуманы, по образцу genSector. */
+var V=[
+ {n:'1 · Тихий ход', c:'<b>Движутся кольца и небо, миры стоят.</b> Пунктир колец ползёт, внутренние быстрее внешних, как настоящие орбиты; звёзды медленно поворачивают вокруг базы. Суда ходят как в игре. Самый спокойный, ничего не отвлекает от чисел.'},
+ {n:'2 · Поток', c:'<b>Движется груз.</b> По каждой линии к базе текут точки цвета ресурса, база вспыхивает на каждой доставке, у судов короткий след. Карта сама показывает, где густо, а где линия пустая. Риск: на 4× может рябить.'},
+ {n:'3 · Развёртка Пульта', c:'<b>Пульт смотрит.</b> От базы по кругу идёт жёлтый луч, под ним проступают соты, миры вспыхивают, когда луч проходит. Связь со взломом и образом Пульта. Риск: луч каждые 20 с может мешать, лучше оставить его фону меню или включать на события.'},
+ {n:'4 · Живые орбиты', c:'<b>Миры едут по орбитам</b>, внутренние быстрее. Линии до базы длину не меняют: расстояние до центра постоянно. <i>Ловушка — линии мир → хаб</i> (жёлтый пунктир): кольца крутятся с разной скоростью, плечо то короче, то длиннее, а рейс в ядре считается от неподвижного угла. С хабами так можно только вместе с правилом расстояний, и тогда маршруты станут «окнами» — это уже другая игра.'}
+];
+var cv=document.getElementById('c'), x=cv.getContext('2d'), W=0,H=0,DPR=1, mode=0, t0=performance.now();
+var bar=document.getElementById('bar'), cap=document.getElementById('cap');
+V.forEach(function(v,i){ var b=document.createElement('button'); b.textContent=v.n; b.onclick=function(){ mode=i; t0=performance.now(); upd() }; bar.appendChild(b) });
+function upd(){ [].forEach.call(bar.children,function(b,i){ b.className=i===mode?'on':'' }); cap.innerHTML=V[mode].c }
+upd();
+function rnd32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; var t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296 } }
+var R=rnd32(77);
+var COL={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#B48CFF'}, KIND={mine:'metal',farm:'food',well:'fuel',works:'parts'};
+var RINGS=5, worlds=[], lines=[], stars=[];
+for(var i=0;i<RINGS;i++){ var kinds=['mine','mine','farm','well','works']; if(R()<0.62) kinds.push(R()<0.62?'mine':'farm');
+  for(var j=0;j<kinds.length;j++){ var tt=(j+R()*0.7)/kinds.length;
+    worlds.push({ring:i, a:(tt*Math.PI*2+R()*0.4+i*0.35)%(Math.PI*2), rr:(170+i*88)+(R()-0.5)*44, kind:kinds[j], live:i<4&&R()<0.62, name:'w'+worlds.length}) } }
+var perRing={}; worlds.forEach(function(w,k){ if(w.live&&(perRing[w.ring]=(perRing[w.ring]||0)+1)<=3) lines.push({w:w, cls:w.ring<2?'courier':(w.ring<3?'hauler':'freighter'), n:w.ring<2?2:1, ph:R()*2, per:6+w.ring*3}) });
+var PAIR=null; worlds.forEach(function(a){ worlds.forEach(function(b){ if(!PAIR&&a.kind===b.kind&&a.ring===3&&b.ring===2) PAIR=[a,b] }) });
+for(i=0;i<240;i++) stars.push({a:R()*Math.PI*2, d:Math.sqrt(R()), z:R(), tw:R()*6.28});
+function size(){ DPR=Math.min(2,window.devicePixelRatio||1); W=innerWidth; H=innerHeight; cv.width=W*DPR; cv.height=H*DPR; x.setTransform(DPR,0,0,DPR,0,0) }
+addEventListener('resize',size); size();
+var OUT=170+(RINGS-1)*88+44;
+function S(){ return Math.min((W-32)/(2*OUT*1.32), (H-150)/(2*OUT*0.9)) }
+function pos(a,r,s){ return {x:W/2+Math.cos(a)*r*1.32*s, y:H/2+15+Math.sin(a)*r*0.9*s} }
+function hex(cx,cy,r,rot){ x.beginPath(); for(var k=0;k<6;k++){ var a=rot+k*Math.PI/3; x[k?'lineTo':'moveTo'](cx+Math.cos(a)*r,cy+Math.sin(a)*r) } x.closePath() }
+function poly(cx,cy,r,n,ang){ x.beginPath(); for(var k=0;k<n;k++){ var a=ang+k*Math.PI*2/n; x[k?'lineTo':'moveTo'](cx+Math.cos(a)*r*(k?0.8:1.25),cy+Math.sin(a)*r*(k?0.8:1.25)) } x.closePath() }
+var SHIP={courier:{n:3,c:'#4FA3FF',r:4},hauler:{n:4,c:'#C9CFD6',r:5.5},freighter:{n:6,c:'#B48CFF',r:7}};
+var flash=0, glow={};
+function wAng(w,t){ return mode===3 ? w.a+t*0.12/Math.pow(1+w.ring,1.5) : w.a }
+function frame(now){
+  var t=(now-t0)/1000, s=S(), cx=W/2, cy=H/2+15;
+  x.fillStyle='#050506'; x.fillRect(0,0,W,H);
+  // stars
+  var rot = mode===0 ? t*0.004 : 0;
+  stars.forEach(function(st){ var a=st.a+rot*(0.4+st.z), d=st.d*Math.hypot(W,H)*0.62;
+    var px=cx+Math.cos(a)*d, py=cy+Math.sin(a)*d*0.8; if(px<0||py<0||px>W||py>H) return;
+    var al=0.18+st.z*0.35; if(mode===1) al*=0.7+0.3*Math.sin(t*1.3+st.tw);
+    x.fillStyle='rgba(242,241,236,'+al.toFixed(3)+')'; x.fillRect(px,py,st.z>0.85?1.6:1,st.z>0.85?1.6:1) });
+  // sweep (3): hex field revealed under the beam
+  var sw=t*0.32;
+  if(mode===2){ var ga=sw%(Math.PI*2);
+    x.save(); x.beginPath(); x.moveTo(cx,cy); x.ellipse(cx,cy,OUT*1.32*s*1.08,OUT*0.9*s*1.08,0,ga-0.55,ga); x.closePath(); x.clip();
+    var hs=22*Math.max(0.6,s*1.6);
+    for(var gy=-H;gy<H*2;gy+=hs*1.5) for(var gx=-W, odd=0;gx<W*2;gx+=hs*Math.sqrt(3)){ var ox=gx+((Math.round(gy/(hs*1.5))%2)?hs*Math.sqrt(3)/2:0);
+      var dx=ox-cx, dy=(gy-cy)/0.68, da=((ga-Math.atan2(dy,dx))%(Math.PI*2)+Math.PI*2)%(Math.PI*2); if(da>0.55) continue;
+      hex(ox,gy,hs*0.92,Math.PI/6); x.strokeStyle='rgba(255,210,63,'+(0.22*(1-da/0.55)).toFixed(3)+')'; x.lineWidth=1; x.stroke() }
+    var g=x.createRadialGradient(cx,cy,0,cx,cy,OUT*1.32*s);
+    g.addColorStop(0,'rgba(255,210,63,.10)'); g.addColorStop(1,'rgba(255,210,63,0)'); x.fillStyle=g; x.fillRect(0,0,W,H);
+    x.restore();
+    x.beginPath(); x.moveTo(cx,cy); var e=pos(ga,OUT*1.08,s); x.lineTo(e.x,e.y); x.strokeStyle='rgba(255,210,63,.55)'; x.lineWidth=1.2; x.stroke() }
+  // lobes
+  x.setLineDash([1.5,5]); x.lineWidth=1; x.strokeStyle='rgba(94,93,88,.8)';
+  for(i=0;i<6;i++){ var la=i*Math.PI/3+0.2, p1=pos(la,40,s), p2=pos(la,OUT,s); x.beginPath(); x.moveTo(p1.x,p1.y); x.lineTo(p2.x,p2.y); x.stroke() }
+  // rings: the dash crawls in 1, inner faster
+  x.lineWidth=1; x.strokeStyle='rgba(242,241,236,.28)';
+  for(i=0;i<RINGS;i++){ var r=170+i*88; x.setLineDash([1.2,5.5]);
+    x.lineDashOffset = mode===0 ? -t*14/Math.pow(1+i,1.5) : 0;
+    x.beginPath(); x.ellipse(cx,cy,r*1.32*s,r*0.9*s,0,0,Math.PI*2); x.stroke() }
+  x.setLineDash([]); x.lineDashOffset=0;
+  // lines
+  lines.forEach(function(L){ var p=pos(wAng(L.w,t),L.w.rr,s);
+    x.beginPath(); x.moveTo(cx,cy); x.lineTo(p.x,p.y); x.strokeStyle='rgba(242,241,236,.22)'; x.lineWidth=1.2; x.stroke();
+    if(mode===1){ var len=Math.hypot(p.x-cx,p.y-cy), k=Math.max(2,Math.round(len/26)), sp=0.09, col=COL[KIND[L.w.kind]];
+      for(var q=0;q<k;q++){ var u=1-((t*sp*(170/L.w.rr)*3+q/k)%1); var px=cx+(p.x-cx)*u, py=cy+(p.y-cy)*u;
+        x.fillStyle=col; x.globalAlpha=0.25+0.6*(1-u); x.fillRect(px-1.2,py-1.2,2.4,2.4) } x.globalAlpha=1;
+      var lastU=(t*sp*(170/L.w.rr)*3)%(1/k); if(lastU<0.016) flash=1 } });
+  // earth / the base
+  if(mode===1){ flash*=0.94 } else flash=0;
+  x.beginPath(); x.arc(cx,cy,(13+flash*8)*Math.max(0.7,s*2),0,Math.PI*2); x.strokeStyle='rgba(255,210,63,'+(0.35+flash*0.5).toFixed(3)+')'; x.lineWidth=1.4; x.stroke();
+  hex(cx,cy,7*Math.max(0.8,s*2),Math.PI/6); x.fillStyle='#F2F1EC'; x.fill();
+  // worlds
+  var ga2=((sw%(Math.PI*2))+Math.PI*2)%(Math.PI*2);
+  worlds.forEach(function(w){ var a=wAng(w,t), p=pos(a,w.rr,s), r=Math.max(3.5,7*s*1.6), col=COL[KIND[w.kind]];
+    var lit=0; if(mode===2){ var da=((ga2-Math.atan2((p.y-cy)/0.68,p.x-cx))%(Math.PI*2)+Math.PI*2)%(Math.PI*2); lit=da<1.2?1-da/1.2:0 }
+    hex(p.x,p.y,r,0);
+    if(w.live){ x.fillStyle=col; x.globalAlpha=0.85+lit*0.15; x.fill(); x.globalAlpha=1 }
+    x.strokeStyle=w.live?col:'rgba(156,155,149,'+(0.45+lit*0.55).toFixed(3)+')'; x.lineWidth=1.2; x.stroke();
+    if(lit>0.05){ hex(p.x,p.y,r+3+lit*5,0); x.strokeStyle='rgba(255,210,63,'+(lit*0.7).toFixed(3)+')'; x.stroke() } });
+  // ships
+  lines.forEach(function(L){ var p=pos(wAng(L.w,t),L.w.rr,s), sh=SHIP[L.cls];
+    for(var m=0;m<L.n;m++){ var ph=((t/L.per+L.ph+m)%2), out=ph<1, u=out?ph:2-ph; u=u*u*(3-2*u);
+      var px=cx+(p.x-cx)*u, py=cy+(p.y-cy)*u, ang=Math.atan2(p.y-cy,p.x-cx)+(out?0:Math.PI), sr=sh.r*Math.max(0.75,s*1.9);
+      if(mode===1){ for(var tr=1;tr<5;tr++){ var uu=Math.max(0,Math.min(1,u+(out?-1:1)*tr*0.012)); x.fillStyle='rgba(242,241,236,'+(0.16-tr*0.03)+')'; x.fillRect(cx+(p.x-cx)*uu-1,cy+(p.y-cy)*uu-1,2,2) } }
+      poly(px,py,sr,sh.n,ang); x.fillStyle=sh.c; x.fill();
+      x.beginPath(); x.arc(px+Math.cos(ang)*sr*1.25,py+Math.sin(ang)*sr*1.25,1.4,0,Math.PI*2); x.fillStyle='#FFD23F'; x.fill() } });
+  // 4: the trap, in numbers
+  if(mode===3&&PAIR){ var A=PAIR[0], B=PAIR[1], aa=wAng(A,t), ab=wAng(B,t), pa=pos(aa,A.rr,s), pb=pos(ab,B.rr,s);
+    var d=Math.sqrt(A.rr*A.rr+B.rr*B.rr-2*A.rr*B.rr*Math.cos(aa-ab));   // the real gap between two worlds on turning rings
+    x.setLineDash([5,4]); x.beginPath(); x.moveTo(pa.x,pa.y); x.lineTo(pb.x,pb.y); x.strokeStyle='#FFD23F'; x.lineWidth=1.6; x.stroke(); x.setLineDash([]);
+    hex(pb.x,pb.y,Math.max(3.5,7*s*1.6)+5,0); x.strokeStyle='#FFD23F'; x.lineWidth=1.4; x.stroke();
+    x.font='12px system-ui,sans-serif'; x.fillStyle='#FFD23F'; x.textAlign=pa.x>cx?'left':'right';
+    x.fillText('плечо в хаб: '+Math.round(d)+' · рейс по правилам: 42 г.',pa.x+(pa.x>cx?12:-12),pa.y-12) }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>

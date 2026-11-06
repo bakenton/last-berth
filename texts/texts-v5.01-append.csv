@@ -1,0 +1,35 @@
+UI,u_hub,Hub,Хаб,v5.01 hubs+exchange,live,new
+UI,u_hubN,{n} / {m},{n} / {m},v5.01 hubs+exchange,live,new
+UI,u_hubBuild,Build a hub,Построить хаб,v5.01 hubs+exchange,live,new
+UI,u_hubWait,Waiting for feeders,Ждут отправки к питателям,v5.01 hubs+exchange,live,new
+UI,u_hubFeeders,Feeders,Питатели,v5.01 hubs+exchange,live,new
+UI,u_viaTo,Ship goods to,Везти груз,v5.01 hubs+exchange,live,new
+UI,u_viaEarth,Earth,Земля,v5.01 hubs+exchange,live,new
+UI,u_lw_courierLine,Line full: {n} couriers,Линия полна: {n} курьера,v5.01 hubs+exchange,live,new
+UI,u_lw_hubCourier,No couriers hub → Earth,Курьер не ходит с хаба на Землю,v5.01 hubs+exchange,live,new
+UI,u_lw_hubHop,Courier: hub too far,Курьеру далеко до хаба,v5.01 hubs+exchange,live,new
+MSG,hubKind,"A hub takes no goods from a works, and a works cannot be one; build the hub first.",Завод не возит в хаб и сам хабом не бывает; сначала хаб надо построить.,v5.01 hubs+exchange,live,new
+MSG,hubRing,A hub must be nearer Earth than this world.,"Хаб должен быть ближе к Земле, чем этот мир.",v5.01 hubs+exchange,live,new
+MSG,hubChain,"A hub feeds only Earth: a hub cannot ship to a hub, and a feeder cannot be one.","Хаб возит только на Землю: хаб не везёт в хаб, питатель хабом не станет.",v5.01 hubs+exchange,live,new
+MSG,hubCap,Hub limit {m} reached. A Gen {g} drive gives one more.,Предел хабов: {m}. Двигатель поколения {g} даст ещё один.,v5.01 hubs+exchange,live,new
+MSG,courierLine,This line already has {n} couriers — the most past ring II. Send a bigger hull.,На линии уже {n} курьера — больше за II кольцом нельзя. Нужно судно крупнее.,v5.01 hubs+exchange,live,new
+MSG,hubCourier,Couriers do not fly a hub's run to Earth. Send a hauler or bigger.,Курьер не ходит с хаба на Землю. Нужен грузовик или крупнее.,v5.01 hubs+exchange,live,new
+MSG,hubHop,"A courier feeds a hub only from the next ring out. A bigger hull, or a nearer hub.",Курьер возит в хаб только с соседнего кольца. Нужно судно крупнее или хаб ближе.,v5.01 hubs+exchange,live,new
+MSG,ok_hub,Hub built at {p}.,Хаб на {p} построен.,v5.01 hubs+exchange,live,new
+MSG,ok_hubDrop,Hub built at {p}. {n} couriers left its line: they do not fly hub → Earth.,Хаб на {p} построен. С линии сняты курьеры ({n}): с хаба на Землю они не ходят.,v5.01 hubs+exchange,live,new
+MSG,ok_via,{p} ships to {h}.,{p} везёт груз: {h}.,v5.01 hubs+exchange,live,new
+MSG,ok_viaDrop,{p} ships to {h}. {n} hulls cannot fly the new line and come home.,{p} везёт груз: {h}. Снято с линии (не долетят): {n}.,v5.01 hubs+exchange,live,new
+LOG,hub_built,"A hub stands at {p}: {m} metal, {t} parts.","На {p} построен хаб: {m} металла, {t} деталей.",v5.01 hubs+exchange,live,new
+LOG,hub_set,{p} now ships to the hub at {h}.,{p} теперь везёт груз в хаб на {h}.,v5.01 hubs+exchange,live,new
+LOG,hub_clear,{p} ships to Earth again.,{p} снова везёт груз на Землю.,v5.01 hubs+exchange,live,new
+UI,u_ex,Exchange,Обменник,v5.01 hubs+exchange,live,new
+UI,u_exGet,Get,Получить,v5.01 hubs+exchange,live,new
+UI,u_exPay,Pay with,Платить,v5.01 hubs+exchange,live,new
+MSG,exSame,Pay with two other resources.,Платить нужно двумя другими ресурсами.,v5.01 hubs+exchange,live,new
+MSG,exClosed,Earth does not trade this yet.,Этим Земля пока не торгует.,v5.01 hubs+exchange,live,new
+MSG,exNone,Nothing to exchange.,Нечего менять.,v5.01 hubs+exchange,live,new
+MSG,exRes,No such resource.,Нет такого ресурса.,v5.01 hubs+exchange,live,new
+MSG,ok_ex,+{n} {r}.,+{n}: {r}.,v5.01 hubs+exchange,live,new
+LOG,exchange,Exchange: {r} +{n} · {a} −{x} · {b} −{y}.,Обмен: {r} +{n} · {a} −{x} · {b} −{y}.,v5.01 hubs+exchange,live,new
+UI,tut_m25,A hub gathers the goods of farther worlds; its own line carries it all to Earth. The first comes with a Gen II drive.,"Хаб собирает груз дальних миров, а его линия везёт всё на Землю. Первый — с двигателем поколения II.",v5.01 hubs+exchange,live,new
+UI,tut_m26,"Exchange: two resources for a third, at a loss. To close a gap, not to trade.","Обменник: два ресурса за третий, в убыток. Чтобы закрыть нехватку, а не торговать.",v5.01 hubs+exchange,live,new
