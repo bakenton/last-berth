@@ -93,8 +93,8 @@ var TONE={voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
 var RES=['metal','food','fuel','parts','people'];
 /* v3.7 (Nikita, 23.09): a world is drawn in the colour of what it gives — the same colour its resource has everywhere else */
-var C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#F2F1EC',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',bg:'#0B0B0C'};
-var KCOL={mine:C.metal,farm:C.food,well:C.fuel,works:C.parts};
+var C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#5B82F0',people:'#FFD23F',red:'#FF2A1A',ark:'#B48CFF',earth:'#4FA3FF',ink:'#F2F1EC',mid:'#9C9B95',dim:'#5E5D58',bg:'#0B0B0C'};
+var KCOL={mine:C.metal,farm:C.food,well:C.fuel,works:C.parts};   // v5.04 (Nikita 06.11, 3D-map drafts): parts are blue (#5B82F0, the gear), metal stays light grey — a works and a mine were the same white
 /* v4.35 (Nikita 15.10, design/ships-v3 option B): hulls are the game's silhouettes, filled with the colour of their class */
 var CLSCOL={courier:'#45D4E8',hauler:'#FF6FB5',freighter:'#F2F1EC'};
 var EVCOL={fold:'91,192,235',storm:'255,138,31'};

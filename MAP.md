@@ -252,7 +252,7 @@
    93  var KIND  ≈ {mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
    94  var RES  ≈ ['metal','food','fuel','parts','people'];
    96  var C  v3.7 (Nikita, 23.09): a world is drawn in the colour of what it gives — the same colour its resource has every
-   97  var KCOL  ≈ {mine:C.metal,farm:C.food,well:C.fuel,works:C.parts};
+   97  var KCOL  v5.04 (Nikita 06.11, 3D-map drafts): parts are blue (#5B82F0, the gear), metal stays light grey — a works and 
    99  var CLSCOL  v4.35 (Nikita 15.10, design/ships-v3 option B): hulls are the game's silhouettes, filled with the colour of th
   100  var EVCOL  ≈ {fold:'91,192,235',storm:'255,138,31'};
 

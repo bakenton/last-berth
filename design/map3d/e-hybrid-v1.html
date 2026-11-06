@@ -1,0 +1,89 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>LAST BERTH · map 3D · E · C×D</title>
+<link rel="stylesheet" href="../../work/web/fonts.css"><link rel="stylesheet" href="common.css">
+<style>#cv{cursor:grab}#cv:active{cursor:grabbing}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:2;background:repeating-linear-gradient(0deg,rgba(255,210,63,.03) 0 1px,transparent 1px 3px);mix-blend-mode:screen}</style></head><body>
+<canvas id="cv"></canvas><div class="scan"></div>
+<script src="data.js"></script><script src="common.js"></script>
+<script>
+/* E · C×D (Nikita's pick, 06.11): D's neon wire worlds, yellow hex floor and energy on the lines + C's worlds on stems with a footprint on the floor.
+   HEIGHT = PEOPLE (a proposal): a settled world stands as high as its population, a tick on the stem every 25 people; a free world lies on the floor.
+   LINES RUN ON THE FLOOR, foot to foot: a line's length on the floor is the leg's length, so distance reads as in the game; the stem carries the eye up to the world.
+   Canvas 2D, no GPU: nothing to fall back from. */
+(function(){
+var C=M3, M=C.M, cam=C.cam, cv=document.getElementById('cv'), x=cv.getContext('2d'), dpr=1;
+var TICK=25, H0=14, HK=1.0, RS=11, RF=8;   // height = H0 + pop*HK units; settled sphere radius RS, free RF
+M.worlds.forEach(function(w){ w.h=w.on?H0+w.pop*HK+RS:RF });   // the sphere's centre: picking aims there
+C.chrome('E · C×D · WORLDS ON STEMS','CANVAS 2D · HEIGHT = PEOPLE · LINES ON THE FLOOR');
+cam.minPitch=14;
+var portrait=innerWidth/innerHeight<0.8; if(portrait){ cam.pitch=70; cam.tz=0 }   // a phone held upright: nearly from above, stems still show
+cam.dist=Math.max(cam.dist,portrait?1900:1500);
+function size(){ dpr=Math.min(devicePixelRatio||1,2); cv.width=innerWidth*dpr; cv.height=innerHeight*dpr } size(); addEventListener('resize',size);
+var Y='255,210,63', HX=[], R=26.5;
+for(var r=-30;r<=30;r++) for(var q=-30;q<=30;q++){ var hx=Math.sqrt(3)*R*(q+r/2), hz=1.5*R*r, d=Math.hypot(hx,hz); if(d<C.OUTER+160) HX.push([hx,hz,d]) }
+function rgb(h){ return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16) }
+function line(pts,close){ x.beginPath(); var on=false; pts.forEach(function(p){ var s=C.project(p); if(!s){ on=false; return } on?x.lineTo(s.x,s.y):x.moveTo(s.x,s.y); on=true }); if(close) x.closePath() }
+function ring(cx,cy,cz,rad,n){ var p=[]; for(var i=0;i<=n;i++){ var a=i/n*Math.PI*2; p.push([cx+Math.cos(a)*rad,cy,cz+Math.sin(a)*rad]) } return p }
+function glow(col,b){ x.shadowColor='rgba('+col+',.9)'; x.shadowBlur=b }
+function noglow(){ x.shadowBlur=0 }
+/* a neon wire sphere: three parallels, four turning meridians, a bright limb */
+function wire(cx,cy,cz,rad,col,spin,alpha,bl){
+  glow(col,bl); x.strokeStyle='rgba('+col+','+alpha+')'; x.lineWidth=1;
+  [-0.55,0,0.55].forEach(function(la){ var rr=Math.cos(la*1.2)*rad; line(ring(cx,cy+Math.sin(la*1.2)*rad,cz,rr,24)); x.stroke() });
+  for(var m=0;m<4;m++){ var a0=spin+m*Math.PI/4, pts=[]; for(var i=0;i<=20;i++){ var b=-Math.PI/2+i/20*Math.PI; pts.push([cx+Math.cos(b)*Math.cos(a0)*rad,cy+Math.sin(b)*rad,cz+Math.cos(b)*Math.sin(a0)*rad]) } line(pts); x.stroke() }
+  var s=C.project([cx,cy,cz]); noglow(); if(!s) return null; var pr=rad*C.pxPer(s.w);
+  x.beginPath(); x.arc(s.x,s.y,pr,0,7); x.fillStyle='rgba(7,7,6,.55)'; x.fill();   // the black of the body behind the limb: the floor does not shine through
+  glow(col,bl*1.4); x.strokeStyle='rgba('+col+','+Math.min(1,alpha*1.5)+')'; x.lineWidth=1.4; x.stroke(); noglow();
+  return {x:s.x,y:s.y,r:pr,w:s.w} }
+function draw(now){ C.step(now); var W=innerWidth, H=innerHeight; C.update(W,H); var t=now/1000, sel=C.sel();
+  x.setTransform(dpr,0,0,dpr,0,0); x.fillStyle='#070706'; x.fillRect(0,0,W,H);
+  // the floor: hexes in a slow wave out of Earth
+  x.lineWidth=1; HX.forEach(function(h){ var wave=Math.max(0,Math.cos((h[2]-t*90)/60))*.10, a=(.045+wave)*Math.max(0,1-h[2]/(C.OUTER+160)); if(a<.01) return;
+    var pts=[]; for(var i=0;i<6;i++){ var aa=Math.PI/3*i+Math.PI/6; pts.push([h[0]+Math.cos(aa)*R*.92,0,h[1]+Math.sin(aa)*R*.92]) } line(pts,true); x.strokeStyle='rgba('+Y+','+a.toFixed(3)+')'; x.stroke() });
+  M.sectors.forEach(function(sc){ x.setLineDash([2,5]); line(ring(0,0,0,sc.r,120)); x.strokeStyle='rgba('+Y+',.34)'; x.stroke(); x.setLineDash([]);
+    var th=cam.yaw*Math.PI/180, q=C.project([Math.sin(th)*sc.r,0,Math.cos(th)*sc.r]); if(q){ x.font='9px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle='rgba('+Y+',.5)'; x.fillText(sc.name,q.x,q.y+12) } });
+  for(var i=0;i<6;i++){ var a=-2.0944+i*1.0472; x.setLineDash([1.5,5]); line([[Math.cos(a)*34,0,Math.sin(a)*34],[Math.cos(a)*(C.OUTER+44),0,Math.sin(a)*(C.OUTER+44)]]); x.strokeStyle='rgba('+Y+',.2)'; x.stroke(); x.setLineDash([]) }
+  // footprints on the floor: two ellipses in the trade's colour (dashed and grey while free)
+  M.worlds.forEach(function(w){ var col=w.on?rgb(C.KCOL[w.kind]):'156,155,149';
+    if(w.ghost){ var g=C.project([w.px,0,w.pz]); if(g){ x.font='13px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle='rgba(94,93,88,.8)'; x.fillText('×',g.x,g.y+4) } return }
+    if(!w.on) x.setLineDash([3,3]); glow(col,w.on?6:0); line(ring(w.px,0,w.pz,13,32)); x.strokeStyle='rgba('+col+','+(w.on?.85:.45)+')'; x.lineWidth=1.3; x.stroke();
+    if(w.on){ line(ring(w.px,0,w.pz,20,32)); x.strokeStyle='rgba('+col+',.25)'; x.lineWidth=1; x.stroke() } x.setLineDash([]); noglow() });
+  // lines on the floor, foot to foot, with energy running home
+  C.routes.forEach(function(r){ var a=C.nodePos(r.a), b=C.nodePos(r.b), col=rgb(C.KCOL[r.kind]); a=[a[0],0,a[2]]; b=[b[0],0,b[2]];
+    var L=Math.hypot(b[0]-a[0],b[2]-a[2]), ua=r.a==='earth'?26/L:14/L, ub=1-14/L;   // from the edge of Earth's ring / the footprint, not the centre
+    line([[a[0]+(b[0]-a[0])*ua,0,a[2]+(b[2]-a[2])*ua],[a[0]+(b[0]-a[0])*ub,0,a[2]+(b[2]-a[2])*ub]]); glow(col,4); x.strokeStyle='rgba('+col+',.4)'; x.lineWidth=1.3; x.stroke(); noglow();
+    for(var k=0;k<4;k++){ var u=ua+(ub-ua)*(1-((t*0.12+k/4+C.hash(r.b))%1)), p=C.project([a[0]+(b[0]-a[0])*u,0,a[2]+(b[2]-a[2])*u]);
+      if(p){ glow(col,8); x.fillStyle='rgba('+col+',.95)'; x.fillRect(p.x-1.4,p.y-1.4,2.8,2.8); noglow() } } });
+  M.ships.forEach(function(s){ var a=C.nodePos(s.from), b=C.nodePos(s.to); if(!a||!b) return; var u=C.shipAt(s,t), u2=Math.min(1,u+0.01),
+    p=C.project([a[0]+(b[0]-a[0])*u,0,a[2]+(b[2]-a[2])*u]), q=C.project([a[0]+(b[0]-a[0])*u2,0,a[2]+(b[2]-a[2])*u2]); if(!p||!q) return;
+    var n=s.cls==='courier'?3:(s.cls==='hauler'?4:6), ang=Math.atan2(q.y-p.y,q.x-p.x); x.beginPath();
+    for(var i=0;i<n;i++){ var aa=ang+Math.PI*2*i/n+(n===4?Math.PI/4:0), rr=i===0&&n===3?7.5:5.5; var px=p.x+Math.cos(aa)*rr, py=p.y+Math.sin(aa)*rr; i?x.lineTo(px,py):x.moveTo(px,py) } x.closePath();
+    x.fillStyle='rgba(7,7,6,.8)'; x.fill(); glow(rgb(C.CLSCOL[s.cls]),6); x.strokeStyle=C.CLSCOL[s.cls]; x.lineWidth=1.5; x.stroke(); noglow(); x.fillStyle='#FFD23F'; x.fillRect(p.x+Math.cos(ang)*7-1.5,p.y+Math.sin(ang)*7-1.5,3,3) });
+  // Earth on the floor — drawn in its place among the worlds (far ones behind it, near ones over it)
+  var boxes=[], e=null;
+  function earth(){ e=wire(0,22,0,22,'79,163,255',t*0.3,.75,10);
+  if(e){ var ef=C.project([0,0,0]); line(ring(0,0,0,26,40)); glow(Y,8); x.strokeStyle='rgba('+Y+',.7)'; x.lineWidth=1.4; x.stroke(); noglow();
+    x.font='600 11px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle='#4FA3FF'; x.fillText('EARTH',e.x,(ef?Math.max(ef.y,e.y+e.r):e.y+e.r)+18); boxes.push({x0:e.x-e.r,x1:e.x+e.r,y0:e.y-e.r,y1:e.y+e.r+20});
+    if(sel==='earth'){ x.beginPath(); x.arc(e.x,e.y,e.r+6,0,7); x.strokeStyle='#FFD23F'; x.lineWidth=2; x.stroke() } } }
+  // worlds far first: stem with a tick every TICK people, then the sphere
+  var list=M.worlds.filter(function(w){ return !w.ghost }).map(function(w){ var s=C.project([w.px,w.h,w.pz]); return s?{w:w,s:s}:null }).filter(Boolean).sort(function(a,b){ return b.s.w-a.s.w });
+  var lab=[], es=C.project([0,22,0]); if(es){ list.push({earth:1,s:es}); list.sort(function(a,b){ return b.s.w-a.s.w }) }
+  list.forEach(function(o){ if(o.earth){ earth(); return } var w=o.w, col=w.on?rgb(C.KCOL[w.kind]):'156,155,149', rad=w.on?RS:RF;
+    if(w.on){ var top=w.h-rad; glow(col,6); line([[w.px,0,w.pz],[w.px,top,w.pz]]); x.strokeStyle='rgba('+col+',.75)'; x.lineWidth=1.6; x.stroke(); noglow();
+      for(var k=TICK;k<=w.pop;k+=TICK){ var hy=H0+k*HK, p=C.project([w.px,hy,w.pz]); if(!p) continue; var tk=4*C.pxPer(p.w)+2.5; x.beginPath(); x.moveTo(p.x-tk,p.y); x.lineTo(p.x+tk,p.y); x.strokeStyle='rgba('+col+',.85)'; x.lineWidth=1.2; x.stroke() } }
+    var s=wire(w.px,w.h,w.pz,rad,col,t*0.5+w.seed*6,w.on?.8:.38,w.on?9:0); if(!s) return;
+    if(sel===w){ x.beginPath(); x.arc(s.x,s.y,s.r+7,0,7); x.strokeStyle='#FFD23F'; x.lineWidth=2; x.stroke() }
+    lab.push({w:w,s:s}) });
+  // names nearest first, never on each other; a settled world says its people — the number its height shows
+  lab.forEach(function(o){ var s=o.s; boxes.push({x0:s.x-s.r,x1:s.x+s.r,y0:s.y-s.r,y1:s.y+s.r}) });   // a name never covers a world
+  x.textAlign='left'; lab.sort(function(a,b){ return (b.w.on-a.w.on)||(a.s.w-b.s.w) }).forEach(function(o){ var w=o.w, s=o.s, nm=w.name.toUpperCase();
+    x.font='10.5px "Geist Mono",monospace'; var tw=x.measureText(nm).width+(w.on?x.measureText(' '+w.pop).width:0);
+    var g=sel===w?9:5, cs=[[s.x+s.r+g,s.y-3],[s.x-s.r-g-tw,s.y-3],[s.x-tw/2,s.y-s.r-g-2]], ok=null;
+    for(var i=0;i<cs.length&&!ok;i++){ var b={x0:cs[i][0]-2,x1:cs[i][0]+tw+2,y0:cs[i][1]-10,y1:cs[i][1]+3}; if(!boxes.some(function(q){ return b.x0<q.x1&&q.x0<b.x1&&b.y0<q.y1&&q.y0<b.y1 })) ok=b }
+    if(!ok) return; boxes.push(ok); x.fillStyle=w.on?'#F2F1EC':'#9C9B95'; x.fillText(nm,ok.x0+2,ok.y1-3);
+    if(w.on){ x.fillStyle='#FFD23F'; x.fillText(' '+w.pop,ok.x0+2+x.measureText(nm).width,ok.y1-3) } });
+  requestAnimationFrame(draw) }
+C.bind(cv,{pick:function(px,py){ C.select(C.pick(px,py,12)) }});
+requestAnimationFrame(draw);
+})();
+</script></body></html>

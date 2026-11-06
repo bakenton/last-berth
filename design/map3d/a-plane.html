@@ -1,0 +1,8 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>LAST BERTH · map 3D · A · PLANE IN 3D</title>
+<link rel="stylesheet" href="../../work/web/fonts.css"><link rel="stylesheet" href="common.css"><style>#ov{cursor:grab}#ov:active{cursor:grabbing}</style></head><body>
+<canvas id="bg"></canvas><canvas id="stage"></canvas><canvas id="ov"></canvas>
+<div class="nogl"><div><b>NO WEBGL2</b><br>This draft needs WebGL2 (the graphics card).<br>Нет WebGL2 — этому черновику нужна видеокарта. Вариант B (SVG) и D (Canvas) работают без неё.<br><a href="index.html" style="color:#FFD23F">ALL DRAFTS</a></div></div>
+<script src="data.js"></script><script src="common.js"></script><script src="gl-map.js"></script>
+<script>M3.chrome('A · PLANE IN 3D','WEBGL2 · LIT SPHERES · ARCS'); try{ GLMAP({}) }catch(e){ document.querySelector('.nogl').style.display='flex'; document.querySelector('.nogl b').textContent='WEBGL ERROR: '+e.message; console.error(e) }</script>
+</body></html>

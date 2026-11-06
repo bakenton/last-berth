@@ -1,0 +1,17 @@
+:root{--bg:#0B0B0C;--pan:#141417;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--yel:#FFD23F;--n:'Geist Mono',ui-monospace,Consolas,monospace;--h:'Jost',system-ui,sans-serif}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);font-family:var(--n);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+canvas,svg{position:fixed;inset:0;width:100%;height:100%;display:block}
+#stage{cursor:grab}#stage:active{cursor:grabbing}
+.chrome{position:fixed;inset:0;pointer-events:none;z-index:5}
+.ttl{position:absolute;left:16px;top:14px;display:flex;flex-direction:column;gap:2px}
+.ttl b{font-family:var(--h);font-weight:600;font-size:15px;letter-spacing:.22em;text-transform:uppercase}
+.ttl span{font-size:10.5px;color:var(--mid);letter-spacing:.12em;text-transform:uppercase}
+.btns{position:absolute;right:16px;top:14px;display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap;justify-content:flex-end;max-width:60vw}
+.btns button,.btns a{font:600 10.5px var(--n);letter-spacing:.16em;color:var(--ink);background:rgba(20,20,23,.9);border:1px solid var(--ln);padding:7px 10px;cursor:pointer;text-decoration:none}
+.btns button:hover,.btns a:hover{border-color:var(--yel);color:var(--yel)}
+.info{position:absolute;left:16px;bottom:16px;max-width:calc(100vw - 32px);box-sizing:border-box;font-size:10.5px;letter-spacing:.12em;color:var(--dim);background:rgba(20,20,23,.85);border:1px solid var(--ln);padding:8px 12px}
+.info.on{color:var(--mid);border-left:3px solid var(--yel);display:flex;flex-direction:column;gap:3px}.info b{font-size:14px;letter-spacing:.14em}
+.meta{position:absolute;right:16px;bottom:16px;font-size:10px;letter-spacing:.12em;color:var(--dim);text-align:right}
+.nogl{position:fixed;inset:0;display:none;align-items:center;justify-content:center;text-align:center;padding:24px;color:var(--mid);font-size:13px;letter-spacing:.1em;line-height:1.7;z-index:9}
+.nogl b{color:#FF2A1A}
+@media (max-width:600px){.meta{display:none}.ttl b{font-size:13px}.btns{top:auto;bottom:72px;right:16px}.info{font-size:9.5px}}

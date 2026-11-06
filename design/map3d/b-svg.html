@@ -1,0 +1,61 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>LAST BERTH · map 3D · B · SVG</title>
+<link rel="stylesheet" href="../../work/web/fonts.css"><link rel="stylesheet" href="common.css">
+<style>#map{cursor:grab}#map:active{cursor:grabbing}#map .wd{cursor:pointer}#map text{font-family:var(--n)}</style></head><body>
+<canvas id="bg"></canvas><svg id="map" xmlns="http://www.w3.org/2000/svg"></svg>
+<script src="data.js"></script><script src="common.js"></script>
+<script>
+/* B · pseudo-3D in the game's own SVG: the same projection as A, but every frame is SVG markup like drawMap() — worlds stay <g class="wd" data-p>,
+   so the game's clicks, the tutorial's cut-outs (tutPlace reads the element's box) and the scenarios that click a world keep working. */
+(function(){
+var C=M3, M=C.M, cam=C.cam, svg=document.getElementById('map');
+C.stars(document.getElementById('bg')); addEventListener('resize',function(){ C.stars(document.getElementById('bg')) });
+cam.maxPitch=89.5; cam.minPitch=22; cam.fov=30; cam.dist*=1.25;
+C.chrome('B · PSEUDO-3D IN SVG','SVG · GRADIENT SPHERES · DEPTH SORT · NO GPU');
+cam.dist=Math.max(cam.dist,2100);
+function f(n){ return n.toFixed(1) }
+/* hexes on the plane, pointy-top, as in the menu's fields */
+var HX=[], R=26.5; for(var r=-30;r<=30;r++) for(var q=-30;q<=30;q++){ var x=Math.sqrt(3)*R*(q+r/2), z=1.5*R*r; if(Math.hypot(x,z)<C.OUTER+140) HX.push([x,z]) }
+var grad='<defs>'+Object.keys(C.KCOL).map(function(k){ return '<radialGradient id="g-'+k+'" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".18" stop-color="'+C.KCOL[k]+'"/><stop offset=".75" stop-color="'+C.KCOL[k]+'" stop-opacity=".55"/><stop offset="1" stop-color="#000" stop-opacity=".9"/></radialGradient>' }).join('')+
+  '<radialGradient id="g-earth" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#cfe6ff"/><stop offset=".25" stop-color="#4FA3FF"/><stop offset="1" stop-color="#0a2346"/></radialGradient>'+
+  '<radialGradient id="g-free" cx="38%" cy="32%" r="75%"><stop offset="0" stop-color="#3a3a3f"/><stop offset="1" stop-color="#0B0B0C"/></radialGradient>'+
+  '<radialGradient id="g-glow"><stop offset="0" stop-color="#FFD23F" stop-opacity=".22"/><stop offset="1" stop-color="#FFD23F" stop-opacity="0"/></radialGradient></defs>';
+function poly(pts){ var s='', on=false; pts.forEach(function(p){ var q=C.project(p); if(!q){ on=false; return } s+=(on?'L':'M')+f(q.x)+' '+f(q.y); on=true }); return s }
+function draw(now){ C.step(now); var W=innerWidth, H=innerHeight; C.update(W,H); var t=now/1000, s=grad;
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  var e=C.project([0,0,0]); if(e){ var gr=260*C.pxPer(e.w); s+='<ellipse cx="'+f(e.x)+'" cy="'+f(e.y)+'" rx="'+f(gr)+'" ry="'+f(gr*Math.sin(cam.pitch*Math.PI/180))+'" fill="url(#g-glow)"/>' }
+  var hp=''; HX.forEach(function(h){ var pts=[]; for(var i=0;i<=6;i++){ var a=Math.PI/3*i+Math.PI/6; pts.push([h[0]+Math.cos(a)*R,0,h[1]+Math.sin(a)*R]) } hp+=poly(pts) });
+  s+='<path d="'+hp+'" fill="none" stroke="#F2F1EC" stroke-opacity=".06" stroke-width="1"/>';
+  M.sectors.forEach(function(sc){ var pts=[]; for(var i=0;i<=120;i++){ var a=i/120*Math.PI*2; pts.push([Math.cos(a)*sc.r,0,Math.sin(a)*sc.r]) }
+    s+='<path d="'+poly(pts)+'" fill="none" stroke="#F2F1EC" stroke-opacity=".3" stroke-width="1" stroke-dasharray="1 5"/>';
+    var th=cam.yaw*Math.PI/180, q=C.project([Math.sin(th)*sc.r,0,Math.cos(th)*sc.r]); if(q) s+='<text x="'+f(q.x)+'" y="'+f(q.y+12)+'" fill="#5E5D58" font-size="9" letter-spacing="1.6" text-anchor="middle">'+sc.name+'</text>' });
+  for(var i=0;i<6;i++){ var a=-2.0944+i*1.0472; s+='<path d="'+poly([[Math.cos(a)*34,0,Math.sin(a)*34],[Math.cos(a)*(C.OUTER+44),0,Math.sin(a)*(C.OUTER+44)]])+'" stroke="#5E5D58" stroke-width="1.2" stroke-dasharray="1.5 5"/>' }
+  function arc(a,b,n){ var o=[], lift=Math.hypot(b[0]-a[0],b[2]-a[2])*0.12; for(var i=0;i<=n;i++){ var u=i/n; o.push([a[0]+(b[0]-a[0])*u, 4*lift*u*(1-u), a[2]+(b[2]-a[2])*u]) } return o }
+  C.routes.forEach(function(r){ s+='<path d="'+poly(arc(C.nodePos(r.a),C.nodePos(r.b),28))+'" fill="none" stroke="'+C.KCOL[r.kind]+'" stroke-opacity=".5" stroke-width="1.6"/>' });
+  // everything with a depth goes in one list, far first
+  var items=[];
+  M.ships.forEach(function(sh){ var a=C.nodePos(sh.from), b=C.nodePos(sh.to); if(!a||!b) return; var pts=arc(a,b,60), k=Math.min(59,Math.floor(C.shipAt(sh,t)*60)), p=C.project(pts[k]), q=C.project(pts[k+1]); if(!p||!q) return;
+    var n=sh.cls==='courier'?3:(sh.cls==='hauler'?4:6), ang=Math.atan2(q.y-p.y,q.x-p.x), d='';
+    for(var i=0;i<n;i++){ var aa=ang+Math.PI*2*i/n+(n===4?Math.PI/4:0), rr=i===0&&n===3?7.5:5.5; d+=(i?'L':'M')+f(p.x+Math.cos(aa)*rr)+' '+f(p.y+Math.sin(aa)*rr) }
+    items.push({w:p.w,h:'<path d="'+d+'Z" fill="'+C.CLSCOL[sh.cls]+'"/><circle cx="'+f(p.x+Math.cos(ang)*7)+'" cy="'+f(p.y+Math.sin(ang)*7)+'" r="1.8" fill="#FFD23F"/>'}) });
+  var sel=C.sel();
+  M.worlds.forEach(function(w){ var p=C.project([w.px,0,w.pz]); if(!p) return; var r=Math.max(8,(w.on?12:9)*C.pxPer(p.w)), h='';
+    var fade=Math.max(.4,Math.min(1,3200/p.w));
+    h+='<g class="wd" data-p="'+w.id+'" opacity="'+fade.toFixed(2)+'" transform="translate('+f(p.x)+' '+f(p.y)+')">';
+    h+='<circle r="'+f(r+6)+'" fill="transparent"/>';
+    if(w.ghost) h+='<text y="4" fill="#5E5D58" font-size="13" text-anchor="middle">×</text>';
+    else if(!w.on) h+='<circle r="'+f(r)+'" fill="url(#g-free)" stroke="#9C9B95" stroke-width="1.2" stroke-dasharray="3 2.5"/>';
+    else h+='<ellipse cy="'+f(r*0.95)+'" rx="'+f(r*1.05)+'" ry="'+f(r*0.3*Math.sin(cam.pitch*Math.PI/180)+.5)+'" fill="#000" opacity=".45"/><circle r="'+f(r)+'" fill="url(#g-'+w.kind+')"/>';
+    if(sel===w) h+='<circle r="'+f(r+7)+'" fill="none" stroke="#FFD23F" stroke-width="2"/>';
+    if(!w.ghost||fade>.6) h+='<text x="'+f(r+5)+'" y="-4" fill="'+(w.on?'#F2F1EC':'#9C9B95')+'" font-size="10.5" letter-spacing="1"'+(w.ghost?' opacity=".5"':'')+'>'+w.name.toUpperCase()+'</text>';
+    items.push({w:p.w,h:h+'</g>'}) });
+  if(e){ var er=Math.max(14,24*C.pxPer(e.w)); items.push({w:e.w,h:'<g class="wd" data-p="earth" transform="translate('+f(e.x)+' '+f(e.y)+')"><circle r="'+f(er*1.35)+'" fill="#4FA3FF" opacity=".12"/><circle r="'+f(er)+'" fill="url(#g-earth)"/>'+
+    '<ellipse rx="'+f(er)+'" ry="'+f(er*0.35)+'" fill="none" stroke="#cfe6ff" stroke-opacity=".35"/><line x1="0" y1="'+f(-er)+'" x2="0" y2="'+f(er)+'" stroke="#cfe6ff" stroke-opacity=".3"/>'+(sel==='earth'?'<circle r="'+f(er*1.35+5)+'" fill="none" stroke="#FFD23F" stroke-width="2"/>':'')+
+    '<text y="'+f(er+16)+'" fill="#4FA3FF" font-size="11" font-weight="600" text-anchor="middle" letter-spacing="1">EARTH</text></g>'}) }
+  items.sort(function(a,b){ return b.w-a.w }); items.forEach(function(it){ s+=it.h });
+  svg.innerHTML=s; requestAnimationFrame(draw) }
+/* the pointer-down element, not the one under the pointer at release: the markup is rebuilt every frame (the game's lost-press risk of v4.35) */
+C.bind(svg,{pick:function(x,y,tg){ var g=tg&&tg.closest&&tg.closest('[data-p]'), id=g&&g.getAttribute('data-p'); C.select(id==='earth'?'earth':(id?C.BY[id]:C.pick(x,y,9))) }});
+requestAnimationFrame(draw);
+})();
+</script></body></html>
