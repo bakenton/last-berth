@@ -1524,6 +1524,7 @@ function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]==
 function popMenu(){
   return '<div class="menu"><button type="button" data-act="lang">'+ic('tWorlds',15)+esc(T('u_mLang'))+' <b>'+(U.lang==='en'?'EN':'RU')+'</b> · '+(U.lang==='en'?'RU':'EN')+'</button>'+
     '<button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
+    '<button type="button" data-act="uisize">'+ic('tWorlds',15)+esc(T('u_mSize'))+' <b>'+Math.round(uiScale()*100)+'%</b></button>'+
     '<button type="button" data-act="help">'+ic('peopleA',15)+esc(T('u_mHelp'))+' <b>'+esc(T(U.tut.help?'u_on':'u_off'))+'</b></button><hr>'+
     '<button type="button" data-act="save">'+ic('unloading',15)+esc(T('u_mSave'))+'</button><button type="button" data-act="load">'+ic('loading',15)+esc(T('u_mLoad'))+'</button>'+
     '<button type="button" data-act="export">'+ic('unloading',15)+esc(T('u_mExport'))+'</button>'+
@@ -1539,6 +1540,7 @@ function menuOpen(){ U.menu=true; draw();
   LBMENU.open({T:function(k,p){ return T(k,p) }, v:VERSION.v, lang:function(){ return U.lang },
     save:function(){ return U.saveDay!==null&&U.saveDay!==undefined?{y:U.saveDay,w:U.saveWorlds||0}:null },
     sound:function(){ return SFX.isOn() }, setSound:function(on){ SFX.set(on) },
+    size:function(){ return uiScale() }, sizeNext:function(){ return uiScaleNext() },
     setLang:function(l){ U.lang=l; try{ localStorage.setItem(LANG_KEY,l) }catch(e){} draw() },
     cont:function(){ U.langPicked=true; if(loadAuto()) return true; U.langPicked=false; return T('mn_contFail') },
     load:function(){ el('loadin').click() },
@@ -1650,6 +1652,7 @@ function doAct(a,b){
   else if(a==='closelog'){ el('logbox').hidden=true }
   else if(a==='lang'){ U.lang=U.lang==='en'?'ru':'en' }
   else if(a==='sfx'){ SFX.set(!SFX.isOn()); if(SFX.isOn()) SFX.play('ok') }
+  else if(a==='uisize'){ uiScaleNext() }   // v5.03: the desk's size; the ≡ list stays open, its number follows
   else if(a==='help'){ if(U.tut.help) tutOff(); else tutOn() }
   else if(a==='save'){ U.pop=null; autosave(); saveFile() }
   else if(a==='load'){ U.pop=null; el('loadin').click() }
@@ -1708,9 +1711,18 @@ document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.tar
   function end(){ if(!drag) return; if(drag.moved) MAPDRAGGED=true; drag=null; m.classList.remove('drag') }
   window.addEventListener('pointerup',end); window.addEventListener('pointercancel',end);
 })();
-/* desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows */
-function fit(){ var a=el('app'), w=window.innerWidth, h=window.innerHeight, z=Math.min(1,w/1180,h/700);
-  a.dataset.z=z; a.style.transform=z<1?'scale('+z+')':''; a.style.width=(w/z)+'px'; a.style.height=(h/z)+'px' }
+/* desktop first (Nikita 16.10): below 1180×700 the whole desk is scaled down, nothing reflows.
+   v5.03 (Nikita 06.11: «если монитор большой, всё крошечное»): it also grows — the desk is drawn as if the screen were 1440×860
+   (1.26× on 1920×1080, 1.67× on 2560×1440), never below 1× on a screen that fits 1180×700; the player's size from the menu
+   (UI_STEPS, lb.uiScale) multiplies that, and the desk is never narrower than 1180×700 of its own pixels.
+   --ah is the desk's own height: 100vh inside a scaled desk is the screen's, not the desk's */
+var UI_STEPS=[0.8,0.9,1,1.15,1.3,1.5];
+function uiScale(){ if(U.uiScale===undefined){ U.uiScale=1; try{ var v=+localStorage.getItem('lb.uiScale'); if(UI_STEPS.indexOf(v)>=0) U.uiScale=v }catch(e){} } return U.uiScale }
+function uiScaleNext(){ var i=UI_STEPS.indexOf(uiScale()); U.uiScale=UI_STEPS[(i+1)%UI_STEPS.length];
+  try{ localStorage.setItem('lb.uiScale',String(U.uiScale)) }catch(e){} fit(); if(G){ drawMap(); tutPlace() } return U.uiScale }
+function fit(){ var a=el('app'), w=window.innerWidth, h=window.innerHeight, zmax=Math.min(w/1180,h/700),
+  auto=Math.max(Math.min(1,zmax),Math.min(w/1440,h/860)), z=Math.max(0.3,Math.min(zmax,auto*uiScale()));
+  a.dataset.z=z; a.style.transform=z!==1?'scale('+z+')':''; a.style.width=(w/z)+'px'; a.style.height=(h/z)+'px'; a.style.setProperty('--ah',(h/z)+'px') }
 window.addEventListener('resize',function(){ fit(); if(G){ drawMap(); tutPlace() } });
 
 /* ---------- loop ---------- */

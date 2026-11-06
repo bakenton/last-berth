@@ -17,7 +17,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.goto(require('url').pathToFileURL(process.env.LB_WORK||require('path').resolve(__dirname,'..','work')).href+'/page.html'); await p.waitForTimeout(600);
   ok('the menu stands in front of the game, the clock stands', await menuOn(p)&&await p.evaluate(()=>LNI.halted()&&!LNU.langPicked&&LNI.big()===null));
   let L=await labels(p);
-  ok('five items; Continue is dim with no record; New game is chosen', L.length===5&&L[0]==='Continue|no record|off'&&/^New game\|\|on$/.test(L[1])&&L[3]==='Language|English'&&/^Sound\|(on|off)$/.test(L[4]), L.join(' · '));
+  // v5.03: a sixth item, Interface size (ui.js UI_STEPS)
+  ok('six items; Continue is dim with no record; New game is chosen', L.length===6&&L[0]==='Continue|no record|off'&&/^New game\|\|on$/.test(L[1])&&L[3]==='Language|English'&&/^Sound\|(on|off)$/.test(L[4])&&/^Interface size\|\d+%$/.test(L[5]), L.join(' · '));
   ok('the mark, the name, Test play and the version', await p.evaluate(()=>!!document.querySelector('#menu .mtop use')&&document.querySelector('#menu .mname').textContent==='LAST BERTH'&&/Test play/.test(document.querySelector('#menu .mtst').textContent)&&/^v\d+\.\d+$/.test(document.querySelector('#menu .mver').textContent)));
   ok('the scene is drawn (WebGL2 or the flat field)', await p.evaluate(()=>{ const c=document.querySelector('#menu .mcv'); return !!c&&c.width>2 }));
   await p.keyboard.press('ArrowDown'); ok('arrow down: Load from file', (await labels(p))[2].endsWith('|on'));

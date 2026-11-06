@@ -72,7 +72,8 @@ function items(){ var s=O.save(); return [
   {id:'new',label:T('mn_new'),sub:''},
   {id:'load',label:T('mn_load'),sub:T('mn_loadSub')},
   {id:'lang',label:T('mn_lang'),sub:T('mn_langVal')},
-  {id:'sound',label:T('mn_sound'),sub:snd()?T('mn_on'):T('mn_off')}] }
+  {id:'sound',label:T('mn_sound'),sub:snd()?T('mn_on'):T('mn_off')},
+  {id:'size',label:T('mn_size'),sub:T('mn_sizeVal',{p:Math.round((O.size?O.size():1)*100)})}] }
 function firstOn(){ var I=items(); for(var i=0;i<I.length;i++) if(!I[i].off) return i; return 0 }
 function drawUI(){ if(!UI) return; var I=items(); if(I[SEL]&&I[SEL].off) SEL=firstOn();
   UI.innerHTML='<div class="mtop">'+mark()+'<div class="mname">LAST BERTH</div><div class="mrun"><i></i></div></div>'+
@@ -84,7 +85,8 @@ function act(i){ var it=items()[i]; if(!it||it.off||BUSY) return;
   if(it.id==='cont'){ diveThen(function(){ var why=O.cont(); if(why===true) fadeOut(); else { diveBack(); note(why) } }); return }
   if(it.id==='load'){ O.load(); return }
   if(it.id==='lang'){ O.setLang(O.lang()==='en'?'ru':'en'); drawUI(); return }
-  if(it.id==='sound'){ O.setSound(!snd()); if(snd()) maStart(); maSet(); drawUI(); return } }
+  if(it.id==='sound'){ O.setSound(!snd()); if(snd()) maStart(); maSet(); drawUI(); return }
+  if(it.id==='size'){ if(O.sizeNext) O.sizeNext(); drawUI(); return } }   // v5.03: the desk's size, 80–150% in steps (ui.js UI_STEPS)
 function test(){ if(BUSY) return; diveThen(function(){ O.test(); fadeOut() }) }
 /* a word in the menu itself (a save that would not load): the game's toasts are under the menu */
 var NOTE=null;

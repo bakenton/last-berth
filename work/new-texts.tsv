@@ -783,3 +783,6 @@ LOG	exchange	Exchange: {r} +{n} · {a} −{x} · {b} −{y}.	Обмен: {r} +{n
 UI	tut_m25	A hub gathers the goods of farther worlds; its own line carries it all to Earth. The first comes with a Gen II drive.	Хаб собирает груз дальних миров, а его линия везёт всё на Землю. Первый — с двигателем поколения II.
 UI	tut_m26	Exchange: two resources for a third, at a loss. To close a gap, not to trade.	Обменник: два ресурса за третий, в убыток. Чтобы закрыть нехватку, а не торговать.
 LOG	hub_lost	The hub at {p} is gone. Lines back to Earth: {n}.	Хаба на {p} больше нет. Линии питателей снова идут на Землю: {n}.
+UI	mn_size	Interface size	Размер интерфейса
+UI	mn_sizeVal	{p}%	{p}%
+UI	u_mSize	Interface size	Размер интерфейса
