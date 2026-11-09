@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — animated short (draft)</title>
+<!--FONTS--><link rel="stylesheet" href="../../work/web/fonts.css"><!--/FONTS-->
+<style>
+html,body{margin:0;height:100%;background:#000;color:#F2F1EC;font-family:'Geist Mono',ui-monospace,Consolas,monospace;overflow:hidden}
+#stage{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+#wrap{position:relative;width:min(100vw,calc((100vh - 44px)*2.4));aspect-ratio:2.4/1}
+#cv{width:100%;height:100%;display:block;cursor:pointer}
+#big{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,1.5vw,22px);letter-spacing:.4em;
+  color:#FFD23F;background:rgba(0,0,0,.45);cursor:pointer;user-select:none}
+#ctl{position:absolute;left:0;right:0;bottom:0;height:44px;display:flex;align-items:center;gap:16px;padding:0 16px;box-sizing:border-box;font-size:12px;letter-spacing:.15em;color:#9C9B95}
+#bar{flex:1;height:18px;display:flex;align-items:center;cursor:pointer;touch-action:none}
+#bar>div{width:100%;height:2px;background:#2E2E33;position:relative}
+#fill{position:absolute;left:0;top:0;bottom:0;background:#FFD23F}
+#snd{cursor:pointer;user-select:none}
+</style>
+</head>
+<body>
+<div id="stage"><div id="wrap"><canvas id="cv"></canvas><div id="big">▶  PLAY</div></div></div>
+<div id="ctl"><span id="tm">0:00</span><div id="bar"><div><div id="fill"></div></div></div><span id="snd">SOUND ON</span></div>
+<!--ASSETS--><!--/ASSETS-->
+<!--CODE--><script src="cartoon.js"></script><!--/CODE-->
+</body>
+</html>
