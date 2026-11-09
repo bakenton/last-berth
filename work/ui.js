@@ -459,7 +459,10 @@ function prj(p){ var m=M3D.VP, x=p[0],y=p[1],z=p[2];
   var cx=m[0]*x+m[4]*y+m[8]*z+m[12], cy=m[1]*x+m[5]*y+m[9]*z+m[13], cw=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(cw<=1) return null; return {x:(cx/cw+1)/2*M3D.W, y:(1-cy/cw)/2*M3D.H, w:cw} }
 function pxPer(w){ return M3D.H/(2*w*Math.tan(CAM.fov*Math.PI/360)) }
-function m3size(){ var mb=el('mapbox'), cv=el('map3d'), W=Math.max(1,mb.clientWidth), H=Math.max(1,mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();
+/* v5.08: the box's size comes from a ResizeObserver — reading clientWidth every frame of a turn made the browser lay the page out again */
+function m3size(){ var mb=el('mapbox'), cv=el('map3d');
+  if(!M3D.ro&&window.ResizeObserver){ M3D.ro=new ResizeObserver(function(){ M3D.bw=mb.clientWidth; M3D.bh=mb.clientHeight; M3D.dirty=true; if(G) drawMap() }); M3D.ro.observe(mb); M3D.bw=mb.clientWidth; M3D.bh=mb.clientHeight }
+  var W=Math.max(1,M3D.ro?M3D.bw:mb.clientWidth), H=Math.max(1,M3D.ro?M3D.bh:mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();
   if(W!==M3D.W||H!==M3D.H||Math.abs(dpr-M3D.dpr)>0.01||cv.width!==Math.round(W*dpr)){ M3D.W=W; M3D.H=H; M3D.dpr=dpr; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); M3D.fk=''; M3D.ok=''; M3D.NEB=null } }
 /* the visible chart in the frame with room for the names: aim at its middle, back off until every world and its footprint sit inside */
 function camFit(){ var vis=PLANETS.filter(function(q){ return secVis(q.sec) }), R=outerR();
@@ -538,10 +541,17 @@ function m3floor(){ var cv=el('map3d'), key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM
   fl.width=cv.width; fl.height=cv.height; fx.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); fx.fillStyle='#050506'; fx.fillRect(0,0,W,H); m3sky(fx);
   var OUT=outerR(), FR=OUT+420, k, i;
   for(k=0;k<10;k++){ m3path(fx,m3ring(0,0,0,FR*(1-k*0.075),72),true); fx.fillStyle='rgba(7,7,8,.16)'; fx.fill() }
-  m3hexes(FR).forEach(function(h){ if(h[2]>=FR) return; var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); if(f<0.02) return; var pts=[];
-    for(var j=0;j<6;j++){ var a=Math.PI/3*j+Math.PI/6, s=prj([h[0]+Math.cos(a)*HEXR*.94,0,h[1]+Math.sin(a)*HEXR*.94]); if(!s) return; pts.push(s) }
-    fx.beginPath(); pts.forEach(function(p,j){ if(j) fx.lineTo(p.x,p.y); else fx.moveTo(p.x,p.y) }); fx.closePath();
-    fx.fillStyle='rgba(26,26,30,'+(0.9*f).toFixed(3)+')'; fx.fill(); fx.strokeStyle='rgba(165,162,155,'+(0.32*f).toFixed(3)+')'; fx.lineWidth=1.1; fx.stroke() });
+  // v5.08 (Nikita 09.11: turning lags on the tablet — the plates are redrawn every frame of a turn): ~1000 plates projected inline
+  // (prj's math, no objects), one colour each for fill and edge with the fade as globalAlpha instead of an rgba string to parse twice a plate
+  var hx=m3hexes(FR), m=M3D.VP, W2=M3D.W/2, H2=M3D.H/2, P=M3D.HP||(M3D.HP=new Float64Array(12)), HV=M3D.HV, hi, j;
+  if(!HV){ HV=M3D.HV=[]; for(j=0;j<6;j++){ var ha=Math.PI/3*j+Math.PI/6; HV.push(Math.cos(ha)*HEXR*.94,Math.sin(ha)*HEXR*.94) } }
+  fx.fillStyle='rgb(26,26,30)'; fx.strokeStyle='rgb(165,162,155)'; fx.lineWidth=1.1;
+  for(hi=0;hi<hx.length;hi++){ var h=hx[hi]; if(h[2]>=FR) continue; var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); if(f<0.02) continue; var ok=true;
+    for(j=0;j<6;j++){ var X=h[0]+HV[j*2], Z=h[1]+HV[j*2+1], cw=m[3]*X+m[11]*Z+m[15]; if(cw<=1){ ok=false; break } P[j*2]=((m[0]*X+m[8]*Z+m[12])/cw+1)*W2; P[j*2+1]=(1-(m[1]*X+m[9]*Z+m[13])/cw)*H2 }
+    if(!ok) continue;
+    fx.beginPath(); fx.moveTo(P[0],P[1]); fx.lineTo(P[2],P[3]); fx.lineTo(P[4],P[5]); fx.lineTo(P[6],P[7]); fx.lineTo(P[8],P[9]); fx.lineTo(P[10],P[11]); fx.closePath();
+    fx.globalAlpha=0.9*f; fx.fill(); fx.globalAlpha=0.32*f; fx.stroke() }
+  fx.globalAlpha=1;
   fx.setLineDash([2,5]); for(i=0;i<visRings();i++){ m3path(fx,m3ring(0,0,0,SECTORS[i].r,140)); fx.strokeStyle='rgba(235,220,170,.30)'; fx.lineWidth=1; fx.stroke() }
   if(can('sectors')) for(i=0;i<LOBES;i++){ var e=lobeEdge(i); m3path(fx,[[Math.cos(e)*34,0,Math.sin(e)*34],[Math.cos(e)*(OUT+44),0,Math.sin(e)*(OUT+44)]]); fx.strokeStyle='rgba(235,220,170,.18)'; fx.stroke() }
   fx.setLineDash([]) }
@@ -617,25 +627,33 @@ function draw3d(now){ if(!G||!el('map3d')) return; m3prep();
     if(works) m3orbit(x,b,h,false,col);
     m3sphere(x,b.x,h,b.z,rad,col,t*0.5+(q.ang*7%6.28),on?.85:.38,on?9:0,body);
     if(works) m3orbit(x,b,h,true,col) }) }
-/* the SVG on top: a .wd per world at its sphere (hit, alarms, the open one, its name and people), Earth's, the lobe and ring names */
+/* the SVG on top: a .wd per world at its sphere (hit, alarms, the open one, its name and people), Earth's, the lobe and ring names.
+   v5.08 (Nikita 09.11: turning lags on the tablet): built as text with its positions apart (S.k — the text without them); when only the
+   positions changed (the camera turned), the nodes already there get the new numbers instead of a new innerHTML (and its style and layout) */
+var SV={k:'',N:null,vb:''};
 function drawMap(){
-  if(!G) return; m3prep(); M3D.dirty=true; var s='', i, W=M3D.W, H=M3D.H;
-  el('map').setAttribute('viewBox','0 0 '+W+' '+H);
-  s+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="none" pointer-events="all"/>';
+  if(!G) return; m3prep(); M3D.dirty=true; var i, W=M3D.W, H=M3D.H, S={s:'',k:'',n:-1,V:[]};
+  function so(tag){ S.n++; S.s+='<'+tag; S.k+='<'+tag }
+  function sa(n,v){ var t=' '+n+'="'+v+'"'; S.s+=t; S.k+=t }
+  function sp(n,v){ S.s+=' '+n+'="'+v+'"'; S.k+=' '+n+'=""'; S.V.push(S.n,n,String(v)) }
+  function sr(t){ S.s+=t; S.k+=t }
+  var vb='0 0 '+W+' '+H; if(vb!==SV.vb){ SV.vb=vb; el('map').setAttribute('viewBox',vb) }
+  so('rect'); sa('x',0); sa('y',0); sp('width',W); sp('height',H); sa('fill','none'); sa('pointer-events','all'); sr('/>');
   var OUT=outerR(), es=prj([0,22,0]), ef=prj([0,0,0]), er=es?22*pxPer(es.w):20;
   // v4.21 (F-21): the six lobes, a name at the rim, lit by its event
   if(can('sectors')) for(i=0;i<LOBES;i++){ var me=lobeMid(i), lp=prj([Math.cos(me)*(OUT+70),0,Math.sin(me)*(OUT+70)]); if(!lp) continue;
     var le=lobeEvents(G,i), lit=le.length?'rgb('+(EVCOL[le[0].type]||'255,42,26')+')':null, ddx=ef?lp.x-ef.x:0;
-    s+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+4).toFixed(1)+'" fill="'+(lit||C.mid)+'" font-size="12" letter-spacing="2.4" text-anchor="'+(ddx>20?'start':(ddx<-20?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>' }
+    so('text'); sp('x',lp.x.toFixed(1)); sp('y',(lp.y+4).toFixed(1)); sa('fill',lit||C.mid); sa('font-size',12); sa('letter-spacing',2.4); sp('text-anchor',ddx>20?'start':(ddx<-20?'end':'middle')); sa('class','nm'); sa('pointer-events','none'); sr('>'+esc(T('lobe'+i).toUpperCase())+'</text>') }
   // ring names, on the near side of each ring
   var th=CAM.yaw*Math.PI/180;
-  for(i=0;i<visRings();i++){ var rq=prj([Math.sin(th)*SECTORS[i].r,0,Math.cos(th)*SECTORS[i].r]); if(rq) s+='<text x="'+rq.x.toFixed(1)+'" y="'+(rq.y+13).toFixed(1)+'" fill="'+C.dim+'" font-size="9" letter-spacing="1.6" text-anchor="middle" class="nm" pointer-events="none">'+esc(SECTORS[i].name)+'</text>' }
+  for(i=0;i<visRings();i++){ var rq=prj([Math.sin(th)*SECTORS[i].r,0,Math.cos(th)*SECTORS[i].r]); if(!rq) continue;
+    so('text'); sp('x',rq.x.toFixed(1)); sp('y',(rq.y+13).toFixed(1)); sa('fill',C.dim); sa('font-size',9); sa('letter-spacing',1.6); sa('text-anchor','middle'); sa('class','nm'); sa('pointer-events','none'); sr('>'+esc(SECTORS[i].name)+'</text>') }
   // the worlds: where their spheres are; names never over a world, never off the map, never on each other (v4.25)
   var boxes=[], L=[];
   if(es) boxes.push({x0:es.x-er,x1:es.x+er,y0:es.y-er,y1:es.y+er+6});
   PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost') return;
-    var sp=prj([b.x,wH(q.id),b.z]); if(!sp) return; var sr=(on?RS:RF)*pxPer(sp.w), rr=sr*(on&&q.kind==='works'?1.8:1);
-    boxes.push({x0:sp.x-rr,x1:sp.x+rr,y0:sp.y-sr,y1:sp.y+sr}); L.push({q:q,s:sp,r:sr,rr:rr,on:on,st:st}) });
+    var sp3=prj([b.x,wH(q.id),b.z]); if(!sp3) return; var sr3=(on?RS:RF)*pxPer(sp3.w), rr=sr3*(on&&q.kind==='works'?1.8:1);
+    boxes.push({x0:sp3.x-rr,x1:sp3.x+rr,y0:sp3.y-sr3,y1:sp3.y+sr3}); L.push({q:q,s:sp3,r:sr3,rr:rr,on:on,st:st}) });
   L.sort(function(u,v){ return (v.on-u.on)||(u.s.w-v.s.w) }).forEach(function(o){
     var q=o.q, nm=q.name.toUpperCase(), pop=o.on?' '+num(G.colonies[q.id].pop):'', tw=(nm.length*7.2+pop.length*6.6), g=(U.win===q.id?9:5)+(o.rr-o.r), ok=null, sx=o.s.x, sy=o.s.y;
     var cs=[[sx+o.r+g,sy+4],[sx-o.r-g-tw,sy+4],[sx-tw/2,sy-o.r-g-4],[sx-tw/2,sy+o.r+16]];
@@ -643,18 +661,23 @@ function drawMap(){
       if(!boxes.some(function(z){ return bx.x0<z.x1&&z.x0<bx.x1&&bx.y0<z.y1&&z.y0<bx.y1 })) ok=bx }
     o.lab=ok||{x0:cs[0][0]-2,y1:cs[0][1]+3,hidden:true}; if(ok) boxes.push(ok) });
   L.forEach(function(o){ var q=o.q, st=o.st, lab=o.lab;
-    s+='<g class="wd" data-p="'+q.id+'" transform="translate('+o.s.x.toFixed(1)+' '+o.s.y.toFixed(1)+')">';
-    s+='<circle r="'+Math.max(12,o.rr+4).toFixed(1)+'" fill="transparent"/>';
-    if(BAD_ST[st]) s+='<circle r="'+(o.rr+7).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>';
-    else if(st==='noline'||st==='half') s+='<circle r="'+(o.rr+7).toFixed(1)+'" fill="none" stroke="'+C.people+'" stroke-width="1.6" class="alarm"/>';
-    if(U.win===q.id) s+='<circle r="'+(o.rr+11).toFixed(1)+'" fill="none" stroke="'+C.people+'" stroke-width="2"/>';
-    if(!lab.hidden) s+='<text x="'+(lab.x0+2-o.s.x).toFixed(1)+'" y="'+(lab.y1-3-o.s.y).toFixed(1)+'" fill="'+(o.on?C.ink:C.mid)+'" font-size="10.5" letter-spacing="1" class="nm">'+esc(q.name.toUpperCase())+(o.on?'<tspan fill="'+C.people+'">'+esc(' '+num(G.colonies[q.id].pop))+'</tspan>':'')+'</text>';
-    s+='</g>' });
+    so('g'); sa('class','wd'); sa('data-p',q.id); sp('transform','translate('+o.s.x.toFixed(1)+' '+o.s.y.toFixed(1)+')'); sr('>');
+    so('circle'); sp('r',Math.max(12,o.rr+4).toFixed(1)); sa('fill','transparent'); sr('/>');
+    if(BAD_ST[st]){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('class','alarm'); sr('/>') }
+    else if(st==='noline'||st==='half'){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1.6); sa('class','alarm'); sr('/>') }
+    if(U.win===q.id){ so('circle'); sp('r',(o.rr+11).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',2); sr('/>') }
+    if(!lab.hidden){ so('text'); sp('x',(lab.x0+2-o.s.x).toFixed(1)); sp('y',(lab.y1-3-o.s.y).toFixed(1)); sa('fill',o.on?C.ink:C.mid); sa('font-size',10.5); sa('letter-spacing',1); sa('class','nm'); sr('>'+esc(q.name.toUpperCase()));
+      if(o.on){ so('tspan'); sa('fill',C.people); sr('>'+esc(' '+num(G.colonies[q.id].pop))+'</tspan>') } sr('</text>') }
+    sr('</g>') });
   // earth
   var nearNight=G.night&&nightLeft(G)<=K.NIGHT_NEAR, crisis=can('events')&&(G.dir&&G.dir.ev||[]).some(function(ev){ return ev.lobe===undefined });
-  if(es) s+='<g class="wd" data-act="tab" data-v="earth" transform="translate('+es.x.toFixed(1)+' '+es.y.toFixed(1)+')"><circle r="'+(er+5).toFixed(1)+'" fill="transparent"/>'+
-    (nearNight?'<circle r="'+(er+8).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>':'')+(crisis?'<circle class="evearth" r="'+(er+12).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" pointer-events="none"/>':'')+'</g>';
-  el('map').innerHTML=s;
+  if(es){ so('g'); sa('class','wd'); sa('data-act','tab'); sa('data-v','earth'); sp('transform','translate('+es.x.toFixed(1)+' '+es.y.toFixed(1)+')'); sr('>');
+    so('circle'); sp('r',(er+5).toFixed(1)); sa('fill','transparent'); sr('/>');
+    if(nearNight){ so('circle'); sp('r',(er+8).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('class','alarm'); sr('/>') }
+    if(crisis){ so('circle'); sa('class','evearth'); sp('r',(er+12).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('pointer-events','none'); sr('/>') }
+    sr('</g>') }
+  if(S.k===SV.k&&SV.N&&SV.N.length===S.n+1&&SV.N[0]&&SV.N[0].isConnected){ var N=SV.N, V=S.V; for(i=0;i<V.length;i+=3){ var e=N[V[i]]; if(e.getAttribute(V[i+1])!==V[i+2]) e.setAttribute(V[i+1],V[i+2]) } return }
+  el('map').innerHTML=S.s; SV.k=S.k; SV.N=el('map').querySelectorAll('*');
   if(el('tip').className) drawTip(document.querySelector('#map .wd[data-p]:hover'));   // the node under the pointer was just replaced
 }
 function drawTip(g){ var tip=el('tip'); if(!g||!G){ tip.className=''; return }
@@ -1757,7 +1780,7 @@ document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.tar
    (Nikita, 22.09: «не могу играть»). Move and up live on window, so a drag that leaves the map ends cleanly; a drag is not a click (MAPDRAGGED). */
 (function(){
   var m=el('map'), P={}, drag=null, pinch=null;
-  function moved(){ drawMap(); tutPlace() }
+  function moved(){ M3D.moved=true }   // v5.08: the SVG and the cut-outs follow the camera once a frame, not on every pointer move (120 a second on a tablet)
   m.addEventListener('contextmenu',function(e){ e.preventDefault() });
   m.addEventListener('wheel',function(e){ e.preventDefault(); camZoom(e.deltaY>0?1.12:0.89); moved() },{passive:false});
   m.addEventListener('pointerdown',function(e){ P[e.pointerId]={x:e.clientX,y:e.clientY}; if(!drag) MAPDRAGGED=false; if(!drag) drag={x0:e.clientX,y0:e.clientY,moved:false,pan:e.button===2||e.shiftKey}; pinch=null });
@@ -1794,7 +1817,7 @@ function clockOn(from){ if(G) G.clock={from:from,at:new Date().toISOString(),ms:
 function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
   if(!halted()){ c.run+=dt; c.sp[U.speed]=(c.sp[U.speed]||0)+dt } }
 /* v5.05: the 3D chart turns its spheres and sends its wave between the years, 20 a second; v5.07: at once when the camera or the chart moved */
-function m3frame(ts){ if(!G) return; if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }
+function m3frame(ts){ if(!G) return; if(M3D.moved){ M3D.moved=false; drawMap(); tutPlace() } if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }
 function frame(ts){
   if(!U.last) U.last=ts;
   var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
