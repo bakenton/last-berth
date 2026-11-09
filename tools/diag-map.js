@@ -1,9 +1,9 @@
 // diag-map — страница-диагностика 3D-карты для живого устройства (v5.07, 09.11.2026: «на планшете в Chrome лагает»).
 // Берёт собранную work/page.html, вшивает флаги в отрисовку карты и панель сверху: fps, размер холста, кнопки,
 // которые по одной выключают части кадра. Игру не меняет; сохранение в диагностике отключено (не затрёт партию).
-// Запуск: node tools/diag-map.js [выход]   (по умолчанию work/diag-map.html)
+// Запуск: node tools/diag-map.js [выход]   (по умолчанию play/DIAG-map.html, вне git)
 const fs=require('fs'), path=require('path');
-const ROOT=path.resolve(__dirname,'..'), OUT=process.argv[2]||path.join(ROOT,'work','diag-map.html');
+const ROOT=path.resolve(__dirname,'..'), OUT=process.argv[2]||path.join(ROOT,'play','DIAG-map.html');
 let s=fs.readFileSync(path.join(ROOT,'work','page.html'),'utf8');
 const BOT=fs.readFileSync(path.join(__dirname,'pw11.js'),'utf8').split('const BOT=`')[1].split('`;')[0];
 const R=[
