@@ -169,7 +169,7 @@ var S1,SCENES=[
 {id:'launch',d:9,helm:[[1,'HERMES · COURIER: CARRIES PEOPLE'],[3.2,'SISYPHUS · HAULER: CARRIES CARGO'],[5.4,'ATLAS · FREIGHTER: CARRIES MORE']],alex:[],chord:[98,146.83,196,246.94]},
 {id:'map',d:21,helm:[[1.6,'WORLD TALLOW: METAL'],[3.6,'WORLD BRINE: RATIONS'],[5.6,'WORLD CINDER: FUEL'],[8.1,'WORLD MARROW: FORGE'],[11.6,'COVERAGE GROWS · THE MAP OPENS'],[15.4,'RING IV: DANTE']],
   alex:[[9.2,6.4,'smile','The first cargo is home. They are shouting.\nI will translate that as: received.']],chord:[110,164.81,220,261.63]},
-{id:'shifts',d:14,helm:[[1,'SHIFT LENGTH: 80 YEARS'],[3.4,function(u){return 'SHIFT '+(shiftNo(u)+1)+' TAKES THE DESK'}]],
+{id:'shifts',d:14,helm:[[1,'SHIFT LENGTH: 80 YEARS'],[3.4,function(u){return 'SHIFT '+shiftNo(u)+' TAKES THE DESK'}]],
   alex:[[3.2,4,null,'Every eighty years the shift changes.'],[8.4,4.6,null,'People change. I remain.']],chord:[87.31,130.81,174.61,261.63]},
 {id:'loss',d:9,helm:[[0.8,'HERMES-14: OUTBOUND · RING III'],[5.2,'HERMES-14: NO SIGNAL'],[6.6,'CREW: 9 · REPLACEMENT: NONE']],alex:[[6.2,2.6,'grief','The ship did not come back.']],chord:[73.42,110,146.83,174.61]},
 {id:'plates',d:9,helm:[[0.8,'LOSSES: 9'],[2.4,'NAMES: NOT STORED']],alex:[[1.4,3,'sad','I will write it down.'],[5,3.4,'sad','Nobody else will remember them.']],chord:[73.42,146.83,220,293.66]},
