@@ -420,7 +420,7 @@ svg.gi{fill:currentColor}
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.07'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.08'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -3084,7 +3084,7 @@ function drawPortrait(cv,seed){
    apart at POS_GAP (v4.35). The camera: a target on the plane, yaw, pitch (90° = straight down), distance; it fits the visible rings by itself
    until the player turns, moves or zooms it (− + ALL: ALL fits again). */
 var CAM={tx:0,tz:0,yaw:0,pitch:52,dist:1700,fov:38}, CFIT=true, CFITK='', MAPDRAGGED=false;
-var M3D={W:1,H:1,VP:null,dpr:1,fk:'',fl:null,ob:null,ok:'',HX:null,HXR:0,LAY:null,NEB:null,last:0,dirty:true};
+var M3D={W:1,H:1,VP:null,dpr:1,fk:'',ok:'',HX:null,HXR:0,LAY:null,NEB:null,last:0,dirty:true};
 var P3={}, P3N=-1, POS_GAP=28, H0=14, HK=1.0, HPOP=160, HTICK=25, RS=11, RF=8, HEXR=46, HUBC='#E040FB', PARTS_BODY='#2F5BD3';
 function p3(p){ if(P3N!==PLANETS.length||!P3[p.id]) layout3(); return P3[p.id] }
 function layout3(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; return {id:q.id,x:Math.cos(q.ang)*R,z:Math.sin(q.ang)*R} });
@@ -3114,7 +3114,10 @@ function prj(p){ var m=M3D.VP, x=p[0],y=p[1],z=p[2];
   var cx=m[0]*x+m[4]*y+m[8]*z+m[12], cy=m[1]*x+m[5]*y+m[9]*z+m[13], cw=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(cw<=1) return null; return {x:(cx/cw+1)/2*M3D.W, y:(1-cy/cw)/2*M3D.H, w:cw} }
 function pxPer(w){ return M3D.H/(2*w*Math.tan(CAM.fov*Math.PI/360)) }
-function m3size(){ var mb=el('mapbox'), cv=el('map3d'), W=Math.max(1,mb.clientWidth), H=Math.max(1,mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();
+/* v5.08: the box's size comes from a ResizeObserver — reading clientWidth every frame of a turn made the browser lay the page out again */
+function m3size(){ var mb=el('mapbox'), cv=el('map3d');
+  if(!M3D.ro&&window.ResizeObserver){ M3D.ro=new ResizeObserver(function(){ M3D.bw=mb.clientWidth; M3D.bh=mb.clientHeight; M3D.dirty=true; if(G) drawMap() }); M3D.ro.observe(mb); M3D.bw=mb.clientWidth; M3D.bh=mb.clientHeight }
+  var W=Math.max(1,M3D.ro?M3D.bw:mb.clientWidth), H=Math.max(1,M3D.ro?M3D.bh:mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();
   if(W!==M3D.W||H!==M3D.H||Math.abs(dpr-M3D.dpr)>0.01||cv.width!==Math.round(W*dpr)){ M3D.W=W; M3D.H=H; M3D.dpr=dpr; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); M3D.fk=''; M3D.ok=''; M3D.NEB=null } }
 /* the visible chart in the frame with room for the names: aim at its middle, back off until every world and its footprint sit inside */
 function camFit(){ var vis=PLANETS.filter(function(q){ return secVis(q.sec) }), R=outerR();
@@ -3165,8 +3168,16 @@ var BAD_ST={dead:1,cut:1,starve:1};
 /* ---------- the map ---------- */
 function m3rgb(h){ return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16) }
 function m3ring(cx,cy,cz,rad,n,a0,a1){ var p=[]; a0=a0||0; a1=a1===undefined?Math.PI*2:a1; for(var i=0;i<=n;i++){ var a=a0+(a1-a0)*i/n; p.push([cx+Math.cos(a)*rad,cy,cz+Math.sin(a)*rad]) } return p }
-function m3path(x,pts,close){ x.beginPath(); var on=false; pts.forEach(function(p){ var s=prj(p); if(!s){ on=false; return } if(on) x.lineTo(s.x,s.y); else x.moveTo(s.x,s.y); on=true }); if(close) x.closePath() }
-function m3glow(x,col,b){ x.shadowColor='rgba('+col+',.9)'; x.shadowBlur=b }
+function m3path(x,pts,close){ x.beginPath(); var on=false, m=M3D.VP, W2=M3D.W/2, H2=M3D.H/2;   // prj's math inline: no object a point (hot)
+  for(var i=0;i<pts.length;i++){ var p=pts[i], X=p[0], Y=p[1], Z=p[2], cw=m[3]*X+m[7]*Y+m[11]*Z+m[15]; if(cw<=1){ on=false; continue }
+    var sx=((m[0]*X+m[4]*Y+m[8]*Z+m[12])/cw+1)*W2, sy=(1-(m[1]*X+m[5]*Y+m[9]*Z+m[13])/cw)*H2; if(on) x.lineTo(sx,sy); else x.moveTo(sx,sy); on=true }
+  if(close) x.closePath() }
+/* a horizontal circle straight into a path (the same points as m3path(x,m3ring(…)), without the arrays) */
+function m3pathRing(x,cx,cy,cz,rad,n,close){ x.beginPath(); var on=false, m=M3D.VP, W2=M3D.W/2, H2=M3D.H/2;
+  for(var i=0;i<=n;i++){ var an=Math.PI*2*i/n, X=cx+Math.cos(an)*rad, Z=cz+Math.sin(an)*rad, cw=m[3]*X+m[7]*cy+m[11]*Z+m[15]; if(cw<=1){ on=false; continue }
+    var sx=((m[0]*X+m[4]*cy+m[8]*Z+m[12])/cw+1)*W2, sy=(1-(m[1]*X+m[5]*cy+m[9]*Z+m[13])/cw)*H2; if(on) x.lineTo(sx,sy); else x.moveTo(sx,sy); on=true }
+  if(close) x.closePath() }
+function m3glow(x,col,b,post){ x.shadowColor='rgba('+col+',.9)'; x.shadowBlur=b; x._post=!!post }
 /* space: three star layers and a nebula, made once per size; drawn each frame with a little parallax on turning */
 function m3rnd(seed){ return function(){ seed=(seed*16807)%2147483647; return seed/2147483647 } }
 function m3space(){ var T=1024;
@@ -3180,38 +3191,211 @@ function m3space(){ var T=1024;
   n.fillStyle='#050506'; n.fillRect(0,0,N.width,N.height);
   [['70,40,120',.13],['40,70,130',.10],['90,40,110',.08],['30,50,90',.10],['60,30,100',.07]].forEach(function(c){ var cx=r()*N.width, cy=r()*N.height*.8, rad=(.25+r()*.35)*Math.max(N.width,N.height);
     var g=n.createRadialGradient(cx,cy,0,cx,cy,rad); g.addColorStop(0,'rgba('+c[0]+','+c[1]+')'); g.addColorStop(.5,'rgba('+c[0]+','+(c[1]*.4)+')'); g.addColorStop(1,'rgba('+c[0]+',0)'); n.fillStyle=g; n.fillRect(0,0,N.width,N.height) }) }
-function m3sky(x){ if(!M3D.NEB) m3space(); var W=M3D.W, H=M3D.H, span=W*0.4;
-  x.drawImage(M3D.NEB,-(((CAM.yaw*1.2)%span)+span)%span-W*0.05,-(H*0.2)+(CAM.pitch-50)*0.6,M3D.NEB.width,M3D.NEB.height);
-  M3D.LAY.forEach(function(L){ var ox=((-CAM.yaw*L.k*12)%L.T+L.T)%L.T, oy=((CAM.pitch*L.k*8)%L.T+L.T)%L.T;
-    for(var tx=-ox;tx<W;tx+=L.T) for(var ty=-oy;ty<H;ty+=L.T) x.drawImage(L.c,tx,ty) }) }
-/* the floor: dark hex plates with thin edges sinking into space at the rim, the rings, the lobes — drawn once per camera onto its own canvas */
 function m3hexes(FR){ if(M3D.HX&&M3D.HXR>=FR) return M3D.HX; var L=[], n=Math.ceil(FR/(HEXR*1.5))+2;
   for(var r=-n;r<=n;r++) for(var q=-2*n;q<=2*n;q++){ var hx=Math.sqrt(3)*HEXR*(q+r/2), hz=1.5*HEXR*r, d=Math.hypot(hx,hz); if(d<FR) L.push([hx,hz,d]) }
   M3D.HX=L; M3D.HXR=FR; return L }
-function m3floor(){ var cv=el('map3d'), key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM.dist].map(function(v){ return v.toFixed(2) }).join()+'|'+cv.width+'|'+cv.height+'|'+visRings()+'|'+(can('sectors')?1:0);
-  if(key===M3D.fk&&M3D.fl) return; M3D.fk=key; var fl=M3D.fl||(M3D.fl=document.createElement('canvas')), fx=fl.getContext('2d'), W=M3D.W, H=M3D.H;
-  fl.width=cv.width; fl.height=cv.height; fx.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); fx.fillStyle='#050506'; fx.fillRect(0,0,W,H); m3sky(fx);
+/* ---------- v5.08: the chart through WebGL ----------
+   Nikita 09.11 («на планшете в Chrome лагает… при поворотах лагает нереально… Переводи. Я не хочу костыли с проблемами»): the 2D canvas
+   gave the GPU a command for every line, plate and shadow — thousands a frame, a shadow a pass of its own. The scene is the same code as
+   before, in the same order, but it draws into M3R recorders that turn it into triangles: a line is a strip with mitred joins and a 1 px
+   soft edge, a fill a fan, a dash is cut on the way. A frame is a handful of draw calls. The ~1000 plates are built once (M3D.HX) and
+   projected by the GPU. The glow is the glowing strokes' own triangles drawn into a half-size buffer and blurred there (sizes as the old
+   shadows: 4, 6, 8–10, 12–14), under the sharp strokes, or over them for what was drawn after a sphere's body (pre / post).
+   Space: the nebula and three star layers as textures. No WebGL — no chart canvas (the names and alarms on the SVG stay). */
+var GLR=null;
+var M3SH={
+ line:['attribute vec2 a_p; attribute vec2 a_dh; attribute vec4 a_c; uniform vec2 u_res; varying vec4 v_c; varying vec2 v_dh;'+
+   'void main(){ gl_Position=vec4(a_p.x/u_res.x*2.0-1.0,1.0-a_p.y/u_res.y*2.0,0.0,1.0); v_c=a_c; v_dh=a_dh; }',
+   'precision mediump float; varying vec4 v_c; varying vec2 v_dh;'+
+   'void main(){ float a=v_c.a*clamp(v_dh.y+0.5-abs(v_dh.x),0.0,1.0); gl_FragColor=vec4(v_c.rgb*a,a); }'],
+ hex:['attribute vec2 a_c; attribute vec3 a_j; uniform mat4 u_vp; uniform vec2 u_css; uniform float u_dpr; uniform vec2 u_hv[6]; uniform float u_mode; uniform float u_hw; uniform float u_al;'+
+   'varying float v_a; varying vec2 v_dh;'+
+   'vec3 pj(vec2 p){ vec4 c=u_vp*vec4(p.x,0.0,p.y,1.0); return vec3((c.x/c.w+1.0)*0.5*u_css.x*u_dpr,(1.0-c.y/c.w)*0.5*u_css.y*u_dpr,c.w); }'+
+   'void main(){ float bad=0.0; for(int i=0;i<6;i++){ vec4 c=u_vp*vec4(a_c.x+u_hv[i].x,0.0,a_c.y+u_hv[i].y,1.0); if(c.w<=1.0) bad=1.0; }'+
+   ' int j=int(a_j.x+0.5), jp=int(mod(a_j.x+5.0,6.0)+0.5), jn=int(mod(a_j.x+1.0,6.0)+0.5); vec3 p1=pj(a_c+u_hv[j]); vec2 pos=p1.xy; v_dh=vec2(0.0,10000.0);'+
+   ' if(u_mode>0.5){ vec3 p0=pj(a_c+u_hv[jp]), p2=pj(a_c+u_hv[jn]); vec2 e0=normalize(p1.xy-p0.xy), e1=normalize(p2.xy-p1.xy), n0=vec2(-e0.y,e0.x), n1=vec2(-e1.y,e1.x), m=normalize(n0+n1);'+
+   '   float o=u_hw+1.0; pos=p1.xy+m*(o/max(dot(m,n1),0.25))*a_j.y; v_dh=vec2(o*a_j.y,u_hw); }'+
+   ' v_a=u_al*a_j.z; vec2 r=u_css*u_dpr; gl_Position=bad>0.5?vec4(2.0,2.0,2.0,1.0):vec4(pos.x/r.x*2.0-1.0,1.0-pos.y/r.y*2.0,0.0,1.0); }',
+   'precision mediump float; uniform vec3 u_col; varying float v_a; varying vec2 v_dh;'+
+   'void main(){ float a=v_a*clamp(v_dh.y+0.5-abs(v_dh.x),0.0,1.0); gl_FragColor=vec4(u_col*a,a); }'],
+ tex:['attribute vec2 a_p; uniform vec4 u_rect; uniform vec2 u_res; uniform vec4 u_uv; varying vec2 v_t;'+
+   'void main(){ vec2 p=u_rect.xy+a_p*u_rect.zw; gl_Position=vec4(p.x/u_res.x*2.0-1.0,1.0-p.y/u_res.y*2.0,0.0,1.0); v_t=u_uv.xy+a_p*u_uv.zw; }',
+   'precision mediump float; uniform sampler2D u_t; varying vec2 v_t; void main(){ gl_FragColor=texture2D(u_t,v_t); }'],
+ blur:['attribute vec2 a_p; varying vec2 v_t; void main(){ gl_Position=vec4(a_p*2.0-1.0,0.0,1.0); v_t=a_p; }',
+   'precision mediump float; uniform sampler2D u_t; uniform vec2 u_d; uniform float u_w[13]; uniform float u_r; uniform float u_k; varying vec2 v_t;'+
+   'void main(){ vec4 acc=texture2D(u_t,v_t)*u_w[0]; for(int i=1;i<13;i++){ if(float(i)>u_r) break; acc+=(texture2D(u_t,v_t+u_d*float(i))+texture2D(u_t,v_t-u_d*float(i)))*u_w[i]; } gl_FragColor=min(acc*u_k,vec4(1.0)); }'],
+ sky:['attribute vec2 a_p; void main(){ gl_Position=vec4(a_p*2.0-1.0,0.0,1.0); }',
+   'precision mediump float; uniform sampler2D u_n; uniform sampler2D u_l0; uniform sampler2D u_l1; uniform sampler2D u_l2; uniform vec2 u_res; uniform float u_dpr; uniform vec4 u_nr; uniform vec2 u_o0; uniform vec2 u_o1; uniform vec2 u_o2;'+
+   'vec4 ov(vec4 b,vec4 t){ return t+b*(1.0-t.a); }'+
+   'void main(){ vec2 p=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y); vec2 nu=(p-u_nr.xy)/u_nr.zw; vec4 c=vec4(5.0/255.0,5.0/255.0,6.0/255.0,1.0);'+
+   ' if(nu.x>=0.0&&nu.y>=0.0&&nu.x<=1.0&&nu.y<=1.0) c=texture2D(u_n,nu); vec2 q=p/u_dpr/1024.0;'+
+   ' c=ov(c,texture2D(u_l0,q+u_o0)); c=ov(c,texture2D(u_l1,q+u_o1)); c=ov(c,texture2D(u_l2,q+u_o2)); gl_FragColor=c; }']};
+function m3glInit(){ var cv=el('map3d'), gl=null;
+  try{ gl=cv.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,premultipliedAlpha:true,preserveDrawingBuffer:false}) }catch(e){}
+  if(!gl){ GLR=false; return false }
+  function sh(t,src){ var o=gl.createShader(t); gl.shaderSource(o,src); gl.compileShader(o); if(!gl.getShaderParameter(o,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o }
+  function prog(k){ var p=gl.createProgram(); gl.attachShader(p,sh(gl.VERTEX_SHADER,M3SH[k][0])); gl.attachShader(p,sh(gl.FRAGMENT_SHADER,M3SH[k][1])); gl.linkProgram(p);
+    if(!gl.getProgramParameter(p,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p)); var u={}, a={}, i, n;
+    n=gl.getProgramParameter(p,gl.ACTIVE_UNIFORMS); for(i=0;i<n;i++){ var nm=gl.getActiveUniform(p,i).name.replace('[0]',''); u[nm]=gl.getUniformLocation(p,nm) }
+    n=gl.getProgramParameter(p,gl.ACTIVE_ATTRIBUTES); for(i=0;i<n;i++){ var an=gl.getActiveAttrib(p,i).name; a[an]=gl.getAttribLocation(p,an) } return {p:p,u:u,a:a} }
+  var R={gl:gl,P:{line:prog('line'),hex:prog('hex'),tex:prog('tex'),blur:prog('blur'),sky:prog('sky')},quad:gl.createBuffer(),hexV:gl.createBuffer(),hexI:gl.createBuffer(),hexN:0,hexR:-1,
+    tex:{},T:null,lost:false};
+  gl.bindBuffer(gl.ARRAY_BUFFER,R.quad); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,1,0,0,1,0,1,1,0,1,1]),gl.STATIC_DRAW);
+  cv.addEventListener('webglcontextlost',function(e){ e.preventDefault(); R.lost=true });
+  cv.addEventListener('webglcontextrestored',function(){ GLR=null; M3D.fk=''; M3D.ok=''; M3D.dirty=true });
+  gl.disable(gl.DEPTH_TEST); gl.enable(gl.BLEND); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);
+  GLR=R; return R }
+/* a recorder: the part of the canvas 2D interface the scene uses, into triangles (x, y device px; d, hw: the line's soft edge; rgba bytes) */
+var M3COL={};
+function m3col(s){ var c=M3COL[s]; if(c) return c; var m;
+  if(s.charAt(0)==='#') c=[parseInt(s.slice(1,3),16),parseInt(s.slice(3,5),16),parseInt(s.slice(5,7),16),1];
+  else if((m=/rgba?\(([^)]*)\)/.exec(s))){ var p=m[1].split(','); c=[+p[0],+p[1],+p[2],p.length>3?+p[3]:1] } else c=[255,255,255,1];
+  M3COL[s]=c; return c }
+function M3R(){ this.buf=new ArrayBuffer(1<<18); this.f=new Float32Array(this.buf); this.u8=new Uint8Array(this.buf); this.n=0; this.vbo=null; this.up=-1;
+  this.k=1; this.P=[]; this.S=null; this.lineWidth=1; this.strokeStyle='#000'; this.fillStyle='#000'; this.globalAlpha=1; this.dash=[]; this.shadowBlur=0; this.shadowColor='rgba(0,0,0,0)'; this._post=false; this.G=null; this.bx=[1e9,1e9,-1e9,-1e9] }
+M3R.prototype={
+  reset:function(){ this.n=0; this.up=-1; this.bx=[1e9,1e9,-1e9,-1e9]; this.P=[]; this.S=null; this.dash=[]; this.shadowBlur=0; this._post=false; this.globalAlpha=1; if(this.G) for(var k in this.G) this.G[k].reset() },
+  room:function(v){ if((this.n+v)*20<=this.buf.byteLength) return; var nb=new ArrayBuffer(Math.max(this.buf.byteLength*2,(this.n+v)*20*2)); new Uint8Array(nb).set(this.u8.subarray(0,this.n*20)); this.buf=nb; this.f=new Float32Array(nb); this.u8=new Uint8Array(nb) },
+  v:function(x,y,d,hw,c,a){ var i=this.n*5, b=this.n*20+16; this.f[i]=x; this.f[i+1]=y; this.f[i+2]=d; this.f[i+3]=hw; this.u8[b]=c[0]; this.u8[b+1]=c[1]; this.u8[b+2]=c[2]; this.u8[b+3]=Math.max(0,Math.min(255,Math.round(a*255))); this.n++ },
+  setTransform:function(a){ this.k=a }, beginPath:function(){ this.P=[]; this.S=null },
+  moveTo:function(x,y){ this.S=[x*this.k,y*this.k]; this.P.push(this.S) },
+  lineTo:function(x,y){ if(!this.S) return this.moveTo(x,y); this.S.push(x*this.k,y*this.k) },
+  closePath:function(){ if(this.S) this.S.closed=true },
+  arc:function(cx,cy,r,a0,a1){ var k=this.k, full=Math.abs(a1-a0)>=Math.PI*2-1e-6, n=Math.max(16,Math.min(96,Math.ceil(r*k*0.7))), i, e=full?a0+Math.PI*2:a1;
+    if(!this.S||full){ this.S=[]; this.P.push(this.S) } for(i=0;i<=n-(full?1:0);i++){ var a=a0+(e-a0)*i/n; this.S.push((cx+Math.cos(a)*r)*k,(cy+Math.sin(a)*r)*k) } if(full) this.S.closed=true },
+  setLineDash:function(d){ this.dash=d.slice() }, getLineDash:function(){ return this.dash.slice() },
+  fillRect:function(x,y,w,h){ var k=this.k, c=m3col(this.fillStyle), a=c[3]*this.globalAlpha; this.room(6); x*=k; y*=k; w*=k; h*=k;
+    this.v(x,y,0,1e4,c,a); this.v(x+w,y,0,1e4,c,a); this.v(x,y+h,0,1e4,c,a); this.v(x,y+h,0,1e4,c,a); this.v(x+w,y,0,1e4,c,a); this.v(x+w,y+h,0,1e4,c,a) },
+  fill:function(){ var c=m3col(this.fillStyle), a=c[3]*this.globalAlpha, i, j;
+    for(i=0;i<this.P.length;i++){ var S=this.P[i], n=S.length/2; if(n<3) continue; this.room((n-2)*3);
+      for(j=1;j<n-1;j++){ this.v(S[0],S[1],0,1e4,c,a); this.v(S[j*2],S[j*2+1],0,1e4,c,a); this.v(S[j*2+2],S[j*2+3],0,1e4,c,a) } } },
+  stroke:function(){ var c=m3col(this.strokeStyle), a=c[3]*this.globalAlpha, hw=this.lineWidth*this.k/2, i, g=null, gc, ga, ghw;
+    if(this.shadowBlur>0){ var b=this.shadowBlur, cls=b<5?0:(b<7?1:(b<11?2:3)), key=(this._post?'p':'q')+cls; this.G=this.G||{}; g=this.G[key]||(this.G[key]=new M3R()); g.cls=cls; g.post=this._post;
+      var sc=m3col(this.shadowColor); gc=sc; ghw=Math.max(hw,1); ga=sc[3]*a*hw/ghw*0.5 }   // ×0.5: added up in the glow buffer, doubled after the blur
+    for(i=0;i<this.P.length;i++){ var S=this.P[i]; if(S.length<4) continue; var parts=this.dash.length?m3dash(S,this.dash,this.k):[S];
+      for(var j=0;j<parts.length;j++){ var pp=parts[j], cl=!this.dash.length&&!!S.closed; m3line(this,pp,cl,hw,c,a); if(g) m3line(g,pp,cl,ghw,gc,ga) } } } };
+/* a dash pattern (desk px, as the canvas: scaled with the transform) cut along a subpath; it starts again at each subpath */
+function m3dash(S,D,k){ var out=[], cur=null, di=0, left=D[0]*k, on=true, n=S.length/2, i, closed=!!S.closed;
+  function pt(x,y){ if(!cur){ cur=[x,y]; out.push(cur) } else cur.push(x,y) }
+  for(i=0;i<(closed?n:n-1);i++){ var x0=S[i*2], y0=S[i*2+1], i1=(i+1)%n, x1=S[i1*2], y1=S[i1*2+1], L=Math.hypot(x1-x0,y1-y0), t=0;
+    if(on) pt(x0,y0);
+    while(L-t>left){ t+=left; var px=x0+(x1-x0)*t/L, py=y0+(y1-y0)*t/L; if(on){ pt(px,py); cur=null } else pt(px,py); on=!on; di=(di+1)%D.length; left=D[di]*k }
+    left-=L-t; if(on) pt(x1,y1) }
+  return out.filter(function(p){ return p.length>=4 }) }
+/* a polyline as a strip: mitred joins (limit 4), butt ends, a 1 px soft edge on both sides; thinner than 1 px — 1 px and fainter.
+   Hot (every stroke of every frame): no allocations, the vertices written straight into the recorder's buffer */
+var M3LP=new Float64Array(512), M3LM=new Float64Array(512);
+function m3line(R,S,closed,hw,c,a){ var n0=S.length>>1, P=M3LP, M=M3LM, n=0, i;
+  if(P.length<n0*2){ P=M3LP=new Float64Array(n0*4); M=M3LM=new Float64Array(n0*4) }
+  for(i=0;i<n0;i++){ var x=S[i*2], y=S[i*2+1]; if(n&&Math.abs(P[n*2-2]-x)<1e-3&&Math.abs(P[n*2-1]-y)<1e-3) continue; P[n*2]=x; P[n*2+1]=y; n++ }
+  if(closed&&n>2&&Math.abs(P[0]-P[n*2-2])<1e-3&&Math.abs(P[1]-P[n*2-1])<1e-3) n--; if(n<2) return; if(n<3) closed=false;
+  if(hw<0.5){ a*=hw*2; hw=0.5 } var o=hw+1;
+  for(i=0;i<n;i++){ var hp=closed||i>0, hn=closed||i<n-1, ip=i>0?i-1:n-1, inx=i<n-1?i+1:0, n0x=0, n0y=0, n1x=0, n1y=0, l, ex, ey;
+    if(hp){ ex=P[i*2]-P[ip*2]; ey=P[i*2+1]-P[ip*2+1]; l=Math.sqrt(ex*ex+ey*ey)||1; n0x=-ey/l; n0y=ex/l }
+    if(hn){ ex=P[inx*2]-P[i*2]; ey=P[inx*2+1]-P[i*2+1]; l=Math.sqrt(ex*ex+ey*ey)||1; n1x=-ey/l; n1y=ex/l }
+    if(!hp){ n0x=n1x; n0y=n1y } if(!hn){ n1x=n0x; n1y=n0y }
+    var mx=n0x+n1x, my=n0y+n1y, ml=Math.sqrt(mx*mx+my*my); if(ml<1e-6){ mx=n1x; my=n1y; ml=1 } mx/=ml; my/=ml;
+    var dt=mx*n1x+my*n1y, sc=o/(dt>0.25?dt:0.25); M[i*2]=mx*sc; M[i*2+1]=my*sc }
+  var B=R.bx; for(i=0;i<n;i++){ var qx=P[i*2], qy=P[i*2+1]; if(qx-o<B[0]) B[0]=qx-o; if(qy-o<B[1]) B[1]=qy-o; if(qx+o>B[2]) B[2]=qx+o; if(qy+o>B[3]) B[3]=qy+o }
+  var segs=closed?n:n-1; R.room(segs*6);
+  var F=R.f, U=R.u8, v=R.n, cr=c[0], cg=c[1], cb=c[2], ca=Math.max(0,Math.min(255,Math.round(a*255)));
+  function put(x,y,d){ var k=v*5, q=v*20+16; F[k]=x; F[k+1]=y; F[k+2]=d; F[k+3]=hw; U[q]=cr; U[q+1]=cg; U[q+2]=cb; U[q+3]=ca; v++ }
+  for(i=0;i<segs;i++){ var j=i<n-1?i+1:0, ax=P[i*2], ay=P[i*2+1], bx=P[j*2], by=P[j*2+1], amx=M[i*2], amy=M[i*2+1], bmx=M[j*2], bmy=M[j*2+1];
+    put(ax+amx,ay+amy,o); put(ax-amx,ay-amy,-o); put(bx+bmx,by+bmy,o); put(bx+bmx,by+bmy,o); put(ax-amx,ay-amy,-o); put(bx-bmx,by-bmy,-o) }
+  R.n=v }
+/* a recorder's triangles to the GPU (uploaded again only after a reset) and drawn */
+function m3draw(R,rec,res){ if(!rec.n) return; var gl=R.gl, L=R.P.line;
+  if(!rec.vbo) rec.vbo=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,rec.vbo); if(rec.up!==rec.n){ gl.bufferData(gl.ARRAY_BUFFER,new Uint8Array(rec.buf,0,rec.n*20),gl.DYNAMIC_DRAW); rec.up=rec.n }
+  gl.useProgram(L.p); gl.uniform2f(L.u.u_res,res[0],res[1]);
+  gl.enableVertexAttribArray(L.a.a_p); gl.vertexAttribPointer(L.a.a_p,2,gl.FLOAT,false,20,0);
+  gl.enableVertexAttribArray(L.a.a_dh); gl.vertexAttribPointer(L.a.a_dh,2,gl.FLOAT,false,20,8);
+  gl.enableVertexAttribArray(L.a.a_c); gl.vertexAttribPointer(L.a.a_c,4,gl.UNSIGNED_BYTE,true,20,16);
+  gl.drawArrays(gl.TRIANGLES,0,rec.n); m3off(gl) }
+function m3off(gl){ for(var i=0;i<4;i++) gl.disableVertexAttribArray(i) }
+/* render targets at half size for the glow */
+function m3target(R,w,h){ var gl=R.gl, t={w:w,h:h,tex:gl.createTexture(),fb:gl.createFramebuffer()};
+  gl.bindTexture(gl.TEXTURE_2D,t.tex); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,w,h,0,gl.RGBA,gl.UNSIGNED_BYTE,null);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,t.fb); gl.framebufferTexture2D(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.TEXTURE_2D,t.tex,0); return t }
+function m3targets(R,W,H){ var w=Math.max(1,Math.ceil(W/2)), h=Math.max(1,Math.ceil(H/2)); if(R.T&&R.T.w===w&&R.T.h===h) return R.T;
+  var gl=R.gl; if(R.T) ['g','t','a'].forEach(function(k){ gl.deleteTexture(R.T[k].tex); gl.deleteFramebuffer(R.T[k].fb) });
+  R.T={w:w,h:h,g:m3target(R,w,h),t:m3target(R,w,h),a:m3target(R,w,h)}; return R.T }
+function m3quad(R,prog){ var gl=R.gl; gl.bindBuffer(gl.ARRAY_BUFFER,R.quad); gl.enableVertexAttribArray(prog.a.a_p); gl.vertexAttribPointer(prog.a.a_p,2,gl.FLOAT,false,0,0); gl.drawArrays(gl.TRIANGLES,0,6); m3off(gl) }
+/* one glow phase: per size class, its strokes into g, blurred across into t, along into a (over what is there); a over the frame.
+   All inside the box of the strokes plus the blur's reach (scissor): g is cleared wider than t, t than a, so no stale pixel is read */
+var M3SIG=[2,3,4.5,6.6], M3W={};
+function m3wts(sg){ var k=sg.toFixed(3); if(M3W[k]) return M3W[k]; var r=Math.min(12,Math.ceil(sg*3)), w=new Float32Array(13), t=0, i;
+  for(i=0;i<=r;i++){ w[i]=Math.exp(-i*i/(2*sg*sg)); t+=i?2*w[i]:w[i] } for(i=0;i<=r;i++) w[i]/=t; return (M3W[k]={w:w,r:r}) }
+function m3glowPass(R,recs,post,W,H,dst){ var gl=R.gl, T=m3targets(R,W,H), B=R.P.blur, c, jobs=[], U=[1e9,1e9,-1e9,-1e9];
+  function grow(b,p){ return [b[0]-p,b[1]-p,b[2]+p,b[3]+p] }
+  function half(b){ var x0=Math.max(0,Math.floor(b[0]/2)), y0=Math.max(0,Math.floor((H-b[3])/2)), x1=Math.min(T.w,Math.ceil(b[2]/2)+1), y1=Math.min(T.h,Math.ceil((H-b[1])/2)+1); gl.scissor(x0,y0,Math.max(0,x1-x0),Math.max(0,y1-y0)) }
+  for(c=0;c<4;c++){ var key=(post?'p':'q')+c, list=recs.map(function(r){ return r.G&&r.G[key] }).filter(function(g){ return g&&g.n }); if(!list.length) continue;
+    var bb=[1e9,1e9,-1e9,-1e9]; list.forEach(function(g){ bb=[Math.min(bb[0],g.bx[0]),Math.min(bb[1],g.bx[1]),Math.max(bb[2],g.bx[2]),Math.max(bb[3],g.bx[3])] });
+    var rd=Math.ceil(M3SIG[c]*3)+2, box=grow(bb,rd); jobs.push({c:c,list:list,box:box,rd:rd}); U=[Math.min(U[0],box[0]),Math.min(U[1],box[1]),Math.max(U[2],box[2]),Math.max(U[3],box[3])] }
+  if(!jobs.length) return;
+  gl.enable(gl.SCISSOR_TEST); gl.clearColor(0,0,0,0);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,T.a.fb); gl.viewport(0,0,T.w,T.h); half(U); gl.clear(gl.COLOR_BUFFER_BIT);
+  jobs.forEach(function(j){ var wt=m3wts(M3SIG[j.c]/2);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,T.g.fb); half(grow(j.box,j.rd*2+4)); gl.clear(gl.COLOR_BUFFER_BIT);
+    gl.blendFunc(gl.ONE,gl.ONE); j.list.forEach(function(g){ m3draw(R,g,[W,H]) }); gl.blendFunc(gl.ONE,gl.ONE_MINUS_SRC_ALPHA);   // the shadows of the old canvas added up where strokes crowd (a sphere's wire): so here
+    gl.useProgram(B.p); gl.uniform1i(B.u.u_t,0); gl.activeTexture(gl.TEXTURE0); gl.uniform1fv(B.u.u_w,wt.w); gl.uniform1f(B.u.u_r,wt.r);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,T.t.fb); half(grow(j.box,j.rd+2)); gl.bindTexture(gl.TEXTURE_2D,T.g.tex); gl.uniform2f(B.u.u_d,1/T.w,0); gl.uniform1f(B.u.u_k,1); gl.disable(gl.BLEND); m3quad(R,B); gl.enable(gl.BLEND);
+    gl.bindFramebuffer(gl.FRAMEBUFFER,T.a.fb); half(j.box); gl.bindTexture(gl.TEXTURE_2D,T.t.tex); gl.uniform2f(B.u.u_d,0,1/T.h); gl.uniform1f(B.u.u_k,2); m3quad(R,B) });
+  gl.bindFramebuffer(gl.FRAMEBUFFER,dst||null); gl.viewport(0,0,W,H); gl.scissor(Math.max(0,Math.floor(U[0])),Math.max(0,Math.floor(H-U[3])),Math.max(0,Math.ceil(U[2]-U[0])),Math.max(0,Math.ceil(U[3]-U[1])));
+  var X=R.P.tex; gl.useProgram(X.p); gl.uniform1i(X.u.u_t,0); gl.bindTexture(gl.TEXTURE_2D,T.a.tex);
+  gl.uniform2f(X.u.u_res,W,H); gl.uniform4f(X.u.u_rect,0,H,W,-H); gl.uniform4f(X.u.u_uv,0,0,1,1); m3quad(R,X); gl.disable(gl.SCISSOR_TEST) }
+/* a canvas as a texture (premultiplied), kept by key */
+function m3tex(R,key,cv,rep){ var gl=R.gl, t=R.tex[key]; if(t&&t.src===cv) return t.tex; if(t) gl.deleteTexture(t.tex);
+  var tex=gl.createTexture(); gl.bindTexture(gl.TEXTURE_2D,tex); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true); gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,cv); gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,false);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,rep?gl.REPEAT:gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,rep?gl.REPEAT:gl.CLAMP_TO_EDGE);
+  R.tex[key]={tex:tex,src:cv}; return tex }
+/* space as before (the nebula with a little parallax, three star layers tiled 1024 desk px a tile), in one pass over the frame */
+function m3skyGL(R,W,H){ if(!M3D.NEB) m3space(); var gl=R.gl, X=R.P.sky, k=M3D.dpr, w=M3D.W, h=M3D.H, span=w*0.4, N=M3D.NEB, i;
+  var nx=-(((CAM.yaw*1.2)%span)+span)%span-w*0.05, ny=-(h*0.2)+(CAM.pitch-50)*0.6;
+  gl.useProgram(X.p); gl.disable(gl.BLEND);
+  gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,m3tex(R,'neb',N,false)); gl.uniform1i(X.u.u_n,0);
+  for(i=0;i<3;i++){ var L=M3D.LAY[i], ox=((-CAM.yaw*L.k*12)%L.T+L.T)%L.T, oy=((CAM.pitch*L.k*8)%L.T+L.T)%L.T;
+    gl.activeTexture(gl.TEXTURE1+i); gl.bindTexture(gl.TEXTURE_2D,m3tex(R,'lay'+i,L.c,true)); gl.uniform1i(X.u['u_l'+i],1+i); gl.uniform2f(X.u['u_o'+i],ox/L.T,oy/L.T) }
+  gl.uniform2f(X.u.u_res,W,H); gl.uniform1f(X.u.u_dpr,k); gl.uniform4f(X.u.u_nr,nx*k,ny*k,N.width*k,N.height*k);
+  m3quad(R,X); gl.enable(gl.BLEND); gl.activeTexture(gl.TEXTURE0) }
+/* the plates: built when the floor's reach changes (a centre, a corner, a side, a fade per vertex), drawn by the GPU from the camera */
+function m3hexGL(R,FR,W,H){ var gl=R.gl, X=R.P.hex, j;
+  if(R.hexR!==FR){ R.hexR=FR; var hx=m3hexes(FR).filter(function(h){ var f=(FR-h[2])/(FR*0.5); return h[2]<FR&&Math.min(1,f)>=0.02 }), V=[], I=[], b=0;
+    hx.forEach(function(h){ var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); for(j=0;j<6;j++){ V.push(h[0],h[1],j,0,f) } for(j=1;j<5;j++) I.push(b,b+j,b+j+1); b+=6 });
+    R.hexFill=I.length; hx.forEach(function(h){ var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); for(j=0;j<6;j++){ V.push(h[0],h[1],j,1,f, h[0],h[1],j,-1,f) }
+      for(j=0;j<6;j++){ var a=b+j*2, c=b+((j+1)%6)*2; I.push(a,a+1,c, c,a+1,c+1) } b+=12 });
+    R.hexN=I.length; if(b>65535){ R.hexN=0; R.hexFill=0 }
+    gl.bindBuffer(gl.ARRAY_BUFFER,R.hexV); gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(V),gl.STATIC_DRAW);
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,R.hexI); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER,new Uint16Array(I),gl.STATIC_DRAW) }
+  if(!R.hexN) return; gl.useProgram(X.p);
+  var hv=[]; for(j=0;j<6;j++){ var ha=Math.PI/3*j+Math.PI/6; hv.push(Math.cos(ha)*HEXR*.94,Math.sin(ha)*HEXR*.94) }
+  gl.uniformMatrix4fv(X.u.u_vp,false,new Float32Array(M3D.VP)); gl.uniform2f(X.u.u_css,M3D.W,M3D.H); gl.uniform1f(X.u.u_dpr,M3D.dpr); gl.uniform2fv(X.u.u_hv,new Float32Array(hv));
+  gl.bindBuffer(gl.ARRAY_BUFFER,R.hexV); gl.enableVertexAttribArray(X.a.a_c); gl.vertexAttribPointer(X.a.a_c,2,gl.FLOAT,false,20,0); gl.enableVertexAttribArray(X.a.a_j); gl.vertexAttribPointer(X.a.a_j,3,gl.FLOAT,false,20,8);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,R.hexI);
+  gl.uniform1f(X.u.u_mode,0); gl.uniform1f(X.u.u_al,0.9); gl.uniform3f(X.u.u_col,26/255,26/255,30/255); gl.uniform1f(X.u.u_hw,0); gl.drawElements(gl.TRIANGLES,R.hexFill,gl.UNSIGNED_SHORT,0);
+  gl.uniform1f(X.u.u_mode,1); gl.uniform1f(X.u.u_al,0.32); gl.uniform3f(X.u.u_col,165/255,162/255,155/255); gl.uniform1f(X.u.u_hw,1.1*M3D.dpr/2); gl.drawElements(gl.TRIANGLES,R.hexN-R.hexFill,gl.UNSIGNED_SHORT,R.hexFill*2);
+  m3off(gl) }
+/* the floor's lines: the darkening rims (under the plates) and the rings and the lobes (over them) — again only when the camera moves */
+function m3floorEmit(fa,fb){ fa.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); fb.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   var OUT=outerR(), FR=OUT+420, k, i;
-  for(k=0;k<10;k++){ m3path(fx,m3ring(0,0,0,FR*(1-k*0.075),72),true); fx.fillStyle='rgba(7,7,8,.16)'; fx.fill() }
-  m3hexes(FR).forEach(function(h){ if(h[2]>=FR) return; var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); if(f<0.02) return; var pts=[];
-    for(var j=0;j<6;j++){ var a=Math.PI/3*j+Math.PI/6, s=prj([h[0]+Math.cos(a)*HEXR*.94,0,h[1]+Math.sin(a)*HEXR*.94]); if(!s) return; pts.push(s) }
-    fx.beginPath(); pts.forEach(function(p,j){ if(j) fx.lineTo(p.x,p.y); else fx.moveTo(p.x,p.y) }); fx.closePath();
-    fx.fillStyle='rgba(26,26,30,'+(0.9*f).toFixed(3)+')'; fx.fill(); fx.strokeStyle='rgba(165,162,155,'+(0.32*f).toFixed(3)+')'; fx.lineWidth=1.1; fx.stroke() });
-  fx.setLineDash([2,5]); for(i=0;i<visRings();i++){ m3path(fx,m3ring(0,0,0,SECTORS[i].r,140)); fx.strokeStyle='rgba(235,220,170,.30)'; fx.lineWidth=1; fx.stroke() }
-  if(can('sectors')) for(i=0;i<LOBES;i++){ var e=lobeEdge(i); m3path(fx,[[Math.cos(e)*34,0,Math.sin(e)*34],[Math.cos(e)*(OUT+44),0,Math.sin(e)*(OUT+44)]]); fx.strokeStyle='rgba(235,220,170,.18)'; fx.stroke() }
-  fx.setLineDash([]) }
+  for(k=0;k<10;k++){ m3pathRing(fa,0,0,0,FR*(1-k*0.075),72,true); fa.fillStyle='rgba(7,7,8,.16)'; fa.fill() }
+  fb.setLineDash([2,5]); for(i=0;i<visRings();i++){ m3pathRing(fb,0,0,0,SECTORS[i].r,140); fb.strokeStyle='rgba(235,220,170,.30)'; fb.lineWidth=1; fb.stroke() }
+  if(can('sectors')) for(i=0;i<LOBES;i++){ var e=lobeEdge(i); m3path(fb,[[Math.cos(e)*34,0,Math.sin(e)*34],[Math.cos(e)*(OUT+44),0,Math.sin(e)*(OUT+44)]]); fb.strokeStyle='rgba(235,220,170,.18)'; fb.stroke() }
+  fb.setLineDash([]) }
 /* a world's sphere, wire (Nikita 06.11: «каркас»): three parallels, four meridians turning slowly, a dark body, a glowing limb */
 function m3sphere(x,cx,cy,cz,rad,col,spin,alpha,bl,body){ var s=prj([cx,cy,cz]); if(!s) return null; var pr=rad*pxPer(s.w), i, m;
   m3glow(x,col,bl); x.strokeStyle='rgba('+col+','+alpha+')'; x.lineWidth=1;
-  [-0.55,0,0.55].forEach(function(la){ m3path(x,m3ring(cx,cy+Math.sin(la*1.2)*rad,cz,Math.cos(la*1.2)*rad,24)); x.stroke() });
+  [-0.55,0,0.55].forEach(function(la){ m3pathRing(x,cx,cy+Math.sin(la*1.2)*rad,cz,Math.cos(la*1.2)*rad,24); x.stroke() });
   for(m=0;m<4;m++){ var a0=spin+m*Math.PI/4, pts=[]; for(i=0;i<=20;i++){ var b=-Math.PI/2+i/20*Math.PI; pts.push([cx+Math.cos(b)*Math.cos(a0)*rad,cy+Math.sin(b)*rad,cz+Math.cos(b)*Math.sin(a0)*rad]) } m3path(x,pts); x.stroke() }
   x.shadowBlur=0; x.beginPath(); x.arc(s.x,s.y,pr,0,7); x.fillStyle=body!==col?'rgba('+body+',.28)':'rgba(7,7,6,.55)'; x.fill();
-  m3glow(x,col,bl*1.4); x.strokeStyle='rgba('+col+','+Math.min(1,alpha*1.5)+')'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0;
+  m3glow(x,col,bl*1.4,true); x.strokeStyle='rgba('+col+','+Math.min(1,alpha*1.5)+')'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0;
   return {x:s.x,y:s.y,r:pr,w:s.w} }
 /* the works' orbital ring, tilted: the half behind the sphere before it, the half in front after it */
 function m3orbit(x,a,h,front,col){ var rr=RS*1.75, tilt=0.38, c=prj([a.x,h,a.z]), P=[], i; if(!c) return;
   for(i=0;i<=40;i++){ var an=Math.PI*2*i/40, ox=Math.cos(an)*rr, oz=Math.sin(an)*rr; P.push(prj([a.x+ox,h+oz*Math.sin(tilt),a.z+oz*Math.cos(tilt)])) }
-  m3glow(x,col,6); x.strokeStyle='rgba('+col+',.9)'; x.lineWidth=1.5; x.beginPath();
+  m3glow(x,col,6,front); x.strokeStyle='rgba('+col+',.9)'; x.lineWidth=1.5; x.beginPath();
   for(i=0;i<40;i++){ var p=P[i], q=P[i+1]; if(!p||!q) continue; if(((p.w+q.w)/2<c.w)!==front) continue; x.moveTo(p.x,p.y); x.lineTo(q.x,q.y) }
   x.stroke(); x.shadowBlur=0 }
 /* a double line on the floor: a hub's (to Earth, magenta) and a feeder's (to its hub, in its trade's colour) */
@@ -3219,16 +3403,13 @@ function m3dbl(x,a,b,col,wd){ var p=prj(a), q=prj(b); if(!p||!q) return; var dx=
   m3glow(x,col,6); x.strokeStyle='rgba('+col+',.95)'; x.lineWidth=wd;
   x.beginPath(); x.moveTo(p.x+nx,p.y+ny); x.lineTo(q.x+nx,q.y+ny); x.moveTo(p.x-nx,p.y-ny); x.lineTo(q.x-nx,q.y-ny); x.stroke(); x.shadowBlur=0 }
 function m3wcol(kind){ return m3rgb(KCOL[kind]) }
-/* v5.07 (Nikita 09.11, «на планшете 5 фпс»): the footprints and the lines lie on the floor under everything else and do not move between
-   the years — drawn onto their own canvas when the camera or the chart changes (who is settled, settling, abandoned, a hub, whose line goes where) */
-function m3floorObj(vis){ var cv=el('map3d'), sig=M3D.fk+'#'+vis.map(function(q){ var id=q.id, c=G.colonies[id]; return id+(G.ghost&&G.ghost[id]?'g':c?'c'+(c.hub?'h':'')+lineTo(G,id):enRoute(G,id)?'s':'f') }).join();
-  if(sig===M3D.ok&&M3D.ob) return; M3D.ok=sig; var ob=M3D.ob||(M3D.ob=document.createElement('canvas')); ob.width=cv.width; ob.height=cv.height;
-  var x=ob.getContext('2d'), hubc=m3rgb(HUBC), k, p, a; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
+/* the footprints and the lines on the floor: again when the camera or the chart changes (who is settled, settling, abandoned, a hub, whose line goes where) */
+function m3obEmit(x,vis){ var hubc=m3rgb(HUBC), k, p, a; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   // footprints: settled — two rings in the trade's colour; free — dashed grey; settling — dashed yellow; abandoned — ×
   vis.forEach(function(q){ var st=wst(q.id), on=!!G.colonies[q.id], col=on?m3wcol(q.kind):(st==='settling'?m3rgb(C.people):'156,155,149'); a=p3(q);
-    if(st==='ghost'){ var g=prj([a.x,0,a.z]); if(g){ x.font='13px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle='rgba(94,93,88,.8)'; x.fillText('×',g.x,g.y+4) } return }
-    if(!on) x.setLineDash([3,3]); if(on) m3glow(x,col,6); m3path(x,m3ring(a.x,0,a.z,13,32)); x.strokeStyle='rgba('+col+','+(on||st==='settling'?.85:.45)+')'; x.lineWidth=1.3; x.stroke();
-    if(on){ m3path(x,m3ring(a.x,0,a.z,19,32)); x.strokeStyle='rgba('+col+',.25)'; x.lineWidth=1; x.stroke() } x.setLineDash([]); x.shadowBlur=0;
+    if(st==='ghost') return;   // its × is in the SVG
+    if(!on) x.setLineDash([3,3]); if(on) m3glow(x,col,6); m3pathRing(x,a.x,0,a.z,13,32); x.strokeStyle='rgba('+col+','+(on||st==='settling'?.85:.45)+')'; x.lineWidth=1.3; x.stroke();
+    if(on){ m3pathRing(x,a.x,0,a.z,19,32); x.strokeStyle='rgba('+col+',.25)'; x.lineWidth=1; x.stroke() } x.setLineDash([]); x.shadowBlur=0;
     if(on&&G.colonies[q.id].hub){ var hp=[]; for(k=0;k<=6;k++){ var ha=Math.PI/3*k; hp.push([a.x+Math.cos(ha)*27,0,a.z+Math.sin(ha)*27]) } x.setLineDash([5,3]); m3glow(x,hubc,8); m3path(x,hp); x.strokeStyle='rgba('+hubc+',.95)'; x.lineWidth=1.8; x.stroke(); x.setLineDash([]); x.shadowBlur=0 } });
   // lines, still: Earth → a world in its trade's colour; Earth → a hub double magenta; a hub → its feeder double in the feeder's colour
   for(k in G.colonies){ p=planet(k); if(!secVis(p.sec)) continue; var lt=lineTo(G,k), A=node3(lt==='earth'?'earth':lt), B=node3(k); if(!A||!B) continue;
@@ -3237,27 +3418,24 @@ function m3floorObj(vis){ var cv=el('map3d'), sig=M3D.fk+'#'+vis.map(function(q)
     if(hubA) m3dbl(x,A2,B2,col,1.3); else if(hubB) m3dbl(x,A2,B2,hubc,1.3);
     else { m3path(x,[A2,B2]); m3glow(x,col,4); x.strokeStyle='rgba('+col+',.45)'; x.lineWidth=1.3; x.stroke(); x.shadowBlur=0 } }
 }
-/* the whole scene; the SVG on top is drawn by drawMap from the same camera */
-/* the camera for this size and chart: the SVG needs it at once, the canvas draws on the next frame */
-function m3prep(){ m3size(); if(CFIT){ var fk=visRings()+'|'+M3D.W+'|'+M3D.H; if(fk!==CFITK){ CFITK=fk; camFit() } } camUpdate() }
-function draw3d(now){ if(!G||!el('map3d')) return; m3prep();
-  var cv=el('map3d'), x=cv.getContext('2d'), t=(now||performance.now())/1000, OUT=outerR(), i, k;
-  m3floor(); x.setTransform(1,0,0,1,0,0); x.globalCompositeOperation='copy'; x.drawImage(M3D.fl,0,0); x.globalCompositeOperation='source-over'; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
+/* the moving floor: the quiet wave and the events' lobes */
+function m3waveEmit(x,t,OUT){ x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   // the quiet wave: one soft ring out of Earth every 9 s
-  var wr=((t%9)/9)*(OUT+200); m3path(x,m3ring(0,0,0,wr,90)); x.strokeStyle='rgba(255,210,63,'+(0.10*(1-wr/(OUT+200))).toFixed(3)+')'; x.lineWidth=6; x.stroke();
+  var wr=((t%9)/9)*(OUT+200); m3pathRing(x,0,0,0,wr,90); x.strokeStyle='rgba(255,210,63,'+(0.10*(1-wr/(OUT+200))).toFixed(3)+')'; x.lineWidth=6; x.stroke();
   // v4.21 (F-21): an event lights its lobe — dashed while announced (blinking), a translucent wedge while it runs
   if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){ if(ev.lobe===undefined) return; var ec=EVCOL[ev.type]||'255,42,26', a0=lobeEdge(ev.lobe), pts=[[0,0,0]].concat(m3ring(0,0,0,OUT+44,16,a0,a0+LOBE_ARC));
     var bl=ev.state==='warn'?0.45+0.55*Math.abs(Math.sin(t*Math.PI/1.6)):1; m3path(x,pts,true);
     if(ev.state==='active'){ x.fillStyle='rgba('+ec+',.10)'; x.fill() } x.setLineDash(ev.state==='warn'?[6,5]:[3,4]); x.strokeStyle='rgba('+ec+','+(0.7*bl).toFixed(3)+')'; x.lineWidth=1.4; x.stroke(); x.setLineDash([]) });
-  var vis=PLANETS.filter(function(q){ return secVis(q.sec) });
-  m3floorObj(vis); x.setTransform(1,0,0,1,0,0); x.drawImage(M3D.ob,0,0); x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
+}
+/* the hulls and the worlds, every frame */
+function m3dynEmit(x,t,vis){ var i, k; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   // hulls: the figure of the class (3, 4, 6 sides) in its colour, the yellow nose along the leg; a missing one — a red ring with ?
   for(i=0;i<G.ships.length;i++){ var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
     var SA=node3(sh.origin), SB=node3(sh.dest||sh.target); if(!SA||!SB) continue;
     var f=sh.total?(1-sh.t/sh.total):0; if(sh.mode==='missing') f=sh.lastT!==undefined?sh.lastT:0.55; else sh.lastT=f;
     var f2=Math.min(1,f+0.01), sp=prj([SA[0]+(SB[0]-SA[0])*f,0,SA[2]+(SB[2]-SA[2])*f]), sq=prj([SA[0]+(SB[0]-SA[0])*f2,0,SA[2]+(SB[2]-SA[2])*f2]); if(!sp||!sq) continue;
     var kk=Math.max(.5,Math.min(1,pxPer(sp.w)*1.4));
-    if(sh.mode==='missing'){ x.setLineDash([2,3]); x.beginPath(); x.arc(sp.x,sp.y,8*kk,0,7); x.strokeStyle=C.red; x.lineWidth=1; x.stroke(); x.setLineDash([]); x.font='10px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle=C.red; x.fillText('?',sp.x,sp.y+3.5); continue }
+    if(sh.mode==='missing'){ x.setLineDash([2,3]); x.beginPath(); x.arc(sp.x,sp.y,8*kk,0,7); x.strokeStyle=C.red; x.lineWidth=1; x.stroke(); x.setLineDash([]); continue }   // its ? is in the SVG
     var scls=shipClass(sh), n=scls==='courier'?3:(scls==='hauler'?4:6), ang=Math.atan2(sq.y-sp.y,sq.x-sp.x); x.beginPath();
     for(k=0;k<n;k++){ var aa=ang+Math.PI*2*k/n+(n===4?Math.PI/4:0), rr=(k===0&&n===3?7.5:5.5)*kk, px=sp.x+Math.cos(aa)*rr, py=sp.y+Math.sin(aa)*rr; if(k) x.lineTo(px,py); else x.moveTo(px,py) } x.closePath();
     x.fillStyle='rgba(7,7,6,.8)'; x.fill(); m3glow(x,m3rgb(CLSCOL[scls]),6); x.strokeStyle=CLSCOL[scls]; x.lineWidth=1.5; x.stroke(); x.shadowBlur=0; x.fillStyle=C.people; x.fillRect(sp.x+Math.cos(ang)*7*kk-1.5,sp.y+Math.sin(ang)*7*kk-1.5,3,3) }
@@ -3265,32 +3443,71 @@ function draw3d(now){ if(!G||!el('map3d')) return; m3prep();
   var list=vis.filter(function(q){ return wst(q.id)!=='ghost' }).map(function(q){ var b=p3(q), s=prj([b.x,wH(q.id),b.z]); return s?{q:q,s:s}:null }).filter(Boolean);
   var es=prj([0,22,0]); if(es) list.push({earth:1,s:es}); list.sort(function(u,v){ return v.s.w-u.s.w });
   list.forEach(function(o){
-    if(o.earth){ m3sphere(x,0,22,0,22,m3rgb(C.earth),t*0.3,.8,10); m3path(x,m3ring(0,0,0,26,40)); m3glow(x,'255,210,63',8); x.strokeStyle='rgba(255,210,63,.7)'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0; return }
+    if(o.earth){ m3sphere(x,0,22,0,22,m3rgb(C.earth),t*0.3,.8,10); m3pathRing(x,0,0,0,26,40); m3glow(x,'255,210,63',8,true); x.strokeStyle='rgba(255,210,63,.7)'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0; return }
     var q=o.q, b=p3(q), on=!!G.colonies[q.id], h=wH(q.id), col=on?m3wcol(q.kind):'156,155,149', body=on&&q.kind==='works'?m3rgb(PARTS_BODY):col, rad=on?RS:RF, works=on&&q.kind==='works';
     if(on){ m3glow(x,col,6); m3path(x,[[b.x,0,b.z],[b.x,h-rad,b.z]]); x.strokeStyle='rgba('+col+',.75)'; x.lineWidth=1.6; x.stroke(); x.shadowBlur=0;
       for(var tk=HTICK;tk<=Math.min(G.colonies[q.id].pop,HPOP);tk+=HTICK){ var tp=prj([b.x,H0+tk*HK,b.z]); if(!tp) continue; var tl=4*pxPer(tp.w)+2.5; x.beginPath(); x.moveTo(tp.x-tl,tp.y); x.lineTo(tp.x+tl,tp.y); x.strokeStyle='rgba('+col+',.85)'; x.lineWidth=1.2; x.stroke() } }
     if(works) m3orbit(x,b,h,false,col);
     m3sphere(x,b.x,h,b.z,rad,col,t*0.5+(q.ang*7%6.28),on?.85:.38,on?9:0,body);
-    if(works) m3orbit(x,b,h,true,col) }) }
-/* the SVG on top: a .wd per world at its sphere (hit, alarms, the open one, its name and people), Earth's, the lobe and ring names */
+    if(works) m3orbit(x,b,h,true,col) })
+}
+/* the whole scene; the SVG on top is drawn by drawMap from the same camera */
+/* the camera for this size and chart: the SVG needs it at once, the canvas draws on the next frame */
+function m3prep(){ m3size(); if(CFIT){ var fk=visRings()+'|'+M3D.W+'|'+M3D.H; if(fk!==CFITK){ CFITK=fk; camFit() } } camUpdate() }
+var M3RS={fa:null,fb:null,ob:null,wv:null,dy:null};
+function draw3d(now){ if(!G||!el('map3d')) return; m3prep(); var R=GLR===null?m3glInit():GLR; if(!R||R.lost) return;
+  var gl=R.gl, cv=el('map3d'), W=cv.width, H=cv.height, t=(now||performance.now())/1000, OUT=outerR(), FR=OUT+420, vis=PLANETS.filter(function(q){ return secVis(q.sec) });
+  var Q=M3RS; if(!Q.fa){ Q.fa=new M3R(); Q.fb=new M3R(); Q.ob=new M3R(); Q.wv=new M3R(); Q.dy=new M3R() }
+  var key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM.dist].map(function(v){ return v.toFixed(2) }).join()+'|'+W+'|'+H+'|'+visRings()+'|'+(can('sectors')?1:0);
+  var bgNew=key!==M3D.fk; if(bgNew){ M3D.fk=key; Q.fa.reset(); Q.fb.reset(); m3floorEmit(Q.fa,Q.fb) }
+  var sig=key+'#'+vis.map(function(q){ var id=q.id, c=G.colonies[id]; return id+(G.ghost&&G.ghost[id]?'g':c?'c'+(c.hub?'h':'')+lineTo(G,id):enRoute(G,id)?'s':'f') }).join();
+  var obNew=sig!==M3D.ok; if(obNew){ M3D.ok=sig; Q.ob.reset(); m3obEmit(Q.ob,vis) }
+  Q.wv.reset(); m3waveEmit(Q.wv,t,OUT); Q.dy.reset(); m3dynEmit(Q.dy,t,vis);
+  // space and the floor change only with the camera, the footprints and the floor's lines with the camera or the chart: while they move
+  // they are drawn straight into the frame; once still, each is baked into a full-size texture (the floor's lines with their glow) and
+  // laid down as one quad a frame
+  function blit(t){ var X=R.P.tex; gl.useProgram(X.p); gl.uniform1i(X.u.u_t,0); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,t.tex); gl.uniform2f(X.u.u_res,W,H); gl.uniform4f(X.u.u_rect,0,H,W,-H); gl.uniform4f(X.u.u_uv,0,0,1,1); m3quad(R,X) }
+  function bgDraw(){ m3skyGL(R,W,H); m3draw(R,Q.fa,[W,H]); m3hexGL(R,FR,W,H); m3draw(R,Q.fb,[W,H]) }
+  if(R.bg&&(R.bg.w!==W||R.bg.h!==H)){ ['bg','obt'].forEach(function(k){ if(R[k]){ gl.deleteTexture(R[k].tex); gl.deleteFramebuffer(R[k].fb); R[k]=null } }); R.bgOK=false; R.obOK=false }
+  if(bgNew||R.bgFR!==FR){ R.bgFR=FR; R.bgOK=false }
+  if(R.bgOK){ gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H); gl.disable(gl.BLEND); blit(R.bg); gl.enable(gl.BLEND) }
+  else if(!bgNew){ if(!R.bg) R.bg=m3target(R,W,H); gl.bindFramebuffer(gl.FRAMEBUFFER,R.bg.fb); gl.viewport(0,0,W,H); bgDraw(); R.bgOK=true;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.disable(gl.BLEND); blit(R.bg); gl.enable(gl.BLEND) }
+  else { gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H); bgDraw() }
+  m3draw(R,Q.wv,[W,H]);
+  if(obNew) R.obOK=false;
+  if(!R.obOK&&!obNew){ if(!R.obt) R.obt=m3target(R,W,H); gl.bindFramebuffer(gl.FRAMEBUFFER,R.obt.fb); gl.viewport(0,0,W,H); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
+    m3glowPass(R,[Q.ob],false,W,H,R.obt.fb); gl.bindFramebuffer(gl.FRAMEBUFFER,R.obt.fb); m3draw(R,Q.ob,[W,H]); R.obOK=true; gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H) }
+  if(R.obOK) blit(R.obt); else m3draw(R,Q.ob,[W,H]);
+  m3glowPass(R,R.obOK?[Q.dy]:[Q.ob,Q.dy],false,W,H); m3draw(R,Q.dy,[W,H]); m3glowPass(R,[Q.dy],true,W,H) }
+/* the SVG on top: a .wd per world at its sphere (hit, alarms, the open one, its name and people), Earth's, the lobe and ring names.
+   v5.08 (Nikita 09.11: turning lags on the tablet): built as text with its positions apart (S.k — the text without them); when only the
+   positions changed (the camera turned), the nodes already there get the new numbers instead of a new innerHTML (and its style and layout) */
+var SV={k:'',N:null,vb:''};
 function drawMap(){
-  if(!G) return; m3prep(); M3D.dirty=true; var s='', i, W=M3D.W, H=M3D.H;
-  el('map').setAttribute('viewBox','0 0 '+W+' '+H);
-  s+='<rect x="0" y="0" width="'+W+'" height="'+H+'" fill="none" pointer-events="all"/>';
+  if(!G) return; m3prep(); M3D.dirty=true; var i, W=M3D.W, H=M3D.H, S={s:'',k:'',n:-1,V:[]};
+  function so(tag){ S.n++; S.s+='<'+tag; S.k+='<'+tag }
+  function sa(n,v){ var t=' '+n+'="'+v+'"'; S.s+=t; S.k+=t }
+  function sp(n,v){ S.s+=' '+n+'="'+v+'"'; S.k+=' '+n+'=""'; S.V.push(S.n,n,String(v)) }
+  function sr(t){ S.s+=t; S.k+=t }
+  var vb='0 0 '+W+' '+H; if(vb!==SV.vb){ SV.vb=vb; el('map').setAttribute('viewBox',vb) }
+  so('rect'); sa('x',0); sa('y',0); sp('width',W); sp('height',H); sa('fill','none'); sa('pointer-events','all'); sr('/>');
   var OUT=outerR(), es=prj([0,22,0]), ef=prj([0,0,0]), er=es?22*pxPer(es.w):20;
   // v4.21 (F-21): the six lobes, a name at the rim, lit by its event
   if(can('sectors')) for(i=0;i<LOBES;i++){ var me=lobeMid(i), lp=prj([Math.cos(me)*(OUT+70),0,Math.sin(me)*(OUT+70)]); if(!lp) continue;
     var le=lobeEvents(G,i), lit=le.length?'rgb('+(EVCOL[le[0].type]||'255,42,26')+')':null, ddx=ef?lp.x-ef.x:0;
-    s+='<text x="'+lp.x.toFixed(1)+'" y="'+(lp.y+4).toFixed(1)+'" fill="'+(lit||C.mid)+'" font-size="12" letter-spacing="2.4" text-anchor="'+(ddx>20?'start':(ddx<-20?'end':'middle'))+'" class="nm" pointer-events="none">'+esc(T('lobe'+i).toUpperCase())+'</text>' }
+    so('text'); sp('x',lp.x.toFixed(1)); sp('y',(lp.y+4).toFixed(1)); sa('fill',lit||C.mid); sa('font-size',12); sa('letter-spacing',2.4); sp('text-anchor',ddx>20?'start':(ddx<-20?'end':'middle')); sa('class','nm'); sa('pointer-events','none'); sr('>'+esc(T('lobe'+i).toUpperCase())+'</text>') }
   // ring names, on the near side of each ring
   var th=CAM.yaw*Math.PI/180;
-  for(i=0;i<visRings();i++){ var rq=prj([Math.sin(th)*SECTORS[i].r,0,Math.cos(th)*SECTORS[i].r]); if(rq) s+='<text x="'+rq.x.toFixed(1)+'" y="'+(rq.y+13).toFixed(1)+'" fill="'+C.dim+'" font-size="9" letter-spacing="1.6" text-anchor="middle" class="nm" pointer-events="none">'+esc(SECTORS[i].name)+'</text>' }
+  for(i=0;i<visRings();i++){ var rq=prj([Math.sin(th)*SECTORS[i].r,0,Math.cos(th)*SECTORS[i].r]); if(!rq) continue;
+    so('text'); sp('x',rq.x.toFixed(1)); sp('y',(rq.y+13).toFixed(1)); sa('fill',C.dim); sa('font-size',9); sa('letter-spacing',1.6); sa('text-anchor','middle'); sa('class','nm'); sa('pointer-events','none'); sr('>'+esc(SECTORS[i].name)+'</text>') }
   // the worlds: where their spheres are; names never over a world, never off the map, never on each other (v4.25)
   var boxes=[], L=[];
   if(es) boxes.push({x0:es.x-er,x1:es.x+er,y0:es.y-er,y1:es.y+er+6});
-  PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost') return;
-    var sp=prj([b.x,wH(q.id),b.z]); if(!sp) return; var sr=(on?RS:RF)*pxPer(sp.w), rr=sr*(on&&q.kind==='works'?1.8:1);
-    boxes.push({x0:sp.x-rr,x1:sp.x+rr,y0:sp.y-sr,y1:sp.y+sr}); L.push({q:q,s:sp,r:sr,rr:rr,on:on,st:st}) });
+  var GH=[];
+  PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost'){ var gp=prj([b.x,0,b.z]); if(gp) GH.push(gp); return }
+    var sp3=prj([b.x,wH(q.id),b.z]); if(!sp3) return; var sr3=(on?RS:RF)*pxPer(sp3.w), rr=sr3*(on&&q.kind==='works'?1.8:1);
+    boxes.push({x0:sp3.x-rr,x1:sp3.x+rr,y0:sp3.y-sr3,y1:sp3.y+sr3}); L.push({q:q,s:sp3,r:sr3,rr:rr,on:on,st:st}) });
   L.sort(function(u,v){ return (v.on-u.on)||(u.s.w-v.s.w) }).forEach(function(o){
     var q=o.q, nm=q.name.toUpperCase(), pop=o.on?' '+num(G.colonies[q.id].pop):'', tw=(nm.length*7.2+pop.length*6.6), g=(U.win===q.id?9:5)+(o.rr-o.r), ok=null, sx=o.s.x, sy=o.s.y;
     var cs=[[sx+o.r+g,sy+4],[sx-o.r-g-tw,sy+4],[sx-tw/2,sy-o.r-g-4],[sx-tw/2,sy+o.r+16]];
@@ -3298,18 +3515,27 @@ function drawMap(){
       if(!boxes.some(function(z){ return bx.x0<z.x1&&z.x0<bx.x1&&bx.y0<z.y1&&z.y0<bx.y1 })) ok=bx }
     o.lab=ok||{x0:cs[0][0]-2,y1:cs[0][1]+3,hidden:true}; if(ok) boxes.push(ok) });
   L.forEach(function(o){ var q=o.q, st=o.st, lab=o.lab;
-    s+='<g class="wd" data-p="'+q.id+'" transform="translate('+o.s.x.toFixed(1)+' '+o.s.y.toFixed(1)+')">';
-    s+='<circle r="'+Math.max(12,o.rr+4).toFixed(1)+'" fill="transparent"/>';
-    if(BAD_ST[st]) s+='<circle r="'+(o.rr+7).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>';
-    else if(st==='noline'||st==='half') s+='<circle r="'+(o.rr+7).toFixed(1)+'" fill="none" stroke="'+C.people+'" stroke-width="1.6" class="alarm"/>';
-    if(U.win===q.id) s+='<circle r="'+(o.rr+11).toFixed(1)+'" fill="none" stroke="'+C.people+'" stroke-width="2"/>';
-    if(!lab.hidden) s+='<text x="'+(lab.x0+2-o.s.x).toFixed(1)+'" y="'+(lab.y1-3-o.s.y).toFixed(1)+'" fill="'+(o.on?C.ink:C.mid)+'" font-size="10.5" letter-spacing="1" class="nm">'+esc(q.name.toUpperCase())+(o.on?'<tspan fill="'+C.people+'">'+esc(' '+num(G.colonies[q.id].pop))+'</tspan>':'')+'</text>';
-    s+='</g>' });
+    so('g'); sa('class','wd'); sa('data-p',q.id); sp('transform','translate('+o.s.x.toFixed(1)+' '+o.s.y.toFixed(1)+')'); sr('>');
+    so('circle'); sp('r',Math.max(12,o.rr+4).toFixed(1)); sa('fill','transparent'); sr('/>');
+    if(BAD_ST[st]){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('class','alarm'); sr('/>') }
+    else if(st==='noline'||st==='half'){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1.6); sa('class','alarm'); sr('/>') }
+    if(U.win===q.id){ so('circle'); sp('r',(o.rr+11).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',2); sr('/>') }
+    if(!lab.hidden){ so('text'); sp('x',(lab.x0+2-o.s.x).toFixed(1)); sp('y',(lab.y1-3-o.s.y).toFixed(1)); sa('fill',o.on?C.ink:C.mid); sa('font-size',10.5); sa('letter-spacing',1); sa('class','nm'); sr('>'+esc(q.name.toUpperCase()));
+      if(o.on){ so('tspan'); sa('fill',C.people); sr('>'+esc(' '+num(G.colonies[q.id].pop))+'</tspan>') } sr('</text>') }
+    sr('</g>') });
+  // v5.08: the letters the chart canvas drew before WebGL — an abandoned world's ×, a missing hull's ?
+  GH.forEach(function(gp){ so('text'); sp('x',gp.x.toFixed(1)); sp('y',(gp.y+4).toFixed(1)); sa('fill','rgba(94,93,88,.8)'); sa('font-size',13); sa('font-family','Geist Mono,monospace'); sa('text-anchor','middle'); sa('pointer-events','none'); sr('>×</text>') });
+  G.ships.forEach(function(sh){ if(sh.mode!=='missing') return; var SA=node3(sh.origin), SB=node3(sh.dest||sh.target); if(!SA||!SB) return; var f=sh.lastT!==undefined?sh.lastT:0.55, mp=prj([SA[0]+(SB[0]-SA[0])*f,0,SA[2]+(SB[2]-SA[2])*f]); if(!mp) return;
+    so('text'); sp('x',mp.x.toFixed(1)); sp('y',(mp.y+3.5).toFixed(1)); sa('fill',C.red); sa('font-size',10); sa('font-family','Geist Mono,monospace'); sa('text-anchor','middle'); sa('pointer-events','none'); sr('>?</text>') });
   // earth
   var nearNight=G.night&&nightLeft(G)<=K.NIGHT_NEAR, crisis=can('events')&&(G.dir&&G.dir.ev||[]).some(function(ev){ return ev.lobe===undefined });
-  if(es) s+='<g class="wd" data-act="tab" data-v="earth" transform="translate('+es.x.toFixed(1)+' '+es.y.toFixed(1)+')"><circle r="'+(er+5).toFixed(1)+'" fill="transparent"/>'+
-    (nearNight?'<circle r="'+(er+8).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" class="alarm"/>':'')+(crisis?'<circle class="evearth" r="'+(er+12).toFixed(1)+'" fill="none" stroke="'+C.red+'" stroke-width="2" pointer-events="none"/>':'')+'</g>';
-  el('map').innerHTML=s;
+  if(es){ so('g'); sa('class','wd'); sa('data-act','tab'); sa('data-v','earth'); sp('transform','translate('+es.x.toFixed(1)+' '+es.y.toFixed(1)+')'); sr('>');
+    so('circle'); sp('r',(er+5).toFixed(1)); sa('fill','transparent'); sr('/>');
+    if(nearNight){ so('circle'); sp('r',(er+8).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('class','alarm'); sr('/>') }
+    if(crisis){ so('circle'); sa('class','evearth'); sp('r',(er+12).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('pointer-events','none'); sr('/>') }
+    sr('</g>') }
+  if(S.k===SV.k&&SV.N&&SV.N.length===S.n+1&&SV.N[0]&&SV.N[0].isConnected){ var N=SV.N, V=S.V; for(i=0;i<V.length;i+=3){ var e=N[V[i]]; if(e.getAttribute(V[i+1])!==V[i+2]) e.setAttribute(V[i+1],V[i+2]) } return }
+  el('map').innerHTML=S.s; SV.k=S.k; SV.N=el('map').querySelectorAll('*');
   if(el('tip').className) drawTip(document.querySelector('#map .wd[data-p]:hover'));   // the node under the pointer was just replaced
 }
 function drawTip(g){ var tip=el('tip'); if(!g||!G){ tip.className=''; return }
@@ -4412,7 +4638,7 @@ document.addEventListener('mouseover',function(e){ var g=e.target.closest&&e.tar
    (Nikita, 22.09: «не могу играть»). Move and up live on window, so a drag that leaves the map ends cleanly; a drag is not a click (MAPDRAGGED). */
 (function(){
   var m=el('map'), P={}, drag=null, pinch=null;
-  function moved(){ drawMap(); tutPlace() }
+  function moved(){ M3D.moved=true }   // v5.08: the SVG and the cut-outs follow the camera once a frame, not on every pointer move (120 a second on a tablet)
   m.addEventListener('contextmenu',function(e){ e.preventDefault() });
   m.addEventListener('wheel',function(e){ e.preventDefault(); camZoom(e.deltaY>0?1.12:0.89); moved() },{passive:false});
   m.addEventListener('pointerdown',function(e){ P[e.pointerId]={x:e.clientX,y:e.clientY}; if(!drag) MAPDRAGGED=false; if(!drag) drag={x0:e.clientX,y0:e.clientY,moved:false,pan:e.button===2||e.shiftKey}; pinch=null });
@@ -4449,7 +4675,7 @@ function clockOn(from){ if(G) G.clock={from:from,at:new Date().toISOString(),ms:
 function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
   if(!halted()){ c.run+=dt; c.sp[U.speed]=(c.sp[U.speed]||0)+dt } }
 /* v5.05: the 3D chart turns its spheres and sends its wave between the years, 20 a second; v5.07: at once when the camera or the chart moved */
-function m3frame(ts){ if(!G) return; if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }
+function m3frame(ts){ if(!G) return; if(M3D.moved){ M3D.moved=false; drawMap(); tutPlace() } if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }
 function frame(ts){
   if(!U.last) U.last=ts;
   var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
