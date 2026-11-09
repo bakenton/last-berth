@@ -429,8 +429,7 @@ function drawPortrait(cv,seed){
    apart at POS_GAP (v4.35). The camera: a target on the plane, yaw, pitch (90° = straight down), distance; it fits the visible rings by itself
    until the player turns, moves or zooms it (− + ALL: ALL fits again). */
 var CAM={tx:0,tz:0,yaw:0,pitch:52,dist:1700,fov:38}, CFIT=true, CFITK='', MAPDRAGGED=false;
-var M3D={W:1,H:1,VP:null,dpr:1,fk:'',fl:null,HX:null,HXR:0,LAY:null,NEB:null,last:0,dirty:true,drew:false,blink:false,dts:[],
-  lo:!!(window.matchMedia&&matchMedia('(pointer:coarse)').matches)};   // v5.06 (Nikita 09.11, «на планшете 5 фпс»): lo — no glow, no spin, no wave, 1.5× pixels, drawn only when something changed
+var M3D={W:1,H:1,VP:null,dpr:1,fk:'',fl:null,ob:null,ok:'',HX:null,HXR:0,LAY:null,NEB:null,last:0,dirty:true};
 var P3={}, P3N=-1, POS_GAP=28, H0=14, HK=1.0, HPOP=160, HTICK=25, RS=11, RF=8, HEXR=46, HUBC='#E040FB', PARTS_BODY='#2F5BD3';
 function p3(p){ if(P3N!==PLANETS.length||!P3[p.id]) layout3(); return P3[p.id] }
 function layout3(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; return {id:q.id,x:Math.cos(q.ang)*R,z:Math.sin(q.ang)*R} });
@@ -460,8 +459,8 @@ function prj(p){ var m=M3D.VP, x=p[0],y=p[1],z=p[2];
   var cx=m[0]*x+m[4]*y+m[8]*z+m[12], cy=m[1]*x+m[5]*y+m[9]*z+m[13], cw=m[3]*x+m[7]*y+m[11]*z+m[15];
   if(cw<=1) return null; return {x:(cx/cw+1)/2*M3D.W, y:(1-cy/cw)/2*M3D.H, w:cw} }
 function pxPer(w){ return M3D.H/(2*w*Math.tan(CAM.fov*Math.PI/360)) }
-function m3size(){ var mb=el('mapbox'), cv=el('map3d'), W=Math.max(1,mb.clientWidth), H=Math.max(1,mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,M3D.lo?1.5:2)*appZoom();
-  if(W!==M3D.W||H!==M3D.H||Math.abs(dpr-M3D.dpr)>0.01||cv.width!==Math.round(W*dpr)){ M3D.W=W; M3D.H=H; M3D.dpr=dpr; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); M3D.fk=''; M3D.NEB=null } }
+function m3size(){ var mb=el('mapbox'), cv=el('map3d'), W=Math.max(1,mb.clientWidth), H=Math.max(1,mb.clientHeight), dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();
+  if(W!==M3D.W||H!==M3D.H||Math.abs(dpr-M3D.dpr)>0.01||cv.width!==Math.round(W*dpr)){ M3D.W=W; M3D.H=H; M3D.dpr=dpr; cv.width=Math.round(W*dpr); cv.height=Math.round(H*dpr); M3D.fk=''; M3D.ok=''; M3D.NEB=null } }
 /* the visible chart in the frame with room for the names: aim at its middle, back off until every world and its footprint sit inside */
 function camFit(){ var vis=PLANETS.filter(function(q){ return secVis(q.sec) }), R=outerR();
   var xs=[0,-R*0.6,R*0.6], zs=[0,-R*0.6,R*0.6]; vis.forEach(function(q){ var a=p3(q); xs.push(a.x); zs.push(a.z) });
@@ -512,7 +511,7 @@ var BAD_ST={dead:1,cut:1,starve:1};
 function m3rgb(h){ return parseInt(h.slice(1,3),16)+','+parseInt(h.slice(3,5),16)+','+parseInt(h.slice(5,7),16) }
 function m3ring(cx,cy,cz,rad,n,a0,a1){ var p=[]; a0=a0||0; a1=a1===undefined?Math.PI*2:a1; for(var i=0;i<=n;i++){ var a=a0+(a1-a0)*i/n; p.push([cx+Math.cos(a)*rad,cy,cz+Math.sin(a)*rad]) } return p }
 function m3path(x,pts,close){ x.beginPath(); var on=false; pts.forEach(function(p){ var s=prj(p); if(!s){ on=false; return } if(on) x.lineTo(s.x,s.y); else x.moveTo(s.x,s.y); on=true }); if(close) x.closePath() }
-function m3glow(x,col,b){ if(M3D.lo) return; x.shadowColor='rgba('+col+',.9)'; x.shadowBlur=b }
+function m3glow(x,col,b){ x.shadowColor='rgba('+col+',.9)'; x.shadowBlur=b }
 /* space: three star layers and a nebula, made once per size; drawn each frame with a little parallax on turning */
 function m3rnd(seed){ return function(){ seed=(seed*16807)%2147483647; return seed/2147483647 } }
 function m3space(){ var T=1024;
@@ -536,7 +535,7 @@ function m3hexes(FR){ if(M3D.HX&&M3D.HXR>=FR) return M3D.HX; var L=[], n=Math.ce
   M3D.HX=L; M3D.HXR=FR; return L }
 function m3floor(){ var cv=el('map3d'), key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM.dist].map(function(v){ return v.toFixed(2) }).join()+'|'+cv.width+'|'+cv.height+'|'+visRings()+'|'+(can('sectors')?1:0);
   if(key===M3D.fk&&M3D.fl) return; M3D.fk=key; var fl=M3D.fl||(M3D.fl=document.createElement('canvas')), fx=fl.getContext('2d'), W=M3D.W, H=M3D.H;
-  fl.width=cv.width; fl.height=cv.height; fx.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); fx.clearRect(0,0,W,H);
+  fl.width=cv.width; fl.height=cv.height; fx.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); fx.fillStyle='#050506'; fx.fillRect(0,0,W,H); m3sky(fx);
   var OUT=outerR(), FR=OUT+420, k, i;
   for(k=0;k<10;k++){ m3path(fx,m3ring(0,0,0,FR*(1-k*0.075),72),true); fx.fillStyle='rgba(7,7,8,.16)'; fx.fill() }
   m3hexes(FR).forEach(function(h){ if(h[2]>=FR) return; var f=Math.max(0,Math.min(1,(FR-h[2])/(FR*0.5))); if(f<0.02) return; var pts=[];
@@ -565,20 +564,12 @@ function m3dbl(x,a,b,col,wd){ var p=prj(a), q=prj(b); if(!p||!q) return; var dx=
   m3glow(x,col,6); x.strokeStyle='rgba('+col+',.95)'; x.lineWidth=wd;
   x.beginPath(); x.moveTo(p.x+nx,p.y+ny); x.lineTo(q.x+nx,q.y+ny); x.moveTo(p.x-nx,p.y-ny); x.lineTo(q.x-nx,q.y-ny); x.stroke(); x.shadowBlur=0 }
 function m3wcol(kind){ return m3rgb(KCOL[kind]) }
-/* the whole scene; the SVG on top is drawn by drawMap from the same camera */
-/* the camera for this size and chart: the SVG needs it at once, the canvas draws on the next frame */
-function m3prep(){ m3size(); if(CFIT){ var fk=visRings()+'|'+M3D.W+'|'+M3D.H; if(fk!==CFITK){ CFITK=fk; camFit() } } camUpdate() }
-function draw3d(now){ if(!G||!el('map3d')) return; m3prep(); M3D.blink=false;
-  var cv=el('map3d'), x=cv.getContext('2d'), tb=(now||performance.now())/1000, t=M3D.lo?0:tb, OUT=outerR(), hubc=m3rgb(HUBC), i, k, p, a;
-  x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); m3sky(x); m3floor(); x.setTransform(1,0,0,1,0,0); x.drawImage(M3D.fl,0,0); x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
-  // the quiet wave: one soft ring out of Earth every 9 s
-  if(!M3D.lo){ var wr=((t%9)/9)*(OUT+200); m3path(x,m3ring(0,0,0,wr,90)); x.strokeStyle='rgba(255,210,63,'+(0.10*(1-wr/(OUT+200))).toFixed(3)+')'; x.lineWidth=6; x.stroke(); }
-  // v4.21 (F-21): an event lights its lobe — dashed while announced (blinking), a translucent wedge while it runs
-  if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){ if(ev.lobe===undefined) return; var ec=EVCOL[ev.type]||'255,42,26', a0=lobeEdge(ev.lobe), pts=[[0,0,0]].concat(m3ring(0,0,0,OUT+44,16,a0,a0+LOBE_ARC));
-    if(ev.state==='warn') M3D.blink=true; var bl=ev.state==='warn'?0.45+0.55*Math.abs(Math.sin(tb*Math.PI/1.6)):1; m3path(x,pts,true);
-    if(ev.state==='active'){ x.fillStyle='rgba('+ec+',.10)'; x.fill() } x.setLineDash(ev.state==='warn'?[6,5]:[3,4]); x.strokeStyle='rgba('+ec+','+(0.7*bl).toFixed(3)+')'; x.lineWidth=1.4; x.stroke(); x.setLineDash([]) });
+/* v5.07 (Nikita 09.11, «на планшете 5 фпс»): the footprints and the lines lie on the floor under everything else and do not move between
+   the years — drawn onto their own canvas when the camera or the chart changes (who is settled, settling, abandoned, a hub, whose line goes where) */
+function m3floorObj(vis){ var cv=el('map3d'), sig=M3D.fk+'#'+vis.map(function(q){ var id=q.id, c=G.colonies[id]; return id+(G.ghost&&G.ghost[id]?'g':c?'c'+(c.hub?'h':'')+lineTo(G,id):enRoute(G,id)?'s':'f') }).join();
+  if(sig===M3D.ok&&M3D.ob) return; M3D.ok=sig; var ob=M3D.ob||(M3D.ob=document.createElement('canvas')); ob.width=cv.width; ob.height=cv.height;
+  var x=ob.getContext('2d'), hubc=m3rgb(HUBC), k, p, a; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   // footprints: settled — two rings in the trade's colour; free — dashed grey; settling — dashed yellow; abandoned — ×
-  var vis=PLANETS.filter(function(q){ return secVis(q.sec) });
   vis.forEach(function(q){ var st=wst(q.id), on=!!G.colonies[q.id], col=on?m3wcol(q.kind):(st==='settling'?m3rgb(C.people):'156,155,149'); a=p3(q);
     if(st==='ghost'){ var g=prj([a.x,0,a.z]); if(g){ x.font='13px "Geist Mono",monospace'; x.textAlign='center'; x.fillStyle='rgba(94,93,88,.8)'; x.fillText('×',g.x,g.y+4) } return }
     if(!on) x.setLineDash([3,3]); if(on) m3glow(x,col,6); m3path(x,m3ring(a.x,0,a.z,13,32)); x.strokeStyle='rgba('+col+','+(on||st==='settling'?.85:.45)+')'; x.lineWidth=1.3; x.stroke();
@@ -590,6 +581,21 @@ function draw3d(now){ if(!G||!el('map3d')) return; m3prep(); M3D.blink=false;
     var A2=[A[0]+(B[0]-A[0])*ua,0,A[2]+(B[2]-A[2])*ua], B2=[A[0]+(B[0]-A[0])*ub,0,A[2]+(B[2]-A[2])*ub], col=m3wcol(p.kind);
     if(hubA) m3dbl(x,A2,B2,col,1.3); else if(hubB) m3dbl(x,A2,B2,hubc,1.3);
     else { m3path(x,[A2,B2]); m3glow(x,col,4); x.strokeStyle='rgba('+col+',.45)'; x.lineWidth=1.3; x.stroke(); x.shadowBlur=0 } }
+}
+/* the whole scene; the SVG on top is drawn by drawMap from the same camera */
+/* the camera for this size and chart: the SVG needs it at once, the canvas draws on the next frame */
+function m3prep(){ m3size(); if(CFIT){ var fk=visRings()+'|'+M3D.W+'|'+M3D.H; if(fk!==CFITK){ CFITK=fk; camFit() } } camUpdate() }
+function draw3d(now){ if(!G||!el('map3d')) return; m3prep();
+  var cv=el('map3d'), x=cv.getContext('2d'), t=(now||performance.now())/1000, OUT=outerR(), i, k;
+  m3floor(); x.setTransform(1,0,0,1,0,0); x.globalCompositeOperation='copy'; x.drawImage(M3D.fl,0,0); x.globalCompositeOperation='source-over'; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
+  // the quiet wave: one soft ring out of Earth every 9 s
+  var wr=((t%9)/9)*(OUT+200); m3path(x,m3ring(0,0,0,wr,90)); x.strokeStyle='rgba(255,210,63,'+(0.10*(1-wr/(OUT+200))).toFixed(3)+')'; x.lineWidth=6; x.stroke();
+  // v4.21 (F-21): an event lights its lobe — dashed while announced (blinking), a translucent wedge while it runs
+  if(can('events')) (G.dir&&G.dir.ev||[]).forEach(function(ev){ if(ev.lobe===undefined) return; var ec=EVCOL[ev.type]||'255,42,26', a0=lobeEdge(ev.lobe), pts=[[0,0,0]].concat(m3ring(0,0,0,OUT+44,16,a0,a0+LOBE_ARC));
+    var bl=ev.state==='warn'?0.45+0.55*Math.abs(Math.sin(t*Math.PI/1.6)):1; m3path(x,pts,true);
+    if(ev.state==='active'){ x.fillStyle='rgba('+ec+',.10)'; x.fill() } x.setLineDash(ev.state==='warn'?[6,5]:[3,4]); x.strokeStyle='rgba('+ec+','+(0.7*bl).toFixed(3)+')'; x.lineWidth=1.4; x.stroke(); x.setLineDash([]) });
+  var vis=PLANETS.filter(function(q){ return secVis(q.sec) });
+  m3floorObj(vis); x.setTransform(1,0,0,1,0,0); x.drawImage(M3D.ob,0,0); x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   // hulls: the figure of the class (3, 4, 6 sides) in its colour, the yellow nose along the leg; a missing one — a red ring with ?
   for(i=0;i<G.ships.length;i++){ var sh=G.ships[i]; if(sh.mode!=='transit'&&sh.mode!=='missing') continue;
     var SA=node3(sh.origin), SB=node3(sh.dest||sh.target); if(!SA||!SB) continue;
@@ -1787,16 +1793,12 @@ var MS={1:1500,2:1000,4:600,10:200};   // v4.42: 10 has no button or key — onl
 function clockOn(from){ if(G) G.clock={from:from,at:new Date().toISOString(),ms:0,run:0,sp:{}} }
 function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return; dt=Math.min(dt,1000); c.ms+=dt;
   if(!halted()){ c.run+=dt; c.sp[U.speed]=(c.sp[U.speed]||0)+dt } }
-/* v5.05: the 3D chart turns its spheres and sends its wave between the years (20 a second). v5.06: lo (a touch screen, or frames slower
-   than 30 a second while it draws) — drawn only when the chart changed, and four times a second while an event's lobe blinks */
-function m3frame(ts,dt){ if(!G) return;
-  if(M3D.drew&&!M3D.lo){ M3D.dts.push(dt); if(M3D.dts.length>=8){ var a=M3D.dts.slice().sort(function(u,v){ return u-v }); if(a[4]>34){ M3D.lo=true; M3D.fk=''; M3D.dirty=true } M3D.dts=[] } }
-  M3D.drew=false;
-  if(M3D.dirty||(!M3D.lo&&ts-M3D.last>50)||(M3D.blink&&ts-M3D.last>250)){ M3D.last=ts; M3D.dirty=false; M3D.drew=true; try{ draw3d(ts) }catch(e){} } }
+/* v5.05: the 3D chart turns its spheres and sends its wave between the years, 20 a second; v5.07: at once when the camera or the chart moved */
+function m3frame(ts){ if(!G) return; if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }
 function frame(ts){
   if(!U.last) U.last=ts;
   var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
-  m3frame(ts,dt);
+  m3frame(ts);
   if(G&&!halted()&&!G.over){
     U.acc+=dt; var step=MS[U.speed]||600, did=false;
     try{
