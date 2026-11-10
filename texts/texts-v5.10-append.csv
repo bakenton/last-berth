@@ -1,0 +1,66 @@
+UI,u_sleepOn,Sleep on,Спят дальше,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_arkFed,last to the Night,хватит до Ночи,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_arkFamine,run out in {y},кончатся в {y},"v5.10 ark: pod rings, hive, convoy share",live,new
+MSG,ok_allpier,{n} hulls put in the convoy.,Судов поставлено в конвой: {n}.,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,statConvoy,Convoy,Конвой,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_hiveHead,The ark · one hex — 100 people,Ковчег · один гекс — 100 человек,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_hiveConvoy,Convoy · the whole fleet fills the ring,Конвой · весь флот заполняет кольцо,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_lgPod,pod,капсула,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_lgNoPod,no pod,без капсулы,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_lgConvoy,in the convoy,в конвое,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_lgWay,coming home,летит домой,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_arkHint1,Press the hive to buy pods.,"Нажми на соты, чтобы купить капсулы.","v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_arkHint2,Press the ring to man the convoy.,"Нажми на кольцо, чтобы собрать конвой.","v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_hiveRing,Ring {n},Кольцо {n},"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_pods,Pods,Капсулы,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_arkRations,Rations,Рационы,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_arkFamine2,run out in {y} · in {z} without it,кончатся в {y} · без покупки в {z},"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvIn,In the convoy,В конвое,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvOf,{a} of {b} hulls,{a} из {b} судов,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvPier,At the pier,У причала,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvLines,On the lines,На линиях,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvWay,Coming home,Летят домой,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvAdd,Add all,Добавить всех,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvCall,Call home,Вызвать домой,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_cvSure,Press again,Ещё раз,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_topWake,Wake · sleep on,Проснутся · спят,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,tut_m27,A hex is 100 people. Press the hive to fill a ring with pods — the card says if the rations last to the Night.,"Гекс — 100 человек. Нажми на соты, чтобы заполнить кольцо капсулами: карточка скажет, хватит ли рационов до Ночи.","v5.10 ark: pod rings, hive, convoy share",live,new
+UI,tut_m28,"Wake and sleep on: who would wake if the Night came today, and who would sleep on. Both numbers stay up here.","Проснутся и спят: сколько проснулось бы, приди Ночь сегодня, и сколько спали бы дальше. Оба числа всегда здесь.","v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_vNoConvoy,Nobody would wake: no hull stands in the convoy.,Никто не проснётся: в конвое нет ни одного судна.,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,u_vNoWake,Nobody would wake.,Никто не проснётся.,"v5.10 ark: pod rings, hive, convoy share",live,new
+UI,a_ark,The ark has no pods yet. Fill the first ring.,У ковчега ещё нет капсул. Заполни первое кольцо.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,statBerths,Rings · pods,Кольца · капсулы,"v5.10 ark: pod rings, hive, convoy share",live,changed
+MSG,arkhave,This ring is already filled.,Это кольцо уже заполнено.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,a_mutiny,{n} hull(s) refuse orders. Their crews are home. Put the hulls in the convoy — they still count.,"Судов, отказавшихся от приказов: {n}. Экипажи дома. Поставь суда в конвой — в счёт они идут.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_levels,Capsule rings,Кольца капсул,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_buyLv,Fill ring {l},Заполнить кольцо {l},"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_convoy,Convoy · {a} of {b} hulls,Конвой · {a} из {b} судов,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_convoyHint,A hull counts when it stands in the convoy at Earth's pier on the day of the Night. The capsules wake by the convoy's share of the fleet.,"Судно в счёте, если в день Ночи стоит в конвое у причала Земли. Капсулы будят по доле флота в конвое.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_flArkNone,No pods bought,Капсулы не куплены,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_flConvoy,Convoy: {n} of {k},Конвой: {n} из {k},"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,a_convoy,The convoy holds {n} of {k} hulls. The pods wake by that share.,В конвое {n} из {k} судов. Капсулы будят по этой доле.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+MSG,arklevel,There is no such ring.,Такого кольца нет.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+MSG,ok_arkbuy,Ring {n} filled.,Кольцо {n} заполнено.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+LOG,ark_bought,Ring {l} of the hive filled: {n} pods in all.,Кольцо сот {l} заполнено: всего капсул {n}.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_vNoLevel,No ring of pods is filled.,Ни одно кольцо капсул не заполнено.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,statNoWake,Sleep on,Спят дальше,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,tut_m19,The ark leaves on the Night with everyone on Earth aboard. Pods wake them — by the share of the fleet standing in the convoy that day.,"Ковчег уходит в Ночь со всеми, кто на Земле. Будят капсулы — по доле флота, стоящей в конвое в тот день.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,hk_cArk,ARK.RING.{l},КОВЧЕГ.КОЛЬЦО.{l},"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,tut_m20,Press the ring to put hulls in the convoy. A hull counts if it stands at the pier on the day of the Night.,"Нажми на кольцо, чтобы поставить суда в конвой. Судно в счёте, если в день Ночи стоит у причала.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,tut_m23,"Near the end, crews refuse runs. Put a hull that refused in the convoy — it will not fly, but it counts.","Ближе к концу экипажи отказываются от рейсов. Отказавшееся судно ставь в конвой — лететь оно не станет, но в счёт идёт.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_reserve,Into the convoy,В конвой,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_stReserve,in the convoy,в конвое,"v5.10 ark: pod rings, hive, convoy share",live,changed
+MSG,ok_reserve,Hull {n} put in the convoy.,Судно {n} поставлено в конвой.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+MSG,ok_unreserve,Hull {n} taken out of the convoy.,Судно {n} снято с конвоя.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,u_resLeft,Hull {n} left the convoy.,Судно {n} вышло из конвоя.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,hk_unArk,Ring {l} of the hive counts now.,Кольцо сот {l} засчитано.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+LOG,ark_drive,GENERATION {g} DRIVE CAN PUSH THE ARK. The Night is still year {y}.,ДВИГАТЕЛЬ ПОКОЛЕНИЯ {g} СДВИНЕТ КОВЧЕГ. Ночь по-прежнему в год {y}.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+LOG,ark_grounded,"THE NIGHT CAME AND THE ARK STAYED ON THE PIER. {b} aboard, and no Generation {g} drive to push them.","НОЧЬ НАСТУПИЛА, А КОВЧЕГ ОСТАЛСЯ У ПРИЧАЛА. {b} на борту — и нет двигателя поколения {g}, чтобы их сдвинуть.","v5.10 ark: pod rings, hive, convoy share",live,changed
+LOG,ark_woke,{w} of {s} woke at the other end. The rest sleep on.,На месте проснулись {w} из {s}. Остальные спят дальше.,"v5.10 ark: pod rings, hive, convoy share",live,changed
+VOICE,ark_drive.1,"Generation {g}. It will carry an ark past the collapse. It will not wake anyone at the other end: the pods do that, and the convoy that stands by them. The drive only gets the sleepers there. That is the whole of what I have to offer you.","Поколение {g}. Оно вынесет ковчег за пределы коллапса. Будить на месте оно никого не станет: это дело капсул и конвоя, который стоит при них. Двигатель только довозит спящих. Это всё, что я могу вам предложить.","v5.10 ark: pod rings, hive, convoy share",live,changed
+VOICE,ark_drive.2,The Generation {g} drive is done and it is enough. Enough is a word I used to hate. It carries everyone who boards; who wakes is counted in pods and in hulls of the convoy. Another generation gives you faster hulls and nothing more for the ark. I have written both columns on the same page and I am not choosing.,"Двигатель поколения {g} готов, и его достаточно. «Достаточно» — слово, которое я раньше ненавидел. Он увезёт всех, кто сядет; кто проснётся, считают в капсулах и в судах конвоя. Ещё одно поколение даст вам суда быстрее — и ничего больше для ковчега. Я записал оба столбца на одной странице и не выбираю.","v5.10 ark: pod rings, hive, convoy share",live,changed
+VOICE,doomsday.1,"{n} years to the Night and the square in front of the Institute is full every morning. Some of them say the date is a lie the desk tells to keep them digging. Some say the ark is for us and not for them, and they are not wrong about the arithmetic: pods for {b}, {h} standing at home. I have stopped reading what they paint on the doors. The lines still run.","До Ночи {n} лет, и площадь перед Институтом полна каждое утро. Одни говорят, что дата — ложь, которую пульт рассказывает, чтобы они копали. Другие — что ковчег для нас, а не для них, и в арифметике они не ошибаются: капсул на {b}, дома стоят {h}. Я перестал читать, что они пишут на дверях. Линии ходят.","v5.10 ark: pod rings, hive, convoy share",live,changed
+VOICE,doomsday.2,"There is a congregation on the pier now. They hold a service at every launch and a wake at every landing. They do not want a pod; they say the Night is owed. The yards work around them. I have {h} at home, pods for {b}, and {n} years. I do not have time to argue with the ones who have decided.","На пирсе теперь община. Служба на каждый вылет, поминки на каждую посадку. Капсула им не нужна — говорят, Ночь заслужена. Верфи работают, обходя их. У меня {h} дома, капсул на {b} и {n} лет. Спорить с теми, кто уже решил, времени нет.","v5.10 ark: pod rings, hive, convoy share",live,changed
+LOG,doomsday,"{n} YEARS TO THE NIGHT. Earth has learned to live by the date: congregations on the pier, the Institute guarded, children taught the year before they are taught to read. Pods for {b}; {h} standing at home.","{n} ЛЕТ ДО НОЧИ. Земля научилась жить по дате: общины на пирсе, Институт под охраной, детей учат году раньше, чем читать. Капсул на {b}; дома стоят {h}.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,nar_N12b,One hundred years. Earth queues for the ark — there are more in the line than pods.,"Сто лет. На Земле очередь на ковчег — в ней больше людей, чем капсул.","v5.10 ark: pod rings, hive, convoy share",live,changed
+UI,nar_rsLevel,not one ring of pods was filled,ни одно кольцо капсул не заполнено,"v5.10 ark: pod rings, hive, convoy share",live,changed

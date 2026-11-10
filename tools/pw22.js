@@ -44,9 +44,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('captain voices logged for mutinies', vo>0, vo);
   // crews at home count for the ark
   const souls=await p.evaluate(()=>{ const G=LN; G.driveLvl=G.arkMark; G.gen=G.driveLvl; ensureGen(G.gen); G.earth.parts=1e5; G.earth.metal=1e5; G.earth.fuel=1e5; G.earth.food=1e5;
-    // v4.24: buy level 1 to enable ark boarding
+    // v5.10: buy ring I to enable ark boarding
     arkBuy(G,1);
-    return {souls:arkSouls(G), docked:crewDocked(G), people:Math.round(G.earth.people), arkLevel:arkLevel(G)} });
+    return {souls:arkSouls(G), docked:crewDocked(G), people:Math.round(G.earth.people), rings:arkRings(G)} });
   ok('mutinied crews stand on the pier (crewDocked > 0, they board)', souls.docked>0&&souls.souls>0, JSON.stringify(souls));
   // scrap a mutinied hull by two clicks (the first arms it, the second confirms)
   const idm=await p.evaluate(()=>LN.ships.find(s=>s.mutiny&&s.mode==='idle').id);

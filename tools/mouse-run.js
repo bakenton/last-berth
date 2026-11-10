@@ -67,7 +67,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
     return {day:G.day,over:G.over||null,big:LNI.big(),pf:!!U.pf,paused:!!U.paused,speed:U.speed,halted:LNI.halted(),win:U.win||null,tab:U.tab||null,pop:U.pop||null,logOpen:!document.getElementById('logbox').hidden,
       people:Math.round(E.people),food:Math.round(E.food),metal:Math.round(E.metal),fuel:Math.round(E.fuel),parts:Math.round(E.parts),cols:Object.keys(G.colonies).length,settled:settledCount(G),
       ships:G.ships.filter(s=>s.mode!=='dead').length,sectors:SECTORS.length,gen:G.gen||0,drive:G.driveLvl||0,night:G.night||0,nightLeft:G.night?nightLeft(G):null,
-      arkLv:G.ark?arkLevel(G):0,cvOk:G.night?arkConvoy(G).ok:false,hungry:!!G.hungry,hubs:(typeof hubCount==='function')?hubCount(G):0} }).catch(()=>null);
+      arkLv:arkRings(G),cvOk:G.night?arkConvoy(G).ok:false,hungry:!!G.hungry,hubs:(typeof hubCount==='function')?hubCount(G):0} }).catch(()=>null);
   const ust=()=>p.evaluate(()=>({win:LNU.win||null,tab:LNU.tab||null,pop:LNU.pop||null})).catch(()=>({}));
 
   /* ---------- большие окна ---------- */
@@ -279,7 +279,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
 
   /* ---------- финал ---------- */
   await wait(800); const endShot=await shot('end');
-  const finO=await p.evaluate(()=>({day:LN.day,over:LN.over||null,souls:LN.souls||0,boarded:LN.boarded||0,left:LN.left||0,arkLv:LN.ark?arkLevel(LN):0,grounded:!!LN.grounded,groundedWhy:LN.groundedWhy||null,people:Math.round(LN.earth.people),
+  const finO=await p.evaluate(()=>({day:LN.day,over:LN.over||null,souls:LN.souls||0,boarded:LN.boarded||0,left:LN.left||0,arkLv:arkRings(LN),grounded:!!LN.grounded,groundedWhy:LN.groundedWhy||null,people:Math.round(LN.earth.people),
     cols:Object.keys(LN.colonies).length,settled:settledCount(LN),gen:LN.gen||0,sectors:SECTORS.length,acts:LN.actions.length,bigText:(document.getElementById('noteL')||{innerText:''}).innerText.replace(/\s+/g,' ').slice(0,700)})).catch(()=>({}));
   const gameLog=await p.evaluate(()=>{ try{ return exportLog(LN) }catch(e){ return JSON.stringify({err:String(e)}) } }).catch(()=>null);
   if(gameLog) fs.writeFileSync(path.join(OUT,'game-log.json'),gameLog);

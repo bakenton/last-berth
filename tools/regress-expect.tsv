@@ -3,7 +3,7 @@ pw9	клик по миру открывает окно мира (v4.35)	^click -
 pw9	модалка Ночи	^night modal shown: true
 pw9	дата Ночи в шапке	^night cell: \d+
 pw9	блок ковчега, покупка доступна	^ark block: true \| buy available: true
-pw9	места на ковчеге куплены	^ark level: [1-4]
+pw9	кольцо ковчега куплено (v5.10: кольца, не уровни)	^ark rings: 1 \| rings paid: 1
 pw9	финал наступил	^over: (?!false|null|undefined)\S+
 pw9	заголовок финала	^end title: \S
 pw9	ошибок страницы нет	^errors: none

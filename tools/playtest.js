@@ -109,8 +109,9 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
       paused:!!U.paused,speed:U.speed,halted:I.halted(),big:I.big(),win:U.win||null,tab:U.tab||null,pop:U.pop||null,pf:U.pf?(U.pf.low?'low':'full'):null,
       logOpen:!document.getElementById('logbox').hidden,free:fr.length,freeIds:fr.map(s=>s.id),building:G.ships.filter(s=>s.mode==='building').length,
       missing:G.ships.filter(s=>s.mode==='missing').map(s=>s.id),ships:G.ships.filter(s=>s.mode!=='dead').length,adv,advR,flags:fl,wst,lines,
-      sectors:SECTORS.length,drive:G.driveLvl||0,gen:G.gen||0,driveRunning:!!G.drive,canSurvey:canSurvey(G),arkLv:G.ark?arkLevel(G):0,arkReady:G.arkMark!==null&&G.arkMark!==undefined?arkReady(G):false,
-      cv:cv&&{need:cv.need,have:cv.have,ok:cv.ok},souls:G.souls||0,hungry:!!G.hungry,logLen:G.log.length} }).catch(()=>null);
+      sectors:SECTORS.length,drive:G.driveLvl||0,gen:G.gen||0,driveRunning:!!G.drive,canSurvey:canSurvey(G),arkLv:arkRings(G),   // v5.10: rings of pods (was levels)
+     arkReady:G.arkMark!==null&&G.arkMark!==undefined?arkReady(G):false,
+      cv:cv&&{all:cv.all,have:cv.have,share:cv.share,ok:cv.ok},souls:G.souls||0,hungry:!!G.hungry,logLen:G.log.length} }).catch(()=>null);
 
   /* ---------- большие окна: сколько раз и каких перебили игроку ---------- */
   const interrupts={}; const bump=l=>{ interrupts[l]=(interrupts[l]||0)+1 };
@@ -352,24 +353,17 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
       if(await hasEl(enabled(sel))){ if((await tap(enabled(sel)))==='ok'){ ok=true; await keyShot('ark'+l,'ark-level-'+l+'-bought'); break } }
       else await tap(sel,{soft:true}) }   // refused: read why
     await closeTab('ark'); return ok }
-  // конвой: сначала судна у пирса в резерв, потом достроить недостающий класс
+  // конвой (v5.10, ARK.md 2г): каждое судно у пирса, не занятое линией, — в конвой; поколение и класс не спрашиваются, постройки под конвой нет
   async function actConvoy(s){
     if(!s.cv||s.cv.ok) return false;
     if(!(await openTab('yard'))) return false; let n=0;
     for(let k=0;k<12;k++){
-      const pickId=await p.evaluate(()=>{ const cv=arkConvoy(LN), res={courier:0,hauler:0,freighter:0};
-        for(const s of LN.ships){ if(s.reserve&&convoyHull(LN,s)) res[shipClass(s)]++ }
-        for(const s of LN.ships){ const c=shipClass(s); if(s.reserve||s.mutiny||!convoyHull(LN,s)) continue; if(res[c]<cv.need[c]) return s.id } return null });
+      const pickId=await p.evaluate(()=>{ for(const s of LN.ships){ if(!s.reserve&&!s.mutiny&&convoyHull(LN,s)) return s.id } return null });
       if(pickId===null) break;
       const sel='#ovl [data-act="reserve"][data-s="'+pickId+'"][data-on="1"]';
       if(!(await hasEl(sel))) break; if((await tap(sel))!=='ok') break; n++; await wait(60) }
     if(n) await keyShot('convoy','convoy-reserved');
-    let built=false;
-    const short=await p.evaluate(()=>{ const cv=arkConvoy(LN), res={courier:0,hauler:0,freighter:0}; for(const s of LN.ships){ if(s.reserve&&convoyHull(LN,s)) res[shipClass(s)]++ }
-      return CLASSES.map(c=>({c,d:cv.need[c]-res[c]})).filter(x=>x.d>0) });
-    if(short.length&&RICH&&GOD){ await p.evaluate(()=>{ const E=LN.earth; for(const k of ['metal','fuel','parts']) E[k]=Math.max(E[k],20000); E.people=Math.max(E.people,400); LNdraw() }); richTops++; rec('rich-convoy',{}); await wait(100) }
-    for(const sh of short.slice(0,3)){ const idx=await p.evaluate(c=>currentHull(LN,c),sh.c); const sel='#ovl [data-act="build"][data-h="'+idx+'"]'; if(idx!==null&&await hasEl(sel)&&(await tap(sel))==='ok') built=true }
-    await closeTab('yard'); return n>0||built }
+    await closeTab('yard'); return n>0 }
 
   /* ---------- политика игрока ---------- */
   async function pickSettleTarget(skipIds){
@@ -477,7 +471,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   /* ---------- финал ---------- */
   const fin=await S(); await dismiss(); await shot('final'); await audit('final');
   if(fin&&!fin.over){ await tour('final') }
-  const finO=await p.evaluate(()=>({over:LN.over||null,souls:LN.souls||0,boarded:LN.boarded||0,arkLv:LN.ark?arkLevel(LN):0,grounded:!!LN.grounded,groundedWhy:LN.groundedWhy||null})).catch(()=>({}));
+  const finO=await p.evaluate(()=>({over:LN.over||null,souls:LN.souls||0,boarded:LN.boarded||0,arkLv:arkRings(LN),grounded:!!LN.grounded,groundedWhy:LN.groundedWhy||null})).catch(()=>({}));
   const logText=await p.evaluate(()=>{ const e=document.getElementById('logtxt'); return e?String(e.value||'').slice(0,3000):'' }).catch(()=>'');
   const gameLog=await p.evaluate(()=>{ try{ return exportLog(LN) }catch(e){ return JSON.stringify({err:String(e)}) } }).catch(()=>null);
   if(gameLog) fs.writeFileSync(path.join(OUT,'game-log.json'),gameLog);

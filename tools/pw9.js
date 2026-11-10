@@ -24,10 +24,12 @@ const UI=require('./pw-ui.js');
   console.log('night cell:', await p.textContent('#top .night b').catch(()=>'none'));
   await U.tab('ark');
   const arkTxt=await p.textContent('#ovl').catch(()=>'');
-  console.log('ark block:', /Ark|Ковчег|ковчег/i.test(arkTxt), '| buy available:', await p.evaluate(()=>!!document.querySelector('[data-act="arkbuy"]:not([aria-disabled="true"])')));
-  // v4.24: the ark has levels, not berths; buy level 1
-  await U.tap('[data-act="arkbuy"][data-l="1"]'); await p.waitForTimeout(80);
-  console.log('ark level:', await p.evaluate(()=>window.LN.ark.lv), '| level paid:', await p.evaluate(()=>arkLevel(window.LN)));
+  // v5.10: the hive — a ring is bought from its card (press the ring's cells, then FILL RING I)
+  await U.tap('#ovl .hold .hr[data-v="1"] .hx');
+  console.log('ark block:', /Wake|Sleep on|ark/i.test(arkTxt), '| buy available:', await p.evaluate(()=>!!document.querySelector('#arkcard [data-act="arkbuy"]:not([aria-disabled="true"])')));
+  // v5.10: the ark is a hive of rings; buy ring I — press its cell, then FILL RING I on the card
+  await U.tap('#arkcard [data-act="arkbuy"]'); await p.waitForTimeout(80);
+  console.log('ark rings:', await p.evaluate(()=>window.LN.ark.rings), '| rings paid:', await p.evaluate(()=>arkRings(window.LN)));
   await p.screenshot({path:'v5-ark.png'});
   await U.tab('ark');
   // jump to the end

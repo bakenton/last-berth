@@ -63,8 +63,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // the ark drive lands -> physicist window with wake %
   await p.evaluate(()=>{ const G=window.LN; const k=Object.keys(G.colonies).find(k=>planet(k).kind==='works')||Object.keys(G.colonies)[0]; G.driveLvl=G.arkMark-1; G.gen=G.driveLvl; LNU.voiceLast=-1000; driveDone(G,k); LNdraw(); });
   f=await p.pf();
-  const w0=await p.evaluate(()=>Math.round(K.ARK_WAKE[0]*100));   // v4.29: the ladder starts at 30 (was 60) — read it from the core
-  ok('A ark-drive mark opens the physicist with wake %', !!f&&/Institute physicist/.test(f)&&new RegExp(w0+' (of every hundred|out of a hundred)').test(f), f);
+  // v5.10 (ARK.md 2г): the physicist no longer names a wake %: the drive carries the sleepers, the pods and the convoy wake them
+  ok('A ark-drive mark opens the physicist: the drive carries, the convoy wakes (v5.10: no wake %)', !!f&&/Institute physicist/.test(f)&&/convoy/.test(f)&&!/%/.test(f), f);
   await p.screenshot({path:'x5-arkdrive.png'}); await p.U.clear();
   // 900 years out: doomsday chronicle + chief window
   await p.evaluate(()=>{ const G=window.LN; G.night=G.day+K.DOOMSDAY_AT+1; G.earth.food=1e5; G.earth.metal=1e5; botRun(2); LNdraw(); });

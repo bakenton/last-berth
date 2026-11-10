@@ -1,6 +1,7 @@
 // pw48 — v4.46 по забегу Никиты 316286103: окно завода говорит «нужно / линия везёт» по топливу, металлу, еде; одна карточка
 // на завод вместо двух; топливо грузится первым; WAKE ушёл с верхней полосы; флажок «рационы до Ночи» не висит; помехи с 300 лет;
 // ковчег: уровень I по старой цене, II–IV ×3; трюм ×1.5 за поколение. Настоящая мышь.
+// v5.10 (ARK.md 2г): кольца вместо уровней — кольцо I 1 200 еды / 600 металла, II 3 200 / 2 000; WAKE снова на верхней полосе в Ночь (Никита 10.11).
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js'); const path=require('path');
 const SHOTS=process.env.PW48_SHOTS||null;
@@ -14,10 +15,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // === 1. hulls and the ark price, straight from the rules
   const k=await p.evaluate(()=>{ ensureGen(5); const c=(key,g)=>HULLS.find(h=>h.key===key&&h.gen===g);
-    return {f6:c('freighter',5).cap, h6:c('hauler',5).cap, c6:c('courier',5).cap, f1:c('freighter',0).cap, m:c('hauler',5).metal/c('hauler',0).metal, a1:arkPrice(1).metal, a2:arkPrice(2).metal, a4:arkPrice(4).metal} });
+    return {f6:c('freighter',5).cap, h6:c('hauler',5).cap, c6:c('courier',5).cap, f1:c('freighter',0).cap, m:c('hauler',5).metal/c('hauler',0).metal, a1:arkRingPrice(1).metal, a1f:arkRingPrice(1).food, a2:arkRingPrice(2).metal, a2f:arkRingPrice(2).food} });
   ok('the hold grows ×1.5 a generation (Freighter VI ≈ 5771)', k.f6===Math.round(760*Math.pow(1.5,5))&&k.h6===Math.round(240*Math.pow(1.5,5))&&k.c6===Math.round(70*Math.pow(1.5,5)),JSON.stringify(k));
   ok('metal grows with the hold', Math.abs(k.m-Math.pow(1.5,5))<0.05,k.m);
-  ok('ark: level I at the old price, II–IV ×3', k.a1===2250&&k.a2===18000&&k.a4===81000,JSON.stringify(k));
+  ok('ark: ring I 1 200 food / 600 metal, ring II 3 200 / 2 000 (ARK.md 2г)', k.a1===600&&k.a1f===1200&&k.a2===2000&&k.a2f===3200,JSON.stringify(k));
 
   // === 2. a works world with machines on a thin line
   const W=await p.evaluate(()=>{ const G=LN, wk=PLANETS.filter(q=>q.sec<=1&&q.kind==='works').sort((a,b)=>a.dist-b.dist)[0].id;
@@ -45,9 +46,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.closeWin();
 
   // === 3. the Night: no WAKE on the top bar, no «before the Night» flag, static from 300 years
-  await p.evaluate(()=>{ const G=LN; G.night=G.day+290; G.foodFc={y:G.day+150,n:450,farms:0}; G.arkPaid={metal:2250,parts:450,food:1500,fuel:1200}; G.arkMark=0; LNdraw() });
+  await p.evaluate(()=>{ const G=LN; G.night=G.day+290; G.foodFc={y:G.day+150,n:450,farms:0}; G.ark={rings:0,woke:0}; G.arkMark=0; LNdraw() });
   const top=await p.evaluate(()=>document.querySelector('#top').innerText.replace(/\s+/g,' '));
-  ok('the top bar has no WAKE', !/wake/i.test(top),top);
+  ok('the top bar has WAKE · SLEEP ON in the Night (v5.10, Nikita 10.11)', /WAKE/i.test(top)&&/SLEEP ON/i.test(top),top);
   const flag=await p.evaluate(()=>{ const e=document.querySelector('#tabs [data-v="earth"] .flag'); return e?e.innerText:'' });
   ok('no «rations end before the Night» flag on Earth', !/before the Night/i.test(flag),flag);
   const fx=await p.evaluate(()=>document.querySelector('#mapbox').classList.contains('nfon'));

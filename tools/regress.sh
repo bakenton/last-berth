@@ -21,7 +21,7 @@ np() { if command -v cygpath >/dev/null; then cygpath -m "$1"; else echo "$1"; f
 # v4.35 (16.10): сценарии переведены на новый интерфейс (окна, вкладки, тосты); убраны из full, т.к. проверяют удалённое:
 #   pw15 (док и рейка), pw16 и pw17 (пролог), pw23 (шесть вступительных карточек), pw34 (знак кольца, #nofree, рейка, телефон F-01..F-08),
 #   pw35 (панель флота с полосами v4.17 — заменена окном мира и вкладкой Fleet), pw39 (журнал, ячейка Земли, док у подвала). Файлы не удалены.
-FULL="smoke fuzz pw9 pw13 pw18 pw19 pw20 pw21 pw22 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw36 pw37 pw38 pw40 pw41 pw43 pw44 pw46 pw47 pw48 pw49 pw50 pw51 pw52 pw53 pwalx sim"
+FULL="smoke fuzz pw9 pw13 pw18 pw19 pw20 pw21 pw22 pw24 pw25 pw26 pw27 pw28 pw29 pw30 pw31 pw32 pw33 pw36 pw37 pw38 pw40 pw41 pw43 pw44 pw46 pw47 pw48 pw49 pw50 pw51 pw52 pw53 pw54 pw55 pwalx sim"
 SIM_ARGS="4500 11,22,33,44,55,66,77,88"   # F-20: to the Night and past it — a style is judged by whether the ark sails
 SHOTS=0 RESUME=0 FRESH=0 REBASE=0 QUIET=0 NAMES=()
 for a in "$@"; do case "$a" in
@@ -88,7 +88,7 @@ judge() {  # $1 name, $2 log, $3 exit code → печатает строку и�
   local n=$1 f=$2 rc=$3
   if grep -qE '^(PASS|FAIL) ' "$f"; then
     local p=$(grep -c '^PASS ' "$f") t=$(grep -cE '^(PASS|FAIL|ERROR) ' "$f")
-    local was=$(grep "^$n " "$LOG/counts" 2>/dev/null | tail -1 | cut -d' ' -f2); was=${was:-0}
+    local was=$(grep "^$n " "$LOG/counts" 2>/dev/null | tail -1 | cut -d' ' -f2); was=${was:-0}; case " ${COUNTS_RESET:-} " in *" $n "*) was=0;; esac   # COUNTS_RESET="pw46" — сброс базы проверок, когда правило ушло и проверку убрали (назвать в отчёте)
     if [ "$p" = "$t" ] && [ "$rc" = 0 ] && [ "$t" -ge "$was" ]; then echo "$n $p/$t PASS"; echo "$n $t" >> "$LOG/counts"
     else echo "$n $p/$t FAIL"; grep -E '^(FAIL|ERROR) ' "$f" | head -10 | cut -c1-200 | sed 's/^/  /'
       [ "$t" -lt "$was" ] && echo "  проверок $t, в прошлом зелёном прогоне было $was — сценарий оборвался раньше"
@@ -149,7 +149,7 @@ run_one() {  # $1 name → строка итога в stdout
   if [ "$n" = fuzz ]; then run_fuzz; return; fi
   [ -f "$R/$n.js" ] || { echo "$n ? нет tools/$n.js"; return; }
   local t1=$(date +%s)
-  ( cd "$R" && LB_WORK="$(np "$W")" LB_PLAYWRIGHT="$(np "$R/pw-shim.js")" LB_SHOTS=$([ $SHOTS = 1 ] && echo 1) timeout 165 node "$n.js" ) > "$LOG/$n.log" 2>&1; local rc=$?
+  ( cd "$R" && LB_WORK="$(np "$W")" LB_PLAYWRIGHT="$(np "$R/pw-shim.js")" LB_SHOTS=$([ $SHOTS = 1 ] && echo 1) timeout $([ "$n" = pw41 ] && echo 300 || echo 165) node "$n.js" ) > "$LOG/$n.log" 2>&1; local rc=$?
   echo "$n $(( $(date +%s)-t1 ))" >> "$LOG/durations"
   judge "$n" "$LOG/$n.log" "$rc"
 }

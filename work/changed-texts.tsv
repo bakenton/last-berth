@@ -50,17 +50,17 @@ UI	lineRenewOn	Auto-replace with new generation: ON	Автозамена на н
 UI	lineRenewOff	Auto-replace with new generation: OFF	Автозамена на новое поколение: ВЫКЛ
 MSG	ok_renew_on	Auto-replacement on: the yards will spend metal on newer hulls.	Автозамена включена: верфи будут тратить металл на новые корпуса.
 MSG	ok_renew_off	Auto-replacement off: old hulls stay as they are.	Автозамена выключена: старые корпуса остаются как есть.
-UI	a_ark	No ark level is paid for yet. Pick a level and buy it in one go.	Ни один уровень ковчега ещё не оплачен. Выбери уровень и купи его разом.
-UI	statBerths	Ark level	Уровень ковчега
+UI	a_ark	The ark has no pods yet. Fill the first ring.	У ковчега ещё нет капсул. Заполни первое кольцо.
+UI	statBerths	Rings · pods	Кольца · капсулы
 UI	lbHome	at home, no ark	дома, без ковчега
 UI	endNightDrive	The ark stood on the pier. The Generation {g} drive to push it past the collapse was never finished. The dark closed over a full ark that could not leave.	Ковчег стоял у причала. Двигатель поколения {g}, чтобы вытолкнуть его за обрушение, так и не закончили. Тьма сомкнулась над полным ковчегом, который не смог уйти.
 UI	shLeftN	{n} years · room for {b}	{n} лет · мест {b}
 UI	arkBuyBtn	Buy level {n}	Купить уровень {n}
 UI	arkHintNew	Pick a level and pay for it in one go, at full price; a higher level pays only the difference. Everyone at home sails; the level sets how much of what is left on Earth rides along. Buy early and Earth lives on what remains; buy late and the stock may be gone.	Выбери уровень и оплати его разом, по полной цене; следующий уровень доплачивается разницей. Летят все, кто дома; уровень задаёт, сколько остатков с Земли поедет с ковчегом. Купишь рано — Земля живёт на остаток; поздно — запас может кончиться.
 UI	arkDriveHint	The ark sails on a Generation {g} drive or better: {a}% of the sleepers wake on the minimum, {b}% one mark above, {c}% two above, {d}% three and beyond. The minimum is a cushion for the lazy — and it is paid for in souls.	Ковчег уходит на двигателе поколения {g} или лучше: на минимальном просыпается {a}% спящих, на одну метку выше — {b}%, на две — {c}%, на три и дальше — {d}%. Минимум — подушка для ленивых, и платят за неё душами.
-MSG	arkhave	This level is already yours. Pick a higher one.	Этот уровень уже твой. Выбери выше.
+MSG	arkhave	This ring is already filled.	Это кольцо уже заполнено.
 UI	mutinyHint	These crews will not go out again. They stand on the pier and board if there is a berth. The hulls take no orders, but they count for the ark's convoy.	Эти экипажи больше не выйдут. Они стоят на пирсе и сядут, если будет место. Корпуса приказов не принимают, но в конвой ковчега засчитываются.
-UI	a_mutiny	{n} hull(s) refuse orders. Their crews are home; the hulls still count for the convoy — scrap them for the metal or leave them.	Корпусов, отказавшихся от приказов: {n}. Экипажи дома; корпуса всё ещё идут в конвой — спиши на металл или оставь.
+UI	a_mutiny	{n} hull(s) refuse orders. Their crews are home. Put the hulls in the convoy — they still count.	Судов, отказавшихся от приказов: {n}. Экипажи дома. Поставь суда в конвой — в счёт они идут.
 UI	a_kit	{p} can afford a tier {t} kit: {kx} → {ky} a year, and the seam will outlast it.	{p}: комплект яруса {t} по карману — {kx} → {ky} в год, жилы хватит.
 UI	convoyHint	Hulls docked at Earth, mutinied ones too — they all count. Plus sets a hull aside for the ark — the yards leave it alone, and a hull on a line leaves its line. Minus gives it back.	Суда у причала Земли, бунтовавшие тоже — считаются все. Плюс ставит судно в резерв ковчега — верфи его не тронут, а судно с линии с неё снимется. Минус возвращает.
 UI	lineUpkeepHint	Set how many hulls of each class stay on this line. The yards send an idle hull from Earth first, then build a new one of the current generation.	Задай, сколько судов каждого класса держать на линии. Верфи сначала шлют свободное с Земли, потом строят новое текущего поколения.
@@ -75,3 +75,35 @@ UI	noFreeAny	No free hull at Earth. Order one in the dock, or with + on a world�
 UI	evacW_orderC	Build a courier in the dock, or take one off a line.	Заложи курьер в доке или сними один с линии.
 UI	shIdle	(idle at the pier: {n})	(корпусов без дела: {n})
 UI	u_aForge	{w}: the line brings {c} a year, the works burn {n}	{w}: линия везёт {c} в год, завод жжёт {n}
+UI	u_levels	Capsule rings	Кольца капсул
+UI	u_buyLv	Fill ring {l}	Заполнить кольцо {l}
+UI	u_convoy	Convoy · {a} of {b} hulls	Конвой · {a} из {b} судов
+UI	u_convoyHint	A hull counts when it stands in the convoy at Earth's pier on the day of the Night. The capsules wake by the convoy's share of the fleet.	Судно в счёте, если в день Ночи стоит в конвое у причала Земли. Капсулы будят по доле флота в конвое.
+UI	u_flArkNone	No pods bought	Капсулы не куплены
+UI	u_flConvoy	Convoy: {n} of {k}	Конвой: {n} из {k}
+UI	a_convoy	The convoy holds {n} of {k} hulls. The pods wake by that share.	В конвое {n} из {k} судов. Капсулы будят по этой доле.
+MSG	arklevel	There is no such ring.	Такого кольца нет.
+MSG	ok_arkbuy	Ring {n} filled.	Кольцо {n} заполнено.
+LOG	ark_bought	Ring {l} of the hive filled: {n} pods in all.	Кольцо сот {l} заполнено: всего капсул {n}.
+UI	u_vNoLevel	No ring of pods is filled.	Ни одно кольцо капсул не заполнено.
+UI	statNoWake	Sleep on	Спят дальше
+UI	tut_m19	The ark leaves on the Night with everyone on Earth aboard. Pods wake them — by the share of the fleet standing in the convoy that day.	Ковчег уходит в Ночь со всеми, кто на Земле. Будят капсулы — по доле флота, стоящей в конвое в тот день.
+UI	hk_cArk	ARK.RING.{l}	КОВЧЕГ.КОЛЬЦО.{l}
+UI	tut_m20	Press the ring to put hulls in the convoy. A hull counts if it stands at the pier on the day of the Night.	Нажми на кольцо, чтобы поставить суда в конвой. Судно в счёте, если в день Ночи стоит у причала.
+UI	tut_m23	Near the end, crews refuse runs. Put a hull that refused in the convoy — it will not fly, but it counts.	Ближе к концу экипажи отказываются от рейсов. Отказавшееся судно ставь в конвой — лететь оно не станет, но в счёт идёт.
+UI	u_reserve	Into the convoy	В конвой
+UI	u_stReserve	in the convoy	в конвое
+MSG	ok_reserve	Hull {n} put in the convoy.	Судно {n} поставлено в конвой.
+MSG	ok_unreserve	Hull {n} taken out of the convoy.	Судно {n} снято с конвоя.
+UI	u_resLeft	Hull {n} left the convoy.	Судно {n} вышло из конвоя.
+UI	hk_unArk	Ring {l} of the hive counts now.	Кольцо сот {l} засчитано.
+LOG	ark_drive	GENERATION {g} DRIVE CAN PUSH THE ARK. The Night is still year {y}.	ДВИГАТЕЛЬ ПОКОЛЕНИЯ {g} СДВИНЕТ КОВЧЕГ. Ночь по-прежнему в год {y}.
+LOG	ark_grounded	THE NIGHT CAME AND THE ARK STAYED ON THE PIER. {b} aboard, and no Generation {g} drive to push them.	НОЧЬ НАСТУПИЛА, А КОВЧЕГ ОСТАЛСЯ У ПРИЧАЛА. {b} на борту — и нет двигателя поколения {g}, чтобы их сдвинуть.
+LOG	ark_woke	{w} of {s} woke at the other end. The rest sleep on.	На месте проснулись {w} из {s}. Остальные спят дальше.
+VOICE	ark_drive.1	Generation {g}. It will carry an ark past the collapse. It will not wake anyone at the other end: the pods do that, and the convoy that stands by them. The drive only gets the sleepers there. That is the whole of what I have to offer you.	Поколение {g}. Оно вынесет ковчег за пределы коллапса. Будить на месте оно никого не станет: это дело капсул и конвоя, который стоит при них. Двигатель только довозит спящих. Это всё, что я могу вам предложить.
+VOICE	ark_drive.2	The Generation {g} drive is done and it is enough. Enough is a word I used to hate. It carries everyone who boards; who wakes is counted in pods and in hulls of the convoy. Another generation gives you faster hulls and nothing more for the ark. I have written both columns on the same page and I am not choosing.	Двигатель поколения {g} готов, и его достаточно. «Достаточно» — слово, которое я раньше ненавидел. Он увезёт всех, кто сядет; кто проснётся, считают в капсулах и в судах конвоя. Ещё одно поколение даст вам суда быстрее — и ничего больше для ковчега. Я записал оба столбца на одной странице и не выбираю.
+VOICE	doomsday.1	{n} years to the Night and the square in front of the Institute is full every morning. Some of them say the date is a lie the desk tells to keep them digging. Some say the ark is for us and not for them, and they are not wrong about the arithmetic: pods for {b}, {h} standing at home. I have stopped reading what they paint on the doors. The lines still run.	До Ночи {n} лет, и площадь перед Институтом полна каждое утро. Одни говорят, что дата — ложь, которую пульт рассказывает, чтобы они копали. Другие — что ковчег для нас, а не для них, и в арифметике они не ошибаются: капсул на {b}, дома стоят {h}. Я перестал читать, что они пишут на дверях. Линии ходят.
+VOICE	doomsday.2	There is a congregation on the pier now. They hold a service at every launch and a wake at every landing. They do not want a pod; they say the Night is owed. The yards work around them. I have {h} at home, pods for {b}, and {n} years. I do not have time to argue with the ones who have decided.	На пирсе теперь община. Служба на каждый вылет, поминки на каждую посадку. Капсула им не нужна — говорят, Ночь заслужена. Верфи работают, обходя их. У меня {h} дома, капсул на {b} и {n} лет. Спорить с теми, кто уже решил, времени нет.
+LOG	doomsday	{n} YEARS TO THE NIGHT. Earth has learned to live by the date: congregations on the pier, the Institute guarded, children taught the year before they are taught to read. Pods for {b}; {h} standing at home.	{n} ЛЕТ ДО НОЧИ. Земля научилась жить по дате: общины на пирсе, Институт под охраной, детей учат году раньше, чем читать. Капсул на {b}; дома стоят {h}.
+UI	nar_N12b	One hundred years. Earth queues for the ark — there are more in the line than pods.	Сто лет. На Земле очередь на ковчег — в ней больше людей, чем капсул.
+UI	nar_rsLevel	not one ring of pods was filled	ни одно кольцо капсул не заполнено

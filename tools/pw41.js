@@ -18,13 +18,15 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('SKIP in the terminal: the map and the first rule', mn.gone&&await p.evaluate(()=>LNI.tut().msg==='m0'), JSON.stringify(mn));
   ok('at the start only rations and people are seen', await p.evaluate(()=>[...document.querySelectorAll('#res .rc[data-r]')].map(e=>e.dataset.r).join()==='food,people'));
   ok('at the start no tab is open', await p.evaluate(()=>document.querySelectorAll('#tabs [data-act="tab"]').length===0));
-  const r=await TUT.drive(p,U,{deadline:T0+120000,shots:process.env.LB_SHOTS?'pw41':null});
+  // v5.10: the Night step grew (m28 «WAKE · SLEEP ON» between m18 and m19, the Ark window's m27/m20) — more steps, more time
+  const r=await TUT.drive(p,U,{cap:260,deadline:T0+200000,shots:process.env.LB_SHOTS?'pw41':null});
   const S=r.seen, M=r.marks, F=M.final;
   ok('all 12 steps open, to the Night and the ark', F.step===11, 'step '+F.step+' day '+F.day+' over '+M.over+' · '+S.join(' '));
   const want=['m0','m1','m2','m3','N02','m4','m8','mM','m9','m10','m14','m15','N07','m17','N08','m16','N09','m18','m19'];   // m12 waits for the first parts at home
   const miss=want.filter(x=>!S.includes(x)); ok('every rule and story block of the steps was shown', !miss.length, 'missing '+miss.join(' ')+' · '+S.join(' '));
   // v4.40: the events story (N07, m17) waits for the first event in the sky — a soft step opened early has no sector to name
   const order=want.filter(x=>S.includes(x)&&x!=='N07'&&x!=='m17').map(x=>S.indexOf(x)); ok('in the order of the steps', order.every((v,i)=>!i||v>order[i-1]), S.join(' '));
+  ok('v5.10: m28 (WAKE · SLEEP ON) is shown between m18 and m19', S.indexOf('m28')>S.indexOf('m18')&&S.indexOf('m19')>S.indexOf('m28')&&S.indexOf('m28')>=0, S.join(' '));
   ok('N07 after m15, m17 right after N07', S.indexOf('N07')>S.indexOf('m15')&&S.indexOf('m17')===S.indexOf('N07')+1, S.join(' '));
   ok('N07 names the sector (no «Space over  flows»)', /^Space over [A-Z]/.test(M.v_N07||''), M.v_N07);
   ok('m12 «Parts are home» only with parts at home', !S.includes('m12')||(M.h_m12&&M.h_m12.parts>0), JSON.stringify(M.h_m12||null));
@@ -42,6 +44,14 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('the core opened every resource the run met', await p.evaluate(()=>['metal','fuel','parts'].every(k=>LN.opened[k]!==undefined)), await p.evaluate(()=>JSON.stringify(LN.opened)));
   ok('no hull lost before the advisor step (G.safe)', await p.evaluate(()=>LN.safe===false));
   ok('no page errors (tutorial run)', p.errs.length===0, p.errs.join(' | '));
+  // v5.10: the Ark window's two helper words on the first opening — m27 (the hive) and m20 (the convoy ring)
+  await U.clear(); await U.tab('ark'); await p.waitForTimeout(400);
+  const seenArk=[];
+  for(let i=0;i<8;i++){ const h=await p.evaluate(()=>({id:LNU.tut.msg?LNU.tut.msg.id:null,text:(document.querySelector('#helper .htx')||{innerText:''}).innerText}));
+    if(!h.id){ await p.waitForTimeout(250); continue } seenArk.push(h);
+    if(await p.isVisible('#helper [data-act="tutok"]')) await U.tap('#helper [data-act="tutok"]'); else break; await p.waitForTimeout(250) }
+  ok('v5.10: the Ark window names the hive (m27) and the convoy ring (m20)', seenArk.some(h=>h.id==='m27'&&/Press the hive/i.test(h.text||''))&&seenArk.some(h=>h.id==='m20'&&/Press the ring/i.test(h.text||'')), seenArk.map(h=>h.id+':'+(h.text||'').slice(0,40)).join(' | '));
+  await U.clear();
   // 2. save in the middle of the tutorial, load: the lock and what was said stay
   const sv=await p.evaluate(()=>LNsave()); await p.evaluate(s=>LNload(s),sv);
   ok('a save keeps the tutorial state', await p.evaluate(()=>{ const t=LNI.tut(); return t.lock&&t.step===11&&t.help }));

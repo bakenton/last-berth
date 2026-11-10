@@ -31,7 +31,8 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   ok('A header shows the year and the Night (макет v7)', hd.year===hd.G.day && hd.night===hd.G.night, JSON.stringify(hd));
   await p.screenshot({path:'w2-header.png',clip:{x:0,y:0,width:1600,height:70}});
   const rail=await p.arkTxt();
-  ok('A ark tab: drive row + wake row + verdict', /Ark drive/.test(rail)&&/Wake/.test(rail), rail.match(/The ark[^]*?Wake[^]{0,120}/i)?.[0].slice(0,260));
+  // v5.10: the hive has no drive row — WAKE, SLEEP ON and the verdict; with no ring the verdict says so
+  ok('A ark tab: WAKE, SLEEP ON and the verdict (no ring yet)', /Wake/.test(rail)&&/Sleep on/i.test(rail)&&/No ring of pods is filled/.test(rail), rail.match(/The ark[^]*?Wake[^]{0,160}/i)?.[0].slice(0,260));
   await p.U.tab('ark'); await p.locator('#ovl .win').first().screenshot({path:'w3-arkblock.png'}).catch(()=>{}); await p.U.tab('ark');
   ok('A advisor lists worlds only (Nikita 15.10): every row points at a world', await p.advWorlds(), JSON.stringify(await p.evaluate(()=>LNI.adv().map(r=>r[3]))));
   // forecast vs a real run: keep playing until the mark lands or 1400 years pass
@@ -43,24 +44,26 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   await p.pf(); await p.evaluate(()=>LNdraw());
   // v4.30: the journal is gone; the commissioning is checked in LN.log (its wording is no longer on the page)
   ok('A log: ark drive commissioned (LN.log ark_drive)', await p.evaluate(()=>LN.log.some(e=>e.code==='ark_drive')));
-  const rd=await p.arkTxt();
-  ok('A ark tab says ready (Gen V · ready)', /ready/i.test(rd)&&await p.evaluate(()=>arkReady(LN)), rd.match(/Ark drive.{0,40}/)?.[0]);
+  ok('A drive ready in the core (arkReady)', await p.evaluate(()=>arkReady(LN)));
   await p.screenshot({path:'w4-ready.png',clip:{x:0,y:0,width:1600,height:70}});
-  // build the first ark level with real clicks, then end
-  await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4;E.people=Math.max(E.people,450); LNdraw(); });
+  // v5.10: the ring I of pods is bought by clicks — press its cell, then FILL RING I on the card
+  const rd=await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4;E.people=Math.max(E.people,450); LNdraw(); return 1 });
   await p.U.tab('ark');
-  await p.U.tap('#ovl [data-act="arkbuy"][data-l="1"]');
-  const arkLv=await p.evaluate(()=>window.LN.ark.lv);
-  ok('A ark level bought by clicks', arkLv>=1, arkLv);
+  await p.U.tap('#ovl .hold .hr[data-v="1"] .hx'); await p.U.tap('#arkcard [data-act="arkbuy"]');
+  const arkLv=await p.evaluate(()=>window.LN.ark.rings);
+  ok('A ring I bought by clicks', arkLv>=1, arkLv);
+  const rd2=await p.evaluate(()=>(document.getElementById('arkfate')||{innerText:''}).innerText.replace(/\s+/g,' '));   // the tab stays open here: read it, do not toggle it
+  // v5.10: with no convoy the verdict says nobody would wake (not the drive line); the drive's readiness is in the core
+  ok('A ark tab: the drive is ready (core), the verdict says the ark sails, nobody wakes yet', await p.evaluate(()=>arkReady(LN))&&/The ark sails/i.test(rd2)&&/Nobody would wake/i.test(rd2), rd2);
   await p.U.tab('ark');
-  // v4.29: the ark needs a convoy at the pier (K.ARK_CONVOY, generation ≥ arkMark−1) — dock one and set it aside
-  const cvA=await p.evaluate(()=>{ const G=window.LN, g=convoyGen(G); ['courier','courier','courier','hauler','hauler','freighter'].forEach(function(c){ const hi=hullAt(c,g); if(hi!==null&&buildShip(G,hi)==='ok'){ const s=G.ships[G.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.pend=null; s.reserve=true } }); return arkConvoy(G) });
-  ok('A convoy gathered at the pier', cvA.ok, JSON.stringify(cvA));
+  // v5.10: nobody wakes without a convoy; the convoy is the hulls set aside at the pier — dock six and set them aside
+  const cvA=await p.evaluate(()=>{ const G=window.LN; ['courier','courier','courier','hauler','hauler','freighter'].forEach(function(c){ const hi=hullAt(c,G.arkMark); if(hi!==null&&buildShip(G,hi)==='ok'){ const s=G.ships[G.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.pend=null; s.reserve=true } }); return arkConvoy(G) });
+  ok('A convoy gathered at the pier (six hulls set aside)', cvA.have>=6&&cvA.share>0, JSON.stringify({have:cvA.have,all:cvA.all,share:cvA.share}));
   await p.evaluate(()=>{ window.LN.night=window.LN.day+2; LNdraw() });
   await p.U.until(()=>p.evaluate(()=>!!window.LN.over),200,10); await p.U.pause();
-  const end=await p.evaluate(()=>({over:LN.over,boarded:LN.boarded,souls:LN.souls,wake:LN.wake,grounded:LN.grounded}));
+  const end=await p.evaluate(()=>({over:LN.over,boarded:LN.boarded,souls:LN.souls,wake:LN.wake,grounded:LN.grounded,capsuled:LN.capsuled,convoy:LN.convoy}));
   const ov=await p.big();
-  ok('A sailed: souls = floor(boarded × wake)', end.over==='night'&&!end.grounded&&end.wake>0&&(end.souls===Math.floor(end.boarded*end.wake)||end.souls>0), JSON.stringify(end));
+  ok('A sailed: woke = floor(min(aboard, pods) x convoy share)', end.over==='night'&&!end.grounded&&end.boarded>0&&end.souls>0&&end.souls===Math.floor(Math.min(end.boarded,end.capsuled)*end.convoy.have/end.convoy.all+1e-9), JSON.stringify(end));
   ok('A ending shows boarded and woke', /Souls aboard/.test(ov)&&/Woke at the other end/.test(ov)&&/woke at the other end/i.test(ov), ov.slice(0,420));
   await p.screenshot({path:'w5-end.png'});
   ok('A no page errors', !p.errs.length, p.errs.join(' | '));
@@ -74,13 +77,16 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   ok('B header: the Night date', !!hr.night&&hr.night.indexOf(String(hr.G.night))>=0, JSON.stringify(hr));
   await p.screenshot({path:'w6-ru-header.png',clip:{x:0,y:0,width:1600,height:70}});
   const ruArk=await p.arkTxt();
-  ok('B ark tab: drive title and generation', /Ark drive/i.test(ruArk)&&/IV/.test(ruArk), ruArk.match(/Ark drive.{0,60}/i)?.[0]);
+  ok('B ark tab: no ring yet — the verdict says so', /No ring of pods is filled/.test(ruArk), ruArk.match(/No ring.{0,40}/)?.[0]);
   ok('B advisor lists worlds only (Nikita 15.10)', await p.advWorlds(), JSON.stringify(await p.evaluate(()=>LNI.adv().map(r=>r[3]))));
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; LNdraw(); });
-  await p.U.tab('ark'); await p.U.tap('#ovl [data-act="arkbuy"][data-l="1"]'); await p.U.tab('ark');
+  await p.U.tab('ark'); await p.U.tap('#ovl .hold .hr[data-v="1"] .hx'); await p.U.tap('#arkcard [data-act="arkbuy"]');
+  const fateB=await p.evaluate(()=>(document.getElementById('arkfate')||{innerText:''}).innerText.replace(/\s+/g,' '));
+  ok('B the verdict names the generation once a ring is paid (Gen IV)', /Gen IV/.test(fateB), fateB);
+  await p.U.tab('ark');
   await p.evaluate(()=>{ window.LN.night=window.LN.day+2; LNdraw() });
   await p.U.until(()=>p.evaluate(()=>!!window.LN.over),200,10); await p.U.pause();
-  const endB=await p.evaluate(()=>({over:LN.over,souls:LN.souls,grounded:LN.grounded,arkLevel:arkLevel(LN),log:LN.log.filter(e=>e.code==='ark_grounded').length}));
+  const endB=await p.evaluate(()=>({over:LN.over,souls:LN.souls,grounded:LN.grounded,rings:arkRings(LN),log:LN.log.filter(e=>e.code==='ark_grounded').length}));
   const ovB=await p.big();
   ok('B grounded: 0 souls, grounded log, verdict text', endB.grounded&&endB.souls===0&&endB.log===1&&/The Night/.test(ovB)&&/The ark did not sail/.test(ovB), JSON.stringify(endB)+' | '+ovB.slice(0,300));
   await p.screenshot({path:'w7-grounded.png'});

@@ -68,10 +68,10 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const h=await p.evaluate(()=>{ const x=HULLS.find(h=>h.key==='hauler'&&h.gen===0), y=genHull(1,1); return {m:x.metal,p:x.parts,p2:y.parts} });
   ok('Hauler I: 100 metal, no parts; Hauler II keeps its parts', h.m===100&&h.p===0&&h.p2>0, JSON.stringify(h));
 
-  // 7. the ark: level IV adds 15 points to the drive's share; II–IV are dearer in food, cheaper in parts
-  const a=await p.evaluate(()=>{ LN.arkMark=2; LN.driveLvl=3; LN.ark.paid=arkPrice(1); const w1=arkWake(LN); LN.ark.paid=arkPrice(4); const w4=arkWake(LN); LN.ark.paid={metal:0,parts:0,food:0,fuel:0}; return {w1,w4,f2:arkPrice(2).food,p2:arkPrice(2).parts} });
-  ok('ark: level I — the drive alone, level IV +15%', a.w1===0.6&&Math.abs(a.w4-0.75)<1e-9, JSON.stringify(a));
-  ok('ark level II: food ×2, parts ×0.5', a.f2===3750*3*2&&a.p2===900*3*0.5, JSON.stringify(a));
+  // 7. v5.10 (ARK.md 2г): the rings of pods cost the ladder's sum over their capsules; nobody wakes without a convoy at the pier
+  const a=await p.evaluate(()=>{ LN.arkMark=2; LN.driveLvl=3; const r=[1,2,3,4].map(k=>arkRingPrice(k)); const was=LN.ark; LN.ark={rings:1,woke:1}; const cv=arkConvoy(LN).have, w=arkWakeN(LN); LN.ark=was; return {r,cv,w} });
+  ok('ark rings: 1 200/600, 3 200/2 000, 7 600/6 400, 19 000/22 000', a.r[0].food===1200&&a.r[0].metal===600&&a.r[1].food===3200&&a.r[1].metal===2000&&a.r[2].food===7600&&a.r[2].metal===6400&&a.r[3].food===19000&&a.r[3].metal===22000, JSON.stringify(a.r));
+  ok('ark: no convoy at the pier = nobody wakes', a.cv===0&&a.w===0, JSON.stringify({cv:a.cv,w:a.w}));
 
   // 8. v5.02: the hub is evacuated while a feeder hull flies into it with a hold — the hold comes home, the line goes to Earth, one log line
   await U.clear();

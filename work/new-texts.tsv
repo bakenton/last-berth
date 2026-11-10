@@ -793,3 +793,33 @@ UI	hk_nameB	HIVE	УЛЕЙ
 UI	hk_lvlB	Rings: {n}	Колец: {n}
 UI	hk_dB	A core sits behind rings of cells. Break through to it.	Ядро сидит за кольцами ячеек. Пробейся к нему.
 UI	hk_rB	every cell takes damage · the core is the goal · a lost cell grows back · do not touch the hive	ранится каждая ячейка · цель — ядро · выбитая ячейка отрастает · улья не касайся
+UI	u_sleepOn	Sleep on	Спят дальше
+UI	u_arkFed	last to the Night	хватит до Ночи
+UI	u_arkFamine	run out in {y}	кончатся в {y}
+MSG	ok_allpier	{n} hulls put in the convoy.	Судов поставлено в конвой: {n}.
+UI	statConvoy	Convoy	Конвой
+UI	u_hiveHead	The ark · one hex — 100 people	Ковчег · один гекс — 100 человек
+UI	u_hiveConvoy	Convoy · the whole fleet fills the ring	Конвой · весь флот заполняет кольцо
+UI	u_lgPod	pod	капсула
+UI	u_lgNoPod	no pod	без капсулы
+UI	u_lgConvoy	in the convoy	в конвое
+UI	u_lgWay	coming home	летит домой
+UI	u_arkHint1	Press the hive to buy pods.	Нажми на соты, чтобы купить капсулы.
+UI	u_arkHint2	Press the ring to man the convoy.	Нажми на кольцо, чтобы собрать конвой.
+UI	u_hiveRing	Ring {n}	Кольцо {n}
+UI	u_pods	Pods	Капсулы
+UI	u_arkRations	Rations	Рационы
+UI	u_arkFamine2	run out in {y} · in {z} without it	кончатся в {y} · без покупки в {z}
+UI	u_cvIn	In the convoy	В конвое
+UI	u_cvOf	{a} of {b} hulls	{a} из {b} судов
+UI	u_cvPier	At the pier	У причала
+UI	u_cvLines	On the lines	На линиях
+UI	u_cvWay	Coming home	Летят домой
+UI	u_cvAdd	Add all	Добавить всех
+UI	u_cvCall	Call home	Вызвать домой
+UI	u_cvSure	Press again	Ещё раз
+UI	u_topWake	Wake · sleep on	Проснутся · спят
+UI	tut_m27	A hex is 100 people. Press the hive to fill a ring with pods — the card says if the rations last to the Night.	Гекс — 100 человек. Нажми на соты, чтобы заполнить кольцо капсулами: карточка скажет, хватит ли рационов до Ночи.
+UI	tut_m28	Wake and sleep on: who would wake if the Night came today, and who would sleep on. Both numbers stay up here.	Проснутся и спят: сколько проснулось бы, приди Ночь сегодня, и сколько спали бы дальше. Оба числа всегда здесь.
+UI	u_vNoConvoy	Nobody would wake: no hull stands in the convoy.	Никто не проснётся: в конвое нет ни одного судна.
+UI	u_vNoWake	Nobody would wake.	Никто не проснётся.

@@ -940,6 +940,7 @@ var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to
 function drawTop(){
   var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
   if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
+  if(can('ark')&&G.night){ var twk=arkWakeN(G), tab_=arkSouls(G); h+='<div class="yr wso" id="topwake"><small>'+esc(T('u_topWake'))+'</small><b style="color:'+C.food+'">'+num(twk)+'</b><span>·</span><b style="color:'+C.ark+'">'+num(Math.max(0,tab_-twk))+'</b></div>' }
   if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
   h+='<div class="spd">'+(hz?'<span class="pz">'+esc(T('u_paused'))+'</span>':'');
@@ -993,10 +994,11 @@ function flags(){ var F={}, E=G.earth, nd=G.need||earthNeed(G);
   if(cw) F.fleet=[fill(T('u_flCrew'),{n:cw}),C.red];
   else if(idle) F.fleet=[fill(T('u_flIdle'),{n:idle}),C.people];
   else if(mut) F.fleet=[fill(T('u_flMutiny'),{n:mut}),C.red];
-  if(G.night){ var cv=arkConvoy(G), sh=0; for(var c in cv.need) sh+=Math.max(0,cv.need[c]-(cv.have[c]||0));
-    if(arkLevel(G)<1) F.ark=[T('u_flArkNone'),C.ark];
+  if(G.night){ var cv=arkConvoy(G);
+    if(arkRings(G)<1) F.ark=[T('u_flArkNone'),C.ark];
     else if(!arkReady(G)) F.ark=[T('u_flArkDrive'),C.ark];
-    else F.ark=sh?[fill(T('u_flConvoy'),{n:sh}),C.ark]:[T('u_flConvoyOk'),C.food] }
+    else if(cv.ok) F.ark=[T('u_flConvoyOk'),C.food];
+    else if(nightLeft(G)<=K.NIGHT_NEAR*2) F.ark=[fill(T('u_flConvoy'),{n:cv.have,k:cv.all}),C.ark] }   // v5.10: the convoy is a share of the fleet — flagged when the end is near
   if(canSurvey(G)==='ok') F.tech=[fill(T('u_flSurvey'),{n:SECTORS.length+1}),C.food];
   else if(!G.drive&&startDriveWhy(driveHost())==='ok') F.tech=[T('u_flDrive'),C.food];
   var hkF=hackNext(G); if(hkF&&!hackOn()) F[hkF.k==='drive'?'tech':'ark']=[T('u_flHack'),C.people];   // v5.09: a waiting hack flags its tab
@@ -1072,14 +1074,13 @@ function bigHtml(kind){
   if(kind==='over'){ var btns='<div class="nbtn">'+btn(esc(T('exportLog')),'export')+btn(esc(T('newGame')),'new',null,'pri')+'</div>';
     if(G.over==='night'){ var sl=G.souls||0, lb=G.left||leftBehind(G), tier=sl<=0?0:(sl<300?1:(sl<1200?2:3)), behind=lb.home+lb.hulls+lb.colonies+lb.transit;
       var sailed=!G.grounded&&(G.boarded||0)>0, why='', noWake=sailed?G.boarded-sl:0;
-      if(!sailed){ if(G.grounded&&G.groundedWhy==='convoy'){ var cv=arkConvoy(G), sh=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) sh.push(d+' × '+T(c)) }); why=fill(T('nar_rsConvoy'),{s:sh.join(', '),g:roman(convoyGen(G))}) }
-        else if(G.grounded) why=fill(T('nar_rsDrive'),{g:roman(G.arkMark)}); else why=T('nar_rsLevel') }
+      if(!sailed){ if(G.grounded) why=fill(T('nar_rsDrive'),{g:roman(G.arkMark)}); else why=T('nar_rsLevel') }
       return '<div class="nwin '+(sailed&&tier?'good':'bad')+'">'+icap(T('u_year')+' '+G.day+' · '+T('u_theNight'))+
         (sailed?'<div class="nbig" style="color:'+C.ark+'"><small>'+esc(T('nar_aboard'))+'</small><b>'+num(G.boarded)+'</b></div><p>'+esc(fill(T('nar_N13a'),{n:num(G.boarded)}))+'</p>'
-               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+(noWake>0?'<p style="color:'+C.red+'">'+esc(fill(T('nar_rsWake'),{n:num(noWake),g:roman(G.driveLvl||0),h:roman((G.driveLvl||0)+1),p:Math.round(wakeAt(G,(G.driveLvl||0)+1)*100)}))+'</p>':'')+'<div class="rws">'+
+               :'<p>'+esc(fill(T('nar_N13b'),{reason:why}))+'</p>')+'<div class="rws">'+
         rw2(esc(T('statSouls')),num(G.boarded||0),(G.boarded||0)?'good':'bad')+
-        rw2(esc(T('statWoke')),G.grounded?esc(T(G.groundedWhy==='convoy'?'arkNoConvoy':'arkNoDrive')):num(sl)+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+(noWake>0?rw2(esc(T('statNoWake')),num(noWake),'bad'):'')+
-        rw2(esc(T('statBerths')),arkLevel(G)+' / '+K.ARK_LEVELS.length)+(G.cargo?rw2(esc(T('statCargo')),price(G.cargo,null)):'')+
+        rw2(esc(T('statWoke')),G.grounded?esc(T('arkNoDrive')):num(sl)+' · '+Math.round((G.wake||0)*100)+'%',tier?'good':'bad')+(noWake>0?rw2(esc(T('statNoWake')),num(noWake),'warn'):'')+
+        rw2(esc(T('statBerths')),arkRings(G)+' · '+num(arkCaps(arkRings(G))))+(G.convoy?rw2(esc(T('statConvoy')),G.convoy.have+' / '+G.convoy.all):'')+(G.cargo?rw2(esc(T('statCargo')),price(G.cargo,null)):'')+
         rw2(esc(T('statLeft')),num(behind)+' · '+lb.hulls+' '+esc(T('lbHulls'))+' · '+lb.colonies+' '+esc(T('lbCol')),'warn')+
         rw2(esc(T('statDay')),G.day)+rw2(esc(T('statSec')),SECTORS.length)+rw2(esc(T('statPeak')),G.stats.peak)+rw2(esc(T('statDrive')),G.driveLvl||0)+(G.stats.mutinies?rw2(esc(T('statMutiny')),G.stats.mutinies,'warn'):'')+'</div>'+
         chronLines(3)+alx(T(sailed?'nar_N13a_a':'nar_N13b_a'))+btns+'</div>' }
@@ -1212,11 +1213,13 @@ var TMSG={
  m16:{at:function(){ return '#map .wd[data-p="'+U.tut.r2+'"]' },mode:'see',k:'tut_m16',
    pre:function(){ closeAll(); var w=PLANETS.filter(function(p){ return p.sec===1&&!(G.ghost&&G.ghost[p.id]) }).sort(function(a,b){ return a.dist-b.dist })[0]; U.tut.r2=w?w.id:null; CFIT=true; CFITK=''; return {} }},
  m18:{at:'#top .night',mode:'see',k:'tut_m18',pre:closeAll},
- m19:{at:'#tabs [data-v="ark"]',mode:'see',k:'tut_m19',pre:function(){ closeAll(); return {g:roman(convoyGen(G))} }},
+ m28:{at:'#topwake',mode:'see',k:'tut_m28',pre:closeAll},   // v5.10: WAKE · SLEEP ON in the top bar, told with the date of the Night
+ m19:{at:'#tabs [data-v="ark"]',mode:'see',k:'tut_m19',pre:function(){ closeAll(); return {} }},
  /* by occasion: once each, when the thing first happens */
  m7:{at:'#ovl .wh small',mode:'see',k:'tut_m7'},
  m13:{at:'#mach',mode:'see',k:'tut_m13'},
- m20:{at:'#convoy',mode:'see',k:'tut_m20'},
+ m27:{at:'#ovl .hold',mode:'see',k:'tut_m27'},   // v5.10: the hive, the first time the Ark window shows it
+ m20:{at:'#cvring',mode:'see',k:'tut_m20'},   // v5.10: the convoy is the ring around the hive (was the 3-2-1 block)
  m21:{at:'#rw-lift',mode:'see',k:'tut_m21'},
  m22:{at:'#ovl [data-act="evac"]',mode:'see',k:'tut_m22',pre:function(){ var d=U.tut.dead; if(d&&G.colonies[d]) openWorld(d); return {} }},
  m25:{at:'#hubblk',mode:'see',k:'tut_m25'},   // v5.01: the hub, the first time a world card shows it
@@ -1249,7 +1252,7 @@ var STEPS=[
  {t:'advisor',opens:['advisor','worlds'],q:['m15'],soft:1,when:function(){ return reach(G)>=5||advRows().length>0||G.day>=500 }},
  {t:'events',opens:['sectors','events'],q:['N07','m17'],soft:1,when:function(){ return evOn()||G.day>=700 }},
  {t:'ring2',opens:['ring2','zoom'],q:['N08','m16'],when:function(){ return !ringFree(0).length||settledCount(G)>=5||G.day>=700||!!G.night }},
- {t:'night',opens:['ring3','night','ark','reserve','lift','evac'],q:['m18','m19'],when:function(){ return !!G.night&&!!G.nightSeen }}
+ {t:'night',opens:['ring3','night','ark','reserve','lift','evac'],q:['m18','m28','m19'],when:function(){ return !!G.night&&!!G.nightSeen }}
 ];
 function stepReady(i){ var s=STEPS[i]; if(!s) return false; return s.when()||(!!s.soft&&stepReady(i+1)) }
 var STEP_SAFE=8;   // HANDOFF: no hull is lost before the advisor step (G.safe)
@@ -1288,7 +1291,7 @@ function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
   if(!t.help||!quiet||!w) return;   // the window ones speak only while that window is up
   var c=planet(w)&&G.colonies[w], ll=c&&lastLift(G,w);
   if(w==='earth'||w==='yard'||w==='ark') tutPush('m7');
-  if(w==='ark'&&G.night&&can('ark')) tutPush('m20');
+  if(w==='ark'&&G.night&&can('ark')){ tutPush('m27'); tutPush('m20') }
   if(c&&can('machines')&&(kitOpen(G)||kitTier(c))) tutPush('m13');
   if(c&&can('lift')&&ll&&ll.st!=='going') tutPush('m21');
   if(c&&can('parts')&&planet(w).kind!=='works') tutPush('m25');
@@ -1643,7 +1646,7 @@ function winYard(){ var g=G.gen||0, b=building(), pier=freeAtPier(), h='';
   h+=pier.length?'<div class="pier">'+pier.sort(function(a,b){ return (b.reserve?1:0)-(a.reserve?1:0)||hullGen(b)-hullGen(a)||a.id-b.id }).map(function(s){ var v=scrapValue(HULLS[s.hull]), arm=U.scrapArm===s.id;
     return '<div class="pc'+(s.reserve?' res':'')+(s.mutiny?' mut':'')+'">'+shipIc(shipClass(s),34)+genB(hullGen(s),hullGen(s)<g-1)+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b>'+
       (s.reserve?'<em>'+ic('reserve',14,C.ark)+esc(T('u_stReserve').toUpperCase())+'</em>':(s.mutiny?'<em>'+ic('mutiny',14,C.red)+esc(T('u_stMutiny').toUpperCase())+'</em>':''))+
-      '<div>'+(G.night&&can('reserve')&&!s.mutiny?btn(esc(T(s.reserve?'u_release':'u_reserve')),'reserve',{s:s.id,on:s.reserve?0:1},'','reserve',(!s.reserve&&hullGen(s)<convoyGen(G))?off('convoy_old',{g:roman(convoyGen(G))}):''):'')+
+      '<div>'+(G.night&&can('reserve')&&!s.mutiny?btn(esc(T(s.reserve?'u_release':'u_reserve')),'reserve',{s:s.id,on:s.reserve?0:1},'','reserve'):'')+
       (s.reserve?'':(arm?'<button class="b red" type="button" data-act="scrap" data-s="'+s.id+'">'+esc(T('u_scrapSure'))+' '+price({metal:v.metal,parts:v.parts,people:s.crew||0},null,11)+'</button>':btn(esc(T('u_scrap')),'scrap',{s:s.id},'','scrap')))+'</div></div>' }).join('')+'</div>':hint(esc(T('u_pierEmpty')));
   return '<div class="win wide">'+head(esc(T('u_tabYard').toUpperCase()),esc(fill(T('u_genPaused'),{g:roman(g)})),ic('tYard',18))+'<div class="bd">'+h+'</div></div>' }
 
@@ -1691,9 +1694,8 @@ function startDriveWhy(pid){ if(G.drive) return 'running';
   return 'ok' }
 /* Nikita, 26.10: «непонятно что за программа двигателя» — a note that opens and closes any time; the choice stays between runs */
 function driveHelpOn(){ if(U.driveHelp===undefined){ U.driveHelp=false; try{ U.driveHelp=localStorage.getItem('lb.driveHelp')==='1' }catch(e){} } return U.driveHelp }
-function driveHelp(work){ var w=K.ARK_WAKE, pc=function(x){ return Math.round(x*100) };
-  return '<div class="dhelp"><p>'+esc(T('u_dh1'))+'</p><p>'+esc(T('u_dh2'))+'</p><p>'+esc(fill(T('u_dh3'),{n:num(work)}))+'</p><p>'+esc(T('u_dh4'))+'</p>'+
-    (can('ark')&&G.night&&G.arkMark!==null?'<p style="color:'+C.ark+'">'+esc(fill(T('u_dh5'),{g:roman(G.arkMark),a:pc(w[0]),b:pc(w[1]),c:pc(w[2]),d:pc(w[3])}))+'</p>':'')+'</div>' }
+function driveHelp(work){
+  return '<div class="dhelp"><p>'+esc(T('u_dh1'))+'</p><p>'+esc(T('u_dh2'))+'</p><p>'+esc(fill(T('u_dh3'),{n:num(work)}))+'</p><p>'+esc(T('u_dh4'))+'</p>'+'</div>' }
 function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWorkFor(G), h='';
   h+=sec(esc(T('u_hullGen'))+'<button type="button" class="qm'+(driveHelpOn()?' on':'')+'" data-act="drivehelp" aria-expanded="'+driveHelpOn()+'" title="'+attr(T('u_dhQ'))+'" aria-label="'+attr(T('u_dhQ'))+'">?</button>',roman(g)+' → '+roman(g+1));
   if(driveHelpOn()) h+=driveHelp(work);
@@ -1714,7 +1716,6 @@ function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=
   CLASSES.forEach(function(cls,j){ var a=HULLS[currentHull(G,cls)], b=genHull(g+1,j);
     h+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span><i>'+speedTxt(a)+'</i>'+speedTxt(b,lvl+1)+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
   h+='</div>';
-  if(G.night&&can('ark')&&G.arkMark!==null){ var wn=Math.round(wakeAt(G,lvl)*100), wx=Math.round(wakeAt(G,lvl+1)*100); if(wx>wn) h+=hint('<span style="color:'+C.ark+'">'+ic('ark',14,C.ark)+' '+esc(fill(T('u_arkWakeNext'),{a:wn,b:wx}))+'</span>') }
   // rings
   var sn=K.SURVEY_REACH*SECTORS.length, sc=surveyCost(SECTORS.length), sv=canSurvey(G);
   h+=sec(esc(T('u_rings')),esc(fill(T('u_charted'),{n:SECTORS.length})).toUpperCase());
@@ -1726,7 +1727,8 @@ function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=
   if(beyond) h+=hint(esc(fill(T('u_beyond'),{k:beyond,n:lim+1,g:roman(g+1)})));
   return '<div class="side">'+head(esc(T('u_tech').toUpperCase()),'',ic('tTech',18))+'<div class="tbl">'+h+'</div></div>' }
 
-/* ---------- Ark: the Night, the levels, the convoy, the verdict ---------- */
+/* ---------- Ark: the Night, the capsule rings, the convoy, the verdict ----------
+   v5.10 (design/ARK.md 2g): the rules of the hive in the old frame — the hive drawing of design/ark-menu comes next */
 function arkDriveTxt(){ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.arkMark)}),C.food];
   var f=driveForecast(G,G.arkMark);
   if(f.st==='ok') return [fill(T('u_arkBy'),{g:roman(G.arkMark),y:f.y}),f.y>G.night?C.red:(f.y>G.night-K.NIGHT_NEAR/2?C.people:C.food)];
@@ -1734,37 +1736,57 @@ function arkDriveTxt(){ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.
   if(f.st==='host') return [fill(T('u_arkNoHost'),{g:roman(G.arkMark)}),C.red];
   return [fill(T('u_arkStall'),{g:roman(G.arkMark)}),C.red] }
 /* Nikita, 02.11 (35 presses at the end of run 221175121): every hull on a line, in one press — the same two orders the hull rows give. A hull on an evacuation or a landing finishes first */
-function homeList(){ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!s.mutiny&&!s.job&&(s.from||s.pend) }) }
+function homeList(){ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!s.reserve&&!s.job&&(s.from||s.pend) }) }
+/* the hulls at the pier that are not in the convoy yet */
+function pierOut(){ return freeAtPier().filter(function(s){ return !s.reserve&&!s.job }) }
+/* v5.10 (design/ARK.md 2g p. 5, drafts design/ark-menu hex-F1/F2/F3 — one window in three states: at rest, the convoy pressed, a ring
+   pressed). The hive: a hex is 100 people; ring k of cells is block k (6k cells = 600k pods). A cell is purple when its ring is
+   bought, an outline when a person stands there with no pod, dotted when nobody does. Outside, the convoy ring: always 36 cells,
+   full by the share of the fleet standing in the convoy. U.arkSel — what is pressed: a ring number, 'c' (the convoy) or nothing. */
+var HIVE_D=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]], HIVE_S3=Math.sqrt(3);
+function hivePts(cx,cy,r){ var a=[]; for(var i=0;i<6;i++){ var t=Math.PI/3*i; a.push((cx+r*Math.cos(t)).toFixed(1)+','+(cy+r*Math.sin(t)).toFixed(1)) } return a.join(' ') }
+function hiveRings(){ var need=1, ab=arkBoard(G); while(arkCaps(need)<ab&&need<12) need++; return Math.max(need,arkPaid(G)+1) }
+function hiveSvg(sel){
+  var rg=arkRings(G), paid=arkPaid(G), N=hiveRings(), rc=Math.max(6,N+2), r=19*6/rc, cx=262, cy=236, cv=arkConvoy(G);
+  var people=Math.ceil(arkBoard(G)/100), k=0, s='<polygon class="hx core" points="'+hivePts(cx,cy,r-1.8)+'"/>', ring, side, j;
+  var at=function(q,rr){ return [cx+r*1.5*q,cy+r*HIVE_S3*(rr+q/2)] };
+  for(ring=1;ring<=N;ring++){ var q=0, rr=-ring, g='';
+    for(side=0;side<6;side++) for(j=0;j<ring;j++,k++){ var xy=at(q,rr), man=k<people;
+      var cls=ring<=rg?(man?'on':'on spare'):(ring<=paid?'wait':(typeof sel==='number'&&ring<=sel?'sel':(man?'':'none')));
+      g+='<polygon class="hx '+cls+(sel===ring?' rsel':'')+'" points="'+hivePts(xy[0],xy[1],r-1.9)+'"/>'; q+=HIVE_D[side][0]; rr+=HIVE_D[side][1] }
+    s+='<g class="hr" data-act="arksel" data-v="'+ring+'">'+g+'</g>' }
+  var way=Math.min(cv.cells-cv.lit,cv.all?Math.ceil(cv.cells*cv.way/cv.all):0), per=cv.cells/6, c='', q2=0, r2=-rc;
+  for(side=0;side<6;side++){ for(j=0;j<per;j++){ var i=side*per+j, f=j/per*rc, xy2=at(q2+HIVE_D[side][0]*f,r2+HIVE_D[side][1]*f);
+      c+='<polygon class="hx cv'+(i<cv.lit?' on':(i<cv.lit+way?' way':''))+'" points="'+hivePts(xy2[0],xy2[1],r-1.9)+'"/>' }
+    q2+=HIVE_D[side][0]*rc; r2+=HIVE_D[side][1]*rc }
+  s+='<g class="hr'+(sel==='c'?' csel':'')+'" id="cvring" data-act="arksel" data-v="c">'+c+'</g>';
+  return '<svg class="hold" viewBox="0 0 524 472" role="img">'+s+'</svg>' }
+function hiveLg(cls,key){ return '<span><svg width="16" height="14" viewBox="0 0 16 14"><polygon class="hx '+cls+'" points="'+hivePts(8,7,6.5)+'"/></svg>'+esc(T(key))+'</span>' }
 function winArk(){
   if(!G.night) return '<div class="win sm">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_timePaused')),ic('ark',18,C.ark))+'<div class="bd"><div class="big mid">'+ic('night',22,C.mid)+esc(T('u_noDate'))+'</div>'+hint(esc(fill(T('u_noDateHint'),{n:K.NIGHT_TRIGGER_SECTORS,y:K.NIGHT_TRIGGER_YEAR})))+'</div></div>';
-  var lv=arkLevel(G), top=K.ARK_LEVELS.length, ad=arkDriveTxt(), lvl=G.driveLvl||0, h='';
-  var hkA=hackNext(G); if(hkA&&hkA.k==='ark'&&!hackOn()) h+='<div id="hkneed" style="margin-bottom:12px">'+alertBox('ark',esc(fill(T('u_hackNeed'),{w:hackWho(hkA)})),true)+btn(esc(T('u_hackStart')),'hack',null,'pri full','ark')+'</div>';   // v5.09
-  h+='<div class="arktop"><div>'+sec(esc(T('u_theNight')))+'<div class="hero" style="color:'+C.red+'">'+G.night+'<span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>'+
-    row(ic('drive',13,C.ark)+esc(T('u_arkDrive')),esc(ad[0]),ad[1])+row(esc(T('u_wake')),arkReady(G)?Math.round(arkWake(G)*100)+'%':'—')+
-    (arkLvlWake(G)>0?row(ic('ark',13,C.ark)+esc(fill(T('u_wakeStores'),{l:roman(lv-1)})),'+'+Math.round(arkLvlWake(G)*100)+'%',C.ark):'');   // v4.49: what the paid level adds
-  if(lvl+1>=G.arkMark&&wakeAt(G,lvl+1)>arkWake(G)){ var f2=driveForecast(G,lvl+1); h+=row(esc(fill(T('u_withGen'),{g:roman(lvl+1),y:f2.st==='ok'?'≈ '+f2.y:'—'})),Math.round(wakeAt(G,lvl+1)*100)+'%',C.ark) }
-  h+='</div><div>'+sec(esc(T('u_levels')),lv+' / '+top)+'<div class="lv">';
-  for(var l=1;l<=top;l++){ var cap=arkCap(l), cls=l<=lv?'paid':(l===lv+1?'next':'');
-    var lw=K.ARK_LVL_WAKE[l-1]||0;   // v4.49: levels II–IV wake more of the sleepers
-    h+='<div class="lc '+cls+'"><b>'+roman(l-1)+'</b>'+(lw?'<span'+(l<=lv?'':' style="color:'+C.ark+'"')+'>'+esc(fill(T('u_lvWake'),{n:Math.round(lw*100)}))+'</span>':'<span>'+esc(T('u_lvTicket'))+'</span>')+'<span>'+esc(T('u_takesAlong'))+'</span><div class="prow">'+price(cap,null,11)+'</div>';
-    if(l<=lv) h+='<em>'+esc(T('u_paid'))+'</em>';
-    else { var owed=arkOwed(G,l), w=arkCheck(G,l); if(w==='ok') w=shortWhy(owed,G.earth);
-      h+='<span>'+esc(T('u_price'))+'</span><div class="prow">'+price(owed,G.earth,11)+'</div>'+(l===lv+1||(typeof w!=='string'&&w[0]==='ok')?btn(esc(fill(T('u_buyLv'),{l:roman(l-1)})),'arkbuy',{l:l},(typeof w!=='string'&&w[0]==='ok')?'pri':'',null,offW(w)):'') }
-    h+='</div>' }
-  h+='</div></div></div>';
-  var cv=arkConvoy(G), pier=G.ships.filter(function(s){ return convoyHull(G,s) }).sort(function(a,b){ return (b.reserve?1:0)-(a.reserve?1:0)||hullGen(b)-hullGen(a) });
-  h+='<div id="convoy">'+sec(esc(fill(T('u_convoy'),{a:cv.need.courier,b:cv.need.hauler,c:cv.need.freighter})),esc(fill(T('u_genPlus'),{g:roman(cv.gen)})).toUpperCase())+'<div class="cv">';
-  CLASSES.forEach(function(cls){ var mine=pier.filter(function(s){ return shipClass(s)===cls }); h+='<div class="cg">';
-    for(var i=0;i<cv.need[cls];i++){ var s=mine[i]; h+='<div class="slot'+(s?' on':'')+'">'+shipIc(cls,40)+'<span>'+esc(s?T(cls)+' '+roman(hullGen(s))+' '+fill(T('hullNo'),{n:s.id}):T('u_empty').toUpperCase())+'</span></div>' }
-    h+='</div>' });
-  var over=[]; CLASSES.forEach(function(c){ over=over.concat(pier.filter(function(s){ return shipClass(s)===c }).slice(cv.need[c])) });
-  var hl=can('reserve')?homeList():[];
-  h+='</div>'+(over.length?hint('<span style="color:'+C.ark+'">'+ic('reserve',14,C.ark)+' '+esc(fill(T('u_convoyOver'),{n:num(over.reduce(function(a,s){ return a+(s.crew||0) },0)),k:over.length}))+'</span>'):'')+hint(esc(fill(T('u_convoyHint'),{g:roman(cv.gen)})))+btn(esc(T('u_toYard')),'tab',{v:'yard'},'','tYard')+
-    (hl.length?btn(esc(fill(T(U.homeArm?'u_allHomeArm':'u_allHome'),{n:hl.length})),'allhome',null,U.homeArm?'red':'','reserve')+hint(esc(T('u_allHomeHint'))):'')+'</div>';
-  var short=[]; CLASSES.forEach(function(c){ var d=cv.need[c]-(cv.have[c]||0); if(d>0) short.push(d+' × '+T(c)) });
-  var lb=leftBehind(G), souls=arkSouls(G), wk=arkWake(G), stays=lv<1?T('u_vNoLevel'):(!arkReady(G)?fill(T('u_vNoDrive'),{g:roman(G.arkMark)}):(!cv.ok?fill(T('u_vConvoy'),{s:short.join(', ')}):null));
-  h+=sec(esc(T('u_ifToday')))+'<div class="verdict'+(stays?'':' ok')+'"><b>'+esc(T(stays?'u_arkStays':'u_arkSails'))+'</b><span>'+esc(stays||fill(T('u_vSails'),{s:num(souls),w:num(Math.floor(souls*wk)),l:num(lb.home+lb.hulls+lb.colonies+lb.transit)}))+'</span><i>'+esc(fill(T('u_vBoard'),{s:num(souls)}))+'</i></div>';
-  return '<div class="win wide">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_timePaused')),ic('ark',18,C.ark))+'<div class="bd">'+h+'</div></div>' }
+  var rg=arkRings(G), paid=arkPaid(G), ad=arkDriveTxt(), cv=arkConvoy(G), ab=arkSouls(G), wk=arkWakeN(G), sel=U.arkSel, card='';
+  if(typeof sel==='number'&&sel<=paid) sel=U.arkSel=null;
+  var hkA=hackNext(G), hk=(hkA&&hkA.k==='ark'&&!hackOn())?'<div id="hkneed">'+alertBox('ark',esc(fill(T('u_hackNeed'),{w:hackWho(hkA)})),true)+btn(esc(T('u_hackStart')),'hack',null,'pri full','ark')+'</div>':'';   // v5.09
+  var big='<div class="ah-big"><div class="wk" id="arkwake"><small>'+esc(T('u_wake'))+'</small><b>'+num(wk)+'</b><i>'+esc(T('u_ifToday'))+'</i></div><div class="sl" id="arksleep"><small>'+esc(T('u_sleepOn'))+'</small><b>'+num(Math.max(0,ab-wk))+'</b><i>&nbsp;</i></div></div>';
+  if(sel==='c'){ var po=can('reserve')?pierOut():[], hl=can('reserve')?homeList():[];
+    card='<div class="ah-pick cvp" id="arkcard"><h4>'+esc(T('statConvoy'))+'</h4><div class="ah-line"><span>'+esc(T('u_cvIn'))+'</span><b>'+esc(fill(T('u_cvOf'),{a:cv.have,b:cv.all}))+'</b></div>'+
+      '<div class="ah-alt"><span>'+esc(T('u_cvPier'))+'</span><b>'+po.length+'</b>'+(po.length?btn(esc(T('u_cvAdd')),'allpier',null,'sm'):'<span class="nob"></span>')+'</div>'+
+      '<div class="ah-alt"><span>'+esc(T('u_cvLines'))+'</span><b>'+hl.length+'</b>'+(hl.length?btn(esc(T(U.homeArm?'u_cvSure':'u_cvCall')),'allhome',null,U.homeArm?'sm red':'sm'):'<span class="nob"></span>')+'</div>'+
+      '<div class="ah-alt"><span>'+esc(T('u_cvWay'))+'</span><b>'+cv.way+'</b><span class="nob"></span></div></div>' }
+  else if(typeof sel==='number'){ var owed=arkOwed(G,sel), w=arkCheck(G,sel), fc=foodForecast(G,owed.food), fc0=fc?foodForecast(G):null; if(w==='ok') w=shortWhy(owed,G.earth);
+    var can1=typeof w!=='string'&&w[0]==='ok';
+    card='<div class="ah-pick" id="arkcard"><h4>'+esc(fill(T('u_hiveRing'),{n:roman(sel-1)}))+'</h4><div class="ah-line"><span>'+esc(T('u_price'))+'</span><div class="prow">'+price(owed,G.earth,12)+'</div></div>'+
+      '<div class="ah-line"><span>'+esc(T('u_pods'))+'</span><b>+'+num(arkCaps(sel)-arkCaps(paid))+'</b></div>'+
+      '<div class="ah-line"><span>'+esc(T('u_hold'))+'</span><div class="prow">'+price(arkHold(sel),null,12)+'</div></div>'+
+      '<div class="ah-line" id="arkfed"><span>'+esc(T('u_arkRations'))+'</span><b style="color:'+(fc?(fc0&&fc0.y<=fc.y?C.people:C.red):C.food)+'">'+esc(fc?(fc0?fill(T('u_arkFamine2'),{y:fc.y,z:fc0.y}):fill(T('u_arkFamine'),{y:fc.y})):T('u_arkFed'))+'</b></div>'+   // 2g p. 6: the larder after the purchase, before the press
+      btn(esc(fill(T('u_buyLv'),{l:roman(sel-1)})),'arkbuy',{l:sel},can1&&!(fc&&!fc0)?'pri full':'full',null,offW(w))+'</div>' }
+  else card='<div class="ah-hint">'+esc(T('u_arkHint1'))+'<br>'+esc(T('u_arkHint2'))+'</div>';
+  var stays=rg<1?T('u_vNoLevel'):(!arkReady(G)?ad[0]:null);
+  var mute=!stays&&wk<1 ? T(cv.have<1?'u_vNoConvoy':'u_vNoWake') : null;   // reviewer, 10.11: it sails and nobody wakes — said in the verdict, not in green
+  var fate='<div class="ah-fate'+(stays?'':(mute?' warn':' ok'))+'" id="arkfate"><div><b>'+esc(T(stays?'u_arkStays':'u_arkSails'))+'</b><i>'+(mute?'':ic('drive',13,C.ark)+' ')+esc(stays||mute||(T('u_arkDrive')+' · '+ad[0]))+'</i></div><span class="lab2">'+esc(T('u_ifToday'))+'</span></div>';
+  var lg='<div class="ah-lg">'+hiveLg('on','u_lgPod')+hiveLg('','u_lgNoPod')+hiveLg('cv on','u_lgConvoy')+hiveLg('cv way','u_lgWay')+'</div>';
+  return '<div class="win wide">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_timePaused')),ic('ark',18,C.ark))+'<div class="bd"><div class="ah"><div class="ah-two"><div class="ah-l">'+
+    sec(esc(T('u_hiveHead')),esc(T('u_hiveConvoy')))+hiveSvg(sel)+lg+'</div><div class="ah-r">'+hk+big+card+'</div></div>'+fate+'</div></div></div>' }
 
 /* ---------- the advisor: worlds only, worst first (Nikita 15.10: «не понимаю, что делать») ----------
    A row says the problem in numbers, what follows, and a button that names the fix; the button opens the world with the
@@ -1843,7 +1865,7 @@ function dump(){ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,
 function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) });
   if(!o||!o.G||!o.SECTORS) throw new Error('not a save');
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
-  G=o.G; G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
+  G=o.G; arkFix(G); G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
   if(!G.clock){ clockOn('save'); G.clock.year=G.day }   // a save from before v4.46: the clock counts from the load
   var u=o.U||{}; ['hist','voiceSeq','voiceLast','voy','capt','founded','shiftStop','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] }); if(SPEEDS.indexOf(U.speed)<0) U.speed=4;   // a save from before v4.42 may hold 10×
   tutLoad(u.tut);
@@ -1907,7 +1929,9 @@ function doAct(a,b){
     if(res==='ok'){ var vd=vc0-onLine(G,d.p).length; if(vd>0){ okc='ok_viaDrop'; okp.n=vd } } }
   else if(a==='build'){ var bh=HULLS[+d.h]; res=buildShip(G,+d.h); act(G,'build',{hull:bh.key,gen:bh.gen},res); okc='ok_build'; okp={n:G.nextShip-1,h:hullName(bh),y:bh.days} }
   else if(a==='drivehelp'){ U.driveHelp=!driveHelpOn(); try{ localStorage.setItem('lb.driveHelp',U.driveHelp?'1':'0') }catch(e){} }
-  else if(a==='allhome'){ if(!U.homeArm) U.homeArm=true; else { U.homeArm=false; var hl=homeList(), cg=convoyGen(G); hl.forEach(function(s){ if(hullGen(s)>=cg){ res=setReserve(G,s.id,true); act(G,'reserve',{hull:s.id,on:true},res) } else { res=clearLine(G,s.id); act(G,'release',{hull:s.id},res) } }); okc='ok_allhome'; okp={n:hl.length} } }
+  else if(a==='allhome'){ if(!U.homeArm) U.homeArm=true; else { U.homeArm=false; var hl=homeList(); hl.forEach(function(s){ res=setReserve(G,s.id,true); act(G,'reserve',{hull:s.id,on:true},res) }); okc='ok_allhome'; okp={n:hl.length} } }
+  else if(a==='arksel'){ var av=v==='c'?'c':Math.max(+v,arkPaid(G)+1); U.arkSel=U.arkSel===av?null:av }
+  else if(a==='allpier'){ var pl=pierOut(); pl.forEach(function(s){ res=setReserve(G,s.id,true); act(G,'reserve',{hull:s.id,on:true},res) }); res='ok'; okc='ok_allpier'; okp={n:pl.length} }
   else if(a==='reserve'){ var ron=d.on==='1'; res=setReserve(G,+d.s,ron); act(G,'reserve',{hull:+d.s,on:ron},res); okc=ron?'ok_reserve':'ok_unreserve'; okp={n:+d.s} }
   else if(a==='scrap'){ var sid2=+d.s; if(U.scrapArm!==sid2){ U.scrapArm=sid2 } else { U.scrapArm=null; res=scrap(G,sid2); act(G,'scrap',{hull:sid2},res); okc='ok_scrap' } }
   else if(a==='evac'){ var ep=d.p, ec=pickCourier(ep), ecol=G.colonies[ep];
@@ -1924,7 +1948,7 @@ function doAct(a,b){
   else if(a==='exn') U.exN=+v;
   else if(a==='exgo'){ var xn=+d.n; res=exchange(G,d.r,d.a,d.b,xn); act(G,'exchange',{r:d.r,n:xn,a:d.a,b:d.b},res); okc='ok_ex'; okp={n:num(xn),r:T(d.r)};
     if(res===d.a||res===d.b){ var xw=shortWhy(exchangeCost(G,d.r,d.a,d.b,xn),G.earth); say(xw[0],xw[1]); draw(); return } }
-  else if(a==='arkbuy'){ res=arkBuy(G,+d.l); act(G,'arkbuy',{l:+d.l},res); okc='ok_arkbuy'; okp={n:roman(+d.l-1)}; if(res==='metal'||res==='parts'||res==='food'||res==='fuel'){ var sw=shortWhy(arkOwed(G,+d.l),G.earth); say(sw[0],sw[1]); draw(); return } }
+  else if(a==='arkbuy'){ res=arkBuy(G,+d.l); act(G,'arkbuy',{l:+d.l},res); okc='ok_arkbuy'; okp={n:roman(+d.l-1)}; if(res==='ok') U.arkSel=null; if(res==='metal'||res==='parts'||res==='food'||res==='fuel'){ var sw=shortWhy(arkOwed(G,+d.l),G.earth); say(sw[0],sw[1]); draw(); return } }
   else if(a==='search'){ var m=shipById(G,+d.m), hs=m?bestSearch(m):null; res=hs?search(G,hs.id,+d.m):'nofree'; act(G,'search',{m:+d.m},res); okc='ok_search'; okp={n:+d.m} }
   else if(a==='nightok'){ G.nightSeen=true }
   else if(a==='shiftok'){ var cb=el('shstop'); if(cb) U.shiftStop=cb.checked; G.shiftOpen=false; act(G,'shift_go',{stop:U.shiftStop}); autosave() }

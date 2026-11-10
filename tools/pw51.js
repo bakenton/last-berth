@@ -86,21 +86,21 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('the card is gone', !(await vis('#cards .bcard.hk')));
   await U.closeBig();
 
-  // 6. the ark: a paid level waits for the hack at level 2 (the run's second hack)
+  // 6. the ark: a paid ring waits for the hack (the run's second hack)
   await U.pause();
-  await p.evaluate(()=>{ const G=LN; if(!G.night) revealNight(G); G.nightSeen=true; const c=arkPrice(1); ['metal','parts','food','fuel'].forEach(r=>{ G.earth[r]+=c[r]+10 }); LNdraw() });
+  await p.evaluate(()=>{ const G=LN; if(!G.night) revealNight(G); G.nightSeen=true; const c=arkRingPrice(1); ['metal','food'].forEach(r=>{ G.earth[r]+=c[r]+10 }); LNdraw() });
   await U.closeBig(); await U.tab('ark');
-  await U.tap('[data-act="arkbuy"][data-l="1"]');
-  ok('ark level I paid: not counted until the hack', await p.evaluate(()=>LN.ark.lv===1&&arkLevel(LN)===0&&LN.hackQ.length===1&&LN.hackQ[0].k==='ark'));
+  await U.tap('#ovl .hold .hr[data-v="1"] .hx'); await U.tap('#arkcard [data-act="arkbuy"]');   // v5.10: press ring I, FILL RING I
+  ok('ark ring I paid: not counted until the hack', await p.evaluate(()=>LN.ark.rings===1&&arkRings(LN)===0&&LN.hackQ.length===1&&LN.hackQ[0].k==='ark'));
   await p.waitForTimeout(600);
-  ok('v5.09: the ark hack waits for the player — the Ark window says «Hack needed: ARK.LVL.I»', !(await H()).open&&/Hack needed: ARK\.LVL\.I\b/.test(await txt('#ovl'))&&await vis('#ovl [data-act="hack"]'));
+  ok('v5.09: the ark hack waits for the player — the Ark window says «Hack needed: ARK.RING.I»', !(await H()).open&&/Hack needed: ARK\.RING\.I\b/.test(await txt('#ovl'))&&await vis('#ovl [data-act="hack"]'));
   await U.tap('#ovl [data-act="hack"]');
   ok('the hack opens for the ark', await waitFor(async()=>(await H()).open));
   const ai=await txt('#hkIntro');
   // v5.09 (Никита 10.11: «разделить взломы… тип двигателя и соты»): ковчег встречает улей, а не змея; сложность — по номеру уровня ковчега
-  ok('ark intro: ARK.LVL.I meets the HIVE — rings, the core, no serpent words', /ARK\.LVL\.I\b/.test(ai)&&/HIVE/.test(ai)&&/Rings: 2/.test(ai)&&/core/.test(ai)&&!/SERPENT|Fault level/.test(ai), ai.replace(/\n/g,' | '));
+  ok('ark intro: ARK.RING.I meets the HIVE — rings, the core, no serpent words', /ARK\.RING\.I\b/.test(ai)&&/HIVE/.test(ai)&&/Rings: 2/.test(ai)&&/core/.test(ai)&&!/SERPENT|Fault level/.test(ai), ai.replace(/\n/g,' | '));
   ok('the hack knows its kind and level: hive, 1', (await H()).kind==='hive'&&(await H()).lv===1, JSON.stringify(await H()).slice(0,120));
-  ok('a second ark level cannot be bought while one waits', await p.evaluate(()=>arkCheck(LN,2)==='hack'));
+  ok('a second ring cannot be bought while one waits', await p.evaluate(()=>arkCheck(LN,2)==='hack'));
   await U.tap('#hkGo'); await waitFor(async()=>(await H()).game==='play');
   { const l0=(await H()).left; let hit=false;   // настоящая мышь целится в ближайшую ячейку — улей теряет прочность
     for(let i=0;i<50&&!hit;i++){ const t=await p.evaluate(()=>{ const s=LBhack.state(), ts=LBhack.targets(), e=ts[ts.length-1]; return e?{x:s.ox+e.x*s.k,y:s.oy+e.y*s.k}:null }); if(t) await p.mouse.move(t.x,t.y); await p.waitForTimeout(100); const s2=await H(); if(s2.game!=='play') break; hit=s2.left<l0 }
@@ -108,7 +108,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>LBhack.cheat()); await waitFor(async()=>(await H()).panel==='won');
   await waitFor(()=>vis('#hkDone'),8000);
   const aw=await txt('#hkWon');
-  ok('ark won: ARK.LVL.I, the second memory block, level I counts', /COMMAND WOKE: ARK\.LVL\.I\b/.test(aw)&&/Yard log/.test(aw)&&/Ark level I counts now/.test(aw)&&await p.evaluate(()=>arkLevel(LN)===1&&LN.hacks===2), aw.replace(/\n/g,' | '));
+  ok('ark won: ARK.RING.I, the second memory block, ring I counts', /COMMAND WOKE: ARK\.RING\.I\b/.test(aw)&&/Yard log/.test(aw)&&/Ring I of the hive counts now/.test(aw)&&await p.evaluate(()=>arkRings(LN)===1&&LN.hacks===2), aw.replace(/\n/g,' | '));
   await U.tap('#hkDone');
 
   // 7. the log keeps the attempts
