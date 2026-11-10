@@ -212,9 +212,12 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   if(BRAIN==='sim'){
     const simSrc=fs.readFileSync(path.join(ROOT,'tools','sim.js'),'utf8');
     const names=(simSrc.match(/const names=\[([\s\S]*?)\];/)||[])[1];
-    const inPage=simSrc.replace("const fs=require('fs');","const fs=null;").replace(/module\.exports=[^\n]*\n/,'window.SIM={STYLES,step};\n').replace('if(require.main===module){','if(false){');
+    // v5.08 (10.11): sim.js reads process.env since the hubs (v5.01) — the page has none, the head never loaded and the run went on GOD.skip alone.
+    // The source goes into a closure (its names must not shadow the core's) with an empty process.env; a head that did not load stops the run.
+    const inPage='window.process=window.process||{env:{}};(function(){'+simSrc.replace("const fs=require('fs');","const fs=null;").replace(/module\.exports=[^\n]*\n/,'window.SIM={STYLES,step};\n').replace('if(require.main===module){','if(false){')+'\n})();';
     await p.addScriptTag({content:inPage});
-    await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C=Object.fromEntries(list.map(n=>[n,window[n]])); window.__st={idleY:{},fuelHist:[],want:{}}; window.__lastDay=-1 },names);
+    if(!(await p.evaluate(()=>!!(window.SIM&&SIM.step)))){ console.error('--brain sim: голова бота не загрузилась (tools/sim.js)'); process.exit(2) }
+    await p.evaluate(names=>{ const list=eval('['+names+']'); window.__C={}; list.forEach(n=>{ try{ window.__C[n]=eval(n) }catch(e){} }); window.__st={idleY:{},fuelHist:[],want:{}}; window.__lastDay=-1 },names);
     rec('brain',{brain:'sim',style:STYLE}) }
   await tap('#top [data-act="spd"][data-v="4"]');
   marks.push({t:wall(),year:0,what:'игра начата на ×4'});

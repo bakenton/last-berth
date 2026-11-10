@@ -8,12 +8,17 @@
      (v4.29, Nikita 09.10: the yearly deposits are gone from the game — every style pays for a level in one go; rush and serial
       buy like `ark` does, without the early stop. All four gather the convoy (K.ARK_CONVOY) once the ark drive is ready.)
    (visitor / hoarder dropped 06.10 by Nikita: two player styles + the ark runner.)
+     lazy    — Nikita 10.11: «часто пропускает уведомления, линии возят мало или слишком много». Looks at the desk one year in
+               `every` (25), on a visit overlooks a world with chance `miss` (1/3: its line is not sized, a spent world is not lifted),
+               and sizes lines by eye (`sloppy`): a third of the worlds keep one hull for good («мало»), a third get three at once
+               («слишком много»). Not in the default list (the baseline is six bots): BOTS=lazy. Numbers are Claude's, set before the first run.
    Legacy bots (expand / pro / tidy / late) still run with BOTS=expand,pro,tidy,late. */
 const STYLES={
   rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, deep:true},
   serial: {hands:30, keep:260,  sFood:90,  sMetal:300,  serial:true, evac:true},
   ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200, deep:true},
-  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, saver:true}
+  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, saver:true},
+  lazy:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, every:+(process.env.LAZY_EVERY||25), miss:+(process.env.LAZY_MISS||1/3), sloppy:true}
 };
 const fs=require('fs');
 function load(path){
@@ -30,6 +35,8 @@ function load(path){
 }
 function freeHulls(G){return G.ships.filter(s=>s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.mutiny&&!s.reserve)}   // v4.29: the ark reserve is not free
 const CLS=['courier','hauler','freighter'];
+/* lazy: a fixed coin per game, world and visit — the same seed plays the same game */
+function lazyCoin(G,k,n){ let x=((G.seed|0)^0x9e3779b9)>>>0; const s=k+':'+n; for(let i=0;i<s.length;i++){ x^=s.charCodeAt(i); x=Math.imul(x,16777619)>>>0 } x^=x>>>15; x=Math.imul(x,2246822519)>>>0; x^=x>>>13; return (x>>>0)/4294967296 }
 let noFreeWellNow=G=>true;
 function lined(G,pid){return G.ships.some(s=>s.mode!=='dead'&&s.from===pid)}
 /* nodes-1.00: with hubs in the core, whether a hull can serve a line is the core's lineOk (a feeder's range counts from her hub,
@@ -178,6 +185,9 @@ function step(C,G,bot,d,st){
     const per=n=>!!P.every||d%n===0;                         // on a visit every periodic chore is due
     const need=G.need||{food:5,metal:3};
     st.want=st.want||{};
+    const visit=P.every?Math.floor(d/P.every):d;
+    const missed=k=>!!P.miss&&lazyCoin(G,k,visit)<P.miss;                                  // lazy: this world is overlooked on this visit
+    const bias=k=>{ if(!P.sloppy) return 'ok'; const c=lazyCoin(G,k,'b'); return c<1/3?'thin':c<2/3?'fat':'ok' };   // lazy: the line sized by eye
     for(let rep=0;rep<(P.reps||1);rep++){
 
     // 1. every settled world wants a line.
@@ -218,13 +228,14 @@ function step(C,G,bot,d,st){
       hubPlan(C,G,st);
       const order=[];
       for(const k in G.colonies){ const p=C.planet(k), lr=C.lineRate(G,k); if(!lr) continue; let L=plan(st,k);
+        if(missed(k)) continue;
         if(lr.dry&&lr.sitting<1){ if(L){ for(const c of CLS) if(L[c]) setW(C,G,st,k,c,0) } continue }
         if(L){ for(const c of CLS){ const w=L[c]||0, have=C.lineCount(G,k,c); if(w>have){ const yc=yardOk(C,G,k,c);
           if(yc==='range'||yc==='locked'||yc==='mutiny'||yc==='keep') setW(C,G,st,k,c,have); else unfilled+=w-have } } }   // v4.43: a hull held back for the convoy is not a debt of the yards
         L=plan(st,k);
-        if(!wantSum(L)){ setW(C,G,st,k,(C.setVia&&CLS.find(c=>{ const y=yardOk(C,G,k,c); return y!=='range'&&y!=='locked' }))||'courier',1); if(plan(st,k)) unfilled++; continue }   // nodes-1.00: no courier on a hub's line
+        if(!wantSum(L)){ setW(C,G,st,k,(C.setVia&&CLS.find(c=>{ const y=yardOk(C,G,k,c); return y!=='range'&&y!=='locked' }))||'courier',bias(k)==='fat'?3:1); if(plan(st,k)) unfilled+=wantSum(plan(st,k)); continue }   // nodes-1.00: no courier on a hub's line
         const pri=(p.kind==='well'&&fuelShort?3:0)+(p.kind==='farm'&&foodShort?3:0)+(p.kind==='mine'&&metalShort?2.5:0)+(p.kind==='works'?2:0)+Math.min(1,lr.sitting/3000);
-        if(lr.piling&&(lr.sitting>1500||lr.hulls===0)) order.push({k,pri}) }
+        if(lr.piling&&(lr.sitting>1500||lr.hulls===0)&&bias(k)!=='thin') order.push({k,pri}) }
       order.sort((a,b)=>b.pri-a.pri);
       const prelude=C.SECTORS.length<3;
       let crewOut=0; for(const sh of G.ships){ if(sh.mode!=='dead') crewOut+=(sh.crew||0) }
@@ -359,7 +370,7 @@ function step(C,G,bot,d,st){
     // 4b. v4.15 'tidy': a spent world (seam dry, stockyard empty) is evacuated — people come home, the ghost stays on the chart
     if(P.evac&&per(25)){
       for(const k in G.colonies){ const c=G.colonies[k]; const p=C.planet(k);
-        if(p.kind==='works'||!(G.reserves[k]<=0)||!notHub(C,G,k)) continue;   // nodes-1.00: a dead hub still takes its feeders
+        if(p.kind==='works'||!(G.reserves[k]<=0)||!notHub(C,G,k)||missed(k)) continue;   // nodes-1.00: a dead hub still takes its feeders
         const dep=p.dep; if(((c.store&&c.store[dep])||0)>=1) continue;
         const s=freeHulls(G).find(s=>reachOK(s,p)&&C.HULLS[s.hull].key==='courier'); if(s){ C.abandon(G,s.id,k); break } }   // v4.18: only a courier lifts a settlement
     }
@@ -381,10 +392,14 @@ function step(C,G,bot,d,st){
         // holds out and buys the best level it can pay for in the last 100 years
         const lv=C.arkLevel(G), top=C.K.ARK_LEVELS.length;
         const keepAfter={metal:resv.metal+need.metal*300, food:resv.food+need.food*300, fuel:resv.fuel, parts:0};
-        const afford=(l,strict)=>{ const o=C.arkOwed(G,l); return ['metal','parts','food','fuel'].every(r=>E[r]-Math.ceil(o[r])>=(strict?keepAfter[r]:0)) };
+        // ARK_KEEP=1 (Claude 10.11, off by default — the baseline is Nikita's): the last-100-years buyer keeps Earth's rations up to the Night.
+        // «Pure gain» was false: level II takes 21 000 rations, and a mouse run (rush, seed 11) bought it 91 years out with the whole larder —
+        // 3122 at home, famine from the 12th year, 403 aboard. Earth needs no reserve PAST the Night, but it eats until it.
+        // Level I stays unconditional (no level, no ark: with the rule on level I too, ark went 7/8 -> 6/8 and lazy 3/8 -> 2/8).
+        const afford=(l,strict)=>{ const o=C.arkOwed(G,l); return ['metal','parts','food','fuel'].every(r=>E[r]-Math.ceil(o[r])>=(strict===true?keepAfter[r]:(strict==='night'&&r==='food'?need.food*(left+30):0))) };
         if(lv<top&&(per(10)||left<=100)){
           // the last 100 years: whatever is affordable is pure gain, Earth needs no reserve past the Night
-          if(left<=100){ for(let l=top;l>lv;l--){ if(afford(l,false)&&C.arkBuy(G,l)==='ok') break } }
+          if(left<=100){ for(let l=top;l>lv;l--){ if(afford(l,(process.env.ARK_KEEP&&l>1)?'night':false)&&C.arkBuy(G,l)==='ok') break } }
           else if(P.saver){ if(lv<1&&afford(1,true)) C.arkBuy(G,1) }
           else if(afford(lv+1,true)) C.arkBuy(G,lv+1);
         }

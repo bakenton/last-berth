@@ -1,0 +1,7 @@
+UI,u_hackNeed,Hack needed: {w},Нужен взлом: {w},"v5.09 hack by button, hive",live,new
+UI,u_hackStart,Start the hack,Начать взлом,"v5.09 hack by button, hive",live,new
+UI,u_flHack,Hack needed,Нужен взлом,"v5.09 hack by button, hive",live,new
+UI,hk_nameB,HIVE,УЛЕЙ,"v5.09 hack by button, hive",live,new
+UI,hk_lvlB,Rings: {n},Колец: {n},"v5.09 hack by button, hive",live,new
+UI,hk_dB,A core sits behind rings of cells. Break through to it.,Ядро сидит за кольцами ячеек. Пробейся к нему.,"v5.09 hack by button, hive",live,new
+UI,hk_rB,every cell takes damage · the core is the goal · a lost cell grows back · do not touch the hive,ранится каждая ячейка · цель — ядро · выбитая ячейка отрастает · улья не касайся,"v5.09 hack by button, hive",live,new

@@ -74,6 +74,8 @@ cd work && node ../tools/trace.js serial 11 4500 500   # ряд одного з�
 cd work && node ../tools/sweep.js EARTH_BURN 0.8,1.2 rush,serial   # «что будет, если K.X = …» — таблица по стилям, файл не трогает
 node tools/debug-check.js                              # панель отладки (с v4.40 в каждой сборке: стартовое окно → TEST PLAY; ` / Ё; время, ресурсы, Ночь, слоты) — проверка в браузере
 node tools/playtest.js --minutes 3 [--god] [--viewport 390x844]   # бот-игрок в браузере, отчёт work/playtest/<метка>/report.md (skill /playtest)
+node tools/mouse-run.js --style rush|serial|lazy --seed 11 [--env ARK_KEEP=1]   # партия до Ночи мышью на ×4 (~60 мин, в фоне): голова sim.js, руки — клики; отчёт work/playtest/mouse-<стиль>-<сид>/
+cd work && BOTS=lazy node ../tools/sim.js core.js 4500             # «ленивый» (вне эталона); ARK_KEEP=1 — покупка уровней ковчега с запасом еды до Ночи
 ```
 Переменные: `LB_WORK` (другая рабочая папка), `LB_PLAYWRIGHT`, `LB_CHROMIUM`, `PYTHON`, `BUDGET`. Сценарии ждут плоскую папку — `regress.sh` копирует их в `work/.run`.
 

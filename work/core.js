@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.08'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.09'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -762,10 +762,19 @@ function foodForecast(G){
 /* short = the rations run out inside FOOD_HORIZON years. ('Not reaching the Night' was tried and dropped: once the date is
    known the span is ~2800 years and today's lines never cover it — the advisor was on 40-70% of a winning run.) */
 function foodShort(G){ var ff=G.foodFc; return !!ff&&ff.n<=K.FOOD_HORIZON }
+/* v5.09 (Nikita 10.11: «делаем, чтоб судно не ходило пустым»): a world whose seam is dead and whose surface is bare — not a works, not a hub.
+   The same test loadAt uses for the hull that takes the last load (homeOnly); here it stops the OTHER hulls of the line from flying out for nothing. */
+function spentWorld(G,pid){ var p=planet(pid), c=G.colonies[pid];
+  return !!(p&&c&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0&&!isHub(G,pid)&&pileLeft(G,pid)<1) }
 function sail(G,s){
   var here=s.at, dest = here===s.from ? s.to : s.from;
   if(s.mutiny) return 'mutiny';
   if(dest!=='earth'&&!G.colonies[dest]){ s.from=null;s.to=null; return 'nocolony' }
+  /* v5.09: her line's world is spent — she does not go out; the line is dropped where she stands (at Earth she is free at once,
+     at a hub she flies home with no line, as a hull released in flight does) */
+  if(dest===s.from&&spentWorld(G,dest)){ var sw=s.from; s.from=null; s.to=null;
+    if(here==='earth'&&!s.pend&&!s.moveTo){ s.waiting=true; log(G,'nothing_left',{n:s.id,p:sw}) }
+    return 'spent' }
   if(G.night&&here==='earth'&&mutinyDue(G,s,legDays(G,here,dest,s)*2)){
     // the crew will not go out again: the line is dropped on the pier
     s.mutiny=true; s.from=null; s.to=null; s.pend=null; s.waiting=true; G.stats.mutinies=(G.stats.mutinies||0)+1;
@@ -1459,6 +1468,11 @@ function tick(G){
     }
     if(s.mode==='idle'){ if(s.from&&s.to) sail(G,s); else if(s.at&&s.at!=='earth'){ s.origin=s.at; s.dest='earth'; s.at=null; s.mode='transit'; s.dir='in'; s.t=legDays(G,s.origin,'earth',s); s.total=s.t } continue }
     if(s.mode!=='transit') continue;
+    /* v5.09: the world she is bound for was stripped while she was on the way out — she turns back from where she is (the way home
+       is as long as the way flown), brings her hold back and stands down there (homeOnly → nothing_left). A kit, a settlers', an
+       evacuation or a search flight goes on. */
+    if(s.dir==='out'&&!s.job&&s.dest===s.from&&!(s.cargo&&s.cargo.kit)&&spentWorld(G,s.dest)){ var tb=s.dest, bk=s.origin;
+      s.origin=tb; s.dest=bk; s.dir=bk==='earth'?'in':'out'; s.t=Math.max(1,s.total-s.t); s.homeOnly=tb }
 
     if(s.t===s.total){
       var pd = s.dest==='earth' ? null : planet(s.dest);

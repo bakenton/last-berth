@@ -23,8 +23,15 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const g0=await p.evaluate(()=>LN.gen||0);
   await p.evaluate(()=>{ const w=PLANETS.find(x=>x.kind==='works'); driveDone(LN,w?w.id:'earth'); LNdraw() });
   ok('drive done: the generation is not open yet', await p.evaluate(g=>(LN.gen||0)===g&&LN.hackQ.length===1&&LN.hackQ[0].k==='drive',g0));
+  // v5.09 (Никита 10.11: «игрок должен сам решить, когда взламывать»): взлом сам не открывается — карточка, флажок вкладки и кнопка в Tech
+  await U.play(4); const dA=await U.day(); await p.waitForTimeout(1600);
+  ok('v5.09: the hack does not open by itself and the clock runs', !(await H()).open&&(await U.day())>dA);
+  ok('the card HACK WAITING stands and the Tech tab is flagged «Hack needed»', await vis('#cards .bcard.hk')&&/Hack needed/.test(await txt('#tabs')), (await txt('#tabs')).replace(/\s+/g,' ').slice(0,160));
+  await U.pause(); await U.tab('tech');
+  ok('Tech: «Hack needed: HULL.GEN.II» with the button «Start the hack»', /Hack needed: HULL\.GEN\.II/.test(await txt('#side'))&&/Start the hack/i.test(await txt('#side [data-act="hack"]')), (await txt('#hkneed')).replace(/\s+/g,' '));
+  await U.tap('#side [data-act="hack"]');
+  ok('the button opens the hack', await waitFor(async()=>(await H()).open));
   await U.play(4);
-  ok('the hack window opens by itself', await waitFor(async()=>(await H()).open));
   const intro=await txt('#hkIntro');
   ok('intro: wakes HULL.GEN.II, fault level 1 of 6, rules', /THE HELM WAKES A COMMAND: HULL\.GEN\.II/.test(intro)&&/Fault level 1 of 6/.test(intro)&&/New: walls/.test(intro)&&/WASD/.test(intro), intro.replace(/\n/g,' | '));
   const d0=await U.day(); await p.waitForTimeout(1500);
@@ -85,11 +92,19 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.closeBig(); await U.tab('ark');
   await U.tap('[data-act="arkbuy"][data-l="1"]');
   ok('ark level I paid: not counted until the hack', await p.evaluate(()=>LN.ark.lv===1&&arkLevel(LN)===0&&LN.hackQ.length===1&&LN.hackQ[0].k==='ark'));
+  await p.waitForTimeout(600);
+  ok('v5.09: the ark hack waits for the player — the Ark window says «Hack needed: ARK.LVL.I»', !(await H()).open&&/Hack needed: ARK\.LVL\.I\b/.test(await txt('#ovl'))&&await vis('#ovl [data-act="hack"]'));
+  await U.tap('#ovl [data-act="hack"]');
   ok('the hack opens for the ark', await waitFor(async()=>(await H()).open));
   const ai=await txt('#hkIntro');
-  ok('ark intro: ARK.LVL.I, fault level 2 of 6, the new thing of level 2', /ARK\.LVL\.I\b/.test(ai)&&/Fault level 2 of 6/.test(ai)&&/links fire/.test(ai), ai.replace(/\n/g,' | '));
+  // v5.09 (Никита 10.11: «разделить взломы… тип двигателя и соты»): ковчег встречает улей, а не змея; сложность — по номеру уровня ковчега
+  ok('ark intro: ARK.LVL.I meets the HIVE — rings, the core, no serpent words', /ARK\.LVL\.I\b/.test(ai)&&/HIVE/.test(ai)&&/Rings: 2/.test(ai)&&/core/.test(ai)&&!/SERPENT|Fault level/.test(ai), ai.replace(/\n/g,' | '));
+  ok('the hack knows its kind and level: hive, 1', (await H()).kind==='hive'&&(await H()).lv===1, JSON.stringify(await H()).slice(0,120));
   ok('a second ark level cannot be bought while one waits', await p.evaluate(()=>arkCheck(LN,2)==='hack'));
   await U.tap('#hkGo'); await waitFor(async()=>(await H()).game==='play');
+  { const l0=(await H()).left; let hit=false;   // настоящая мышь целится в ближайшую ячейку — улей теряет прочность
+    for(let i=0;i<50&&!hit;i++){ const t=await p.evaluate(()=>{ const s=LBhack.state(), ts=LBhack.targets(), e=ts[ts.length-1]; return e?{x:s.ox+e.x*s.k,y:s.oy+e.y*s.k}:null }); if(t) await p.mouse.move(t.x,t.y); await p.waitForTimeout(100); const s2=await H(); if(s2.game!=='play') break; hit=s2.left<l0 }
+    ok('the mouse aims: the hive takes damage', hit, l0+' → '+(await H()).left); await p.screenshot({path:require('path').join(require('os').tmpdir(),'lb-hive.png')}) }
   await p.evaluate(()=>LBhack.cheat()); await waitFor(async()=>(await H()).panel==='won');
   await waitFor(()=>vis('#hkDone'),8000);
   const aw=await txt('#hkWon');

@@ -786,3 +786,10 @@ LOG	hub_lost	The hub at {p} is gone. Lines back to Earth: {n}.	Хаба на {p}
 UI	mn_size	Interface size	Размер интерфейса
 UI	mn_sizeVal	{p}%	{p}%
 UI	u_mSize	Interface size	Размер интерфейса
+UI	u_hackNeed	Hack needed: {w}	Нужен взлом: {w}
+UI	u_hackStart	Start the hack	Начать взлом
+UI	u_flHack	Hack needed	Нужен взлом
+UI	hk_nameB	HIVE	УЛЕЙ
+UI	hk_lvlB	Rings: {n}	Колец: {n}
+UI	hk_dB	A core sits behind rings of cells. Break through to it.	Ядро сидит за кольцами ячеек. Пробейся к нему.
+UI	hk_rB	every cell takes damage · the core is the goal · a lost cell grows back · do not touch the hive	ранится каждая ячейка · цель — ядро · выбитая ячейка отрастает · улья не касайся
