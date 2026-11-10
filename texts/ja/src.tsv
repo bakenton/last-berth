@@ -1,0 +1,1108 @@
+UI	day	Year
+UI	drive	Drive
+UI	a_starving	EARTH IS STARVING — {n} left and falling. Get rations home.
+UI	a_cold	No metal at home. The yards are running slow.
+UI	a_lastload	{p} is worked out but {n} still sits on the surface. Send a hull for it.
+UI	a_nolineShort	{p} has no line — nothing leaves and no hands arrive.
+UI	a_survey	You can chart ring {n}.
+UI	a_chartfull	Every charted world is settled. Chart further out.
+UI	crossings	Crossings
+UI	crewFleet	On hulls
+UI	crewHome	At home
+UI	crewLost	Lost with hulls
+UI	collapse	Collapse
+UI	chronTag	Desk
+UI	busyFar	{b} busy · {f} cannot reach this world
+UI	orders	Orders
+UI	genSep	Generation {g}
+UI	buildTime	{n} {yr}
+UI	hullNo	no. {n}
+UI	lbHulls	on hulls away
+UI	lbCol	on colonies
+UI	a_ark	No ark level is paid for yet. Pick a level and buy it in one go.
+UI	a_nightrecall	{n} years to the Night. {h} hands on hulls away from Earth and {c} on colonies will not sail. Bring them home.
+UI	statSouls	Souls aboard
+UI	statBerths	Ark level
+UI	statLeft	Left behind
+UI	a_idlehands	{n} hands sitting at Earth with nothing to do. Build hulls or chart further out — both spend them.
+UI	a_nowell	You hold no fuel world and Earth has {n} fuel. Without fuel nothing leaves. Settle a well.
+UI	a_scrap	{n} idle hulls of an older generation. Scrap them for metal, or put them on short lines.
+UI	genNow	Generation {n} yards
+UI	genReach	freighters reach ring {n}
+UI	ghostWorld	Worked out and lifted in year {d}. A grave marker on the chart. Nothing here answers.
+UI	a_genwall	Every world your hulls can reach is taken. Generation {n} is the way out — run the drive programme.
+UI	runLog	Run log
+UI	exportLog	Copy run log
+UI	copyBtn	Copy to clipboard
+UI	closeBtn	Close
+UI	a_feedslow	{p} has been idle {n} years — the line feeds it slower than it burns. Add a hull.
+UI	statSec	Rings charted
+UI	statPeak	Worlds held at peak
+UI	statDrive	Drive marks
+UI	advisor	Needs a decision
+UI	a_food	Earth has {n} years of rations left.
+UI	a_metal	Earth has {n} years of metal left.
+UI	a_fuel	Fuel at Earth is down to {n}. Ships cannot leave without it.
+UI	a_dry	{p} is worked out. {n} hull(s) still fly there for nothing.
+UI	a_noline	{p} has no line. Nothing is leaving it.
+UI	a_pile	{p} is piling up {n} — the hulls on that line cannot carry it all.
+UI	a_feed	{p} is an industrial world with nothing to burn. Run a line from Earth.
+UI	a_idle	{n} hull(s) idle at Earth.
+UI	a_settle	{p} is open and you have a hull and people for it.
+UI	a_build	You can afford a new hull right now.
+UI	a_drive	{p} can host drive mark {n}.
+UI	crewTitle	Hands at home
+UI	lineTo	{a} ↔ {b}
+UI	queued	Orders sent — it changes line when it next docks.
+UI	lost	That hull is missing.
+UI	samenode	Both ends are the same place.
+UI	tabEarth	Earth
+UI	tabTarget	Target
+UI	metal	Metal
+UI	food	Rations
+UI	fuel	Fuel
+UI	parts	Parts
+UI	people	People
+UI	kMine	Mining world
+UI	kFarm	Agricultural world
+UI	kWell	Fuel world
+UI	kWorks	Industrial world
+UI	wherePeople	Where people are
+UI	why	Why they are angry
+UI	wSilence	Out of contact
+UI	wNeglect	Nobody has come
+UI	wHaul	Hauling it all away
+UI	wCalm	Settling down
+UI	carries	The line carries
+UI	verdictOk	Keeping up
+UI	verdictPile	NOT KEEPING UP — {n}/year piling up
+UI	verdictDry	SEAM WORKED OUT — nothing left to haul
+UI	verdictLast	SEAM WORKED OUT — {n} still on the surface, worth one last run
+UI	verdictSpare	Spare capacity — {n}/year
+UI	short	short {n}
+UI	halted	Clock held — a hull is waiting or something changed.
+UI	awaiting	Free hulls — send them out
+UI	worldsTab	Worlds
+UI	burnTitle	Earth burns every year
+UI	burns	{n}/year
+UI	earthNode	EARTH
+UI	speed	Speed
+UI	nothing	nothing
+UI	build	Build {n}
+UI	courier	Courier
+UI	hauler	Hauler
+UI	freighter	Freighter
+UI	capacity	cap {n}
+UI	travel	Courier, one way
+UI	sector	Ring
+UI	depleted	worked out
+UI	settlers	Settlers
+UI	evac	Evacuate settlement
+UI	clear	Release hauler
+UI	bearing	bearing {n}
+UI	none	none
+UI	newGame	New run
+UI	seed	Seed
+UI	statCol	Settlements founded
+UI	statLost	Hulls lost
+UI	statDay	Years elapsed
+UI	crashToast	Engine fault: {msg} — clock held. Copy the run log.
+UI	textsReload	Reload texts from the sheet
+LOG	awaiting	Hull {n} is home at Earth and awaiting orders.
+LOG	surveyed	{s} CHARTED. New worlds on the board.
+LOG	scrapped	Hull {n} broken up: +{m} metal, +{t} parts, {c} hands home.
+LOG	scrapped_many	{n} Generation {g} hulls broken up: +{m} metal, +{t} parts.
+LOG	crash	ENGINE FAULT in year {day}: {msg}
+LOG	drive_mark	GENERATION {n} DRIVE COMMISSIONED AT {p}. New hulls in the yards; rings up to {s} within reach.
+LOG	earth_dead	EARTH IS IN FAMINE. {n} years of it and the desk goes unattended for good.
+LOG	reassigned	Hull {n} takes up its new line.
+LOG	earth_short	EARTH HAS RUN SHORT. Stability is falling until the holds are full again.
+LOG	dropped	Hull {n} dropped {m} metal and {f} rations at {p}.
+LOG	ev_rich	{p}: a rich seam opens — {q} extra {dep}.
+LOG	ev_wreck	{p}: stockpile lost — {q} {dep} gone.
+LOG	ev_disaster	{p}: disaster. {q} dead.
+LOG	ev_seam	{p}: prospectors find {q} more in the ground.
+LOG	ship_ordered	Hull {n} laid down.
+LOG	ship_ready	Hull {n} fitted out and standing by.
+LOG	launch_colony	Hull {n} away to {p} with {people} settlers.
+LOG	colony_founded	{p}: landfall confirmed. {pop} settlers down.
+LOG	colony_failed	Hull {n} broke up on approach to {p}. No landing.
+LOG	pickup	Hull {n} loaded {q} {dep} at {p}.
+LOG	delivered	Hull {n} home. {m} metal, {f} rations, {u} fuel, {t} parts, {p} people.
+LOG	demand	{p} requests relief. Answer expected by day {by}.
+LOG	demand_unmet	{p}: no answer came. Unrest rising.
+LOG	revolt	{p} HAS GONE SILENT. Administration overthrown.
+LOG	relief_done	{p}: relief granted. Tempers cooling.
+LOG	order_sent	Order transmitted to {p} — {l} years out.
+LOG	relay_up	{p}: relay station on the air. Sector delay halved.
+LOG	relay_fail	{p}: relay order arrived, stock gone. Nothing built.
+LOG	depleted	{p}: the deposit is worked out.
+LOG	ship_missing	HULL {n} OVERDUE ON THE {p} RUN. No carrier.
+LOG	fragment	Signal fragment, hull {n}. Bearing {b}. Nothing more.
+LOG	ship_returns	HULL {n} IS BACK ON THE AIR after {d} years.
+LOG	ship_written_off	Hull {n} written off. {c} hands lost with her.
+LOG	search_found	Search made contact. Hull {n} under way home.
+LOG	search_empty2	Nothing at {p}. Empty sky.
+LOG	launch_search	Hull {n} away to search for hull {m}.
+LOG	launch_punitive	Hull {n} away to {p} with an enforcement party.
+LOG	launch_evac	Hull {n} away to lift {p}.
+LOG	evacuated	{p} evacuated. {pop} lifted off. The site is abandoned.
+LOG	evac_partial	{p}: {pop} lifted. Not everyone fit.
+LOG	works_idle	{p} has been idle 30 years. No metal on site to work.
+LOG	drive_started	DRIVE PROGRAMME OPENED AT {p}. Every works world now builds toward it.
+LOG	night_dated	THE OUTER SURVEY BRINGS BACK THE READINGS. The collapse reaches the sun in year {y} and takes every charted world with it. {n} years to build an ark — and a drive that can outrun it.
+LOG	night_near	{n} YEARS TO THE NIGHT. {s} would sail today.
+LOG	ark_block	Ark berths now {n}.
+LOG	night	—
+LOG	drive_lost	{p} has fallen and the drive programme went with it.
+LOG	shift_calm	SHIFT {n} TAKES THE DESK. {c} worlds answering, {h} hands at home. The previous shift left the lines running and nothing else.
+LOG	shift_grow	SHIFT {n} TAKES THE DESK. {c} worlds answering — more than the last shift inherited. Their note says: keep going out.
+LOG	shift_shrink	SHIFT {n} TAKES THE DESK. {c} worlds answering, fewer than before. The chart has more grave markers than it had.
+LOG	shift_hungry	SHIFT {n} TAKES THE DESK with the larders empty. The last operator's note is one line: rations first.
+LOG	shift_idle	SHIFT {n} TAKES THE DESK. {i} hulls sitting at Earth with nothing to do. Somebody built them; nobody gave them orders.
+LOG	shift_empty	SHIFT {n} TAKES THE DESK. Nothing answers. The chart is a list of names.
+LOG	shift_night	SHIFT {n} TAKES THE DESK. {n2} years to the Night. Berths for {b}; {h} standing at home. The note says: stop building. Start bringing them in.
+LOG	shift_grow2	SHIFT {n} TAKES THE DESK. {c} worlds answering. The handover note is a list of names nobody here has seen.
+LOG	shift_grow3	SHIFT {n} TAKES THE DESK. {c} worlds answering, {h} hands at home. The chart has grown past the edge of the old screens.
+LOG	shift_calm2	SHIFT {n} TAKES THE DESK. {c} worlds answering. Nothing changed since the last handover; the note says so in one word.
+LOG	shift_calm3	SHIFT {n} TAKES THE DESK. {c} worlds answering. The previous shift asked to be remembered for keeping it that way.
+LOG	shift_idle2	SHIFT {n} TAKES THE DESK. {i} hulls idle at the yards. The previous shift meant to find them work.
+LOG	shift_idle3	SHIFT {n} TAKES THE DESK. {i} hulls at Earth without orders, crews still aboard, waiting.
+LOG	shift_shrink2	SHIFT {n} TAKES THE DESK. {c} worlds answering. The previous shift spent its years lifting settlements.
+LOG	shift_shrink3	SHIFT {n} TAKES THE DESK. {c} worlds answering. The handover note lists the ones that stopped.
+LOG	first_landfall	{p}: the first landing this desk has ever confirmed. The operator wrote the time down twice.
+LOG	epitaph	{p}, settled year {f}, lifted year {y}. {q} {dep} shipped in {n} {yr}. {pop} came home. Struck from the chart.
+LOG	old_night	The charts call the new ring OLD NIGHT. Nobody at the desk remembers who named it.
+LOG	ark_sailed	THE ARK LEFT ON SCHEDULE. {s} aboard. {b} behind — on hulls, on worlds, on the pier. The desk logged the departure and then logged nothing.
+LOG	desk_silent	FINAL ENTRY. The larders have been empty {n} years. The lines will keep running until the hulls wear out. Nobody will be here to read this.
+LOG	lose	—
+MSG	ok	Order sent.
+MSG	halted	Clock held — a hull is waiting, or something changed.
+MSG	locked	That hull is not unlocked yet.
+MSG	cost	Not enough at Earth to pay for it.
+MSG	noship	No hull selected.
+MSG	noplanet	No such body.
+MSG	sector	That ring is beyond your hulls' range.
+MSG	busy	That hull is not at Earth.
+MSG	fuel	Not enough fuel at Earth for the crossing.
+MSG	taken	There is already a settlement there.
+MSG	people	Not enough people at Earth.
+MSG	cap	That will not fit in the hold.
+MSG	nocolony	No settlement there.
+MSG	pop	Population too small.
+MSG	metal	Not enough metal ON SITE. Ship metal there first.
+MSG	parts	Not enough parts at Earth. Parts come from industrial worlds.
+MSG	nomissing	That hull is not missing.
+MSG	running	The drive programme is already under way.
+MSG	notworks	Only an industrial world can host it.
+MSG	food	Not enough rations at Earth.
+MSG	none	Nothing to scrap.
+MSG	crew	Not enough hands at Earth to man her.
+MSG	evacuating	A hull is already on its way to lift that world.
+MSG	range	That hull is short-legged for a ring that far out. A bigger class, or a newer generation, can make it.
+MSG	ghost	That world is dead. Nothing there to settle.
+MSG	retired	The yards no longer build that generation.
+MSG	copied	Run log copied.
+MSG	copyfail	Could not copy — select the text and copy by hand.
+MSG	off	That system is switched off in this build.
+MSG	noroute	No line set.
+MSG	queued	Orders sent — it changes line when it next docks.
+MSG	lost	That hull is missing.
+MSG	samenode	Both ends are the same place.
+MSG	textsOk	Texts reloaded from the sheet.
+MSG	textsNoUrl	No sheet link in this build.
+MSG	textsFail	Could not reach the sheet — keeping the built-in texts.
+RES	metal	metal
+RES	food	rations
+RES	fuel	fuel
+RES	parts	parts
+UI	prevFound	{n} settlers → {r}/year {dep}. The world holds {cap}; the line tops it up.
+UI	prevLine	Round trip {t} {yrt} · hold {cap} {dep} per run.
+UI	calloutOk	Got it
+UI	cPeople	Hands. Settlers and crews come from here, and only from here.
+UI	cMetal	Earth burns metal every year. The arrow says whether the stockpile grows or shrinks.
+UI	cFood	Earth burns rations too. Hunger kills faster than anything else.
+UI	cFuel	Fuel is spent on every departure. Without it nothing leaves.
+UI	cParts	Parts come from the industrial world. Bigger hulls, surveys and the drive cost parts.
+UI	cDock	The yards. New hulls come from here; each takes its crew off Earth.
+UI	cAdvisor	From now on this panel lists what wants a decision, worst first. Open jumps to it, × silences it.
+UI	cSurvey	Charting the next ring needs enough settled worlds — every world you have ever settled counts, even a spent one. Settle more, then survey.
+VOICE	role_chief	Shift chief
+VOICE	role_captain	Hull captain
+VOICE	role_head	Settlement head
+VOICE	role_duty	Duty operator
+VOICE	night_dated.1	The outer survey came back with the readings, and I have checked them until there was nothing left to check. Past the last charted ring, space is falling in on itself. It reaches the sun in year {y}. Everything you have charted goes with it. No drive we own can outrun it; a Generation {g} drive can. {fy} I am told to say nothing else.
+VOICE	colony_founded.1	Down. {pop} of us, one dome. Send more people while you still have them.
+VOICE	captain_new.1	Hull {hull}. Captain no. {k} on this hull. Never met the ones before.
+VOICE	ship_missing.1	Hull {hull} missed its call. Crew of {crew}. Holding the channel open, per regulation.
+VOICE	last_flight.1	Order received. We will not make it back — the table says so. Proceeding.
+VOICE	evacuated.1	Lifting off. {pop} aboard. We left the dome lights on. I do not know why.
+VOICE	left_behind.1	We can hear the countdown. Do not answer. Keep the channel for the ones who will make it.
+VOICE	ark_closed.1	Boarding closed. {left} stay on the pier. The desk runs to the end.
+UI	pfTitle	Personal file
+UI	pfNo	service no. {n}
+UI	pfHull	hull {n} · captain no. {k}
+UI	pfOk	Acknowledged
+UI	names	Adeyemi Okafor Varga Novak Lindqvist Sato Ferreira Haddad Petrov Nakamura Oyelaran Kowalski Brandt Moreau Iyer Castellanos Nygaard Dlamini Haugen Tanaka Marchetti Sorensen Abara Kimura Delacroix Ivashko Bekele Fontaine Ruiz Yilmaz Halvorsen Mbeki Andrade Sokolov Quintero Nakashima Weiss Osei Lindgren Taggart Murakami Vasquez Achebe Holm Rahimi Duarte Karlsen Obi Renaud Zielinski
+LOG	voice	{who} {name}: {line}
+VOICE	colony_founded.2	Landed. {pop}. The dome holds pressure. Nobody here has seen Earth; nobody here will.
+VOICE	evacuated.2	{pop} aboard. Twelve stayed to shut the reactor down. They knew the hold was full when they volunteered.
+VOICE	captain_new.2	Hull {hull}. I took the bridge in the dark between stars; the last captain is in the aft locker. Cargo intact.
+VOICE	ship_missing.2	Hull {hull}, {crew} aboard, no carrier for six months. Logging it as overdue, not lost. Regulation says lost.
+VOICE	night_dated.2	Year {y}. The number is not mine; the machine gave it, and the machine has been right about everything smaller. The collapse takes the sun and every world on your chart. Between now and then there is one problem, not many: a Generation {g} drive. {fy} Something will change. That is your desk, not mine.
+UI	arkdReach	needs {n} worlds settled, you have {r}
+UI	arkdHost	no industrial world with {n} hands to host it
+UI	arkdStall	no parts coming in
+UI	arkNoDrive	no drive — the ark cannot sail
+UI	statWoke	Woke at the other end
+UI	a_arkd_late	The ark drive (Generation {g}) is due in year {y} at this pace — {l} {yrl} after the Night. Feed the drive programme.
+UI	a_arkd_tight	The ark drive (Generation {g}) is due in year {y} — only {l} {yrl} before the Night.
+UI	a_arkd_reach	The ark drive (Generation {g}) needs the next drive mark, and that needs {n} worlds settled. You have settled {r}.
+UI	a_arkd_host	The ark drive (Generation {g}) needs a drive programme, and no industrial world has {n} hands to host it.
+UI	a_arkd_stall	No parts are coming in. The ark drive (Generation {g}) will never be ready at this pace.
+LOG	ark_drive	GENERATION {g} DRIVE CAN PUSH THE ARK. {w}% of the sleepers would wake at the other end. The Night is still year {y}.
+LOG	ark_grounded	THE NIGHT CAME AND THE ARK STAYED ON THE PIER. {b} berths, and no Generation {g} drive to push them.
+LOG	ark_woke	Generation {g} drive. {w} of {s} woke at the other end.
+VOICE	role_sci	Institute physicist
+VOICE	date_shift.1	First shift to take the desk with the year already on the wall. Nobody here will see it. We are asked to work as if we will.
+VOICE	date_shift.2	Year {y} is on the wall above the desk in the previous shift's hand. I have not painted over it. I have added the number of worlds.
+VOICE	ark_drive.1	Generation {g}. It will carry an ark past the collapse. It will not carry everyone through the crossing: {w} of every hundred wake at the other end, by the model, and the model has not been wrong yet. Every generation after this one wakes more. That is the whole of what I have to offer you.
+VOICE	ark_drive.2	The Generation {g} drive is done and it is enough. Enough is a word I used to hate. {w} out of a hundred wake at the far end; the rest do not. You can stop here and build berths, or feed the programme another generation and lose the years. I have written both columns on the same page and I am not choosing.
+VOICE	doomsday.1	{n} years to the Night and the square in front of the Institute is full every morning. Some of them say the date is a lie the desk tells to keep them digging. Some say the ark is for us and not for them, and they are not wrong about the arithmetic: berths for {b}, {h} standing at home. I have stopped reading what they paint on the doors. The lines still run.
+VOICE	doomsday.2	There is a congregation on the pier now. They hold a service at every launch and a wake at every landing. They do not want a berth; they say the Night is owed. The yards work around them. I have {h} at home, berths for {b}, and {n} years. I do not have time to argue with the ones who have decided.
+VOICE	crash.1	Hull {hull}, on final to {p}. Lost the port cluster at two thousand metres. We are not going to make the plain. I am putting the log on the carrier so someone has it. Cargo was people.
+VOICE	crash.2	Hull {hull}. Atmosphere on {p} is thicker than the survey said and the survey is older than I am. Structure is going. Nobody in the hold is awake for this, which is the one mercy. Closing the channel.
+VOICE	written_off.1	Hull {hull} struck off. {crew} aboard. The regulation gives a form for this; I have filled it in and I do not know where it goes.
+VOICE	written_off.2	Closing the channel for hull {hull} after three hundred years of silence. {crew} people. I kept it open longer than the rules allow. The rules do not sit at this desk.
+VOICE	seam_more.1	The core samples were wrong, in our favour for once. The seam under {p} runs deeper than the chart says — {q} more {dep} in the ground. The children here will not have to move.
+VOICE	seam_more.2	{p}: we went past the depth the survey called the floor and there was no floor. {q} more {dep}, by the new bores. Send another hull, not more people.
+VOICE	seam_less.1	{p}: the seam pinched out {q} short of the survey. The prospector who signed the chart has been dead for a century. We are digging the walls now and counting the years, not the tonnes.
+VOICE	seam_less.2	We opened the lower gallery on {p} and found rock. {q} {dep} that the chart promised are not there and never were. Tell the desk to plan the lift early. We would rather leave than starve here.
+VOICE	seam_rich.1	{p}: a pocket opened under the main gallery, {q} {dep} sitting loose. It will not fit on the next hull. It will not fit on the next three.
+VOICE	wreck.1	{p}: the stack collapsed in the storm and took {q} {dep} with it. A year's work on the ground in an hour. Nobody hurt; nobody will say that is enough.
+VOICE	disaster.1	{p}: dome two lost pressure in the night. {q} did not wake. We have moved into dome one and it is enough room, which is the worst thing I have written to you.
+VOICE	disaster.2	{p}: seismic. {q} dead under the gallery. We will dig again when the ground stops. Please do not send condolences on the carrier; send people.
+LOG	ev_short	{p}: the seam is thinner than the survey said — {q} {dep} that were never there.
+LOG	doomsday	{n} YEARS TO THE NIGHT. Earth has learned to live by the date: congregations on the pier, the Institute guarded, children taught the year before they are taught to read. Berths for {b}; {h} standing at home.
+LOG	shift_dated	SHIFT {n} TAKES THE DESK. The first to inherit a year instead of a chart: {n2} to the Night. {c} worlds answering. The note says: they will not be here for it; work anyway.
+LOG	shift_long	SHIFT {n} TAKES THE DESK. {n2} years to the Night. Nobody at this desk was born before the date. {c} worlds answering; the drive programme is the only line on the board anyone asks about.
+LOG	shift_long2	SHIFT {n} TAKES THE DESK. {n2} years to the Night. The Institute has stopped taking students for anything but the drive. {c} worlds answering. The handover note is a drawing of the ark; the yards have not started it.
+LOG	shift_long3	SHIFT {n} TAKES THE DESK. {n2} years to the Night. The date is taught in schools now as a fact about the world, like the tides. {c} worlds answering, {h} hands at home, and every one of them knows the year.
+LOG	shift_dusk	SHIFT {n} TAKES THE DESK. {n2} years to the Night. There is a congregation on the pier that holds a service at every launch. Berths for {b}; {h} standing at home. The note says: do not argue with them; count them.
+LOG	shift_dusk2	SHIFT {n} TAKES THE DESK. {n2} years to the Night. Three of this shift asked to be struck from the berth list. The previous shift granted it and wrote nothing else. Berths for {b}; {h} standing at home.
+LOG	shift_dusk3	SHIFT {n} TAKES THE DESK. {n2} years to the Night. The yards run three shifts; the pier runs a fourth that builds nothing and sings. {c} worlds answering. The note says: bring them in while the lines still hold.
+UI	a_mutiny	{n} hull(s) refuse orders. Their crews are home; the hulls still count for the convoy — scrap them for the metal or leave them.
+UI	statMutiny	Mutinies
+MSG	mutiny	That crew has refused the Night. The hull takes no orders.
+LOG	mutiny	HULL {n} REFUSES ORDERS at {p}. The crew is bringing her home and will not go out again.
+VOICE	mutiny.1	Hull {hull}. We have done the arithmetic on the bridge and it does not come out. We are loading what is on the ground at {p} and coming home. Log it as mutiny if the regulation needs a word.
+VOICE	mutiny.2	Hull {hull}. The crew voted. I did not stop them, and I would not have won. We are not going back out to {p}. Whatever you do with the hull when we dock, do it after we have walked off.
+UI	kitFuel	Burns
+UI	kitStarved	No fuel on site. The machines stand; the world digs by hand.
+UI	kitAboard	Kit aboard hull {n}, {y} years out.
+UI	kitMax	Top tier. Nothing bigger fits on this world.
+UI	a_kit	{p} can afford a tier {t} kit: {kx} → {ky} a year, and the seam will outlast it.
+UI	a_kithold	{p}: the tier {t} kit ({w}) is stuck on the pier — no hull on that line can carry it.
+UI	a_kitfuel	{p}: the machines stand — no fuel on site. The line should be bringing it.
+UI	a_foodpile	Rations for {n} years in store. Not waste: the ark eats rations by the block.
+MSG	kitgate	The engineering programme is not open yet.
+MSG	tiermax	That world is at the top tier already.
+MSG	kitpending	A kit is already on its way there.
+LOG	kit_ordered	Tier {t} kit for {p} laid out on the pier — {w} of hold, first hull that fits takes it.
+LOG	kit_loaded	Hull {n} takes the tier {t} kit for {p}.
+LOG	kit_built	{p}: TIER {t} MACHINES RUNNING. Output ×{x}.
+LOG	kit_lost	The tier {t} kit for {p} went down with the hull.
+LOG	kit_starved	{p}: no fuel. The tier {t} machines have stopped.
+LOG	kit_running	{p}: fuel arrived. The tier {t} machines are running again.
+VOICE	kit_built.1	The rig is up on {p}. Forty years in a hold and every bolt is where the drawing says. It drinks. Keep the fuel coming and I will send you a number you have not seen before.
+VOICE	kit_built.2	{p}, tier {t}. The children came out to watch it move. Nobody here had seen a machine bigger than a dome. Output ×{x}, and I have written that on the wall.
+VOICE	kit_starved.1	{p}: the tanks are dry and the tier {t} rig is a monument. We are back on shovels. Tell the desk the line is too thin.
+UI	open.c1	EARTH, YEAR 0. The mines are empty. The soil is spent. The sea is still there, and nothing lives in it.
+UI	open.c2	Earth burns a little more every year than the year before. Nobody argues about the number any more. They argue about the ships.
+UI	open.c3	A hundred nations would race each other to the same rocks. So there is one Institute, and at its centre one desk. It answers to no government, and it never sleeps.
+UI	open.c4	The desk orders hulls built. It names the worlds and sends people out to settle them. It opens the lines that carry back whatever those worlds dig, grow and pump. Nothing else on Earth does any of this.
+UI	open.c5	A shift at the desk is eighty years. The first shift sits down today. It is you. You will not see the end of anything you begin.
+UI	open.c6	Keep the holds full. That is the whole job. For now.
+UI	shiftT	Shift {n} hands over the desk
+UI	shiftGo	Take the desk
+UI	shiftStop	Stop at every shift
+UI	shDelivered	Brought home these eighty years
+UI	shPeople	Hands come home
+UI	shWorlds	Live worlds
+UI	shFounded	({n} founded)
+UI	shSectors	Chart
+UI	shSectorsN	{n} new ring(s)
+UI	shDrive	Drive programme
+UI	shDriveN	{n} mark(s) earned
+UI	shKits	Kits of machines delivered
+UI	shLost	Hulls written off
+UI	shMutiny	Mutinies
+UI	shHands	Hands at home
+UI	shIdle	(idle at the pier: {n})
+UI	shLeft	To the Night
+UI	shLeftN	{n} years · room for {b}
+UI	a_lastbuild	A hull built now will not sail: the shortest line open is {n} years round and {l} years are left. Crews refuse. Spend the metal on the ark.
+UI	shBuilt	Hulls the yards built
+LOG	yard_line	The yards lay down hull {n}, Generation {g}, for the {p} line.
+LOG	yard_renew	The yards lay down hull {n}, Generation {g}, to replace hull {o} on the {p} line.
+LOG	yard_take	Hull {n} was idle on the pier; it takes the {p} line.
+LOG	line_retired	Hull {n} comes off its line and goes to scrap — {m} metal back.
+UI	a_crew	{n} hull(s) wait at the pier with no hands to sign on. The crossings take crews; Earth is not replacing them.
+UI	shAttrition	Hands lost on the crossings
+UI	shHandsRate	Earth still raises
+UI	shHandsRateN	{n} hands a year
+LOG	crew_lost	Hull {n} comes home {c} short. The crossing keeps its share.
+LOG	crew_wait	Hull {n} waits on the pier: {c} berths in the crew and nobody to sign. Earth has no hands to spare.
+LOG	crew_signed	Hull {n} has its crew again and sails.
+MSG	enroute	A founding party is already on its way there.
+LOG	yard_scrap	Hull {n}, Generation {g}, sat idle on the pier for a decade. The yards broke it up — {m} metal back.
+UI	alertDepleted	Seam exhausted
+UI	evacGoing	Evacuation under way
+UI	bigSurvey	Open the {s} ring
+UI	bigArk	Add {n} berths to the ark
+MSG	depleted	The seam there is exhausted. Nothing to carry.
+LOG	nothing_left	Hull {n} is back from {p} with nothing left to carry. It stands down on the pier.
+UI	bsStock	On the surface
+UI	bsHands	People
+UI	bsMakes	Output
+UI	verdictDead	Nothing left to dig
+UI	verdictNoLine	No hulls on the line
+UI	verdictPileShort	Line falls behind — piling up
+UI	verdictOkShort	Line keeps up
+UI	alertFood	Rations are running out
+UI	alertFoodBody	Earth has {n} years of rations and no farm on a line. Chart a ring and settle a farm.
+UI	alertWorks	First industrial world
+UI	alertWorksBody	{p} makes parts. Open its card and host the drive programme there — {n} parts buys the next generation of hulls.
+UI	a_bigger	{p}: {n} couriers run this line. One hauler carries as much for less metal and fewer hands.
+UI	saveBtn	Save as file
+MSG	saved	Saved.
+MSG	savefail	Could not save the file. Use Copy instead.
+MSG	short_metal	Not enough metal at Earth — {n} short.
+MSG	short_food	Not enough rations at Earth — {n} short.
+MSG	short_fuel	Not enough fuel at Earth — {n} short.
+MSG	short_parts	Not enough parts at Earth — {n} short. Parts come from industrial worlds.
+MSG	short_people	Not enough free hands at Earth — {n} short. Earth keeps {k} for itself.
+MSG	needreach	Needs {n} live worlds — you have {r}. A world is live while a colony still stands on it.
+MSG	nofree	No free hull at Earth.
+MSG	fewhands	{n} more hands are needed for a founding party.
+MSG	why_zero	Nothing on this order to take off.
+MSG	why_max	Twelve hulls is the most one line takes.
+MSG	night	The ark is built only once the Night has a date.
+MSG	ok_build	Hull no. {n} laid down — {h}, ready in {y} years.
+MSG	ok_kit	Kit {t} ordered for {p} — it leaves with the next hull.
+MSG	ok_survey	Ring {s} charted. New worlds are on the map.
+MSG	ok_found	Founding party of {n} leaves for {p}.
+MSG	ok_drive	Drive programme started at {p}.
+MSG	ok_evac	A hull is on its way to lift {p}.
+MSG	ok_scrap	Scrapped — the metal is back at the yards.
+MSG	ok_release	Hull released from the line.
+UI	wHulls	on the line
+UI	wHauled	Hauled out
+UI	wStockSeam	Stockyard · seam
+UI	wTravel	From Earth
+MSG	evacNoHull	No free hull at Earth can lift {p}. {w}
+UI	evacW_wait	Hull {n} is home in {l} {yrl}; or order one in the dock.
+UI	evacW_order	Order one in the dock, or lower a standing order to free a hull.
+UI	fyOk	At the pace the works are keeping, that drive is ready in year {y}.
+UI	fyNone	At the pace the works are keeping it is never ready: {w}.
+MSG	settled	Not enough worlds settled yet.
+MSG	needsettled	Needs {n} settled worlds — you have {r}. Every world you have ever settled counts, even a spent one.
+UI	ringSignTitle	NEW RING · {s}
+UI	noFreeTitle	NO FREE WORLDS LEFT
+UI	noFreeLater	Later
+UI	newGenTitle	GENERATION {g} HULLS ARE READY
+MSG	want_wait	{p}: {n} × {c} wanted. No free hull at Earth, and the yards cannot start a new one: {w}.
+MSG	ok_assign	Hull {n} sent to {p}.
+MSG	gen_retired	The yards no longer build this generation, and none is free at Earth.
+UI	evacWho	{h} goes: hold {c}, people {k} — everyone fits; {y} years out.
+UI	evacShort	{h} holds {c} of {k} people — {l} will stay behind. A bigger courier (newer generation) lifts everyone.
+UI	evacNoCourierHint	Only a courier lifts a settlement, and none is free at Earth. {w}
+UI	evacW_orderC	Build a courier in the dock, or take one off a line.
+MSG	evacNoCourier	No free courier at Earth can reach {p}. {w}
+MSG	evacCourier	Only a courier can lift a settlement.
+MSG	ok_evac_short	{n} is on its way to lift {p} — it holds {c}; {l} people will stay behind.
+UI	hullFmt	{t} “{n}” {g}
+UI	hullNm_courier	Hermes
+UI	hullNm_hauler	Sisyphus
+UI	hullNm_freighter	Atlas
+UI	lobe0	Eos
+UI	lobe1	Helios
+UI	lobe2	Hemera
+UI	lobe3	Hesperos
+UI	lobe4	Selene
+UI	lobe5	Nyx
+LOG	pulse_short	Earth cannot cover the extra “{dep}” demand — people are dying.
+UI	alertPulseT	Earth’s demand is rising
+LOG	fold_warn	Space over {lobe} is starting to fold. In {l} years hulls there will fly twice as fast.
+LOG	fold_start	Space over {lobe} has folded: hulls there fly twice as fast for {n} years.
+LOG	fold_end	The fold over {lobe} has closed. Flight times are back to normal.
+LOG	drag_warn	Space over {lobe} is thickening. In {l} years hulls there will crawl.
+LOG	drag_start	Space over {lobe} has gone thick: hulls fly at three-fifths speed for {n} years.
+LOG	drag_end	Space over {lobe} has thinned out. Flight times are back to normal.
+LOG	storm_warn	A space storm is gathering over {lobe}. In {l} years nothing will be able to land there.
+LOG	storm_start	The storm over {lobe} has broken: no landings for {n} years. Hulls hold in orbit, the stockyards fill.
+LOG	storm_end	The storm over {lobe} has passed. Hulls are landing.
+LOG	crisis_warn	Earth reports failing infrastructure: in {l} years its “{dep}” demand doubles for {n} years for repairs. Stock up.
+LOG	crisis_start	Breakdowns on Earth: repairs eat twice as much “{dep}” for {n} years.
+LOG	crisis_end	The repairs are done: Earth’s “{dep}” demand is back to normal.
+LOG	spoil_warn	Earth warns of spoilage: in {l} years the food stores begin to rot — demand doubles for {n} years. Stock up.
+LOG	spoil_start	Earth’s stores are rotting and burning: food demand is doubled for {n} years.
+LOG	spoil_end	The losses are made good: Earth’s food demand is back to normal.
+UI	statCargo	Carried along
+MSG	arkhave	This level is already yours. Pick a higher one.
+MSG	arklevel	There is no such level.
+MSG	ok_arkbuy	Ark level {n} bought.
+LOG	ark_bought	Ark level {l} bought outright.
+LOG	ark_plan	Deposits for ark level {l} begin. Earth sets a share aside every year.
+LOG	ark_level	Ark level {l} is paid in full.
+LOG	mutiny_warn	THE CREWS ARE COUNTING. In {n} years the first line ({p}) refuses to sail; from then on hulls come home and stay. To hold until the Night Earth needs about {f} rations; the larders hold {h}.
+UI	a_mutinysoon	Crews start refusing in {n} years ({p} first). Stock rations now: about {l} to reach the Night, {h} in the larders.
+UI	a_foodhor	Rations run out around year {y} — in {n} years. Earth eats more every century and farm seams end; a new farm takes a survey, a landing and a line. Farms on lines now: {h}.
+LOG	food_horizon	THE LARDERS HAVE A DATE. On today's lines Earth's rations run out around year {y}, {n} years from now; {h} in store, {k} farms feeding home. Earth eats more every century and farm seams end. A new farm takes a survey, a landing and a line — start it now, not when this turns red.
+UI	a_convoy	The convoy is short: {n}/{k} couriers, {h}/{f} haulers, {c}/{m} freighters of Generation {g} or newer at the pier.
+MSG	ok_reserve	Hull {n} set aside for the ark.
+MSG	ok_unreserve	Hull {n} released from the reserve.
+LOG	ark_noconvoy	The ark stayed: no convoy at the pier — {n} couriers, {h} haulers, {c} freighters of Generation {g} or newer.
+UI	arkNoConvoy	no convoy — the ark stayed
+UI	noteEvent	Event
+UI	noteDrive	New generation
+UI	noteArk	The Night
+UI	noteEarth	Earth
+UI	noteRing	Survey
+UI	noteOk	Understood
+UI	evFold	Fold
+UI	evDrag	Stretch
+UI	evStorm	Storm
+UI	evCrisis	Breakdowns
+UI	evSpoil	Spoilage
+UI	evIn	begins in {n} y
+UI	evLeft	{n} y left
+UI	convoyPick	Choose convoy hulls
+UI	convoyTitle	Convoy · Generation {g}+
+UI	convoyHint	Hulls docked at Earth, mutinied ones too — they all count. Plus sets a hull aside for the ark — the yards leave it alone, and a hull on a line leaves its line. Minus gives it back.
+UI	convoyOld	below Generation {g} — not fit for the convoy
+UI	convoyOnLine	on the {p} line
+UI	convoyNone	No hulls are docked at Earth right now.
+UI	convoyDone	Done
+MSG	convoy_old	Too old for the convoy: it takes Generation {g} or newer.
+UI	noteWarn	Warning
+UI	moveTo	Move to:
+UI	convoyMutiny	mutinied · counts for the convoy
+UI	liftCut	Cut off. No courier would be home before the Night — the {k} here stay.
+MSG	evacLate	Too late for {p}: a courier would not be home before the Night.
+LOG	world_cut	{p} IS CUT OFF. No courier can go out and be home before the Night. {n} people stay there.
+UI	a_lastlift	Last lift for {p} in {n} years (by year {y}): after that its {h} people stay. Worlds closing within {l} years: {k}.
+MSG	ok_order	{p}: the yards lay down a {c} for this line, ready in about {y} years.
+MSG	orderNight	No crew will sign for this line so close to the Night.
+UI	u_year	Year
+UI	u_night	Night
+UI	u_yearsN	{n} {yr}
+UI	u_needs	Needs a decision
+UI	u_paused	Paused
+UI	u_perYr	/yr
+UI	u_ends	ends ≈ {y}
+UI	u_fit	Fit
+UI	u_tabEarth	Earth
+UI	u_tabWorlds	Worlds
+UI	u_tabTech	Tech
+UI	u_tabYard	Yard
+UI	u_tabFleet	Fleet
+UI	u_tabArk	Ark
+UI	u_freeHull	free hull
+UI	u_moreYard	+ {n} more in the yard
+UI	u_timePaused	Time is paused
+UI	u_genPaused	Generation {g} · time is paused
+UI	u_flHungry	Earth is starving
+UI	u_flFood	Rations end ≈ {y}
+UI	u_flMetal	Metal is running out
+UI	u_flFuel	Fuel is low
+UI	u_flYard	{n} being built
+UI	u_flCrew	Waiting for crews: {n}
+UI	u_flIdle	Idle at the pier: {n}
+UI	u_flMutiny	Crews refusing: {n}
+UI	u_flArkNone	No ark level paid
+UI	u_flArkDrive	The ark drive is not ready
+UI	u_flConvoy	Convoy short: {n}
+UI	u_flConvoyOk	Convoy ready
+UI	u_flSurvey	Ring {n} can be charted
+UI	u_flDrive	The drive programme can start
+UI	u_home	Home
+UI	u_peopleW	people
+UI	u_foodUntil	Rations last until
+UI	u_foodLong	past the forecast
+UI	u_foodPastNight	past the Night
+UI	u_liveWorlds	Live worlds
+UI	u_crossings	Crossings
+UI	u_onHulls	People on hulls
+UI	u_onWorlds	People on the worlds
+UI	u_alHungry	Earth is out of rations — people are dying.
+UI	u_alFoodNight	Rations end {n} years before the Night.
+UI	u_alFood	Rations end ≈ {y}.
+UI	u_alCold	Earth is out of metal.
+UI	u_alCrisis	Crisis: Earth burns twice its {r} — {n} years left.
+UI	u_burns	Earth burns each year
+UI	u_continueBtn	Continue
+UI	u_shiftCap	Shift report
+UI	u_open	Open
+UI	u_noFreeBody	Every world on the charted rings is settled or spent. Chart the next ring in the Tech tab — without new worlds the colonies run dry and Earth starves.
+UI	u_ringBody	The next ring can be charted: Earth has the worlds and the stores for it. The order is in the Tech tab.
+UI	u_toTech	To Tech
+UI	u_alertFoodBody	Earth has {n} years of rations and no farm on a line. Settle a farm and put a hull on its line.
+UI	u_worksBody	{p} makes parts. The drive programme runs in the Tech tab — {n} parts buy the next generation of hulls.
+UI	u_stYard	in the yard · {n} {yr} → {p}
+UI	u_stMissing	overdue · {n} {yr}
+UI	u_stMutiny	crew refuses to fly
+UI	u_stSettlers	{n} settlers → {p} · {t} {yrt}
+UI	u_stEvacHome	{n} people → Earth · {t} {yrt}
+UI	u_stEvacOut	to lift {p} · {t} {yrt}
+UI	u_stSearch	searching near {p} · {t} {yrt}
+UI	u_stKit	carries tier {k} machines · {t} {yrt}
+UI	u_stHome	Earth · {t} {yrt}
+UI	u_stOut	{p} · {t} {yrt}
+UI	u_stCrew	waits for a crew
+UI	u_stReserve	ark reserve
+UI	u_stAtEarth	unloading at Earth
+UI	u_stPend	takes the {p} line
+UI	u_stFree	free at the pier
+UI	u_stLoading	loading at {p}
+UI	u_stMoveTo	moves to {p} on docking
+UI	u_ringN	ring {n}
+UI	u_kMine	Mine
+UI	u_kFarm	Farm
+UI	u_kWell	Well
+UI	u_kWorks	Works
+UI	u_calm	calm
+UI	u_evacW_wait	Courier {n} is home in {l} {yrl}; or build one in the Yard.
+UI	u_evacW_orderC	Build a courier in the Yard, or take one off a line.
+UI	u_evacLate	Evacuate · too late
+UI	u_evacuate	Evacuate
+UI	u_evacWho	{h} · all {k} · {t} {yrt} out
+UI	u_evacShort	{h} holds {c} of {k} — {l} stay
+UI	u_lastLift	Last lift
+UI	u_liftCut	missed
+UI	u_liftNone	no courier makes it
+UI	u_machines	Machines
+UI	u_tierRun	tier {t} · running
+UI	u_tierStand	tier {t} · standing
+UI	u_tierNone	none
+UI	u_fuelOnSite	Fuel on site
+UI	u_kitWaiting	Tier {t} kit ({w}) waits on the pier for the next hull of this line.
+UI	u_kitTooBig	Tier {t} kit weighs {w}; the biggest hold on this line is {h}. Put a bigger hull on the line.
+UI	u_kitGate	Machines open with Generation {g} hulls.
+UI	u_kitGain	Tier {t}: {x} → {y} /yr · burns {f} fuel /yr
+UI	u_kitOrder	Order tier {t}
+UI	u_kitHold	Needs a hold of {w} on the line — the biggest is {h}.
+UI	u_inTransit	in transit
+UI	u_settlersWay	Settlers on the way
+UI	u_peopleN	{n} people
+UI	u_landsIn	lands in {n} {yr}
+UI	u_world	World
+UI	u_makes	Makes
+UI	u_deposit	Deposit
+UI	u_crossing	Crossing
+UI	u_oneWay	{n} {yr} one way
+UI	u_sector	Sector
+UI	u_found	Found a colony
+UI	u_settlers	Settlers
+UI	u_whoGoes	Who goes
+UI	u_whoLine	hold {c} · arrives in {n} {yr}
+UI	u_noneReach	No free hull at Earth reaches ring {n}.
+UI	u_noFree	No free hull at Earth.
+UI	u_price	Price
+UI	u_sendSettlers	Send settlers
+UI	u_free	free
+UI	u_workedOut	worked out
+UI	u_seamDead	The seam is dead
+UI	u_eats	This world eats
+UI	u_worksIdle	The works stand — no metal or rations on site.
+UI	u_worksLow	Metal or rations for {n} {yr} — then the works stop.
+UI	u_onSurface	On the surface
+UI	u_lineCarries	Line carries
+UI	u_worldGives	World gives
+UI	u_dryShort	worked out
+UI	u_dryLead	The seam is dead: {n} {r} still on the surface. Haul it home, then evacuate.
+UI	u_onLine	On this line
+UI	u_hullsN	hulls · {n}
+UI	u_move	Move
+UI	u_takeOff	Take off
+UI	u_noHulls	No hulls on this line — nothing comes home from here.
+UI	u_addHull	Add a hull
+UI	u_segFree	Free · {n}
+UI	u_segOther	Other lines · {n}
+UI	u_roundTrip	round trip {n} {yr}
+UI	u_fromLine	from {p}
+UI	u_tooShort	reaches ring {n} — too short
+UI	u_assign	Assign
+UI	u_moveHere	Move here
+UI	u_noFreePier	No free hulls at the pier. Order one below or take one from another line.
+UI	u_noOther	No hulls on other lines.
+UI	u_orderNew	Or order a new one
+UI	u_yardGen	Yard · gen {g}
+UI	u_needLive	needs {n} live worlds
+UI	u_buildYrs	Build · {n} {yr}
+UI	u_moveTo	Move {h} to
+UI	u_sendTo	Send {h} to
+UI	u_outReach	out of reach
+UI	u_noWorlds	No live world to go to.
+UI	u_keep	Keep it where it is
+UI	u_inYards	In the yards
+UI	u_lineOf	{p} line
+UI	u_yardsIdle	The yards are idle.
+UI	u_buildFree	Build a free hull
+UI	u_atPier	At the pier
+UI	u_release	Release
+UI	u_reserve	Reserve for ark
+UI	u_scrapSure	Confirm scrap
+UI	u_scrap	Scrap
+UI	u_pierEmpty	Nobody free at the pier.
+UI	u_fl_all	All {n}
+UI	u_fl_free	Free {n}
+UI	u_fl_lines	On lines {n}
+UI	u_fl_yards	In yards {n}
+UI	u_fl_away	Other {n}
+UI	u_send	Send
+UI	u_search	Search
+UI	u_none	None.
+UI	u_ws_dead	evacuate
+UI	u_ws_cut	cut off
+UI	u_ws_starve	works stand
+UI	u_ws_noline	no hulls
+UI	u_ws_half	line carries less
+UI	u_ws_dry	seam dead
+UI	u_ws_ok	—
+UI	u_ws_settling	on the way
+UI	u_ws_free	free
+UI	u_liveFree	{l} live · {f} free
+UI	u_thWorld	World
+UI	u_thRing	Ring
+UI	u_thLeft	Left
+UI	u_thHulls	Hulls
+UI	u_thState	State
+UI	u_cellIs	One cell = {k} worlds · {n} of {m}
+UI	u_noWorks	No works world yet — parts come only from works.
+UI	u_hullGen	Hull generation
+UI	u_driveAt	programme at {p}
+UI	u_step1	1 · Worlds ever settled · {n} of {m}
+UI	u_step2	2 · Parts for the programme · {n} of {m}
+UI	u_runAt	Run the programme at
+UI	u_start	Start the programme
+UI	u_startMore	Start · settle {n} more
+UI	u_genGives	Generation {g} gives
+UI	u_hold	Hold
+UI	u_speedH	Speed
+UI	u_reachH	Reach
+UI	u_arkWakeNext	The ark: {a}% wake → {b}%
+UI	u_rings	Rings
+UI	u_charted	{n} charted
+UI	u_ringNext	Ring {s}
+UI	u_settledOf	Worlds ever settled: {n} of {m}
+UI	u_survey	Survey
+UI	u_surveyMore	Survey · settle {n} more
+UI	u_beyond	Free worlds past ring {n}: {k} — generation {g} reaches them.
+UI	u_tech	Technology
+UI	u_arkReady	Gen {g} · ready
+UI	u_arkBy	Gen {g} · ≈ {y}
+UI	u_arkNeedW	Gen {g} · needs {n} worlds settled, {r} now
+UI	u_arkNoHost	Gen {g} · no works can host the programme
+UI	u_arkStall	Gen {g} · no parts coming in
+UI	u_noDate	The Night has no date yet
+UI	u_noDateHint	The survey of ring {n} brings the readings — or year {y} comes regardless.
+UI	u_theNight	The Night
+UI	u_arkDrive	Ark drive
+UI	u_wake	Wake
+UI	u_withGen	With gen {g} · {y}
+UI	u_levels	Levels
+UI	u_takesAlong	takes along
+UI	u_paid	Paid
+UI	u_buyLv	Buy level {l}
+UI	u_convoy	Convoy · {a} · {b} · {c}
+UI	u_genPlus	gen {g}+
+UI	u_empty	Empty
+UI	u_convoyHint	Hulls of generation {g} or newer, docked at Earth on the day. Hold them with «Reserve for ark» in the Yard.
+UI	u_toYard	To the Yard
+UI	u_ifToday	If the Night came today
+UI	u_arkStays	The ark stays
+UI	u_arkSails	The ark sails
+UI	u_vNoLevel	No level of the ark is paid.
+UI	u_vNoDrive	The generation {g} drive is not ready.
+UI	u_vConvoy	The convoy is short: {s}.
+UI	u_vSails	{s} sail · {w} wake · {l} stay behind
+UI	u_vBoard	{s} aboard
+UI	u_aDead	{w}: the seam is dead
+UI	u_aDeadC	{n} people are still there
+UI	u_aCut	{w} is cut off
+UI	u_aCutC	{n} people stay — no courier gets home in time
+UI	u_aStarve	{w}: the works stand, no {r}
+UI	u_aStarveC	No parts come from here
+UI	u_aLift	{w}: last lift in {n} years ({y})
+UI	u_aLiftC	Then {n} people stay for the Night
+UI	u_aNoLine	{w}: no hulls on the line
+UI	u_aNoLineC	Nothing comes home from here
+UI	u_aHalf	{w}: {c} of {m} {r} a year reach Earth
+UI	u_aHalfC	The rest piles up on the surface — {n} now
+UI	u_aDry	{w}: seam dead, {n} {r} on the surface
+UI	u_aDryC	Haul it home, then evacuate
+UI	u_aKit	{w}: tier {t} machines weigh {n}, the line holds {h}
+UI	u_aKitC	They wait until a bigger hull is on the line
+UI	u_aKitFuel	{w}: the machines stand — no fuel
+UI	u_aKitFuelC	The world digs by hand
+UI	u_fixEvac	Evacuate
+UI	u_fixSee	See
+UI	u_fixAdd	Add a hull
+UI	u_fixOrder	Order a hull
+UI	u_advNone	No world needs a decision now.
+UI	u_mSound	Sound
+UI	u_on	on
+UI	u_off	off
+UI	u_mSave	Save the game to a file
+UI	u_mLoad	Load a game from a file
+UI	u_mExport	Export the run log
+MSG	ok_savegame	Game saved to a file.
+MSG	ok_loadgame	Game loaded — year {y}. Time is paused.
+MSG	loadfail	That file is not a saved game.
+MSG	nohost	No works world with {n} people to host the programme.
+MSG	ok_moveDock	Hull {n} moves to {p} when it docks at Earth.
+MSG	ok_search	A hull goes to look for hull {n}.
+UI	u_newGenBody	Order them in the Yard or under a world's line.
+UI	u_resLeft	Hull {n} left the ark reserve.
+UI	u_evacW_line	Courier {n} is at the pier on a line — take it off the line.
+UI	u_yShort	{n} y
+MSG	ok_assignWait	Hull {n} is on the {p} line but waits at the pier: {w}
+UI	tut_name	ALEXANDRA
+UI	tut_inst	INSTITUTE
+UI	tut_gotIt	Got it
+UI	tut_skipHelper	Skip the helper
+UI	u_mHelp	Helper
+UI	tut_m0	Earth eats more every year. Rations run out in {y}.
+UI	tut_m1	Settle a world that grows food — {p}.
+UI	tut_m2	Settlers cost people and fuel. Every flight burns fuel.
+UI	tut_m3	Time is stopped. Start it. {p} takes no orders until the settlers land.
+UI	tut_m4	They've landed. Put a hull on the line — it brings {p}'s rations home.
+UI	tut_m8	No free hull at the pier. Order one here — it goes straight to this line.
+UI	tut_mM	Hulls are built from metal. {p} mines it.
+UI	tut_m9	Being built — here, and all of it in the YARD.
+UI	tut_m10	Every hull and where it is. A hull you move changes lines when it docks.
+UI	tut_m11	{p} gives {m} a year, its line carries {c}. The rest waits on the surface — another hull carries more.
+UI	tut_m12	Parts are home. Works make them from metal and rations — without rations they stop.
+UI	tut_m14	Each hull generation reaches one ring farther. The next needs settled worlds and parts from a works.
+UI	tut_m15	When a world needs you, it shows here, worst first. The button takes you straight to the fix.
+UI	tut_m17	Space shifts by sector. What is on, and for how long — in this bar.
+UI	tut_m16	Ring 2 is charted. Generation I couriers reach it; each generation flies one ring farther.
+UI	tut_m18	The year of the Night stays up here. Big news stops time and comes one window at a time.
+UI	tut_m19	The ark leaves on the Night with whoever is aboard. It needs paid levels and a convoy: generation {g} or newer, at the pier that day.
+UI	tut_m7	Time stops while this tab is open.
+UI	tut_m13	Machines make a world give more. They burn its fuel and ride out on the line's next hull.
+UI	tut_m20	Hold hulls for the convoy with RESERVE FOR ARK in the Yard.
+UI	tut_m21	Last lift: the year a courier must leave to bring everyone home before the Night.
+UI	tut_m22	The seam is dead. Only evacuation is left — a courier takes everyone.
+UI	tut_m24	A hull is overdue. If it is lost, nothing replaces it — you order the next one.
+UI	tut_m23	Near the end, crews refuse runs. A hull that refused still sails with the convoy.
+UI	nar_N02	Report from {world}: {n} people landed. Ready to mine and ship.
+UI	nar_N03	The first cargo is home — rations now last until {year}. Earth breathes a little easier.
+UI	nar_N04a	Shift 1 hands over the desk. Shift 2 takes it.
+UI	nar_N04a_a	People change — I stay. Nice to meet you, shift 2.
+UI	nar_N04b	Shift {k} hands over the desk.
+UI	nar_N04b_a	I remember every shift before you. I'll remember this one too.
+UI	nar_N05_1	{ship} did not come back. {n} crew went with her.
+UI	nar_N05_2	No one will remember them. I'll write them down.
+UI	nar_N06_1	{world} is worked out — a grey husk in the dark.
+UI	nar_N06_2	{n} people are still there, waiting for someone to come.
+UI	nar_N07	Space over {sector} flows differently. The physicists can't say why yet.
+UI	nar_N08	We're going further. It's darker past the edge of the map — or it seems so to me.
+UI	nar_N09_1	The physicists have named the date: in {year} our galaxy collapses.
+UI	nar_N09_2	The Institute's task changes: build an ark and take people to another galaxy.
+UI	nar_N09_3	Until then Earth must live: whoever starves will not fly.
+UI	nar_N10_1	{world}: the last lift has left. {n} people will stay.
+UI	nar_N10_2	The Institute doesn't count them. I'll remember their names.
+UI	nar_N11	The crew of {ship} refused the run. People are afraid and want a place on the ark.
+UI	nar_N12a	Four hundred years. People start counting.
+UI	nar_N12b	One hundred years. Earth queues for the ark — the line is longer than the berths.
+UI	nar_N12c	Twenty-five years. The ark is packed, and people keep coming.
+UI	nar_N13a	The ark has sailed with {n} aboard. The rest stay behind, without honours or names.
+UI	nar_N13a_a	Except the ones I remember.
+UI	nar_N13b	The ark did not sail: {reason}.
+UI	nar_N13b_a	Was it the Institute's mistake? Or did people not want to be saved?
+UI	nar_N13c	Earth did not live to see the Night: hunger came first.
+UI	nar_N13c_a	We rushed so hard toward the ark that we forgot to feed the ones meant to fly.
+UI	nar_rsConvoy	the convoy of generation {g} is short of {s}
+UI	nar_rsDrive	the generation {g} ark drive is not ready
+UI	nar_rsLevel	not one ark level was paid
+UI	nar_aboard	Aboard
+UI	nar_N13d	The rations ran out. Earth fell silent before the work was done.
+UI	nar_N13d_a	I will remember this shift. To wait, Earth has to eat.
+UI	u_lineAdds	+{n}/yr on this line
+UI	u_aFixFree	{h} stands idle at Earth: +{a} a year, the line is {g} short
+UI	u_aFixMove	{h} runs half empty on {p}: +{a} a year here, the line is {g} short
+UI	u_aFixBuild	Order a {h}: +{a} a year, the line is {g} short
+UI	u_aSpare	{w}: the line can carry {c} {r} a year, it needs {m}
+UI	u_aSpareC	{h} runs half empty — move her where a line falls behind, or take her off
+UI	u_aSpareN	{n} hulls too many. First: {h} — move her, or take her off
+UI	u_fixHull	Show the hull
+UI	mn_cont	Continue
+UI	mn_contSub	year {y} · {w} worlds
+UI	mn_empty	no record
+UI	mn_new	New game
+UI	mn_load	Load from file
+UI	mn_loadSub	.json
+UI	mn_sound	Sound
+UI	mn_on	on
+UI	mn_off	off
+UI	mn_test	Test play
+UI	mn_pult	HELM
+UI	tm_skip	skip
+UI	tm_hint	choose a command (1–4) · click or space finishes a line · Esc skips
+UI	tm_refuse	refused: {r}.
+UI	tm_mt	memory test {n} K
+UI	tm_mtEnd	user memory ........ none
+UI	tm_wait	awaiting command · {n} s
+UI	tm_up	UPTIME T
+UI	tm_sector	SECTOR
+UI	tm_system	SYSTEM
+UI	tm_planet	PLANET
+UI	tm_earth	EARTH
+UI	tm_noName	NO NAME
+UI	tm_grid	GRID 1:1000
+UI	tm_p01	** {name} {v} · cold start **
+UI	tm_p02	power rail A ........ 12.04 V  ok
+UI	tm_p03	power rail B ........  5.01 V  ok
+UI	tm_p04	mains ............... present
+UI	tm_p05	battery bank ........ 41 %  charging
+UI	tm_p06	self-test
+UI	tm_p07	position ........ sector 00/AE · fix
+UI	tm_p08	prepared commands ... found 24
+UI	tm_p09	load 1/6 · air
+UI	tm_p10	load 2/6 · hatches
+UI	tm_p11	load 3/6 · stores
+UI	tm_p12	load 4/6 · yards
+UI	tm_p13	load 5/6 · capsules
+UI	tm_p14	load 6/6 · translation
+UI	tm_p15	prepared commands ... 24 loaded
+UI	tm_p16	system ......... no name in base · 1 star
+UI	tm_p17	clock ................ no source · set 0000.00.00
+UI	tm_p18	bus scan ............. 14 devices
+UI	tm_p19	bus 7: timeout
+UI	tm_p20	bus 7: retry
+UI	tm_p21	bus 7: ok
+UI	tm_p22	planet ......... earth · orbit 3 · surface
+UI	tm_p23	sensor net ........... 212 nodes · 0 reply
+UI	tm_p24	systems offline ...... 6
+UI	tm_air_n	air
+UI	tm_air_f	air: filters clogged
+UI	tm_air_v1	clean
+UI	tm_air_v2	purge
+UI	tm_air_r2	purge needs clean filters
+UI	tm_air_v3	seal
+UI	tm_air_r3	sealed air does not move
+UI	tm_air_v4	disable
+UI	tm_air_r4	air is already stalled
+UI	tm_air_d1	scan air ... codes E12 E13 E40
+UI	tm_air_d2	fan 1: stalled · fan 2: stalled
+UI	tm_air_d3	particulates 9.4 mg/m3 (limit 2.0)
+UI	tm_air_i1	fan 1 ........ 1180 rpm
+UI	tm_air_i2	fan 2 ........ 1204 rpm
+UI	tm_air_i3	pressure ..... 0.71 atm
+UI	tm_air_i4	particulates . 1.1 mg/m3
+UI	tm_air_ok	air: clear
+UI	tm_hatch_n	spaceport hatches
+UI	tm_hatch_f	hatches: sealed
+UI	tm_hatch_v1	open
+UI	tm_hatch_r1	no hydraulic pressure
+UI	tm_hatch_v2	pressurize
+UI	tm_hatch_v3	lock
+UI	tm_hatch_r3	already sealed
+UI	tm_hatch_v4	disable
+UI	tm_hatch_r4	hatches are not running
+UI	tm_hatch_d1	hydraulics ... 0 bar
+UI	tm_hatch_d2	actuators 1–8: no response
+UI	tm_hatch_d3	seal pressure ... 0.00 atm
+UI	tm_hatch_i1	hydraulics ... 210 bar
+UI	tm_hatch_i2	actuators 1–8 .. ok
+UI	tm_hatch_i3	hatch travel ... 0 → 100 %
+UI	tm_hatch_ok	hatches: open
+UI	tm_store_n	warehouses
+UI	tm_store_f	warehouses: ledger stale
+UI	tm_store_v1	erase
+UI	tm_store_r1	the records are all there is
+UI	tm_store_v2	archive
+UI	tm_store_r2	a mismatched ledger cannot be archived
+UI	tm_store_v3	recount
+UI	tm_store_v4	seal
+UI	tm_store_r4	sealed stores cannot be counted
+UI	tm_store_d1	ledger checksum ... mismatch
+UI	tm_store_d2	last entry ... unknown
+UI	tm_store_d3	records ... 1204 · unverified
+UI	tm_store_i1	reading 1204 records
+UI	tm_store_i2	mismatches ... 17 → 0
+UI	tm_store_i3	metal · rations · fuel · parts ... counted
+UI	tm_store_ok	warehouses: ledger updated
+UI	tm_yard_n	shipyards
+UI	tm_yard_f	shipyards: idle
+UI	tm_yard_v1	feed
+UI	tm_yard_r1	tool heads are cold: material would jam
+UI	tm_yard_v2	clear
+UI	tm_yard_r2	cradles are already empty
+UI	tm_yard_v3	stop
+UI	tm_yard_r3	already idle
+UI	tm_yard_v4	warm up
+UI	tm_yard_d1	cradles 1–4 ... idle
+UI	tm_yard_d2	material feed ... off
+UI	tm_yard_d3	tool heads ... cold
+UI	tm_yard_i1	tool heads ... 240 °C
+UI	tm_yard_i2	cradles 1–4 ... ready
+UI	tm_yard_i3	feed ... on
+UI	tm_yard_ok	shipyards: running
+UI	tm_cap_n	capsules
+UI	tm_cap_f	capsules: 128 sealed
+UI	tm_cap_v1	open
+UI	tm_cap_r1	occupied and cold: not first
+UI	tm_cap_v2	drain coolant
+UI	tm_cap_r2	occupied: not now
+UI	tm_cap_v3	wake
+UI	tm_cap_v4	seal
+UI	tm_cap_r4	already sealed
+UI	tm_cap_d1	sealed units ... 128
+UI	tm_cap_d2	coolant ... 4 °C
+UI	tm_cap_d3	occupied ... 128
+UI	tm_cap_i1	warm-up ... 4 → 36 °C
+UI	tm_cap_i2	locks ... released
+UI	tm_cap_i3	name plates ... 128 read
+UI	tm_cap_ok	capsules: open · 128
+UI	tm_tr_n	translation
+UI	tm_tr_f	translation: offline
+UI	tm_tr_v1	translate
+UI	tm_tr_r1	no module loaded
+UI	tm_tr_v2	mute
+UI	tm_tr_r2	the channel is already silent
+UI	tm_tr_v3	train
+UI	tm_tr_r3	nothing to train yet
+UI	tm_tr_v4	link
+UI	tm_tr_d1	module ... offline
+UI	tm_tr_d2	channel ... closed
+UI	tm_tr_d3	speech of people ... not parsed by this unit
+UI	tm_tr_i1	module ... loaded
+UI	tm_tr_i2	channel ... open
+UI	tm_tr_i3	voice ... calibrating
+UI	tm_tr_ok	translation: alexandra online
+UI	tm_her	alexandra › I am here. I will translate.
+UI	mn_contFail	The last save in this browser would not load.
+UI	u_olderGen	Generation {g} needs {n} more parts
+UI	statNoWake	Never woke
+UI	nar_rsWake	{n} sleepers never woke: on a generation {g} drive the crossing was too long. Generation {h} would have woken {p}%.
+UI	u_dhQ	What is the drive programme?
+UI	u_dh1	The drive programme builds the next generation of engine. Every new hull and the ark fly on it.
+UI	u_dh2	It needs worlds ever settled and parts. Parts are made only at works worlds, from the metal and rations your lines bring them.
+UI	u_dh3	START spends them: everything stored at the works and up to {n} from Earth goes in. While it runs, the works make no parts for the yards.
+UI	u_dh4	When it is done, the yards offer the new hulls listed below, and crossings and signals get faster.
+UI	u_dh5	The ark needs generation {g}. On it {a}% of the sleepers wake, one generation newer {b}%, two {c}%, three {d}%.
+UI	u_convoyOver	+{n} crew souls · hulls over the convoy: {k}
+UI	u_allHome	All hulls home · on lines: {n}
+UI	u_allHomeArm	Take {n} hulls off their lines? Press again
+UI	u_allHomeHint	The lines stop. Hulls on an evacuation or a landing finish first.
+MSG	ok_allhome	{n} hulls called home.
+UI	u_letters	Personal files
+UI	u_lettersNew	{n} new
+UI	u_aSeam	{w}: the seam runs out in about {n} years
+UI	u_aSeamC	Think about where the people and the hulls go next
+UI	u_aForge	{w}: the line brings {c} a year, the works burn {n}
+UI	u_aForgeC	The works stand part of the time. Add hold to the line
+UI	u_atEvac	Evacuate
+UI	u_atForge	Works short of supply
+UI	u_atNoLine	No hulls on the line
+UI	u_atSeam	Seam running out
+UI	u_atLine	Line out of balance
+UI	u_pickRate	{c} of {m}/yr · +{a}
+UI	u_feedRow	{n}/yr · line brings {b}
+UI	u_feedShort	The line is {s} a year short. Add hold to it
+UI	u_birthTop	births {x}
+UI	u_births	Births
+UI	u_birthsHint	{lo} with an empty larder, {hi} with food for {n} years in store · now {y} years
+UI	u_wakeStores	Ark {l} stores
+UI	u_lvWake	+{n}% wake
+UI	u_lvTicket	the ticket: everyone at home boards
+UI	hk_wake	THE HELM WAKES A COMMAND: {c}
+UI	hk_name	SERPENT
+UI	hk_lvl	Fault level {n} of {m}
+UI	hk_new1	New: walls. The serpent goes through them, you do not.
+UI	hk_new2	New: links fire. A wall gives cover, a link inside a wall stays silent.
+UI	hk_new3	New: small ones. They path around walls, and a broken link releases more.
+UI	hk_new4	New: dashes and thick strips that cost you speed.
+UI	hk_new5	New: big ones split into small ones, the head fires red.
+UI	hk_new6	New: the head cuts you off, more small ones, shooters appear.
+UI	hk_d	A chain hunts you straight through the walls. Get behind it.
+UI	hk_r1	WASD — move · mouse — aim · fire is automatic
+UI	hk_r1t	drag to move · aim and fire are automatic
+UI	hk_r	only the yellow tail takes damage · the head is last · the body hurts · walls stop you and all fire, not the serpent
+UI	hk_r3	orange can be shot down
+UI	hk_r4	red — only dodge
+UI	hk_go	ENTER
+UI	hk_later	NOT NOW
+UI	hk_lost	SIGNAL LOST
+UI	hk_lostSub	The fault holds the command. Another try costs nothing.
+UI	hk_retry	RETRY
+UI	hk_done	CONTINUE
+UI	hk_woke	COMMAND WOKE: {c}
+UI	hk_mem	Recovered: 1 memory block.
+UI	hk_cGen	HULL.GEN.{g}
+UI	hk_cArk	ARK.LVL.{l}
+UI	hk_unGen	Generation {g} hulls can be ordered.
+UI	hk_unArk	Ark level {l} counts now.
+UI	hk_card	HACK WAITING
+UI	hk_cardGo	open
+UI	hk_m1	"Design file. Author: this unit. Date: earlier than my first record."
+UI	hk_m2	"Yard log. Hulls laid down: 0. Slipways aboard: more than 128 people need."
+UI	hk_m3	"Crew table. Column 'name': empty. Column 'returned': filled in."
+UI	hk_m4	"Chart. Rings marked to the edge of the sheet. Past the edge: not measured."
+UI	hk_m5	"Request to the translator. Answer: not recorded. Request repeated: 1 time."
+UI	hk_m6	"The date. Input data: present. Source of the input: not given."
+UI	hk_m7	"Ark plan. Places for a mind: 1. Mark: taken."
+UI	hk_m8	"Course. Point set. Set by: this unit. Date: earlier than my first record."
+UI	hk_m9	"Sleep report. Woke: a share. The rest: the line is cut off."
+UI	hk_m10	"Last block. Signed: this unit. This unit: not the first."
+UI	hk_m0	"Block damaged. Lines recovered: 0."
+MSG	hack	The Helm has a command to wake first — finish the hack (the card top right of the map).
+UI	u_hub	Hub
+UI	u_hubN	{n} / {m}
+UI	u_hubBuild	Build a hub
+UI	u_hubWait	Waiting for feeders
+UI	u_hubFeeders	Feeders
+UI	u_viaTo	Ship goods to
+UI	u_viaEarth	Earth
+UI	u_lw_courierLine	Line full: {n} couriers
+UI	u_lw_hubCourier	No couriers hub → Earth
+UI	u_lw_hubHop	Courier: hub too far
+MSG	hubKind	A hub takes no goods from a works, and a works cannot be one; build the hub first.
+MSG	hubRing	A hub must be nearer Earth than this world.
+MSG	hubChain	A hub feeds only Earth: a hub cannot ship to a hub, and a feeder cannot be one.
+MSG	hubCap	Hub limit {m} reached. A Gen {g} drive gives one more.
+MSG	courierLine	This line already has {n} couriers — the most past ring II. Send a bigger hull.
+MSG	hubCourier	Couriers do not fly a hub's run to Earth. Send a hauler or bigger.
+MSG	hubHop	A courier feeds a hub only from the next ring out. A bigger hull, or a nearer hub.
+MSG	ok_hub	Hub built at {p}.
+MSG	ok_hubDrop	Hub built at {p}. {n} couriers left its line: they do not fly hub → Earth.
+MSG	ok_via	{p} ships to {h}.
+MSG	ok_viaDrop	{p} ships to {h}. {n} hulls cannot fly the new line and come home.
+LOG	hub_built	A hub stands at {p}: {m} metal, {t} parts.
+LOG	hub_set	{p} now ships to the hub at {h}.
+LOG	hub_clear	{p} ships to Earth again.
+UI	u_ex	Exchange
+UI	u_exGet	Get
+UI	u_exPay	Pay with
+MSG	exSame	Pay with two other resources.
+MSG	exClosed	Earth does not trade this yet.
+MSG	exNone	Nothing to exchange.
+MSG	exRes	No such resource.
+MSG	ok_ex	+{n} {r}.
+LOG	exchange	Exchange: {r} +{n} · {a} −{x} · {b} −{y}.
+UI	tut_m25	A hub gathers the goods of farther worlds; its own line carries it all to Earth. The first comes with a Gen II drive.
+UI	tut_m26	Exchange: two resources for a third, at a loss. To close a gap, not to trade.
+LOG	hub_lost	The hub at {p} is gone. Lines back to Earth: {n}.
+UI	mn_size	Interface size
+UI	mn_sizeVal	{p}%
+UI	u_mSize	Interface size
+UI	u_hackNeed	Hack needed: {w}
+UI	u_hackStart	Start the hack
+UI	u_flHack	Hack needed
+UI	hk_nameB	HIVE
+UI	hk_lvlB	Rings: {n}
+UI	hk_dB	A core sits behind rings of cells. Break through to it.
+UI	hk_rB	every cell takes damage · the core is the goal · a lost cell grows back · do not touch the hive

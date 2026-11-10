@@ -49,7 +49,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
     document.addEventListener('DOMContentLoaded',()=>{ const box=document.getElementById('toasts'); if(!box) return;
       new MutationObserver(ms=>{ ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1&&/toast/.test(n.className)) window.__toasts.push({ts:performance.now(),day:window.LN?window.LN.day:null,cls:n.className.replace('toast','').trim(),txt:(n.textContent||'').trim()}) })) }).observe(box,{childList:true}) });
   });
-  const page=path.join(ROOT,'work','page.html');   // v4.40: no god build — window.GOD is in every page
+  const page=process.env.LB_PAGE?path.resolve(process.env.LB_PAGE):path.join(ROOT,'work','page.html');   // v4.40: no god build — window.GOD is in every page; LB_PAGE — another build (the Japanese file)
   if(!fs.existsSync(page)){ console.error('нет '+page+' — сначала сборка'); process.exit(2) }
   await p.goto(url.pathToFileURL(page).href); await p.waitForTimeout(500);
 

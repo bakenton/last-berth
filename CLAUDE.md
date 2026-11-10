@@ -68,6 +68,7 @@ node tools/texts-csv.js "<где>"             # CSV для Никиты из ts
 node tools/sim-diff.js                      # эталон ботов против последнего sim (skill /balance-change)
 # хук PostToolUse (.claude/settings.json): после правки work/core.js|ui.js — node --check (tools/hook-check.js)
 cd work && py -3 ../tools/build.py          # только сборка; печатает rows · added · changed
+node tools/texts-ja-export.js && node tools/build-ja.js   # японская сборка поверх work/page.html → play/JA/…-ja.html (переводы texts/ja/ja-*.txt); снимки — node tools/ja-shots.js
 cd work && node ../tools/sim.js core.js 4500   # боты напрямую; BOTS=rush — один бот; BOTS=expand,pro,tidy,late — старые
 cd work && node ../tools/fuzz.js core.js 2000  # бот-хаос по ядру: случайные действия + инварианты; входит в full
 cd work && node ../tools/trace.js serial 11 4500 500   # ряд одного забега по векам (люди/еда/металл/миры); TRACE_CSV=f.csv
