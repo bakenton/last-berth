@@ -1460,8 +1460,10 @@ function stRow(s,noT){ var a=hullSt(s), t=noT&&s.mode==='transit'?a[1].replace(/
 function hullRow(s,acts,id,noT){ var g=hullGen(s);
   return '<div class="hr"'+(id?' id="'+id+'"':'')+'>'+shipIc(shipClass(s),30)+genB(g,g<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+stRow(s,noT)+'</span><span class="ha">'+(acts||'')+'</span></div>' }
 /* the speed a hull flies at: its own times the drive's — the drive now, or at mark `at` (v4.49: Tech showed the bare hull speed, the Yard this one) */
-function speedTxt(hl,at){ return (hl.speed*(at===undefined?driveSpeed(G):driveSpeed({driveLvl:at}))).toFixed(2) }
-function specIcons(h){ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedTxt(h)+'</span><span>'+ic('range',15,C.mid)+esc(fill(T('u_ringN'),{n:hullRange(h)+1}))+'</span>' }
+/* Nikita, 12.11 (F-feedback 11.11, «поколение выше летит чуть быстрее»): no speed number — a percent against the generation before; the first generation shows none */
+function pctUp(a,b){ return '+'+Math.round((b/a-1)*100)+'%' }
+function specIcons(h){ var pv=h.gen>0;
+  return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span>'+(pv?'<span>'+ic('speed',15,C.mid)+pctUp(1,K.GEN_SPEED)+'</span>':'')+'<span>'+ic('range',15,C.mid)+esc(fill(T('u_ringN'),{n:hullRange(h)+1}))+'</span>' }
 function hullCost(h){ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
 function clsSeen(cls){ return cls==='courier'||can('parts') }   // v4.36: a hull that costs parts shows up once parts are open
 
@@ -1740,8 +1742,8 @@ function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=
   // the next generation
   h+='<div class="lab">'+esc(fill(T('u_genGives'),{g:roman(g+1)}))+'</div><div class="spec"><div class="sh"><span></span><span>'+ic('hold',13,C.mid)+esc(T('u_hold'))+'</span><span>'+ic('speed',13,C.mid)+esc(T('u_speedH'))+'</span><span>'+ic('range',13,C.mid)+esc(T('u_reachH'))+'</span></div>';
   CLASSES.forEach(function(cls,j){ var a=HULLS[currentHull(G,cls)], b=genHull(g+1,j);
-    h+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span><i>'+speedTxt(a)+'</i>'+speedTxt(b,lvl+1)+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
-  h+='</div>';
+    h+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span>'+pctUp(driveSpeed(G),Math.pow(K.GEN_SPEED,b.gen-a.gen)*driveSpeed({driveLvl:lvl+1}))+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
+  h+='</div>'+hint(ic('speed',13,C.mid)+' '+esc(fill(T('u_driveAll'),{n:pctUp(driveSpeed(G),driveSpeed({driveLvl:lvl+1}))})));
   // rings
   var sn=K.SURVEY_REACH*SECTORS.length, sc=surveyCost(SECTORS.length), sv=canSurvey(G);
   h+=sec(esc(T('u_rings')),esc(fill(T('u_charted'),{n:SECTORS.length})).toUpperCase());

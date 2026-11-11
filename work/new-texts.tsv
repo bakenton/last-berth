@@ -843,3 +843,4 @@ UI	u_pkgEats	and eats	и ест
 UI	u_pkgYear	a year	в год
 UI	u_pkgOrder	Order	Заказать
 UI	u_pkgHold	Needs a hull with a hold of {w}+ on this line · biggest {h}	Нужно судно с трюмом от {w} на этой линии · самый большой {h}
+UI	u_driveAll	New drive: every hull {n} faster	Новый двигатель: все суда {n} быстрее
