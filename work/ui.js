@@ -1454,11 +1454,11 @@ function hullSt(s){
   }
   return ['loading',fill(T('u_stLoading'),{p:pname(s.at)}),C.mid];
 }
-function stRow(s){ var a=hullSt(s);
-  return '<span class="hst" style="color:'+a[2]+'">'+ic(a[0],15,a[2])+esc(a[1])+'</span>'+
+function stRow(s,noT){ var a=hullSt(s), t=noT&&s.mode==='transit'?a[1].replace(/ · \d+ \S+$/,''):a[1];   // v5.14: the world card drops « · N years»
+  return '<span class="hst" style="color:'+a[2]+'">'+ic(a[0],15,a[2])+esc(t)+'</span>'+
     (s.moveTo&&planet(s.moveTo)?'<span class="hst" style="color:'+C.ink+'">'+ic('movesTo',15)+esc(fill(T('u_stMoveTo'),{p:pname(s.moveTo)}))+'</span>':'') }
-function hullRow(s,acts,id){ var g=hullGen(s);
-  return '<div class="hr"'+(id?' id="'+id+'"':'')+'>'+shipIc(shipClass(s),30)+genB(g,g<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+stRow(s)+'</span><span class="ha">'+(acts||'')+'</span></div>' }
+function hullRow(s,acts,id,noT){ var g=hullGen(s);
+  return '<div class="hr"'+(id?' id="'+id+'"':'')+'>'+shipIc(shipClass(s),30)+genB(g,g<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+stRow(s,noT)+'</span><span class="ha">'+(acts||'')+'</span></div>' }
 /* the speed a hull flies at: its own times the drive's — the drive now, or at mark `at` (v4.49: Tech showed the bare hull speed, the Yard this one) */
 function speedTxt(hl,at){ return (hl.speed*(at===undefined?driveSpeed(G):driveSpeed({driveLvl:at}))).toFixed(2) }
 function specIcons(h){ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedTxt(h)+'</span><span>'+ic('range',15,C.mid)+esc(fill(T('u_ringN'),{n:hullRange(h)+1}))+'</span>' }
@@ -1499,7 +1499,7 @@ function evacBlock(p){ var c=G.colonies[p.id];
   if(!s) return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac',off('evacNoCourier',{p:pname(p.id),w:evacW(p.id)}));
   return btn(esc(T('u_evacuate')),'evac',{p:p.id},'red full','evac')+hint(esc(fill(T(s.cap<pop?'u_evacShort':'u_evacWho'),{h:T('courier')+' '+fill(T('hullNo'),{n:s.id}),c:s.cap,k:pop,l:pop-s.cap,t:legDays(G,p.id,'earth',s)})),'c') }
 function liftRow(p){ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
-  var v=ll.st==='cut'?T('u_liftCut'):(ll.st==='none'?T('u_liftNone'):ll.y+' · '+fill(T('u_yearsN'),{n:ll.n}));
+  var v=ll.st==='cut'?T('u_liftCut'):(ll.st==='none'?T('u_liftNone'):String(ll.y));   // v5.14 (Nikita 11.11): no «· N years», the colour warns
   return row(ic('lift',13,C.people)+esc(T('u_lastLift')),esc(v),ll.st==='cut'?C.red:(ll.st==='none'||ll.n<=25?C.red:(ll.n<=K.LIFT_WARN?C.people:null)),'rw-lift') }
 /* nodes-1.01 (Nikita 05.11): the hub — build one here, or send this world's goods to one; on a hub, its depot and the hands waiting for its feeders */
 var HUB_RES=['metal','food','fuel','parts'];
@@ -1602,7 +1602,7 @@ function winWorld(pid){
   // the line: the hulls on it, a free hull or one from another line, or a new one from the yards
   var on=onLine(G,pid).sort(function(a,b){ return a.id-b.id });
   R+=sec(esc(T('u_onLine')),esc(fill(T('u_hullsN'),{n:on.length})).toUpperCase());
-  R+=on.length?on.map(function(s){ return hullRow(s,(can('fleet')&&s.mode!=='building'&&s.mode!=='missing'?btn(esc(T('u_move')),'pick',{v:'move:'+s.id},'','move'):'')+btn(esc(T('u_takeOff')),'unroute',{s:s.id},'','takeoff'),'hr-'+s.id) }).join(''):'<div class="why">'+esc(T('u_noHulls'))+'</div>';
+  R+=on.length?on.map(function(s){ return hullRow(s,(can('fleet')&&s.mode!=='building'&&s.mode!=='missing'?btn(esc(T('u_move')),'pick',{v:'move:'+s.id},'','move'):'')+btn(esc(T('u_takeOff')),'unroute',{s:s.id},'','takeoff'),'hr-'+s.id,true) }).join(''):'<div class="why">'+esc(T('u_noHulls'))+'</div>';
   var free=freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }), other=G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&!s.mutiny&&((s.from&&s.to&&s.from!==pid)||(s.pend&&s.pend.from!==pid))&&s.mode!=='building'&&s.moveTo!==pid });
   var tab=U.addTab==='other'&&can('fleet')?'other':'free', pool=tab==='free'?free:other;
   R+='<div id="addblk"><div class="sec"><span>'+esc(T('u_addHull'))+'</span><span class="seg"><button type="button" data-act="addtab" data-v="free" class="'+(tab==='free'?'on':'')+'">'+esc(fill(T('u_segFree'),{n:free.length}))+'</button>'+(can('fleet')?'<button type="button" data-act="addtab" data-v="other" class="'+(tab==='other'?'on':'')+'">'+esc(fill(T('u_segOther'),{n:other.length}))+'</button>':'')+'</span></div><div class="lst">';

@@ -34,7 +34,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
     document.addEventListener('DOMContentLoaded',()=>{ const box=document.getElementById('toasts'); if(!box) return;
       new MutationObserver(ms=>{ ms.forEach(m=>m.addedNodes.forEach(n=>{ if(n.nodeType===1&&/toast/.test(n.className)) window.__toasts.push({day:window.LN?window.LN.day:null,cls:n.className.replace('toast','').trim(),txt:(n.textContent||'').trim()}) })) }).observe(box,{childList:true}) });
   });
-  const page=path.join(ROOT,'work','page.html'); if(!fs.existsSync(page)){ console.error('нет сборки work/page.html'); process.exit(2) }
+  const page=process.env.LB_PAGE?path.resolve(process.env.LB_PAGE):path.join(ROOT,'work','page.html');   // LB_PAGE: another build (e.g. play/V5/…-v5.11.html) to compare if(!fs.existsSync(page)){ console.error('нет сборки work/page.html'); process.exit(2) }
   await p.goto(url.pathToFileURL(page).href); await p.waitForTimeout(600);
   const wait=ms=>p.waitForTimeout(ms);
   const phase=ph=>p.evaluate(ph=>{ window.__phase=ph },ph).catch(()=>{});

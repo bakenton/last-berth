@@ -554,8 +554,8 @@
 
  1434  ## HULLS: WHERE EACH ONE IS, IN ONE LINE
  1435  hullSt(s) [22]  ≈ var wl=forWorld(s);
- 1457  stRow(s) [3]  ≈ var a=hullSt(s);
- 1460  hullRow(s,acts,id) [2]  ≈ var g=hullGen(s);
+ 1457  stRow(s,noT) [3]  v5.14: the world card drops « · N years»
+ 1460  hullRow(s,acts,id,noT) [2]  ≈ var g=hullGen(s);
  1463  speedTxt(hl,at) [1]  the speed a hull flies at: its own times the drive's — the drive now, or at mark `at` (v4.49: Tech showed the 
  1464  specIcons(h) [1]  ≈ return '<span>'+ic('hold',15,C.mid)+num(h.cap)+'</span><span>'+ic('speed',15,C.mid)+speedT
  1465  hullCost(h) [1]  ≈ return {metal:h.metal,fuel:h.fuel,parts:h.parts||0,people:h.crew||0} }
@@ -574,7 +574,7 @@
  1491  evacGoing(pid) [1]  ≈ return G.ships.some(function(o){ return o.job==='evac'&&o.dest===pid&&o.mode==='transit' }
  1492  evacW(pid) [1]  ≈ var nh=nextHome(G,pid,'courier'); if(nh&&nh.t<=0) return fill(T('u_evacW_line'),{n:nh.id})
  1493  evacBlock(p) [8]  ≈ var c=G.colonies[p.id];
- 1501  liftRow(p) [3]  ≈ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='going') return '';
+ 1501  liftRow(p) [3]  v5.14 (Nikita 11.11): no «· N years», the colour warns
  1505  var HUB_RES  nodes-1.01 (Nikita 05.11): the hub — build one here, or send this world's goods to one; on a hub, its depot an
  1506  hubCapP() [1]  ≈ return {m:hubCap(G),g:roman((G.gen||0)+1)} }
  1507  hubBlock(p,c,deadW) [19]  ≈ if(p.kind==='works') return '';

@@ -108,3 +108,5 @@ LOG	doomsday	{n} YEARS TO THE NIGHT. Earth has learned to live by the date: cong
 UI	nar_N12b	One hundred years. Earth queues for the ark — there are more in the line than pods.	Сто лет. На Земле очередь на ковчег — в ней больше людей, чем капсул.
 UI	nar_rsLevel	not one ring of pods was filled	ни одно кольцо капсул не заполнено
 UI	u_feedRow	{n}/yr · line {b}	{n}/год · линия {b}
+UI	u_worksLow	Metal or rations are running out — then the works stop.	Металл или рационы кончаются — потом завод встанет.
+UI	u_evacWho	{h} · all {k}	{h} · все {k}

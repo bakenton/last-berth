@@ -30,7 +30,7 @@ const TMP=require('os').tmpdir();
   await U.clear();
   await p.evaluate(a=>{ LN.night=LN.day+a.rt+200; LNdraw() },{rt}); await show(mine);
   const w1=await win(), l1=await p.evaluate(id=>lastLift(LN,id),mine);
-  ok('far from the deadline: "Last lift … by year Y — 200 years"', l1.st==='open'&&l1.n===200&&new RegExp('Last lift[^A-Za-z]{0,5}(by year|year)? ?'+l1.y+'[^]{0,20}200 years').test(w1), JSON.stringify(l1)+' '+(w1.match(/Last lift.{0,80}/)||[''])[0]);
+  ok('far from the deadline: "Last lift Y", no years (v5.14, Nikita 11.11)', l1.st==='open'&&l1.n===200&&new RegExp('Last lift\s*'+l1.y+'(?!\s*·)').test(w1)&&!/Last lift\s*\d+\s*·\s*\d+ years/.test(w1), JSON.stringify(l1)+' '+(w1.match(/Last lift.{0,80}/)||[''])[0]);
   ok('…and the advisor is silent about it (worlds rows only, no last-lift row by code)', !(await advMine(mine)).match(/[Ll]ast lift/), await advMine(mine));
   ok('evacuation is still on offer', (await evacState())&&(await evacState()).why!=='evacLate', JSON.stringify(await evacState()));
 
@@ -38,7 +38,7 @@ const TMP=require('os').tmpdir();
   await p.evaluate(a=>{ LN.night=LN.day+a.rt+40; LNdraw() },{rt}); await show(mine);
   const a2=await p.evaluate(id=>LNI.adv().filter(r=>r[3]===id)[0]||null,mine);
   const w2=await win();
-  ok('40 years out: the window names the last lift year, 40 years', /Last lift\s*\d+ · 40 years/.test(w2), (w2.match(/Last lift.{0,80}|.{0,40}40 years.{0,20}/)||[''])[0]);
+  ok('40 years out: the window names the last lift year, no years (v5.14)', /Last lift\s*\d+/.test(w2)&&!/40 years/.test(w2), (w2.match(/Last lift.{0,80}|.{0,40}40 years.{0,20}/)||[''])[0]);
   ok('…and the advisor has one row for the nearest world (last lift, 40 years)', !!a2&&a2[3]===mine, JSON.stringify(a2));
   ok('the advisor row reads in English, no raw placeholders', !!a2&&!/\{[a-z]\}/.test(a2[1]+a2[2])&&/40/.test(a2[1]+a2[2]), JSON.stringify(a2));
   await p.screenshot({path:TMP+'/v433-lift-warn.png'});
