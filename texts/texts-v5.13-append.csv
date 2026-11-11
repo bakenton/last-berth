@@ -1,0 +1,14 @@
+UI,u_wt_world,World,Мир,v5.13 world card tabs,live,new
+UI,u_wt_line,Line,Линия,v5.13 world card tabs,live,new
+UI,u_wt_up,Upgrade,Улучшение,v5.13 world card tabs,live,new
+UI,u_wt_hub,Hub,Хаб,v5.13 world card tabs,live,new
+UI,u_pkg_works,Forge package {t},Пакет кузницы {t},v5.13 world card tabs,live,new
+UI,u_pkg_mine,Mining package {t},Пакет рудника {t},v5.13 world card tabs,live,new
+UI,u_pkg_farm,Farm package {t},Пакет фермы {t},v5.13 world card tabs,live,new
+UI,u_pkg_well,Well package {t},Пакет скважины {t},v5.13 world card tabs,live,new
+UI,u_pkgGain,{r} a year,{r} в год,v5.13 world card tabs,live,new
+UI,u_pkgEats,and eats,и ест,v5.13 world card tabs,live,new
+UI,u_pkgYear,a year,в год,v5.13 world card tabs,live,new
+UI,u_pkgOrder,Order,Заказать,v5.13 world card tabs,live,new
+UI,u_pkgHold,Needs a hull with a hold of {w}+ on this line · biggest {h},Нужно судно с трюмом от {w} на этой линии · самый большой {h},v5.13 world card tabs,live,new
+UI,u_feedRow,{n}/yr · line {b},{n}/год · линия {b},v5.13 world card tabs,live,changed

@@ -35,7 +35,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await run(3); await showWorld(mine);
   ok('order button enabled', await p.evaluate(()=>{ const bt=document.querySelector('#ovl [data-act="kit"]'); return !!bt&&bt.getAttribute('aria-disabled')!=='true' }));
   const wtxt=await win();
-  ok('weight line names 190 and hold 70', /Needs a hold of 190 on the line — the biggest is 70\./.test(wtxt), wtxt.match(/Needs a hold[^.]*\./)?.[0]);
+  ok('weight line names 190 and hold 70', /Needs a hull with a hold of 190\+ on this line · biggest 70/.test(wtxt), wtxt.match(/Needs a hull[^·]*· biggest \d+/)?.[0]);   // v5.13: the package card says it as an action
   const m0=await p.evaluate(()=>LN.earth.metal);
   await U.tap('#ovl [data-act="kit"]');
   ok('kit ordered: metal charged 100', await p.evaluate(m0=>Math.round(m0-LN.earth.metal)===100,m0), await p.evaluate(()=>LN.earth.metal));
@@ -70,7 +70,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('world window shows the tier: TIER I · RUNNING (v4.35: no ⚙I in the Worlds list, on purpose)', /TIER I · RUNNING/i.test(await win()), (await win()).match(/Machines.{0,60}/)?.[0]);
   await U.tab('worlds');
   await showWorld(mine);
-  ok('world window shows the next tier: Tier II: x → y /yr (v4.35: no ×1.6)', /Tier II: [\d.]+ → [\d.]+ \/yr/.test(await win()), (await win()).match(/Tier II.{0,50}/)?.[0]);
+  ok('world window shows the next package: Mining package II, +x a year (v5.13: the gain, not «x → y»)', /(Mining|Farm|Well) package II\s*\+[\d.]+\s*\w+ a year/.test(await win()), (await win()).match(/package II.{0,50}/)?.[0]);
   // 5. no fuel: after 15 years the machines stand; advisor speaks; fuel returns → running again
   await p.evaluate(id=>{ LN.colonies[id].store.fuel=0; LN.earth.fuel=0; LN.ships.forEach(s=>{ if(s.mode==='transit') s.cargo.fuel=0 }) },mine);
   await run(20);
@@ -105,7 +105,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await q.evaluate(id=>{ LN.driveLvl=2; LN.gen=2; ensureGen(2); LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:2,fuelOut:0}; LNdraw() },mineRu);
   await V.openWorld(mineRu); await q.evaluate(()=>LNdraw());
   const ru=await q.evaluate(()=>document.getElementById('ovl').textContent.replace(/\s+/g,' '));
-  ok('kit block: Machines, TIER II · RUNNING, Order tier III', /Machines/.test(ru)&&/TIER II · RUNNING/.test(ru)&&/Order tier III/.test(ru), ru.match(/Machines.{0,80}/)?.[0]);   // v4.35: блок «Техника», «ЯРУС II · РАБОТАЕТ», «Заказать ярус III» (EN: u_machines, TIER, u_kitOrder)
+  ok('kit block: Machines, TIER II · RUNNING, package III to order', /Machines/.test(ru)&&/TIER II · RUNNING/.test(ru)&&/package III/.test(ru)&&/Order/.test(ru), ru.match(/Machines.{0,80}/)?.[0]);   // v5.13: the next tier is a package card   // v4.35: блок «Техника», «ЯРУС II · РАБОТАЕТ», «Заказать ярус III» (EN: u_machines, TIER, u_kitOrder)
   ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   finally{ if(b) await b.close().catch(()=>{}) }   // v4.32: a failed run used to leave the browser open

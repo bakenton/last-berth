@@ -107,3 +107,4 @@ VOICE	doomsday.2	There is a congregation on the pier now. They hold a service at
 LOG	doomsday	{n} YEARS TO THE NIGHT. Earth has learned to live by the date: congregations on the pier, the Institute guarded, children taught the year before they are taught to read. Pods for {b}; {h} standing at home.	{n} ЛЕТ ДО НОЧИ. Земля научилась жить по дате: общины на пирсе, Институт под охраной, детей учат году раньше, чем читать. Капсул на {b}; дома стоят {h}.
 UI	nar_N12b	One hundred years. Earth queues for the ark — there are more in the line than pods.	Сто лет. На Земле очередь на ковчег — в ней больше людей, чем капсул.
 UI	nar_rsLevel	not one ring of pods was filled	ни одно кольцо капсул не заполнено
+UI	u_feedRow	{n}/yr · line {b}	{n}/год · линия {b}

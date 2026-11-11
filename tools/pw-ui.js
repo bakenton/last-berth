@@ -12,8 +12,14 @@ async function newPage(b,{vp={width:1600,height:1000},file='page.html'}={}){
 
 function ui(p){
   // клик по центру элемента; элемент прокручивается; ждёт появления (панели перерисовываются каждый тик)
-  const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
+  // v5.13: the world card has tabs — a target on a hidden tab is reached the player's way, by pressing its tab on the rail first
+  const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null;
+      const wp=!e.getClientRects().length&&e.closest('.wpan[hidden]'); if(wp){ const t=document.querySelector('#ovl .wrail [data-act="wtab"][data-v="'+wp.dataset.wtab+'"]'); if(t){ const r=t.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2,tab:1} } }
+      e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
+    if(bb&&bb.tab){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); continue }
     if(bb){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); return } if(k>=8) throw new Error('no '+sel); await p.waitForTimeout(150) } };
+  // v5.13: open a tab of the world card with the mouse ('world' | 'line' | 'up' | 'hub')
+  const wtab=async v=>{ await tap('#ovl .wrail [data-act="wtab"][data-v="'+v+'"]') };
   // клик по координатам (для карты и мест, где центр закрыт другим элементом)
   const at=async(x,y)=>{ await p.mouse.click(x,y); await p.waitForTimeout(120) };
   // большие окна, которые останавливают время: смена (с остановкой), событие, Ночь, личное дело
@@ -65,6 +71,6 @@ function ui(p){
     if(lang) await tap('[data-lang]');   // v5.05: English only — the start window has one button; lang is kept for the callers
     if(seed!==undefined){ await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin',String(seed)); await tap('[data-act="new"]') }
     await p.evaluate(()=>{ LNU.shiftStop=false }) };
-  return {tap,at,closeBig,clear,speed,pause,play,until,years,point,openWorld,closeWin,tab,tabOn,day,start,menuNew} }
+  return {tap,at,closeBig,clear,speed,pause,play,until,years,point,openWorld,closeWin,tab,tabOn,day,start,menuNew,wtab} }
 
 module.exports={newPage,ui,WORK,URL};

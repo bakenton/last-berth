@@ -830,3 +830,16 @@ MSG	ok_hubRaze	The hub at {p} is pulled down. Its feeders' lines go to Earth aga
 MSG	kitDry	The seam is dead: there is nothing to dig.	Жила выработана: добывать нечего.
 MSG	nohub	There is no hub here.	Здесь нет хаба.
 LOG	hub_razed	The hub at {p} is pulled down: +{m} metal, +{t} parts back. Lines back to Earth: {n}.	Хаб на {p} снесён: вернулось {m} металла и {t} деталей. Линии питателей снова идут на Землю: {n}.
+UI	u_wt_world	World	Мир
+UI	u_wt_line	Line	Линия
+UI	u_wt_up	Upgrade	Улучшение
+UI	u_wt_hub	Hub	Хаб
+UI	u_pkg_works	Forge package {t}	Пакет кузницы {t}
+UI	u_pkg_mine	Mining package {t}	Пакет рудника {t}
+UI	u_pkg_farm	Farm package {t}	Пакет фермы {t}
+UI	u_pkg_well	Well package {t}	Пакет скважины {t}
+UI	u_pkgGain	{r} a year	{r} в год
+UI	u_pkgEats	and eats	и ест
+UI	u_pkgYear	a year	в год
+UI	u_pkgOrder	Order	Заказать
+UI	u_pkgHold	Needs a hull with a hold of {w}+ on this line · biggest {h}	Нужно судно с трюмом от {w} на этой линии · самый большой {h}

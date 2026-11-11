@@ -11,7 +11,10 @@ const WORK=process.env.LB_WORK||require('path').resolve(__dirname,'..','work');
   const errs=[]; p.on('pageerror',e=>errs.push(String(e)));
   // Клик настоящей мышью по центру элемента. Координаты читаются одним вызовом (панели перерисовываются каждый тик при 10×);
   // пока элемента нет — повтор. Элемент прокручивается в видимую часть.
-  const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null; e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
+  const tap=async sel=>{ for(let k=0;;k++){ const bb=await p.evaluate(q=>{ const e=document.querySelector(q); if(!e) return null;
+      const wp=!e.getClientRects().length&&e.closest('.wpan[hidden]'); if(wp){ const t=document.querySelector('#ovl .wrail [data-act="wtab"][data-v="'+wp.dataset.wtab+'"]'); if(t){ const r=t.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2,tab:1} } }   // v5.13: a hidden tab of the world card is pressed first
+      e.scrollIntoView({block:'nearest'}); const r=e.getBoundingClientRect(); return r.width?{x:r.left+r.width/2,y:r.top+r.height/2}:null },sel);
+    if(bb&&bb.tab){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); continue }
     if(bb){ await p.mouse.click(bb.x,bb.y); await p.waitForTimeout(120); return } if(k>=6) throw new Error('no '+sel); await p.waitForTimeout(150) } };
   const SPD10='[data-act="spd"][data-v="4"]', PAUSE='[data-act="spd"][data-v="0"]';
   // закрыть всё, что останавливает время: смена (с остановкой), событие, Ночь, личное дело
