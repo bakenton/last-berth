@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Вкладка Tech — черновики</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Черновики вкладки Tech (Никита 12.11: «открыл вкладку tech и увидел базовую информацию, а остальная во внутренних»; разгон всего флота
+     от двигателя остаётся, но его надо показать). Не код игры. Числа — бот serial, сид 11, год 700, ядро v5.15: идёт программа III→IV
+     на Tallow; темп деталей у кузниц условный. Значки упрощены. -->
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--warn:#FF4D4D;
+  --metal:#C9CFD6;--food:#3DDC84;--fuel:#FF8A1F;--parts:#5B82F0;--people:#FFD23F;--ark:#B98CFF;
+  --h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.35 var(--h)}
+body{padding:20px 16px 60px}
+.page{max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font:600 15px var(--h);letter-spacing:.18em;text-transform:uppercase;margin:0}
+.lead{color:var(--mid);font-size:13px;max-width:760px;margin:0}
+.vs{display:flex;flex-wrap:wrap;gap:6px}
+.vs button{font:600 12px var(--h);letter-spacing:.14em;text-transform:uppercase;background:var(--pan);color:var(--mid);border:1px solid var(--ln);padding:9px 12px;cursor:pointer}
+.vs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.stage{display:grid;grid-template-columns:minmax(0,470px) minmax(0,1fr);gap:28px;align-items:start}
+.note{border-left:2px solid var(--ln);padding:2px 0 2px 14px;color:var(--mid);font-size:13px}
+.note b{color:var(--ink);font-weight:500}
+.note .pro,.note .con{display:block;margin-top:8px}.note .pro{color:#9FE3B8}.note .con{color:#FFB0A8}
+@media (max-width:860px){.stage{grid-template-columns:1fr}}
+
+/* ---------- the side panel (game look) ---------- */
+.side{background:var(--pan);border:1px solid var(--ln);min-width:0;display:flex;flex-direction:column;height:720px}
+.wh{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--ln);flex:none}
+.wh b{font:600 17px var(--h);letter-spacing:.16em;text-transform:uppercase;flex:1}
+.wh .back{background:none;border:0;color:var(--mid);font:600 11px var(--h);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;padding:0;display:inline-flex;gap:6px;align-items:center}
+.bd{padding:14px 18px 18px;display:flex;flex-direction:column;gap:6px;overflow:auto;flex:1;min-height:0}
+.sec{display:flex;justify-content:space-between;align-items:center;font:500 10.5px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase;padding:12px 0 6px;border-bottom:1px solid var(--ln);margin-bottom:2px}
+.sec:first-child{padding-top:2px}
+.btn{font:600 11.5px var(--h);letter-spacing:.14em;text-transform:uppercase;background:var(--ink);color:var(--bg);border:0;padding:10px 13px;display:inline-flex;gap:7px;align-items:center;justify-content:center;cursor:pointer;white-space:nowrap}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--ln)}
+.btn.wide{width:100%;padding:11px}
+.btn.dis{background:transparent;color:var(--dim);border:1px dashed var(--ln)}
+.pr{display:inline-flex;align-items:center;gap:4px;font:500 13px var(--n);margin-right:10px}
+.prow{display:flex;flex-wrap:wrap;gap:2px 0;padding:4px 0}
+.hint{color:var(--mid);font-size:12.5px;padding:4px 0}
+.ic{display:inline-block;vertical-align:-2px;flex:none}
+.gen{font:500 12px var(--n);border:1px solid var(--mid);padding:1px 6px}
+.gen.big{font-size:16px;padding:3px 10px}
+.gen.nx{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.ok{color:var(--food)}
+.bar{height:6px;background:var(--pan2);position:relative;flex:1}.bar u{position:absolute;left:0;top:0;bottom:0;text-decoration:none}
+
+/* drive head: III -> IV, two steps */
+.dh{display:flex;align-items:center;gap:10px;padding:6px 0 2px}
+.dh .st{margin-left:auto;font:500 11px var(--h);letter-spacing:.14em;text-transform:uppercase;color:var(--people)}
+.stp{display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:center;font-size:12.5px;color:var(--mid);padding:3px 0}
+.stp b{font:500 12.5px var(--n);color:var(--ink)}
+/* gains: the point of the page */
+.gains{border:1px solid var(--ln);border-left:3px solid var(--ink);background:#101012;padding:10px 12px;display:flex;flex-direction:column;gap:7px;margin-top:4px}
+.gains .gt{font:500 10.5px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase}
+.g{display:grid;grid-template-columns:20px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.g b{font:500 15px var(--n)}
+.g small{color:var(--mid);font-size:12px}
+.g.ark b{color:var(--ark)}
+.more{background:none;border:0;border-top:1px solid var(--ln);color:var(--ink);font:600 11px var(--h);letter-spacing:.14em;text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;width:100%;padding:11px 0 3px;cursor:pointer;margin-top:4px}
+.more i{font-style:normal;color:var(--mid)}
+/* hulls table */
+.ht{border:1px solid var(--ln);background:var(--bg);padding:4px 10px 8px}
+.ht .sh,.ht .sr{display:grid;grid-template-columns:1.35fr 1fr .8fr .8fr;gap:6px;align-items:center}
+.ht .sh{font:500 10px var(--h);letter-spacing:.12em;color:var(--mid);text-transform:uppercase;padding:6px 0 4px;border-bottom:1px solid var(--ln)}
+.ht .sh span{display:flex;align-items:center;gap:4px}
+.ht .sr{padding-top:8px;font:500 13px var(--n)}
+.ht .sr>span{display:flex;align-items:center;gap:6px;white-space:nowrap}
+.ht .sr b{font:600 12.5px var(--h)}
+.ht .sr i{font-style:normal;color:var(--dim);font-size:11px;text-decoration:line-through}
+.ht .sp{padding:2px 0 6px 30px;border-bottom:1px solid rgba(255,255,255,.04)}
+.ht .sp .pr{font-size:11.5px;margin-right:8px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chips button{font:500 12.5px var(--h);background:transparent;color:var(--ink);border:1px solid var(--ln);padding:7px 10px;display:inline-flex;gap:6px;align-items:center}
+.chips button.on{background:var(--ink);color:var(--bg)}
+.wk{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.wk b{font:500 13px var(--n)}
+.ring{display:flex;align-items:center;gap:9px;padding:6px 0 2px;font:600 14px var(--h);letter-spacing:.06em}
+.ring small{margin-left:auto;font:400 12px var(--h);letter-spacing:0;color:var(--mid)}
+
+/* A: tabs on top */
+.tabs{display:flex;border-bottom:1px solid var(--ln);flex:none}
+.tabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--mid);font:600 11px var(--h);letter-spacing:.14em;text-transform:uppercase;padding:12px 6px 10px;display:inline-flex;align-items:center;justify-content:center;gap:6px;cursor:pointer}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+/* C: rail */
+.cwrap{display:grid;grid-template-columns:64px 1fr;flex:1;min-height:0}
+.rail{border-right:1px solid var(--ln);display:flex;flex-direction:column}
+.rail button{background:none;border:0;border-bottom:1px solid var(--ln);color:var(--mid);padding:12px 0 9px;display:flex;flex-direction:column;align-items:center;gap:5px;font:600 9px var(--h);letter-spacing:.14em;text-transform:uppercase;cursor:pointer;position:relative}
+.rail button.on{color:var(--ink);background:var(--pan2)}
+.rail button.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--ink)}
+.rail .dot{position:absolute;top:8px;right:12px;width:7px;height:7px;border-radius:50%;background:var(--people)}
+@media (max-width:520px){
+  .side{height:auto;min-height:640px}
+  .cwrap{grid-template-columns:1fr}
+  .rail{flex-direction:row;border-right:0;border-top:1px solid var(--ln);order:2;background:var(--pan)}
+  .rail button{flex:1;border-bottom:0;border-right:1px solid var(--ln)}
+  .rail button.on::before{left:0;right:0;top:0;bottom:auto;width:auto;height:2px}
+}
+@media (max-width:420px){ body{padding:14px 12px 40px} .bd{padding:12px 14px 16px} .wh{padding:12px 14px} .ht{padding:4px 8px 8px} .ht .sr i{display:none} }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Вкладка Tech · черновики</h1>
+  <p class="lead">Черновики, не игра. Состояние: год 700, флот 50 судов, поколение III, программа двигателя IV идёт на Tallow (детали 196 из 634), кольцо 4 можно размечать. Вкладки и строки кликаются. Во всех вариантах первым видно одно и то же — что даёт двигатель; различается, куда уходит остальное.</p>
+  <div class="vs" id="vs"></div>
+  <div class="stage"><div id="card"></div><div class="note" id="note"></div></div>
+</div>
+<script>
+(function(){
+/* ---------- the numbers (serial bot, seed 11, year 700, core v5.15) ---------- */
+var S={fleet:50,g:'III',nx:'IV',settled:13,need:12,have:196,work:634,host:'Tallow',
+  fleetSpd:26,fuelCut:11,ark:'IV',
+  works:[{n:'Tallow',pop:44,r:2.6,on:true},{n:'Kiln',pop:38,r:2.1}],
+  hulls:[{cls:'courier',cap:[158,236],r:[4,5],cost:{metal:135,fuel:149,parts:472,people:18}},
+         {cls:'hauler',cap:[540,810],r:[5,6],cost:{metal:338,fuel:479,parts:1022,people:44}},
+         {cls:'freighter',cap:[1710,2565],r:[6,7],cost:{metal:1080,fuel:1278,parts:3341,people:99}}],
+  ring:{n:4,name:'CICERO',charted:3,settled:13,need:9,cost:{metal:384,food:1405,fuel:681,parts:135,people:98}}};
+var CLS={courier:'Courier',hauler:'Hauler',freighter:'Freighter'};
+var num=function(n){ return String(n).replace(/\B(?=(\d{3})+(?!\d))/g,' ') };
+
+/* ---------- simplified icons ---------- */
+function ic(k,s,col){ s=s||13; var c={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#5B82F0',people:'#FFD23F',mid:'#9C9B95',ink:'#F2F1EC',ark:'#B98CFF',dim:'#5E5D58'}, P={
+  metal:'<path d="M3 11h10l-2-6H5z" fill="C"/>',
+  food:'<path d="M8 14V6M8 9c-3 0-4-2-4-4 2 0 4 1 4 4zm0-1c3 0 4-2 4-4-2 0-4 1-4 4z" stroke="C" stroke-width="1.6" fill="none"/>',
+  fuel:'<path d="M8 2c2.5 3.5 4 5.5 4 7.5a4 4 0 0 1-8 0C4 7.5 5.5 5.5 8 2z" fill="C"/>',
+  parts:'<path d="M8 2l5 3v6l-5 3-5-3V5z" fill="none" stroke="C" stroke-width="2"/><circle cx="8" cy="8" r="1.6" fill="C"/>',
+  people:'<circle cx="8" cy="5" r="2.4" fill="C"/><path d="M3.5 14c0-3 2-4.5 4.5-4.5s4.5 1.5 4.5 4.5z" fill="C"/>',
+  hold:'<rect x="2.5" y="4.5" width="11" height="7" fill="none" stroke="C" stroke-width="1.4"/><path d="M5.5 4.5v7M8 4.5v7M10.5 4.5v7" stroke="C" stroke-width="1"/>',
+  speed:'<path d="M2.5 12a5.5 5.5 0 0 1 11 0" fill="none" stroke="C" stroke-width="1.5"/><path d="M8 12l3-4" stroke="C" stroke-width="1.6"/>',
+  range:'<circle cx="8" cy="8" r="6" fill="none" stroke="C" stroke-width="1.2"/><circle cx="8" cy="8" r="3" fill="none" stroke="C" stroke-width="1.2"/><circle cx="8" cy="8" r="1" fill="C"/>',
+  drive:'<path d="M3 9l5-4 5 4M3 13l5-4 5 4" fill="none" stroke="C" stroke-width="1.8"/><path d="M3 3h10" stroke="C" stroke-width="1.2" opacity=".5"/>',
+  ring:'<path d="M3 13a7 7 0 0 1 9-9" fill="none" stroke="C" stroke-width="1.6"/><path d="M11 9v5M8.5 11.5h5" stroke="C" stroke-width="1.6"/>',
+  ships:'<path d="M2 6l6-2.5L8 6zM2 11l7-2.5V11z" fill="C"/><path d="M8 4l3 1-3 1zM9 8.5l3 1.2L9 11z" fill="#FFD23F"/>',
+  works:'<path d="M2 13V7l3 2V7l3 2V7l3 2V4h3v9z" fill="C"/>',
+  ark:'<path d="M2 8l4-4h4l4 4-4 4H6z" fill="none" stroke="C" stroke-width="1.5"/><circle cx="8" cy="8" r="1.8" fill="C"/>',
+  check:'<path d="M3 8.5l3 3 7-7" fill="none" stroke="C" stroke-width="2"/>',
+  over:'<rect x="2.5" y="2.5" width="4.5" height="4.5" fill="none" stroke="C" stroke-width="1.4"/><rect x="9" y="2.5" width="4.5" height="4.5" fill="none" stroke="C" stroke-width="1.4"/><rect x="2.5" y="9" width="11" height="4.5" fill="none" stroke="C" stroke-width="1.4"/>',
+  chev:'<path d="M6 3l5 5-5 5" fill="none" stroke="C" stroke-width="1.8"/>',
+  back:'<path d="M10 3L5 8l5 5" fill="none" stroke="C" stroke-width="1.8"/>'}[k]||'';
+  return '<svg class="ic" width="'+s+'" height="'+s+'" viewBox="0 0 16 16">'+P.replace(/C/g,c[col||k]||c.mid)+'</svg>' }
+function ship(cls,w){ var f={courier:['<path d="M2 3l18 6-18 6z" fill="#41C8E8"/><path d="M14 7l6 2-6 2z" fill="#FFD23F"/>',22],
+  hauler:['<path d="M1 9l7-6 7 6-7 6z" fill="#FF6FB4"/><path d="M15 9l-4-3.4v6.8z" fill="#FFD23F"/>',18],
+  freighter:['<path d="M3 3h11l4 6-4 6H3l-2-6z" fill="#EDEDE8"/><path d="M14 3l4 6-4 6z" fill="#FFD23F"/>',20]}[cls];
+  return '<svg class="ic" width="'+(w||22)+'" height="'+Math.round((w||22)*18/22)+'" viewBox="0 0 22 18">'+f[0]+'</svg>' }
+function price(o,sz){ return Object.keys(o).map(function(k){ return '<span class="pr">'+ic(k,sz||12)+num(o[k])+'</span>' }).join('') }
+function bar(n,m,col){ return '<div class="bar"><u style="width:'+Math.min(100,Math.round(n/m*100))+'%;background:'+col+'"></u></div>' }
+
+/* ---------- blocks ---------- */
+function driveHead(){ return '<div class="dh"><span class="gen big">'+S.g+'</span>'+ic('drive',18,'mid')+'<span class="gen big nx">'+S.nx+'</span><span class="st">Running at '+S.host+'</span></div>' }
+function steps(){ return '<div class="stp">'+ic('check',14,'food')+'<span>Worlds ever settled</span><b class="ok">'+S.settled+' / '+S.need+'</b></div>'+
+  '<div class="stp">'+ic('parts',14)+'<span style="display:flex;gap:8px;align-items:center">Parts '+bar(S.have,S.work,'#5B82F0')+'</span><b>'+S.have+' / '+S.work+'</b></div>' }
+function gains(compact){ var h='<div class="gains"><div class="gt">Drive '+S.nx+' gives</div>';
+  h+='<div class="g">'+ic('speed',16,'ink')+'<span>Every hull flies faster<br><small>all '+S.fleet+' in the fleet, old ones too</small></span><b>+'+S.fleetSpd+'%</b></div>';
+  h+='<div class="g">'+ic('fuel',16)+'<span>Fuel per trip<br><small>every hull</small></span><b>−'+S.fuelCut+'%</b></div>';
+  h+='<div class="g">'+ic('ships',16,'ink')+'<span>New hulls '+S.nx+'<br><small>hold +50% · speed +12% · one ring further</small></span><b></b></div>';
+  h+='<div class="g ark">'+ic('ark',16)+'<span>The ark can sail<br><small>it needs generation '+S.ark+'</small></span><b>'+ic('check',14,'ark')+'</b></div>';
+  return h+'</div>' }
+function hullTable(){ var h='<div class="ht"><div class="sh"><span></span><span>'+ic('hold',12)+'Hold</span><span>'+ic('speed',12)+'Speed</span><span>'+ic('range',12)+'Reach</span></div>';
+  S.hulls.forEach(function(x){ h+='<div class="sr"><span>'+ship(x.cls)+'<b>'+CLS[x.cls]+'</b></span><span><i>'+num(x.cap[0])+'</i>'+num(x.cap[1])+'</span><span>+12%</span><span>ring '+x.r[1]+'</span></div><div class="sp">'+price(x.cost,11)+'</div>' });
+  return h+'</div>' }
+function fleetBlock(){ return '<div class="g" style="padding:4px 0">'+ic('speed',16,'ink')+'<span>Every hull, old ones too</span><b>+'+S.fleetSpd+'%</b></div>'+
+  '<div class="g" style="padding:4px 0">'+ic('fuel',16)+'<span>Fuel per trip</span><b>−'+S.fuelCut+'%</b></div>' }
+function programme(){ var h='<div class="sec"><span>Parts from the works</span><span>'+S.have+' / '+S.work+'</span></div>';
+  S.works.forEach(function(w){ h+='<div class="wk">'+ic('works',14,'parts')+'<span>'+w.n+' <span style="color:var(--mid)">· '+w.pop+' people</span></span><b>'+w.r+'/yr</b></div>' });
+  h+='<div class="sec"><span>Runs at</span></div><div class="chips">'+S.works.map(function(w){ return '<button class="'+(w.on?'on':'')+'">'+ic('works',14,w.on?'dim':'parts')+w.n+'</button>' }).join('')+'</div>';
+  h+='<div class="hint">Parts come only from works worlds.</div>';
+  return h }
+function ringBrief(){ return '<div class="ring">'+ic('ring',20,'food')+'RING '+S.ring.n+' · '+S.ring.name+'<small>settled '+S.ring.settled+' of '+S.ring.need+' '+ic('check',11,'food')+'</small></div>'+
+  '<div class="prow">'+price(S.ring.cost)+'</div><button class="btn wide">'+ic('ring',14,'dim')+'Survey</button>' }
+function ringFull(){ return '<div class="sec"><span>Rings</span><span>'+S.ring.charted+' charted</span></div>'+ringBrief()+
+  '<div class="hint">A new ring opens new free worlds. Freighters '+S.g+' reach ring 6, Freighters '+S.nx+' ring 7: worlds beyond what your hulls reach wait for the next generation.</div>' }
+
+/* ---------- variants ---------- */
+var st={A:'over',B:null,C:'drive'};
+var V={
+ A:{name:'A · вкладки сверху',
+   note:'<b>Три вкладки под заголовком: OVERVIEW · DRIVE IV · RINGS.</b> Открыл Tech — видишь обзор: двигатель III→IV, два шага, блок «что даёт» и кнопку разметки кольца одной строкой. Таблица судов, кузницы и «где идёт» — во вкладке DRIVE, подробности колец — в RINGS.'+
+     '<span class="pro">+ Знакомо по любой игре; вкладки подписаны словами, ничего не надо угадывать.</span>'+
+     '<span class="con">− Обзор повторяет куски других вкладок (кольцо и шаги). Другой узор, чем рейка карточки мира.</span>',
+   draw:function(){ var t=st.A, tb='<div class="tabs">'+[['over','Overview'],['drive','Drive '+S.nx],['rings','Rings']].map(function(x){ return '<button data-a="A" data-t="'+x[0]+'" class="'+(t===x[0]?'on':'')+'">'+x[1]+'</button>' }).join('')+'</div>', b='';
+     if(t==='over') b='<div class="sec"><span>Hull generation</span><span>'+S.g+' → '+S.nx+'</span></div>'+driveHead()+steps()+gains()+'<div class="sec"><span>Next ring</span></div>'+ringBrief();
+     if(t==='drive') b='<div class="sec"><span>What drive '+S.nx+' gives</span></div>'+fleetBlock()+'<div class="sec"><span>New hulls</span><span>'+S.g+' → '+S.nx+'</span></div>'+hullTable()+programme();
+     if(t==='rings') b=ringFull();
+     return '<div class="side"><div class="wh">'+ic('drive',18,'ink')+'<b>Technology</b></div>'+tb+'<div class="bd">'+b+'</div></div>' }},
+ B:{name:'B · обзор и вглубь',
+   note:'<b>Обзор, а под каждым блоком строка «›», которая открывает внутреннюю страницу со стрелкой назад.</b> Внутри: «What drive IV gives» (весь флот + таблица судов), «Programme» (кузницы, где идёт), «Rings».'+
+     '<span class="pro">+ Обзор чистый, ничего не повторяется; на телефоне это самый привычный узор.</span>'+
+     '<span class="con">− Подробности спрятаны на шаг глубже: чтобы сравнить суда и цену кольца, надо ходить туда-обратно. В игре такого узора ещё нет.</span>',
+   draw:function(){ var t=st.B, b, title='Technology', back='';
+     if(!t) b='<div class="sec"><span>Hull generation</span><span>'+S.g+' → '+S.nx+'</span></div>'+driveHead()+steps()+
+        '<button class="more" data-a="B" data-t="prog">How the programme runs<i>'+ic('chev',12)+'</i></button>'+gains()+
+        '<button class="more" data-a="B" data-t="gives">New hulls and prices<i>'+ic('chev',12)+'</i></button>'+
+        '<div class="sec"><span>Next ring</span></div>'+ringBrief()+'<button class="more" data-a="B" data-t="rings">Rings<i>'+ic('chev',12)+'</i></button>';
+     else { back='<button class="back" data-a="B" data-t="">'+ic('back',12)+'Tech</button>';
+       if(t==='gives'){ title='Drive '+S.nx; b='<div class="sec"><span>Every hull</span></div>'+fleetBlock()+'<div class="sec"><span>New hulls</span><span>'+S.g+' → '+S.nx+'</span></div>'+hullTable() }
+       if(t==='prog'){ title='Programme'; b=driveHead()+steps()+programme() }
+       if(t==='rings'){ title='Rings'; b=ringFull() } }
+     return '<div class="side"><div class="wh">'+(back||ic('drive',18,'ink'))+'<b>'+title+'</b></div><div class="bd">'+b+'</div></div>' }},
+ C:{name:'C · рейка, как у карточки мира',
+   note:'<b>Та же рейка, что в карточке мира (v5.13): DRIVE · HULLS · RINGS.</b> Первая — DRIVE: двигатель III→IV, шаги и «что даёт». HULLS — таблица судов с ценами. RINGS — разметка. Кузницы и «где идёт» — под шагами в DRIVE, свёрнуто в одну строку. Жёлтая точка — на вкладке есть доступное действие.'+
+     '<span class="pro">+ Один узор на всю игру: игрок уже научился рейке в карточке мира. Нет повторов.</span>'+
+     '<span class="con">− Рейка съедает 64 px из 470 у боковой панели; кольцо уже не видно с первого взгляда, только точкой.</span>',
+   draw:function(){ var t=st.C, rl=[['drive','drive','Drive'],['hulls','ships','Hulls'],['rings','ring','Rings']], b='';
+     var rail='<div class="rail">'+rl.map(function(x){ return '<button data-a="C" data-t="'+x[0]+'" class="'+(t===x[0]?'on':'')+'">'+(x[0]==='rings'?'<span class="dot"></span>':'')+ic(x[1],20,t===x[0]?'ink':'mid')+x[2]+'</button>' }).join('')+'</div>';
+     if(t==='drive') b='<div class="sec"><span>Hull generation</span><span>'+S.g+' → '+S.nx+'</span></div>'+driveHead()+steps()+
+        '<div class="wk">'+ic('works',14,'parts')+'<span>Tallow 2.6/yr · Kiln 2.1/yr</span><b style="color:var(--mid);font-family:var(--h);font-size:11px;letter-spacing:.12em">CHANGE</b></div>'+gains();
+     if(t==='hulls') b='<div class="sec"><span>New hulls</span><span>'+S.g+' → '+S.nx+'</span></div>'+hullTable()+fleetBlock();
+     if(t==='rings') b=ringFull();
+     return '<div class="side"><div class="wh">'+ic('drive',18,'ink')+'<b>Technology</b></div><div class="cwrap">'+rail+'<div class="bd">'+b+'</div></div></div>' }}
+};
+var cur='A';
+function draw(){ document.getElementById('vs').innerHTML=Object.keys(V).map(function(k){ return '<button data-v="'+k+'" class="'+(k===cur?'on':'')+'">'+V[k].name+'</button>' }).join('');
+  document.getElementById('card').innerHTML=V[cur].draw(); document.getElementById('note').innerHTML=V[cur].note }
+document.addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return;
+  if(b.dataset.v){ cur=b.dataset.v; draw(); return }
+  if(b.dataset.a){ st[b.dataset.a]=b.dataset.t||null; draw() } });
+draw();
+})();
+</script>
+</body>
+</html>
