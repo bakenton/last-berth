@@ -344,11 +344,14 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
   // Ark: вклады уровней
   async function actArk(s){
     if(!(await openTab('ark'))) return false;
-    if(!(await hasEl('#ovl [data-act="arkbuy"]'))){ await closeTab('ark'); return false }
+    if(!(await hasEl('#ovl .hold .hr[data-act="arksel"]'))){ await closeTab('ark'); return false }
     let levels; const left=s.nightLeft;
     if(RUSH) levels=[4,3,2,1]; else if(SER) levels=[2,1]; else levels=[2,1,3,4];
     let ok=false;
-    for(const l of levels){ if(l<=s.arkLv) continue; const sel='#ovl [data-act="arkbuy"][data-l="'+l+'"]'; if(!(await hasEl(sel))) continue;
+    for(const l of levels){ if(l<=s.arkLv) continue; const sel='#ovl [data-act="arkbuy"][data-l="'+l+'"]';
+      if(!(await hasEl(sel))){ const ring='#ovl .hold .hr[data-v="'+l+'"] .hx'; if(!(await hasEl(ring))) continue;   // v5.10: the price card opens on a press of the ring's cells
+        if((await tap(ring,{soft:true}))!=='ok') continue; await wait(100) }
+      if(!(await hasEl(sel))) continue;
       if(RICH&&GOD&&!(await hasEl(enabled(sel)))){ await p.evaluate(()=>{ const E=LN.earth; for(const k of ['metal','food','fuel','parts']) E[k]=Math.max(E[k],12000); LNdraw() }); rec('rich-top-up',{l}); await wait(150) }
       if(await hasEl(enabled(sel))){ if((await tap(enabled(sel)))==='ok'){ ok=true; await keyShot('ark'+l,'ark-level-'+l+'-bought'); break } }
       else await tap(sel,{soft:true}) }   // refused: read why
@@ -358,7 +361,7 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
     if(!s.cv||s.cv.ok) return false;
     if(!(await openTab('yard'))) return false; let n=0;
     for(let k=0;k<12;k++){
-      const pickId=await p.evaluate(()=>{ for(const s of LN.ships){ if(!s.reserve&&!s.mutiny&&convoyHull(LN,s)) return s.id } return null });
+      const pickId=await p.evaluate(()=>{ for(const s of LN.ships){ if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend&&!s.job&&!s.reserve) return s.id } return null });
       if(pickId===null) break;
       const sel='#ovl [data-act="reserve"][data-s="'+pickId+'"][data-on="1"]';
       if(!(await hasEl(sel))) break; if((await tap(sel))!=='ok') break; n++; await wait(60) }

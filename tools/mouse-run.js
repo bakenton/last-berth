@@ -132,7 +132,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
     window.__mr={st:{idleY:{},fuelHist:[],want:{}},pend:[],C0};
     /* ход бота за год d на копии: что бы он сделал. Живую игру не трогает. */
     window.__plan=function(style,d){ const G0=window.LN, sh=Object.assign({},G0); delete sh.rnd; const Gc=structuredClone(sh), acts=[], C=Object.assign({},C0); Gc.rnd=mulberry32(1);   // кости игры — замыкание, в копию не идут; ход бота их не бросает
-      for(const id of __mr.pend){ const s=Gc.ships.find(x=>x.id===id); if(s&&s.mode==='building') s.reserve=true }   // корпус, заложенный под конвой: у игрока нет кнопки «в резерв» до пирса, руки помнят сами
+      for(const id of __mr.pend){ const s=Gc.ships.find(x=>x.id===id); if(s&&s.mode!=='dead') s.reserve=true }   // корпус, заложенный под конвой: у игрока нет кнопки «в резерв» до пирса, руки помнят сами
       const R=(f,o)=>{ acts.push(Object.assign({f},o)); return o.r };
       C.colonize=(G,sid,pid,people,food)=>{ const s=shipById(G,sid), np=foundParty(G,s,pid); const r=C0.colonize(G,sid,pid,np,food); return R('colonize',{sid,pid,people:np,asked:people,r}) };   // окно мира шлёт foundParty, не 26
       C.setLine=(G,sid,k,to)=>R('setLine',{sid,k,r:C0.setLine(G,sid,k,to)});
@@ -215,8 +215,19 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
     async abandon(a){ if(!(await openWorld(a.k))) return {ok:false,why:'world-not-open'};
       const r=await press('#ovl [data-act="evac"][data-p="'+a.k+'"]','evacuate'); if(r.ok&&r.d&&r.d.hull!==a.sid) note('evac: окно мира само выбрало курьера (бот называл другого)','бот '+a.sid+' · игра '+r.d.hull); return r },
     async survey(){ if(!(await openTab('tech'))) return {ok:false,why:'tech-not-open'}; const r=await press('#side [data-act="survey"]','survey'); if(r.ok) await shot('ring-charted-y'+curDay); return r },
-    async arkBuy(a){ if(!(await openTab('ark'))) return {ok:false,why:'ark-not-open'}; const r=await press('#ovl [data-act="arkbuy"][data-l="'+a.l+'"]','arkbuy'); if(r.ok) await shot('ark-level-'+a.l+'-y'+curDay); return r },
+    async arkBuy(a){ if(!(await openTab('ark'))) return {ok:false,why:'ark-not-open'};
+      const buy='#ovl [data-act="arkbuy"][data-l="'+a.l+'"]';
+      if(!(await has(buy))){ const ring='#ovl .hold .hr[data-v="'+a.l+'"] .hx';   // v5.10: карточка с ценой и кнопкой открывается нажатием на соты кольца
+        if(!(await has(ring))){ note('arkbuy: кольца '+a.l+' в улье не нарисовано — игроку его купить негде','год '+curDay); return {ok:false,why:'ring-not-drawn'} }
+        const r0=await tap(ring); if(r0.res!=='ok') return {ok:false,why:'ring-'+r0.res,top:r0.top||null}; await wait(100) }
+      if(!(await has(buy))) return {ok:false,why:'arkbuy-missing'};
+      const r=await press(buy,'arkbuy'); if(r.ok) await shot('ark-ring-'+a.l+'-y'+curDay); return r },
     async setReserve(a){ if(await p.evaluate(a=>{ const s=shipById(LN,a.sid); return !!s&&!!s.reserve===a.on },a)) return {ok:true,skip:'уже так'};
+      const at=await p.evaluate(sid=>{ const s=shipById(LN,sid); return s?{pier:s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend,line:!!(s.from||s.pend)}:null },a.sid);
+      if(a.on&&at&&!at.pier){   // v5.10: у судна на линии или в рейсе своей кнопки «в конвой» нет (CALL HOME в окне ковчега зовёт все разом) — игрок снимает его с линии в окне мира и ставит в конвой у пирса
+        if(await p.evaluate(id=>__mr.pend.includes(id),a.sid)) return {ok:true,skip:'ждёт пирса'};
+        if(at.line){ const r=await HANDS.clearLine({sid:a.sid}); if(!r.ok&&!r.skip) return r }
+        await p.evaluate(id=>{ __mr.pend.push(id) },a.sid); note('convoy: судно не у пирса — снято с линии в окне мира, «в конвой» нажато у пирса','судно '+a.sid); return {ok:true,skip:'снято с линии, ждёт пирса'} }
       if(!(await openTab('yard'))) return {ok:false,why:'yard-not-open'}; return press('#ovl [data-act="reserve"][data-s="'+a.sid+'"][data-on="'+(a.on?1:0)+'"]','reserve') },
     async buildHub(a){ if(!(await openWorld(a.k))) return {ok:false,why:'world-not-open'}; const r=await press('#ovl [data-act="hubbuild"][data-p="'+a.k+'"]','hub'); if(r.ok) await shot('hub-built-y'+curDay); return r },
     async setVia(a){ const cur=await p.evaluate(k=>(LN.colonies[k]||{}).via||null,a.k); if(cur===a.h) return {ok:true,skip:'уже так'};
@@ -255,7 +266,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
       if(s.day-lastStep>1&&lastStep>0){ missed+=s.day-lastStep-1; maxJump=Math.max(maxJump,s.day-lastStep) }
       for(let day=Math.max(lastStep+1,s.day-40); day<=s.day; day++){   // пропущенные годы (кадр вместил несколько лет) доигрываются по текущему состоянию, все подряд: «раз в 25 лет» ленивого не должно выпадать
         // корпуса, заложенные под конвой, дошли до пирса — в резерв, как только игра даёт кнопку
-        const due=await p.evaluate(()=>{ const out=[]; __mr.pend=__mr.pend.filter(id=>{ const s=LN.ships.find(x=>x.id===id); if(!s||s.mode==='dead') return false; if(s.mode==='building') return true; if(s.mode==='idle'&&s.at==='earth'&&!s.reserve&&!(s.from&&s.to)) out.push(id); return false }); return out });
+        const due=await p.evaluate(()=>{ const out=[]; __mr.pend=__mr.pend.filter(id=>{ const s=LN.ships.find(x=>x.id===id); if(!s||s.mode==='dead') return false; if(s.mode==='idle'&&s.at==='earth'&&!(s.from&&s.to)&&!s.pend){ if(!s.reserve) out.push(id); return false } return true }); return out });
         const plan=await p.evaluate(({style,d})=>__plan(style,d),{style:STYLE,d:day-1});
         if(plan.err){ planErrs++; rec('plan-error',{day,err:plan.err}); if(planErrs<=3) console.log('ошибка головы бота, год '+day+': '+plan.err.slice(0,200)) }
         const todo=plan.acts.filter(a=>a.r==='ok'||a.r==='queued');
