@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.11'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.12'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -174,10 +174,39 @@ function hubBuildCheck(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) 
   return 'ok' }
 function buildHub(G,pid){ var r=hubBuildCheck(G,pid); if(r!=='ok') return r;
   var k=hubCost(G), c=G.colonies[pid]; G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts});
-  c.hub=true;
+  c.hub=true; c.hubPaid={metal:k.metal,parts:k.parts}; c.exHub=false;
   for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead') continue;   // couriers come off the hub's line to Earth
     if(s.from===pid&&!lineOk(G,s,pid)){ s.from=null; s.to=null } if(s.pend&&s.pend.from===pid&&!lineOk(G,s,pid)) s.pend=null }
   log(G,'hub_built',{p:pid,m:k.metal,t:k.parts}); return 'ok' }
+/* v5.02: a hub's feeders go back to Earth with their hulls, as setVia does; a hull that cannot fly to Earth stands down */
+function feedersHome(G,hub){ var fdr=feedersOf(G,hub);
+  for(var fi=0;fi<fdr.length;fi++){ var fk=fdr[fi]; G.colonies[fk].via=null;
+    for(var fq=0;fq<G.ships.length;fq++){ var fo=G.ships[fq]; if(fo.mode==='dead') continue;
+      if(fo.from===fk){ fo.to='earth'; if(!lineOk(G,fo,fk)){ fo.from=null; fo.to=null } }
+      if(fo.pend&&fo.pend.from===fk){ fo.pend.to='earth'; if(!lineOk(G,fo,fk)) fo.pend=null } } }
+  return fdr }
+/* v5.12 (Nikita 11.11: «снести хаб и получить четверть тех ресурсов, что я в него вложил»): a quarter of this hub's own price back
+   (a save from before v5.12 has no price on the hub: the price of the last hub bought stands in). The feeders go home to Earth,
+   the hands waiting for them stay on the world, and what lies in the depot still goes to Earth (c.exHub) until it is gone. */
+function hubRefund(G,pid){ var c=G.colonies[pid]; if(!c||!c.hub) return null;
+  var k=c.hubPaid||(function(){ var g=Math.pow(K.HUB_GROW,Math.max(0,hubCount(G)-1)); return {metal:Math.round(K.HUB_METAL*g), parts:Math.round(K.HUB_PARTS*g)} })();
+  return {metal:Math.floor(k.metal*K.HUB_REFUND), parts:Math.floor(k.parts*K.HUB_REFUND)} }
+function razeHub(G,pid){ var c=G.colonies[pid]; if(!c||!c.hub) return 'nohub';
+  var r=hubRefund(G,pid), fdr=feedersHome(G,pid);
+  G.earth.metal+=r.metal; G.earth.parts+=r.parts;
+  c.pop+=Math.floor(c.wait||0); c.wait=0; c.hub=false; delete c.hubPaid; c.exHub=true;
+  for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead') continue;   // couriers may fly the line to Earth again; one a hub line refused before is not put back
+    if(s.from===pid&&!lineOk(G,s,pid)){ s.from=null; s.to=null } }
+  log(G,'hub_razed',{p:pid,m:r.metal,t:r.parts,n:fdr.length}); return 'ok' }
+/* a hub, or a world that was one: Earth takes the whole depot — less the fuel its own machines drink */
+function depotKinds(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return [];
+  var dep=p.kind==='works'?'parts':p.dep;
+  if(c.hub) return ['metal','food','fuel','parts'];
+  if(!c.exHub) return [dep];
+  return ['metal','food','fuel','parts'].filter(function(q){ return q===dep||!(q==='fuel'&&kitTier(c)>0)&&!(p.kind==='works'&&(q==='metal'||q==='food')) }) }
+/* v5.12 (Nikita 11.11, a spent hub sold a tier for +0 that burnt fuel): machines on a dead seam have nothing to dig — they stand and drink nothing */
+function kitIdle(G,pid){ var p=planet(pid); return !!p&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0 }
+function kitDrinks(G,pid){ return kitTier(G.colonies[pid])>0&&!kitIdle(G,pid) }
 function lineOk(G,s,pid){ var p=planet(pid), h=HULLS[s.hull]; if(!p||!h) return false;
   var to=lineTo(G,pid);
   if(h.key==='courier'&&p.sec>=K.COURIER_FREE&&!(K.COURIER_FEED_FREE&&to!=='earth')&&s.from!==pid&&!(s.pend&&s.pend.from===pid)&&lineCount(G,pid,'courier')>=K.COURIER_LINE) return false;   // nodes-1.01: the line is full of couriers
@@ -220,7 +249,7 @@ function hubHands(G,hub){ var n=0, f=feedersOf(G,hub); for(var i=0;i<f.length;i+
 function hubLoad(G,s,hub,w){
   var hc=G.colonies[hub], wc=G.colonies[w]; if(!wc||!hc) return; var room=s.cap;
   if(wc.kit&&room>=wc.kit.w){ s.cargo.kit=wc.kit; room-=wc.kit.w; wc.kitShip=s.id; wc.kit=null; log(G,'kit_loaded',{p:w,n:s.id,t:s.cargo.kit.tier}) }
-  if(kitTier(wc)>0){ var n=Math.max(1,onLine(G,w).length), rt=Math.max(1,legDays(G,w,hub,s)*2);
+  if(kitDrinks(G,w)){ var n=Math.max(1,onLine(G,w).length), rt=Math.max(1,legDays(G,w,hub,s)*2);
     var need=Math.ceil(Math.max(0,kitBurn(wc)*rt/n*K.FEED_BUFFER-(wc.store.fuel||0)));
     var floor=Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_METAL_KEEP), got=Math.min(need,room,Math.floor(G.earth.fuel-floor));
     if(got>0){ G.earth.fuel-=got; openRes(G,'fuel'); s.cargo.fuel=got; room-=got; G.ledger.fuelOut=(G.ledger.fuelOut||0)+got } }
@@ -239,6 +268,7 @@ var K={
   HUB_HOP:1,           // nodes-1.00: a courier feeds a hub from this many rings out at most
   HUB_BASE:0,          // nodes-1.01 (Nikita 05.11: «кол-во хабов зависит от поколения двигателя»): hubs allowed = HUB_BASE + drive generation (Gen I: none)
   HUB_METAL:5000, HUB_PARTS:750, HUB_GROW:1.5,   // nodes-1.03 (Nikita 05.11: «хабы слишком дешёвые», первый 5 тыс. металла, детали ×5; was 800/150); the n-th costs BASE x GROW^(n-1) (grow: Claude, awaits Nikita)
+  HUB_REFUND:0.25,     // v5.12 (Nikita 11.11): a hub pulled down gives back a quarter of what was paid for it
   HUB_NO_COURIER:1,    // 1: no courier on a hub's line to Earth (nodes-1.00); 0: only the per-line limit below
   COURIER_FREE:2,      // nodes-1.01 (Nikita 05.11: «первые два кольца сколько влезет, дальше лимит»): rings I..COURIER_FREE take any number of couriers
   COURIER_FEED_FREE:1, // 1: the limit holds only on lines to Earth — a courier feeding a hub is free (her job)
@@ -423,6 +453,7 @@ function lineHold(G,pid){ var best=0; for(var i=0;i<G.ships.length;i++){ var s=G
 function canKit(G,pid){
   var c=G.colonies[pid]; if(!c) return 'nocolony';
   if(!kitOpen(G)) return 'kitgate';
+  if(kitIdle(G,pid)) return 'kitDry';
   if(kitTier(c)>=K.KIT_MAX) return 'tiermax';
   if(c.kit||c.kitShip) return 'kitpending';
   var k=kitCost(c);
@@ -442,7 +473,7 @@ function orderKit(G,pid){
 function feedRates(G,node){
   var c=G.colonies[node], p=planet(node), r={}; if(!c||!p) return r;
   if(p.kind==='works'){ var want=c.pop*p.rich*K.REFINE*rateMult(c); r.metal=want*K.REFINE_METAL; r.food=want*K.REFINE_FOOD }
-  if(kitTier(c)>0) r.fuel=kitBurn(c);
+  if(kitDrinks(G,node)) r.fuel=kitBurn(c);
   return r;
 }
 /* Earth's own output rides on the people left at home — but only so far.
@@ -601,7 +632,7 @@ function needsOf(G,node){
   var p=planet(node), c=G.colonies[node], out=[];
   /* v4.4: machines run on fuel. v4.46 (Nikita, 03.11: «постоянно не хватает топлива»): the hold is filled in this order and
      fuel used to go last, so a thin line stopped the machines first. Fuel is 2–9 a year against tens of metal and food */
-  if(c&&kitTier(c)>0) out.push('fuel');
+  if(c&&kitDrinks(G,node)) out.push('fuel');
   if(p.kind==='works') out.push('metal','food');
   return out.length?out:null;
 }
@@ -650,7 +681,7 @@ function loadAt(G,s,node){
   var list;
   if(other!=='earth'&&s.to===other) list=[planet(node).dep];   // nodes-1.00: a feeder carries her world's trade to the hub
   else if(wants) list=wants.slice();                       // the far end is a works world
-  else if(other==='earth') list=isHub(G,node)?['metal','food','fuel','parts'].filter(function(q){ return (c.store[q]||0)>=1 }):[planet(node).dep];   // Earth takes anything; nodes-1.01: a hub sends the whole depot
+  else if(other==='earth') list=depotKinds(G,node).filter(function(q){ return (c.store[q]||0)>=1 });   // Earth takes anything; nodes-1.01: a hub sends the whole depot
   else return;
   if(!list.length) list=[planet(node).dep];   // an empty depot loads its own trade (nothing)                                        // a mine has no use for parts
 
@@ -1009,7 +1040,7 @@ function moveLine(G,shipId,pid){
    A line is the hulls on it: the player puts a free hull on it, moves one from another line, or orders a new hull for it.
    A hull that is lost, refuses the Night or comes home from a spent world is not replaced by anyone. */
 var CLASSES=['courier','hauler','freighter'];
-function pileLeft(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return 0; return Math.floor(c.store[p.kind==='works'?'parts':p.dep]||0) }   // v4.11: what is still on the surface
+function pileLeft(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return 0; if(c.exHub) return depotKinds(G,pid).reduce(function(a,q){ return a+Math.floor(c.store[q]||0) },0); return Math.floor(c.store[p.kind==='works'?'parts':p.dep]||0) }   // v4.11: what is still on the surface
 function shipClass(s){ return HULLS[s.hull]?HULLS[s.hull].key:'courier' }
 function onLine(G,pid){ var out=[]; for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='dead') continue;
   if((o.from===pid&&o.to)||(o.pend&&o.pend.from===pid)||(o.lineFor===pid&&o.mode==='building')) out.push(o) } return out }
@@ -1506,14 +1537,8 @@ function tick(G){
         // whatever was on the surface goes with them, as far as the hold allows
         var roomE=Math.max(0,s.cap-lift);
         ['metal','food','fuel','parts'].forEach(function(kk){ var g=Math.min(roomE,Math.floor(ce.store[kk]||0)); if(g>0){ s.cargo[kk]=g; roomE-=g } });
-        var fdr=feedersOf(G,node);
         delete G.colonies[node];
-        /* v5.02 (reviewer v5.01, Nikita 06.11 «Да, чини»): the feeders' lines go back to Earth with their hulls, as setVia does;
-           a hull that cannot fly to Earth stands down. A hull already flying into the hub brings her hold home (below, on arrival). */
-        for(var fi=0;fi<fdr.length;fi++){ var fk=fdr[fi]; G.colonies[fk].via=null;
-          for(var fq=0;fq<G.ships.length;fq++){ var fo=G.ships[fq]; if(fo.mode==='dead') continue;
-            if(fo.from===fk){ fo.to='earth'; if(!lineOk(G,fo,fk)){ fo.from=null; fo.to=null } }
-            if(fo.pend&&fo.pend.from===fk){ fo.pend.to='earth'; if(!lineOk(G,fo,fk)) fo.pend=null } } }
+        var fdr=feedersHome(G,node);   // v5.02: a hull already flying into the hub brings her hold home (below, on arrival)
         if(ce.hub) log(G,'hub_lost',{p:node,n:fdr.length});
         if(G.reserves[node]!==Infinity&&G.reserves[node]<=0){ G.ghost[node]=G.day }
         for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.from===node||o.to===node){ o.from=null; o.to=null } if(o.pend&&o.pend.from===node) o.pend=null; if(o.lineFor===node) o.lineFor=null; if(o.moveTo===node) o.moveTo=null }
@@ -1574,7 +1599,7 @@ function tick(G){
     // v4.10: hazard takes its share; the line brings the replacements
     if(c.pop>K.MIN_FOUND){ c.lossDebt=(c.lossDebt||0)+c.pop*p.haz*K.COLONY_LOSS; var cl=Math.floor(c.lossDebt); if(cl>0){ c.lossDebt-=cl; c.pop=Math.max(K.MIN_FOUND,c.pop-cl); G.stats.colonyLoss=(G.stats.colonyLoss||0)+cl } }
     // v4.4: the machines drink first; dry for KIT_GRACE years and they stand
-    if(kitTier(c)>0){ var burn=kitBurn(c);
+    if(kitDrinks(G,k)){ var burn=kitBurn(c);
       if((c.store.fuel||0)>=burn){ c.store.fuel-=burn; if(c.fuelOut>=K.KIT_GRACE){ log(G,'kit_running',{p:k,t:c.tier}); forgeEv(G,k,'kit_running') } c.fuelOut=0 }
       else { c.store.fuel=0; c.fuelOut=(c.fuelOut||0)+1; if(c.fuelOut===K.KIT_GRACE){ log(G,'kit_starved',{p:k,t:c.tier}); forgeEv(G,k,'kit_starved') } } }
     var mult=rateMult(c);

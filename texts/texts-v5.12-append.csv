@@ -1,0 +1,7 @@
+UI,u_hubRaze,Pull down the hub,Снести хаб,v5.12 hub pull-down,live,new
+UI,u_hubBack,Gives back,Вернётся,v5.12 hub pull-down,live,new
+UI,u_kitIdle,The seam is dead: the machines stand and burn no fuel.,Жила выработана: машины стоят и топлива не жгут.,v5.12 hub pull-down,live,new
+MSG,ok_hubRaze,The hub at {p} is pulled down. Its feeders' lines go to Earth again.,Хаб на {p} снесён. Линии питателей снова идут на Землю.,v5.12 hub pull-down,live,new
+MSG,kitDry,The seam is dead: there is nothing to dig.,Жила выработана: добывать нечего.,v5.12 hub pull-down,live,new
+MSG,nohub,There is no hub here.,Здесь нет хаба.,v5.12 hub pull-down,live,new
+LOG,hub_razed,"The hub at {p} is pulled down: +{m} metal, +{t} parts back. Lines back to Earth: {n}.",Хаб на {p} снесён: вернулось {m} металла и {t} деталей. Линии питателей снова идут на Землю: {n}.,v5.12 hub pull-down,live,new

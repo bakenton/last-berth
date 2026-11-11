@@ -480,7 +480,7 @@ function camPan(dx,dy){ camUpdate(); var s=1/pxPer(CAM.dist), th=CAM.yaw*Math.PI
 function camZoom(f){ CAM.dist=Math.max(220,Math.min(12000,CAM.dist*f)); CFIT=false }
 
 /* ---------- the state of a world, as the map, the list and the advisor see it ---------- */
-function isDead(pid){ var p=planet(pid); return !!G.colonies[pid]&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0&&pileLeft(G,pid)<1 }
+function isDead(pid){ var p=planet(pid); return !!G.colonies[pid]&&!G.colonies[pid].hub&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0&&pileLeft(G,pid)<1 }
 function isDry(pid){ var p=planet(pid); return !!G.colonies[pid]&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0 }
 function worksHungry(pid){ var p=planet(pid), c=G.colonies[pid]; if(!c||p.kind!=='works') return null;
   var fr=feedRates(G,pid), ym=(c.store.metal||0)/Math.max(0.01,fr.metal||0), yf=(c.store.food||0)/Math.max(0.01,fr.food||0);
@@ -1500,18 +1500,20 @@ function liftRow(p){ var ll=lastLift(G,p.id); if(!can('lift')||!ll||ll.st==='goi
 /* nodes-1.01 (Nikita 05.11): the hub — build one here, or send this world's goods to one; on a hub, its depot and the hands waiting for its feeders */
 var HUB_RES=['metal','food','fuel','parts'];
 function hubCapP(){ return {m:hubCap(G),g:roman((G.gen||0)+1)} }
-function hubBlock(p,c){ if(p.kind==='works') return '';
+function hubBlock(p,c,deadW){ if(p.kind==='works') return '';
   var pid=p.id, h='', hubs=Object.keys(G.colonies).filter(function(k){ return k!==pid&&isHub(G,k)&&!isDead(k) });
   var head2=sec(esc(T('u_hub')),esc(fill(T('u_hubN'),{n:hubCount(G),m:hubCap(G)})));
   if(c.hub){ var f=feedersOf(G,pid);
     h+=head2+'<div id="hubstore">';
     HUB_RES.forEach(function(k){ if(can(k)) h+=row(resIc(k,13)+esc(T(k)),num(Math.floor(c.store[k]||0)),C[k]) });
     h+=row(resIc('people',13)+esc(T('u_hubWait')),num(Math.floor(c.wait||0)),C.people)+row(esc(T('u_hubFeeders')),f.length?esc(f.map(pname).join(', ')):'0')+'</div>';
+    var rb=hubRefund(G,pid);   // v5.12 (Nikita 11.11): pull the hub down for a quarter of its price
+    h+='<div class="prow" id="hubraze"><span class="lab">'+esc(T('u_hubBack'))+'</span><span>'+resIc('metal',13)+num(rb.metal)+' '+resIc('parts',13)+num(rb.parts)+'</span></div>'+btn(esc(T('u_hubRaze')),'hubraze',{p:pid},'full','takeoff');
     return h }
   if(!c.via){ var k2=hubCost(G), w=hubBuildCheck(G,pid);
     if(w==='metal'||w==='parts') w=shortWhy(k2,G.earth); else if(w==='hubCap') w=['hubCap',hubCapP()];
     h+=head2+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(k2,G.earth)+'</div>'+btn(esc(T('u_hubBuild')),'hubbuild',{p:pid},'full','build',offW(w)) }
-  if(hubs.length){ var cur=c.via||'earth';
+  if(hubs.length&&!deadW){ var cur=c.via||'earth';
     if(c.via) h+=head2;
     h+='<div class="lab">'+esc(T('u_viaTo'))+'</div><div class="seg wide" id="viaseg" style="padding:2px 0 6px">'+
       '<button type="button" data-act="via" data-p="'+pid+'" data-v="earth" class="'+(cur==='earth'?'on':'')+'">'+esc(T('u_viaEarth'))+'</button>'+
@@ -1522,6 +1524,8 @@ function lineWhyP(code){ return code==='courierLine'?{n:K.COURIER_LINE}:null }
 function lineWhyShort(code){ return code==='range'?T('u_outReach'):fill(T('u_lw_'+code),lineWhyP(code)) }
 function machines(p,c){ if(!can('machines')||(!kitOpen(G)&&!kitTier(c))) return '';   // before the Gen III yards the block is only noise
   var kt=kitTier(c), kc=kitCost(c), kr=canKit(G,p.id), hold=lineHold(G,p.id), h='';
+  if(kitIdle(G,p.id)){ if(!kt) return '';   // v5.12 (Nikita 11.11): a spent seam sold a tier for +0 that burnt fuel
+    return '<div id="mach">'+sec(esc(T('u_machines')),esc(fill(T('u_tierStand'),{t:roman(kt-1)})).toUpperCase())+hint(esc(T('u_kitIdle')))+'</div>' }
   h+=sec(esc(T('u_machines')),esc(kt?fill(T(kitLive(c)?'u_tierRun':'u_tierStand'),{t:roman(kt-1)}):T('u_tierNone')).toUpperCase());
   if(kt){ var burn=kitBurn(c); h+=row(resIc('fuel',13)+esc(T('kitFuel')),dec(burn)+esc(T('u_perYr')),C.fuel)+row(resIc('fuel',13)+esc(T('u_fuelOnSite')),esc(fill(T('u_yearsN'),{n:Math.floor((c.store.fuel||0)/Math.max(0.01,burn))})),kitLive(c)?null:C.red);
     if(!kitLive(c)) h+=alertBox('stopped',esc(T('kitStarved'))) }
@@ -1558,7 +1562,7 @@ function winWorld(pid){
     L0+='<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price({fuel:fuel,people:party},G.earth)+'</div>'+btn(esc(T('u_sendSettlers')),'send',{p:pid},'pri full','send',offW(w==='ok'||(w[0]==='ok')?'ok':w));
     return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_free')),wmark(p.kind,false,16))+'<div class="bd">'+L0+'</div>'+nav+'</div>' }
   if(st==='dead') return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_workedOut')),wmark(p.kind,true,16))+'<div class="bd"><div class="big mid">'+ic('workedout',22,C.mid)+esc(T('u_seamDead'))+'</div>'+
-    row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p)+evacBlock(p)+'</div>'+nav+'</div>';
+    row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p)+(can('parts')?'<div id="hubblk">'+hubBlock(p,c,true)+'</div>':'')+evacBlock(p)+'</div>'+nav+'</div>';   // v5.12 (Nikita 11.11): a hub on a worked-out world
   var lr=lineRate(G,pid);
   L0+=sec(esc(T('u_world')));
   if(p.kind==='works'){ var wh=worksHungry(pid), fr=feedRates(G,pid);
@@ -1577,7 +1581,7 @@ function winWorld(pid){
     L0+=row(resIc(dep,13)+esc(T('u_deposit')),dry?esc(T('u_dryShort')):esc(seamLeft(pid)),dry?C.red:KCOL[p.kind])+row(esc(T('u_onSurface')),num(c.store[dep]||0))+
       '<div id="rw-carries">'+row(esc(T('u_worldGives')),dec(lr.makes)+esc(T('u_perYr')))+row(esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')),(lr.carries<lr.makes*0.8)?C.people:null)+'</div>'+
       row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
-    if(dry) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
+    if(dry&&!c.hub) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
   }
   var hb=can('parts')?hubBlock(p,c):''; if(hb) L0+='<div id="hubblk">'+hb+'</div>';   // v5.01: the hub's price takes parts — not before the player sees them; the tutorial points here (m25)
   L0+=machines(p,c);
@@ -1925,6 +1929,7 @@ function doAct(a,b){
     if(res==='ok'){ var hd=hc0-onLine(G,d.p).length; if(hd>0){ okc='ok_hubDrop'; okp.n=hd } }
     else if(res==='metal'||res==='parts'){ var hw=shortWhy(hubCost(G),G.earth); say(hw[0],hw[1]); draw(); return }
     else if(res==='hubCap'){ say('hubCap',hubCapP()); draw(); return } }
+  else if(a==='hubraze'){ res=razeHub(G,d.p); act(G,'hubRaze',{p:d.p},res); okc='ok_hubRaze'; okp={p:pname(d.p)} }
   else if(a==='via'){ var vc0=onLine(G,d.p).length; res=setVia(G,d.p,v); act(G,'via',{p:d.p,h:v},res); okc='ok_via'; okp={p:pname(d.p),h:v==='earth'?T('u_viaEarth'):pname(v)};
     if(res==='ok'){ var vd=vc0-onLine(G,d.p).length; if(vd>0){ okc='ok_viaDrop'; okp.n=vd } } }
   else if(a==='build'){ var bh=HULLS[+d.h]; res=buildShip(G,+d.h); act(G,'build',{hull:bh.key,gen:bh.gen},res); okc='ok_build'; okp={n:G.nextShip-1,h:hullName(bh),y:bh.days} }

@@ -823,3 +823,10 @@ UI	tut_m27	A hex is 100 people. Press the hive to fill a ring with pods — the 
 UI	tut_m28	Wake and sleep on: who would wake if the Night came today, and who would sleep on. Both numbers stay up here.	Проснутся и спят: сколько проснулось бы, приди Ночь сегодня, и сколько спали бы дальше. Оба числа всегда здесь.
 UI	u_vNoConvoy	Nobody would wake: no hull stands in the convoy.	Никто не проснётся: в конвое нет ни одного судна.
 UI	u_vNoWake	Nobody would wake.	Никто не проснётся.
+UI	u_hubRaze	Pull down the hub	Снести хаб
+UI	u_hubBack	Gives back	Вернётся
+UI	u_kitIdle	The seam is dead: the machines stand and burn no fuel.	Жила выработана: машины стоят и топлива не жгут.
+MSG	ok_hubRaze	The hub at {p} is pulled down. Its feeders' lines go to Earth again.	Хаб на {p} снесён. Линии питателей снова идут на Землю.
+MSG	kitDry	The seam is dead: there is nothing to dig.	Жила выработана: добывать нечего.
+MSG	nohub	There is no hub here.	Здесь нет хаба.
+LOG	hub_razed	The hub at {p} is pulled down: +{m} metal, +{t} parts back. Lines back to Earth: {n}.	Хаб на {p} снесён: вернулось {m} металла и {t} деталей. Линии питателей снова идут на Землю: {n}.
