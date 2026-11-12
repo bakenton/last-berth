@@ -20,7 +20,7 @@
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.18'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.19'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -2720,7 +2720,7 @@ function drawPortrait(cv,seed){
    until the player turns, moves or zooms it (− + ALL: ALL fits again). */
 var CAM={tx:0,tz:0,yaw:0,pitch:52,dist:1700,fov:38}, CFIT=true, CFITK='', MAPDRAGGED=false;
 var M3D={W:1,H:1,VP:null,dpr:1,fk:'',ok:'',HX:null,HXR:0,LAY:null,NEB:null,last:0,dirty:true};
-var P3={}, P3N=-1, POS_GAP=28, H0=14, HK=1.0, HPOP=160, HTICK=25, RS=11, RF=8, HEXR=46, HUBC='#E040FB', PARTS_BODY='#2F5BD3';
+var P3={}, P3N=-1, POS_GAP=28, H0=14, HK=1.0, HSTEM=60, RS=11, RF=8, HEXR=46, HUBC='#E040FB', PARTS_BODY='#2F5BD3';
 function p3(p){ if(P3N!==PLANETS.length||!P3[p.id]) layout3(); return P3[p.id] }
 function layout3(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; return {id:q.id,x:Math.cos(q.ang)*R,z:Math.sin(q.ang)*R} });
   for(var it=0;it<40;it++){ var moved=false;
@@ -2728,12 +2728,12 @@ function layout3(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; retu
       if(d<POS_GAP){ var k=(POS_GAP-d)/2/d; a.x-=dx*k; a.z-=dz*k; b.x+=dx*k; b.z+=dz*k; moved=true } }
     if(!moved) break }
   P3={}; Ls.forEach(function(o){ P3[o.id]={x:o.x,z:o.z} }); P3N=PLANETS.length }
-/* a settled world stands on its people (capped at HPOP), a free one lies low over its footprint */
 /* v5.17 (Nikita 12.11: «вместо населения возле имени планеты писать процентаж жилы и чтобы цвет менялся»): what is left of the seam it was born with */
 function seamLeftP(q){ var r=G.reserves[q.id]; return (q.kind==='works'||!q.res0||r===Infinity)?null:Math.max(0,Math.min(100,Math.round(r/q.res0*100))) }
 function seamPct(q){ var v=seamLeftP(q); return v===null?'':' '+v+'%' }
 function seamCol(q){ var v=seamLeftP(q); return v>=50?C.food:v>=20?C.people:v>0?C.red:C.mid }
-function wH(pid){ var c=G.colonies[pid]; return c?H0+Math.min(c.pop,HPOP)*HK+RS:RF }
+/* v5.19 (Nikita 12.11: «кол-во людей на планете вообще погоды не делает» → «ровные»): every settled world stands on a stem of one height; a free one lies low over its footprint */
+function wH(pid){ var c=G.colonies[pid]; return c?H0+HSTEM*HK+RS:RF }
 function node3(n){ if(!n) return null; if(n==='earth') return [0,0,0]; var pp=planet(n); if(!pp) return null; var q=p3(pp); return [q.x,0,q.z] }
 function outerR(){ return secRadius(Math.max(0,visRings()-1)) }
 
@@ -3078,7 +3078,7 @@ function m3dynEmit(x,t,vis){ var i, k; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
     var scls=shipClass(sh), n=scls==='courier'?3:(scls==='hauler'?4:6), ang=Math.atan2(sq.y-sp.y,sq.x-sp.x); x.beginPath();
     for(k=0;k<n;k++){ var aa=ang+Math.PI*2*k/n+(n===4?Math.PI/4:0), rr=(k===0&&n===3?7.5:5.5)*kk, px=sp.x+Math.cos(aa)*rr, py=sp.y+Math.sin(aa)*rr; if(k) x.lineTo(px,py); else x.moveTo(px,py) } x.closePath();
     x.fillStyle='rgba(7,7,6,.8)'; x.fill(); m3glow(x,m3rgb(CLSCOL[scls]),6); x.strokeStyle=CLSCOL[scls]; x.lineWidth=1.5; x.stroke(); x.shadowBlur=0; x.fillStyle=C.people; x.fillRect(sp.x+Math.cos(ang)*7*kk-1.5,sp.y+Math.sin(ang)*7*kk-1.5,3,3) }
-  // Earth and the worlds, far first: stems with a tick for every HTICK people, the works' orbit, the sphere
+  // Earth and the worlds, far first: stems of one height with a tick for every upgrade package, the works' orbit, the sphere
   var list=vis.filter(function(q){ return wst(q.id)!=='ghost' }).map(function(q){ var b=p3(q), s=prj([b.x,wH(q.id),b.z]); return s?{q:q,s:s}:null }).filter(Boolean);
   var es=prj([0,22,0]); if(es) list.push({earth:1,s:es}); list.sort(function(u,v){ return v.s.w-u.s.w });
   list.forEach(function(o){
