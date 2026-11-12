@@ -1,0 +1,44 @@
+--- work/core.js	2026-11-12 17:07:34.423770900 +0900
++++ /c/Users/baken/AppData/Local/Temp/claude/a9cd4f09d5e84782/914622ac-b8ee-4a51-bd08-7cc677830a20/scratchpad/core-feed.js	2026-11-12 20:57:11.765917300 +0900
+@@ -641,6 +641,7 @@
+   if(node==='earth') return ['metal','food'];
+   return [planet(node).dep];
+ }
++var FEED_OLD=(typeof process!=='undefined'&&process.env.FEED_OLD==='1');
+ function loadAt(G,s,node){
+   s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};   // v4.4: cargo.kit rides alongside
+   var other = node===s.from ? s.to : s.from;
+@@ -656,10 +657,30 @@
+          Before this the metal share was a fixed 37.5% of the hold regardless of need (v3.9.1). */
+       var rates=feedRates(G,other), nd=G.need||earthNeed(G);
+       var hulls=0, rt=Math.max(1,legDays(G,other,lineTo(G,other),s)*2);
+-      for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.mode==='dead'||o.mode==='missing') continue; if(o.from===other&&o.to) hulls++ }
+-      var interval=rt/Math.max(1,hulls), cuts={};
++      var inb={};
++      for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.mode==='dead'||o.mode==='missing') continue; if(o.from===other&&o.to){ hulls++;
++        if(o!==s&&o.mode==='transit'&&o.dest===other&&o.cargo) for(var qi=0;qi<wants.length;qi++) inb[wants[qi]]=(inb[wants[qi]]||0)+(o.cargo[wants[qi]]||0) } }
++      var interval=rt/Math.max(1,hulls), cuts={}, ask={}, askSum=0, lim={};
++      /* FEED-FIX 2: not rt/hulls (hulls built together fly together) — the real wait for the next hull after her */
++      var myArr=rt/2, nextArr=myArr+rt;
++      for(var q2=0;q2<G.ships.length;q2++){ var o2=G.ships[q2]; if(o2===s||o2.mode==='dead'||o2.mode==='missing'||o2.mode==='building'||o2.mutiny) continue; if(!(o2.from===other&&o2.to)) continue;
++        var rtO=Math.max(1,legDays(G,other,lineTo(G,other),o2)*2), cand;
++        if(o2.mode==='transit'&&o2.dest===other) cand = o2.t;
++        else if(o2.mode==='transit') cand=o2.t+rtO/2;
++        else cand=myArr+rtO;
++        if(cand<myArr+rt/(2*Math.max(1,hulls))) cand+=rtO;   /* a hull right behind her is the same call */
++        if(cand<nextArr) nextArr=cand }
++      if(!FEED_OLD) interval=Math.max(1,nextArr-myArr);
++      /* FEED-FIX: the far end burns while she flies out (rt/2), and what her sisters already carry is on its way */
++      for(var i0=0;i0<wants.length;i0++){ var k0=wants[i0];
++        ask[k0]=Math.ceil(Math.max(0,(rates[k0]||0)*(rt/2+interval*K.FEED_BUFFER)-(cc0.store[k0]||0)-(inb[k0]||0)));
++        if(k0!=='fuel') askSum+=ask[k0] }
++      var fuelTake=wants.indexOf('fuel')>=0?Math.min(ask.fuel,room):0, left=Math.max(0,room-fuelTake);
++      /* FEED-FIX: a hold too small is split by the recipe, not metal first (a far works got metal only and stood) */
++      for(var i1=0;i1<wants.length;i1++){ var k1=wants[i1]; lim[k1]= k1==='fuel'||askSum<=left ? ask[k1] : Math.floor(left*ask[k1]/askSum) }
+       for(var i=0;i<wants.length;i++){ var kk=wants[i];
+-        var need=Math.ceil(Math.max(0,(rates[kk]||0)*interval*K.FEED_BUFFER-(cc0.store[kk]||0)));
++        var need=FEED_OLD?Math.ceil(Math.max(0,(rates[kk]||0)*interval*K.FEED_BUFFER-(cc0.store[kk]||0))):ask[kk];
++        if(!FEED_OLD&&lim[kk]<need){ cuts[kk]='room'; need=lim[kk] }
+         var floor= kk==='fuel' ? Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_METAL_KEEP) : Math.max(0,(nd[kk]||0)*K.EARTH_METAL_KEEP);     // Earth keeps this many years of its own burn — fuel included, or the machines ground the fleet
+         var got=Math.min(need,room,Math.floor(G.earth[kk]-floor));
+         if(got<need) cuts[kk]=room<need?'room':'earth';
