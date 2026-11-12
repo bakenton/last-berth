@@ -41,7 +41,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const win=await p.evaluate(()=>{ const e=document.querySelector('.win'); return e?e.innerText.replace(/\s+/g,' '):'' });
   const lines=(win.match(/\/yr · line [\d.,]+/g)||[]).length;   // v5.13: «{n}/yr · line {b}», no years
   ok('the works window: need and what the line brings for fuel, metal and food', lines===3&&/Fuel/.test(win)&&/Metal/.test(win)&&/Rations/.test(win),win.slice(0,400));
-  ok('the works window says the line is short: a red dot on its LINE tab (v5.13; the «a year short» hint is gone, Nikita 11.11)', await p.evaluate(()=>!!document.querySelector('#ovl .wrail [data-v="line"] .wdot.red')),win.slice(0,300));
+  ok('the works window says the line is short: a red dot on its WORLD tab (v5.13, WORLD and LINE one tab since v5.17; the «a year short» hint is gone, Nikita 11.11)', await p.evaluate(()=>!!document.querySelector('#ovl .wrail [data-v="world"] .wdot.red')),win.slice(0,300));
   await shot('works-window');
   await U.closeWin();
 
