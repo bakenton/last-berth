@@ -38,6 +38,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('one card for the works, with numbers, no second «machines stand» card', mine.length===1&&/the line brings [\d.,]+ a year, the works burn [\d.,]+/.test(mine[0].t),JSON.stringify(mine));
   await U.clear();
   await p.evaluate(id=>{ LNU.win=id; LNdraw() },W);
+  await U.tap('#ovl [data-act="feedhelp"]');   // v5.21: what the works burn a year, by resource, sits behind «?»
   const win=await p.evaluate(()=>{ const e=document.querySelector('.win'); return e?e.innerText.replace(/\s+/g,' '):'' });
   const lines=(win.match(/\/yr · line [\d.,]+/g)||[]).length;   // v5.13: «{n}/yr · line {b}», no years
   ok('the works window: need and what the line brings for fuel, metal and food', lines===3&&/Fuel/.test(win)&&/Metal/.test(win)&&/Rations/.test(win),win.slice(0,400));

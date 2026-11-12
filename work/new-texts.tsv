@@ -857,3 +857,78 @@ UI	u_gArkSub	it needs generation {g}	ему нужно поколение {g}
 UI	u_gEvery	Every hull, old ones too	Все суда, и старые тоже
 UI	u_ringNextH	Next ring	Следующее кольцо
 UI	u_worksParts	Parts from the works	Детали с заводов
+UI	o_head	Objective	Цель
+UI	o_also	{n} more	ещё {n}
+UI	o_at	{w} · ring {n}	{w} · кольцо {n}
+UI	o_fDrive	Drive {g}	Двигатель {g}
+UI	o_first	Settle your first world	Заселите первый мир
+UI	o_time	Let the years run	Пустите время
+UI	o_line	Put a hull on the line	Поставьте судно на линию
+UI	o_farm	Settle a farm	Заселите ферму
+UI	o_food	Find rations	Найдите рационы
+UI	o_feed	Feed the works	Накормите завод
+UI	o_hack	Run the hack	Проведите взлом
+UI	o_more	Settle another world	Заселите ещё один мир
+UI	o_settle	Settle a world	Заселите мир
+UI	o_works	Settle a works	Заселите завод
+UI	o_grow	Bring the works to {n} people	Доведите завод до {n} человек
+UI	o_drive	Start Drive {g}	Запустите двигатель {g}
+UI	o_parts	Parts for Drive {g}	Детали для двигателя {g}
+UI	o_survey	Chart ring {n}	Нанесите кольцо {n}
+UI	o_ark	Buy the first ark ring	Купите первое кольцо ковчега
+UI	o_pods	Add an ark ring	Добавьте кольцо ковчега
+UI	o_convoy	Gather the convoy	Соберите конвой
+UI	os_first	No free world in reach	Свободных миров в досягаемости нет
+UI	os_time	The settlers are on their way	Поселенцы в пути
+UI	os_food	No free farm in reach	Свободных ферм в досягаемости нет
+UI	os_hack	What you paid for waits behind it	За ним ждёт оплаченное
+UI	os_drive	The Tech tab	Вкладка «Техника»
+UI	os_survey	The Tech tab	Вкладка «Техника»
+UI	os_ark	Without pods nobody boards	Без капсул никто не взойдёт
+UI	os_pods	Pods for {n} of {k}	Капсул на {n} из {k}
+UI	os_convoy	{n} of {k} hulls	{n} из {k} судов
+UI	ow_first	Earth eats its stock. A farm sends rations.	Земля проедает запас. Ферма шлёт рационы.
+UI	ow_time	Nothing moves while the clock stands.	Пока часы стоят, ничего не движется.
+UI	ow_line	Without a hull nothing leaves this world.	Без судна с этого мира ничего не уходит.
+UI	ow_farm	Earth's rations will not last.	Рационов Земли надолго не хватит.
+UI	ow_food	A farm lies farther out: chart a ring or earn a drive.	Ферма лежит дальше: нанесите кольцо или получите двигатель.
+UI	ow_feed	The line brings the works less than they burn.	Линия везёт заводу меньше, чем он расходует.
+UI	ow_hack	A drive or an ark ring is yours only after the hack.	Двигатель или кольцо ковчега ваши только после взлома.
+UI	ow_more	More worlds — more supply.	Больше миров — больше снабжения.
+UI	ow_settle	{n} more for Drive {g}.	Ещё {n} до двигателя {g}.
+UI	ow_works	Only a works makes parts. The drive is built of them.	Детали делает только завод. Из них строят двигатель.
+UI	ow_grow	The programme needs {n} people at one works.	Программе нужно {n} человек на одном заводе.
+UI	ow_drive	Every hull flies faster and one ring farther.	Все суда летят быстрее и на кольцо дальше.
+UI	ow_parts	The works feed the programme while their lines run.	Заводы кормят программу, пока ходят их линии.
+UI	ow_survey	New worlds to settle.	Новые миры для заселения.
+UI	ow_ark	Only those in pods leave before the Night.	До Ночи улетят только те, кто в капсулах.
+UI	ow_pods	No pod — no waking.	Нет капсулы — нет пробуждения.
+UI	ow_convoy	The share of the fleet in the convoy is the share who wake.	Какая доля флота в конвое — такая доля проснётся.
+UI	o_jTitle	Objectives	Цели
+UI	o_jNow	Now	Сейчас
+UI	o_show	Show	Показать
+UI	o_jNext	Next · Drive {g}	Дальше · двигатель {g}
+UI	o_jWorlds	Settle {n} worlds	Заселить миров: {n}
+UI	o_jParts	Then parts at a works	Затем детали на заводе
+UI	o_jGives	Gives: every hull faster · one ring farther	Даёт: суда быстрее · на кольцо дальше
+UI	o_jNight	The Night	Ночь
+UI	o_jYear	year {y}	год {y}
+UI	o_jPods	Pods	Капсулы
+UI	o_jPodsV	{n} for {k} people	{n} на {k} человек
+UI	o_jConvoy	Convoy	Конвой
+UI	o_jArkDrive	Ark drive	Двигатель ковчега
+UI	o_jArkDriveV	Generation {g} · you have {h}	Поколение {g} · у вас {h}
+UI	o_jDone	Done	Сделано
+UI	od_first_landfall	First world: {w}	Первый мир: {w}
+UI	od_surveyed	Ring charted: {s}	Нанесено кольцо: {s}
+UI	od_drive_mark	Drive {g}	Двигатель {g}
+UI	od_night_dated	The Night dated: year {y}	Ночь датирована: год {y}
+UI	od_ark_bought	Ark ring {l}: {n} pods	Кольцо ковчега {l}: капсул {n}
+UI	od_ark_drive	The ark drive is ready	Двигатель ковчега готов
+UI	tut_mO	This card always names your next objective. Press it for the whole list.	Эта карточка всегда называет следующую цель. Нажмите — откроется весь список.
+UI	u_youBring	You bring	Вы везёте
+UI	u_itMakes	It makes	Он делает
+UI	u_fed	Line brings	Линия везёт
+UI	u_feedQ	What it burns a year	Что он расходует за год
+UI	u_lineLow	The line brings too little	Линия везёт мало
+UI	u_ofCap	of {n}	из {n}

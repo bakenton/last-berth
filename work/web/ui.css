@@ -315,3 +315,38 @@ svg.gi{fill:currentColor}
 .wkr b{font:500 13px var(--n)}
 .bar.flow{margin:4px 0 8px}
 .lab.pcl{display:flex;align-items:center;gap:7px;color:var(--mid);margin:12px 0 6px}
+/* v5.21: the objective — a card on the chart (draft B3 of design/orders/round2.html), its journal, and the works' «You bring → It makes» (draft W2) */
+.ocard{display:block;width:100%;padding:0;text-align:left;background:rgba(20,20,23,.94);border:1px solid var(--ink)}
+.ocard .hd{background:var(--pan2);display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font:600 10px var(--h);letter-spacing:.18em;text-transform:uppercase}
+.ocard .hd span{display:flex;gap:7px;align-items:center}.ocard .hd svg{color:var(--ppl)}
+.ocard .hd em{font:500 9px var(--h);font-style:normal;color:var(--mid);letter-spacing:.16em}
+.ocard .tt{padding:11px 10px 10px;font:600 17px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.15}
+.ocard .tt small{display:block;font:400 12.5px var(--h);letter-spacing:0;text-transform:none;color:var(--mid);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard .ft{display:flex;border-top:1px solid var(--ln)}
+.ocard .ft>div{flex:1;min-width:0;padding:7px 10px 9px;font:600 9px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase;white-space:nowrap}
+.ocard .ft>div+div{border-left:1px solid var(--ln)}
+.ocard .ft b,.opg b{float:right;font:500 12px var(--n);letter-spacing:0;color:var(--ink)}
+.ocard .bar{height:4px;margin:7px 0 0;clear:both}
+.ocard:hover{background:var(--pan)}
+.orow{display:grid;grid-template-columns:10px 1fr auto;gap:10px;align-items:center;padding:7px 0}
+.orow>i{width:9px;height:9px;background:var(--ppl);transform:rotate(45deg)}.orow.alt>i{background:none;border:1px solid var(--mid)}
+.orow b{display:block;font:600 14px var(--h);letter-spacing:.04em}.orow.alt b{font-weight:500}
+.orow span{display:block;font-size:12.5px;color:var(--mid);margin-top:2px}
+.opg>div{font-size:13px;color:var(--mid);padding:3px 0 2px}.opg .bar{margin:6px 0 8px;clear:both}
+.ogv{font-size:12.5px;color:var(--mid)}
+.ock{display:grid;grid-template-columns:16px 92px 1fr;gap:8px;align-items:baseline;font-size:13px;padding:4px 0}.ock:first-of-type{margin-top:8px}
+.ock i{font:600 13px var(--n);font-style:normal}.ock.ok i{color:var(--food)}.ock.no i{color:var(--red)}
+.ock.yet i{color:var(--mid)}.ock b{font-weight:600}.ock span{color:var(--mid)}.ock.no span,.ock.yet span{color:var(--ink)}
+.odn{display:grid;grid-template-columns:52px 1fr;gap:8px;font-size:13px;padding:2.5px 0;color:var(--mid)}.odn b{font:500 12px var(--n);color:var(--mid)}.odn span{color:var(--ink)}
+.trade{display:grid;grid-template-columns:1fr 30px 1fr;align-items:stretch;margin:2px 0 0}
+.trade .bx{border:1px solid var(--ln);background:var(--bg);padding:10px 12px 11px;display:flex;flex-direction:column;gap:8px;min-height:96px}
+.trade .bx.out{border-color:rgba(91,130,240,.6)}
+.trade .lbl,.fed .lbl{font:600 10px var(--h);letter-spacing:.18em;color:var(--mid);text-transform:uppercase}
+.trade .res{display:flex;align-items:center;gap:7px;font-size:14px}
+.trade .mk{font:500 24px/1 var(--n);margin-top:auto}.trade .mk small{font:400 12px var(--n);color:var(--mid);margin-left:3px}
+.trade .aw{font:500 20px var(--n);color:var(--mid);display:flex;align-items:center;justify-content:center}
+.fed{margin:12px 0 4px}.fed .lbl{display:flex;justify-content:space-between;align-items:center}.fed .lbl span{display:flex;align-items:center}
+.fed .lbl b{font:500 12px var(--n);letter-spacing:0;color:var(--ppl)}.fed .bar{height:6px;margin:6px 0 0}
+.vd{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--ppl);color:var(--ppl);padding:7px 10px;font-size:12.5px;margin:10px 0 8px}
+.vd span{display:flex;align-items:center;gap:8px}
+#goals .ah-big{margin-bottom:8px}#goals .ah-big b{font-size:34px}

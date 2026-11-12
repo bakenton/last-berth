@@ -507,7 +507,7 @@ function wst(pid){ var c=G.colonies[pid];
 /* Nikita, 26.10 («линия возит меньше или больше на 1 единицу, а уже уведомление»): a line speaks when it matters. Short: it carries
    under half of what it must, or Earth's stock of this resource runs out soon at today's pace. Works: under FORGE_WARN of what they burn,
    at once and not after 90 idle years (forge-stat, 02.11: a thin line is the main reason the works stand). Too many hulls: SPARE_WARN times the need */
-var THIN_WARN=0.5, RUNOUT_YEARS=100, FORGE_WARN=0.75, SPARE_WARN=2, SEAM_YEARS=80;
+var THIN_WARN=0.5, RUNOUT_YEARS=100, FORGE_WARN=FEED_THIN, SPARE_WARN=2, SEAM_YEARS=80;
 function earthRunout(res){ var t=trend(res); return t!==null&&t<-0.05&&G.earth[res]/-t<RUNOUT_YEARS }
 function lineThin(pid){ var f=lineFit(G,pid), lr=lineRate(G,pid); if(!f||!lr||f.gap<=0.01) return false;
   if(planet(pid).kind==='works') return f.carries<f.need*FORGE_WARN;   // v4.38: a hull in the yards for the line counts
@@ -903,11 +903,60 @@ function drawEvBar(){
   E.forEach(function(ev){ var on=ev.state==='active'; if(on) live=true; var col='rgb('+(EVCOL[ev.type]||'255,42,26')+')';
     h+='<div class="evc'+(on?' on':'')+'" style="border-color:'+col+'">'+ic(ev.type==='fold'?'fold':(ev.type==='drag'?'stretch':'storm'),16,col)+'<b style="color:'+col+'">'+esc((evName(ev.type)+' · '+(ev.lobe!==undefined?T('lobe'+ev.lobe):T('earthNode'))).toUpperCase())+'</b><span>'+esc(fill(T(on?'evLeft':'evIn'),{n:Math.max(0,(on?ev.end:ev.start)-G.day)}))+'</span></div>' });
   setHTML('evbar',h); el('evbar').classList.toggle('blink',live) }
+/* ---------- v5.21: THE OBJECTIVE — a card on the chart (draft B3 of design/orders/round2.html) and its journal ----------
+   Nikita 12.11 (a live playtest of v5.20: «он тупо не понимает что делать… нужен какой-то журнал квестов»). The list is core's
+   objectives(G); here it is cut to what the helper has opened (nothing names a tab or a resource the player does not see yet). */
+var OBJ_CAN={o_food:'tech',o_feed:'parts',o_settle:'tech',o_works:'tech',o_grow:'tech',o_drive:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark'};
+var OBJ_GO={o_drive:'tech',o_survey:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark',o_food:'tech',o_hack:'hack'};
+var HEXI='<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M6 .5 11 3.3v5.4L6 11.5 1 8.7V3.3z" fill="currentColor"/></svg>';
+function objNow(O){ var l=O.now.filter(function(o){ return o.code==='o_survey'?can(o.n<=2?'ring2':'ring3'):o.code==='o_hack'?can(o.k==='ark'?'ark':'tech'):(!OBJ_CAN[o.code]||can(OBJ_CAN[o.code])) });
+  if(!l.length){ var w=freeWorld(G); l=[w?{code:'o_more',p:w}:{code:'o_time'}] }
+  return l }
+function objT(pre,o){ return fill(T(pre+o.code.slice(2)),{g:roman((o.g||1)-1),n:o.n===undefined?'':num(o.n),k:o.k===undefined?'':num(o.k)}) }
+function objSub(o){ var p=o.p&&planet(o.p);
+  if(o.code==='o_parts') return num(o.n)+' / '+num(o.k);
+  if(o.code==='o_pods'||o.code==='o_convoy') return objT('os_',o);
+  if(p) return fill(T('o_at'),{w:pname(o.p),n:p.sec+1});
+  return objT('os_',o) }
+function objBar(l,v,share,col){ return '<div>'+esc(l)+'<b'+(col?' style="color:'+col+'"':'')+'>'+v+'</b><div class="bar"><u style="width:'+Math.round(Math.max(0,Math.min(1,share))*100)+'%'+(col?';background:'+col:'')+'"></u></div></div>' }
+function objFoot(O){ var D=O.drive, A=O.ark, ft='', dl=fill(T('o_fDrive'),{g:roman(D.g-1)});
+  if(can('tech')) ft+=D.running?objBar(dl,num(D.work)+' / '+num(D.workNeed),D.work/Math.max(1,D.workNeed),C.parts):objBar(dl,Math.min(D.settled,D.need)+' / '+D.need,D.settled/Math.max(1,D.need));
+  if(A&&can('ark')) ft+=objBar(T('u_wake'),num(A.wake)+' / '+num(A.board),A.board?A.wake/A.board:0,A.wake>0||!A.near?C.ark:C.red);   // red is an alarm: only when the Night is near (as the ark's flag and the advisor have it)
+  return ft }
+function objCard(){ if(!G||G.over) return ''; var O=objectives(G), l=objNow(O), o=l[0], ft=objFoot(O);
+  return '<button class="ocard" type="button" data-act="tab" data-v="goals"><div class="hd"><span>'+HEXI+esc(T('o_head'))+'</span>'+(l.length>1?'<em>'+esc(fill(T('o_also'),{n:l.length-1}))+'</em>':'')+'</div>'+
+    '<div class="tt">'+esc(objT('o_',o))+'<small>'+esc(objSub(o))+'</small></div>'+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
+function objDone(e){ var d=e.d||{}, g=e.code==='ark_drive'?(d.g||0):(d.n||1)-1;
+  return fill(T('od_'+e.code),{w:d.p?pname(d.p):'',s:d.s||'',g:roman(g),y:d.y||'',l:d.l||'',n:d.n===undefined?'':num(d.n)}) }
+function winGoals(){ var O=objectives(G), l=objNow(O), D=O.drive, A=O.ark, h='';
+  h+=sec(esc(T('o_jNow')));
+  l.slice(0,3).forEach(function(o,i){ var go=OBJ_GO[o.code]||(o.p?'w':'');
+    h+='<div class="orow'+(i?' alt':'')+'"><i></i><div><b>'+esc(objT('o_',o))+(o.p&&planet(o.p)?' — '+esc(pname(o.p)):'')+'</b><span>'+esc(objT('ow_',o))+'</span></div>'+
+      (go?'<button type="button" class="b" data-act="goal" data-v="'+i+'">'+esc(T('o_show'))+'</button>':'')+'</div>' });
+  if(can('tech')){ h+=sec(esc(fill(T('o_jNext'),{g:roman(D.g-1)})));
+    h+='<div class="opg">'+objBar(fill(T('o_jWorlds'),{n:D.need}),Math.min(D.settled,D.need)+' / '+D.need,D.settled/Math.max(1,D.need))+objBar(T('o_jParts'),num(D.work)+' / '+num(D.workNeed),D.work/Math.max(1,D.workNeed),C.parts)+'</div>'+
+      '<div class="ogv">'+esc(T('o_jGives'))+'</div>' }
+  if(A&&can('ark')){ h+=sec(esc(T('o_jNight')),esc(fill(T('o_jYear'),{y:A.night})));
+    h+='<div class="ah-big"><div class="wk"><small>'+esc(T('u_wake'))+'</small><b>'+num(A.wake)+'</b></div><div class="sl"><small>'+esc(T('u_sleepOn'))+'</small><b>'+num(Math.max(0,A.board-A.wake))+'</b></div></div>';
+    var ck=function(ok,name,v){ return '<div class="ock '+(ok?'ok':A.near?'no':'yet')+'"><i>'+(ok?'✓':'✗')+'</i><b>'+esc(name)+'</b><span>'+esc(v)+'</span></div>' };
+    h+=ck(A.caps>=A.board&&A.caps>0,T('o_jPods'),fill(T('o_jPodsV'),{n:num(A.caps),k:num(A.board)}))+
+       ck(A.convoy,T('o_jConvoy'),fill(T('os_convoy'),{n:A.have,k:A.all}))+
+       ck(A.ready,T('o_jArkDrive'),fill(T('o_jArkDriveV'),{g:roman(A.mark),h:roman(A.lvl)})) }
+  if(O.done.length){ h+=sec(esc(T('o_jDone')),String(O.done.length));
+    O.done.slice().reverse().forEach(function(e){ h+='<div class="odn"><b>'+e.day+'</b><span>'+esc(objDone(e))+'</span></div>' }) }
+  return '<div class="win sm" id="goals">'+head(esc(T('o_jTitle')),'',HEXI)+'<div class="bd">'+h+'</div></div>' }
+function objGo(i){ var o=objNow(objectives(G))[i]; if(!o) return; var go=OBJ_GO[o.code];
+  U.pop=null;
+  if(go==='hack'){ U.win=null; U.hackGo=true }
+  else if(go==='tech'){ U.win=null; U.tab='tech'; U.ttab='over' }
+  else if(go){ U.tab=null; U.win=go }
+  else if(o.p&&planet(o.p)) openWorld(o.p,o.code==='o_line'||o.code==='o_feed'?'add':null) }
+
 /* v4.35: what the yards are building, top right of the map — the three nearest, and how many more */
 function building(){ return G.ships.filter(function(s){ return s.mode==='building' }).sort(function(a,b){ return a.t-b.t }) }
 function hullProgress(s){ var h=HULLS[s.hull], tot=Math.max(1,h?h.days:1); return Math.max(0,Math.min(1,1-(s.t||0)/tot)) }
 function forWorld(s){ return s.lineFor||(s.pend&&s.pend.from)||null }
-function drawCards(){ var b=can('yard')?building():[], h='', hk=hackNext(G);
+function drawCards(){ var b=can('yard')?building():[], h=objCard(), hk=hackNext(G);   // v5.21: the objective is the first card
   if(hk&&!hackOn()) h+='<button class="bcard hk" type="button" data-act="hack"><b>'+esc(T('hk_card'))+'</b><span>'+esc(hackWho(hk))+'</span><i>'+esc(T('hk_cardGo'))+'</i></button>';   // v5.09 (Nikita 10.11): the hack never opens by itself — this card, the Tech tab or the Ark window start it
   b.slice(0,3).forEach(function(s){ var w=forWorld(s);
     h+='<button class="bcard" type="button" data-act="tab" data-v="yard">'+shipIc(shipClass(s),26)+'<b>'+esc(T(shipClass(s))+' '+roman(hullGen(s)))+'</b><span>→ '+esc(w?pname(w):T('u_freeHull'))+'</span><i>'+s.t+' '+yrs(s.t)+'</i><u style="width:'+Math.round(hullProgress(s)*100)+'%"></u></button>' });
@@ -1209,6 +1258,7 @@ var TMSG={
    pre:function(){ var pid=firstCol(); if(!pid) return null; openWorld(pid); return {p:pname(pid)} }, done:function(a,v,res){ return (a==='assign'||a==='pickgo')&&res==='ok' }},
  m8:{at:'#ordblk',mode:'do',k:'tut_m8',pre:function(){ var pid=lineless(); if(!pid||freeHullAtPier()) return null; openWorld(pid); return {} }, done:function(a,v,res){ return a==='order'&&res==='ok' }},
  mM:{at:'#res [data-r="metal"]',mode:'see',k:'tut_mM',pre:function(){ closeAll(); var m=mineFor(); return {p:m?pname(m):'—'} }},
+ mO:{at:'#cards .ocard',mode:'see',k:'tut_mO',pre:function(){ closeAll(); return el('cards')&&el('cards').querySelector('.ocard')?{}:null }},   // v5.21: the objective card
  m9:{at:'#cards',mode:'see',k:'tut_m9',pre:function(){ closeAll(); return building().length?{}:null }},
  m10:{at:'#tabs [data-v="fleet"]',mode:'see',k:'tut_m10',pre:closeAll},
  m11:{at:'#rw-carries',mode:'see',k:'tut_m11',pre:function(){ var pid=halfWorld(); if(!pid) return null; openWorld(pid); var lr=lineRate(G,pid); return {p:pname(pid),m:dec(lr.makes),c:dec(lr.carries)} }},
@@ -1249,7 +1299,7 @@ var NAR={
 var STEPS=[
  {t:'hunger',opens:['people','food','line'],q:['m0','m1','m2']},
  {t:'time',opens:['speed'],q:['m3'],when:function(){ return reach(G)>0||G.ships.some(function(s){ return s.job==='colonize' })||G.day>0 }},
- {t:'line',opens:['fuel'],q:['N02','m4'],when:function(){ return reach(G)>0||G.day>=40 },go:function(){ U.tut.col=Object.keys(G.colonies)[0] }},
+ {t:'line',opens:['fuel'],q:['N02','m4','mO'],when:function(){ return reach(G)>0||G.day>=40 },go:function(){ U.tut.col=Object.keys(G.colonies)[0] }},
  {t:'home',opens:['earth'],q:['N03'],soft:1,when:function(){ return (G.delivered.food||0)>0||G.day>=80 }},
  {t:'yard',opens:['metal','order','yard'],q:['m8','mM','m9'],when:function(){ return (reach(G)>=2&&Object.keys(G.colonies).some(function(k){ return !onLine(G,k).length })&&!freeHullAtPier())||(reach(G)>0&&!offLine())||G.day>=150 }},
  {t:'fleet',opens:['fleet'],q:['m10'],soft:1,when:function(){ return builtHulls()>=4||G.day>=300 }},
@@ -1413,7 +1463,7 @@ function drawSide(){ var t=U.tab, h='';
   if(t==='worlds') h=sideWorlds(); else if(t==='tech') h=sideTech(); else if(t==='fleet') h=sideFleet();
   setHTML('side',h,t+':'+U.filter); el('side').className=t?'on':''; el('app').classList.toggle('sideon',!!t) }   // v4.42: the chart gives way to the panel instead of hiding under it
 function drawWin(){ var w=U.win, h='';
-  if(w==='earth') h=winEarth(); else if(w==='yard') h=winYard(); else if(w==='ark') h=winArk(); else if(w&&planet(w)) h=winWorld(w);
+  if(w==='earth') h=winEarth(); else if(w==='yard') h=winYard(); else if(w==='ark') h=winArk(); else if(w==='goals') h=winGoals(); else if(w&&planet(w)) h=winWorld(w);
   setHTML('ovl',h,w); el('ovl').className=h?'on':'' }
 function drawPop(){ var p=U.pop, h='', cls='';
   if(p==='adv'){ h=popAdv(); cls='p-adv' } else if(p==='menu'){ h=popMenu(); cls='p-menu' } else if(p&&p.indexOf('pick:')===0){ h=picker(); cls='p-center' } else if(p==='letters'&&G.letters&&G.letters.length){ h=popLetters(); cls='p-letters' }
@@ -1589,15 +1639,20 @@ function winWorld(pid){
   var lr=lineRate(G,pid);
   L0+=sec(esc(T('u_world')));
   if(p.kind==='works'){ var wh=worksHungry(pid), fr=feedRates(G,pid);
-    var MK='<div id="rw-carries">'+row(resIc('parts',13)+esc(T('u_makes')),wh.idle>5?'0':dec(lr.makes)+esc(T('u_perYr')))+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')))+row(esc(T('u_onSurface')),num(c.store.parts||0))+'</div>';
-    L0+=MK+row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
-    /* v4.46 (Nikita, 03.11: «игра не говорит, сколько топлива нужно и сколько возится»): each thing the works burn, what the line brings of it and how long the stock lasts */
-    var fd=feedSplit(pid), ff=lineFit(G,pid), yr={metal:wh.metal,food:wh.food,fuel:(c.store.fuel||0)/Math.max(0.01,fr.fuel||0)};
-    L0+=sec(esc(T('u_eats')));
-    Object.keys(fd).forEach(function(k){ var f=fd[k];
-      L0+=row(resIc(k,13)+esc(T(k)),esc(fill(T('u_feedRow'),{n:dec(f.need),b:dec(f.brings)})),yr[k]<10||f.brings<f.need*0.95?C.red:null) });
+    /* v5.21 (Nikita 12.11, draft W2 of design/orders/round2.html: «я хочу понимать что на завод нужно везти ресурсы и за них он будет делать детали»):
+       what you bring → what it makes, one bar for how well the line feeds it, one verdict with its button. The figures of v4.46
+       (each thing it burns a year, what the line brings of it) sit behind «?» */
+    var fd=feedSplit(pid), ff=lineFit(G,pid), fed=ff&&ff.need>0.001?Math.min(1,ff.carries/ff.need):0, thin=fed<FORGE_WARN, act=wh.idle>5?0:wh.low>=10?lr.makes:lr.makes*fed, yr={metal:wh.metal,food:wh.food,fuel:(c.store.fuel||0)/Math.max(0.01,fr.fuel||0)};
+    L0+='<div class="trade"><div class="bx"><span class="lbl">'+esc(T('u_youBring'))+'</span>'+Object.keys(fd).map(function(k){ return '<span class="res">'+resIc(k,15)+esc(T(k))+'</span>' }).join('')+'</div><div class="aw">→</div>'+
+      '<div class="bx out"><span class="lbl">'+esc(T('u_itMakes'))+'</span><span class="res">'+resIc('parts',15)+esc(T('parts'))+'</span><span class="mk">'+dec(act)+'<small>'+esc(T('u_perYr'))+(act<lr.makes*0.95?' · '+esc(fill(T('u_ofCap'),{n:dec(lr.makes)})):'')+'</small></span></div></div>';
+    L0+='<div class="fed"><div class="lbl"><span>'+esc(T('u_fed'))+'<button type="button" class="qm'+(U.feedHelp?' on':'')+'" data-act="feedhelp" aria-expanded="'+!!U.feedHelp+'" title="'+attr(T('u_feedQ'))+'" aria-label="'+attr(T('u_feedQ'))+'">?</button></span><b'+(thin?'':' style="color:'+C.ink+'"')+'>'+Math.round(fed*100)+'%</b></div><div class="bar"><u style="width:'+Math.round(fed*100)+'%;background:'+(thin?C.people:C.parts)+'"></u></div></div>';
+    if(U.feedHelp){ L0+=sec(esc(T('u_eats')));
+      Object.keys(fd).forEach(function(k){ var f=fd[k];
+        L0+=row(resIc(k,13)+esc(T(k)),esc(fill(T('u_feedRow'),{n:dec(f.need),b:dec(f.brings)})),yr[k]<10||f.brings<f.need*0.95?C.red:null) }) }
     if(wh.idle>5) L0+=alertBox('starving',esc(T('u_worksIdle')));
+    else if(thin) L0+='<div class="vd"><span>'+ic('starving',15,C.people)+esc(T('u_lineLow'))+'</span><button type="button" class="b" data-act="world" data-v="'+pid+'" data-f="add">'+esc(T('u_fixAdd'))+'</button></div>';
     else if(wh.low<10) L0+=alertBox('starving',esc(fill(T('u_worksLow'),{n:Math.floor(wh.low)})));
+    L0+='<div id="rw-carries">'+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')))+row(esc(T('u_onSurface')),num(c.store.parts||0))+'</div>'+row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
   } else {
     var dry=isDry(pid);
     var shareC=lr.makes>0.001?Math.min(1,lr.carries/lr.makes):1, shortC=lr.carries<lr.makes*0.8&&!dry;
@@ -1964,6 +2019,8 @@ function doAct(a,b){
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
   else if(a==='spd'){ if(v==='0') pauseToggle(); else { U.speed=+v; U.paused=false; act(G,'speed',{x:U.speed}) } }
+  else if(a==='goal'){ objGo(+v) }   // v5.21: the journal's «Show» — the world, the tab or the window the objective is done in
+  else if(a==='feedhelp'){ U.feedHelp=!U.feedHelp }
   else if(a==='hack'){ U.hackGo=true }   // v5.09: the player starts the hack; hackCheck opens it on the next frame
   else if(a==='zoom'){ if(v==='fit'){ CFIT=true; CFITK='' } else camZoom(v==='in'?0.75:1.35) }
   else if(a==='addtab') U.addTab=v;

@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.20'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.21'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -825,6 +825,7 @@ function sail(G,s){
 /* chronicle lines never roll off the cap: the log forgets traffic, not history */
 var CHRON={shift:1,first_landfall:1,epitaph:1,old_night:1,ark_sailed:1,desk_silent:1,night_dated:1,ark_drive:1,ark_grounded:1,ark_woke:1,doomsday:1};
 function log(G,code,d){G.logSeq=(G.logSeq||0)+1;G.log.push({day:G.day,code:code,d:d||{},seq:G.logSeq});
+  if(DONE[code]) (G.done=G.done||[]).push({day:G.day,code:code,d:d||{}});   // v5.21: the objectives' list of what is done
   if(G.log.length>400){ for(var i=0;i<G.log.length;i++){ if(!CHRON[G.log[i].code]){ G.log.splice(i,1); break } } }}
 /* F-14 (Nikita, 02.11: 'кузницам не хватает топлива — в лог не идёт'): the run log keeps every world's machines and every
    works' feed, year by year, so a stall can be read after the run. Counters only: nothing in the rules reads them. */
@@ -1864,6 +1865,60 @@ function advice(G){
   out.sort(function(a,b){return rank[a.sev]-rank[b.sev]});
   return out;
 }
+
+/* ---------- v5.21: OBJECTIVES — the next thing worth doing, read off the gates that already exist ----------
+   Nikita 12.11 (a live playtest of v5.20: «ему не хватает цели… нужен какой-то журнал квестов»). Nothing here is a rule:
+   no reward, no state but the list of what is done (G.done, kept by log()). `now` is in order of urgency — its first entry
+   is what the card on the chart names; `drive` and `ark` are the two long bars under it (Claude — awaiting review:
+   the order of `now`, and the convoy named only inside 2×NIGHT_NEAR, as its flag is). */
+var FEED_THIN=0.75;   // ui.js FORGE_WARN: a works' line that brings under this share of what it burns
+var DONE={first_landfall:1,surveyed:1,drive_mark:1,night_dated:1,ark_bought:1,ark_drive:1};
+function freeWorld(G,kind){ var lim=Math.min(SECTORS.length,sectorLimit(G.gen||0)), best=null;
+  for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(p.sec>=lim||(kind&&p.kind!==kind)) continue;
+    if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])||enRoute(G,p.id)) continue;
+    if(!best||p.sec<best.sec||(p.sec===best.sec&&p.dist<best.dist)) best=p }
+  return best?best.id:null }
+function objectives(G){
+  var now=[], lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), nc=reach(G), k, p, c, i;
+  function add(code,o){ o=o||{}; o.code=code; now.push(o) }
+  var works=[], host=null, big=null, idle=null, bare=null, bareFarm=null;
+  for(k in G.colonies){ p=planet(k); c=G.colonies[k]; if(!p) continue;
+    if(p.kind==='works'){ works.push(k); if(!big||c.pop>G.colonies[big].pop) big=k;
+      if(c.pop>=K.DRIVE_POP&&(!host||c.pop>G.colonies[host].pop)) host=k;
+      var lf=lineFit(G,k); if(!idle&&(!lf||(lf.need>0.001&&lf.carries<lf.need*FEED_THIN))) idle=k }   // a works never quite stands (local scrap) — «unfed» is a thin line, as the advisor has it
+    else if(G.reserves[k]>0&&!onLine(G,k).length){ if(!bare) bare=k; if(p.kind==='farm'&&!bareFarm) bareFarm=k } }
+  var farm=freeWorld(G,'farm'), any=freeWorld(G), flying=false, ring=SECTORS.length+1;
+  for(i=0;i<G.ships.length;i++) if(G.ships[i].mode==='transit'&&G.ships[i].job==='colonize') flying=true;
+  /* first the larder and what stands still */
+  if(!nc){ if(flying) add('o_time'); else add('o_first',{p:farm||any}) }
+  else if(G.hungry||foodShort(G)){ if(bareFarm) add('o_line',{p:bareFarm}); else if(farm) add('o_farm',{p:farm}); else add('o_food') }
+  else if(nc===1&&bare) add('o_line',{p:bare});
+  var hk=hackNext(G); if(hk) add('o_hack',{k:hk.k});
+  if(idle) add('o_feed',{p:idle});
+  /* the drive: worlds, a works, hands at it, the programme, its parts */
+  var d=null;
+  if(G.drive) d={code:'o_parts',p:G.drive,n:Math.floor(G.driveWork||0),k:driveWorkFor(G)};
+  else if(hackWait(G,'drive')) d=null;
+  else if(s<need) d=any?{code:'o_settle',p:any,n:need-s}:{code:'o_survey',n:ring};
+  else if(!works.length){ var fw=freeWorld(G,'works'); d=fw?{code:'o_works',p:fw}:{code:'o_survey',n:ring} }
+  else if(!host) d={code:'o_grow',p:big,n:K.DRIVE_POP};
+  else d={code:'o_drive',p:host};
+  if(!nc&&d&&d.code==='o_settle') d=null;   // the first world is that objective already
+  if(d) d.g=lvl+2;
+  /* the ark: a first ring, its drive, pods for everyone, the convoy when the end is near */
+  var A=null;
+  if(G.night){ var rings=arkRings(G), paid=arkPaid(G), board=arkBoard(G), caps=arkCaps(rings), cv=arkConvoy(G), left=nightLeft(G), ready=arkReady(G);
+    var pods=paid<1?{code:'o_ark'}:(caps<board&&paid<=rings?{code:'o_pods',n:caps,k:board}:null);
+    var conv=(!cv.ok&&left<=K.NIGHT_NEAR*2)?{code:'o_convoy',n:cv.have,k:cv.all}:null;
+    if(conv&&left<=K.NIGHT_NEAR){ now.push(conv); conv=null }
+    if(pods&&pods.code==='o_ark'){ now.push(pods); pods=null }
+    if(ready){ if(pods) now.push(pods); if(d) now.push(d) } else { if(d) now.push(d); if(pods) now.push(pods) }
+    if(conv) now.push(conv);
+    A={night:G.night,near:left<=K.NIGHT_NEAR*2,board:board,caps:caps,wake:arkWakeN(G),have:cv.have,all:cv.all,convoy:cv.ok,ready:ready,mark:G.arkMark,lvl:lvl};
+  } else if(d) now.push(d);
+  if(canSurvey(G)==='ok'&&!now.some(function(o){ return o.code==='o_survey' })) add('o_survey',{n:ring});
+  if(!now.length) add('o_time');
+  return {now:now, drive:{g:lvl+2,settled:s,need:need,work:Math.floor(G.driveWork||0),workNeed:driveWorkFor(G),running:!!G.drive}, ark:A, done:G.done||[]} }
 
 function dismiss(G,key){ G.dismissed[key]=G.day; return 'ok' }
 function undismissAll(G){ G.dismissed={}; return 'ok' }

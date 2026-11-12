@@ -34,8 +34,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.colonies[id]={pid:id,pop:30,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; LNdraw() },works);
   await U.closeWin(); await U.openWorld(works);
   const wt=await win();
-  // v4.35: блок завода — «This world eats … Makes Parts»; «first-generation plant» в окне нет: проверка — завод делает детали, не лопаты
-  ok('works: makes parts, not shovels', /Makes/.test(wt)&&!/shovels/.test(wt), wt.slice(0,160));
+  // v5.21: блок завода — «You bring → It makes Parts» (было v4.35: «This world eats … Makes Parts»); «first-generation plant» в окне нет: проверка — завод делает детали, не лопаты
+  ok('works: makes parts, not shovels', /It makes/i.test(wt)&&/Parts/.test(wt)&&!/shovels/.test(wt), wt.slice(0,160));
   // 6. the shift report: reset to a fresh game, run to year 80 with stops on
   await U.closeWin();
   await U.tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin','309573272'); await U.tap('[data-act="new"]');

@@ -1,0 +1,75 @@
+UI,o_head,Objective,Цель,"v5.21 objectives, works",live,new
+UI,o_also,{n} more,ещё {n},"v5.21 objectives, works",live,new
+UI,o_at,{w} · ring {n},{w} · кольцо {n},"v5.21 objectives, works",live,new
+UI,o_fDrive,Drive {g},Двигатель {g},"v5.21 objectives, works",live,new
+UI,o_first,Settle your first world,Заселите первый мир,"v5.21 objectives, works",live,new
+UI,o_time,Let the years run,Пустите время,"v5.21 objectives, works",live,new
+UI,o_line,Put a hull on the line,Поставьте судно на линию,"v5.21 objectives, works",live,new
+UI,o_farm,Settle a farm,Заселите ферму,"v5.21 objectives, works",live,new
+UI,o_food,Find rations,Найдите рационы,"v5.21 objectives, works",live,new
+UI,o_feed,Feed the works,Накормите завод,"v5.21 objectives, works",live,new
+UI,o_hack,Run the hack,Проведите взлом,"v5.21 objectives, works",live,new
+UI,o_more,Settle another world,Заселите ещё один мир,"v5.21 objectives, works",live,new
+UI,o_settle,Settle a world,Заселите мир,"v5.21 objectives, works",live,new
+UI,o_works,Settle a works,Заселите завод,"v5.21 objectives, works",live,new
+UI,o_grow,Bring the works to {n} people,Доведите завод до {n} человек,"v5.21 objectives, works",live,new
+UI,o_drive,Start Drive {g},Запустите двигатель {g},"v5.21 objectives, works",live,new
+UI,o_parts,Parts for Drive {g},Детали для двигателя {g},"v5.21 objectives, works",live,new
+UI,o_survey,Chart ring {n},Нанесите кольцо {n},"v5.21 objectives, works",live,new
+UI,o_ark,Buy the first ark ring,Купите первое кольцо ковчега,"v5.21 objectives, works",live,new
+UI,o_pods,Add an ark ring,Добавьте кольцо ковчега,"v5.21 objectives, works",live,new
+UI,o_convoy,Gather the convoy,Соберите конвой,"v5.21 objectives, works",live,new
+UI,os_first,No free world in reach,Свободных миров в досягаемости нет,"v5.21 objectives, works",live,new
+UI,os_time,The settlers are on their way,Поселенцы в пути,"v5.21 objectives, works",live,new
+UI,os_food,No free farm in reach,Свободных ферм в досягаемости нет,"v5.21 objectives, works",live,new
+UI,os_hack,What you paid for waits behind it,За ним ждёт оплаченное,"v5.21 objectives, works",live,new
+UI,os_drive,The Tech tab,Вкладка «Техника»,"v5.21 objectives, works",live,new
+UI,os_survey,The Tech tab,Вкладка «Техника»,"v5.21 objectives, works",live,new
+UI,os_ark,Without pods nobody boards,Без капсул никто не взойдёт,"v5.21 objectives, works",live,new
+UI,os_pods,Pods for {n} of {k},Капсул на {n} из {k},"v5.21 objectives, works",live,new
+UI,os_convoy,{n} of {k} hulls,{n} из {k} судов,"v5.21 objectives, works",live,new
+UI,ow_first,Earth eats its stock. A farm sends rations.,Земля проедает запас. Ферма шлёт рационы.,"v5.21 objectives, works",live,new
+UI,ow_time,Nothing moves while the clock stands.,"Пока часы стоят, ничего не движется.","v5.21 objectives, works",live,new
+UI,ow_line,Without a hull nothing leaves this world.,Без судна с этого мира ничего не уходит.,"v5.21 objectives, works",live,new
+UI,ow_farm,Earth's rations will not last.,Рационов Земли надолго не хватит.,"v5.21 objectives, works",live,new
+UI,ow_food,A farm lies farther out: chart a ring or earn a drive.,Ферма лежит дальше: нанесите кольцо или получите двигатель.,"v5.21 objectives, works",live,new
+UI,ow_feed,The line brings the works less than they burn.,"Линия везёт заводу меньше, чем он расходует.","v5.21 objectives, works",live,new
+UI,ow_hack,A drive or an ark ring is yours only after the hack.,Двигатель или кольцо ковчега ваши только после взлома.,"v5.21 objectives, works",live,new
+UI,ow_more,More worlds — more supply.,Больше миров — больше снабжения.,"v5.21 objectives, works",live,new
+UI,ow_settle,{n} more for Drive {g}.,Ещё {n} до двигателя {g}.,"v5.21 objectives, works",live,new
+UI,ow_works,Only a works makes parts. The drive is built of them.,Детали делает только завод. Из них строят двигатель.,"v5.21 objectives, works",live,new
+UI,ow_grow,The programme needs {n} people at one works.,Программе нужно {n} человек на одном заводе.,"v5.21 objectives, works",live,new
+UI,ow_drive,Every hull flies faster and one ring farther.,Все суда летят быстрее и на кольцо дальше.,"v5.21 objectives, works",live,new
+UI,ow_parts,The works feed the programme while their lines run.,"Заводы кормят программу, пока ходят их линии.","v5.21 objectives, works",live,new
+UI,ow_survey,New worlds to settle.,Новые миры для заселения.,"v5.21 objectives, works",live,new
+UI,ow_ark,Only those in pods leave before the Night.,"До Ночи улетят только те, кто в капсулах.","v5.21 objectives, works",live,new
+UI,ow_pods,No pod — no waking.,Нет капсулы — нет пробуждения.,"v5.21 objectives, works",live,new
+UI,ow_convoy,The share of the fleet in the convoy is the share who wake.,Какая доля флота в конвое — такая доля проснётся.,"v5.21 objectives, works",live,new
+UI,o_jTitle,Objectives,Цели,"v5.21 objectives, works",live,new
+UI,o_jNow,Now,Сейчас,"v5.21 objectives, works",live,new
+UI,o_show,Show,Показать,"v5.21 objectives, works",live,new
+UI,o_jNext,Next · Drive {g},Дальше · двигатель {g},"v5.21 objectives, works",live,new
+UI,o_jWorlds,Settle {n} worlds,Заселить миров: {n},"v5.21 objectives, works",live,new
+UI,o_jParts,Then parts at a works,Затем детали на заводе,"v5.21 objectives, works",live,new
+UI,o_jGives,Gives: every hull faster · one ring farther,Даёт: суда быстрее · на кольцо дальше,"v5.21 objectives, works",live,new
+UI,o_jNight,The Night,Ночь,"v5.21 objectives, works",live,new
+UI,o_jYear,year {y},год {y},"v5.21 objectives, works",live,new
+UI,o_jPods,Pods,Капсулы,"v5.21 objectives, works",live,new
+UI,o_jPodsV,{n} for {k} people,{n} на {k} человек,"v5.21 objectives, works",live,new
+UI,o_jConvoy,Convoy,Конвой,"v5.21 objectives, works",live,new
+UI,o_jArkDrive,Ark drive,Двигатель ковчега,"v5.21 objectives, works",live,new
+UI,o_jArkDriveV,Generation {g} · you have {h},Поколение {g} · у вас {h},"v5.21 objectives, works",live,new
+UI,o_jDone,Done,Сделано,"v5.21 objectives, works",live,new
+UI,od_first_landfall,First world: {w},Первый мир: {w},"v5.21 objectives, works",live,new
+UI,od_surveyed,Ring charted: {s},Нанесено кольцо: {s},"v5.21 objectives, works",live,new
+UI,od_drive_mark,Drive {g},Двигатель {g},"v5.21 objectives, works",live,new
+UI,od_night_dated,The Night dated: year {y},Ночь датирована: год {y},"v5.21 objectives, works",live,new
+UI,od_ark_bought,Ark ring {l}: {n} pods,Кольцо ковчега {l}: капсул {n},"v5.21 objectives, works",live,new
+UI,od_ark_drive,The ark drive is ready,Двигатель ковчега готов,"v5.21 objectives, works",live,new
+UI,tut_mO,This card always names your next objective. Press it for the whole list.,Эта карточка всегда называет следующую цель. Нажмите — откроется весь список.,"v5.21 objectives, works",live,new
+UI,u_youBring,You bring,Вы везёте,"v5.21 objectives, works",live,new
+UI,u_itMakes,It makes,Он делает,"v5.21 objectives, works",live,new
+UI,u_fed,Line brings,Линия везёт,"v5.21 objectives, works",live,new
+UI,u_feedQ,What it burns a year,Что он расходует за год,"v5.21 objectives, works",live,new
+UI,u_lineLow,The line brings too little,Линия везёт мало,"v5.21 objectives, works",live,new
+UI,u_ofCap,of {n},из {n},"v5.21 objectives, works",live,new

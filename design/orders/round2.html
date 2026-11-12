@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Цели и завод — раунд 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Раунд 2 (Никита 12.11): «нравится вариант B, но не нравится его оформление»; «заводы R1, но не нравится графоманство цифр, ваще не ясно
+     чо к чему; хочу понимать, что на завод нужно везти ресурсы и за них он будет делать детали». Не код игры. Партия тестера, год 405.
+     Карточка цели — три оформления; завод — три картинки с одним числом. Журнал по нажатию тот же, что в drafts.html. -->
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--warn:#FF4D4D;
+  --metal:#C9CFD6;--food:#3DDC84;--fuel:#FF8A1F;--parts:#5B82F0;--people:#FFD23F;--ark:#B98CFF;
+  --h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.35 var(--h)}
+body{padding:20px 16px 70px;overflow-x:hidden}
+.page{max-width:1060px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font:600 15px var(--h);letter-spacing:.18em;text-transform:uppercase;margin:0}
+h2{font:600 13px var(--h);letter-spacing:.18em;text-transform:uppercase;margin:26px 0 0;padding-top:22px;border-top:1px solid var(--ln)}
+.lead{color:var(--mid);font-size:13px;max-width:760px;margin:0}
+.lead b{color:var(--ink);font-weight:500}
+.vs{display:flex;flex-wrap:wrap;gap:6px}
+.vs button{font:600 12px var(--h);letter-spacing:.14em;text-transform:uppercase;background:var(--pan);color:var(--mid);border:1px solid var(--ln);padding:9px 12px;cursor:pointer}
+.vs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.note{border-left:2px solid var(--ln);padding:2px 0 2px 14px;color:var(--mid);font-size:13px;max-width:760px}
+.note b{color:var(--ink);font-weight:500}
+.note .pro,.note .con{display:block;margin-top:8px}.note .pro{color:#9FE3B8}.note .con{color:#FFB0A8}
+.two{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+svg{flex:none;display:block}
+
+/* ---------- a corner of the chart, real size ---------- */
+.mapc{position:relative;height:330px;border:1px solid var(--ln);overflow:hidden;background:#0D0D0F}
+.mapc>svg{position:absolute;inset:0;width:100%;height:100%}
+.mapc text{font:600 10px var(--h);letter-spacing:.1em;fill:var(--ink)}
+.pin{position:absolute;top:14px;right:14px;max-width:calc(100% - 28px)}
+
+/* B1: hexes */
+.b1{width:300px;background:#0F0F11;border:1px solid var(--ln);padding:14px 14px 12px;cursor:pointer}
+.b1 .now{display:grid;grid-template-columns:26px 1fr;gap:10px;align-items:center}
+.b1 .now b{font:600 15px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.2}
+.b1 .now small{display:block;font:400 12.5px var(--h);letter-spacing:0;text-transform:none;color:var(--mid);margin-top:2px}
+.b1 .mt{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px;padding-top:12px;border-top:1px solid var(--ln)}
+.b1 .lb{font:600 9px var(--h);letter-spacing:.18em;color:var(--mid);text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:7px}
+.b1 .lb i{font:500 11px var(--n);font-style:normal;letter-spacing:0;color:var(--ink)}
+.b1 .hx{display:flex;gap:2px;flex-wrap:wrap}
+.b1 .wk{display:flex;align-items:center;gap:10px}
+.b1 .wk b{font:500 24px var(--n);color:var(--ark);line-height:1}
+/* B2: flags */
+.b2{display:flex;flex-direction:column;align-items:flex-end;gap:6px;cursor:pointer}
+.fl{position:relative;font:500 13px var(--h);padding:7px 12px;border:1px solid;white-space:nowrap;background:rgba(11,11,12,.9);display:flex;gap:10px;align-items:center}
+.fl b{font:500 12.5px var(--n)}
+.fl.main{background:var(--people);border-color:var(--people);color:#000;font:600 13px var(--h);letter-spacing:.08em;text-transform:uppercase;padding:10px 14px}
+.fl.gate{border-color:var(--ink);color:var(--ink)}
+.fl.night{border-color:var(--ark);color:var(--ark)}
+.fl.night b{color:var(--warn)}
+.fl i{font:600 9px var(--h);font-style:normal;letter-spacing:.16em;opacity:.75}
+/* B3: window */
+.b3{width:320px;background:var(--pan);border:1px solid var(--ink);cursor:pointer}
+.b3 .hd{background:var(--pan2);display:flex;justify-content:space-between;align-items:center;padding:8px 12px;font:600 11px var(--h);letter-spacing:.18em}
+.b3 .hd span{display:flex;gap:8px;align-items:center}
+.b3 .hd em{font:500 9px var(--h);font-style:normal;color:var(--mid);letter-spacing:.16em}
+.b3 .tt{padding:14px 12px 12px;font:600 19px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.15}
+.b3 .tt small{display:block;font:400 13px var(--h);letter-spacing:0;text-transform:none;color:var(--mid);margin-top:5px}
+.b3 .ft{display:grid;grid-template-columns:1fr 1fr;border-top:1px solid var(--ln)}
+.b3 .ft div{padding:9px 12px 10px;font:600 9px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase}
+.b3 .ft div+div{border-left:1px solid var(--ln)}
+.b3 .ft b{float:right;font:500 12px var(--n);letter-spacing:0;color:var(--ink)}
+.b3 .bar{height:4px;background:var(--pan2);margin-top:8px;position:relative;clear:both}
+.b3 .bar u{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+@media (max-width:520px){ .mapc{height:auto;padding:14px 12px 150px} .pin{position:relative;top:auto;right:auto;max-width:none;z-index:1} .b1,.b3{width:100%} .b2{align-items:stretch} .fl{white-space:normal} }
+
+/* ---------- the works ---------- */
+.win{background:var(--pan);border:1px solid var(--ln);width:100%;max-width:440px}
+.wh{background:var(--pan2);padding:11px 14px;display:flex;align-items:center;gap:10px;font:600 15px var(--h);letter-spacing:.1em;text-transform:uppercase}
+.wh small{margin-left:auto;font:400 12px var(--h);letter-spacing:0;color:var(--mid);text-transform:none}
+.bd{padding:16px 14px 16px}
+.lbl{font:600 9.5px var(--h);letter-spacing:.18em;color:var(--mid);text-transform:uppercase}
+.res{display:inline-flex;align-items:center;gap:6px;font:500 13px var(--h)}
+.gg{display:inline-flex;gap:2px;margin-left:4px}
+.gg i{width:7px;height:11px;background:var(--pan2)}
+.gg i.f{background:var(--ink)}.gg.lo i.f{background:var(--people)}
+.vd{margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid var(--ln);padding-top:12px;font-size:13.5px}
+.vd span{display:flex;gap:8px;align-items:center;color:var(--people)}
+.go{font:600 10.5px var(--h);letter-spacing:.14em;border:1px solid var(--ink);background:none;color:var(--ink);padding:8px 11px;text-transform:uppercase;white-space:nowrap}
+.big{font:500 26px var(--n);color:var(--parts);line-height:1}
+.big small{font:400 12px var(--h);color:var(--mid);text-transform:none;letter-spacing:0}
+/* W1: the loop */
+.loop{display:grid;grid-template-columns:62px 1fr 96px;gap:0;align-items:stretch}
+.nd{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border:1px solid var(--ln);background:var(--bg);padding:10px 4px;font:600 9px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase;text-align:center}
+.nd.wk{border-color:rgba(91,130,240,.6);color:var(--ink)}
+.lanes{display:flex;flex-direction:column;justify-content:space-between;gap:14px;padding:6px 0}
+.lane{position:relative;padding:0 8px}
+.lane .ar{height:2px;background:var(--mid);position:relative;margin:7px 0 0}
+.lane .ar::after{content:'';position:absolute;top:-4px;border:5px solid transparent}
+.lane.to .ar::after{right:-1px;border-left-color:var(--mid);border-right:0}
+.lane.back .ar::after{left:-1px;border-right-color:var(--mid);border-left:0}
+.lane.back .ar{background:var(--parts)}.lane.back .ar::after{border-right-color:var(--parts)}
+.lane.lo .ar{background:var(--people)}.lane.lo .ar::after{border-left-color:var(--people)}
+.lane .cg{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:center}
+.lane.back .cg{justify-content:flex-end}
+/* W2: the trade */
+.tr{display:grid;grid-template-columns:1fr 34px 1fr;align-items:center}
+.tr .bx{border:1px solid var(--ln);background:var(--bg);padding:12px 12px 13px;display:flex;flex-direction:column;gap:9px;min-height:104px}
+.tr .bx.out{border-color:rgba(91,130,240,.6)}
+.tr .aw{font:500 20px var(--n);color:var(--mid);text-align:center}
+.fed{margin-top:12px}
+.fed .bar{height:6px;background:var(--pan2);position:relative;margin-top:6px}
+.fed .bar u{position:absolute;left:0;top:0;bottom:0;background:var(--people)}
+.fed .lbl{display:flex;justify-content:space-between}.fed .lbl b{font:500 12px var(--n);letter-spacing:0;color:var(--people)}
+/* W3: the belt */
+.belt{display:flex;align-items:center;gap:8px;justify-content:space-between}
+.belt .hxb{position:relative;width:78px;height:100px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font:600 9px var(--h);letter-spacing:.14em;text-transform:uppercase}
+.belt .hxb svg.bg{position:absolute;inset:0;width:100%;height:100%}
+.belt .hxb>*:not(.bg){position:relative}
+.belt .op{font:500 18px var(--n);color:var(--mid)}
+@media (max-width:420px){ body{padding:14px 12px 50px} .belt{gap:3px} .belt .hxb{width:70px;height:92px} .loop{grid-template-columns:54px 1fr 84px} }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Цели игрока · раунд 2 · оформление карточки</h1>
+  <p class="lead">Место то же — правый верхний угол карты (вариант B). Меняется только вид. Содержание одно: <b>что делать сейчас, сколько до следующего двигателя, сколько проснётся</b>. Нажатие открывает тот же журнал, что в первом раунде. Кусок карты — в настоящем размере.</p>
+  <div class="vs" id="vs"></div>
+  <div class="mapc" id="mapc"></div>
+  <div class="note" id="note"></div>
+
+  <h2>Завод · одна мысль, одно число</h2>
+  <p class="lead">Мысль, которую должен считать игрок: <b>на завод везут металл и рационы — обратно он отдаёт детали</b>. Чисел оставлено одно — сколько деталей в год. Хватает ли подвоза, показывает шкала из пяти делений (жёлтая — не хватает), а не цифры. Точные расходы уходят в справку «?».</p>
+  <div class="vs" id="ws"></div>
+  <div class="two">
+    <div id="wk"></div>
+    <div class="note" id="wnote"></div>
+  </div>
+</div>
+<script>
+(function(){
+var C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#5B82F0',people:'#FFD23F',mid:'#9C9B95',ink:'#F2F1EC',ark:'#B98CFF',dim:'#5E5D58',warn:'#FF4D4D',pan2:'#202024'};
+function ic(k,s,col){ s=s||13; var P={
+  metal:'<path d="M3 11h10l-2-6H5z" fill="C"/>',
+  food:'<path d="M8 14V6M8 9c-3 0-4-2-4-4 2 0 4 1 4 4zm0-1c3 0 4-2 4-4-2 0-4 1-4 4z" stroke="C" stroke-width="1.6" fill="none"/>',
+  parts:'<path d="M8 2l5 3v6l-5 3-5-3V5z" fill="none" stroke="C" stroke-width="2"/><circle cx="8" cy="8" r="1.6" fill="C"/>',
+  works:'<path d="M2 13V7l3 2V7l3 2V7l3 2V4h3v9z" fill="C"/>',
+  earth:'<circle cx="8" cy="8" r="5.5" fill="none" stroke="C" stroke-width="1.6"/><path d="M2.5 8h11M8 2.5c-2.5 3-2.5 8 0 11c2.5-3 2.5-8 0-11" fill="none" stroke="C" stroke-width="1.2"/>',
+  warn:'<path d="M8 2l6.5 11.5h-13z" fill="none" stroke="C" stroke-width="1.6"/><path d="M8 6.5v3.5M8 11.6v.4" stroke="C" stroke-width="1.6"/>',
+  moon:'<path d="M11.5 12.5A6 6 0 0 1 8 2a6 6 0 1 0 5.5 8.5 4.5 4.5 0 0 1-2 2z" fill="C"/>',
+  goal:'<path d="M8 2l6 6-6 6-6-6z" fill="C"/>'};
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 16 16">'+(P[k]||'').replace(/C/g,col||C[k]||C.mid)+'</svg>' }
+/* the house hex: pointy top */
+function hex(s,fill,stroke,sw){ return '<svg width="'+s+'" height="'+Math.round(s*1.12)+'" viewBox="0 0 20 22.4"><path d="M10 1.2l8.6 5v10l-8.6 5-8.6-5v-10z" fill="'+(fill||'none')+'" stroke="'+(stroke||'none')+'" stroke-width="'+(sw||1.6)+'"/></svg>' }
+function hexBg(stroke,fill){ return '<svg class="bg" viewBox="0 0 74 82" preserveAspectRatio="none"><path d="M37 2l34 19.5v39L37 80 3 60.5v-39z" fill="'+(fill||'#0B0B0C')+'" stroke="'+stroke+'" stroke-width="1.5"/></svg>' }
+
+/* ---------- the chart's corner ---------- */
+function chart(){ var h='', x, y, r=34, w=r*Math.sqrt(3);
+  for(y=-1;y<8;y++) for(x=-1;x<16;x++){ var cx=x*w+(y%2?w/2:0), cy=y*r*1.5; h+='<path d="M'+cx+' '+(cy-r)+'l'+(w/2)+' '+(r/2)+'v'+r+'l'+(-w/2)+' '+(r/2)+'l'+(-w/2)+' '+(-r/2)+'v'+(-r)+'z" fill="none" stroke="#17171b" stroke-width="2"/>' }
+  h+='<circle cx="120" cy="250" r="7" fill="'+C.metal+'"/><text x="134" y="254">SOLACE</text><path d="M-20 330L120 250" stroke="'+C.metal+'" opacity=".5"/>'+
+     '<circle cx="250" cy="120" r="8" fill="none" stroke="'+C.food+'" stroke-width="1.5" stroke-dasharray="2 2"/><circle cx="250" cy="120" r="16" fill="none" stroke="'+C.people+'" stroke-width="1.5"/><text x="274" y="124">HOLLOW</text>'+
+     '<circle cx="60" cy="90" r="6" fill="'+C.dim+'"/><text x="74" y="94" fill="#5E5D58">CINDER</text>';
+  return '<svg viewBox="0 0 1000 330" preserveAspectRatio="xMinYMin slice">'+h+'</svg>' }
+
+var V={
+ B1:{name:'B1 · гексы',
+  html:function(){ var pips=''; for(var i=0;i<8;i++) pips+=hex(12,i<6?C.ink:'none',i<6?C.ink:C.dim,1.6);
+    return '<div class="b1"><div class="now">'+hex(26,C.people)+'<b>Settle a farm<small>Hollow · ring 2</small></b></div>'+
+      '<div class="mt"><div><div class="lb">Drive III<i>6/8</i></div><div class="hx">'+pips+'</div></div>'+
+      '<div><div class="lb">Wake</div><div class="wk"><b>0</b><div class="hx">'+hex(16,C.food,C.food)+hex(16,'none',C.warn,2)+hex(16,'none',C.warn,2)+'</div></div></div></div></div>' },
+  note:'<b>Фирменные гексы вместо таблицы.</b> Жёлтый гекс — задача сейчас. Восемь маленьких — миры до двигателя III, шесть закрашены. У «Wake» три гекса — три условия ковчега: капсулы (есть), конвой и двигатель (нет). Подписей-ярлыков NOW / NEXT / NIGHT больше нет.'+
+    '<span class="pro">+ Тот же язык, что улей ковчега и гекс-пол: считается глазами, почти без слов.<br>+ Три гекса условий сразу показывают, чего не хватает ковчегу.</span>'+
+    '<span class="con">− Что значат три гекса у «Wake», без журнала не угадать — нужна одна подсказка помощника.<br>− При воротах больше 12 миров ряд гексов уйдёт на вторую строку.</span>'},
+ B2:{name:'B2 · флажки',
+  html:function(){ return '<div class="b2"><div class="fl main">'+ic('goal',11,'#000')+'Settle a farm — Hollow</div>'+
+      '<div class="fl gate"><i>DRIVE III</i><b>6 / 8</b></div><div class="fl night"><i>WAKE</i><b>0 / 528</b></div></div>' },
+  note:'<b>Язык уже есть в игре</b> — флажки у вкладок слева («Metal is running out», «Idle at the pier: 1»). Цель — такой же флажок, только залитый жёлтым и справа; под ним два тонких: ворота и «проснётся».'+
+    '<span class="pro">+ Ничего нового учить не надо: игрок уже читает флажки.<br>+ Самый лёгкий вариант, карту почти не закрывает.</span>'+
+    '<span class="con">− Легко спутать с тревогами: флажки слева — проблемы, справа — цели, а выглядят родственно.<br>− Выглядит скромно; для «главной цели игры» может быть слишком тихо.</span>'},
+ B3:{name:'B3 · окно',
+  html:function(){ return '<div class="b3"><div class="hd"><span>'+ic('goal',11,C.people)+'OBJECTIVE</span><em>2 MORE</em></div>'+
+      '<div class="tt">Settle a farm<small>Hollow · ring 2</small></div>'+
+      '<div class="ft"><div>Drive III<b>6 / 8</b><div class="bar"><u style="width:75%"></u></div></div><div>Wake<b style="color:'+C.warn+'">0 / 528</b><div class="bar"><u style="width:0"></u></div></div></div></div>' },
+  note:'<b>Как окна игры</b> (шапка-плашка, крупный заголовок капсом — как «THE NIGHT HAS NO DATE YET»). Задача читается с любого расстояния; внизу две полоски: ворота и «проснётся».'+
+    '<span class="pro">+ Самый заметный: цель невозможно пропустить.<br>+ Заголовок того же вида, что у окон событий, — игра говорит одним голосом.</span>'+
+    '<span class="con">− Самый тяжёлый: постоянно висящее «окно» на карте, 320×130.<br>− Белая рамка спорит с окнами, которые действительно требуют ответа.</span>'}
+};
+var cur='B1';
+function draw(){
+  document.getElementById('vs').innerHTML=Object.keys(V).map(function(k){ return '<button type="button" data-v="'+k+'" class="'+(k===cur?'on':'')+'">'+V[k].name+'</button>' }).join('');
+  document.getElementById('mapc').innerHTML=chart()+'<div class="pin">'+V[cur].html()+'</div>';
+  document.getElementById('note').innerHTML=V[cur].note }
+
+/* ---------- the works: Brine, fed 4 of 5 ---------- */
+function gauge(n,lo){ var h=''; for(var i=0;i<5;i++) h+='<i class="'+(i<n?'f':'')+'"></i>'; return '<span class="gg'+(lo?' lo':'')+'">'+h+'</span>' }
+function head(){ return '<div class="wh">'+ic('works',18,C.parts)+'Brine<small>works</small></div>' }
+function verdict(){ return '<div class="vd"><span>'+ic('warn',15,C.people)+'The line brings too little</span><button class="go" type="button">Add a hull</button></div>' }
+var WV={
+ W1:{name:'W1 · круг',
+  html:function(){ return '<div class="win">'+head()+'<div class="bd"><div class="loop">'+
+    '<div class="nd">'+ic('earth',22,C.ink)+'Earth</div>'+
+    '<div class="lanes"><div class="lane to lo"><div class="cg"><span class="res">'+ic('metal')+'Metal'+gauge(4,1)+'</span><span class="res">'+ic('food')+'Rations'+gauge(4,1)+'</span></div><div class="ar"></div></div>'+
+    '<div class="lane back"><div class="ar"></div><div class="cg" style="margin-top:7px"><span class="res">'+ic('parts')+'Parts</span></div></div></div>'+
+    '<div class="nd wk">'+ic('works',22,C.parts)+'<span class="big">2.5<small> /yr</small></span></div></div>'+verdict()+'</div></div>' },
+  note:'<b>Круг «Земля ⇄ завод».</b> Верхняя стрелка — что линия везёт на завод (металл и рационы, у каждого шкала подвоза). Нижняя — что едет обратно (детали). Единственное число — выпуск в год. Внизу одна строка, что не так, и кнопка, которая это чинит.'+
+    '<span class="pro">+ Прямо рисует то, что ты просил: везёшь ресурсы — получаешь детали.<br>+ Видно, что это одна линия в обе стороны, а не две разные вещи.</span>'+
+    '<span class="con">− Самая высокая картинка из трёх.<br>− Шкала из пяти делений грубая: «4 из 5» — это и 70%, и 89%.</span>'},
+ W2:{name:'W2 · обмен',
+  html:function(){ return '<div class="win">'+head()+'<div class="bd"><div class="tr">'+
+    '<div class="bx"><span class="lbl">You bring</span><span class="res">'+ic('metal',15)+'Metal</span><span class="res">'+ic('food',15)+'Rations</span></div><div class="aw">→</div>'+
+    '<div class="bx out"><span class="lbl">It makes</span><span class="res">'+ic('parts',15)+'Parts</span><span class="big">2.5<small> /yr</small></span></div></div>'+
+    '<div class="fed"><div class="lbl">Fed<b>83%</b></div><div class="bar"><u style="width:83%"></u></div></div>'+verdict()+'</div></div>' },
+  note:'<b>Обмен: «You bring → It makes».</b> Два блока и стрелка, под ними одна полоска «Fed 83%» на оба входа сразу.'+
+    '<span class="pro">+ Самый короткий для чтения: два слова и стрелка.<br>+ Одна полоска вместо шкалы на каждый ресурс.</span>'+
+    '<span class="con">− Не видно, какого именно ресурса не хватает (в игре завод встаёт по худшему из двух).<br>− Два числа вместо одного: 83% и 2.5.</span>'},
+ W3:{name:'W3 · гексы',
+  html:function(){ var cell=function(k,nm,g,st){ return '<div class="hxb">'+hexBg(st)+ic(k,18)+'<span>'+nm+'</span>'+(g||'')+'</div>' };
+    return '<div class="win">'+head()+'<div class="bd"><div class="belt">'+cell('metal','Metal',gauge(4,1),C.people)+'<span class="op">+</span>'+cell('food','Rations',gauge(4,1),C.people)+'<span class="op">→</span>'+
+    '<div class="hxb">'+hexBg(C.parts,'#10131f')+ic('parts',18)+'<span>Parts</span><span class="big" style="font-size:17px">2.5<small style="font-size:10px">/yr</small></span></div></div>'+verdict()+'</div></div>' },
+  note:'<b>Рецепт R1, но в гексах и без цифр у входов.</b> Два гекса-входа со шкалой подвоза, гекс-выход с одним числом. Жёлтая обводка — этого не хватает.'+
+    '<span class="pro">+ Тот же вид, что гексы целей (B1) и улей — одна система знаков.<br>+ Третий вход (топливо у улучшенного завода) добавляется ещё одним гексом.</span>'+
+    '<span class="con">− Не говорит, что ресурсы надо именно привезти с Земли; это всё ещё «рецепт», а не «перевозка».<br>− Четыре гекса в ряд на 390 px не влезут — перенос на вторую строку.</span>'}
+};
+var wcur='W1';
+function wdraw(){
+  document.getElementById('ws').innerHTML=Object.keys(WV).map(function(k){ return '<button type="button" data-w="'+k+'" class="'+(k===wcur?'on':'')+'">'+WV[k].name+'</button>' }).join('');
+  document.getElementById('wk').innerHTML=WV[wcur].html(); document.getElementById('wnote').innerHTML=WV[wcur].note }
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-v]'); if(b){ cur=b.getAttribute('data-v'); draw(); return }
+  var w=e.target.closest('[data-w]'); if(w){ wcur=w.getAttribute('data-w'); wdraw() } });
+var q=location.hash.replace('#','').split(','); if(V[q[0]]) cur=q[0]; if(WV[q[1]]) wcur=q[1];
+draw(); wdraw();
+})();
+</script>
+</body>
+</html>

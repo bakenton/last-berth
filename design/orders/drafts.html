@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Цели и рецепт завода — черновики</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<!-- Черновики, не код игры. Повод — плейтест v5.20 (12.11): игрок с включённым помощником «вообще ничего не понял», 30 минут из 34 на паузе,
+     на 398-м году 11 минут и 20 противоречивых приказов. Состояние на макетах — его партия, сид 491389956, год 405 (лог экспорта).
+     Числа завода Brine — по порядку величин из лога и констант (REFINE, REFINE_METAL, REFINE_FOOD), не из ядра. Значки упрощены.
+     Слово OBJECTIVES — рабочее (Claude), не решено. -->
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--warn:#FF4D4D;
+  --metal:#C9CFD6;--food:#3DDC84;--fuel:#FF8A1F;--parts:#5B82F0;--people:#FFD23F;--ark:#B98CFF;
+  --h:'Jost',system-ui,sans-serif;--n:'Geist Mono',ui-monospace,Consolas,monospace}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:400 14px/1.35 var(--h)}
+body{padding:20px 16px 70px;overflow-x:hidden}
+.page{max-width:1060px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+h1{font:600 15px var(--h);letter-spacing:.18em;text-transform:uppercase;margin:0}
+h2{font:600 13px var(--h);letter-spacing:.18em;text-transform:uppercase;margin:26px 0 0;padding-top:22px;border-top:1px solid var(--ln)}
+.lead{color:var(--mid);font-size:13px;max-width:760px;margin:0}
+.lead b{color:var(--ink);font-weight:500}
+.vs{display:flex;flex-wrap:wrap;gap:6px}
+.vs button{font:600 12px var(--h);letter-spacing:.14em;text-transform:uppercase;background:var(--pan);color:var(--mid);border:1px solid var(--ln);padding:9px 12px;cursor:pointer}
+.vs button.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cap{font:500 10.5px var(--h);letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin:0 0 6px}
+.note{border-left:2px solid var(--ln);padding:2px 0 2px 14px;color:var(--mid);font-size:13px;max-width:760px}
+.note b{color:var(--ink);font-weight:500}
+.note .pro,.note .con{display:block;margin-top:8px}.note .pro{color:#9FE3B8}.note .con{color:#FFB0A8}
+.two{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:28px;align-items:start}
+@media (max-width:860px){.two{grid-template-columns:1fr}}
+svg{flex:none;display:block}
+
+/* ---------- the whole screen, scaled to the column ---------- */
+.fw{width:100%;overflow:hidden;border:1px solid var(--ln);position:relative}
+.fr{width:1000px;height:590px;transform-origin:0 0;background:#0D0D0F;position:relative;display:grid;grid-template-rows:40px 46px auto 1fr}
+.tb{display:flex;align-items:center;gap:16px;padding:0 14px;border-bottom:1px solid var(--ln);background:#101012}
+.tb .lg{font:600 13px var(--h);letter-spacing:.3em}
+.tb .yr{display:flex;flex-direction:column;font:500 8px var(--h);letter-spacing:.16em;color:var(--mid)}
+.tb .yr b{font:500 16px var(--n);color:var(--ink);letter-spacing:0}
+.tb .nd{border:1px solid var(--people);color:var(--people);font:600 9.5px var(--h);letter-spacing:.16em;padding:6px 9px;display:flex;gap:8px;align-items:center;white-space:nowrap}
+.tb .nd i{font:500 10px var(--n);font-style:normal;background:var(--people);color:#000;padding:0 5px}
+.tb .ng{font:500 9.5px var(--h);letter-spacing:.14em;color:var(--mid);white-space:nowrap}
+.tb .ng b{font:500 12px var(--n);color:var(--ark);letter-spacing:0;margin:0 8px 0 4px}
+.tb .sp{margin-left:auto;display:flex;gap:4px;align-items:center;font:500 10px var(--n);color:var(--mid)}
+.tb .sp span{border:1px solid var(--ln);padding:5px 8px}.tb .sp .on{background:var(--people);color:#000;border-color:var(--people)}
+.rs{display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid var(--ln)}
+.rs div{padding:5px 12px;border-right:1px solid var(--ln);font:500 8px var(--h);letter-spacing:.16em;color:var(--mid);position:relative}
+.rs div b{display:block;font:500 17px var(--n);letter-spacing:0}
+.rs div em{position:absolute;right:10px;top:6px;font:600 8px var(--h);font-style:normal;color:var(--red);letter-spacing:.14em}
+.mid{display:grid;grid-template-columns:56px 1fr;min-height:0}
+.rl{border-right:1px solid var(--ln);display:flex;flex-direction:column}
+.rl span{height:58px;border-bottom:1px solid var(--ln);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;font:600 7.5px var(--h);letter-spacing:.16em;color:var(--mid)}
+.rl span i{width:16px;height:16px;border:1.5px solid var(--mid);border-radius:50%}
+.mp{position:relative;background:radial-gradient(circle at 50% 55%,#17171b 0,#0c0c0e 70%);overflow:hidden}
+.mp svg{position:absolute;inset:0;width:100%;height:100%}
+.mp text{font:600 9px var(--h);letter-spacing:.1em;fill:var(--ink)}
+.new{outline:2px solid var(--people);outline-offset:2px}
+/* A in the frame */
+.fA{grid-row:3;display:flex;align-items:center;gap:12px;padding:0 14px;height:30px;border-bottom:1px solid var(--ln);background:var(--pan);font-size:11.5px;white-space:nowrap}
+.fA .k{font:600 8.5px var(--h);letter-spacing:.18em;color:var(--people)}
+.fA .w{color:var(--mid)}
+.fA .ch{margin-left:auto;display:flex;gap:6px}
+.fA .ch span{border:1px solid var(--ln);padding:2px 7px;font:500 10px var(--n);color:var(--mid)}
+/* B in the frame */
+.fB{position:absolute;right:12px;top:12px;width:236px;background:rgba(20,20,23,.94);border:1px solid var(--ln);padding:8px 10px;font-size:11px}
+.fB .r{display:grid;grid-template-columns:44px 1fr auto;gap:6px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);align-items:center}
+.fB .r:last-child{border:0}
+.fB .k{font:600 7.5px var(--h);letter-spacing:.16em;color:var(--mid)}
+.fB b{font:500 10.5px var(--n)}
+/* C in the frame */
+.tb .obx{border:1px solid var(--people);background:var(--people);color:#000;font:600 9.5px var(--h);letter-spacing:.14em;padding:6px 9px;white-space:nowrap}
+.tb .al{border:1px solid var(--ln);color:var(--people);font:500 10px var(--n);padding:5px 7px}
+
+/* ---------- close-up: the thing itself, at its real size ---------- */
+.cu{display:flex;flex-direction:column;gap:10px;min-width:0}
+/* A: strip */
+.strip{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;background:var(--pan);border:1px solid var(--ln);padding:9px 12px;cursor:pointer;width:100%;text-align:left;color:var(--ink);font:400 14px var(--h)}
+.strip .k{font:600 10px var(--h);letter-spacing:.18em;color:var(--people);display:flex;align-items:center;gap:6px}
+.strip .t b{font-weight:500}.strip .t span{color:var(--mid)}
+.strip .ch{margin-left:auto;display:flex;gap:6px;align-items:center}
+.chip{border:1px solid var(--ln);padding:3px 8px;font:500 12px var(--n);color:var(--mid);display:inline-flex;gap:6px;align-items:center;white-space:nowrap}
+.chip i{font:600 9px var(--h);font-style:normal;letter-spacing:.14em}
+.chip.bad{color:var(--warn);border-color:rgba(255,77,77,.5)}
+.cv{color:var(--mid);font-size:12px;margin-left:2px}
+/* B: card */
+.card{background:var(--pan);border:1px solid var(--ln);width:100%;max-width:330px;padding:4px 12px 6px}
+.card .hd{display:flex;align-items:center;justify-content:space-between;width:100%;background:none;border:0;color:var(--mid);font:600 10px var(--h);letter-spacing:.18em;padding:8px 0 6px;cursor:pointer;text-transform:uppercase}
+.cr{display:grid;grid-template-columns:52px 1fr auto;gap:8px;align-items:center;padding:8px 0;border-top:1px solid rgba(255,255,255,.06);font-size:13.5px}
+.cr .k{font:600 9px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase}
+.cr.now .k{color:var(--people)}
+.cr b{font:500 13px var(--n);white-space:nowrap}
+.cr small{display:block;color:var(--mid);font-size:12px}
+/* C: top-bar button */
+.tbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:#101012;border:1px solid var(--ln);padding:10px 12px}
+.obtn{border:1px solid var(--people);background:var(--people);color:#000;font:600 11.5px var(--h);letter-spacing:.12em;text-transform:uppercase;padding:9px 12px;cursor:pointer;display:flex;gap:8px;align-items:center;text-align:left}
+.abtn{border:1px solid var(--ln);background:none;color:var(--people);font:500 13px var(--n);padding:8px 10px;display:flex;gap:6px;align-items:center}
+
+/* ---------- the journal (the same in every variant) ---------- */
+.jr{background:var(--pan);border:1px solid var(--ln);width:100%;max-width:440px}
+.jr[hidden]{display:none}
+.jh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid var(--ln);font:600 12px var(--h);letter-spacing:.18em}
+.jh span{color:var(--mid);font:400 16px var(--h);letter-spacing:0}
+.jt{display:flex;border-bottom:1px solid var(--ln)}
+.jt span{flex:1;text-align:center;font:600 10.5px var(--h);letter-spacing:.14em;color:var(--mid);padding:10px 4px 8px;border-bottom:2px solid transparent}
+.jt span.on{color:var(--ink);border-bottom-color:var(--ink)}
+.js{padding:12px 14px 14px;border-bottom:1px solid var(--ln)}
+.js:last-child{border:0}
+.jl{display:flex;justify-content:space-between;align-items:baseline;font:600 10px var(--h);letter-spacing:.18em;color:var(--mid);text-transform:uppercase;margin-bottom:9px}
+.jl b{font:500 12px var(--n);letter-spacing:0;color:var(--ink)}
+.js.now .jl{color:var(--people)}
+.ob{display:grid;grid-template-columns:16px 1fr auto;gap:9px;align-items:start;padding:6px 0}
+.ob+.ob{border-top:1px solid rgba(255,255,255,.05);margin-top:4px;padding-top:10px}
+.ob .tt{font-weight:500;font-size:14.5px}
+.ob .why{color:var(--mid);font-size:12.5px;margin-top:2px}
+.ob .dm{width:9px;height:9px;transform:rotate(45deg);background:var(--people);margin:5px 0 0 3px}
+.ob.alt .dm{background:none;border:1.5px solid var(--mid)}
+.ob.alt .tt{font-weight:400}
+.go{font:600 10px var(--h);letter-spacing:.14em;border:1px solid var(--ink);background:none;color:var(--ink);padding:6px 9px;text-transform:uppercase}
+.pg{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;font-size:13.5px;padding:3px 0}
+.pg b{font:500 13px var(--n)}
+.bar{grid-column:1/-1;height:5px;background:var(--pan2);position:relative;margin:1px 0 6px}
+.bar u{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+.gv{color:var(--mid);font-size:12.5px;margin-top:4px}
+.ws{display:flex;gap:22px;margin:0 0 10px}
+.ws div{font:600 9.5px var(--h);letter-spacing:.16em;color:var(--mid)}
+.ws b{display:block;font:500 24px var(--n);letter-spacing:0;color:var(--ark)}
+.ws div+div b{color:var(--mid)}
+.ck{display:grid;grid-template-columns:16px 78px 1fr;gap:8px;align-items:baseline;padding:5px 0;font-size:13px;border-top:1px solid rgba(255,255,255,.05)}
+.ck i{font-style:normal;font:500 13px var(--n)}
+.ck.ok i{color:var(--food)}.ck.no i{color:var(--warn)}
+.ck span{font-weight:500}
+.ck em{font-style:normal;color:var(--mid)}
+.ck.no em b{color:var(--ink);font-weight:400}
+.dn{display:grid;grid-template-columns:38px 1fr;gap:8px;font-size:12.5px;color:var(--mid);padding:3px 0}
+.dn b{font:500 12px var(--n);color:var(--dim)}
+
+/* ---------- the works ---------- */
+.win{background:var(--pan);border:1px solid var(--ln);width:100%;max-width:440px}
+.wh{padding:12px 14px;border-bottom:1px solid var(--ln);display:flex;align-items:center;gap:10px;font:600 14px var(--h);letter-spacing:.1em;text-transform:uppercase}
+.wh small{margin-left:auto;font:400 12px var(--h);letter-spacing:0;color:var(--mid);text-transform:none}
+.bd{padding:10px 14px 16px}
+.sec{font:600 10px var(--h);letter-spacing:.18em;color:var(--mid);text-transform:uppercase;margin:12px 0 4px}
+.row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:13.5px}
+.row span{display:flex;gap:7px;align-items:center}
+.row b{font:500 13px var(--n)}
+.rc{display:flex;align-items:stretch;gap:6px;margin:10px 0 4px}
+.rc .in,.rc .out{flex:1;border:1px solid var(--ln);background:var(--bg);padding:9px 9px 8px;min-width:0}
+.rc .out{border-color:rgba(91,130,240,.55)}
+.rc .op{align-self:center;color:var(--mid);font:500 16px var(--n)}
+.rc .nm{display:flex;gap:6px;align-items:center;font:600 9.5px var(--h);letter-spacing:.14em;color:var(--mid);text-transform:uppercase}
+.rc .v{font:500 19px var(--n);margin-top:4px}
+.rc .v small{font:400 11px var(--h);color:var(--mid)}
+.rc .br{font-size:11.5px;color:var(--mid);margin-top:6px;white-space:nowrap}
+.rc .br b{font:500 12px var(--n);color:var(--people)}
+.rc .bar{margin:5px 0 0}
+.rc .bar u{background:var(--people)}
+.vd{margin-top:10px;border-left:2px solid var(--people);padding:3px 0 3px 10px;font-size:13px}
+.vd b{font:500 13px var(--n);color:var(--people)}
+.tbl{display:grid;grid-template-columns:1fr auto auto;gap:0 14px;margin-top:8px}
+.tbl>*{padding:7px 0;border-bottom:1px solid rgba(255,255,255,.05);display:flex;align-items:center;gap:7px;font-size:13.5px}
+.tbl .th{font:600 9.5px var(--h);letter-spacing:.14em;color:var(--mid);text-transform:uppercase;border-bottom:1px solid var(--ln);justify-content:flex-end}
+.tbl .th:first-child{justify-content:flex-start}
+.tbl b{font:500 13px var(--n);justify-content:flex-end}
+.tbl .lo{color:var(--people)}
+.tbl .sum{border-top:1px solid var(--ln);border-bottom:0;padding-top:10px}
+@media (max-width:420px){ body{padding:14px 12px 50px} .rc{gap:4px} .rc .in,.rc .out{padding:8px 6px} .rc .v{font-size:17px} .rc .br{white-space:normal} .ck{grid-template-columns:16px 66px 1fr} }
+</style>
+</head>
+<body>
+<div class="page">
+  <h1>Цели игрока · черновики</h1>
+  <p class="lead">Черновики, не игра. Повод — плейтест v5.20: помощник был включён, игрок прошёл 405 лет и «ничего не понял». На макетах его партия на 405-м году: <b>единственная ферма выработана, куплено кольцо ковчега, в конвое ни одного судна, проснётся 0</b>. Сейчас игра этого одной фразой нигде не говорит. Три варианта различаются только тем, где цель лежит на экране; сам журнал (нажмите на цель) во всех одинаковый. Слово OBJECTIVES — рабочее.</p>
+  <div class="vs" id="vs"></div>
+  <div>
+    <p class="cap">Где это на экране (экран уменьшен, новое — в жёлтой рамке)</p>
+    <div class="fw" id="fw"><div class="fr" id="fr"></div></div>
+  </div>
+  <div class="two">
+    <div class="cu">
+      <p class="cap">Крупно · нажмите, чтобы открыть журнал</p>
+      <div id="cu"></div>
+      <div class="jr" id="jr" hidden></div>
+    </div>
+    <div class="note" id="note"></div>
+  </div>
+
+  <h2>Завод: что он ест</h2>
+  <p class="lead">Жалоба игрока — «у заводов формулировка странная насчёт того, что он потребляет». Сейчас строка «Metal 3.0/yr · line 2.6»: что «line 2.6» — это привоз линии, угадать нельзя. По логу завод Brine простоял 56 лет из 349 из-за подвоза. Числа условные.</p>
+  <div class="vs" id="ws"></div>
+  <div class="two">
+    <div id="wk"></div>
+    <div class="note" id="wnote"></div>
+  </div>
+</div>
+<script>
+(function(){
+/* ---------- the run: seed 491389956, year 405 (the player's export) ---------- */
+var S={year:405,night:3699,people:528,pods:600,convoy:0,fleet:9,settled:6,need:8,parts:0,work:264,foodEnd:490,alarms:4,
+  done:[[16,'First world settled · Cinder'],[55,'Rations are home'],[76,'Fuel is home'],[126,'Parts are home'],[265,'Metal is home'],[276,'Drive II'],[398,'Ring 2 settled · Vesper'],[399,'The Night is dated'],[402,'Ark ring I · 600 pods']]};
+var C={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#5B82F0',people:'#FFD23F',mid:'#9C9B95',ink:'#F2F1EC',ark:'#B98CFF',dim:'#5E5D58',warn:'#FF4D4D'};
+function ic(k,s,col){ s=s||13; var P={
+  metal:'<path d="M3 11h10l-2-6H5z" fill="C"/>',
+  food:'<path d="M8 14V6M8 9c-3 0-4-2-4-4 2 0 4 1 4 4zm0-1c3 0 4-2 4-4-2 0-4 1-4 4z" stroke="C" stroke-width="1.6" fill="none"/>',
+  parts:'<path d="M8 2l5 3v6l-5 3-5-3V5z" fill="none" stroke="C" stroke-width="2"/><circle cx="8" cy="8" r="1.6" fill="C"/>',
+  works:'<path d="M2 13V7l3 2V7l3 2V7l3 2V4h3v9z" fill="C"/>',
+  goal:'<path d="M8 2l6 6-6 6-6-6z" fill="C"/>',
+  warn:'<path d="M8 2l6.5 11.5h-13z" fill="none" stroke="C" stroke-width="1.6"/><path d="M8 6.5v3.5M8 11.6v.4" stroke="C" stroke-width="1.6"/>',
+  down:'<path d="M3.5 6l4.5 4.5L12.5 6" fill="none" stroke="C" stroke-width="1.8"/>'};
+  return '<svg width="'+s+'" height="'+s+'" viewBox="0 0 16 16">'+(P[k]||'').replace(/C/g,col||C[k]||C.mid)+'</svg>' }
+
+/* ---------- the journal ---------- */
+function journal(tabs){
+  var h='<div class="jh">OBJECTIVES<span>×</span></div>';
+  if(tabs) h+='<div class="jt"><span class="on">OBJECTIVES</span><span>ALARMS · '+S.alarms+'</span></div>';
+  h+='<div class="js now"><div class="jl">Now</div>'+
+     '<div class="ob"><i class="dm"></i><div><div class="tt">Settle a farm — Hollow</div><div class="why">Cinder is worked out. Rations end ≈ '+S.foodEnd+'.</div></div><button class="go" type="button">Show</button></div>'+
+     '<div class="ob alt"><i class="dm"></i><div><div class="tt">Put a hull on Vesper’s line</div><div class="why">The works stand: nothing brings them metal.</div></div><button class="go" type="button">Show</button></div></div>';
+  h+='<div class="js"><div class="jl">Next · Drive III</div>'+
+     '<div class="pg"><span>Settle 8 worlds</span><b>'+S.settled+' / '+S.need+'</b><div class="bar"><u style="width:'+(S.settled/S.need*100)+'%"></u></div></div>'+
+     '<div class="pg"><span>Then parts at a works</span><b>'+S.parts+' / '+S.work+'</b><div class="bar"><u style="width:0"></u></div></div>'+
+     '<div class="gv">Gives: every hull faster · one ring farther</div></div>';
+  h+='<div class="js"><div class="jl">The Night<b>year '+S.night+'</b></div>'+
+     '<div class="ws"><div>WAKE<b>0</b></div><div>SLEEP ON<b>'+S.people+'</b></div></div>'+
+     '<div class="ck ok"><i>✓</i><span>Pods</span><em>'+S.pods+' for '+S.people+' people</em></div>'+
+     '<div class="ck no"><i>✗</i><span>Convoy</span><em><b>'+S.convoy+' of '+S.fleet+' hulls.</b> Nobody wakes without it</em></div>'+
+     '<div class="ck no"><i>✗</i><span>Ark drive</span><em><b>Generation IV.</b> You have II</em></div></div>';
+  h+='<div class="js"><div class="jl">Done<b>'+S.done.length+'</b></div>'+S.done.slice().reverse().map(function(d){ return '<div class="dn"><b>'+d[0]+'</b><span>'+d[1]+'</span></div>' }).join('')+'</div>';
+  return h }
+
+/* ---------- the screen ---------- */
+function frame(v){
+  var top='<div class="tb"><span class="lg">LAST BERTH</span><span class="yr">YEAR<b>'+S.year+'</b></span>'+
+    (v==='C'?'<span class="obx new">◆ SETTLE A FARM — HOLLOW</span><span class="al">⚠ '+S.alarms+'</span>':'<span class="nd">⚠ NEEDS A DECISION <i>'+S.alarms+'</i></span>')+
+    '<span class="ng">NIGHT<b>'+S.night+'</b>WAKE<b>0</b>SLEEP ON<b style="color:var(--mid)">'+S.people+'</b></span>'+
+    '<span class="sp"><span class="on">❚❚</span><span>1×</span><span>2×</span><span>4×</span><span>≡</span></span></div>';
+  var rs='<div class="rs"><div>METAL<b style="color:'+C.metal+'">313</b></div><div>RATIONS<b style="color:'+C.food+'">523</b><em>ENDS ≈ '+S.foodEnd+'</em></div><div>FUEL<b style="color:'+C.fuel+'">904</b></div><div>PARTS<b style="color:'+C.parts+'">85</b></div><div>PEOPLE<b style="color:'+C.people+'">528</b></div></div>';
+  var a=v==='A'?'<div class="fA new"><span class="k">◆ OBJECTIVE</span><span>Settle a farm — Hollow</span><span class="w">rations end ≈ '+S.foodEnd+'</span><span class="ch"><span>DRIVE III 6/8</span><span style="color:'+C.warn+'">WAKE 0/'+S.people+'</span><span>▾</span></span></div>':'<div style="grid-row:3"></div>';
+  var W=[[470,260,'',C.people,9],[400,200,'TALLOW',C.dim,6],[560,215,'CINDER',C.dim,6],[390,300,'BRINE',C.parts,6],[520,330,'MARROW',C.metal,6],[610,290,'SOLACE',C.metal,6],[250,150,'VESPER',C.parts,6],[700,130,'HOLLOW',C.food,6],[180,330,'FERROUS',C.metal,5],[760,380,'THRENODY',C.fuel,5]];
+  var svg='<svg viewBox="0 0 944 500" preserveAspectRatio="xMidYMid slice"><circle cx="470" cy="260" r="110" fill="none" stroke="#26262b" stroke-dasharray="2 5"/><circle cx="470" cy="260" r="250" fill="none" stroke="#26262b" stroke-dasharray="2 5"/>'+
+    W.slice(1,7).map(function(w){ return '<path d="M470 260L'+w[0]+' '+w[1]+'" stroke="'+w[3]+'" stroke-width="1" opacity=".55"/>' }).join('')+
+    W.map(function(w,i){ var free=i>=7; return '<circle cx="'+w[0]+'" cy="'+w[1]+'" r="'+w[4]+'" fill="'+(free?'none':w[3])+'" stroke="'+w[3]+'" stroke-width="1.5"'+(free?' stroke-dasharray="2 2"':'')+'/>'+(w[2]?'<text x="'+(w[0]+11)+'" y="'+(w[1]+3)+'"'+(w[3]===C.dim?' fill="#5E5D58"':'')+'>'+w[2]+'</text>':'') }).join('')+
+    '<circle cx="700" cy="130" r="14" fill="none" stroke="'+C.people+'" stroke-width="1.5"/></svg>';
+  var b=v==='B'?'<div class="fB new"><div class="r"><span class="k" style="color:'+C.people+'">NOW</span><span>Settle a farm — Hollow</span><span></span></div><div class="r"><span class="k">NEXT</span><span>Drive III · worlds</span><b>6/8</b></div><div class="r"><span class="k">NIGHT</span><span>Wake</span><b style="color:'+C.warn+'">0/'+S.people+'</b></div></div>':'';
+  return top+rs+a+'<div class="mid"><div class="rl">'+['EARTH','WORLDS','TECH','YARD','FLEET','ARK'].map(function(t){ return '<span><i></i>'+t+'</span>' }).join('')+'</div><div class="mp">'+svg+b+'</div></div>' }
+
+/* ---------- the three placements ---------- */
+var V={
+ A:{name:'A · строка под ресурсами',
+  cu:function(){ return '<button class="strip" type="button" data-j><span class="k">'+ic('goal',11,C.people)+'OBJECTIVE</span><span class="t"><b>Settle a farm — Hollow</b> <span>· rations end ≈ '+S.foodEnd+'</span></span>'+
+    '<span class="ch"><span class="chip"><i>DRIVE III</i>6/8</span><span class="chip bad"><i>WAKE</i>0/'+S.people+'</span>'+ic('down',14,C.mid)+'</span></button>' },
+  note:'<b>Полоса во всю ширину под ресурсами.</b> Слева задача «сейчас» и причина, справа два счётчика: ближайшие ворота и главный итог. Журнал выпадает вниз поверх карты.'+
+    '<span class="pro">+ Всегда на виду и рядом с числами, про которые говорит (рационы кончаются — прямо под рационами).<br>+ На телефоне счётчики уходят на вторую строку, ничего не теряется.</span>'+
+    '<span class="con">− Третья полоса сверху: карта теряет ~30 px высоты.<br>− Причина одной фразой — всё-таки текст на экране, вопреки правилу «меньше текста».</span>'},
+ B:{name:'B · карточка на карте',
+  cu:function(){ return '<div class="card"><button class="hd" type="button" data-j>Objectives'+ic('down',14,C.mid)+'</button>'+
+    '<div class="cr now"><span class="k">Now</span><span>Settle a farm — Hollow</span><span></span></div>'+
+    '<div class="cr"><span class="k">Next</span><span>Drive III<small>settle worlds</small></span><b>6 / 8</b></div>'+
+    '<div class="cr"><span class="k">Night</span><span>Wake<small>convoy 0 of 9</small></span><b style="color:'+C.warn+'">0 / '+S.people+'</b></div></div>' },
+  note:'<b>Карточка в правом верхнем углу карты</b> — три слоя сразу: сейчас, ближайшие ворота, Ночь. Прецедент по памяти — цели в углу экрана во Frostpunk. Нажатие на строку ведёт к месту, на заголовок — открывает журнал.'+
+    '<span class="pro">+ Игрок без единого нажатия видит и задачу, и зачем она: «проснётся 0 из 528» висит всё время.<br>+ Причин на экране нет, только числа — правило «меньше текста» соблюдено.</span>'+
+    '<span class="con">− Закрывает угол карты; на уменьшенном столе (ноутбук 1280) текст мелкий — надо проверять.<br>− На телефоне карточку придётся сворачивать в одну строку (то есть в вариант A).</span>'},
+ C:{name:'C · кнопка в верхней панели',
+  cu:function(){ return '<div class="tbar"><button class="obtn" type="button" data-j>'+ic('goal',11,'#000')+'Settle a farm — Hollow</button><span class="abtn">'+ic('warn',14,C.people)+S.alarms+'</span><span class="cv">вместо «NEEDS A DECISION '+S.alarms+'»</span></div>' },
+  tabs:true,
+  note:'<b>Вместо кнопки «NEEDS A DECISION 4»</b> — текущая задача словами, тревоги рядом счётчиком. Окно одно, в нём две вкладки: OBJECTIVES и ALARMS (нынешний советник).'+
+    '<span class="pro">+ Ни одного нового места на экране.<br>+ Цели и тревоги живут в одном окне — игрок не ищет, куда смотреть.</span>'+
+    '<span class="con">− На виду только слой «сейчас»; ворота и Ночь — за нажатием. Игроку, который не понимает зачем, этого мало.<br>− Длинная задача не влезет в панель на узком экране.</span>'}
+};
+var cur='B';
+function draw(){
+  document.getElementById('vs').innerHTML=Object.keys(V).map(function(k){ return '<button type="button" data-v="'+k+'" class="'+(k===cur?'on':'')+'">'+V[k].name+'</button>' }).join('');
+  document.getElementById('fr').innerHTML=frame(cur);
+  document.getElementById('cu').innerHTML=V[cur].cu();
+  var j=document.getElementById('jr'); j.innerHTML=journal(V[cur].tabs);
+  document.getElementById('note').innerHTML=V[cur].note+'<span style="display:block;margin-top:12px"><b>Общее для всех:</b> двенадцать шагов помощника становятся первыми двенадцатью целями (помощник говорит «как», цель — «что и зачем»). Когда помощник кончается, цели идут дальше — из состояния партии. Наград за цели нет.</span>';
+  fit() }
+function fit(){ var w=document.getElementById('fw'), f=document.getElementById('fr'), k=w.clientWidth/1000; f.style.transform='scale('+k+')'; w.style.height=Math.round(590*k)+'px' }
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-v]'); if(b){ cur=b.getAttribute('data-v'); draw(); return }
+  if(e.target.closest('[data-j]')){ var j=document.getElementById('jr'); j.hidden=!j.hidden; return }
+  var w=e.target.closest('[data-w]'); if(w){ wcur=w.getAttribute('data-w'); wdraw() } });
+window.addEventListener('resize',fit);
+
+/* ---------- the works: Brine ---------- */
+var B={pop:43,full:3.0,metal:[3.0,2.6],food:[1.2,1.0],makes:2.5,carries:3.9,store:191};
+function head(){ return '<div class="wh">'+ic('works',18,C.parts)+'Brine<small>works · 43 people</small></div>' }
+var WV={
+ now:{name:'Сейчас (v5.20)',
+  html:function(){ return '<div class="win">'+head()+'<div class="bd"><div class="sec">This world eats</div>'+
+    '<div class="row"><span>'+ic('metal')+'Metal</span><b>3.0/yr · line 2.6</b></div><div class="row"><span>'+ic('food')+'Rations</span><b>1.2/yr · line 1.0</b></div>'+
+    '<div class="sec">&nbsp;</div><div class="row"><span>'+ic('parts')+'Parts</span><b>2.5/yr</b></div><div class="row"><span>Line carries</span><b>3.9/yr</b></div><div class="row"><span>On the surface</span><b>191</b></div></div></div>' },
+  note:'<b>Как сейчас.</b> Нужно и привоз склеены в одну ячейку через «· line». Что завод делает из этого детали и что нехватка режет выпуск — нигде не сказано: строки «ест» и «делает» не связаны.'},
+ R1:{name:'R1 · рецепт',
+  html:function(){ var inb=function(k,nm,a){ return '<div class="in"><div class="nm">'+ic(k,12)+nm+'</div><div class="v">'+a[0].toFixed(1)+'<small> /yr</small></div><div class="br">line brings <b>'+a[1].toFixed(1)+'</b></div><div class="bar"><u style="width:'+Math.round(a[1]/a[0]*100)+'%"></u></div></div>' };
+    return '<div class="win">'+head()+'<div class="bd"><div class="sec">Makes parts from</div><div class="rc">'+inb('metal','Metal',B.metal)+'<span class="op">+</span>'+inb('food','Rations',B.food)+'<span class="op">→</span>'+
+    '<div class="out"><div class="nm">'+ic('parts',12)+'Parts</div><div class="v" style="color:'+C.parts+'">'+B.makes.toFixed(1)+'<small> /yr</small></div><div class="br">of '+B.full.toFixed(1)+' at full work</div></div></div>'+
+    '<div class="vd">Works at <b>83%</b> — the line brings too little.</div>'+
+    '<div class="sec">Parts</div><div class="row"><span>Line carries home</span><b>3.9/yr</b></div><div class="row"><span>On the surface</span><b>191</b></div></div></div>' },
+  note:'<b>Рецепт картинкой:</b> металл + рационы → детали. Под каждым входом — сколько привозит линия и полоска (тот же приём, что «World gives / Line carries» в v5.17). Одна строка итога: завод работает на 83%.'+
+    '<span class="pro">+ Игрок с первого взгляда видит, что завод — это переработка, и что именно его держит.<br>+ Тот же рисунок годится для справки «на что идёт ресурс».</span>'+
+    '<span class="con">− Три блока в ряд на 390 px тесно: числа влезают, подписи на пределе.<br>− С пакетами улучшений добавится третий вход (топливо) — ряд придётся переносить.</span>'},
+ R2:{name:'R2 · таблица',
+  html:function(){ var r=function(k,nm,a){ return '<span>'+ic(k)+nm+'</span><b>'+a[0].toFixed(1)+'</b><b class="lo">'+a[1].toFixed(1)+'</b>' };
+    return '<div class="win">'+head()+'<div class="bd"><div class="tbl"><span class="th">Per year</span><span class="th">Needs</span><span class="th">Line brings</span>'+r('metal','Metal',B.metal)+r('food','Rations',B.food)+
+    '<span class="sum">'+ic('parts')+'Makes parts</span><b class="sum" style="color:'+C.parts+'">'+B.makes.toFixed(1)+'</b><b class="sum" style="color:var(--mid);font-size:12px">of '+B.full.toFixed(1)+'</b></div>'+
+    '<div class="sec">Parts</div><div class="row"><span>Line carries home</span><b>3.9/yr</b></div><div class="row"><span>On the surface</span><b>191</b></div></div></div>' },
+  note:'<b>Те же строки, но два столбца с заголовками:</b> «нужно» и «привозит линия»; жёлтое — меньше нужного. Итог — строка «Makes parts 2.5 of 3.0».'+
+    '<span class="pro">+ Только числа, место то же, что сейчас; третий вход добавляется строкой.<br>+ На телефоне ничего не жмётся.</span>'+
+    '<span class="con">− Связь «из этого делается то» слабее, чем в рецепте: надо прочитать заголовки.</span>'}
+};
+var wcur='R1';
+function wdraw(){
+  document.getElementById('ws').innerHTML=Object.keys(WV).map(function(k){ return '<button type="button" data-w="'+k+'" class="'+(k===wcur?'on':'')+'">'+WV[k].name+'</button>' }).join('');
+  document.getElementById('wk').innerHTML=WV[wcur].html(); document.getElementById('wnote').innerHTML=WV[wcur].note }
+var q=location.hash.replace('#','').split(','); if(V[q[0]]) cur=q[0]; if(WV[q[1]]) wcur=q[1];
+draw(); wdraw(); if(q[2]==='j') document.getElementById('jr').hidden=false;
+})();
+</script>
+</body>
+</html>
