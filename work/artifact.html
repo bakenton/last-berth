@@ -20,7 +20,7 @@
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.17'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.18'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -84,6 +84,7 @@ function openSector(G){
     PLANETS.push(w);
     if(G.reserves) G.reserves[w.id]= w.kind==='works' ? Infinity
       : Math.round(w.rich*K.RESERVE_BASE*Math.pow(K.RESERVE_GROW,i)*(w.kind==='farm'?1.5:1));
+    if(G.reserves&&w.kind!=='works') w.res0=G.reserves[w.id];   // v5.17: the seam it was born with — the map tells what is left in percent
   }
   G.sectors=SECTORS.length;
   return i;
@@ -2728,6 +2729,10 @@ function layout3(){ var Ls=PLANETS.map(function(q){ var R=SECTORS[q.sec].r; retu
     if(!moved) break }
   P3={}; Ls.forEach(function(o){ P3[o.id]={x:o.x,z:o.z} }); P3N=PLANETS.length }
 /* a settled world stands on its people (capped at HPOP), a free one lies low over its footprint */
+/* v5.17 (Nikita 12.11: «вместо населения возле имени планеты писать процентаж жилы и чтобы цвет менялся»): what is left of the seam it was born with */
+function seamLeftP(q){ var r=G.reserves[q.id]; return (q.kind==='works'||!q.res0||r===Infinity)?null:Math.max(0,Math.min(100,Math.round(r/q.res0*100))) }
+function seamPct(q){ var v=seamLeftP(q); return v===null?'':' '+v+'%' }
+function seamCol(q){ var v=seamLeftP(q); return v>=50?C.food:v>=20?C.people:v>0?C.red:C.mid }
 function wH(pid){ var c=G.colonies[pid]; return c?H0+Math.min(c.pop,HPOP)*HK+RS:RF }
 function node3(n){ if(!n) return null; if(n==='earth') return [0,0,0]; var pp=planet(n); if(!pp) return null; var q=p3(pp); return [q.x,0,q.z] }
 function outerR(){ return secRadius(Math.max(0,visRings()-1)) }
@@ -3080,7 +3085,8 @@ function m3dynEmit(x,t,vis){ var i, k; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
     if(o.earth){ m3sphere(x,0,22,0,22,m3rgb(C.earth),t*0.3,.8,10); m3pathRing(x,0,0,0,26,40); m3glow(x,'255,210,63',8,true); x.strokeStyle='rgba(255,210,63,.7)'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0; return }
     var q=o.q, b=p3(q), on=!!G.colonies[q.id], h=wH(q.id), col=on?m3wcol(q.kind):'156,155,149', body=on&&q.kind==='works'?m3rgb(PARTS_BODY):col, rad=on?RS:RF, works=on&&q.kind==='works';
     if(on){ m3glow(x,col,6); m3path(x,[[b.x,0,b.z],[b.x,h-rad,b.z]]); x.strokeStyle='rgba('+col+',.75)'; x.lineWidth=1.6; x.stroke(); x.shadowBlur=0;
-      for(var tk=HTICK;tk<=Math.min(G.colonies[q.id].pop,HPOP);tk+=HTICK){ var tp=prj([b.x,H0+tk*HK,b.z]); if(!tp) continue; var tl=4*pxPer(tp.w)+2.5; x.beginPath(); x.moveTo(tp.x-tl,tp.y); x.lineTo(tp.x+tl,tp.y); x.strokeStyle='rgba('+col+',.85)'; x.lineWidth=1.2; x.stroke() } }
+      var kt=kitTier(G.colonies[q.id]), top=h-rad-4, sp=kt?Math.min(6,Math.max(2,top-2)/kt):0;   // v5.17 (Nikita 12.11): the ticks are the upgrade packages, not people
+      for(var tk=0;tk<kt;tk++){ var tp=prj([b.x,top-tk*sp,b.z]); if(!tp) continue; var tl=5*pxPer(tp.w)+3; x.beginPath(); x.moveTo(tp.x-tl,tp.y); x.lineTo(tp.x+tl,tp.y); x.strokeStyle='rgba(255,210,63,.95)'; x.lineWidth=2.2; x.stroke() } }
     if(works) m3orbit(x,b,h,false,col);
     m3sphere(x,b.x,h,b.z,rad,col,t*0.5+(q.ang*7%6.28),on?.85:.38,on?9:0,body);
     if(works) m3orbit(x,b,h,true,col) })
@@ -3143,7 +3149,7 @@ function drawMap(){
     var sp3=prj([b.x,wH(q.id),b.z]); if(!sp3) return; var sr3=(on?RS:RF)*pxPer(sp3.w), rr=sr3*(on&&q.kind==='works'?1.8:1);
     boxes.push({x0:sp3.x-rr,x1:sp3.x+rr,y0:sp3.y-sr3,y1:sp3.y+sr3}); L.push({q:q,s:sp3,r:sr3,rr:rr,on:on,st:st}) });
   L.sort(function(u,v){ return (v.on-u.on)||(u.s.w-v.s.w) }).forEach(function(o){
-    var q=o.q, nm=q.name.toUpperCase(), pop=o.on?' '+num(G.colonies[q.id].pop):'', tw=(nm.length*7.2+pop.length*6.6), g=(U.win===q.id?9:5)+(o.rr-o.r), ok=null, sx=o.s.x, sy=o.s.y;
+    var q=o.q, nm=q.name.toUpperCase(), pop=o.on?seamPct(q):'', tw=(nm.length*7.2+pop.length*6.6), g=(U.win===q.id?9:5)+(o.rr-o.r), ok=null, sx=o.s.x, sy=o.s.y;
     var cs=[[sx+o.r+g,sy+4],[sx-o.r-g-tw,sy+4],[sx-tw/2,sy-o.r-g-4],[sx-tw/2,sy+o.r+16]];
     for(var j=0;j<cs.length&&!ok;j++){ var bx={x0:cs[j][0]-2,x1:cs[j][0]+tw+2,y0:cs[j][1]-11,y1:cs[j][1]+3}; if(bx.x0<2||bx.x1>W-2) continue;
       if(!boxes.some(function(z){ return bx.x0<z.x1&&z.x0<bx.x1&&bx.y0<z.y1&&z.y0<bx.y1 })) ok=bx }
@@ -3155,7 +3161,7 @@ function drawMap(){
     else if(st==='noline'||st==='half'){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1.6); sa('class','alarm'); sr('/>') }
     if(U.win===q.id){ so('circle'); sp('r',(o.rr+11).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',2); sr('/>') }
     if(!lab.hidden){ so('text'); sp('x',(lab.x0+2-o.s.x).toFixed(1)); sp('y',(lab.y1-3-o.s.y).toFixed(1)); sa('fill',o.on?C.ink:C.mid); sa('font-size',10.5); sa('letter-spacing',1); sa('class','nm'); sr('>'+esc(q.name.toUpperCase()));
-      if(o.on){ so('tspan'); sa('fill',C.people); sr('>'+esc(' '+num(G.colonies[q.id].pop))+'</tspan>') } sr('</text>') }
+      var sq=o.on?seamPct(q):''; if(sq){ so('tspan'); sa('fill',seamCol(q)); sr('>'+esc(sq)+'</tspan>') } sr('</text>') }
     sr('</g>') });
   // v5.08: the letters the chart canvas drew before WebGL — an abandoned world's ×, a missing hull's ?
   GH.forEach(function(gp){ so('text'); sp('x',gp.x.toFixed(1)); sp('y',(gp.y+4).toFixed(1)); sa('fill','rgba(94,93,88,.8)'); sa('font-size',13); sa('font-family','Geist Mono,monospace'); sa('text-anchor','middle'); sa('pointer-events','none'); sr('>×</text>') });
@@ -3807,12 +3813,14 @@ function hubBlock(p,c,deadW){ if(p.kind==='works') return '';
   if(!c.via){ var k2=hubCost(G), w=hubBuildCheck(G,pid);
     if(w==='metal'||w==='parts') w=shortWhy(k2,G.earth); else if(w==='hubCap') w=['hubCap',hubCapP()];
     h+=head2+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(k2,G.earth)+'</div>'+btn(esc(T('u_hubBuild')),'hubbuild',{p:pid},'full','build',offW(w)) }
-  if(hubs.length&&!deadW){ var cur=c.via||'earth';
-    if(c.via) h+=head2;
-    h+='<div class="lab">'+esc(T('u_viaTo'))+'</div><div class="seg wide" id="viaseg" style="padding:2px 0 6px">'+
-      '<button type="button" data-act="via" data-p="'+pid+'" data-v="earth" class="'+(cur==='earth'?'on':'')+'">'+esc(T('u_viaEarth'))+'</button>'+
-      hubs.map(function(k){ var r=hubCheck(G,pid,k); return '<button type="button" data-act="via" data-p="'+pid+'" data-v="'+k+'" class="'+(cur===k?'on':'')+'"'+off(r)+'>'+esc(pname(k))+'</button>' }).join('')+'</div>' }
   return h }
+/* v5.17 (Nikita 12.11: «доставка куда земля или хаб была во вкладке линии, а то не ясно куда и как перевести судно»): where the line runs — Earth or a hub — sits over the hulls of the line, not in the hub block */
+function viaSeg(p,c){ if(p.kind==='works'||c.hub||!can('parts')) return '';
+  var pid=p.id, hubs=Object.keys(G.colonies).filter(function(k){ return k!==pid&&isHub(G,k)&&!isDead(k) }); if(!hubs.length) return '';
+  var cur=c.via||'earth';
+  return '<div class="lab">'+esc(T('u_viaTo'))+'</div><div class="seg wide" id="viaseg" style="padding:2px 0 6px">'+
+    '<button type="button" data-act="via" data-p="'+pid+'" data-v="earth" class="'+(cur==='earth'?'on':'')+'">'+esc(T('u_viaEarth'))+'</button>'+
+    hubs.map(function(k){ var r=hubCheck(G,pid,k); return '<button type="button" data-act="via" data-p="'+pid+'" data-v="'+k+'" class="'+(cur===k?'on':'')+'"'+off(r)+'>'+esc(pname(k))+'</button>' }).join('')+'</div>' }
 /* nodes-1.01: a hull a line will not take says why — the courier limit, a hub's run to Earth, a hub too far for a courier, or range */
 function lineWhyP(code){ return code==='courierLine'?{n:K.COURIER_LINE}:null }
 function lineWhyShort(code){ return code==='range'?T('u_outReach'):fill(T('u_lw_'+code),lineWhyP(code)) }
@@ -3893,7 +3901,7 @@ function winWorld(pid){
   if(can('evac')) L0+=evacBlock(p);
   // the line: the hulls on it, a free hull or one from another line, or a new one from the yards
   var on=onLine(G,pid).sort(function(a,b){ return a.id-b.id });
-  R+=sec(esc(T('u_onLine')),esc(fill(T('u_hullsN'),{n:on.length})).toUpperCase());
+  R+=sec(esc(T('u_onLine')),esc(fill(T('u_hullsN'),{n:on.length})).toUpperCase())+viaSeg(p,c);
   R+=on.length?on.map(function(s){ return hullRow(s,(can('fleet')&&s.mode!=='building'&&s.mode!=='missing'?btn(esc(T('u_move')),'pick',{v:'move:'+s.id},'','move'):'')+btn(esc(T('u_takeOff')),'unroute',{s:s.id},'','takeoff'),'hr-'+s.id,true) }).join(''):'<div class="why">'+esc(T('u_noHulls'))+'</div>';
   var free=freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait&&!s.job }), other=G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&!s.mutiny&&((s.from&&s.to&&s.from!==pid)||(s.pend&&s.pend.from!==pid))&&s.mode!=='building'&&s.moveTo!==pid });
   var tab=U.addTab==='other'&&can('fleet')?'other':'free', pool=tab==='free'?free:other;
