@@ -296,3 +296,20 @@ svg.gi{fill:currentColor}
 .seg.exs button{display:inline-flex;align-items:center;gap:3px}.seg.exs button.on{background:transparent;color:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 /* v5.01: the hub block and the exchange stand apart from their neighbours (reviewer) */
 #hubblk,#exblk{margin:10px 0 12px}
+/* v5.16: Tech on tabs (design/tech/tabs.html, draft A) */
+.ttabs{display:flex;border-bottom:1px solid var(--ln);flex:none}
+.ttabs button{flex:1;background:none;border:0;border-bottom:2px solid transparent;color:var(--mid);font:600 11px var(--h);letter-spacing:.14em;text-transform:uppercase;padding:12px 6px 10px;cursor:pointer}
+.ttabs button:hover{color:var(--ink)}
+.ttabs button.on{color:var(--ink);border-bottom-color:var(--ink)}
+.tpan[hidden]{display:none}
+.gains{border:1px solid var(--ln);border-left:3px solid var(--ink);background:var(--bg);padding:10px 12px;display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.gains.flat{border:0;background:none;padding:6px 0 2px;margin-top:0}
+.gains .gt{font-size:10px;letter-spacing:.18em;color:var(--dim);font-weight:600;text-transform:uppercase}
+.gains .g{display:grid;grid-template-columns:20px 1fr auto;gap:8px;align-items:center;font-size:13px}
+.gains .g span{display:flex;flex-direction:column}
+.gains .g small{color:var(--mid);font-size:11.5px}
+.gains .g b{font:500 15px var(--n)}
+.gains .g.ark b{color:var(--ark)}
+.wkr{display:grid;grid-template-columns:auto 1fr auto;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px}
+.wkr i{font-style:normal;color:var(--mid);font-size:12px;display:inline-flex;align-items:center;gap:3px;margin-left:6px}
+.wkr b{font:500 13px var(--n)}

@@ -1,0 +1,13 @@
+UI,u_tt_over,Overview,Обзор,v5.16 Tech on tabs,live,new
+UI,u_tt_drive,Drive {g},Двигатель {g},v5.16 Tech on tabs,live,new
+UI,u_gFleet,Every hull flies faster,Все суда летят быстрее,v5.16 Tech on tabs,live,new
+UI,u_gFleetSub,"all {n} in the fleet, old ones too","все {n} во флоте, и старые тоже",v5.16 Tech on tabs,live,new
+UI,u_gFuel,Fuel per trip,Топливо на рейс,v5.16 Tech on tabs,live,new
+UI,u_gFuelSub,every hull,у всех судов,v5.16 Tech on tabs,live,new
+UI,u_gHulls,New hulls {g},Новые суда {g},v5.16 Tech on tabs,live,new
+UI,u_gHullsSub,hold {c} · speed {s} · one ring further,трюм {c} · скорость {s} · на кольцо дальше,v5.16 Tech on tabs,live,new
+UI,u_gArk,The ark can sail,Ковчег сможет отлететь,v5.16 Tech on tabs,live,new
+UI,u_gArkSub,it needs generation {g},ему нужно поколение {g},v5.16 Tech on tabs,live,new
+UI,u_gEvery,"Every hull, old ones too","Все суда, и старые тоже",v5.16 Tech on tabs,live,new
+UI,u_ringNextH,Next ring,Следующее кольцо,v5.16 Tech on tabs,live,new
+UI,u_worksParts,Parts from the works,Детали с заводов,v5.16 Tech on tabs,live,new

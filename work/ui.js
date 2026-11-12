@@ -168,7 +168,7 @@ function wmark(kind,on,sz){ sz=sz||14; var m=WMARK[kind].replace('/>',on?' fill=
 /* ---------- state ---------- */
 /* U.tut / can(key): the tutorial decides what the player may see; with its lock off everything is open.
    A resource is opened in the core (openRes) the moment the interface shows it — so the tutorial controls Earth's burn. */
-var U={tut:tutBlank(), hist:[], wtab:'world', lang:'en', langPicked:false, menu:false, speed:2, paused:false, acc:0, last:0, ff:false, shiftStop:true,
+var U={tut:tutBlank(), hist:[], wtab:'world', ttab:'over', lang:'en', langPicked:false, menu:false, speed:2, paused:false, acc:0, last:0, ff:false, shiftStop:true,
   tab:null, win:null, pop:null, filter:'all', addTab:'free', who:{}, scrapArm:null, focus:null, notes:[], driveAt:null, ovlOff:false};
 var G=null;
 function can(k){ return !U.tut.lock||!!U.tut.open[k] }
@@ -1326,7 +1326,7 @@ function tutTick(){ var t=U.tut; if(!U.langPicked||G.over) return;
 function tutHold(){ var t=U.tut; return !!t.msg||!!(t.nar&&t.nar.hold) }
 /* the press: a rule lets through only its lit thing; her voice closes on any press */
 function tutTarget(m){ var s=typeof m.at==='function'?m.at():m.at, e=s?document.querySelector(s):null;
-  if(e&&!e.getClientRects().length){ var wp=e.closest&&e.closest('.wpan[hidden]'); if(wp&&U.wtab!==wp.dataset.wtab){ U.wtab=wp.dataset.wtab; setTimeout(draw,0) } }   // v5.13: the world card's tabs
+  if(e&&!e.getClientRects().length){ var wp=e.closest&&e.closest('[data-pan][hidden]'), q=wp&&wp.dataset.pan.split(':'); if(q&&U[q[0]]!==q[1]){ U[q[0]]=q[1]; setTimeout(draw,0) } }   // v5.13/5.16: a tab of the world card or of Tech
   return e&&e.getClientRects().length?e:null }
 function tutClick(ev){ var t=U.tut, x=ev.target;
   if(t.msg){ var b=x.closest('#helper [data-act]');
@@ -1633,7 +1633,7 @@ function winWorld(pid){
   var tabs=[['world','tWorlds',L0,worldBad?'red':''],['line','toEarth',R,lineBad?'red':''],['up','upgrade',MB,canKit(G,pid)==='ok'?'up':''],['hub','hub',HB,'']].filter(function(t){ return t[2] });
   if(!tabs.some(function(t){ return t[0]===U.wtab })) U.wtab='world';
   var rail='<div class="wrail">'+tabs.map(function(t){ var on1=t[0]===U.wtab; return '<button type="button" data-act="wtab" data-v="'+t[0]+'" class="'+(on1?'on':'')+'">'+ic(t[1],20)+'<span>'+esc(T('u_wt_'+t[0]))+'</span>'+(t[3]?'<i class="wdot '+t[3]+'"></i>':'')+'</button>' }).join('')+'</div>';
-  var pans=tabs.map(function(t){ return '<div class="wpan" data-wtab="'+t[0]+'"'+(t[0]===U.wtab?'':' hidden')+'>'+t[2]+'</div>' }).join('');
+  var pans=tabs.map(function(t){ return '<div class="wpan" data-wtab="'+t[0]+'" data-pan="wtab:'+t[0]+'"'+(t[0]===U.wtab?'':' hidden')+'>'+t[2]+'</div>' }).join('');
   return '<div class="win wt">'+head(esc(pname(pid)),wsub(p),wmark(p.kind,true,16))+'<div class="bd wtb">'+rail+'<div class="wbody">'+pans+'</div></div>'+nav+'</div>' }
 /* v4.10 (Nikita, 27.09: 'слишком много непонятных цифр'): the seam is told in years at the current pace */
 function seamShort(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid), rate=c?c.pop*p.rich*K.PROD*rateMult(c):0; return rate<=0.001?num(res):fill(T('u_yShort'),{n:num(res/rate)}) }
@@ -1724,36 +1724,55 @@ function startDriveWhy(pid){ if(G.drive) return 'running';
 function driveHelpOn(){ if(U.driveHelp===undefined){ U.driveHelp=false; try{ U.driveHelp=localStorage.getItem('lb.driveHelp')==='1' }catch(e){} } return U.driveHelp }
 function driveHelp(work){
   return '<div class="dhelp"><p>'+esc(T('u_dh1'))+'</p><p>'+esc(T('u_dh2'))+'</p><p>'+esc(fill(T('u_dh3'),{n:num(work)}))+'</p><p>'+esc(T('u_dh4'))+'</p>'+'</div>' }
-function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWorkFor(G), h='';
-  h+=sec(esc(T('u_hullGen'))+'<button type="button" class="qm'+(driveHelpOn()?' on':'')+'" data-act="drivehelp" aria-expanded="'+driveHelpOn()+'" title="'+attr(T('u_dhQ'))+'" aria-label="'+attr(T('u_dhQ'))+'">?</button>',roman(g)+' → '+roman(g+1));
-  if(driveHelpOn()) h+=driveHelp(work);
-  h+='<div class="gnow"><span class="gen big">'+roman(g)+'</span>'+ic('tTech',18,C.mid)+'<span class="gen big nx">'+roman(g+1)+'</span>'+(G.drive?'<span class="gtx">'+esc(fill(T('u_driveAt'),{p:pname(G.drive)}))+'</span>':'')+'</div>';
-  var hkT=hackNext(G); if(hkT&&hkT.k==='drive'&&!hackOn()) h+='<div id="hkneed">'+alertBox('tTech',esc(fill(T('u_hackNeed'),{w:hackWho(hkT)})),true)+btn(esc(T('u_hackStart')),'hack',null,'pri full','tTech')+'</div>';   // v5.09: the player starts the hack
-  h+='<div class="lab">'+esc(fill(T('u_step1'),{n:Math.min(s,need),m:need}))+'</div>'+steps(s,need,C.food);
-  var ws=worksList(), have=G.drive?G.driveWork:G.earth.parts+ws.reduce(function(a,k){ return a+(G.colonies[k].store.parts||0) },0);
-  h+='<div class="lab">'+esc(fill(T('u_step2'),{n:num(Math.min(have,work)),m:num(work)}))+'</div><div class="bar"><u style="width:'+Math.min(100,Math.round(have/work*100))+'%;background:'+C.parts+'"></u></div>';
-  if(ws.length) h+=hint(ws.map(function(k){ var c=G.colonies[k], p=planet(k), wh=worksHungry(k), r=wh.idle>5?0:c.pop*p.rich*K.REFINE*rateMult(c); return ic('works',13,C.parts)+' '+esc(pname(k))+' '+dec(r)+esc(T('u_perYr')) }).join(' · '));
-  else h+=hint(esc(T('u_noWorks')));
-  if(!G.drive){ var host=driveHost();
-    if(ws.length) h+='<div class="lab">'+esc(T('u_runAt'))+'</div><div class="chips">'+ws.map(function(k){ var ok=G.colonies[k].pop>=K.DRIVE_POP, on=k===host;
-      return '<button type="button" data-act="driveat" data-v="'+k+'" class="'+(on?'on':'')+'"'+(ok?'':off('pop'))+'>'+ic('works',15,on?'#000':C.parts)+esc(pname(k))+'</button>' }).join('')+'</div>';
-    var w=startDriveWhy(host), lbl=(typeof w!=='string'&&w[0]==='needsettled')?fill(T('u_startMore'),{n:need-s}):T('u_start');
-    h+=btn(esc(lbl),'drive',{p:host||''},'pri full','tTech',offW(w)) }
-  // the next generation
-  h+='<div class="lab">'+esc(fill(T('u_genGives'),{g:roman(g+1)}))+'</div><div class="spec"><div class="sh"><span></span><span>'+ic('hold',13,C.mid)+esc(T('u_hold'))+'</span><span>'+ic('speed',13,C.mid)+esc(T('u_speedH'))+'</span><span>'+ic('range',13,C.mid)+esc(T('u_reachH'))+'</span></div>';
-  CLASSES.forEach(function(cls,j){ var a=HULLS[currentHull(G,cls)], b=genHull(g+1,j);
-    h+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span>'+pctUp(driveSpeed(G),Math.pow(K.GEN_SPEED,b.gen-a.gen)*driveSpeed({driveLvl:lvl+1}))+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
-  h+='</div>'+hint(ic('speed',13,C.mid)+' '+esc(fill(T('u_driveAll'),{n:pctUp(driveSpeed(G),driveSpeed({driveLvl:lvl+1}))})));
-  // rings
+/* v5.16 (Nikita 12.11, draft A of design/tech/tabs.html): Tech on three tabs — OVERVIEW (the programme, what the drive gives, the next ring), DRIVE (the new hulls, the works), RINGS.
+   The drive speeds up every hull, old ones too, and cuts the fuel of a trip — shown as numbers, the new hulls add their own +12% */
+function techGains(g,lvl){ var d0=driveSpeed(G), d1=driveSpeed({driveLvl:lvl+1}), h='';
+  var row=function(icn,col,t,sub,v,cls){ return '<div class="g'+(cls?' '+cls:'')+'">'+(icn?ic(icn,16,col):resIc('fuel',16))+'<span>'+esc(t)+(sub?'<small>'+esc(sub)+'</small>':'')+'</span><b>'+v+'</b></div>' };
+  h+=row('speed',C.ink,T('u_gFleet'),fill(T('u_gFleetSub'),{n:G.ships.length}),pctUp(d0,d1));
+  if(can('fuel')) h+=row(null,null,T('u_gFuel'),T('u_gFuelSub'),'−'+Math.round((1-Math.sqrt(d0/d1))*100)+'%');
+  h+=row('tYard',C.ink,fill(T('u_gHulls'),{g:roman(g+1)}),fill(T('u_gHullsSub'),{c:pctUp(1,K.GEN_CAP),s:pctUp(1,K.GEN_SPEED)}),'');
+  if(can('ark')&&G.arkMark===g+1) h+=row('ark',C.ark,T('u_gArk'),fill(T('u_gArkSub'),{g:roman(g+1)}),'✓','ark');
+  return '<div class="gains"><div class="gt">'+esc(fill(T('u_genGives'),{g:roman(g+1)}))+'</div>'+h+'</div>' }
+function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWorkFor(G);
+  var ws=worksList(), have=G.drive?G.driveWork:G.earth.parts+ws.reduce(function(a,k){ return a+(G.colonies[k].store.parts||0) },0), host=G.drive?null:driveHost();
   var sn=K.SURVEY_REACH*SECTORS.length, sc=surveyCost(SECTORS.length), sv=canSurvey(G);
-  h+=sec(esc(T('u_rings')),esc(fill(T('u_charted'),{n:SECTORS.length})).toUpperCase());
-  h+='<div class="gnow"><span class="rnum">'+ic('ring',22,C.food)+esc(fill(T('u_ringNext'),{s:secName(SECTORS.length)}))+'</span><span class="gtx">'+esc(fill(T('u_settledOf'),{n:Math.min(s,sn),m:sn}))+'</span></div>'+steps(s,sn,C.food);
-  h+='<div class="prow">'+price(sc,G.earth)+'</div>';
-  var sw=sv==='settled'?['needsettled',{n:sn,r:s}]:(sv==='ok'?'ok':shortWhy(sc,G.earth));
-  h+=btn(esc(sv==='settled'?fill(T('u_surveyMore'),{n:sn-s}):T('u_survey')),'survey',null,'pri full','survey',offW(sw));
+  var ringRow=function(){ var sw=sv==='settled'?['needsettled',{n:sn,r:s}]:(sv==='ok'?'ok':shortWhy(sc,G.earth));
+    return '<div class="gnow"><span class="rnum">'+ic('ring',22,C.food)+esc(fill(T('u_ringNext'),{s:secName(SECTORS.length)}))+'</span><span class="gtx">'+esc(fill(T('u_settledOf'),{n:Math.min(s,sn),m:sn}))+'</span></div>'+
+      '<div class="prow">'+price(sc,G.earth)+'</div>'+btn(esc(sv==='settled'?fill(T('u_surveyMore'),{n:sn-s}):T('u_survey')),'survey',null,'pri full','survey',offW(sw)) };
+  // OVERVIEW
+  var o=sec(esc(T('u_hullGen'))+'<button type="button" class="qm'+(driveHelpOn()?' on':'')+'" data-act="drivehelp" aria-expanded="'+driveHelpOn()+'" title="'+attr(T('u_dhQ'))+'" aria-label="'+attr(T('u_dhQ'))+'">?</button>',roman(g)+' → '+roman(g+1));
+  if(driveHelpOn()) o+=driveHelp(work);
+  o+='<div class="gnow"><span class="gen big">'+roman(g)+'</span>'+ic('tTech',18,C.mid)+'<span class="gen big nx">'+roman(g+1)+'</span>'+(G.drive?'<span class="gtx">'+esc(fill(T('u_driveAt'),{p:pname(G.drive)}))+'</span>':'')+'</div>';
+  var hkT=hackNext(G); if(hkT&&hkT.k==='drive'&&!hackOn()) o+='<div id="hkneed">'+alertBox('tTech',esc(fill(T('u_hackNeed'),{w:hackWho(hkT)})),true)+btn(esc(T('u_hackStart')),'hack',null,'pri full','tTech')+'</div>';   // v5.09: the player starts the hack
+  o+='<div class="lab">'+esc(fill(T('u_step1'),{n:Math.min(s,need),m:need}))+'</div>'+steps(s,need,C.food);
+  o+='<div class="lab">'+esc(fill(T('u_step2'),{n:num(Math.min(have,work)),m:num(work)}))+'</div><div class="bar"><u style="width:'+Math.min(100,Math.round(have/work*100))+'%;background:'+C.parts+'"></u></div>';
+  if(!ws.length) o+=hint(esc(T('u_noWorks')));
+  if(!G.drive){ var w=startDriveWhy(host), lbl=(typeof w!=='string'&&w[0]==='needsettled')?fill(T('u_startMore'),{n:need-s}):T('u_start');
+    o+=btn(esc(lbl),'drive',{p:host||''},'pri full','tTech',offW(w)) }
+  o+=techGains(g,lvl);
+  o+=sec(esc(T('u_ringNextH')))+ringRow();
+  // DRIVE
+  var d=sec(esc(T('u_hullGen')),roman(g)+' → '+roman(g+1))+'<div class="gains flat">'+
+    '<div class="g">'+ic('speed',16,C.ink)+'<span>'+esc(T('u_gEvery'))+'</span><b>'+pctUp(driveSpeed(G),driveSpeed({driveLvl:lvl+1}))+'</b></div>'+
+    (can('fuel')?'<div class="g">'+resIc('fuel',16)+'<span>'+esc(T('u_gFuel'))+'</span><b>−'+Math.round((1-Math.sqrt(driveSpeed(G)/driveSpeed({driveLvl:lvl+1})))*100)+'%</b></div>':'')+'</div>';
+  d+=sec(esc(fill(T('u_gHulls'),{g:roman(g+1)})))+'<div class="spec"><div class="sh"><span></span><span>'+ic('hold',13,C.mid)+esc(T('u_hold'))+'</span><span>'+ic('speed',13,C.mid)+esc(T('u_speedH'))+'</span><span>'+ic('range',13,C.mid)+esc(T('u_reachH'))+'</span></div>';
+  CLASSES.forEach(function(cls,j){ var a=HULLS[currentHull(G,cls)], b=genHull(g+1,j);
+    d+='<div class="sr"><span>'+shipIc(cls,30)+'<b>'+esc(T(cls))+'</b></span><span><i>'+num(a.cap)+'</i>'+num(b.cap)+'</span><span>'+pctUp(1,Math.pow(K.GEN_SPEED,b.gen-a.gen))+'</span><span><i>'+(hullRange(a)+1)+'</i>'+esc(fill(T('u_ringN'),{n:hullRange(b)+1}))+'</span></div><div class="sp">'+price(hullCost(b),null,12)+'</div>' });
+  d+='</div>';
+  d+=sec(esc(T('u_worksParts')),num(Math.min(have,work))+' / '+num(work));
+  if(ws.length) d+=ws.map(function(k){ var c=G.colonies[k], p=planet(k), wh=worksHungry(k), r=wh.idle>5?0:c.pop*p.rich*K.REFINE*rateMult(c);
+    return '<div class="wkr">'+ic('works',14,C.parts)+'<span>'+esc(pname(k))+' <i>'+resIc('people',11)+num(Math.round(c.pop))+'</i></span><b>'+dec(r)+esc(T('u_perYr'))+'</b></div>' }).join('');
+  else d+=hint(esc(T('u_noWorks')));
+  if(!G.drive&&ws.length) d+='<div class="lab">'+esc(T('u_runAt'))+'</div><div class="chips">'+ws.map(function(k){ var ok=G.colonies[k].pop>=K.DRIVE_POP, on=k===host;
+      return '<button type="button" data-act="driveat" data-v="'+k+'" class="'+(on?'on':'')+'"'+(ok?'':off('pop'))+'>'+ic('works',15,on?'#000':C.parts)+esc(pname(k))+'</button>' }).join('')+'</div>';
+  // RINGS
+  var r=sec(esc(T('u_rings')),esc(fill(T('u_charted'),{n:SECTORS.length})).toUpperCase())+ringRow().replace('</div><div class="prow">','</div>'+steps(s,sn,C.food)+'<div class="prow">');
   var lim=sectorLimit(g), beyond=freeWorlds().filter(function(p){ return p.sec>lim }).length;
-  if(beyond) h+=hint(esc(fill(T('u_beyond'),{k:beyond,n:lim+1,g:roman(g+1)})));
-  return '<div class="side">'+head(esc(T('u_tech').toUpperCase()),'',ic('tTech',18))+'<div class="tbl">'+h+'</div></div>' }
+  if(beyond) r+=hint(esc(fill(T('u_beyond'),{k:beyond,n:lim+1,g:roman(g+1)})));
+  var tabs=[['over',T('u_tt_over'),o],['drive',fill(T('u_tt_drive'),{g:roman(g+1)}),d],['rings',T('u_rings'),r]];
+  var bar='<div class="ttabs">'+tabs.map(function(t){ return '<button type="button" data-act="ttab" data-v="'+t[0]+'" class="'+(U.ttab===t[0]?'on':'')+'">'+esc(t[1])+'</button>' }).join('')+'</div>';
+  var pans=tabs.map(function(t){ return '<div class="tpan" data-pan="ttab:'+t[0]+'"'+(t[0]===U.ttab?'':' hidden')+'>'+t[2]+'</div>' }).join('');
+  return '<div class="side">'+head(esc(T('u_tech').toUpperCase()),'',ic('tTech',18))+bar+'<div class="tbl">'+pans+'</div></div>' }
 
 /* ---------- Ark: the Night, the capsule rings, the convoy, the verdict ----------
    v5.10 (design/ARK.md 2g): the rules of the hive in the old frame — the hive drawing of design/ark-menu comes next */
@@ -1931,7 +1950,7 @@ function resLeft(sid){ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false
 function doAct(a,b){
   var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
   if(a!=='allhome') U.homeArm=false;
-  if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null } else U.win=U.win===v?null:v; SFX.play('tab') }
+  if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null; if(v==='tech') U.ttab='over' } else U.win=U.win===v?null:v; SFX.play('tab') }
   else if(a==='world'){ openWorld(v,d.f) }
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
@@ -1954,6 +1973,7 @@ function doAct(a,b){
     else if(res==='metal'||res==='parts'){ var hw=shortWhy(hubCost(G),G.earth); say(hw[0],hw[1]); draw(); return }
     else if(res==='hubCap'){ say('hubCap',hubCapP()); draw(); return } }
   else if(a==='wtab'){ U.wtab=v; draw(); return }
+  else if(a==='ttab'){ U.ttab=v; draw(); return }
   else if(a==='hubraze'){ res=razeHub(G,d.p); act(G,'hubRaze',{p:d.p},res); okc='ok_hubRaze'; okp={p:pname(d.p)} }
   else if(a==='via'){ var vc0=onLine(G,d.p).length; res=setVia(G,d.p,v); act(G,'via',{p:d.p,h:v},res); okc='ok_via'; okp={p:pname(d.p),h:v==='earth'?T('u_viaEarth'):pname(v)};
     if(res==='ok'){ var vd=vc0-onLine(G,d.p).length; if(vd>0){ okc='ok_viaDrop'; okp.n=vd } } }

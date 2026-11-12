@@ -46,8 +46,8 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
   /* tap(sel) → {res:'ok'|'disabled'|'covered'|'missing'|'lost', why, toast}. Нажатие на заблокированную кнопку делается: причина — в отчёт */
   async function tap(sel,opt){ opt=opt||{};
     for(let attempt=0;attempt<3;attempt++){
-      const wt=await p.evaluate(sel=>{ const e=document.querySelector(sel), w=e&&!e.getClientRects().length&&e.closest('.wpan[hidden]'); return w?w.dataset.wtab:null },sel).catch(()=>null);   // v5.13: the world card's tabs — press the tab first, as a player
-      if(wt&&!sel.includes('wrail')) await tap('#ovl .wrail [data-act="wtab"][data-v="'+wt+'"]',{soft:true});
+      const wt=await p.evaluate(sel=>{ const e=document.querySelector(sel), w=e&&!e.getClientRects().length&&e.closest('[data-pan][hidden]'); return w?w.dataset.pan.split(':'):null },sel).catch(()=>null);   // v5.13: the world card's tabs — press the tab first, as a player
+      if(wt&&!sel.includes('data-act="'+wt[0]+'"')) await tap('[data-act="'+wt[0]+'"][data-v="'+wt[1]+'"]',{soft:true});   // v5.16: Tech's tabs too
       const L=p.locator(sel).first(); if(!(await L.count())) return {res:'missing'};
       try{ await L.scrollIntoViewIfNeeded({timeout:1000}) }catch(e){}
       const info=await p.evaluate(sel=>{ const e=document.querySelector(sel); if(!e) return null; const r=e.getBoundingClientRect(), x=r.left+r.width/2, y=r.top+r.height/2, t=document.elementFromPoint(x,y);

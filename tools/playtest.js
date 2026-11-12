@@ -73,8 +73,8 @@ const SER=STYLE==='serial', RUSH=STYLE==='rush';
      gets the reason in a toast, and the reason is what the report wants. Taps the FIRST element matching sel. */
   async function tap(sel,opt){ opt=opt||{};
     for(let attempt=0;attempt<3;attempt++){
-      const wt=await p.evaluate(sel=>{ const e=document.querySelector(sel), w=e&&!e.getClientRects().length&&e.closest('.wpan[hidden]'); return w?w.dataset.wtab:null },sel).catch(()=>null);   // v5.13: the world card's tabs — press the tab first, as a player
-      if(wt&&!sel.includes('wrail')) await tap('#ovl .wrail [data-act="wtab"][data-v="'+wt+'"]',{soft:true});
+      const wt=await p.evaluate(sel=>{ const e=document.querySelector(sel), w=e&&!e.getClientRects().length&&e.closest('[data-pan][hidden]'); return w?w.dataset.pan.split(':'):null },sel).catch(()=>null);   // v5.13: the world card's tabs — press the tab first, as a player
+      if(wt&&!sel.includes('data-act="'+wt[0]+'"')) await tap('[data-act="'+wt[0]+'"][data-v="'+wt[1]+'"]',{soft:true});   // v5.16: Tech's tabs too
       let bb=await box(sel); if(!bb) return 'missing';
       const aim=async()=>{ const x=bb.x+bb.width/2, y=bb.y+bb.height/2; const h=await p.evaluate(probeJs,{x,y,sel}).catch(()=>({ok:true})); return Object.assign(h,{x,y}) };
       let hit=await aim();
