@@ -20,7 +20,8 @@ const out=[]; const ok=(name,cond,extra)=>{ out.push((cond?'PASS ':'FAIL ')+name
   }
   // ---------- A: English, the drive gets there ----------
   let p=await open('en');
-  ok('A night cell hidden before the date', await p.evaluate(()=>!document.querySelector('#top .yr.night')));
+  // v5.26: the Night stands in the top bar from year 0 — without a year until it is dated (was: no cell before the date)
+  ok('A night cell before the date: there, with no year', await p.evaluate(()=>{ const e=document.querySelector('#top .yr.night'); return !!e&&e.classList.contains('nd')&&!/\d/.test(e.querySelector('b').textContent) }));
   await p.evaluate(()=>{ botRun(430); const G=window.LN; if(!G.night) revealNight(G); LNdraw(); });
   const modal=await p.big();
   // v4.35: текст ночи назвал поколение двигателя, фраза про «два года» из нарратива ушла (срок — во вкладке Ark)

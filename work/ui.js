@@ -909,7 +909,9 @@ function drawEvBar(){
 var OBJ_CAN={o_food:'tech',o_feed:'parts',o_settle:'tech',o_works:'tech',o_grow:'tech',o_drive:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark'};
 var OBJ_GO={o_drive:'tech',o_survey:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark',o_food:'tech',o_hack:'hack'};
 var HEXI='<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M6 .5 11 3.3v5.4L6 11.5 1 8.7V3.3z" fill="currentColor"/></svg>';
-function objNow(O){ var l=O.now.filter(function(o){ return o.code==='o_survey'?can(o.n<=2?'ring2':'ring3'):o.code==='o_hack'?can(o.k==='ark'?'ark':'tech'):(!OBJ_CAN[o.code]||can(OBJ_CAN[o.code])) });
+/* v5.26: «Chart ring 3» is the way to the date of the Night — named as soon as the helper has shown the rings and the Tech tab
+   (it waited for the Night step, which only opens once the date is known); the rings after it wait for that step as before */
+function objNow(O){ var l=O.now.filter(function(o){ return o.code==='o_survey'?(can('ring2')&&can('tech')&&(o.n<=K.NIGHT_TRIGGER_SECTORS||can('ring3'))):o.code==='o_hack'?can(o.k==='ark'?'ark':'tech'):(!OBJ_CAN[o.code]||can(OBJ_CAN[o.code])) });
   if(!l.length){ var w=freeWorld(G); l=[w?{code:'o_more',p:w}:{code:'o_time'}] }
   return l }
 function objT(pre,o){ return fill(T(pre+o.code.slice(2)),{g:roman((o.g||1)-1),n:o.n===undefined?'':num(o.n),k:o.k===undefined?'':num(o.k)}) }
@@ -931,12 +933,16 @@ function objDone(e){ var d=e.d||{}, g=e.code==='ark_drive'?(d.g||0):(d.n||1)-1;
 function winGoals(){ var O=objectives(G), l=objNow(O), D=O.drive, A=O.ark, h='';
   h+=sec(esc(T('o_jNow')));
   l.slice(0,3).forEach(function(o,i){ var go=OBJ_GO[o.code]||(o.p?'w':'');
-    h+='<div class="orow'+(i?' alt':'')+'"><i></i><div><b>'+esc(objT('o_',o))+(o.p&&planet(o.p)?' — '+esc(pname(o.p)):'')+'</b><span>'+esc(objT('ow_',o))+'</span></div>'+
+    h+='<div class="orow'+(i?' alt':'')+'"><i></i><div><b>'+esc(objT('o_',o))+(o.p&&planet(o.p)?' — '+esc(pname(o.p)):'')+'</b><span>'+esc(o.code==='o_survey'&&!G.night?T('ow_surveyDate'):objT('ow_',o))+'</span></div>'+
       (go?'<button type="button" class="b" data-act="goal" data-v="'+i+'">'+esc(T('o_show'))+'</button>':'')+'</div>' });
   if(can('tech')){ h+=sec(esc(fill(T('o_jNext'),{g:roman(D.g-1)})));
     h+='<div class="opg">'+objBar(fill(T('o_jWorlds'),{n:D.need}),Math.min(D.settled,D.need)+' / '+D.need,D.settled/Math.max(1,D.need))+objBar(T('o_jParts'),num(D.work)+' / '+num(D.workNeed),D.work/Math.max(1,D.workNeed),C.parts)+'</div>'+
       '<div class="ogv">'+esc(T('o_jGives'))+'</div>' }
-  if(A&&can('ark')){ h+=sec(esc(T('o_jNight')),esc(fill(T('o_jYear'),{y:A.night})));
+  /* v5.26: the Night is in the journal from year 0 — no date; the way to it (the ring that dates it, core's NIGHT_TRIGGER_SECTORS)
+     is named once the rings and the Tech tab are open. No rule and no reward: revealNight is as it was */
+  if(!G.night){ h+=sec(esc(T('o_jNight')),esc(T('u_nightNo')));
+    if(can('tech')&&can('ring2')) h+='<div class="ock yet"><i>✗</i><b>'+esc(T('o_jDate'))+'</b><span>'+esc(fill(T('o_jDateV'),{n:K.NIGHT_TRIGGER_SECTORS}))+'</span></div>' }
+  else if(A&&can('ark')){ h+=sec(esc(T('o_jNight')),esc(fill(T('o_jYear'),{y:A.night})));
     h+='<div class="ah-big"><div class="wk"><small>'+esc(T('u_wake'))+'</small><b>'+num(A.wake)+'</b></div><div class="sl"><small>'+esc(T('u_sleepOn'))+'</small><b>'+num(Math.max(0,A.board-A.wake))+'</b></div></div>';
     var ck=function(ok,name,v){ return '<div class="ock '+(ok?'ok':A.near?'no':'yet')+'"><i>'+(ok?'✓':'✗')+'</i><b>'+esc(name)+'</b><span>'+esc(v)+'</span></div>' };
     h+=ck(A.caps>=A.board&&A.caps>0,T('o_jPods'),fill(T('o_jPodsV'),{n:num(A.caps),k:num(A.board)}))+
@@ -994,7 +1000,11 @@ var SPEEDS=[1,2,4];   // v4.42 (Nikita, 24.10): no 10× — presses were lost to
 /* v4.46 (Nikita, 03.11: «уведомление вверху не нужно, удалить»): the WAKE number of v4.45 is gone from the top bar; the ark tab keeps it */
 function drawTop(){
   var h='<div class="logo"><svg class="mk" viewBox="0 0 120 120" aria-hidden="true"><use href="#i-mark"/></svg>LAST BERTH</div><div class="yr"><small>'+esc(T('u_year'))+'</small><b>'+G.day+'</b></div>';
-  if(can('night')&&G.night) h+='<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>';
+  /* v5.26 (Nikita 13.11: «если сразу будет ночь, то это хороший хук, но когда — пока неизвестно»; a live player left at year 405
+     without ever seeing what the game is about): the Night stands up here from year 0, with or without the helper — no year
+     until revealNight dates it (.nd), then the year and the years left, as before */
+  h+=G.night?'<div class="yr night"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+G.night+'</b><span>'+esc(fill(T('u_yearsN'),{n:nightLeft(G)}))+'</span></div>'
+    :'<div class="yr night nd"><small>'+ic('night',11,C.red)+esc(T('u_night'))+'</small><b>'+esc(T('u_nightQ'))+'</b><span>'+esc(T('u_nightNo'))+'</span></div>';
   if(can('ark')&&G.night){ var twk=arkWakeN(G), tab_=arkSouls(G); h+='<div class="yr wso" id="topwake"><small>'+esc(T('u_topWake'))+'</small><b style="color:'+C.food+'">'+num(twk)+'</b><span>·</span><b style="color:'+C.ark+'">'+num(Math.max(0,tab_-twk))+'</b></div>' }
   if(can('advisor')){ var n=advRows().filter(function(r){ return r[0]!==C.mid }).length; h+='<button class="adv'+(U.pop==='adv'?' on':'')+(n?'':' calm')+'" type="button" data-act="pop" data-v="adv">'+ic('warn',15)+'<span>'+esc(T('u_needs'))+'</span><b>'+n+'</b></button>' }
   var hz=halted();
@@ -1060,7 +1070,7 @@ function flags(){ var F={}, E=G.earth, nd=G.need||earthNeed(G);
   return F }
 function drawTabs(){ var F=flags(), h='';
   TABS.forEach(function(t){ var k=t[0];
-    if(!can(k)){ h+='<div class="tab tlk"></div>'; return }
+    if(!can(k)){ h+=k==='ark'?'<div class="tab tlk sil">'+ic(t[1],30,C.dim)+'</div>':'<div class="tab tlk"></div>'; return }   // v5.26: the ark is there from year 0 — a shut outline, no word, no press
     var on=U.win===k||U.tab===k, f=F[k];
     h+='<button class="tab'+(on?' on':'')+'" type="button" data-act="tab" data-v="'+k+'">'+ic(t[1],30,on?((k==='earth'||k==='ark')?t[3]:'#000'):t[3])+'<span>'+esc(T(t[2]).toUpperCase())+'</span>'+(U.tut.fresh[k]&&!on?'<i class="new"></i>':'')+
       (f&&!U.win&&!U.tab&&!U.pop?'<em class="flag" style="color:'+f[1]+';border-color:'+f[1]+'">'+esc(f[0])+'</em>':'')+'</button>' });
@@ -1125,7 +1135,7 @@ function winEarth(){ var E=G.earth, nd=G.need||earthNeed(G), t=peopleRate(), h='
   h+=sec(esc(T('u_home')))+'<div class="hero" style="color:'+C.people+'">'+num(E.people)+'<span>'+esc(T('u_peopleW'))+(t!==null?' · '+(t>=0?'+':'−')+Math.abs(t).toFixed(1)+esc(T('u_perYr')):'')+'</span></div>';
   var bx=birthX(); h+=row(resIc('people',13)+esc(T('u_births')),birthTxt(bx),birthCol(bx))+hint(esc(fill(T('u_birthsHint'),{lo:birthTxt(K.FED_MIN),hi:birthTxt(K.FED_MAX),n:K.FED_YEARS,y:Math.floor(E.food/Math.max(0.1,nd.food||1))})));
   h+=row(resIc('food',13)+esc(T('u_foodUntil')),G.foodFc?'≈ '+G.foodFc.y:esc(T(G.night?'u_foodPastNight':'u_foodLong')),G.foodFc?C.red:null);
-  if(can('night')&&G.night) h+=row(ic('night',13,C.red)+esc(T('u_night')),G.night+' · '+esc(fill(T('u_yearsN'),{n:nightLeft(G)})),C.red);
+  h+=G.night?row(ic('night',13,C.red)+esc(T('u_night')),G.night+' · '+esc(fill(T('u_yearsN'),{n:nightLeft(G)})),C.red):row(ic('night',13,C.red)+esc(T('u_night')),esc(T('u_nightNo')),C.mid);   // v5.26: the row is there before the date too (the «?» sheet names it)
   h+=row(esc(T('u_liveWorlds')),reach(G))+row(esc(T('u_crossings')),'×'+driveSpeed(G).toFixed(2));
   var pop=0, tr=0; for(var ck in G.colonies) pop+=G.colonies[ck].pop; for(var i=0;i<G.ships.length;i++) tr+=(G.ships[i].cargo.people||0);
   h+=row(esc(T('u_onHulls')),num(crewOut(G)+tr))+row(esc(T('u_onWorlds')),num(pop));

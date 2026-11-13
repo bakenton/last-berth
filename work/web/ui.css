@@ -12,6 +12,7 @@ svg.gi{fill:currentColor}
 .logo{font-weight:700;letter-spacing:.22em;font-size:14px;display:flex;align-items:center;gap:10px;white-space:nowrap}.logo .mk{width:26px;height:26px;flex:none}
 .yr{white-space:nowrap}.yr small{text-transform:uppercase;display:flex;align-items:center;gap:4px;font-size:9.5px;letter-spacing:.18em;color:var(--mid);font-weight:600}.yr b{font:600 20px var(--n)}.yr span{font-size:11px;color:var(--mid);margin-left:6px}
 .night small,.night b{color:var(--red)}
+.yr.night.nd b{color:var(--mid);letter-spacing:.08em}   /* v5.26: the Night before its date — no year, no alarm yet */
 .adv{text-transform:uppercase;display:flex;align-items:center;gap:8px;border:1px solid var(--ppl);color:var(--ppl);padding:5px 8px 5px 10px;font-size:11px;font-weight:600;letter-spacing:.12em;white-space:nowrap}
 .adv b{background:var(--ppl);color:#000;padding:0 6px;font:600 12px var(--n)}.adv.on{background:var(--ppl);color:#000}.adv.on b{background:#000;color:var(--ppl)}
 .adv.calm{border-color:var(--dim);color:var(--dim)}.adv.calm b{background:var(--dim)}
@@ -31,6 +32,7 @@ svg.gi{fill:currentColor}
 .tab{width:82px;height:82px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;border-bottom:1px solid var(--ln);position:relative;font-size:10px;letter-spacing:.16em;font-weight:600;color:var(--mid)}
 .tab.on{background:var(--ink);color:#000}
 .tab.tlk{cursor:default}
+.tab.sil .ic{opacity:.6}   /* v5.26: the ark's shut outline before its step */
 .tab .new{position:absolute;right:8px;top:8px;width:8px;height:8px;background:var(--ppl)}
 .flag{position:absolute;left:88px;top:28px;white-space:nowrap;font-style:normal;letter-spacing:.02em;font-size:12px;font-weight:500;background:var(--pan);border:1px solid;padding:3px 9px;pointer-events:none}
 .flag:before{content:'';position:absolute;left:-7px;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:currentColor;border-left:0}

@@ -1006,3 +1006,10 @@ UI	h_free_1	Deposit — how much lies in the ground. It will not last forever.	�
 UI	h_free_2	Settlers — hands leaving Earth to found the colony.	Поселенцы — люди, которые уходят с Земли основать колонию.
 UI	h_free_3	Who goes — the hull that takes them: her hold and the years of the crossing.	Кто летит — судно, которое их повезёт: трюм и годы пути.
 UI	h_free_4	Price — fuel for the crossing and the people who go.	Цена — топливо на перелёт и люди, которые уходят.
+UI	u_nightQ	????	????
+UI	u_nightNo	date unknown	дата неизвестна
+UI	o_jDate	Date	Дата
+UI	o_jDateV	chart ring {n}	нанесите кольцо {n}
+UI	ow_surveyDate	New worlds — and the date of the Night.	Новые миры — и дата Ночи.
+UI	tm_p25	NIGHT ................ detected	НОЧЬ ................. обнаружена
+UI	tm_p26	NIGHT · date ......... no data	НОЧЬ · дата .......... нет данных

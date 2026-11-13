@@ -1,0 +1,8 @@
+UI,u_nightQ,????,????,v5.26 night from year 0,live,new
+UI,u_nightNo,date unknown,дата неизвестна,v5.26 night from year 0,live,new
+UI,o_jDate,Date,Дата,v5.26 night from year 0,live,new
+UI,o_jDateV,chart ring {n},нанесите кольцо {n},v5.26 night from year 0,live,new
+UI,ow_surveyDate,New worlds — and the date of the Night.,Новые миры — и дата Ночи.,v5.26 night from year 0,live,new
+UI,tm_p25,NIGHT ................ detected,НОЧЬ ................. обнаружена,v5.26 night from year 0,live,new
+UI,tm_p26,NIGHT · date ......... no data,НОЧЬ · дата .......... нет данных,v5.26 night from year 0,live,new
+UI,tut_m18,The Night has its year now — up here. Big news stops time and comes one window at a time.,"У Ночи теперь есть год — здесь, наверху. Большие новости останавливают время и приходят по одному окну.",v5.26 night from year 0,live,changed

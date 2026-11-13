@@ -116,3 +116,4 @@ LOG	kit_starved	{p}: Earth has no fuel to spare. The tier {t} machines have stop
 LOG	kit_running	{p}: Earth has fuel again. The tier {t} machines are running.	{p}: у Земли снова есть топливо. Техника яруса {t} работает.
 VOICE	kit_starved.1	{p}: the tanks are dry and the tier {t} rig is a monument. We are back on shovels. Tell the desk there is no fuel left for us.	{p}: баки сухие, установка яруса {t} стала памятником. Мы снова на лопатах. Передайте на пульт: для нас топлива не осталось.
 UI	tut_m13	Machines make a world give more. They burn Earth's fuel and ride out on the line's next hull.	Техника поднимает выработку мира. Жжёт топливо Земли и уходит со следующим судном линии.
+UI	tut_m18	The Night has its year now — up here. Big news stops time and comes one window at a time.	У Ночи теперь есть год — здесь, наверху. Большие новости останавливают время и приходят по одному окну.

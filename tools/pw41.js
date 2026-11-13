@@ -18,6 +18,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('SKIP in the terminal: the map and the first rule', mn.gone&&await p.evaluate(()=>LNI.tut().msg==='m0'), JSON.stringify(mn));
   ok('at the start only rations and people are seen', await p.evaluate(()=>[...document.querySelectorAll('#res .rc[data-r]')].map(e=>e.dataset.r).join()==='food,people'));
   ok('at the start no tab is open', await p.evaluate(()=>document.querySelectorAll('#tabs [data-act="tab"]').length===0));
+  // v5.26: the Night is in the top bar from year 0 with no date, the ark is a shut outline among the blank tabs
+  ok('at the start the Night is seen without a date, the ark as a shut outline', await p.evaluate(()=>{ const e=document.querySelector('#top .yr.night.nd'); return !!e&&!/\d/.test(e.textContent)&&document.querySelectorAll('#tabs .tab.sil svg').length===1&&!document.getElementById('topwake') }));
   // v5.10: the Night step grew (m28 «WAKE · SLEEP ON» between m18 and m19, the Ark window's m27/m20) — more steps, more time
   const r=await TUT.drive(p,U,{cap:260,deadline:T0+200000,shots:process.env.LB_SHOTS?'pw41':null});
   const S=r.seen, M=r.marks, F=M.final;
@@ -37,6 +39,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('her voice: the first landing report (N-02)', /Report from [A-Z]+: \d+ people landed/.test(M.v_N02||''), M.v_N02);
   ok('the first shift window speaks for the Institute (N-04)', /Shift 1 hands over the desk/.test(M.n04||'')&&/I stay/.test(M.n04||''), (M.n04||'').slice(0,160));
   ok('the Night window is N-09', /in \d+ our galaxy collapses/.test(M.n09||''), (M.n09||'').slice(0,160));
+  ok('v5.26: m18 speaks of a Night that was up there already and now has its year', /The Night has its year now/.test((M.h_m18||{}).text||''), (M.h_m18||{}).text);
   ok('a new tab shows a yellow dot until opened', M.earthDot===true&&M.earthDotAfter===false, M.earthDot+' '+M.earthDotAfter);
   ok('by occasion: the first look into Earth tells time stops (m7)', S.includes('m7'), S.join(' '));
   ok('ring II hidden until its step, then shown', M.ring2Before>0&&M.ring2After>M.ring2Before, M.ring2Before+' → '+M.ring2After);

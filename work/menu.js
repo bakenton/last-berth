@@ -277,7 +277,7 @@ function auStop(){ var a=BT.au; BT.au=null; if(!a) return; try{ a.m.gain.setTarg
    right zooms in (sector, system, planet), mem — the memory count */
 var PRE=[['l','cm','tm_p01'],['l','','tm_p02'],['l','','tm_p03'],['l','','tm_p04'],['l','','tm_p05'],['w',300],['t','tm_p06',1300],['loc',1,1800],['l','','tm_p07'],
   ['mem'],['l','','tm_p08'],['t','tm_p09',450],['t','tm_p10',450],['t','tm_p11',450],['t','tm_p12',450],['t','tm_p13',450],['t','tm_p14',450],['l','ok','tm_p15'],['loc',2,2600],['l','','tm_p16'],
-  ['l','','tm_p17'],['l','','tm_p18'],['l','f','tm_p19'],['t','tm_p20',700],['l','ok','tm_p21'],['loc',3,3400],['l','ok','tm_p22'],['l','','tm_p23'],['l','f','tm_p24'],['w',350]];
+  ['l','','tm_p17'],['l','','tm_p18'],['l','f','tm_p19'],['t','tm_p20',700],['l','ok','tm_p21'],['loc',3,3400],['l','ok','tm_p22'],['l','','tm_p23'],['l','f','tm_p25'],['l','f','tm_p26'],['w',500],['l','f','tm_p24'],['w',350]];   // v5.26 (Nikita 13.11: «в терминале можно добавить про ночь, потому что это важно»): p25, p26 — the Night is detected, its date is not
 /* the six systems, in order: their sound, the right verb (of four), how many lines the start-up prints */
 var SYS=[{k:'air',sig:'air',ok:0,ni:4},{k:'hatch',sig:'hatch',ok:1,ni:3},{k:'store',sig:'tape',ok:2,ni:3},{k:'yard',sig:'yard',ok:3,ni:3},{k:'cap',sig:'cap',ok:2,ni:3},{k:'tr',sig:'tr',ok:3,ni:3}];
 function sk(s,f,n){ return 'tm_'+s.k+'_'+f+(n||'') }
