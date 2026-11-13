@@ -4,7 +4,7 @@
 Навигация: `grep -n <имя> MAP.md` → `sed -n "<строка-40>,<строка+40>p" work/<файл>`. Код целиком не открывать.
 Формат: `строка  имя(аргументы) [длина]  назначение`. «≈ …» = комментария нет, показано начало кода.
 
-## core.js (1925 строк)
+## core.js (1934 строк)
 
 ```
     3  var VERSION  LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators.
@@ -244,9 +244,9 @@
  1874  var FEED_THIN  ≈ 0.75; // ui.js FORGE_WARN: a works' line that brings under this share of what it burns
  1875  var DONE  ≈ {first_landfall:1,surveyed:1,drive_mark:1,night_dated:1,ark_bought:1,ark_drive:1};
  1876  freeWorld(G,kind) [5]  ≈ var lim=Math.min(SECTORS.length,sectorLimit(G.gen||0)), best=null;
- 1881  objectives(G) [41]  ≈ var now=[], lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), nc=reach(G), k, p
- 1923  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
- 1924  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
+ 1881  objectives(G) [50]  ≈ var now=[], lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), nc=reach(G), k, p
+ 1932  dismiss(G,key) [1]  ≈ G.dismissed[key]=G.day; return 'ok' }
+ 1933  undismissAll(G) [1]  ≈ G.dismissed={}; return 'ok' }
 ```
 
 ## ui.js (2214 строк)

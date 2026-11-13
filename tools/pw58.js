@@ -95,11 +95,21 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.tap('#goals [data-act="goal"][data-v="'+arkI+'"]');
   ok('Show: the ark window', await p.evaluate(()=>LNU.win==='ark'));
   await p.keyboard.press('Escape');
-  // the end is near: the convoy comes first
-  await p.evaluate(()=>{ LN.night=LN.day+300; LNdraw() });
+  // v5.22 — the end is near and not a pod is bought: the ark comes before the works nobody feeds (a mouse run of v5.21:
+  // 286 years to the Night, no ring, and the card said «Feed the works»)
+  now=await p.evaluate(id=>{ onLine(LN,id).forEach(s=>clearLine(LN,s.id)); LN.night=LN.day+700; LNdraw(); return objectives(LN).now.map(o=>o.code) },ids.works);
+  ok('fixture: the works is unfed again and the Night is 700 years off', now.indexOf('o_feed')>=0, now.join(' '));
+  ok('near the Night: the first ring stands before the works and the hack', now.indexOf('o_ark')>=0&&now.indexOf('o_ark')<now.indexOf('o_feed')&&(now.indexOf('o_hack')<0||now.indexOf('o_ark')<now.indexOf('o_hack')), now.join(' '));
   tx=await p.innerText('#cards .ocard');
-  ok('card near the Night: gather the convoy', /gather the convoy/i.test(tx)&&/0 of \d+ hulls/i.test(tx), tx.replace(/\n/g,' | '));
-  await shot('6-card-convoy');
+  ok('card near the Night, no pods: buy the first ark ring', /buy the first ark ring/i.test(tx), tx.replace(/\n/g,' | '));
+  await shot('6-card-ark-first');
+  const far=await p.evaluate(()=>{ const n=LN.night; LN.night=LN.day+3000; const r=objectives(LN).now.map(o=>o.code); LN.night=n; return r });
+  ok('three thousand years off: the works first, as before', far.indexOf('o_feed')<far.indexOf('o_ark'), far.join(' '));
+  // a ring is there, the Night inside NIGHT_NEAR: the convoy comes first
+  now=await p.evaluate(()=>{ LN.ark=LN.ark||{}; LN.ark.rings=1; LN.ark.woke=1; LN.night=LN.day+300; LNdraw(); return objectives(LN).now.map(o=>o.code) });
+  tx=await p.innerText('#cards .ocard');
+  ok('card near the Night, a ring bought: gather the convoy', /gather the convoy/i.test(tx)&&/0 of \d+ hulls/i.test(tx)&&now[0]==='o_convoy'&&now.indexOf('o_convoy')<now.indexOf('o_feed'), tx.replace(/\n/g,' | ')+' · '+now.join(' '));
+  await shot('7-card-convoy');
   ok('no page errors', !errs.length, errs.join(' ; '));
   await b.close();
 }catch(e){ ok('scenario ran', false, e&&e.stack||e) }

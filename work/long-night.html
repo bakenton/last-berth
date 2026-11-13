@@ -516,7 +516,7 @@ svg.gi{fill:currentColor}
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.21'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.22'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -2386,7 +2386,7 @@ function advice(G){
    Nikita 12.11 (a live playtest of v5.20: «ему не хватает цели… нужен какой-то журнал квестов»). Nothing here is a rule:
    no reward, no state but the list of what is done (G.done, kept by log()). `now` is in order of urgency — its first entry
    is what the card on the chart names; `drive` and `ark` are the two long bars under it (Claude — awaiting review:
-   the order of `now`, and the convoy named only inside 2×NIGHT_NEAR, as its flag is). */
+   the order of `now`, and the convoy named only inside 2×NIGHT_NEAR, as its flag is). v5.22: inside that window the ark comes first. */
 var FEED_THIN=0.75;   // ui.js FORGE_WARN: a works' line that brings under this share of what it burns
 var DONE={first_landfall:1,surveyed:1,drive_mark:1,night_dated:1,ark_bought:1,ark_drive:1};
 function freeWorld(G,kind){ var lim=Math.min(SECTORS.length,sectorLimit(G.gen||0)), best=null;
@@ -2409,6 +2409,7 @@ function objectives(G){
   if(!nc){ if(flying) add('o_time'); else add('o_first',{p:farm||any}) }
   else if(G.hungry||foodShort(G)){ if(bareFarm) add('o_line',{p:bareFarm}); else if(farm) add('o_farm',{p:farm}); else add('o_food') }
   else if(nc===1&&bare) add('o_line',{p:bare});
+  var head=now.length;   // v5.22: what the ark still lacks goes in here when the Night is near
   var hk=hackNext(G); if(hk) add('o_hack',{k:hk.k});
   if(idle) add('o_feed',{p:idle});
   /* the drive: worlds, a works, hands at it, the programme, its parts */
@@ -2426,10 +2427,18 @@ function objectives(G){
   if(G.night){ var rings=arkRings(G), paid=arkPaid(G), board=arkBoard(G), caps=arkCaps(rings), cv=arkConvoy(G), left=nightLeft(G), ready=arkReady(G);
     var pods=paid<1?{code:'o_ark'}:(caps<board&&paid<=rings?{code:'o_pods',n:caps,k:board}:null);
     var conv=(!cv.ok&&left<=K.NIGHT_NEAR*2)?{code:'o_convoy',n:cv.have,k:cv.all}:null;
-    if(conv&&left<=K.NIGHT_NEAR){ now.push(conv); conv=null }
-    if(pods&&pods.code==='o_ark'){ now.push(pods); pods=null }
-    if(ready){ if(pods) now.push(pods); if(d) now.push(d) } else { if(d) now.push(d); if(pods) now.push(pods) }
-    if(conv) now.push(conv);
+    /* v5.22 (a mouse run of v5.21 to the Night: 286 years left, not a pod bought, 46 000 metal at home — and the card said
+       «Feed the works»): inside 2×NIGHT_NEAR whatever the ark lacks — a first ring, pods for everyone, the convoy, the drive she
+       cannot sail without — stands right after the larder, before the hack and the works. A first ring before the convoy:
+       with no pod the convoy wakes nobody. Further from the Night the order is as it was */
+    var near=left<=K.NIGHT_NEAR*2, seq=[], urgent=[];
+    if(pods&&pods.code==='o_ark'){ seq.push(pods); pods=null }
+    if(conv&&left<=K.NIGHT_NEAR){ seq.push(conv); conv=null }
+    if(ready){ if(pods) seq.push(pods); if(d) seq.push(d) } else { if(d) seq.push(d); if(pods) seq.push(pods) }
+    if(conv) seq.push(conv);
+    for(i=0;i<seq.length;i++){ var q=seq[i];
+      if(near&&(q.code==='o_ark'||q.code==='o_pods'||q.code==='o_convoy'||(q===d&&!ready))) urgent.push(q); else now.push(q) }
+    for(i=urgent.length-1;i>=0;i--) now.splice(head,0,urgent[i]);
     A={night:G.night,near:left<=K.NIGHT_NEAR*2,board:board,caps:caps,wake:arkWakeN(G),have:cv.have,all:cv.all,convoy:cv.ok,ready:ready,mark:G.arkMark,lvl:lvl};
   } else if(d) now.push(d);
   if(canSurvey(G)==='ok'&&!now.some(function(o){ return o.code==='o_survey' })) add('o_survey',{n:ring});
