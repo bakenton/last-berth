@@ -934,3 +934,75 @@ UI	u_lineLow	The line brings too little	Линия везёт мало
 UI	u_ofCap	of {n}	из {n}
 UI	u_kitDregs	Earth has no fuel to spare: the machines stand in {n} years.	У Земли нет лишнего топлива: техника встанет через {n} лет.
 UI	u_close	Close	Закрыть
+UI	u_help	Help	Справка
+UI	h_what	What this is	Что это
+UI	h_first	Do first	С чего начать
+UI	h_signs	What is what	Что есть что
+UI	tut_mH	«?» explains a window: what it is, what to do first, what each sign means.	«?» объясняет окно: что это, с чего начать и что значит каждый значок.
+UI	h_earth_w	Home. Everything the worlds send comes here, and everyone lives off it.	Дом. Сюда приходит всё, что шлют миры, и этим живут все.
+UI	h_earth_f	Watch the rations. Settle a farm before they run out.	Следите за рационами. Заселите ферму раньше, чем они кончатся.
+UI	h_earth_1	People — hands you can send out as settlers and crews. A full larder makes them grow faster.	Люди — руки, которых можно отправить поселенцами и экипажами. При полных складах их прибывает быстрее.
+UI	h_earth_2	Rations last until — the year the larder is empty at today's burn.	Рационов хватит до — год, когда склады опустеют при нынешнем расходе.
+UI	h_earth_3	Night — the year everything ends. Only the ark leaves.	Ночь — год, когда всё кончится. Уйдёт только ковчег.
+UI	h_earth_4	Earth burns — what home uses up every year, whatever you do.	Земля тратит — что дом расходует каждый год, что бы вы ни делали.
+UI	h_earth_5	Exchange — trade two things you have for one you lack. It costs more than it gives.	Обмен — отдать два ресурса за один, которого нет. Отдаёте больше, чем получаете.
+UI	h_yard_w	The Yard builds hulls. A hull with no line waits here, at the pier.	Верфь строит суда. Судно без линии ждёт здесь, у пирса.
+UI	h_yard_f	Build a courier. Then open a world on the chart and put her on its line.	Постройте курьер. Потом откройте мир на карте и поставьте судно на его линию.
+UI	h_yard_1	Hold — what she carries in one trip.	Трюм — сколько судно везёт за рейс.
+UI	h_yard_2	Speed — how much faster she is than the generation before.	Скорость — насколько судно быстрее прошлого поколения.
+UI	h_yard_3	Ring — how far from home she can fly.	Кольцо — как далеко от дома судно долетит.
+UI	h_yard_4	Price — metal, fuel, parts and crew, taken from Earth at once.	Цена — металл, топливо, детали и экипаж; берутся с Земли сразу.
+UI	h_yard_5	Generation — newer hulls carry more and fly farther. Tech raises it.	Поколение — новые суда везут больше и летят дальше. Поднимается в Технологиях.
+UI	h_yard_6	Class — courier, hauler, freighter: from small and quick to big and slow.	Класс — курьер, тягач, грузовоз: от малого и быстрого к большому и медленному.
+UI	h_yard_7	At the pier — hulls with nothing to do. Give them a line or scrap them.	У пирса — суда без дела. Дайте им линию или разберите.
+UI	h_ark_w	The ark is the only way out before the Night.	Ковчег — единственный выход до Ночи.
+UI	h_ark_f	Buy the first ring of pods. Then man the convoy — without it nobody wakes.	Купите первое кольцо капсул. Потом соберите конвой — без него никто не проснётся.
+UI	h_ark_1	Pod — one hex is a hundred people who board. Press the hive to buy a ring of pods.	Капсула — один гекс это сто человек на борту. Нажмите на улей, чтобы купить кольцо капсул.
+UI	h_ark_2	No pod — people with no place aboard. They stay.	Нет капсулы — люди без места на борту. Они остаются.
+UI	h_ark_3	Convoy — hulls that fly with the ark. Press the ring to man it.	Конвой — суда, которые летят с ковчегом. Нажмите на кольцо, чтобы его собрать.
+UI	h_ark_4	Wake — who wakes at the other end: those in pods, by the share of the fleet in the convoy.	Проснутся — кто проснётся на том конце: люди в капсулах, по доле флота в конвое.
+UI	h_ark_5	Sleep on — aboard, but with no convoy hull to wake them.	Спят дальше — на борту, но будить их некому: судов в конвое не хватило.
+UI	h_ark_6	Ark drive — the hull generation the ark needs before she can sail.	Двигатель ковчега — поколение судов, без которого ковчег не уйдёт.
+UI	h_worlds_w	Every world on the chart — yours and free.	Все миры на карте — ваши и свободные.
+UI	h_worlds_f	Press a world to open it. Free worlds in ring 1 are the place to start.	Нажмите на мир, чтобы открыть его. Начинать стоит со свободных миров кольца 1.
+UI	h_worlds_1	Mine — gives metal.	Шахта — даёт металл.
+UI	h_worlds_2	Farm — gives rations.	Ферма — даёт рационы.
+UI	h_worlds_3	Well — gives fuel.	Колодец — даёт топливо.
+UI	h_worlds_4	Works — makes parts from metal and rations.	Завод — делает детали из металла и рационов.
+UI	h_worlds_5	Ring — how far from home. A hull reaches only so far.	Кольцо — как далеко от дома. Судно долетает не до всякого.
+UI	h_worlds_6	Left — how much of the seam is still in the ground.	Осталось — сколько жилы ещё в земле.
+UI	h_tech_w	Two ways to grow: a new hull generation and a new ring of worlds.	Два пути роста: новое поколение судов и новое кольцо миров.
+UI	h_tech_f	Settle worlds — both need them. Then press START at a works.	Заселяйте миры — они нужны для обоих. Потом нажмите START на заводе.
+UI	h_tech_1	Generation — the next one makes every hull faster and new hulls bigger.	Поколение — следующее ускоряет все суда, а новые делает больше.
+UI	h_tech_2	Worlds ever settled — the first gate: settle this many.	Заселено миров — первое условие: заселить столько.
+UI	h_tech_3	Parts for the programme — the second gate: press START and a works makes them.	Детали на программу — второе условие: нажмите START, и завод их сделает.
+UI	h_tech_4	Next ring — a survey opens new worlds farther out.	Следующее кольцо — разведка открывает новые миры дальше от дома.
+UI	h_tech_5	The ark can sail — the generation the ark waits for.	Ковчег может уйти — поколение, которого ждёт ковчег.
+UI	h_fleet_w	Every hull you have and what she is doing.	Все ваши суда и чем каждое занято.
+UI	h_fleet_f	A hull free at the pier does nothing. Send her to a world.	Судно у пирса ничего не делает. Отправьте его к миру.
+UI	h_fleet_1	Shape and colour — her class: courier, hauler or freighter.	Форма и цвет — класс: курьер, тягач или грузовоз.
+UI	h_fleet_2	Numeral — her generation.	Цифра — поколение.
+UI	h_fleet_3	Free at the pier — at Earth with no line. Press SEND.	Свободно у пирса — стоит у Земли без линии. Нажмите SEND.
+UI	h_fleet_4	On her way — where she flies and the years left.	В пути — куда летит и сколько лет осталось.
+UI	h_fleet_5	World name — her line. Press it to open that world.	Имя мира — её линия. Нажмите, чтобы открыть этот мир.
+UI	h_world_w	A world you hold. It gives one thing, and a line of hulls carries it home.	Ваш мир. Он даёт один ресурс, а линия судов везёт его домой.
+UI	h_world_f	Keep the line as strong as the world: if it carries less than the world gives, add a hull.	Держите линию вровень с миром: если она увозит меньше, чем мир даёт, добавьте судно.
+UI	h_world_1	World gives — what it digs or grows in a year.	Мир даёт — сколько он добывает или растит за год.
+UI	h_world_2	Line carries — what its hulls take home in a year.	Линия увозит — сколько её суда доставляют домой за год.
+UI	h_world_3	Deposit — years until the seam is empty. Then the world is worked out.	Залежь — сколько лет до конца жилы. После этого мир выработан.
+UI	h_world_4	People — hands at work: more hands, more output. The line brings them.	Люди — рабочие руки: больше рук, больше выработка. Их привозит линия.
+UI	h_world_5	Last lift — the year a courier must leave to bring everyone home before the Night.	Последний рейс — год, когда курьер должен вылететь, чтобы вывезти всех до Ночи.
+UI	h_world_6	Upgrade — machines that raise the output and burn Earth's fuel.	Улучшение — техника: поднимает выработку и жжёт топливо Земли.
+UI	h_works_w	A works. It turns metal and rations into parts — for hulls, drives and the ark.	Завод. Превращает металл и рационы в детали — для судов, двигателей и ковчега.
+UI	h_works_f	Give it a line: the hull brings metal and rations out and takes parts home.	Дайте ему линию: судно привозит металл и рационы и увозит детали домой.
+UI	h_works_1	You bring — what the line must carry out to it.	Вы привозите — что линия должна сюда доставлять.
+UI	h_works_2	It makes — parts a year at today's supply.	Он делает — деталей в год при нынешнем подвозе.
+UI	h_works_3	Line brings — how much of what it burns the line delivers.	Линия везёт — какую долю его расхода линия покрывает.
+UI	h_works_4	People — a drive programme needs a works with enough hands.	Люди — программе двигателя нужен завод, где хватает рук.
+UI	h_works_5	Upgrade — machines: more parts, and more to bring.	Улучшение — техника: больше деталей и больше возить.
+UI	h_free_w	A free world. Nobody lives here yet.	Свободный мир. Здесь пока никто не живёт.
+UI	h_free_f	Pick a hull and press SEND SETTLERS. When they land, give the world a line.	Выберите судно и нажмите SEND SETTLERS. Когда они сядут, дайте миру линию.
+UI	h_free_1	Deposit — how much lies in the ground. It will not last forever.	Залежь — сколько лежит в земле. Навсегда её не хватит.
+UI	h_free_2	Settlers — hands leaving Earth to found the colony.	Поселенцы — люди, которые уходят с Земли основать колонию.
+UI	h_free_3	Who goes — the hull that takes them: her hold and the years of the crossing.	Кто летит — судно, которое их повезёт: трюм и годы пути.
+UI	h_free_4	Price — fuel for the crossing and the people who go.	Цена — топливо на перелёт и люди, которые уходят.
