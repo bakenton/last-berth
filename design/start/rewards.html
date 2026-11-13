@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — world rewards (drafts 13.11)</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--food:#3DDC84;--ppl:#FFD23F;--metal:#C9CFD6;--fuel:#FF8A1F;--earth:#4FA3FF;--parts:#5B82F0;--hub:#FF4FD8;--h:'Jost',system-ui,-apple-system,'Segoe UI',sans-serif;--n:'Geist Mono',ui-monospace,Consolas,Menlo,monospace}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--h)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#page{max-width:1180px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:13px;font-family:var(--n);font-weight:400;letter-spacing:.1em;color:var(--mid);margin-bottom:18px}
+h2{font-size:11px;font-weight:600;letter-spacing:.18em;color:var(--mid);text-transform:uppercase;border-bottom:1px solid var(--ln);padding-bottom:6px;margin:22px 0 12px;display:flex;justify-content:space-between;gap:10px}
+h2 span{color:var(--dim);font-weight:400;letter-spacing:.06em;text-transform:none}
+.ru{font-size:13px;line-height:1.4;color:var(--mid);margin:8px 0 0}
+.ru b{color:var(--ink);font-weight:600}
+/* ---- icon sheet ---- */
+.sheet{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:8px}
+.it{border:1px solid var(--ln);background:var(--pan);padding:10px 8px 8px;display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;min-height:104px}
+.it b{font-size:10px;letter-spacing:.14em;font-weight:600}
+.it small{font-size:11px;color:var(--dim);line-height:1.2}
+.it.r{border-color:#5E4E18}
+.pair{display:flex;gap:6px;align-items:center}
+/* ---- stages ---- */
+.grid{display:grid;grid-template-columns:1fr;gap:26px}
+@media(min-width:1000px){.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}}
+.stage{position:relative;border:1px solid var(--ln);background:var(--bg);overflow:hidden;max-width:420px;width:100%;margin:0 auto}
+.top{display:flex;justify-content:space-between;gap:4px;padding:8px 10px;background:var(--pan);border-bottom:1px solid var(--ln);font-family:var(--n);font-size:12px}
+.rc{display:inline-flex;align-items:center;gap:5px;color:var(--ink);transition:color .25s}
+.rc.up{color:var(--ppl)}
+.map{position:relative;height:236px;overflow:hidden}
+.map>svg{position:absolute;inset:0;width:100%;height:100%}
+.nm{position:absolute;transform:translateX(-50%);font-size:12px;font-weight:600;letter-spacing:.1em;color:var(--mid);white-space:nowrap;transition:color .3s}
+.on .nm{color:var(--ink)}
+.strip{position:absolute;transform:translateX(-50%);display:flex;gap:5px;white-space:nowrap}
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 6px 3px 5px;border:1px dashed var(--dim);background:var(--bg);font-family:var(--n);font-size:11px;color:var(--ink)}
+.on .chip{border-style:solid}
+.badge{position:absolute;transform:translate(-50%,-50%)}
+.ping{position:absolute;left:50%;top:50%;width:44px;height:44px;margin:-22px 0 0 -22px;border:1px solid var(--ppl);border-radius:50%;animation:pg 1.8s ease-out infinite;pointer-events:none}
+.on .ping{display:none}
+@keyframes pg{from{opacity:.9;transform:scale(.6)}to{opacity:0;transform:scale(1.5)}}
+.cap{position:absolute;left:0;right:0;bottom:8px;text-align:center;font-family:var(--n);font-size:11px;letter-spacing:.12em;color:var(--ppl);opacity:0;transition:opacity .4s}
+.cap.show{opacity:1}
+.ctl{display:flex;gap:8px;padding:10px;border-top:1px solid var(--ln);background:var(--pan)}
+.b{flex:1;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:40px;border:1px solid var(--ppl);color:var(--ppl);font-size:12px;letter-spacing:.14em;font-weight:600;text-transform:uppercase}
+.b.q{flex:none;padding:0 14px;border-color:var(--ln);color:var(--mid)}
+.b[disabled]{border-color:var(--ln);color:var(--dim);cursor:default}
+/* B: the world window */
+.win{position:absolute;left:10px;right:10px;top:10px;background:var(--pan);border:1px solid var(--ink)}
+.wh{display:flex;align-items:center;gap:10px;height:40px;padding:0 12px;background:var(--pan2);border-bottom:1px solid var(--ln)}
+.wh b{font-size:16px;font-weight:600;letter-spacing:.1em}
+.wh small{margin-left:auto;font-size:10px;letter-spacing:.18em;color:var(--mid);font-weight:600}
+.wh i{flex:none;width:22px;height:22px;background:var(--ppl);color:#000;font-style:normal;font-weight:700;display:flex;align-items:center;justify-content:center;font-size:13px}
+.bd{padding:10px 12px 12px}
+.sec{font-size:10px;letter-spacing:.18em;color:var(--mid);font-weight:600;border-bottom:1px solid var(--ln);padding-bottom:5px;margin-bottom:8px}
+.tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tile{border:1px dashed var(--dim);padding:8px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--n);font-size:13px;transition:border-color .3s,background .3s}
+.tile small{font-family:var(--h);font-size:9px;letter-spacing:.16em;color:var(--mid);font-weight:600}
+.tile.got{border:1px solid var(--mid);background:var(--pan2)}
+.rare{grid-column:1/4;flex-direction:row;justify-content:flex-start;gap:12px;padding:8px 10px;border-color:#7A651F;text-align:left;font-family:var(--h)}
+.rare b{display:block;font-size:13px;letter-spacing:.14em;color:var(--ppl);font-weight:600}
+.rare span{font-size:13px;color:var(--ink)}
+.rare.got{border-color:var(--ppl);background:#1B180C}
+/* C: the opening card */
+.sheetc{position:absolute;left:0;right:0;bottom:0;background:var(--pan);border-top:1px solid var(--ink);padding:10px 12px 14px;transform:translateY(102%);transition:transform .45s cubic-bezier(.2,.9,.3,1)}
+.on .sheetc{transform:none}
+.sheetc .t{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.sheetc .t small{font-size:10px;letter-spacing:.18em;color:var(--mid);font-weight:600}
+.sheetc .t b{font-size:18px;letter-spacing:.1em;font-weight:600}
+.slots{display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
+.slot{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;font-family:var(--n);font-size:13px;opacity:.28;transform:scale(.86);transition:opacity .3s,transform .35s cubic-bezier(.2,.9,.3,1.5)}
+.slot small{font-family:var(--h);font-size:9px;letter-spacing:.16em;color:var(--mid);font-weight:600}
+.slot.open{opacity:1;transform:none}
+.slot.big{flex:1.5}
+.slot.big small{color:var(--ppl)}
+.fly{position:fixed;z-index:9;pointer-events:none;display:inline-flex;align-items:center;gap:4px;font-family:var(--n);font-size:12px;color:var(--ppl)}
+/* R: variant A on two rings, with the world card */
+.rstage{position:relative;border:1px solid var(--ln);background:var(--bg);overflow:hidden;max-width:560px;width:100%;margin:0 auto}
+.rmap{position:relative}
+.rmap svg.m{display:block;width:100%;height:auto;user-select:none}
+.rmap text{font-family:var(--h);font-weight:600;letter-spacing:.06em;paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round}
+.rchips{position:absolute;transform:translateX(-50%);display:flex;gap:4px;white-space:nowrap;pointer-events:none}
+.rchips .chip{border-style:solid;border-color:var(--mid)}
+.hit{fill:transparent;cursor:pointer}
+.pingS{transform-box:fill-box;transform-origin:center;animation:pg 1.8s ease-out infinite}
+#rpanel{border-top:1px solid var(--ln);background:var(--pan);min-height:250px}
+#rpanel .bd{padding:10px 12px 12px}
+.idle{padding:16px 12px}.idle .tt{font-family:var(--n);font-size:11px;letter-spacing:.1em;color:var(--mid);margin-bottom:8px}.idle .mn{font-size:22px;font-weight:600}
+.rw{display:grid;grid-template-columns:26px 1fr auto;gap:1px 10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--ln)}
+.rw b{font-size:12px;letter-spacing:.14em;font-weight:600}
+.rw em{font-family:var(--n);font-style:normal;font-size:15px}
+.rw small{grid-column:2/4;font-size:13px;color:var(--mid);line-height:1.3}
+.rw.r b,.rw.r em{color:var(--ppl)}
+.rw.got{opacity:.55}
+#rpanel .b{width:100%;margin-top:12px}
+@media(prefers-reduced-motion:reduce){.ping,.pingS{animation:none}.sheetc,.slot,.tile{transition:none}}
+</style>
+</head>
+<body>
+<div id="page">
+<h1>LAST BERTH · WORLD REWARDS · DRAFTS 13.11 · design/START.md · not the game</h1>
+
+<h2>A · on two rings <span>вариант A на 11 мирах: редкая видна всегда, остальное — по нажатию на мир</span></h2>
+<div class="rstage" id="R"></div>
+<p class="ru"><b>Проверка на перегруз.</b> Постоянно на карте — только жёлтые знаки редких наград (здесь три). Нажмите мир: под именем появляются плашки, внизу — карточка с наградами и числами. Новый вид редкой награды подписан на карте, пока его не открыли первый раз. Числа — заглушки.</p>
+
+<h2>Reward icons <span>иконки наград — в грамматике значков игры (24 px, линия 1.9)</span></h2>
+<div class="sec" style="border:0;margin:0 0 6px">EVERY WORLD · на каждом мире</div>
+<div class="sheet" id="common"></div>
+<div class="sec" style="border:0;margin:14px 0 6px">RARE · один-два мира на кольцо</div>
+<div class="sheet" id="rare"></div>
+<p class="ru">Редкая награда — в жёлтом шестиугольнике: контур, пока мир не заселён, заливка — когда получена. Обычные — значок цвета ресурса и число.</p>
+
+<h2>World opening <span>три черновика одного и того же момента — мир Vesper, те же награды</span></h2>
+<div class="grid">
+ <div><div class="stage" id="A"></div><p class="ru"><b>A · Знаки на карте.</b> Награды висят под именем мира ещё до посадки. При посадке улетают в верхнюю панель, редкая остаётся на мире. Окон нет, игра не останавливается.</p></div>
+ <div><div class="stage" id="B"></div><p class="ru"><b>B · Окно мира.</b> В окне мира раздел FOUND HERE: плитки пунктиром до посадки, заливка после. Привычное место, но награду видно только тому, кто открыл окно.</p></div>
+ <div><div class="stage" id="C"></div><p class="ru"><b>C · Вскрытие.</b> При посадке снизу выезжает карточка, ячейки открываются по одной, редкая — последней и крупно. Самый «праздничный», но закрывает карту на 2–3 секунды.</p></div>
+</div>
+</div>
+<script>
+(function(){
+var ST='fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round" stroke-linecap="round"',FL='fill="currentColor"';
+function gp(d,x){ return '<path d="'+d+'" '+(x||'')+' '+ST+'/>' }
+function fp(d,x){ return '<path d="'+d+'" '+(x||'')+' '+FL+'/>' }
+var I={
+ cache:gp('M3 8 L12 3 L21 8 V16.5 L12 21.5 L3 16.5 Z')+gp('M3 8 L12 13 L21 8 M12 13 V21.5'),
+ sleep:gp('M8 3 H16 A4 4 0 0 1 20 7 V17 A4 4 0 0 1 16 21 H8 A4 4 0 0 1 4 17 V7 A4 4 0 0 1 8 3 Z')+fp('M12 9 m-2.4 0 a2.4 2.4 0 1 0 4.8 0 a2.4 2.4 0 1 0 -4.8 0')+fp('M7.6 17.6 C7.6 12.6 16.4 12.6 16.4 17.6 Z'),
+ hulk:gp('M10.5 3 L3 20 H9.5 L8 14.5 L11 11.5 Z')+gp('M14 7 L21 20 H13.5 L12 15 L14.8 12 Z'),
+ kit:gp('M3 8 H21 V20 H3 Z')+gp('M12 14 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+gp('M12 9.5 V11 M12 17 V18.5 M7.5 14 H9 M15 14 H16.5'),
+ crate:gp('M4 9 H20 V20 H4 Z')+gp('M4 9 L7 4 H17 L20 9')+fp('M12 11.5 L15.5 17.5 H8.5 Z'),
+ pods:gp('M2 12 L7 7 H18 L22 12 L18 17 H7 Z')+gp('M12 9.5 V14.5 M9.5 12 H14.5'),
+ dock:gp('M4 4 V20 H20 V4')+fp('M12 5 L17 16 H7 Z'),
+ node:gp('M12 2.5 L20.2 7.25 V16.75 L12 21.5 L3.8 16.75 V7.25 Z')+fp('M12 12 m-3 0 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0'),
+ archive:gp('M5 5 H19 V19 H5 Z')+gp('M9 2.5 V5 M15 2.5 V5 M9 19 V21.5 M15 19 V21.5 M2.5 9 H5 M2.5 15 H5 M19 9 H21.5 M19 15 H21.5')+fp('M13.4 8 A4.6 4.6 0 1 0 16.2 14.8 A3.9 3.9 0 0 1 13.4 8 Z'),
+ stream:gp('M2 7 H11 M2 12 H15 M2 17 H11')+gp('M15 6 L21 12 L15 18'),
+ scope:gp('M3.5 12.5 L14.5 6 L16.5 9.5 L5.5 16 Z')+gp('M14.5 6 L18.5 3.6 L20.6 7.2 L16.5 9.5')+gp('M10 14 L7 21 M10 14 L13.5 21'),
+ slip:gp('M2.5 5 V20 H11 V5 M13 5 V20 H21.5 V5')+fp('M6.75 7.5 L9.4 16.5 H4.1 Z')+fp('M17.25 7.5 L19.9 16.5 H14.6 Z'),
+ convoy:gp('M2 12 L7 5.5 H17 L22 12 L17 18.5 H7 Z')+fp('M12 7.5 L15.4 16 H8.6 Z')
+};
+/* the resource marks are the world marks of the game: circle metal, square food, diamond fuel, triangle parts */
+var RM={metal:'<circle r="6"/>',food:'<rect x="-5.5" y="-5.5" width="11" height="11"/>',fuel:'<path d="M0-7L7 0L0 7L-7 0Z"/>',parts:'<path d="M0-7L7 5.5H-7Z"/>',people:'<circle cy="-3.4" r="3"/><path d="M-6 7C-6 0 6 0 6 7Z"/>'};
+var RC={metal:'#C9CFD6',food:'#3DDC84',fuel:'#FF8A1F',parts:'#5B82F0',people:'#FFD23F'};
+var Y='#FFD23F',BG='#0B0B0C';
+function ic(k,px,c){ return '<svg viewBox="0 0 24 24" width="'+px+'" height="'+px+'" style="color:'+(c||'#F2F1EC')+';flex:none" aria-hidden="true">'+I[k]+'</svg>' }
+function rm(k,px){ return '<svg viewBox="-8 -8 16 16" width="'+px+'" height="'+px+'" fill="'+RC[k]+'" style="flex:none" aria-hidden="true">'+RM[k]+'</svg>' }
+function rare(k,px,on){ return '<svg viewBox="0 0 48 48" width="'+px+'" height="'+px+'" style="color:'+(on?BG:Y)+';flex:none" aria-hidden="true"><path d="M24 3 L42.2 13.5 V34.5 L24 45 L5.8 34.5 V13.5 Z" fill="'+(on?Y:BG)+'" stroke="'+Y+'" stroke-width="1.6" stroke-linejoin="round"/><g transform="translate(12 12)">'+I[k]+'</g></svg>' }
+function $(s,r){ return (r||document).querySelector(s) }
+
+/* ---- the sheet ---- */
+var COMMON=[['res','RESOURCES','ресурсы за открытие'],['cache','CACHE','запас продукта'],['sleep','SLEEPERS','спящие'],['hulk','HULK','остов — металл'],['kit','MACHINES','машины уже стоят'],['crate','PARTS CRATE','ящик деталей'],['pods','PODS','капсулы «до»']];
+var RARE=[['dock','DOCK','готовое судно'],['node','NODE','хаб раньше срока'],['archive','ARCHIVE','кусок даты Ночи'],['stream','STREAM','рейсы вдвое быстрее'],['scope','OBSERVATORY','следующее кольцо'],['slip','SECOND SLIP','два корпуса разом'],['convoy','CONVOY HULL','судно в конвой']];
+var CCOL={cache:'#3DDC84',sleep:'#FFD23F',hulk:'#C9CFD6',kit:'#F2F1EC',crate:'#5B82F0',pods:'#B48CFF'};
+$('#common').innerHTML=COMMON.map(function(c){ return '<div class="it">'+(c[0]==='res'?'<div class="pair" style="height:30px">'+rm('parts',15)+rm('fuel',15)+rm('metal',15)+rm('food',15)+'</div>':ic(c[0],30,CCOL[c[0]]))+'<b>'+c[1]+'</b><small>'+c[2]+'</small></div>' }).join('');
+$('#rare').innerHTML=RARE.map(function(c){ return '<div class="it r"><div class="pair">'+rare(c[0],38,false)+rare(c[0],38,true)+'</div><b>'+c[1]+'</b><small>'+c[2]+'</small></div>' }).join('');
+
+/* ---- the stages: one world, the same rewards, three ways to show the moment ---- */
+var START={food:1240,people:310,fuel:85,metal:420,parts:6};
+var GIFT=[{k:'parts',n:12,l:'PARTS'},{k:'fuel',n:40,l:'FUEL'},{k:'people',n:30,l:'SLEEPERS',i:'sleep'}];
+function top(){ return '<div class="top">'+['food','people','fuel','metal','parts'].map(function(k){ return '<span class="rc" data-r="'+k+'">'+rm(k,11)+'<span>'+START[k]+'</span></span>' }).join('')+'</div>' }
+function gicon(g,px){ return g.i?ic(g.i,px+3,RC[g.k]):rm(g.k,px) }
+function mapSvg(on){ var c='#3DDC84';
+  return '<svg viewBox="0 0 358 236" preserveAspectRatio="xMidYMid slice"><g fill="none" stroke="#2E2E33" stroke-width="1"><ellipse cx="70" cy="196" rx="120" ry="62"/><ellipse cx="70" cy="196" rx="220" ry="118"/><path d="M70 196L330 40M70 196L358 190"/></g>'+
+   '<path class="lane" d="M70 196L236 104" stroke="'+c+'" stroke-width="1" opacity="'+(on?.5:0)+'"/>'+
+   '<path d="M70 196V184" stroke="#4FA3FF"/><circle cx="70" cy="176" r="8" fill="#4FA3FF" fill-opacity=".28" stroke="#4FA3FF" stroke-width="1.6"/>'+
+   '<path d="M236 104V84" stroke="'+c+'"/><circle class="wd" cx="236" cy="76" r="9" fill="'+c+'" fill-opacity="'+(on?.3:0)+'" stroke="'+c+'" stroke-width="1.6"'+(on?'':' stroke-dasharray="3 2.5"')+'/><ellipse cx="236" cy="76" rx="9" ry="3.3" fill="none" stroke="'+c+'" stroke-width=".7" opacity=".7"/><ellipse cx="236" cy="76" rx="3.3" ry="9" fill="none" stroke="'+c+'" stroke-width=".7" opacity=".7"/></svg>' }
+function ctl(){ return '<div class="ctl"><button class="b" data-go>SEND SETTLERS</button><button class="b q" data-re>↺</button></div>' }
+var BUILD={
+ A:function(){ return top()+'<div class="map">'+mapSvg(false)+'<div class="nm" style="left:66%;top:112px">VESPER</div>'+
+   '<div class="strip" style="left:66%;top:132px">'+GIFT.map(function(g,i){ return '<span class="chip" data-g="'+i+'">'+gicon(g,10)+'+'+g.n+'</span>' }).join('')+'</div>'+
+   '<div class="badge" style="left:77%;top:44px"><span class="ping"></span><span data-rare>'+rare('dock',34,false)+'</span></div>'+
+   '<div class="cap">+1 COURIER ON THIS LINE</div></div>'+ctl() },
+ B:function(){ return top()+'<div class="map" style="height:286px">'+mapSvg(false)+'<div class="win"><div class="wh"><svg viewBox="-8 -8 16 16" width="16" height="16" data-mark style="color:#3DDC84"><rect x="-5.5" y="-5.5" width="11" height="11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.5 2"/></svg><b>VESPER</b><small>RING II · FARM</small><i>×</i></div>'+
+   '<div class="bd"><div class="sec">FOUND HERE</div><div class="tiles">'+GIFT.map(function(g,i){ return '<div class="tile" data-g="'+i+'">'+gicon(g,16)+'<span>+'+g.n+'</span><small>'+g.l+'</small></div>' }).join('')+
+   '<div class="tile rare" data-rt><span data-rare>'+rare('dock',40,false)+'</span><div><b>DOCK</b><span>A courier, ready to fly.</span></div></div></div></div></div></div>'+ctl() },
+ C:function(){ return top()+'<div class="map" style="height:286px">'+mapSvg(false)+'<div class="nm" style="left:66%;top:112px">VESPER</div>'+
+   '<div class="badge" style="left:77%;top:44px"><span class="ping"></span>'+rare('dock',34,false)+'</div>'+
+   '<div class="sheetc"><div class="t"><small>LANDFALL</small><b>VESPER</b></div><div class="slots">'+GIFT.map(function(g,i){ return '<div class="slot" data-g="'+i+'">'+gicon(g,26)+'<span>+'+g.n+'</span><small>'+g.l+'</small></div>' }).join('')+
+   '<div class="slot big" data-rt><span data-rare>'+rare('dock',62,false)+'</span><small>DOCK · +1 COURIER</small></div></div></div></div>'+ctl() }
+};
+function tick(el,to){ var from=+el.textContent, t0=performance.now(); el.parentNode.classList.add('up');
+  (function step(t){ var p=Math.min(1,(t-t0)/450); el.textContent=Math.round(from+(to-from)*p); if(p<1) requestAnimationFrame(step); else setTimeout(function(){ el.parentNode.classList.remove('up') },500) })(t0) }
+function fly(st,from,g){ var tgt=$('.rc[data-r="'+g.k+'"]',st), a=from.getBoundingClientRect(), b=tgt.getBoundingClientRect(), f=document.createElement('span');
+  f.className='fly'; f.innerHTML=gicon(g,11)+'+'+g.n; f.style.left=(a.left+a.width/2-14)+'px'; f.style.top=(a.top+2)+'px'; document.body.appendChild(f);
+  var an=f.animate([{transform:'none',opacity:1},{transform:'translate('+(b.left-a.left-a.width/2+14)+'px,'+(b.top-a.top-2)+'px) scale(.8)',opacity:.2}],{duration:520,easing:'cubic-bezier(.4,0,.7,.3)'});
+  an.onfinish=function(){ f.remove(); var n=$('span',tgt); tick(n,+n.textContent+g.n) } }
+function land(id){ var st=$('#'+id), b=$('[data-go]',st); if(b.disabled) return; b.disabled=true; b.textContent='LANDED';
+  st.classList.add('on'); var wd=$('.wd',st), ln=$('.lane',st); wd.setAttribute('fill-opacity','.3'); wd.removeAttribute('stroke-dasharray'); ln.setAttribute('opacity','.5');
+  var mk=$('[data-mark] rect',st); if(mk){ mk.setAttribute('fill','currentColor'); mk.removeAttribute('stroke-dasharray') }
+  var d0=id==='C'?520:260;
+  GIFT.forEach(function(g,i){ setTimeout(function(){ var el=$('[data-g="'+i+'"]',st); if(id==='A') el.style.visibility='hidden'; if(id==='B') el.classList.add('got'); if(id==='C') el.classList.add('open'); fly(st,el,g) },d0+i*300) });
+  setTimeout(function(){ var r=$('[data-rare]',st); r.innerHTML=rare('dock',id==='A'?34:id==='B'?40:62,true); var rt=$('[data-rt]',st); if(rt) rt.classList.add(id==='B'?'got':'open'); var c=$('.cap',st); if(c) c.classList.add('show'); if(id==='C') $('.badge',st).innerHTML=rare('dock',34,true) },d0+GIFT.length*300+250) }
+/* ---- R: variant A on two rings ---- */
+var KY=.8,CX=205,CY=170,RR=[0,84,160],LOBE=Math.PI/3,VH=336;
+var KC={farm:'#3DDC84',mine:'#C9CFD6',well:'#FF8A1F',works:'#5B82F0'},KN={farm:'FARM',mine:'MINE',well:'WELL',works:'WORKS'},ROM=['','I','II'];
+var RL={parts:'PARTS',fuel:'FUEL',metal:'METAL',food:'RATIONS',people:'PEOPLE'};
+var LINE={res:"Lands in Earth's stores at once.",cache:'Already mined. The first ship takes it.',sleep:'They wake here. No one leaves Earth.',hulk:'A wreck. Broken up for metal.',dock:'A courier, ready. Flies this line.',node:'This world is a hub. No cost.'};
+var RNAME={dock:'DOCK',node:'NODE'};
+var RW=[
+ {id:'tallow',n:'Tallow',r:1,l:0,o:.05,k:'farm'},
+ {id:'brine',n:'Brine',r:1,l:1,o:-.1,k:'well'},
+ {id:'cinder',n:'Cinder',r:1,l:2,o:0,k:'mine',g:[{k:'fuel',n:40},{i:'hulk',k:'metal',n:150,l:'HULK'}]},
+ {id:'marrow',n:'Marrow',r:1,l:4,o:-.05,k:'mine',rare:'dock',g:[{k:'parts',n:8},{i:'sleep',k:'people',n:30,l:'SLEEPERS'}]},
+ {id:'solace',n:'Solace',r:1,l:5,o:.1,k:'works',g:[{k:'parts',n:12},{k:'fuel',n:30}]},
+ {id:'vesper',n:'Vesper',r:2,l:0,o:-.2,k:'farm',g:[{i:'cache',k:'food',n:600,l:'CACHE'},{k:'fuel',n:60}]},
+ {id:'gallows',n:'Gallows',r:2,l:1,o:.1,k:'mine',rare:'node',g:[{k:'parts',n:20},{k:'metal',n:200}]},
+ {id:'ferrous',n:'Ferrous',r:2,l:2,o:-.05,k:'mine',g:[{i:'hulk',k:'metal',n:300,l:'HULK'},{k:'parts',n:14}]},
+ {id:'kiln',n:'Kiln',r:2,l:3,o:.1,k:'well',g:[{i:'sleep',k:'people',n:50,l:'SLEEPERS'},{k:'fuel',n:80}]},
+ {id:'hollow',n:'Hollow',r:2,l:4,o:-.3,k:'well',rare:'dock',g:[{k:'parts',n:18},{i:'cache',k:'fuel',n:120,l:'CACHE'}]},
+ {id:'threnody',n:'Threnody',r:2,l:5,o:-.3,k:'works',g:[{k:'parts',n:24},{k:'metal',n:160}]}
+];
+var RS;
+function rreset(){ RS={sel:null,set:{tallow:1,brine:1},seen:{},res:{food:1240,people:310,fuel:85,metal:420,parts:6},busy:false} }
+function rby(id){ for(var i=0;i<RW.length;i++) if(RW[i].id===id) return RW[i]; return null }
+function f1(x){ return x.toFixed(1) }
+function rpos(w,h){ var a=-Math.PI/2+w.l*LOBE+w.o*LOBE; return [CX+RR[w.r]*Math.cos(a), CY+RR[w.r]*Math.sin(a)*KY-(h||0)] }
+function rdraw(){
+  var st=$('#R'), E=[CX,CY], h='', lanes='', i;
+  h+='<g transform="translate('+CX+','+CY+') scale(1,'+KY+')" fill="none" stroke="#2E2E33" stroke-width="1"><circle r="'+RR[1]+'" vector-effect="non-scaling-stroke"/><circle r="'+RR[2]+'" vector-effect="non-scaling-stroke"/>';
+  for(i=0;i<6;i++){ var a=-LOBE*2+i*LOBE; h+='<path vector-effect="non-scaling-stroke" stroke="#1F1F23" d="M'+f1(30*Math.cos(a))+' '+f1(30*Math.sin(a))+'L'+f1(196*Math.cos(a))+' '+f1(196*Math.sin(a))+'"/>' }
+  h+='</g>';
+  var list=RW.map(function(w){ return {w:w,f:rpos(w,0),s:rpos(w,18)} }).sort(function(a,b){ return a.f[1]-b.f[1] }), body='', chips='';
+  list.forEach(function(o){ var w=o.w, f=o.f, sp=o.s, c=KC[w.k], set=!!RS.set[w.id], sel=RS.sel===w.id, g='';
+    if(set){ lanes+='<path d="M'+f1(E[0])+' '+f1(E[1])+'L'+f1(f[0])+' '+f1(f[1])+'" stroke="'+c+'" stroke-width="1" opacity=".45"/>';
+      if(w.rare==='dock'){ var mx=(E[0]+f[0])/2, my=(E[1]+f[1])/2, ang=Math.atan2(f[1]-E[1],f[0]-E[0])*180/Math.PI+90;
+        lanes+='<g transform="translate('+f1(mx)+','+f1(my)+') rotate('+f1(ang)+')"><path d="M-5 4.5L0-6.5L5 4.5Z" fill="'+BG+'" stroke="#F2F1EC" stroke-width="1.1"/><path d="M-1.9-2L0-6.5L1.9-2Z" fill="'+Y+'"/></g>' }
+      if(w.rare==='node') g+='<ellipse cx="'+f1(f[0])+'" cy="'+f1(f[1])+'" rx="13" ry="7.5" fill="none" stroke="#FF4FD8" stroke-width="1.4"/>' }
+    g+='<path d="M'+f1(f[0])+' '+f1(f[1])+'V'+f1(sp[1])+'" stroke="'+c+'" stroke-width="1" opacity=".8"/>';
+    if(sel) g+='<circle cx="'+f1(sp[0])+'" cy="'+f1(sp[1])+'" r="11.5" fill="none" stroke="'+Y+'" stroke-width="1.2"/>';
+    g+='<circle cx="'+f1(sp[0])+'" cy="'+f1(sp[1])+'" r="7" fill="'+(set?c:BG)+'" fill-opacity="'+(set?.3:1)+'" stroke="'+c+'" stroke-width="'+(set?1.6:1.2)+'"'+(set?'':' stroke-dasharray="3 2.5"')+'/><ellipse cx="'+f1(sp[0])+'" cy="'+f1(sp[1])+'" rx="7" ry="2.6" fill="none" stroke="'+c+'" stroke-width=".7" opacity=".7"/><ellipse cx="'+f1(sp[0])+'" cy="'+f1(sp[1])+'" rx="2.6" ry="7" fill="none" stroke="'+c+'" stroke-width=".7" opacity=".7"/>';
+    if(w.rare){ var lf=sp[0]<CX-20, hx=sp[0]+(lf?-15:15), hy=sp[1]-13;
+      if(!set) g+='<circle class="pingS" cx="'+f1(hx)+'" cy="'+f1(hy)+'" r="13" fill="none" stroke="'+Y+'" stroke-width="1"/>';
+      g+='<g transform="translate('+f1(hx-11)+','+f1(hy-11)+')">'+rare(w.rare,22,set)+'</g>';
+      if(!RS.seen[w.rare]) g+='<text x="'+f1(hx+(lf?-14:14))+'" y="'+f1(hy+3.5)+'" text-anchor="'+(lf?'end':'start')+'" font-size="9.5" fill="'+Y+'">'+RNAME[w.rare]+'</text>' }
+    g+='<text x="'+f1(f[0])+'" y="'+f1(f[1]+11.5)+'" text-anchor="middle" font-size="10.5" fill="'+(set||sel?'#F2F1EC':'#9C9B95')+'">'+w.n.toUpperCase()+'</text>';
+    g+='<circle class="hit" data-rw="'+w.id+'" cx="'+f1(sp[0])+'" cy="'+f1(sp[1]+6)+'" r="16"/>';
+    body+=g;
+    if(sel&&!set&&w.g){ var px=Math.max(24,Math.min(76,f[0]/410*100));
+      chips='<div class="rchips" style="left:'+f1(px)+'%;top:'+f1((f[1]+16)/VH*100)+'%">'+w.g.map(function(q,j){ return '<span class="chip" data-g="'+j+'">'+gicon(q,10)+'+'+q.n+'</span>' }).join('')+'</div>' }
+  });
+  h+=lanes+'<path d="M'+CX+' '+CY+'V'+(CY-11)+'" stroke="#4FA3FF"/><circle cx="'+CX+'" cy="'+(CY-19)+'" r="8.5" fill="#4FA3FF" fill-opacity=".28" stroke="#4FA3FF" stroke-width="1.6"/><text x="'+CX+'" y="'+(CY+11.5)+'" text-anchor="middle" font-size="9.5" fill="#4FA3FF">EARTH</text>'+body;
+  var top='<div class="top">'+['food','people','fuel','metal','parts'].map(function(k){ return '<span class="rc" data-r="'+k+'">'+rm(k,11)+'<span>'+RS.res[k]+'</span></span>' }).join('')+'</div>';
+  st.innerHTML=top+'<div class="rmap"><svg class="m" viewBox="0 0 410 '+VH+'">'+h+'</svg>'+chips+'</div><div id="rpanel">'+rpanel()+'</div>';
+}
+function rrow(q,got){ var key=q.i||'res'; return '<div class="rw'+(got?' got':'')+'">'+gicon(q,q.i?17:15)+'<b>'+(q.l||RL[q.k])+'</b><em>'+(got?'✓ ':'+')+q.n+'</em><small>'+LINE[key]+'</small></div>' }
+function rpanel(){
+  if(!RS.sel) return '<div class="idle"><div class="tt">HELM</div><div class="mn">Tap a world.</div></div>';
+  var w=rby(RS.sel), set=!!RS.set[w.id], mark={mine:'<circle r="6"/>',farm:'<rect x="-5.5" y="-5.5" width="11" height="11"/>',well:'<path d="M0-7L7 0L0 7L-7 0Z"/>',works:'<path d="M0-7L7 5.5H-7Z"/>'}[w.k];
+  var h='<div class="wh"><svg viewBox="-8 -8 16 16" width="16" height="16" style="color:'+KC[w.k]+';flex:none" '+(set?'fill="currentColor"':'fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.5 2"')+'>'+mark+'</svg><b>'+w.n.toUpperCase()+'</b><small>RING '+ROM[w.r]+' · '+KN[w.k]+'</small></div><div class="bd">';
+  if(!w.g) return h+'<div class="rw"><span></span><b>SETTLED</b><em></em><small>Nothing was found here.</small></div></div>';
+  h+='<div class="sec">FOUND HERE</div>';
+  if(w.rare) h+='<div class="rw r'+(set?' got':'')+'"><span style="display:flex">'+rare(w.rare,24,set)+'</span><b>'+RNAME[w.rare]+'</b><em>'+(set?'✓':'')+'</em><small>'+LINE[w.rare]+'</small></div>';
+  h+=w.g.map(function(q){ return rrow(q,set) }).join('');
+  h+='<button class="b" data-rgo'+(set?' disabled':'')+'>'+(set?'SETTLED':'SEND SETTLERS')+'</button></div>';
+  return h }
+function rland(){ var w=rby(RS.sel), st=$('#R'); if(!w||RS.set[w.id]||RS.busy) return; RS.busy=true; $('[data-rgo]',st).disabled=true;
+  w.g.forEach(function(q,j){ RS.res[q.k]+=q.n; setTimeout(function(){ var el=$('.rchips [data-g="'+j+'"]',st); if(!el) return; el.style.visibility='hidden'; fly(st,el,q) },150+j*280) });
+  setTimeout(function(){ RS.set[w.id]=1; RS.busy=false; rdraw() },150+w.g.length*280+1100) }
+rreset(); rdraw();
+document.addEventListener('click',function(e){ var st=e.target.closest('#R'); if(!st||RS.busy) return; var q;
+  if(e.target.closest('[data-rgo]')){ rland(); return }
+  if((q=e.target.closest('[data-rw]'))){ var w=rby(q.getAttribute('data-rw')); RS.sel=w.id; if(w.rare) RS.seen[w.rare]=1; rdraw(); return }
+  if(e.target.closest('.rmap')){ RS.sel=null; rdraw() } });
+function build(id){ var st=$('#'+id); st.className='stage'; st.innerHTML=BUILD[id]() }
+['A','B','C'].forEach(build);
+document.addEventListener('click',function(e){ var st=e.target.closest('.stage'); if(!st) return; if(e.target.closest('[data-go]')) land(st.id); else if(e.target.closest('[data-re]')) build(st.id) });
+})();
+</script>
+</body>
+</html>

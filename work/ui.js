@@ -219,6 +219,37 @@ function whyText(code,p){ return fill(MSG[U.lang][code]||code,p||null) }
 function btn(label,act,data,kind,icon,dis){ var d=''; for(var k in (data||{})) d+=' data-'+k+'="'+attr(data[k])+'"';
   return '<button class="b'+(kind?' '+kind:'')+'" type="button"'+(act?' data-act="'+act+'"':'')+d+(dis||'')+'>'+(icon?ic(icon,15):'')+label+'</button>' }
 
+/* ---------- v5.27: what a world gives when it is first settled ---------- */
+/* Nikita 13.11 («как минимум тупо за открытие планеты надо давать немного ресурсов»; the look — draft «A · on two rings» of
+   design/start/rewards.html, «Да, годится»; «когда нажимаешь на саму планету, там показывается, какие конкретно награды, в каких
+   количествах»): giftFor(G,pid) of the core is the one number — the world's window (FOUND HERE), the chips by the world on the chart
+   and the landing itself all read it. Said in the signs of the strip, and only in those the strip shows (can). */
+var GIFT_RES=['parts','fuel'];
+function giftKeys(g){ return g?GIFT_RES.filter(function(k){ return g[k]>0&&can(k) }):[] }
+function giftChip(k,v){ return resIc(k,12)+'+'+num(v) }
+function giftBlock(g,got){ var ks=giftKeys(g); if(!ks.length) return '';
+  return '<div id="gift" class="gift'+(got?' got':'')+'">'+sec(esc(T('u_giftSec')))+ks.map(function(k){ return '<div class="rw gf" data-g="'+k+'"><span>'+resIc(k,15)+esc(T(k))+'</span><b>'+(got?'✓ ':'+')+num(g[k])+'</b></div>' }).join('')+'</div>' }
+/* the chips under the name of the world whose window is open (SV.sel — where drawMap put that name): over the dark of the window's
+   backdrop, under the window itself; they take no press */
+function giftChips(pid){ var g=giftFor(G,pid), ks=giftKeys(g), a=SV.sel; if(!ks.length||!a||a.p!==pid) return '';
+  var mb=el('mapbox'), oc=getComputedStyle(el('ovl')), wd=ks.length*66;   // #ovl is not laid out until its first window (offsetLeft 0): its place from the style
+  var x=Math.max(4,Math.min(M3D.W-wd-4,a.c?a.x-wd/2:a.x))+mb.offsetLeft-(parseFloat(oc.left)||0), y=a.y+mb.offsetTop-(parseFloat(oc.top)||0);
+  return '<div class="gchips" id="gchips" style="left:'+x.toFixed(0)+'px;top:'+y.toFixed(0)+'px">'+ks.map(function(k){ return '<span class="gch" data-g="'+k+'">'+giftChip(k,g[k])+'</span>' }).join('')+'</div>' }
+/* the landing: the chips leave the world for the strip and the counters there click. Nothing stops and there is nothing to press;
+   a fast-forward, a hidden page and «reduce motion» get the click alone */
+function giftTick(k){ U.gtick=U.gtick||{}; U.gtick[k]=Date.now()+700; if(G) drawRes(); setTimeout(function(){ if(G) drawRes() },760) }
+function giftFly(pid,g){ var ks=giftKeys(g); if(!ks.length||U.ff) return;
+  var app=el('app'), z=+app.dataset.z||1, ar=app.getBoundingClientRect(), w=document.querySelector('#map .wd[data-p="'+pid+'"] circle'), lay=el('gfly');
+  if(!lay){ lay=document.createElement('div'); lay.id='gfly'; lay.setAttribute('aria-hidden','true'); app.appendChild(lay) }
+  var still=document.hidden||!lay.animate||(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  ks.forEach(function(k,i){ var t=document.querySelector('#res .rc[data-r="'+k+'"] b');
+    if(!w||!t||still){ giftTick(k); return }
+    var a=w.getBoundingClientRect(), b=t.getBoundingClientRect(), x0=(a.left+a.width/2-ar.left)/z+(i-ks.length/2)*66, y0=(a.bottom-ar.top)/z+4, x1=(b.left-ar.left)/z, y1=(b.top-ar.top)/z;
+    var c=document.createElement('span'); c.className='gch'; c.dataset.g=k; c.innerHTML=giftChip(k,g[k]); c.style.left=x0.toFixed(0)+'px'; c.style.top=y0.toFixed(0)+'px'; lay.appendChild(c);
+    var an=c.animate([{transform:'translate(0,8px) scale(.7)',opacity:0},{transform:'translate(0,0) scale(1.12)',opacity:1,offset:.1},{transform:'translate(0,0) scale(1)',opacity:1,offset:.42},
+      {transform:'translate('+(x1-x0).toFixed(0)+'px,'+(y1-y0).toFixed(0)+'px) scale(.9)',opacity:1}],{duration:1600,delay:i*240,easing:'cubic-bezier(.5,0,.25,1)',fill:'both'});
+    an.onfinish=function(){ if(c.parentNode) c.parentNode.removeChild(c); giftTick(k) } }) }
+
 /* ---------- messages ---------- */
 /* v4.9 / v4.12 (Nikita, 30.09: 'когда я нажал кнопку, я хочу видеть подтверждение'): every order answers — a toast at the
    foot of the map, green with what happened, red with why not. Nothing here stops the clock. */
@@ -337,6 +368,7 @@ function voiceWatch(){
        brings the date and the drive; the shift chief reports what Earth becomes; captains and heads
        speak on losses and on the seams. Windows only for the date, the ark drive, the square and a lost
        hull; everything else is a journal line. */
+    if(e.code==='colony_founded'&&d.gift) giftFly(d.p,d.gift);   // v5.27: what the world gave flies to the strip
     if(e.code==='hub_lost') toastOne(e);   // v5.02: the feeders' lines went back to Earth — the player has to see it
     if(e.code==='night_dated'){ var f0=driveForecast(G,G.arkMark);
       /* v4.14: {fy} is a whole sentence — a year at this pace, or why there is no year yet */
@@ -834,7 +866,7 @@ function draw3d(now){ if(!G||!el('map3d')) return; m3prep(); var R=GLR===null?m3
 /* the SVG on top: a .wd per world at its sphere (hit, alarms, the open one, its name and people), Earth's, the lobe and ring names.
    v5.08 (Nikita 09.11: turning lags on the tablet): built as text with its positions apart (S.k — the text without them); when only the
    positions changed (the camera turned), the nodes already there get the new numbers instead of a new innerHTML (and its style and layout) */
-var SV={k:'',N:null,vb:''};
+var SV={k:'',N:null,vb:'',sel:null};   // sel (v5.27): where the name of the world whose window is open stands — the gift chips hang under it
 function drawMap(){
   if(!G) return; m3prep(); M3D.dirty=true; var i, W=M3D.W, H=M3D.H, S={s:'',k:'',n:-1,V:[]};
   function so(tag){ S.n++; S.s+='<'+tag; S.k+='<'+tag }
@@ -865,6 +897,8 @@ function drawMap(){
     for(var j=0;j<cs.length&&!ok;j++){ var bx={x0:cs[j][0]-2,x1:cs[j][0]+tw+2,y0:cs[j][1]-11,y1:cs[j][1]+3}; if(bx.x0<2||bx.x1>W-2) continue;
       if(!boxes.some(function(z){ return bx.x0<z.x1&&z.x0<bx.x1&&bx.y0<z.y1&&z.y0<bx.y1 })) ok=bx }
     o.lab=ok||{x0:cs[0][0]-2,y1:cs[0][1]+3,hidden:true}; if(ok) boxes.push(ok) });
+  SV.sel=null; L.forEach(function(o){ if(o.q.id!==U.win) return; var lb=o.lab, under=lb.hidden||lb.y1<o.s.y-o.r;   // a name above its world, or none: under the sphere, centred
+    SV.sel=under?{p:o.q.id,x:o.s.x,y:o.s.y+o.r+15,c:1}:{p:o.q.id,x:lb.x0+2,y:lb.y1+5} });
   L.forEach(function(o){ var q=o.q, st=o.st, lab=o.lab;
     so('g'); sa('class','wd'); sa('data-p',q.id); sp('transform','translate('+o.s.x.toFixed(1)+' '+o.s.y.toFixed(1)+')'); sr('>');
     so('circle'); sp('r',Math.max(12,o.rr+4).toFixed(1)); sa('fill','transparent'); sr('/>');
@@ -1040,7 +1074,7 @@ function drawRes(){ var E=G.earth, nd=G.need||earthNeed(G), h='';
     var bad=(k==='food'&&(G.hungry||E.food/Math.max(0.1,nd.food)<25))||(k==='metal'&&(G.cold||E.metal/Math.max(0.1,nd.metal)<25))||(k==='fuel'&&E.fuel<30);
     var fc=k==='food'?(G.foodFc||(G.day<200?foodForecast(G):null)):null, ends=fc?'<em>'+esc(fill(T('u_ends'),{y:fc.y}))+'</em>':'';   // v4.36: the core forecasts from year 200; the strip shows the end from year 0
     if(k==='people'){ var bx=birthX(); ends='<em style="color:'+birthCol(bx)+'" title="'+attr(fill(T('u_birthsHint'),{lo:birthTxt(K.FED_MIN),hi:birthTxt(K.FED_MAX),n:K.FED_YEARS,y:Math.floor(E.food/Math.max(0.1,nd.food||1))}))+'">'+esc(fill(T('u_birthTop'),{x:birthTxt(bx)}))+'</em>' }
-    h+='<div class="rc'+(bad?' bad':'')+'" data-r="'+k+'"><small>'+resIc(k,13)+esc(T(k).toUpperCase())+ends+'</small><b style="color:'+C[k]+'">'+num(E[k])+'</b>'+tt+'</div>' });
+    h+='<div class="rc'+(bad?' bad':'')+(U.gtick&&U.gtick[k]>Date.now()?' tk':'')+'" data-r="'+k+'"><small>'+resIc(k,13)+esc(T(k).toUpperCase())+ends+'</small><b style="color:'+C[k]+'">'+num(E[k])+'</b>'+tt+'</div>' });
   setHTML('res',h) }
 
 /* ---------- tabs and their flags ---------- */
@@ -1098,7 +1132,7 @@ var HELP={
   fleet:function(){ return [shipIc('courier',26),genB(G.gen||0),ic('pier',15,C.people),ic('toEarth',15,C.mid),ic('tWorlds',15,C.mid)] },
   world:function(){ return [hDep(),ic('toEarth',15,C.mid),hWm((planet(U.win)||{}).kind||'mine'),resIc('people',15),ic('lift',15,C.people),ic('upgrade',15,C.people)] },
   works:function(){ return [resIc('metal',15),resIc('parts',15),ic('toEarth',15,C.mid),resIc('people',15),ic('upgrade',15,C.people)] },
-  free:function(){ return [hDep(),resIc('people',15),ic('hold',15,C.mid),resIc('fuel',15)] }
+  free:function(){ var a=[hDep(),resIc('people',15),ic('hold',15,C.mid),resIc('fuel',15)]; if(giftKeys(giftFor(G,U.win)).length) a.push('<b class="htx">+</b>'); return a }   // v5.27: «Found here», when the world has it
 };
 function helpSheet(k){ var ics=HELP[k]&&HELP[k](); if(!ics) return '';
   var li=ics.map(function(icn,i){ var t=T('h_'+k+'_'+(i+1)), j=t.indexOf(' — '); return '<li><span class="hi">'+icn+'</span><span>'+(j>0?'<b>'+esc(t.slice(0,j))+'</b>'+esc(t.slice(j)):esc(t))+'</span></li>' }).join('');
@@ -1661,20 +1695,21 @@ function winWorld(pid){
   if(st==='settling'){ var er=enRoute(G,pid);
     return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_inTransit')),wmark(p.kind,false,16))+'<div class="bd">'+sec(esc(T('u_settlersWay')))+
       '<div class="trn">'+shipIc(shipClass(er),30)+genB(hullGen(er))+'<b>'+esc(hname(er))+' · '+esc(fill(T('u_peopleN'),{n:num(er.cargo.people||0)}))+'</b><span>'+esc(fill(T('u_landsIn'),{n:er.t}))+'</span></div>'+
-      '<div class="bar"><u style="width:'+Math.round((1-er.t/Math.max(1,er.total))*100)+'%;background:'+C.people+'"></u></div></div>'+nav+'</div>' }
+      '<div class="bar"><u style="width:'+Math.round((1-er.t/Math.max(1,er.total))*100)+'%;background:'+C.people+'"></u></div>'+giftBlock(giftFor(G,pid))+'</div>'+nav+'</div>'+giftChips(pid) }
   if(!c){
     var hs=assignable(pid), who=hs.filter(function(s){ return s.id===U.who[pid] })[0];
     if(!who&&hs.length){ who=hs.slice().sort(function(a,b){ return (a.reserve?1:0)-(b.reserve?1:0)||foundParty(G,b,pid)-foundParty(G,a,pid)||legDays(G,'earth',pid,a)-legDays(G,'earth',pid,b) })[0]; U.who[pid]=who.id }
     var party=who?foundParty(G,who,pid):0, fuel=sendFuel(p);
     L0+=sec(esc(T('u_world')))+(!can(dep)?'':p.kind==='works'?row(esc(T('u_makes')),esc(T('parts')),C.parts):row(esc(T('u_deposit')),resIc(dep,13)+num(G.reserves[pid]),KCOL[p.kind]));   // a resource the player has not met yet is not shown
     L0+=row(esc(T('u_sector')),esc(lobeTxt(p)));
+    L0+=giftBlock(giftFor(G,pid));   // v5.27: FOUND HERE — what Earth gets when the settlers land
     L0+=sec(esc(T('u_found')))+row(resIc('people',13)+esc(T('u_settlers')),esc(fill(T('u_peopleN'),{n:party})),C.people)+'<div class="lab">'+esc(T('u_whoGoes'))+'</div>';
     if(hs.length) L0+=hs.map(function(s){ return '<button type="button" class="radio'+(who===s?' on':'')+'" data-act="who" data-p="'+pid+'" data-s="'+s.id+'"><i></i>'+shipIc(shipClass(s),26)+genB(hullGen(s))+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b><span>'+(s.reserve?'<em style="color:'+C.ark+';font-style:normal">'+esc(T('u_stReserve'))+'</em> · ':'')+esc(fill(T('u_whoLine'),{c:num(s.cap),n:legDays(G,'earth',pid,s)}))+'</span></button>' }).join('');
     else L0+='<div class="why">'+esc(freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait }).length?fill(T('u_noneReach'),{n:p.sec+1}):T('u_noFree'))+'</div>';
     var w=!who?'nofree':(party<K.MIN_FOUND?['fewhands',{n:K.MIN_FOUND-party}]:shortWhy({fuel:fuel,people:party},G.earth));
     if(enRoute(G,pid)) w='enroute';
     L0+='<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price({fuel:fuel,people:party},G.earth)+'</div>'+btn(esc(T('u_sendSettlers')),'send',{p:pid},'pri full','send',offW(w==='ok'||(w[0]==='ok')?'ok':w));
-    return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_free')),wmark(p.kind,false,16),null,'free')+'<div class="bd">'+L0+'</div>'+nav+'</div>' }
+    return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_free')),wmark(p.kind,false,16),null,'free')+'<div class="bd">'+L0+'</div>'+nav+'</div>'+giftChips(pid) }
   if(st==='dead') return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_workedOut')),wmark(p.kind,true,16))+'<div class="bd"><div class="big mid">'+ic('workedout',22,C.mid)+esc(T('u_seamDead'))+'</div>'+
     row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p)+(can('parts')?'<div id="hubblk">'+hubBlock(p,c,true)+'</div>':'')+evacBlock(p)+'</div>'+nav+'</div>';   // v5.12 (Nikita 11.11): a hub on a worked-out world
   var lr=lineRate(G,pid);
@@ -1703,6 +1738,7 @@ function winWorld(pid){
       row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
     if(dry&&!c.hub) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
   }
+  L0+=giftBlock(c.gift,true);   // v5.27: what the world gave when it was first settled
   var hb=can('parts')?hubBlock(p,c):'', HB=hb?'<div id="hubblk">'+hb+'</div>':'';   // v5.01: the hub's price takes parts — not before the player sees them; the tutorial points here (m25)
   var MB=machines(p,c);
   if(can('evac')) L0+=evacBlock(p);

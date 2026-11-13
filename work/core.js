@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.26'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.27'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -350,6 +350,8 @@ var K={
   MIN_FOUND:10,
   RESERVE_BASE:2100, RESERVE_GROW:2.15,   // a seam in sector n holds BASE * GROW^n * richness
   SURVEY_REACH:3,      // reach needed per sector already open before the next can be charted
+  GIFT_SHARE:0.8,      // v5.27 (Nikita 13.11: «Да, 80%»): a world settled for the first time gives Earth this share of what charting the NEXT ring costs, in parts and in fuel (giftFor)
+  GIFT_FUEL_RINGS:2,   // ...fuel only from the worlds of the first rings (I–II): further out Earth's stock outgrows it, parts stay short the whole run (bots 13.11, design/START.md)
   DEAD_DAYS:260,       // days of famine before the home world is finished
   DRIVE_STEP:1.55,     // each drive mark cuts crossing times again
   /* v4.2 (Nikita's run 820909096: "13k for a freighter is unreachable"): metal cost used to grow x3.2 a
@@ -611,6 +613,19 @@ function reach(G){var r=0;for(var k in G.colonies){r+=1}return r}
    reach() only falls (seams run dry, the colony is evacuated, a ghost cannot be resettled), so a gate on it closes for good:
    in the v4.14 log (seed 966268745) charting needed 6 live colonies, the run peaked at 6 and never stood there again.
    Hull classes keep reach(). A set, not stats.founded: that counts every founding, so a resettled world would count twice. */
+/* v5.27 (Nikita 13.11: «как минимум тупо за открытие планеты надо давать немного ресурсов. Тех же деталей или топлива, которых мало»;
+   «плюшки надо давать всегда… она должна расти согласно прогрессу игрока»; size — «Да, 80%»; design/START.md, «Плюшки»): what a world gives
+   Earth the first time it is settled — GIFT_SHARE of the price of charting the next ring out (surveyCost), so the gift grows with the ring
+   as the way further does. Parts from any ring, fuel from the first GIFT_FUEL_RINGS only. Never a resource the player has not met
+   (isOpen), and the gift opens none. null — nothing to give: the world was settled before (G.settled), is lived on, was abandoned, or
+   nothing it would give is open yet. One function for the rule (step) and for the window and the chart, so the number shown before the
+   landing is the number that lands. */
+function giftFor(G,pid){
+  var p=planet(pid); if(!p||(G.settled&&G.settled[pid]!==undefined)||G.colonies[pid]||(G.ghost&&G.ghost[pid])) return null;
+  var c=surveyCost(p.sec+1), g={}, n=0;
+  if(isOpen(G,'parts')){ g.parts=Math.round(K.GIFT_SHARE*c.parts); n++ }
+  if(p.sec<K.GIFT_FUEL_RINGS&&isOpen(G,'fuel')){ g.fuel=Math.round(K.GIFT_SHARE*c.fuel); n++ }
+  return n?g:null }
 function settledCount(G){ var seen=G.settled||{}, n=0, k; for(k in seen) n++; for(k in G.colonies) if(!seen[k]) n++; return n }
 function sectorOpen(G,s){return s<SECTORS.length}
 function travelDays(G,dist,ship){
@@ -1520,10 +1535,12 @@ function tick(G){
       var p=planet(node);
       if(!G.safe&&R()<p.haz*0.5){ var cf=s.crew||0; s.mode='dead'; s.crew=0; G.stats.lost++;
         G.earth.lostCrew=(G.earth.lostCrew||0)+cf; log(G,'colony_failed',{n:s.id,p:node}); continue }
+      var gf=giftFor(G,node);   // v5.27: asked before the world is written down as settled
       G.colonies[node]={pid:node,pop:s.cargo.people,
         store:{metal:0,food:0,fuel:0,parts:0},founded:G.day};
+      if(gf){ for(var gk in gf) G.earth[gk]+=gf[gk]; G.colonies[node].gift=gf }   // straight into Earth's stores; the colony remembers what it gave (the world card)
       G.stats.founded++; (G.settled=G.settled||{})[node]=G.day;
-      log(G,'colony_founded',{p:node,pop:Math.round(s.cargo.people)});
+      log(G,'colony_founded',gf?{p:node,pop:Math.round(s.cargo.people),gift:gf}:{p:node,pop:Math.round(s.cargo.people)});
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
       s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
       s.job=null; s.from=null; s.to=null; s.origin=node; s.dest='earth';

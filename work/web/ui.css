@@ -372,3 +372,16 @@ svg.gi{fill:currentColor}
 .hsheet .hi{display:flex;justify-content:center;align-items:center;min-height:18px}.hsheet li b{font-weight:600}
 .hsheet .hdot{width:10px;height:10px;border-radius:50%;display:block}.hsheet .gen{margin:0}
 .hsheet .htx{font:600 13px var(--n);color:var(--mid)}
+
+/* v5.27 (Nikita 13.11, draft «A · on two rings» of design/start/rewards.html): what a world gives when it is first settled — the section in its
+   window (FOUND HERE; dim once given), the chips under its name on the chart while its window is open, the chips flying to the strip at the landing */
+.gift{padding-top:6px}.rw.gf{padding:6px 0;border-bottom:1px solid var(--ln)}
+.rw.gf span{color:var(--ink);font-size:12px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;gap:9px}
+.rw.gf b{font-size:15px}
+.gift.got .gf{opacity:.55}
+.gchips{position:absolute;z-index:-1;display:flex;gap:4px;white-space:nowrap;pointer-events:none}
+.gch{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--mid);background:var(--bg);padding:2px 6px;font:600 12px/1.35 var(--n);color:var(--ink);white-space:nowrap}
+#gfly{position:absolute;inset:0;pointer-events:none;z-index:24;overflow:hidden}
+#gfly .gch{position:absolute;border-color:var(--ink)}
+.rc.tk b{animation:gtk .7s ease-out;transform-origin:0 60%}
+@keyframes gtk{0%{transform:scale(1)}25%{transform:scale(1.22);filter:brightness(1.7)}100%{transform:scale(1)}}

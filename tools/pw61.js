@@ -66,7 +66,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     await U.tap('#side .wh .xb');
     ok(v+': the cross shuts the panel and its sheet', await p.evaluate(()=>!LNU.tab&&!LNU.help));
   }
-  for(const [k,id,n] of [['world',ids.mine,6],['works',ids.works,5],['free',ids.free,4]]){
+  for(const [k,id,n] of [['world',ids.mine,6],['works',ids.works,5],['free',ids.free,5]]){   // v5.27: a free world that has a gift gets a fifth line — «Found here»
     await U.openWorld(id);
     await U.tap('#ovl .wh .qb');
     const s=await sheet();

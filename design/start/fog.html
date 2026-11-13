@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — fog and finds (draft 13.11)</title>
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--pan2:#202024;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--dim:#5E5D58;--red:#FF2A1A;--food:#3DDC84;--ppl:#FFD23F;--metal:#C9CFD6;--fuel:#FF8A1F;--earth:#4FA3FF;--parts:#5B82F0;--hub:#FF4FD8;--h:'Jost',system-ui,-apple-system,'Segoe UI',sans-serif;--n:'Geist Mono',ui-monospace,Consolas,Menlo,monospace}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;background:var(--bg);color:var(--ink);font-family:var(--h)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+#app{max-width:1180px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+#top{display:flex;align-items:baseline;gap:14px;padding:12px 16px 8px;font-family:var(--n);font-size:13px;letter-spacing:.06em;color:var(--mid);border-bottom:1px solid var(--ln)}
+#top b{color:var(--ink);font-weight:600;font-size:16px}
+#top .night{color:var(--red);margin-left:auto;text-align:right}
+#top .night b{color:var(--red);letter-spacing:.14em}
+#top .night i{font-style:normal;color:var(--mid);font-size:11px;display:block;letter-spacing:.04em}
+#bar{display:flex;align-items:center;gap:10px;padding:8px 16px;font-family:var(--n);font-size:11px;letter-spacing:.08em;color:var(--dim)}
+.sw{display:inline-flex;border:1px solid var(--ln)}
+.sw button{padding:7px 12px;font-family:var(--n);font-size:11px;letter-spacing:.1em;color:var(--mid)}
+.sw button.on{background:var(--ink);color:var(--bg)}
+#rst{margin-left:auto;padding:7px 10px;border:1px solid var(--ln);font-family:var(--n);font-size:11px;letter-spacing:.1em;color:var(--mid)}
+#mapbox{position:relative}
+#map{display:block;width:100%;height:auto;touch-action:manipulation;user-select:none}
+#map text{font-family:var(--h);font-weight:600;letter-spacing:.06em;paint-order:stroke;stroke:var(--bg);stroke-width:3px;stroke-linejoin:round}
+.cell{vector-effect:non-scaling-stroke;stroke-width:1}
+.clr{fill:none;stroke:#3A3A41}
+.fog{fill:url(#hatch);stroke:var(--ln);cursor:pointer}
+.fog.av{fill:url(#hatchY);stroke:var(--ppl);stroke-width:1.5;stroke-dasharray:6 4;animation:av 1.8s ease-in-out infinite}
+.fog.sel{stroke:var(--ink);stroke-dasharray:none;stroke-width:1.6;animation:none}
+.orb{fill:none;vector-effect:non-scaling-stroke;stroke:var(--ln);stroke-width:1}
+.orb.f{stroke-dasharray:2 5;stroke:#26262A}
+.hit{fill:transparent;cursor:pointer}
+.ping{transform-box:fill-box;transform-origin:center;animation:pg 1.8s ease-out infinite}
+.pop{animation:pop .55s cubic-bezier(.2,.9,.3,1.2) both}
+@keyframes av{50%{stroke-opacity:.45}}
+@keyframes pg{from{opacity:.9;transform:scale(.75)}to{opacity:0;transform:scale(1.6)}}
+@keyframes pop{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+#strip{display:flex;align-items:center;gap:8px;min-height:34px;padding:6px 16px;border-top:1px solid var(--ln);border-bottom:1px solid var(--ln);font-family:var(--n);font-size:11px;letter-spacing:.1em;color:var(--dim)}
+#strip .ic{flex:none}
+#strip .none{color:var(--dim)}
+#panel{padding:14px 16px 20px;min-height:214px}
+.tt{font-family:var(--n);font-size:11px;letter-spacing:.1em;color:var(--mid);margin-bottom:8px}
+.mn{font-size:24px;font-weight:600;letter-spacing:.02em;line-height:1.15;margin-bottom:8px}
+.ln{font-size:15px;color:var(--mid);line-height:1.35;margin-bottom:10px}
+.ln b{color:var(--ink);font-weight:600}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.chip{display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border:1px solid var(--ln);font-family:var(--n);font-size:12px;letter-spacing:.08em}
+.chip .dot{width:9px;height:9px;border-radius:50%}
+.chip.y{border-color:var(--ppl);color:var(--ppl)}
+.rows{margin-bottom:12px;border-top:1px solid var(--ln)}
+.row{display:flex;align-items:center;gap:10px;width:100%;padding:10px 0;border-bottom:1px solid var(--ln);font-size:15px;font-weight:600;letter-spacing:.04em;text-align:left}
+.row small{margin-left:auto;font-family:var(--n);font-weight:400;font-size:11px;letter-spacing:.08em;color:var(--dim)}
+.row small.y{color:var(--ppl)}
+.row .dot{width:9px;height:9px;border-radius:50%;flex:none}
+.row .q{width:9px;height:9px;border:1px solid var(--mid);border-radius:50%;flex:none}
+.go{display:block;width:100%;min-height:46px;padding:10px 14px;border:1px solid var(--ppl);color:var(--ppl);font-family:var(--n);font-size:14px;letter-spacing:.14em}
+.go:active{background:var(--ppl);color:var(--bg)}
+.go[disabled]{border-color:var(--ln);color:var(--dim);cursor:default}
+.why{margin-top:8px;font-size:13px;color:var(--red)}
+.opt{display:block;width:100%;padding:11px 12px;margin-bottom:8px;border:1px solid var(--ppl);text-align:left}
+.opt b{display:block;font-family:var(--n);font-size:13px;letter-spacing:.12em;color:var(--ppl);margin-bottom:3px}
+.opt span{font-size:14px;color:var(--ink)}
+.find{display:flex;gap:14px;align-items:flex-start}
+.find .big{flex:none;width:56px;height:56px;border:1px solid var(--ppl);display:flex;align-items:center;justify-content:center}
+.next{margin-top:6px;font-family:var(--n);font-size:12px;letter-spacing:.08em;color:var(--ppl)}
+#foot{margin-top:auto;padding:10px 16px 14px;font-family:var(--n);font-size:10px;letter-spacing:.06em;color:var(--dim)}
+@media(min-width:900px){
+ #app{display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-rows:auto auto 1fr auto;column-gap:8px}
+ #top,#bar,#foot{grid-column:1/3}
+ #mapbox{grid-column:1;grid-row:3/5;align-self:center;padding:0 16px}
+ #strip{grid-column:2;grid-row:3;align-self:start;border-top:0}
+ #panel{grid-column:2;grid-row:3;margin-top:48px}
+ #foot{grid-row:5}
+}
+@media(prefers-reduced-motion:reduce){.fog.av,.ping,.pop{animation:none}}
+</style>
+</head>
+<body>
+<div id="app">
+ <header id="top"><span>YEAR <b id="yr">0</b></span><span class="night">NIGHT <b id="nd">????</b><i id="nn">date unknown</i></span></header>
+ <div id="bar"><span class="sw"><button data-m="fog" class="on">FOG</button><button data-m="now">NOW</button></span><span id="cap"></span><button id="rst">RESET</button></div>
+ <div id="mapbox"><svg id="map" viewBox="0 0 410 366" role="img" aria-label="Chart"></svg></div>
+ <div id="strip"></div>
+ <section id="panel"></section>
+ <div id="foot">DRAFT 13.11 · design/START.md · not the game</div>
+</div>
+<script>
+(function(){
+var KY=.78,CX=205,CY=192,RR=[0,60,104,144,182],BD=[36,84,124,164,200],LOBE=Math.PI/3;
+var LN=['EOS','HELIOS','HEMERA','HESPEROS','SELENE','NYX'],RN=['','CAESAR','AUGUSTUS','SCIPIO','CICERO'],ROM=['','I','II','III','IV'];
+var COL={farm:'#3DDC84',mine:'#C9CFD6',well:'#FF8A1F',works:'#5B82F0'},KN={farm:'FARM',mine:'MINE',well:'WELL',works:'WORKS'};
+var Y='#FFD23F',HUB='#FF4FD8',INK='#F2F1EC',MID='#9C9B95',DIM='#5E5D58',BG='#0B0B0C',NIGHT='3300';
+var FN={sleep:'SLEEPERS',stock:'STORE',mem:'MEMORY BLOCK',dock:'HULL IN DOCK',node:'NODE',plan:'BLUEPRINT'};
+var PLAN={solace:[['SECOND SLIP','The yard builds two hulls at once.'],['SEALED HOLD','Haulers carry people too.']],
+          anvil:[['LONG LEG','Every hull flies one ring further.'],['DEEP DRILL','A spent world opens a second seam.']]};
+var W=[
+ {id:'tallow',n:'Tallow',r:1,l:0,o:.05,k:'farm',f:'sleep',v:40},
+ {id:'brine',n:'Brine',r:1,l:1,o:-.1,k:'well',f:'stock',v:400},
+ {id:'cinder',n:'Cinder',r:1,l:2,o:0,k:'mine',f:'sleep',v:30},
+ {id:'marrow',n:'Marrow',r:1,l:4,o:-.05,k:'mine',f:'mem',big:1},
+ {id:'solace',n:'Solace',r:1,l:5,o:.1,k:'works',f:'plan',big:1},
+ {id:'vesper',n:'Vesper',r:2,l:0,o:-.2,k:'farm',f:'node',big:1},
+ {id:'gallows',n:'Gallows',r:2,l:1,o:.1,k:'mine',f:'stock',v:600},
+ {id:'ferrous',n:'Ferrous',r:2,l:2,o:-.05,k:'mine',f:'dock',big:1},
+ {id:'kiln',n:'Kiln',r:2,l:1,o:-.3,k:'well',f:'sleep',v:50},
+ {id:'hollow',n:'Hollow',r:2,l:4,o:-.3,k:'well',f:'sleep',v:60},
+ {id:'threnody',n:'Threnody',r:2,l:5,o:-.3,k:'works',f:'mem',big:1},
+ {id:'lantern',n:'Lantern',r:3,l:0,o:.18,k:'well',f:'stock',v:900},
+ {id:'tinder',n:'Tinder',r:3,l:1,o:-.15,k:'farm',f:'dock',big:1},
+ {id:'pale',n:'Pale',r:3,l:2,o:.05,k:'mine',f:'sleep',v:70},
+ {id:'ossuary',n:'Ossuary',r:3,l:3,o:0,k:'mine',f:'mem',big:1},
+ {id:'harrow',n:'Harrow',r:3,l:4,o:-.2,k:'farm',f:'sleep',v:80},
+ {id:'wick',n:'Wick',r:3,l:5,o:.2,k:'works',f:'stock',v:700},
+ {id:'grist',n:'Grist',r:4,l:0,o:-.1,k:'farm',f:'sleep',v:90},
+ {id:'anvil',n:'Anvil',r:4,l:1,o:.15,k:'works',f:'plan',big:1},
+ {id:'vigil',n:'Vigil',r:4,l:3,o:-.22,k:'mine',f:'mem',big:1},
+ {id:'cairn',n:'Cairn',r:4,l:3,o:.28,k:'mine',f:'sleep',v:60},
+ {id:'loam',n:'Loam',r:4,l:4,o:.1,k:'farm',f:'node',big:1},
+ {id:'sallow',n:'Sallow',r:4,l:5,o:-.05,k:'well',f:'stock',v:1200}
+];
+var GL={sleep:'<rect x="-2.6" y="-5" width="5.2" height="10" rx="2.6"/>',
+ stock:'<path d="M-4.5-4.5H4.5V4.5H-4.5ZM-4.5 0H4.5"/>',
+ mem:'<path d="M0-5.5L5.5 0L0 5.5L-5.5 0Z"/><circle r="1.2" fill="currentColor" stroke="none"/>',
+ dock:'<path d="M-5 4.5L0-5.5L5 4.5Z"/>',
+ node:'<path d="M0-5.5L4.8-2.75V2.75L0 5.5L-4.8 2.75V-2.75Z"/>',
+ plan:'<path d="M-5-2V-5H-2M2-5H5V-2M5 2V5H2M-2 5H-5V2M-1.6 0H1.6M0-1.6V1.6"/>'};
+var S;
+function reset(){ S={open:{},set:{},res:{},got:[],mem:0,yr:0,sel:null,find:null,mode:'fog',fresh:null,nav:0}; for(var l=0;l<6;l++) S.open['1-'+l]=1 }
+function $(id){ return document.getElementById(id) }
+function by(id){ for(var i=0;i<W.length;i++) if(W[i].id===id) return W[i]; return null }
+function edge(i){ return -LOBE*2+i*LOBE }
+function mid(i){ return -Math.PI/2+i*LOBE }
+function P(r,a,h){ return [CX+r*Math.cos(a), CY+r*Math.sin(a)*KY-(h||0)] }
+function open(r,l){ return !!S.open[r+'-'+l] }
+function inCell(r,l){ return W.filter(function(w){ return w.r===r&&w.l===l }) }
+function mine(r,l){ return inCell(r,l).some(function(w){ return S.set[w.id] }) }
+/* a sector can be scouted when a world of yours stands next to it: the same lobe one ring in, or the lobe on either side */
+function avail(r,l){ return !open(r,l)&&inCell(r,l).length>0&&(mine(r-1,l)||mine(r,(l+5)%6)||mine(r,(l+1)%6)) }
+function availN(){ var n=0; for(var r=2;r<=4;r++) for(var l=0;l<6;l++) if(avail(r,l)) n++; return n }
+function f1(x){ return x.toFixed(1) }
+function cellPath(r,l){ var r0=BD[r-1],r1=BD[r],a0=edge(l),a1=edge(l+1);
+  function p(R,a){ return f1(R*Math.cos(a))+' '+f1(R*Math.sin(a)) }
+  return 'M'+p(r0,a0)+'L'+p(r1,a0)+'A'+r1+' '+r1+' 0 0 1 '+p(r1,a1)+'L'+p(r0,a1)+'A'+r0+' '+r0+' 0 0 0 '+p(r0,a0)+'Z' }
+function gl(k,x,y,s,c,cls){ return '<g class="'+(cls||'')+'"><g transform="translate('+f1(x)+','+f1(y)+') scale('+s+')" fill="none" stroke="'+c+'" stroke-width="'+f1(1.3/s)+'" stroke-linejoin="round" style="color:'+c+'">'+GL[k]+'</g></g>' }
+function ico(k,px,c){ c=c||Y; return '<svg class="ic" viewBox="-7 -7 14 14" width="'+px+'" height="'+px+'" fill="none" stroke="'+c+'" stroke-width="1.1" stroke-linejoin="round" style="color:'+c+'">'+GL[k]+'</svg>' }
+function sphere(x,y,r,c,full){ return '<circle cx="'+f1(x)+'" cy="'+f1(y)+'" r="'+r+'" fill="'+(full?c:BG)+'" fill-opacity="'+(full?.28:1)+'" stroke="'+c+'" stroke-width="'+(full?1.6:1.1)+'"/>'+
+  '<ellipse cx="'+f1(x)+'" cy="'+f1(y)+'" rx="'+r+'" ry="'+f1(r*.36)+'" fill="none" stroke="'+c+'" stroke-width=".7" opacity=".7"/>'+
+  '<ellipse cx="'+f1(x)+'" cy="'+f1(y)+'" rx="'+f1(r*.36)+'" ry="'+r+'" fill="none" stroke="'+c+'" stroke-width=".7" opacity=".7"/>' }
+function label(x,y,t,c,sz){ return '<text x="'+f1(x)+'" y="'+f1(y)+'" text-anchor="middle" font-size="'+(sz||10.5)+'" fill="'+c+'">'+t+'</text>' }
+
+function drawMap(){
+  var now=S.mode==='now', h='<defs><pattern id="hatch" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><rect width="7" height="7" fill="#0F0F12"/><path d="M0 0V7" stroke="#222228" stroke-width="1.1"/></pattern><pattern id="hatchY" width="7" height="7" patternUnits="userSpaceOnUse" patternTransform="rotate(38)"><rect width="7" height="7" fill="#17150E"/><path d="M0 0V7" stroke="#6B5A1E" stroke-width="1.6"/></pattern></defs>';
+  var fl='', fa='', r, l;
+  for(r=1;r<=(now?1:4);r++){
+    fl+='<circle class="orb'+(now||r===1||[0,1,2,3,4,5].some(function(q){ return open(r,q) })?'':' f')+'" r="'+RR[r]+'"/>';
+    for(l=0;l<6;l++){
+      if(open(r,l)) fl+='<path class="cell clr" d="'+cellPath(r,l)+'"/>';
+      else if(!now){ var sel=S.sel&&S.sel.t==='cell'&&S.sel.r===r&&S.sel.l===l;
+        var cp='<path class="cell fog'+(avail(r,l)?' av':'')+(sel?' sel':'')+'" data-cell="'+r+'-'+l+'" d="'+cellPath(r,l)+'"/>'; if(avail(r,l)||sel) fa+=cp; else fl+=cp }
+    }
+  }
+  h+='<g transform="translate('+CX+','+CY+') scale(1,'+KY+')">'+fl+fa+'</g>';
+  var E=P(0,0,0), lines='', top='', list=W.filter(function(w){ return !now||w.r===1 }).map(function(w){ var a=mid(w.l)+w.o*LOBE; return {w:w,f:P(RR[w.r],a,0),a:a} }).sort(function(a,b){ return a.f[1]-b.f[1] });
+  list.forEach(function(o){ var w=o.w, f=o.f, c=COL[w.k], op=open(w.r,w.l)||now, set=!!S.set[w.id];
+    var selW=S.sel&&S.sel.t==='w'&&S.sel.id===w.id, selC=S.sel&&S.sel.t==='cell'&&S.sel.r===w.r&&S.sel.l===w.l;
+    var fresh=S.fresh===w.r+'-'+w.l||S.fresh===w.id, g='';
+    if(!op){ var t=P(RR[w.r],o.a,9);
+      /* the fog is quiet, what waits in it is loud: a dark clearing under every signal, a bright dot, a solid yellow sign over a large find */
+      g+='<ellipse cx="'+f1(f[0])+'" cy="'+f1(f[1]-3)+'" rx="10" ry="8" fill="'+BG+'" opacity=".82"/><path d="M'+f1(f[0])+' '+f1(f[1])+'V'+f1(t[1])+'" stroke="'+MID+'" stroke-width="1"/><circle cx="'+f1(t[0])+'" cy="'+f1(t[1])+'" r="3.4" fill="'+BG+'" stroke="#E4E3DE" stroke-width="1.4"/>';
+      if(w.big) g+='<circle class="ping" cx="'+f1(t[0])+'" cy="'+f1(t[1]-14)+'" r="10" fill="none" stroke="'+Y+'" stroke-width="1.2"/><path transform="translate('+f1(t[0])+','+f1(t[1]-14)+')" d="M0-8L6.9-4V4L0 8L-6.9 4V-4Z" fill="'+Y+'"/><text x="'+f1(t[0])+'" y="'+f1(t[1]-10.2)+'" text-anchor="middle" font-size="10.5" font-weight="700" fill="'+BG+'" style="stroke:none">?</text>';
+      if(selC) g+=label(f[0],f[1]+11,w.n.toUpperCase(),MID,9.5);
+      top+='<g style="pointer-events:none">'+g+'</g>'; return }
+    var s=P(RR[w.r],o.a,17);
+    if(set) lines+='<path d="M'+f1(E[0])+' '+f1(E[1])+'L'+f1(f[0])+' '+f1(f[1])+'" stroke="'+c+'" stroke-width="1" opacity=".45"/>';
+    if(set&&w.f==='node') g+='<ellipse cx="'+f1(f[0])+'" cy="'+f1(f[1])+'" rx="12" ry="6.6" fill="none" stroke="'+HUB+'" stroke-width="1.4"/>';
+    g+='<path d="M'+f1(f[0])+' '+f1(f[1])+'V'+f1(s[1])+'" stroke="'+c+'" stroke-width="1" opacity=".8"/>';
+    if(selW) g+='<circle cx="'+f1(s[0])+'" cy="'+f1(s[1])+'" r="11" fill="none" stroke="'+Y+'" stroke-width="1.2"/>';
+    g+=sphere(s[0],s[1],6.5,c,set);
+    if(!now&&!set) g+=gl(w.f,s[0],s[1]-14,w.big?1.05:.8,Y,'');
+    if(set&&w.f==='dock') g+='<path transform="translate('+f1(s[0]+12)+','+f1(s[1]-3)+')" d="M-4 3.5L0-4.5L4 3.5Z" fill="'+BG+'" stroke="'+INK+'" stroke-width="1"/><path transform="translate('+f1(s[0]+12)+','+f1(s[1]-3)+')" d="M-1.5-1.5L0-4.5L1.5-1.5Z" fill="'+Y+'"/>';
+    if(set||selW||selC||w.r===1) g+=label(f[0],f[1]+11,w.n.toUpperCase(),set||selW?INK:MID);
+    if(!now) g+='<circle class="hit" data-w="'+w.id+'" cx="'+f1(s[0])+'" cy="'+f1(s[1]+2)+'" r="12"/>';
+    top+='<g'+(fresh?' class="pop"':'')+'>'+g+'</g>' });
+  var es=P(0,0,10);
+  h+=lines+'<path d="M'+f1(E[0])+' '+f1(E[1])+'V'+f1(es[1])+'" stroke="#4FA3FF" stroke-width="1"/>'+sphere(es[0],es[1],8,'#4FA3FF',true)+label(E[0],E[1]+11,'EARTH','#4FA3FF',9.5)+top;
+  if(now) h+=label(CX,CY+BD[1]*KY+34,'NOTHING PAST THE LAST RING',DIM,10);
+  $('map').innerHTML=h;
+}
+function tt(r,l){ return 'RING '+ROM[r]+' · '+RN[r]+' · '+LN[l] }
+function nextLine(){ var n=availN(); return n?'<div class="next">'+n+(n===1?' SECTOR':' SECTORS')+' OPEN TO SCOUTING</div>':'' }
+function findBody(w){
+  var f=w.f, res=S.res[w.id], b='';
+  if(f==='sleep') b='<div class="ln"><b>'+w.v+' sleepers</b> woke here.</div>';
+  if(f==='stock') b='<div class="ln"><b>'+w.v+' rations</b>, sealed and good.</div>';
+  if(f==='node') b='<div class="ln">This world is <b>a hub</b>. No cost.</div>';
+  if(f==='dock') b='<div class="ln"><b>A courier</b> the yards cannot build. Flying now.</div>';
+  if(f==='mem') b=res?'<div class="ln">The Night: <b>'+res+'</b></div><div class="ln">Log fragment '+S.mem+' of 4.</div>':'<div class="ln">Something still runs in here.</div><button class="go" data-act="hack">HACK</button>';
+  if(f==='plan'){ if(res) b='<div class="ln"><b>'+res[0]+'</b></div><div class="ln">'+res[1]+'</div>';
+    else b='<div class="ln">Pick one. It is yours for good.</div>'+PLAN[w.id].map(function(o,i){ return '<button class="opt" data-act="pick" data-i="'+i+'"><b>'+o[0]+'</b><span>'+o[1]+'</span></button>' }).join('') }
+  return b }
+function drawPanel(){
+  var h='', w, r, l;
+  if(S.mode==='now') h='<div class="tt">AS IT IS · v5.26</div><div class="mn">Ring II is not on the chart.</div><div class="ln">Settle 3 worlds, then pay to chart it.</div>';
+  else if(S.find){ w=by(S.find);
+    h='<div class="pop"><div class="tt">'+w.n.toUpperCase()+' · LANDED</div><div class="find"><div class="big">'+ico(w.f,34)+'</div><div style="flex:1;min-width:0"><div class="mn">'+FN[w.f]+'</div>'+findBody(w)+'</div></div>'+nextLine()+'</div>' }
+  else if(!S.sel) h='<div class="tt">HELM</div><div class="mn">Tap a world. Or the fog.</div>'+nextLine();
+  else if(S.sel.t==='cell'){ r=S.sel.r; l=S.sel.l; var ws=inCell(r,l), op=open(r,l), av=avail(r,l);
+    h='<div class="tt">'+tt(r,l)+'</div><div class="mn">'+(ws.length?ws.length+(ws.length===1?' signal':' signals'):'No signals')+'</div>';
+    if(ws.length) h+='<div class="rows">'+ws.map(function(q){ return op
+      ? '<button class="row" data-w="'+q.id+'"><span class="dot" style="background:'+COL[q.k]+'"></span>'+q.n.toUpperCase()+'<small class="y">'+(S.set[q.id]?'SETTLED':FN[q.f])+'</small></button>'
+      : '<div class="row"><span class="q"></span>'+q.n.toUpperCase()+'<small'+(q.big?' class="y"':'')+'>'+(q.big?'SOMETHING LARGE':'NO DATA')+'</small></div>' }).join('')+'</div>';
+    if(!op&&ws.length) h+='<button class="go" data-act="scout"'+(av?'':' disabled')+'>SCOUT</button>'+(av?'':'<div class="why">Needs a world of yours next to it.</div>') }
+  else { w=by(S.sel.id);
+    h='<div class="tt">'+tt(w.r,w.l)+'</div><div class="mn">'+w.n.toUpperCase()+'</div><div class="chips"><span class="chip"><span class="dot" style="background:'+COL[w.k]+'"></span>'+KN[w.k]+'</span><span class="chip y">'+ico(w.f,14)+FN[w.f]+'</span></div>';
+    h+=S.set[w.id]?'<div class="ln">Settled.</div>'+findBody(w):'<button class="go" data-act="send">SEND SETTLERS</button>' }
+  $('panel').innerHTML=h;
+}
+function drawTop(){
+  $('yr').textContent=S.yr;
+  $('nd').textContent=NIGHT.slice(0,S.mem)+'????'.slice(S.mem);
+  $('nn').textContent=S.mem===0?'date unknown':S.mem<4?S.mem+' of 4 fragments':(+NIGHT-S.yr)+' years left';
+  var b=document.querySelectorAll('.sw button'); for(var i=0;i<b.length;i++) b[i].className=b[i].getAttribute('data-m')===S.mode?'on':'';
+  $('strip').innerHTML=S.mode==='now'?'<span class="none">A NEW WORLD GIVES · ONE MORE SEAM</span>':'FOUND '+(S.got.length?S.got.map(function(k){ return ico(k,18) }).join(''):'<span class="none">· NOTHING YET</span>');
+}
+function draw(){ drawTop(); drawMap(); drawPanel(); S.fresh=null }
+function act(a,el){
+  var w, k;
+  if(a==='scout'){ k=S.sel.r+'-'+S.sel.l; S.open[k]=1; S.fresh=k; S.yr+=20 }
+  if(a==='send'){ w=by(S.sel.id); S.set[w.id]=1; S.find=w.id; S.fresh=w.id; S.yr+=40; if(w.f!=='mem'&&w.f!=='plan'){ S.res[w.id]=1; S.got.push(w.f) } }
+  if(a==='hack'){ w=by(S.find||S.sel.id); S.mem++; S.res[w.id]=NIGHT.slice(0,S.mem)+'????'.slice(S.mem); S.got.push('mem') }
+  if(a==='pick'){ w=by(S.find||S.sel.id); S.res[w.id]=PLAN[w.id][+el.getAttribute('data-i')]; S.got.push('plan') }
+  draw();
+}
+document.addEventListener('click',function(e){
+  var t=e.target, q;
+  if(t.id==='rst'){ reset(); draw(); return }
+  if((q=t.closest('[data-m]'))){ S.mode=q.getAttribute('data-m'); S.sel=null; S.find=null; draw(); return }
+  if((q=t.closest('[data-act]'))){ if(!q.disabled) act(q.getAttribute('data-act'),q); return }
+  if(S.mode==='now') return;
+  if((q=t.closest('[data-w]'))){ S.sel={t:'w',id:q.getAttribute('data-w')}; S.find=null; draw(); return }
+  if((q=t.closest('[data-cell]'))){ var p=q.getAttribute('data-cell').split('-'); S.sel={t:'cell',r:+p[0],l:+p[1]}; S.find=null; draw(); return }
+  if(t.closest('#map')){ S.sel=null; S.find=null; draw() }
+});
+reset(); draw();
+})();
+</script>
+</body>
+</html>

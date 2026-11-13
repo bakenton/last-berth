@@ -1013,3 +1013,5 @@ UI	o_jDateV	chart ring {n}	нанесите кольцо {n}
 UI	ow_surveyDate	New worlds — and the date of the Night.	Новые миры — и дата Ночи.
 UI	tm_p25	NIGHT ................ detected	НОЧЬ ................. обнаружена
 UI	tm_p26	NIGHT · date ......... no data	НОЧЬ · дата .......... нет данных
+UI	u_giftSec	Found here	Найдено здесь
+UI	h_free_5	Found here — Earth gets it when settlers land.	Найдено здесь — Земля получит это, когда сядут поселенцы.
