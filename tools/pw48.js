@@ -30,9 +30,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     if(setLine(G,s.id,wk,'earth')!=='ok'){ s.from=wk; s.to='earth' }
     const f=lineFit(G,wk); s.cap=Math.max(1,Math.round(s.cap*(f.need*0.5)/f.carries)); LNdraw(); return wk });
   const order=await p.evaluate(id=>needsOf(LN,id),W);
-  ok('the hold is filled fuel first', order&&order[0]==='fuel'&&order.join()==='fuel,metal,food',JSON.stringify(order));
+  ok('v5.23: the hold carries metal and rations — no fuel, the machines burn the stock at home', order&&order.join()==='metal,food',JSON.stringify(order));
   const load=await p.evaluate(id=>{ const G=LN, s=G.ships.find(q=>q.mode!=='dead'&&(q.from===id||q.to===id)); s.cap=20; loadAt(G,s,'earth'); return s.cargo },W);
-  ok('a short hold still takes the fuel', load.fuel>0,JSON.stringify(load));
+  ok('v5.23: a hold takes no fuel for the machines', !(load.fuel>0),JSON.stringify(load));
   const rows=await p.evaluate(()=>LNI.adv().map(r=>({t:r[1],s:r[2],k:r[6],w:r[3]})));
   const mine=rows.filter(r=>r.w===W);
   ok('one card for the works, with numbers, no second «machines stand» card', mine.length===1&&/the line brings [\d.,]+ a year, the works burn [\d.,]+/.test(mine[0].t),JSON.stringify(mine));
@@ -41,7 +41,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.tap('#ovl [data-act="feedhelp"]');   // v5.21: what the works burn a year, by resource, sits behind «?»
   const win=await p.evaluate(()=>{ const e=document.querySelector('.win'); return e?e.innerText.replace(/\s+/g,' '):'' });
   const lines=(win.match(/\/yr · line [\d.,]+/g)||[]).length;   // v5.13: «{n}/yr · line {b}», no years
-  ok('the works window: need and what the line brings for fuel, metal and food', lines===3&&/Fuel/.test(win)&&/Metal/.test(win)&&/Rations/.test(win),win.slice(0,400));
+  ok('the works window: need and what the line brings for metal and food (v5.23: no fuel row)', lines===2&&!/Fuel/.test(win)&&/Metal/.test(win)&&/Rations/.test(win),win.slice(0,400));
   ok('the works window says the line is short: a red dot on its WORLD tab (v5.13, WORLD and LINE one tab since v5.17; the «a year short» hint is gone, Nikita 11.11)', await p.evaluate(()=>!!document.querySelector('#ovl .wrail [data-v="world"] .wdot.red')),win.slice(0,300));
   await shot('works-window');
   await U.closeWin();

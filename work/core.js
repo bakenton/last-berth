@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.22'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.23'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -204,7 +204,7 @@ function depotKinds(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) ret
   var dep=p.kind==='works'?'parts':p.dep;
   if(c.hub) return ['metal','food','fuel','parts'];
   if(!c.exHub) return [dep];
-  return ['metal','food','fuel','parts'].filter(function(q){ return q===dep||!(q==='fuel'&&kitTier(c)>0)&&!(p.kind==='works'&&(q==='metal'||q==='food')) }) }
+  return ['metal','food','fuel','parts'].filter(function(q){ return q===dep||!(p.kind==='works'&&(q==='metal'||q==='food')) }) }   // v5.23: fuel is not kept back for the machines — they burn Earth's
 /* v5.12 (Nikita 11.11, a spent hub sold a tier for +0 that burnt fuel): machines on a dead seam have nothing to dig — they stand and drink nothing */
 function kitIdle(G,pid){ var p=planet(pid); return !!p&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0 }
 function kitDrinks(G,pid){ return kitTier(G.colonies[pid])>0&&!kitIdle(G,pid) }
@@ -246,14 +246,10 @@ function setVia(G,pid,hub){
 /* hands a hub's line brings from Earth for its feeders: what they lack, less those already waiting at the hub */
 function hubHands(G,hub){ var n=0, f=feedersOf(G,hub); for(var i=0;i<f.length;i++){ n+=Math.max(0,popWant(planet(f[i]))-G.colonies[f[i]].pop) }
   return Math.max(0,n-((G.colonies[hub]&&G.colonies[hub].wait)||0)) }
-/* a feeder at her hub: the kit and its fuel (written off Earth, as a leg that does not start at Earth burns Earth's fuel), then hands */
+/* a feeder at her hub: the kit, then hands (v5.23: no fuel in the hold — the machines burn Earth's stock where they stand) */
 function hubLoad(G,s,hub,w){
   var hc=G.colonies[hub], wc=G.colonies[w]; if(!wc||!hc) return; var room=s.cap;
   if(wc.kit&&room>=wc.kit.w){ s.cargo.kit=wc.kit; room-=wc.kit.w; wc.kitShip=s.id; wc.kit=null; log(G,'kit_loaded',{p:w,n:s.id,t:s.cargo.kit.tier}) }
-  if(kitDrinks(G,w)){ var n=Math.max(1,onLine(G,w).length), rt=Math.max(1,legDays(G,w,hub,s)*2);
-    var need=Math.ceil(Math.max(0,kitBurn(wc)*rt/n*K.FEED_BUFFER-(wc.store.fuel||0)));
-    var floor=Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_METAL_KEEP), got=Math.min(need,room,Math.floor(G.earth.fuel-floor));
-    if(got>0){ G.earth.fuel-=got; openRes(G,'fuel'); s.cargo.fuel=got; room-=got; G.ledger.fuelOut=(G.ledger.fuelOut||0)+got } }
   var send=Math.min(Math.floor(popWant(planet(w))-wc.pop),room,Math.floor(hc.wait||0));
   if(send>0){ hc.wait-=send; s.cargo.people=send } }
 /* cheapest class that can serve a sector at this generation; null = nothing can */
@@ -441,6 +437,11 @@ function rateMult(c){ return kitLive(c)? Math.pow(K.KIT_OUT,kitTier(c)) : 1 }
    line does not carry waits; the pace of the world is its tier, not its yard. */
 function storeCap(c){ return Infinity }
 function kitBurn(c){ return K.KIT_FUEL*kitTier(c) }
+/* v5.23 (Nikita 13.11: «топливо сделать полностью абстрактным»): fuel is hauled to Earth only and burnt from her stock wherever it is
+   needed — a hull's departure (sail) and, from this version, the machines. No fuel rides in a hold or lies on a world. The machines
+   take only what stands above this floor, as the lines that used to carry it did: the fleet flies first. Short for KIT_GRACE years —
+   they stand, world by world */
+function kitFloor(G){ return Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_METAL_KEEP) }
 /* v4.31 (Nikita, 13.10, F-37): what the next kit does to this world in numbers — output a year now and with it, fuel a year more */
 function kitGain(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return null;
   var base=(p.kind==='works' ? c.pop*p.rich*K.REFINE : (G.reserves[pid]>0 ? c.pop*p.rich*K.PROD : 0));
@@ -470,11 +471,10 @@ function orderKit(G,pid){
   log(G,'kit_ordered',{p:pid,t:k.tier,w:k.w});
   return 'ok';
 }
-/* what a world burns per year that Earth has to send it: works eat metal and rations, kits eat fuel */
+/* what a world burns per year that Earth has to send it: works eat metal and rations (v5.23: the machines' fuel is not sent — see kitFloor) */
 function feedRates(G,node){
   var c=G.colonies[node], p=planet(node), r={}; if(!c||!p) return r;
   if(p.kind==='works'){ var want=c.pop*p.rich*K.REFINE*rateMult(c); r.metal=want*K.REFINE_METAL; r.food=want*K.REFINE_FOOD }
-  if(kitDrinks(G,node)) r.fuel=kitBurn(c);
   return r;
 }
 /* Earth's own output rides on the people left at home — but only so far.
@@ -633,7 +633,6 @@ function needsOf(G,node){
   var p=planet(node), c=G.colonies[node], out=[];
   /* v4.4: machines run on fuel. v4.46 (Nikita, 03.11: «постоянно не хватает топлива»): the hold is filled in this order and
      fuel used to go last, so a thin line stopped the machines first. Fuel is 2–9 a year against tens of metal and food */
-  if(c&&kitDrinks(G,node)) out.push('fuel');
   if(p.kind==='works') out.push('metal','food');
   return out.length?out:null;
 }
@@ -835,7 +834,7 @@ function feedWhy(G,k,c){ if(!onLine(G,k).length) return 'noline'; if(c.clip==='r
 function forgeTally(G,k,c,p,want,made){
   var f=forgeOf(G,k), w; f.y++;
   if(c.fuelOut>0&&c.fuelOut<K.KIT_GRACE) f.dregs++;
-  if(kitTier(c)>0&&c.fuelOut>=K.KIT_GRACE){ f.down++; w=feedWhy(G,k,c); f.downWhy[w]=(f.downWhy[w]||0)+1 }
+  if(kitTier(c)>0&&c.fuelOut>=K.KIT_GRACE){ f.down++; w='earth'; f.downWhy[w]=(f.downWhy[w]||0)+1 }   // v5.23: the only reason left — Earth has none to spare
   if(p.kind!=='works') return;
   var top=c.pop*p.rich*K.REFINE*Math.pow(K.KIT_OUT,kitTier(c));
   f.made+=made; f.lostFeed+=Math.max(0,want-made); f.lostKit+=Math.max(0,top-want);
@@ -1600,10 +1599,11 @@ function tick(G){
     // works worlds convert; everyone else digs or grows from a finite seam
     // v4.10: hazard takes its share; the line brings the replacements
     if(c.pop>K.MIN_FOUND){ c.lossDebt=(c.lossDebt||0)+c.pop*p.haz*K.COLONY_LOSS; var cl=Math.floor(c.lossDebt); if(cl>0){ c.lossDebt-=cl; c.pop=Math.max(K.MIN_FOUND,c.pop-cl); G.stats.colonyLoss=(G.stats.colonyLoss||0)+cl } }
-    // v4.4: the machines drink first; dry for KIT_GRACE years and they stand
+    // v4.4: the machines drink first; dry for KIT_GRACE years and they stand. v5.23: they drink from Earth's stock, above kitFloor
     if(kitDrinks(G,k)){ var burn=kitBurn(c);
-      if((c.store.fuel||0)>=burn){ c.store.fuel-=burn; if(c.fuelOut>=K.KIT_GRACE){ log(G,'kit_running',{p:k,t:c.tier}); forgeEv(G,k,'kit_running') } c.fuelOut=0 }
-      else { c.store.fuel=0; c.fuelOut=(c.fuelOut||0)+1; if(c.fuelOut===K.KIT_GRACE){ log(G,'kit_starved',{p:k,t:c.tier}); forgeEv(G,k,'kit_starved') } } }
+      if(E.fuel-kitFloor(G)>=burn){ E.fuel-=burn; openRes(G,'fuel'); G.ledger.fuelOut=(G.ledger.fuelOut||0)+burn; G.kitFuel=(G.kitFuel||0)+burn;
+        if(c.fuelOut>=K.KIT_GRACE){ log(G,'kit_running',{p:k,t:c.tier}); forgeEv(G,k,'kit_running') } c.fuelOut=0 }
+      else { c.fuelOut=(c.fuelOut||0)+1; if(c.fuelOut===K.KIT_GRACE){ log(G,'kit_starved',{p:k,t:c.tier}); forgeEv(G,k,'kit_starved') } } }
     var mult=rateMult(c);
     if(p.kind==='works'){
       c.store.metal=(c.store.metal||0)+c.pop*K.WORKS_LOCAL;

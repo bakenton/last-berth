@@ -1,0 +1,7 @@
+UI,u_kitDregs,Earth has no fuel to spare: the machines stand in {n} years.,У Земли нет лишнего топлива: техника встанет через {n} лет.,v5.23 abstract fuel,live,new
+UI,kitStarved,Earth has no fuel to spare. The machines stand; the world digs by hand.,"У Земли нет лишнего топлива. Техника стоит, мир копает руками.",v5.23 abstract fuel,live,changed
+UI,a_kitfuel,{p}: the machines stand — Earth has no fuel to spare for them.,{p}: техника стоит — у Земли нет для неё лишнего топлива.,v5.23 abstract fuel,live,changed
+LOG,kit_starved,{p}: Earth has no fuel to spare. The tier {t} machines have stopped.,{p}: у Земли нет лишнего топлива. Техника яруса {t} остановилась.,v5.23 abstract fuel,live,changed
+LOG,kit_running,{p}: Earth has fuel again. The tier {t} machines are running.,{p}: у Земли снова есть топливо. Техника яруса {t} работает.,v5.23 abstract fuel,live,changed
+VOICE,kit_starved.1,{p}: the tanks are dry and the tier {t} rig is a monument. We are back on shovels. Tell the desk there is no fuel left for us.,"{p}: баки сухие, установка яруса {t} стала памятником. Мы снова на лопатах. Передайте на пульт: для нас топлива не осталось.",v5.23 abstract fuel,live,changed
+UI,tut_m13,Machines make a world give more. They burn Earth's fuel and ride out on the line's next hull.,Техника поднимает выработку мира. Жжёт топливо Земли и уходит со следующим судном линии.,v5.23 abstract fuel,live,changed

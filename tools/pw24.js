@@ -60,7 +60,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('output multiplied ×1.6', await p.evaluate(id=>{ const c=LN.colonies[id], q=planet(id); return Math.abs(lineRate(LN,id).makes-c.pop*q.rich*K.PROD*1.6)<1e-6 },mine));
   ok('stockyard bottomless', await p.evaluate(id=>storeCap(LN.colonies[id])===Infinity,mine));
   await run(60);
-  ok('fuel delivered by the line', await p.evaluate(id=>LN.log.some(l=>l.code==='dropped'&&l.d.p===id&&l.d.u>0),mine), await p.evaluate(id=>LN.log.filter(l=>l.code==='dropped'&&l.d.p===id).map(l=>l.d.u).join(','),mine));
+  // v5.23: fuel is abstract — no hull carries it and none lies on the world; the machines burn Earth's stock
+  ok('no fuel rides to the world or lies on it', await p.evaluate(id=>!LN.log.some(l=>l.code==='dropped'&&l.d.p===id&&l.d.u>0)&&!(LN.colonies[id].store.fuel>0),mine), await p.evaluate(id=>LN.log.filter(l=>l.code==='dropped'&&l.d.p===id).map(l=>l.d.u).join(',')+' · store '+(LN.colonies[id].store.fuel||0),mine));
+  ok('the machines burn the fuel of Earth and run', await p.evaluate(id=>(LN.kitFuel||0)>0&&(LN.colonies[id].fuelOut||0)===0,mine), await p.evaluate(()=>'burnt '+(LN.kitFuel||0)));
   // v4.35 (по макету): подписи миров без иконок; людей показывает подсказка #tip при наведении
   await U.closeWin(); await p.evaluate(()=>LNdraw());
   { const pt=await U.point(mine); if(pt){ await p.mouse.move(pt.x,pt.y); await p.waitForTimeout(150) } }
@@ -80,7 +82,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.reserves[id]=1e6; LNdraw() },mine);   // v4.17: a spent seam shows only the evacuation button, so give the world a seam to read the kit panel
   await showWorld(mine);
   ok('panel says the machines stand', /The machines stand/.test(await win()), (await win()).match(/[^.]*machines[^.]*/)?.[0]);
-  await p.evaluate(id=>{ LN.colonies[id].store.fuel=500 },mine); await run(2);
+  await p.evaluate(()=>{ LN.earth.fuel=5000 }); await run(2);   // v5.23: Earth has fuel to spare again
   ok('kit_running after fuel', await p.evaluate(()=>LN.log.some(l=>l.code==='kit_running')));
   // 6. tiermax + pending guards
   ok('canKit pending while another kit is ordered', await p.evaluate(id=>{ LN.earth.metal=9000; LN.earth.parts=5000; orderKit(LN,id); return canKit(LN,id)==='kitpending' },mine));

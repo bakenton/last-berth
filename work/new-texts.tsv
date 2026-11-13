@@ -932,3 +932,4 @@ UI	u_fed	Line brings	Линия везёт
 UI	u_feedQ	What it burns a year	Что он расходует за год
 UI	u_lineLow	The line brings too little	Линия везёт мало
 UI	u_ofCap	of {n}	из {n}
+UI	u_kitDregs	Earth has no fuel to spare: the machines stand in {n} years.	У Земли нет лишнего топлива: техника встанет через {n} лет.

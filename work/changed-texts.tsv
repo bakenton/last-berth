@@ -110,3 +110,9 @@ UI	nar_rsLevel	not one ring of pods was filled	ни одно кольцо кап
 UI	u_feedRow	{n}/yr · line {b}	{n}/год · линия {b}
 UI	u_worksLow	Metal or rations are running out — then the works stop.	Металл или рационы кончаются — потом завод встанет.
 UI	u_evacWho	{h} · all {k}	{h} · все {k}
+UI	kitStarved	Earth has no fuel to spare. The machines stand; the world digs by hand.	У Земли нет лишнего топлива. Техника стоит, мир копает руками.
+UI	a_kitfuel	{p}: the machines stand — Earth has no fuel to spare for them.	{p}: техника стоит — у Земли нет для неё лишнего топлива.
+LOG	kit_starved	{p}: Earth has no fuel to spare. The tier {t} machines have stopped.	{p}: у Земли нет лишнего топлива. Техника яруса {t} остановилась.
+LOG	kit_running	{p}: Earth has fuel again. The tier {t} machines are running.	{p}: у Земли снова есть топливо. Техника яруса {t} работает.
+VOICE	kit_starved.1	{p}: the tanks are dry and the tier {t} rig is a monument. We are back on shovels. Tell the desk there is no fuel left for us.	{p}: баки сухие, установка яруса {t} стала памятником. Мы снова на лопатах. Передайте на пульт: для нас топлива не осталось.
+UI	tut_m13	Machines make a world give more. They burn Earth's fuel and ride out on the line's next hull.	Техника поднимает выработку мира. Жжёт топливо Земли и уходит со следующим судном линии.

@@ -1590,8 +1590,9 @@ function machines(p,c){ if(!can('machines')||(!kitOpen(G)&&!kitTier(c))) return 
   if(kitIdle(G,p.id)){ if(!kt) return '';   // v5.12 (Nikita 11.11): a spent seam sold a tier for +0 that burnt fuel
     return '<div id="mach">'+sec(esc(T('u_machines')),esc(fill(T('u_tierStand'),{t:roman(kt-1)})).toUpperCase())+hint(esc(T('u_kitIdle')))+'</div>' }
   if(kt) h+=sec(esc(T('u_machines')),esc(fill(T(kitLive(c)?'u_tierRun':'u_tierStand'),{t:roman(kt-1)})).toUpperCase());   // v5.13: no machines yet — the package card is the block
-  if(kt){ var burn=kitBurn(c); h+=row(resIc('fuel',13)+esc(T('kitFuel')),dec(burn)+esc(T('u_perYr')),C.fuel)+row(resIc('fuel',13)+esc(T('u_fuelOnSite')),esc(fill(T('u_yearsN'),{n:Math.floor((c.store.fuel||0)/Math.max(0.01,burn))})),kitLive(c)?null:C.red);
-    if(!kitLive(c)) h+=alertBox('stopped',esc(T('kitStarved'))) }
+  if(kt){ var burn=kitBurn(c); h+=row(resIc('fuel',13)+esc(T('kitFuel')),dec(burn)+esc(T('u_perYr')),C.fuel);   // v5.23: no «fuel on site» — the machines burn Earth's stock
+    if(!kitLive(c)) h+=alertBox('stopped',esc(T('kitStarved')));
+    else if((c.fuelOut||0)>0) h+=hint(esc(fill(T('u_kitDregs'),{n:K.KIT_GRACE-c.fuelOut}))) }
   if(c.kit) h+=hint(esc(fill(T(hold>=c.kit.w?'u_kitWaiting':'u_kitTooBig'),{t:roman(c.kit.tier-1),w:num(c.kit.w),h:num(hold)})));
   else if(c.kitShip){ var ks=shipById(G,c.kitShip); h+=hint(esc(fill(T('kitAboard'),{n:c.kitShip,y:ks?ks.t:0}))) }
   else if(kr==='kitgate') h+=hint(esc(fill(T('u_kitGate'),{g:roman(K.KIT_GATE_DRIVE)})));
@@ -1638,11 +1639,11 @@ function winWorld(pid){
     row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p)+(can('parts')?'<div id="hubblk">'+hubBlock(p,c,true)+'</div>':'')+evacBlock(p)+'</div>'+nav+'</div>';   // v5.12 (Nikita 11.11): a hub on a worked-out world
   var lr=lineRate(G,pid);
   L0+=sec(esc(T('u_world')));
-  if(p.kind==='works'){ var wh=worksHungry(pid), fr=feedRates(G,pid);
+  if(p.kind==='works'){ var wh=worksHungry(pid);
     /* v5.21 (Nikita 12.11, draft W2 of design/orders/round2.html: «я хочу понимать что на завод нужно везти ресурсы и за них он будет делать детали»):
        what you bring → what it makes, one bar for how well the line feeds it, one verdict with its button. The figures of v4.46
        (each thing it burns a year, what the line brings of it) sit behind «?» */
-    var fd=feedSplit(pid), ff=lineFit(G,pid), fed=ff&&ff.need>0.001?Math.min(1,ff.carries/ff.need):0, thin=fed<FORGE_WARN, act=wh.idle>5?0:wh.low>=10?lr.makes:lr.makes*fed, yr={metal:wh.metal,food:wh.food,fuel:(c.store.fuel||0)/Math.max(0.01,fr.fuel||0)};
+    var fd=feedSplit(pid), ff=lineFit(G,pid), fed=ff&&ff.need>0.001?Math.min(1,ff.carries/ff.need):0, thin=fed<FORGE_WARN, act=wh.idle>5?0:wh.low>=10?lr.makes:lr.makes*fed, yr={metal:wh.metal,food:wh.food};
     L0+='<div class="trade"><div class="bx"><span class="lbl">'+esc(T('u_youBring'))+'</span>'+Object.keys(fd).map(function(k){ return '<span class="res">'+resIc(k,15)+esc(T(k))+'</span>' }).join('')+'</div><div class="aw">→</div>'+
       '<div class="bx out"><span class="lbl">'+esc(T('u_itMakes'))+'</span><span class="res">'+resIc('parts',15)+esc(T('parts'))+'</span><span class="mk">'+dec(act)+'<small>'+esc(T('u_perYr'))+(act<lr.makes*0.95?' · '+esc(fill(T('u_ofCap'),{n:dec(lr.makes)})):'')+'</small></span></div></div>';
     L0+='<div class="fed"><div class="lbl"><span>'+esc(T('u_fed'))+'<button type="button" class="qm'+(U.feedHelp?' on':'')+'" data-act="feedhelp" aria-expanded="'+!!U.feedHelp+'" title="'+attr(T('u_feedQ'))+'" aria-label="'+attr(T('u_feedQ'))+'">?</button></span><b'+(thin?'':' style="color:'+C.ink+'"')+'>'+Math.round(fed*100)+'%</b></div><div class="bar"><u style="width:'+Math.round(fed*100)+'%;background:'+(thin?C.people:C.parts)+'"></u></div></div>';
