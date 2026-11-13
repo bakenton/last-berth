@@ -350,3 +350,12 @@ svg.gi{fill:currentColor}
 .vd{display:flex;justify-content:space-between;align-items:center;gap:10px;border:1px solid var(--ppl);color:var(--ppl);padding:7px 10px;font-size:12.5px;margin:10px 0 8px}
 .vd span{display:flex;align-items:center;gap:8px}
 #goals .ah-big{margin-bottom:8px}#goals .ah-big b{font-size:34px}
+/* v5.24: one way to shut every window — a cross in its top right corner (Nikita 13.11); yellow, red stays the alarm */
+.xb{flex:none;width:26px;height:26px;margin-left:12px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:var(--ppl);color:#000;border:1px solid var(--ppl);cursor:pointer}
+.xb:hover{background:var(--ink);border-color:var(--ink)}.xb svg{display:block}
+.wh .xb{margin-right:-4px}.sec .xb{width:22px;height:22px;margin-left:10px;vertical-align:middle}
+/* the lists style every button inside them (.advl button, .pick button) — the cross keeps its own look there */
+#pop .xb{display:inline-flex;width:22px;height:22px;padding:0;margin:0 0 0 10px;gap:0;background:var(--ppl);border:1px solid var(--ppl);color:#000}#pop .xb:hover{background:var(--ink);border-color:var(--ink)}
+#pop .advc .xb{margin-left:auto}
+.nwin{position:relative}.nwin>.xb{position:absolute;top:12px;right:12px;margin:0}.nwin>.xb+.icap{padding-right:44px}
+.pfbox{position:relative}.pfbox>.xb{position:absolute;top:8px;right:8px;margin:0;width:22px;height:22px}.pfbox .pfk{padding-right:34px}

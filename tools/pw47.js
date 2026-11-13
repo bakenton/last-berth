@@ -51,7 +51,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('all five kinds are on the list', ['evac','forge','line','noline','seam'].every(k=>kinds.includes(k)),kinds.join());
   await U.clear();   // the state set above opens a note about the first works
   await U.tap('#top [data-act="pop"][data-v="adv"]'); await p.evaluate(()=>LNdraw());
-  const dom=await p.evaluate(()=>({heads:[...document.querySelectorAll('.advl .advh')].map(e=>e.innerText.replace(/\s+/g,' ')),cols:[...document.querySelectorAll('.advl .advh')].map(e=>getComputedStyle(e).color),chips:document.querySelectorAll('.advl .advc span').length,first:document.querySelector('.advl button').getAttribute('data-t')}));
+  const dom=await p.evaluate(()=>({heads:[...document.querySelectorAll('.advl .advh')].map(e=>e.innerText.replace(/\s+/g,' ')),cols:[...document.querySelectorAll('.advl .advh')].map(e=>getComputedStyle(e).color),chips:document.querySelectorAll('.advl .advc span').length,first:document.querySelector('.advl button[data-t]').getAttribute('data-t')}));   // v5.24: the first button of the list is its cross
   ok('groups: a head with a count for each kind, each in its own colour', dom.heads.length===5&&dom.chips===5&&new Set(dom.cols).size===5&&dom.heads.every(h=>/\d$/.test(h)),JSON.stringify(dom));
   ok('the urgent kind comes first', dom.first==='evac',dom.first);
   await shot('adv-types');

@@ -1067,7 +1067,11 @@ function drawTabs(){ var F=flags(), h='';
   setHTML('tabs',h) }
 
 /* ---------- window pieces ---------- */
-function head(title,sub,icon){ return '<div class="wh">'+(icon||'')+'<b>'+title+'</b><small>'+(sub||'')+'</small></div>' }
+/* v5.24 (Nikita 13.11, a live player: «некоторые окна не понять, как закрываются… чтобы все окна, у них был крестик в правом верхнем углу…
+   нажимаешь, и любое окно в игре закрывается»): one cross, the same place, every window. `what` says what it shuts: win | tab | pop, or
+   the acknowledging press of a whole-screen notice (nightok, shiftok, noteok, pfok). Yellow — red is the colour of an alarm here */
+function xb(act,v){ return '<button type="button" class="xb" data-act="'+(act||'x')+'"'+(v?' data-v="'+v+'"':'')+' aria-label="'+esc(T('u_close'))+'" title="'+esc(T('u_close'))+'"><svg viewBox="0 0 14 14" width="14" height="14" aria-hidden="true"><path d="M2 2 12 12M12 2 2 12" stroke="currentColor" stroke-width="2.2" fill="none"/></svg></button>' }
+function head(title,sub,icon,what){ return '<div class="wh">'+(icon||'')+'<b>'+title+'</b><small>'+(sub||'')+'</small>'+xb('x',what||'win')+'</div>' }
 function sec(l,r,id){ return '<div class="sec"'+(id?' id="'+id+'"':'')+'><span>'+l+'</span>'+(r!==undefined&&r!==''?'<span>'+r+'</span>':'')+'</div>' }
 function row(l,v,col,id){ return '<div class="rw"'+(id?' id="'+id+'"':'')+'><span>'+l+'</span><b'+(col?' style="color:'+col+'"':'')+'>'+v+'</b></div>' }
 function hint(t,cls){ return '<div class="hint'+(cls?' '+cls:'')+'">'+t+'</div>' }
@@ -1142,7 +1146,7 @@ function bigHtml(kind){
     return '<div class="nwin bad">'+icap(T('u_year')+' '+G.day)+'<div class="nbig" style="color:'+C.red+'"><small>'+esc(T('food'))+'</small><b>0</b></div><p>'+esc(T(G.night?'nar_N13c':'nar_N13d'))+'</p><div class="rws">'+
       rw2(esc(T('statDay')),G.day)+rw2(esc(T('statSec')),SECTORS.length)+rw2(esc(T('statCol')),G.stats.founded)+rw2(esc(T('statPeak')),G.stats.peak)+rw2(esc(T('statDrive')),G.driveLvl||0)+rw2(esc(T('statLost')),G.stats.lost)+'</div>'+
       chronLines(3)+alx(T(G.night?'nar_N13c_a':'nar_N13d_a'))+btns+'</div>' }
-  if(kind==='night') return '<div class="nwin bad">'+icap(T('u_year')+' '+G.day)+'<div class="nbig" style="color:'+C.red+'"><small>'+esc(T('u_night'))+'</small><b>'+G.night+'</b></div>'+
+  if(kind==='night') return '<div class="nwin bad">'+xb('nightok')+icap(T('u_year')+' '+G.day)+'<div class="nbig" style="color:'+C.red+'"><small>'+esc(T('u_night'))+'</small><b>'+G.night+'</b></div>'+
     ['nar_N09_1','nar_N09_2','nar_N09_3'].map(function(k){ return '<p>'+esc(fill(T(k),{year:G.night}))+'</p>' }).join('')+
     '<div class="rws">'+rw2(ic('drive',13,C.ark)+esc(T('u_arkDrive')),esc(fill(T('u_genPlus'),{g:roman(G.arkMark)})),'warn')+'</div>'+'<div class="nbtn">'+btn(esc(T('u_continueBtn')),'nightok',null,'pri')+'</div></div>';
   if(kind==='shift'){ var R=G.shiftReport||{}, sd=R.d||{}, rows='';
@@ -1161,11 +1165,11 @@ function bigHtml(kind){
     rows+=rw2(esc(T('shHands')),num(R.hands)+(R.idle?' '+esc(fill(T('shIdle'),{n:R.idle})):''),R.hungry?'bad':'dim');
     if(R.left!==null&&R.left!==undefined) rows+=rw2(esc(T('shLeft')),esc(fill(T('shLeftN'),{n:R.left,b:R.berths})),R.left<=K.NIGHT_NEAR?'bad':'warn');
     var k1=Math.max(1,(R.no||2)-1);   // the report at year 80 is the hand-over of shift 1
-    return '<div class="nwin" id="shiftwin">'+icap(T('u_shiftCap')+' · '+T('u_year')+' '+G.day)+'<p>'+esc(k1===1?T('nar_N04a'):fill(T('nar_N04b'),{k:k1}))+'</p><div class="rws">'+rows+'</div>'+alx(T(k1===1?'nar_N04a_a':'nar_N04b_a'))+
+    return '<div class="nwin" id="shiftwin">'+xb('shiftok')+icap(T('u_shiftCap')+' · '+T('u_year')+' '+G.day)+'<p>'+esc(k1===1?T('nar_N04a'):fill(T('nar_N04b'),{k:k1}))+'</p><div class="rws">'+rows+'</div>'+alx(T(k1===1?'nar_N04a_a':'nar_N04b_a'))+
       '<div class="nbtn"><label><input type="checkbox" id="shstop" checked> '+esc(T('shiftStop'))+'</label>'+btn(esc(T('shiftGo')),'shiftok',null,'pri')+'</div></div>' }
   if(kind==='note'){ var n=U.notes[0];
     if(!n.shown){ n.shown=true; SFX.play(n.snd||'info') }
-    return '<div class="nwin '+(n.cls||'')+'"><div class="icap">'+esc(n.k)+'<span>'+G.day+'</span></div><h2>'+esc(n.title)+'</h2><p>'+esc(n.body)+'</p><div class="nbtn">'+
+    return '<div class="nwin '+(n.cls||'')+'">'+xb('noteok')+'<div class="icap">'+esc(n.k)+'<span>'+G.day+'</span></div><h2>'+esc(n.title)+'</h2><p>'+esc(n.body)+'</p><div class="nbtn">'+
       (n.go?btn(esc(n.goL||T('u_open')),'notego',{v:n.go},'pri'):'')+btn(esc(T(n.go?'noFreeLater':'noteOk')),'noteok',null,n.go?'':'pri')+'</div></div>' }
   return '' }
 function drawBig(){ var k=bigKind(), L0=el('noteL'), key=k==='shift'?'shift'+G.day:null;
@@ -1188,7 +1192,7 @@ function drawPF(){
     if(L0._f===f&&L0._lang===U.lang) return;
     L0._f=f; L0._k=null; L0._lang=U.lang; L0.className='full';
     var t=letterText(f);
-    L0.innerHTML='<div class="pfbox"><canvas width="64" height="64"></canvas><div><div class="pfk"><span>'+esc(T('pfTitle'))+'</span><span>'+String(f.day!==undefined?f.day:G.day).padStart(4,'0')+'</span></div>'+
+    L0.innerHTML='<div class="pfbox">'+xb('pfok')+'<canvas width="64" height="64"></canvas><div><div class="pfk"><span>'+esc(T('pfTitle'))+'</span><span>'+String(f.day!==undefined?f.day:G.day).padStart(4,'0')+'</span></div>'+
       '<div class="pfn">'+esc(f.name)+'</div><div class="pfm">'+esc(t.who)+' · '+esc(fill(T('pfNo'),{n:f.no}))+(f.sub?' · '+esc(f.sub):'')+'</div>'+
       '<div class="pfl">'+esc(t.line)+'</div>'+btn(esc(T('pfOk')),'pfok',null,'pri')+'</div></div>';
     drawPortrait(L0.querySelector('canvas'),f.seed); return }
@@ -1202,7 +1206,7 @@ function drawPF(){
     '<button type="button" class="ltarch'+(un?' new':'')+(U.pop==='letters'?' on':'')+'" data-act="pop" data-v="letters">'+ic('peopleA',14)+'<span>'+esc(T('u_letters'))+'</span><b>'+all.length+'</b>'+(un?'<em>'+esc(fill(T('u_lettersNew'),{n:un}))+'</em>':'')+'</button>';
   paintLetters(L0) }
 function popLetters(){ var all=(G.letters||[]).slice().reverse();
-  return '<div class="ltrs">'+sec(esc(T('u_letters')),all.length)+all.map(function(l){ return letterRow(l,U.ltOpen===l.id) }).join('')+'</div>' }
+  return '<div class="ltrs">'+sec(esc(T('u_letters')),all.length+xb('x','pop'))+all.map(function(l){ return letterRow(l,U.ltOpen===l.id) }).join('')+'</div>' }
 
 /* the Night stop, the no-free-worlds stop and the ring note — v4.30/v4.16, now as notes that open the Tech tab */
 function freeWorlds(){ var out=[]; for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(!sectorOpen(G,p.sec)) continue; if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])) continue; out.push(p) } return out }
@@ -1710,7 +1714,7 @@ function seamLeft(pid){ var res=G.reserves[pid], c=G.colonies[pid], p=planet(pid
 function picker(){ var a=U.pop.split(':'), kind=a[1], s=shipById(G,+a[2]); if(!s) return '';
   var here=s.from||(s.pend&&s.pend.from);
   var ws=Object.keys(G.colonies).filter(function(k){ return k!==here&&!isDead(k)&&!evacGoing(k) }).sort(function(x,y){ return planet(x).sec-planet(y).sec||planet(x).ang-planet(y).ang });
-  return '<div class="pick">'+sec(esc(fill(T(kind==='move'?'u_moveTo':'u_sendTo'),{h:hname(s)})).toUpperCase())+'<div class="lst">'+
+  return '<div class="pick">'+sec(esc(fill(T(kind==='move'?'u_moveTo':'u_sendTo'),{h:hname(s)})).toUpperCase(),xb('x','pop'))+'<div class="lst">'+
     (ws.length?ws.map(function(k){ var p=planet(k), lw=lineRefuse(G,s,k), ok=lw==='ok';
       var f=lineFit(G,k), gap=f&&f.gap>0.01;   // Nikita, 02.11: what the line carries, what it must, what this hull would add; ring and kind right by the name
       return '<button type="button" '+(ok?'data-act="pickgo" data-v="'+kind+':'+s.id+':'+k+'"':'class="dis"'+off(lw,lineWhyP(lw)))+'>'+wmark(p.kind,true)+'<b>'+esc(pname(k))+'</b><i>'+esc(fill(T('u_ringN'),{n:p.sec+1})+' · '+kindWord(p.kind).toLowerCase())+'</i><span'+(ok&&gap?' class="short"':'')+'>'+esc(ok&&f?fill(T('u_pickRate'),{c:dec(f.carries),m:dec(f.need),a:dec(hullYield(G,k,s))}):lineWhyShort(lw))+'</span></button>' }).join(''):'<div class="why">'+esc(T('u_noWorlds'))+'</div>')+
@@ -1759,7 +1763,7 @@ function sideFleet(){ var all=G.ships.filter(function(s){ return s.mode!=='dead'
     else if(s.mode==='missing') acts=btn(esc(T('u_search')),'search',{m:s.id},'','overdue',!bestSearch(s)?off('nofree'):(G.earth.fuel<searchFuel(s)?off('fuel'):''));
     else if(wl&&planet(wl)) acts='<button type="button" class="lnk" data-act="world" data-v="'+wl+'">'+esc(pname(wl))+' →</button>';
     return hullRow(s,acts) }).join('');
-  return '<div class="side">'+head(esc(T('u_tabFleet').toUpperCase()),esc(fill(T('u_hullsN'),{n:all.length})).toUpperCase(),ic('tFleet',18))+'<div class="seg wide">'+seg+'</div><div class="lst tall">'+(rows||hint(esc(T('u_none'))))+'</div></div>' }
+  return '<div class="side">'+head(esc(T('u_tabFleet').toUpperCase()),esc(fill(T('u_hullsN'),{n:all.length})).toUpperCase(),ic('tFleet',18),'tab')+'<div class="seg wide">'+seg+'</div><div class="lst tall">'+(rows||hint(esc(T('u_none'))))+'</div></div>' }
 function searchFuel(m){ var w=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target), p=w&&planet(w); return p?Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G))):0 }
 function bestSearch(m){ var where=m.dest&&m.dest!=='earth'?m.dest:(m.origin&&m.origin!=='earth'?m.origin:m.target); if(!where||!planet(where)) return null;
   return assignable(where).sort(function(a,b){ return legDays(G,'earth',where,a)-legDays(G,'earth',where,b) })[0]||null }
@@ -1773,7 +1777,7 @@ function sideWorlds(){ var list=PLANETS.filter(function(p){ return secVis(p.sec)
     var icn={dead:'workedout',cut:'cutoff',starve:'starving',noline:'warn',half:'warn',dry:'workedout',settling:'settlers',free:'free'}[st];
     var left=!c?'—':(p.kind==='works'?'—':(isDry(p.id)?'0':seamShort(p.id)));
     return '<button type="button" class="tr'+(red?' red':'')+(st==='free'?' free':'')+'" data-act="world" data-v="'+p.id+'"><span>'+wmark(p.kind,!!c)+'<b>'+esc(pname(p.id))+'</b></span><span>'+(p.sec+1)+'</span><span>'+esc(left)+'</span><span style="color:'+(!c||n?'':C.red)+'">'+(c?n:'—')+'</span><span style="color:'+C.people+'">'+(c?num(c.pop):'—')+'</span><span style="color:'+col+'">'+(icn?ic(icn,14,col):'')+esc(T('u_ws_'+st))+'</span></button>' }).join('');
-  return '<div class="side">'+head(esc(T('u_tabWorlds').toUpperCase()),esc(fill(T('u_liveFree'),{l:live,f:fr})).toUpperCase(),ic('tWorlds',18,C.metal))+'<div class="tbl"><div class="th"><span>'+esc(T('u_thWorld'))+'</span><span>'+esc(T('u_thRing'))+'</span><span>'+esc(T('u_thLeft'))+'</span><span>'+esc(T('u_thHulls'))+'</span><span>'+esc(T('people'))+'</span><span>'+esc(T('u_thState'))+'</span></div>'+rows+'</div></div>' }
+  return '<div class="side">'+head(esc(T('u_tabWorlds').toUpperCase()),esc(fill(T('u_liveFree'),{l:live,f:fr})).toUpperCase(),ic('tWorlds',18,C.metal),'tab')+'<div class="tbl"><div class="th"><span>'+esc(T('u_thWorld'))+'</span><span>'+esc(T('u_thRing'))+'</span><span>'+esc(T('u_thLeft'))+'</span><span>'+esc(T('u_thHulls'))+'</span><span>'+esc(T('people'))+'</span><span>'+esc(T('u_thState'))+'</span></div>'+rows+'</div></div>' }
 
 /* ---------- Tech: the hull generation (the drive programme), the next generation's specs, the rings ---------- */
 /* BRIEF: the rule of the drive does not change — the gate is worlds ever settled (4 + 4·l), the programme runs at a works,
@@ -1837,7 +1841,7 @@ function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=
   var tabs=[['over',T('u_tt_over'),o],['drive',fill(T('u_tt_drive'),{g:roman(g+1)}),d]];
   var bar='<div class="ttabs">'+tabs.map(function(t){ return '<button type="button" data-act="ttab" data-v="'+t[0]+'" class="'+(U.ttab===t[0]?'on':'')+'">'+esc(t[1])+'</button>' }).join('')+'</div>';
   var pans=tabs.map(function(t){ return '<div class="tpan" data-pan="ttab:'+t[0]+'"'+(t[0]===U.ttab?'':' hidden')+'>'+t[2]+'</div>' }).join('');
-  return '<div class="side">'+head(esc(T('u_tech').toUpperCase()),'',ic('tTech',18))+bar+'<div class="tbl">'+pans+'</div></div>' }
+  return '<div class="side">'+head(esc(T('u_tech').toUpperCase()),'',ic('tTech',18),'tab')+bar+'<div class="tbl">'+pans+'</div></div>' }
 
 /* ---------- Ark: the Night, the capsule rings, the convoy, the verdict ----------
    v5.10 (design/ARK.md 2g): the rules of the hive in the old frame — the hive drawing of design/ark-menu comes next */
@@ -1941,9 +1945,9 @@ function lineFix(pid,used){ var h=lineHelp(G,pid,{noMove:!can('fleet'),cls:clsSe
 /* Nikita, 02.11 («всё сливается и глазу тяжело»): five kinds, each with its own mark and colour; the worst kind first, a count for each. Red still means urgent, grey means it can wait */
 var ADV_T=[{k:'evac',i:'send',c:'#FF2A1A',l:'u_atEvac'},{k:'forge',i:'kit',c:'#FF8A1F',l:'u_atForge'},{k:'noline',i:'takeoff',c:'#FFD23F',l:'u_atNoLine'},{k:'seam',i:'survey',c:'#4FA3FF',l:'u_atSeam'},{k:'line',i:'hold',c:'#B48CFF',l:'u_atLine'}];
 function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
-  if(!a.length) return '<div class="advl"><div class="none">'+esc(T('u_advNone'))+'</div></div>';
+  if(!a.length) return '<div class="advl"><div class="advc">'+xb('x','pop')+'</div><div class="none">'+esc(T('u_advNone'))+'</div></div>';
   var gs=ADV_T.map(function(t,i){ var rows=a.filter(function(r){ return r[6]===t.k }); var w=rows.reduce(function(m,r){ return Math.min(m,rk(r)) },9), live=rows.filter(function(r){ return r[0]!==C.mid }).length; return {t:t,i:i,rows:rows,w:w,c:w===2?C.mid:t.c,n:live||rows.length} })   // v4.50: a group of grey rows is grey, its count is the top bar's.filter(function(g){ return g.rows.length }).sort(function(x,y){ return x.w-y.w||x.i-y.i });
-  return '<div class="advl"><div class="advc">'+gs.map(function(g){ return '<span style="color:'+g.c+'">'+ic(g.t.i,14,g.c)+'<b>'+g.n+'</b></span>' }).join('')+'</div>'+gs.map(function(g){
+  return '<div class="advl"><div class="advc">'+gs.map(function(g){ return '<span style="color:'+g.c+'">'+ic(g.t.i,14,g.c)+'<b>'+g.n+'</b></span>' }).join('')+xb('x','pop')+'</div>'+gs.map(function(g){
     return '<div class="advh" style="color:'+g.c+'">'+ic(g.t.i,15,g.c)+'<span>'+esc(T(g.t.l))+'</span><b>'+g.n+'</b></div>'+g.rows.map(function(r){ return '<button type="button" data-t="'+g.t.k+'" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+(r[0]===C.mid?C.mid:g.t.c)+'"></i><b'+(r[0]===C.red?' style="color:'+C.red+'"':(r[0]===C.mid?' style="color:'+C.mid+'"':''))+'>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join('') }).join('')+'</div>' }
 function popMenu(){
   return '<div class="menu"><button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
@@ -2015,7 +2019,8 @@ function resLeft(sid){ toast(esc(fill(T('u_resLeft'),{n:sid})),'warn',6000,false
 function doAct(a,b){
   var d=b.dataset, res=null, okc=null, okp=null, v=d.v;
   if(a!=='allhome') U.homeArm=false;
-  if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null; if(v==='tech') U.ttab='over' } else U.win=U.win===v?null:v; SFX.play('tab') }
+  if(a==='x'){ U.scrapArm=null; if(v==='pop') U.pop=null; else if(v==='tab'){ U.tab=null; U.pop=null } else { U.win=null; U.pop=null } SFX.play('tab') }
+  else if(a==='tab'){ U.pop=null; U.scrapArm=null; if(v==='worlds'||v==='tech'||v==='fleet'){ U.tab=U.tab===v?null:v; U.win=null; if(v==='tech') U.ttab='over' } else U.win=U.win===v?null:v; SFX.play('tab') }
   else if(a==='world'){ openWorld(v,d.f) }
   else if(a==='step'){ var O=stepOrder(U.win), i=O.indexOf(U.win); if(O.length) U.win=O[(i+(+v)+O.length)%O.length]; U.scrapArm=null }
   else if(a==='pop'){ U.pop=(U.pop===v||!v)?null:v; U.scrapArm=null }
