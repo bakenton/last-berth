@@ -20,7 +20,7 @@
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.27'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.28'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -2592,13 +2592,15 @@ function btn(label,act,data,kind,icon,dis){ var d=''; for(var k in (data||{})) d
 /* ---------- v5.27: what a world gives when it is first settled ---------- */
 /* Nikita 13.11 («как минимум тупо за открытие планеты надо давать немного ресурсов»; the look — draft «A · on two rings» of
    design/start/rewards.html, «Да, годится»; «когда нажимаешь на саму планету, там показывается, какие конкретно награды, в каких
-   количествах»): giftFor(G,pid) of the core is the one number — the world's window (FOUND HERE), the chips by the world on the chart
+   количествах»): giftFor(G,pid) of the core is the one number — the window of a world not settled yet (FOUND HERE), the chips by the world on the chart
    and the landing itself all read it. Said in the signs of the strip, and only in those the strip shows (can). */
 var GIFT_RES=['parts','fuel'];
 function giftKeys(g){ return g?GIFT_RES.filter(function(k){ return g[k]>0&&can(k) }):[] }
 function giftChip(k,v){ return resIc(k,12)+'+'+num(v) }
-function giftBlock(g,got){ var ks=giftKeys(g); if(!ks.length) return '';
-  return '<div id="gift" class="gift'+(got?' got':'')+'">'+sec(esc(T('u_giftSec')))+ks.map(function(k){ return '<div class="rw gf" data-g="'+k+'"><span>'+resIc(k,15)+esc(T(k))+'</span><b>'+(got?'✓ ':'+')+num(g[k])+'</b></div>' }).join('')+'</div>' }
+/* v5.28 (Nikita 14.11: «награду уже после открытия показывать не надо»): only before the landing — a free world and one the settlers are
+   flying to. The settled world's card does not say what it gave (c.gift and the log still hold it). */
+function giftBlock(g){ var ks=giftKeys(g); if(!ks.length) return '';
+  return '<div id="gift" class="gift">'+sec(esc(T('u_giftSec')))+ks.map(function(k){ return '<div class="rw gf" data-g="'+k+'"><span>'+resIc(k,15)+esc(T(k))+'</span><b>+'+num(g[k])+'</b></div>' }).join('')+'</div>' }
 /* the chips under the name of the world whose window is open (SV.sel — where drawMap put that name): over the dark of the window's
    backdrop, under the window itself; they take no press */
 function giftChips(pid){ var g=giftFor(G,pid), ks=giftKeys(g), a=SV.sel; if(!ks.length||!a||a.p!==pid) return '';
@@ -4108,7 +4110,6 @@ function winWorld(pid){
       row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
     if(dry&&!c.hub) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
   }
-  L0+=giftBlock(c.gift,true);   // v5.27: what the world gave when it was first settled
   var hb=can('parts')?hubBlock(p,c):'', HB=hb?'<div id="hubblk">'+hb+'</div>':'';   // v5.01: the hub's price takes parts — not before the player sees them; the tutorial points here (m25)
   var MB=machines(p,c);
   if(can('evac')) L0+=evacBlock(p);
@@ -4142,7 +4143,10 @@ function winWorld(pid){
   var lineBad=!on.length||(p.kind==='works'?!!(lineFit(G,pid)&&lineFit(G,pid).carries<lineFit(G,pid).need*0.95):lr.carries<lr.makes*0.8&&!isDry(pid));
   var worldBad=p.kind==='works'?(worksHungry(pid).idle>5||worksHungry(pid).low<10):isDry(pid);
   /* v5.17 (Nikita 12.11: «я не понимаю сколько на миру производится и сколько линия возит … просто их объединить»): WORLD and LINE are one tab — the world's numbers, then the hulls that carry them */
-  var tabs=[['world','tWorlds',L0+R,worldBad||lineBad?'red':''],['up','upgrade',MB,canKit(G,pid)==='ok'?'up':''],['hub','hub',HB,'']].filter(function(t){ return t[2] });
+  /* v5.28 (Nikita 14.11: «меню мира надо разделить пополам, потому что вниз прокручивать меню неудобно. Эта информация занимает мало места,
+     поэтому про линию влезет»): the first tab stands in two halves — the world's numbers on the left, its line on the right (the hulls on it,
+     a hull to add, a new one from the yards). Each half scrolls by itself if it must; the blocks keep their ids (the tutorial, the advisor) */
+  var tabs=[['world','tWorlds','<div class="wsplit"><div class="wcol wl">'+L0+'</div><div class="wcol wr">'+R+'</div></div>',worldBad||lineBad?'red':''],['up','upgrade',MB,canKit(G,pid)==='ok'?'up':''],['hub','hub',HB,'']].filter(function(t){ return t[2] });
   if(!tabs.some(function(t){ return t[0]===U.wtab })) U.wtab='world';
   var rail='<div class="wrail">'+tabs.map(function(t){ var on1=t[0]===U.wtab; return '<button type="button" data-act="wtab" data-v="'+t[0]+'" class="'+(on1?'on':'')+'">'+ic(t[1],20)+'<span>'+esc(T('u_wt_'+t[0]))+'</span>'+(t[3]?'<i class="wdot '+t[3]+'"></i>':'')+'</button>' }).join('')+'</div>';
   var pans=tabs.map(function(t){ return '<div class="wpan" data-wtab="'+t[0]+'" data-pan="wtab:'+t[0]+'"'+(t[0]===U.wtab?'':' hidden')+'>'+t[2]+'</div>' }).join('');

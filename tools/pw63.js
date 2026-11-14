@@ -2,6 +2,7 @@
 // мало»; размер — «Да, 80%»; вид — черновик «A · on two rings», «Да, годится»): мир при ПЕРВОМ заселении даёт Земле детали и топливо —
 // 80% цены разведки следующего кольца; топливо только в кольцах I–II; только ресурсы, которые игрок уже видит. Число видно до посадки
 // (раздел FOUND HERE в окне мира и плашки под именем выбранного мира), при посадке плашки улетают в верхнюю панель, игра не встаёт.
+// v5.28 (Никита 14.11): после посадки раздела в карточке мира нет; карточка заселённого мира — в две половины, без прокрутки вниз.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js'); const path=require('path');
 const SHOTS=process.env.PW63_SHOTS||null;
@@ -79,7 +80,13 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.pause(); await U.clear();
   ok('the settled world opens by the mouse', await U.openWorld(W));
   s=await seen(p);
-  ok('card of the settled world: FOUND HERE says what was got, dimmed; no chips', s.got&&s.rows.length===2&&/^parts:PARTS ✓ 48$/i.test(s.rows[0])&&/^fuel:FUEL ✓ 249$/i.test(s.rows[1])&&s.nchips===0, JSON.stringify(s.rows)+' chips '+s.nchips);
+  // v5.28 (Никита 14.11: «награду уже после открытия показывать не надо»; «меню мира надо разделить пополам… про линию влезет»)
+  ok('card of the settled world: no FOUND HERE, no chips — the colony still remembers the gift', s.sec===null&&s.rows.length===0&&s.nchips===0&&await p.evaluate(w=>!!LN.colonies[w].gift&&LN.colonies[w].gift.parts===48,W), JSON.stringify(s.rows)+' chips '+s.nchips);
+  const hv=await p.evaluate(()=>{ const R=e=>{ const r=e.getBoundingClientRect(); return {x:r.left,r:r.right,y:r.top,b:r.bottom} }; const c=[...document.querySelectorAll('#ovl .wsplit>.wcol')], wb=document.querySelector('#ovl .wbody');
+    const In=(q,k)=>{ const e=document.querySelector(q); return !!e&&c[k].contains(e)&&e.getBoundingClientRect().height>0 };
+    return {n:c.length,a:c[0]&&R(c[0]),b:c[1]&&R(c[1]),scroll:c.map(e=>e.scrollHeight-e.clientHeight),body:wb.scrollHeight-wb.clientHeight,world:In('#rw-carries',0),line:In('#addblk',1),order:In('#ordblk',1),btn:(()=>{ const e=document.querySelector('#ordblk .oc .b'); if(!e) return null; const r=e.getBoundingClientRect(), w=document.querySelector('#ovl .win').getBoundingClientRect(); return r.bottom<=w.bottom&&r.height>0 })()} });
+  ok('card of the settled world stands in two halves: the world on the left, its line and the yards on the right', hv.n===2&&hv.a.r<=hv.b.x+1&&Math.abs(hv.a.y-hv.b.y)<2&&hv.world&&hv.line&&hv.order, JSON.stringify(hv));
+  ok('nothing to scroll down for: both halves and the window show all they hold, the BUILD button is in sight', hv.scroll.every(v=>v<=1)&&hv.body<=1&&hv.btn===true, JSON.stringify({scroll:hv.scroll,body:hv.body,btn:hv.btn}));
   await shot(p,'A6-settled-card'); await p.keyboard.press('Escape');
 
   // ---------- B. the same world a second time: nothing ----------

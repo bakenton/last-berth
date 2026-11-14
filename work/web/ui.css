@@ -90,7 +90,7 @@ svg.gi{fill:currentColor}
 .bd.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:26px}
 .bd.two>div:first-child{border-right:1px solid var(--ln);padding-right:24px}
 /* v5.13: the world card — a rail of tabs on the left (Nikita 11.11, variant C), one panel at a time */
-.win.wt{width:760px}
+.win.wt{width:1040px}   /* v5.28: wide enough for the world and its line side by side (was 760) */
 .bd.wtb{display:grid;grid-template-columns:76px minmax(0,1fr);padding:0;overflow:hidden}
 .wrail{display:flex;flex-direction:column;border-right:1px solid var(--ln);background:var(--pan)}
 .wrail button{position:relative;display:flex;flex-direction:column;align-items:center;gap:5px;padding:13px 0 10px;border:0;border-bottom:1px solid var(--ln);background:none;color:var(--mid);font:600 9.5px var(--h);letter-spacing:.14em;text-transform:uppercase}
@@ -99,9 +99,18 @@ svg.gi{fill:currentColor}
 .wrail button.on::before{content:'';position:absolute;left:0;top:0;bottom:0;width:2px;background:var(--ink)}
 .wdot{position:absolute;top:9px;right:14px;width:7px;height:7px;border-radius:50%}
 .wdot.red{background:var(--red)}.wdot.up{background:var(--ppl)}
-.wbody{overflow:auto;height:min(560px,calc(var(--ah,100vh) - 120px));padding:14px 20px 16px}   /* one height for every tab: the rail does not jump */
+.wbody{overflow:auto;height:min(620px,calc(var(--ah,100vh) - 176px));padding:14px 20px 16px}   /* v5.28: was min(560, ah − 120) — on a 700-high desk the window's own limit cut its last 46 px off; 620 keeps a line with a hub and four free hulls in sight */   /* one height for every tab: the rail does not jump */
 .pk-f .pr{margin-right:10px}
 .wpan[hidden]{display:none}
+/* v5.28 (Nikita 14.11): the first tab in two halves — the world on the left, its line on the right; no scrolling down for a usual world.
+   The other tabs keep the width they had */
+.wpan[data-wtab="world"]{height:100%}
+.wpan:not([data-wtab="world"]){max-width:682px}
+.wsplit{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,9fr);height:100%}
+.wcol{min-height:0;overflow:auto}
+.wcol.wl{padding-right:22px}
+.wcol.wr{padding-left:22px;border-left:1px solid var(--ln)}
+.wcol>.sec:first-child,.wcol>div:first-child>.sec:first-child{margin-top:0}
 /* v5.13: the upgrade package */
 .pk{border:1px solid var(--ln);border-left:3px solid var(--ppl);background:rgba(255,210,63,.05);padding:12px 14px;display:flex;flex-direction:column;gap:9px;margin-top:8px}
 .pk-h{display:flex;align-items:center;gap:10px}
@@ -374,11 +383,10 @@ svg.gi{fill:currentColor}
 .hsheet .htx{font:600 13px var(--n);color:var(--mid)}
 
 /* v5.27 (Nikita 13.11, draft «A · on two rings» of design/start/rewards.html): what a world gives when it is first settled — the section in its
-   window (FOUND HERE; dim once given), the chips under its name on the chart while its window is open, the chips flying to the strip at the landing */
+   window before the landing (FOUND HERE; v5.28: not on a settled world), the chips under its name on the chart while its window is open, the chips flying to the strip at the landing */
 .gift{padding-top:6px}.rw.gf{padding:6px 0;border-bottom:1px solid var(--ln)}
 .rw.gf span{color:var(--ink);font-size:12px;letter-spacing:.14em;font-weight:600;text-transform:uppercase;gap:9px}
 .rw.gf b{font-size:15px}
-.gift.got .gf{opacity:.55}
 .gchips{position:absolute;z-index:-1;display:flex;gap:4px;white-space:nowrap;pointer-events:none}
 .gch{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--mid);background:var(--bg);padding:2px 6px;font:600 12px/1.35 var(--n);color:var(--ink);white-space:nowrap}
 #gfly{position:absolute;inset:0;pointer-events:none;z-index:24;overflow:hidden}
