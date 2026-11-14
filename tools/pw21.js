@@ -32,7 +32,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // first shift after the date -> chronicle 'dated' + a quiet chief line, no window
   await p.evaluate(()=>{ const G=window.LN; const next=Math.ceil((G.day+1)/K.SHIFT_YEARS)*K.SHIFT_YEARS; botRun(next-G.day+1); LNdraw(); });
   // v4.30 (Nikita, 11.10): a quiet line is a card at the foot of the chart (#pfL.low), not a window — 'no window' means no full-screen one
-  let st=await p.evaluate(()=>{const G=window.LN; const sh=G.log.filter(e=>e.code==='shift').pop(); return {k:sh.d.k, quiet:G.log.some(e=>e.code==='voice'&&/^date_shift/.test(e.d.k)), pf:!!(LNU.pf&&!LNU.pf.low), card:!!(LNU.pf&&LNU.pf.low)}});
+  let st=await p.evaluate(()=>{const G=window.LN; const nd=G.log.filter(e=>e.code==='night_dated').pop(), sh=G.log.filter(e=>e.code==='shift'&&(!nd||e.seq>nd.seq))[0]||G.log.filter(e=>e.code==='shift').pop(); return {k:sh.d.k,   /* v5.29: the first shift AFTER the date (the bot may have dated the Night itself, a shift or two ago) */ quiet:G.log.some(e=>e.code==='voice'&&/^date_shift/.test(e.d.k)), pf:!!(LNU.pf&&!LNU.pf.low), card:!!(LNU.pf&&LNU.pf.low)}});
   ok('A first shift after the date is "dated"; chief line quiet (no window)', st.k==='dated'&&st.quiet&&!st.pf, JSON.stringify(st));
   // v4.30: the journal is gone; the chronicle line lives in LN.log (the text is no longer on the page)
   ok('A the dated shift line is in the chronicle (LN.log)', await p.evaluate(()=>window.LN.log.some(e=>e.code==='shift'&&e.d.k==='dated')));

@@ -1,0 +1,4 @@
+UI,u_dock,Dock,Док,v5.29 dock,live,new
+UI,u_dockLine,"A {c}, ready. Takes this world's line.",Готовый {c}. Встанет на линию этого мира.,v5.29 dock,live,new
+UI,h_free_dock,Dock — a ready hull joins this world's line.,Док — готовое судно встанет на линию этого мира.,v5.29 dock,live,new
+LOG,dock_hull,{p}: the dock's {k} takes this line.,{p}: {k} из дока встаёт на эту линию.,v5.29 dock,live,new

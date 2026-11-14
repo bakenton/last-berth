@@ -1015,3 +1015,7 @@ UI	tm_p25	NIGHT ................ detected	НОЧЬ ................. обнар�
 UI	tm_p26	NIGHT · date ......... no data	НОЧЬ · дата .......... нет данных
 UI	u_giftSec	Found here	Найдено здесь
 UI	h_free_5	Found here — Earth gets it when settlers land.	Найдено здесь — Земля получит это, когда сядут поселенцы.
+UI	u_dock	Dock	Док
+UI	u_dockLine	A {c}, ready. Takes this world's line.	Готовый {c}. Встанет на линию этого мира.
+UI	h_free_dock	Dock — a ready hull joins this world's line.	Док — готовое судно встанет на линию этого мира.
+LOG	dock_hull	{p}: the dock's {k} takes this line.	{p}: {k} из дока встаёт на эту линию.

@@ -142,6 +142,7 @@ var I={
  upgrade:gp('M10 13 m-3 0 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0')+gp('M10 5 V7.5 M10 18.5 V21 M2 13 H4.5 M15.5 13 H18','stroke-width="2.4"')+gp('M19 9 V2 M16 5 L19 2 L22 5'),
  survey:gp('M3 21 A18 18 0 0 1 21 3')+gp('M3 21 L16 8','stroke-width="2.4"')+fp('M17 15 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0'),
  send:fp('M6 4 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M1.5 14 C1.5 9.5 10.5 9.5 10.5 14 Z')+fp('M13 12 L17 9 H21 L23 12 L21 15 H17 Z'),
+ dock:gp('M4 4 V20 H20 V4')+fp('M12 5 L17 16 H7 Z'),   // v5.29: a hull standing in a dock (design/start/rewards.html)
  hub:gp('M12 2.5 L20.2 7.25 V16.75 L12 21.5 L3.8 16.75 V7.25 Z')+fp('M12 12 m-3 0 a3 3 0 1 0 6 0 a3 3 0 1 0 -6 0'),
  tEarth:fp('M12 12 m-9 0 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0')+gp('M3 12 H21 M12 3 C8 7 8 17 12 21 C16 17 16 7 12 3','stroke="#0B0B0C" stroke-width="1.4"'),
  tWorlds:gp('M12 12 m-9 0 a9 9 0 1 0 18 0 a9 9 0 1 0 -18 0','stroke-dasharray="2 2.5"')+fp('M12 12 m-2.5 0 a2.5 2.5 0 1 0 5 0 a2.5 2.5 0 1 0 -5 0')+fp('M18.4 5.6 m-2 0 a2 2 0 1 0 4 0 a2 2 0 1 0 -4 0 M4 16 H8 V20 H4 Z'),
@@ -229,8 +230,14 @@ function giftKeys(g){ return g?GIFT_RES.filter(function(k){ return g[k]>0&&can(k
 function giftChip(k,v){ return resIc(k,12)+'+'+num(v) }
 /* v5.28 (Nikita 14.11: «награду уже после открытия показывать не надо»): only before the landing — a free world and one the settlers are
    flying to. The settled world's card does not say what it gave (c.gift and the log still hold it). */
-function giftBlock(g){ var ks=giftKeys(g); if(!ks.length) return '';
-  return '<div id="gift" class="gift">'+sec(esc(T('u_giftSec')))+ks.map(function(k){ return '<div class="rw gf" data-g="'+k+'"><span>'+resIc(k,15)+esc(T(k))+'</span><b>+'+num(g[k])+'</b></div>' }).join('')+'</div>' }
+/* v5.29 (Nikita 14.11, the first rare gift — the dock; draft «A · on two rings»: the rare one is a yellow hexagon with its sign, seen on
+   the chart by every world that holds it until it is settled, and the first line of FOUND HERE) */
+var RARE_HEX='M24 3 L42.2 13.5 V34.5 L24 45 L5.8 34.5 V13.5 Z';
+function rareIc(k,px){ return '<svg class="ric" viewBox="0 0 48 48" width="'+px+'" height="'+px+'" style="color:'+C.people+'" aria-hidden="true"><path d="'+RARE_HEX+'" fill="'+C.bg+'" stroke="'+C.people+'" stroke-width="1.6" stroke-linejoin="round"/><g transform="translate(12 12)">'+I[k]+'</g></svg>' }
+function dockRow(g){ return g&&g.dock?'<div class="gfr" data-g="dock"><span class="gi">'+rareIc('dock',26)+'</span><b>'+esc(T('u_dock'))+'</b><small>'+esc(fill(T('u_dockLine'),{c:T(g.dock).toLowerCase()}))+'</small></div>':'' }
+function dockSeen(){ return !!(G.rareSeen&&G.rareSeen.dock) }
+function giftBlock(g){ var ks=giftKeys(g), dr=dockRow(g); if(!ks.length&&!dr) return '';
+  return '<div id="gift" class="gift">'+sec(esc(T('u_giftSec')))+dr+ks.map(function(k){ return '<div class="rw gf" data-g="'+k+'"><span>'+resIc(k,15)+esc(T(k))+'</span><b>+'+num(g[k])+'</b></div>' }).join('')+'</div>' }
 /* the chips under the name of the world whose window is open (SV.sel — where drawMap put that name): over the dark of the window's
    backdrop, under the window itself; they take no press */
 function giftChips(pid){ var g=giftFor(G,pid), ks=giftKeys(g), a=SV.sel; if(!ks.length||!a||a.p!==pid) return '';
@@ -268,6 +275,7 @@ function logText(e){ var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return '';
   var d={}; for(var q in e.d) d[q]=e.d[q]; if(d.p&&planet(d.p)) d.p=pname(d.p); if(typeof d.h==='string'&&planet(d.h)) d.h=pname(d.h); if(e.code==='drive_mark'&&typeof d.n==='number') d.n=roman(d.n-1);
   ['s','b','w','h'].forEach(function(k){ if(typeof d[k]==='number'&&Math.abs(d[k])>=1000) d[k]=num(d[k]) });   // v4.42: head counts as on the end window («4 151», not «4151»); years stay as they are
   if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
+  if(e.code==='dock_hull') d.k=T(d.k).toLowerCase();   // v5.29: the class by its name
   if(e.code==='exchange'){ d.r=T(d.r); d.a=T(d.a); d.b=T(d.b); d.n=num(d.n); d.x=num(d.x); d.y=num(d.y) }   // nodes-1.02
   if(e.code==='voice'){ var v=voiceLine(e); return v.who+' '+v.name+': '+v.line }
   return fill(tpl,d) }
@@ -371,7 +379,7 @@ function voiceWatch(){
        speak on losses and on the seams. Windows only for the date, the ark drive, the square and a lost
        hull; everything else is a journal line. */
     if(e.code==='colony_founded'&&d.gift) giftFly(d.p,d.gift);   // v5.27: what the world gave flies to the strip
-    if(e.code==='hub_lost') toastOne(e);   // v5.02: the feeders' lines went back to Earth — the player has to see it
+    if(e.code==='hub_lost'||e.code==='dock_hull') toastOne(e);   // v5.29: the hull from the dock — a line, no window   // v5.02: the feeders' lines went back to Earth — the player has to see it
     if(e.code==='night_dated'){ var f0=driveForecast(G,G.arkMark);
       /* v4.14: {fy} is a whole sentence — a year at this pace, or why there is no year yet */
       var fy0= f0.st==='ok' ? fill(T('fyOk'),{y:f0.y}) : fill(T('fyNone'),{w: f0.st==='settled'?fill(T('arkdReach'),{n:f0.n,r:f0.r}):(f0.st==='host'?fill(T('arkdHost'),{n:K.DRIVE_POP}):T('arkdStall'))});
@@ -889,10 +897,18 @@ function drawMap(){
   // the worlds: where their spheres are; names never over a world, never off the map, never on each other (v4.25)
   var boxes=[], L=[];
   if(es) boxes.push({x0:es.x-er,x1:es.x+er,y0:es.y-er,y1:es.y+er+6});
+  /* v5.29: the dock's sign — up and away from Earth; the word DOCK beside it until the player has opened a world that holds one
+     (G.rareSeen: the run remembers). Names keep clear of both. */
+  var wg0=U.win&&planet(U.win)?giftFor(G,U.win):null; if(wg0&&wg0.dock&&!dockSeen()) (G.rareSeen=G.rareSeen||{}).dock=1;
+  var dkWord=dockSeen()?'':T('u_dock').toUpperCase(), dkW=dkWord.length*7.4;
   var GH=[];
   PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost'){ var gp=prj([b.x,0,b.z]); if(gp) GH.push(gp); return }
     var sp3=prj([b.x,wH(q.id),b.z]); if(!sp3) return; var sr3=(on?RS:RF)*pxPer(sp3.w), rr=sr3*(on&&q.kind==='works'?1.8:1);
-    boxes.push({x0:sp3.x-rr,x1:sp3.x+rr,y0:sp3.y-sr3,y1:sp3.y+sr3}); L.push({q:q,s:sp3,r:sr3,rr:rr,on:on,st:st}) });
+    var o1={q:q,s:sp3,r:sr3,rr:rr,on:on,st:st,dk:!on&&!!(giftFor(G,q.id)||{}).dock};
+    boxes.push({x0:sp3.x-rr,x1:sp3.x+rr,y0:sp3.y-sr3,y1:sp3.y+sr3});
+    if(o1.dk){ o1.lf=!!es&&sp3.x<es.x; o1.hx=(o1.lf?-1:1)*(sr3+13); o1.hy=-(sr3+8); var bx0=sp3.x+o1.hx, by0=sp3.y+o1.hy;
+      boxes.push({x0:bx0-12,x1:bx0+12,y0:by0-12,y1:by0+12}); if(dkWord) boxes.push(o1.lf?{x0:bx0-15-dkW,x1:bx0-12,y0:by0-8,y1:by0+6}:{x0:bx0+12,x1:bx0+15+dkW,y0:by0-8,y1:by0+6}) }
+    L.push(o1) });
   L.sort(function(u,v){ return (v.on-u.on)||(u.s.w-v.s.w) }).forEach(function(o){
     var q=o.q, nm=q.name.toUpperCase(), pop=o.on?seamPct(q):'', tw=(nm.length*7.2+pop.length*6.6), g=(U.win===q.id?9:5)+(o.rr-o.r), ok=null, sx=o.s.x, sy=o.s.y;
     var cs=[[sx+o.r+g,sy+4],[sx-o.r-g-tw,sy+4],[sx-tw/2,sy-o.r-g-4],[sx-tw/2,sy+o.r+16]];
@@ -907,6 +923,13 @@ function drawMap(){
     if(BAD_ST[st]){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.red); sa('stroke-width',2); sa('class','alarm'); sr('/>') }
     else if(st==='noline'||st==='half'){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1.6); sa('class','alarm'); sr('/>') }
     if(U.win===q.id){ so('circle'); sp('r',(o.rr+11).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',2); sr('/>') }
+    if(o.dk){ so('circle'); sa('class','rping'); sp('cx',o.hx.toFixed(1)); sp('cy',o.hy.toFixed(1)); sa('r',13); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1); sr('/>');
+      so('svg'); sa('class','rsign'); sa('data-rare','dock'); sp('x',(o.hx-11).toFixed(1)); sp('y',(o.hy-11).toFixed(1)); sa('width',22); sa('height',22); sa('viewBox','0 0 48 48'); sa('style','color:'+C.people); sr('>');
+      so('path'); sa('d',RARE_HEX); sa('fill',C.bg); sa('stroke',C.people); sa('stroke-width',1.6); sa('stroke-linejoin','round'); sr('/>');
+      so('g'); sa('transform','translate(12 12)'); sr('>');
+      so('path'); sa('d','M4 4 V20 H20 V4'); sa('fill','none'); sa('stroke','currentColor'); sa('stroke-width',1.9); sa('stroke-linejoin','round'); sa('stroke-linecap','round'); sr('/>');
+      so('path'); sa('d','M12 5 L17 16 H7 Z'); sa('fill','currentColor'); sr('/></g></svg>');
+      if(dkWord){ so('text'); sa('class','nm rword'); sp('x',(o.hx+(o.lf?-14:14)).toFixed(1)); sp('y',(o.hy+3.5).toFixed(1)); sp('text-anchor',o.lf?'end':'start'); sa('fill',C.people); sa('font-size',9.5); sa('letter-spacing',1); sr('>'+esc(dkWord)+'</text>') } }
     if(!lab.hidden){ so('text'); sp('x',(lab.x0+2-o.s.x).toFixed(1)); sp('y',(lab.y1-3-o.s.y).toFixed(1)); sa('fill',o.on?C.ink:C.mid); sa('font-size',10.5); sa('letter-spacing',1); sa('class','nm'); sr('>'+esc(q.name.toUpperCase()));
       var sq=o.on?seamPct(q):''; if(sq){ so('tspan'); sa('fill',seamCol(q)); sr('>'+esc(sq)+'</tspan>') } sr('</text>') }
     sr('</g>') });
@@ -1134,10 +1157,10 @@ var HELP={
   fleet:function(){ return [shipIc('courier',26),genB(G.gen||0),ic('pier',15,C.people),ic('toEarth',15,C.mid),ic('tWorlds',15,C.mid)] },
   world:function(){ return [hDep(),ic('toEarth',15,C.mid),hWm((planet(U.win)||{}).kind||'mine'),resIc('people',15),ic('lift',15,C.people),ic('upgrade',15,C.people)] },
   works:function(){ return [resIc('metal',15),resIc('parts',15),ic('toEarth',15,C.mid),resIc('people',15),ic('upgrade',15,C.people)] },
-  free:function(){ var a=[hDep(),resIc('people',15),ic('hold',15,C.mid),resIc('fuel',15)]; if(giftKeys(giftFor(G,U.win)).length) a.push('<b class="htx">+</b>'); return a }   // v5.27: «Found here», when the world has it
+  free:function(){ var a=[hDep(),resIc('people',15),ic('hold',15,C.mid),resIc('fuel',15)], g=giftFor(G,U.win); if(giftKeys(g).length) a.push(['<b class="htx">+</b>',T('h_free_5')]); if(g&&g.dock) a.push([rareIc('dock',18),T('h_free_dock')]); return a }   // v5.27: «Found here», when the world has it
 };
 function helpSheet(k){ var ics=HELP[k]&&HELP[k](); if(!ics) return '';
-  var li=ics.map(function(icn,i){ var t=T('h_'+k+'_'+(i+1)), j=t.indexOf(' — '); return '<li><span class="hi">'+icn+'</span><span>'+(j>0?'<b>'+esc(t.slice(0,j))+'</b>'+esc(t.slice(j)):esc(t))+'</span></li>' }).join('');
+  var li=ics.map(function(icn,i){ var t=typeof icn==='string'?T('h_'+k+'_'+(i+1)):icn[1], j=t.indexOf(' — '); if(typeof icn!=='string') icn=icn[0];   /* v5.29: [sign, words] — a line that is there only sometimes */ return '<li><span class="hi">'+icn+'</span><span>'+(j>0?'<b>'+esc(t.slice(0,j))+'</b>'+esc(t.slice(j)):esc(t))+'</span></li>' }).join('');
   return '<div class="hsheet" id="hsheet"><div class="hc"><div class="hk">'+esc(T('h_what'))+'</div><p>'+esc(T('h_'+k+'_w'))+'</p><div class="hk">'+esc(T('h_first'))+'</div><p>'+esc(T('h_'+k+'_f'))+'</p></div>'+
     '<div class="hc"><div class="hk">'+esc(T('h_signs'))+'</div><ul>'+li+'</ul></div></div>' }
 function head(title,sub,icon,what,hk){ var on=hk&&U.help===hk;

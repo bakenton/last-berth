@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.28'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.29'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -617,12 +617,29 @@ function reach(G){var r=0;for(var k in G.colonies){r+=1}return r}
    «плюшки надо давать всегда… она должна расти согласно прогрессу игрока»; size — «Да, 80%»; design/START.md, «Плюшки»): what a world gives
    Earth the first time it is settled — GIFT_SHARE of the price of charting the next ring out (surveyCost), so the gift grows with the ring
    as the way further does. Parts from any ring, fuel from the first GIFT_FUEL_RINGS only. Never a resource the player has not met
-   (isOpen), and the gift opens none. null — nothing to give: the world was settled before (G.settled), is lived on, was abandoned, or
+   (isOpen), and the gift opens none. v5.29: `dock` — see dockWorld. null — nothing to give: the world was settled before (G.settled), is lived on, was abandoned, or
    nothing it would give is open yet. One function for the rule (step) and for the window and the chart, so the number shown before the
    landing is the number that lands. */
+/* v5.29 (Nikita 14.11: редкие награды — «добавляем», первой док; объём — «Да, делаем»; design/START.md, «Решения Никиты 14.11»): the first
+   rare gift. One world of every ring holds a dock — which one is the seed's choice (its own stream: the worlds of a ring are what they
+   were). The first settlers find a hull standing in it: she goes on that world's line at once — no price, no years in the yards; the
+   cheapest class that flies to that ring (classFor), of the generation the yards build. Her crew comes with her — no hands are taken
+   from Earth for it (Claude — awaits Nikita). On top of the parts and the fuel, not instead of them. giftFor names it as `dock` (the
+   class), so the sign on the chart, the line in the window and the hull that comes are one answer. */
+function dockWorld(G,sec){ var d=G.docks||(G.docks={});
+  if(d[sec]===undefined){ var ws=PLANETS.filter(function(q){ return q.sec===sec }); if(!ws.length) return null;
+    d[sec]=ws[Math.floor(mulberry32((G.seed^0x0D0C0D0C)+sec*7919)()*ws.length)].id }
+  return d[sec] }
+function dockHull(G,pid,cls){ var hi=currentHull(G,cls), h=hi===null?null:HULLS[hi]; if(!h) return null;
+  var s={id:G.nextShip++, hull:hi, cap:h.cap, gen:h.gen, crew:(h.crew||0), mode:'idle', t:0, at:'earth', dock:pid,
+         target:null, route:null, auto:true, cargo:{metal:0,food:0,fuel:0,parts:0,people:0}, out:{metal:0,food:0,parts:0,people:0}, take:{metal:0,food:0,fuel:0,parts:0}, missDays:0, bearing:null, job:null};
+  G.ships.push(s); G.stats.docks=(G.stats.docks||0)+1; log(G,'dock_hull',{n:s.id,p:pid,k:cls,g:h.gen});
+  var r=setLine(G,s.id,pid,'earth'); if(r!=='ok'){ s.waiting=true; log(G,'awaiting',{n:s.id}) }   // as a hull out of the yards that could not sail: she waits at the pier
+  return s }
 function giftFor(G,pid){
   var p=planet(pid); if(!p||(G.settled&&G.settled[pid]!==undefined)||G.colonies[pid]||(G.ghost&&G.ghost[pid])) return null;
-  var c=surveyCost(p.sec+1), g={}, n=0;
+  var c=surveyCost(p.sec+1), g={}, n=0, dk;
+  if(dockWorld(G,p.sec)===pid&&(dk=classFor(p.sec,G.gen||0))){ g.dock=dk; n++ }   // v5.29: the ring's dock — the class of the hull that stands in it
   if(isOpen(G,'parts')){ g.parts=Math.round(K.GIFT_SHARE*c.parts); n++ }
   if(p.sec<K.GIFT_FUEL_RINGS&&isOpen(G,'fuel')){ g.fuel=Math.round(K.GIFT_SHARE*c.fuel); n++ }
   return n?g:null }
@@ -1538,10 +1555,11 @@ function tick(G){
       var gf=giftFor(G,node);   // v5.27: asked before the world is written down as settled
       G.colonies[node]={pid:node,pop:s.cargo.people,
         store:{metal:0,food:0,fuel:0,parts:0},founded:G.day};
-      if(gf){ for(var gk in gf) G.earth[gk]+=gf[gk]; G.colonies[node].gift=gf }   // straight into Earth's stores; the colony remembers what it gave (the world card)
+      if(gf){ G.earth.parts+=gf.parts||0; G.earth.fuel+=gf.fuel||0; G.colonies[node].gift=gf }   // straight into Earth's stores; the colony remembers what it gave
       G.stats.founded++; (G.settled=G.settled||{})[node]=G.day;
       log(G,'colony_founded',gf?{p:node,pop:Math.round(s.cargo.people),gift:gf}:{p:node,pop:Math.round(s.cargo.people)});
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
+      if(gf&&gf.dock) dockHull(G,node,gf.dock);   // v5.29: the hull that stood in the dock takes this world's line
       s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
       s.job=null; s.from=null; s.to=null; s.origin=node; s.dest='earth';
       s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;

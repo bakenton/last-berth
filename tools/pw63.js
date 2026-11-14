@@ -2,6 +2,7 @@
 // мало»; размер — «Да, 80%»; вид — черновик «A · on two rings», «Да, годится»): мир при ПЕРВОМ заселении даёт Земле детали и топливо —
 // 80% цены разведки следующего кольца; топливо только в кольцах I–II; только ресурсы, которые игрок уже видит. Число видно до посадки
 // (раздел FOUND HERE в окне мира и плашки под именем выбранного мира), при посадке плашки улетают в верхнюю панель, игра не встаёт.
+// v5.29: миры сценария — без дока (док проверяет pw64).
 // v5.28 (Никита 14.11): после посадки раздела в карточке мира нет; карточка заселённого мира — в две половины, без прокрутки вниз.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js'); const path=require('path');
@@ -20,7 +21,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
       chipBox:cc, name:R(tx), win:R(document.querySelector('#ovl .win')), under:under?(under.id||under.className||under.tagName):null,
       sameSign:g?[...g.querySelectorAll('.gf')].every(e=>{ const a=e.querySelector('svg'), s=document.querySelector('#res .rc[data-r="'+e.dataset.g+'"] small svg'); return !!a&&!!s&&a.innerHTML===s.innerHTML }):null} });
   // the world of a ring that stands lowest on the screen: its name is not behind the window
-  const lowest=(pg,sec)=>pg.evaluate(sec=>{ const a=PLANETS.filter(q=>q.sec===sec&&!LN.colonies[q.id]).map(q=>{ const c=document.querySelector('#map .wd[data-p="'+q.id+'"] circle'); return {id:q.id,y:c?c.getBoundingClientRect().top:-1} }); a.sort((u,v)=>v.y-u.y); return a.length?a[0].id:null },sec);
+  const lowest=(pg,sec)=>pg.evaluate(sec=>{ const a=PLANETS.filter(q=>q.sec===sec&&!LN.colonies[q.id]&&!(giftFor(LN,q.id)||{}).dock).map(q=>{ const c=document.querySelector('#map .wd[data-p="'+q.id+'"] circle'); return {id:q.id,y:c?c.getBoundingClientRect().top:-1} }); a.sort((u,v)=>v.y-u.y); return a.length?a[0].id:null },sec);
   // the clock by the core, a day at a time, until the settlers of pid are down (windows that would stop the desk are shut)
   const land=(pg,pid)=>pg.evaluate(pid=>{ const E=LN.earth; let prev={parts:E.parts,fuel:E.fuel}, day=null;
     for(let i=0;i<400&&!LN.colonies[pid];i++){ prev={parts:E.parts,fuel:E.fuel}; tick(LN); LN.pauseNow=false; LN.shiftOpen=false }
@@ -109,7 +110,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     const E=LN.earth; E.metal=1e5; E.parts=1e4; E.fuel=5000; E.food=1e5; E.people=Math.max(E.people,800); LN.safe=true;
     buildShip(LN,HULLS.findIndex(h=>h.gen===2&&h.key==='courier')); const sh=LN.ships[LN.ships.length-1]; sh.mode='idle'; sh.at='earth'; sh.t=0; LNdraw() });
   await U.clear(); await p.evaluate(()=>LNdraw());
-  const W3=await lowest(p,2), g3=await p.evaluate(w=>giftFor(LN,w),W3), g2=await p.evaluate(()=>{ const q=PLANETS.find(q=>q.sec===1&&!LN.colonies[q.id]&&LN.settled[q.id]===undefined); return q?giftFor(LN,q.id):null });
+  const W3=await lowest(p,2), g3=await p.evaluate(w=>giftFor(LN,w),W3), g2=await p.evaluate(()=>{ const q=PLANETS.find(q=>q.sec===1&&!LN.colonies[q.id]&&LN.settled[q.id]===undefined&&!(giftFor(LN,q.id)||{}).dock); return q?giftFor(LN,q.id):null });
   ok('core, ring II: 72 parts and 368 fuel', !!g2&&g2.parts===72&&g2.fuel===368, JSON.stringify(g2));
   ok('core, ring III: 108 parts and no fuel', !!g3&&g3.parts===108&&g3.fuel===undefined&&g3.parts===Math.round(0.8*k.c3.parts), JSON.stringify(g3));
   ok('a world of ring III opens by the mouse', !!W3&&await U.openWorld(W3), W3);
