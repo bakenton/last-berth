@@ -21,7 +21,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('m9 — the yard tab is named', /in the YARD/.test((M.h_m9||{}).text||''), (M.h_m9||{}).text);
   ok('m19 — convoy generation in a number', /[Gg]eneration [IVX]+ or newer/.test((M.h_m19||{}).text||''), (M.h_m19||{}).text);
   ok('voice: the first landing report (N-02)', /^Report from [A-Z0-9 ]+: \d+ people landed\./.test(M.v_N02||''), M.v_N02);
-  ok('shift window speaks for the Institute and Alexandra (N-04)', /Shift 1 hands over the desk\. Shift 2 takes it\./.test(M.n04||'')&&/ALEXANDRA/i.test(M.n04||''), (M.n04||'').slice(0,200));
+  ok('shift window speaks for the Institute and Alexandra (N-04)', /Shift 1 hands over the Helm\. Shift 2 takes it\./.test(M.n04||'')&&/ALEXANDRA/i.test(M.n04||''), (M.n04||'').slice(0,200));
   ok('Night window is N-09', /in \d+ our galaxy collapses/.test(M.n09||''), (M.n09||'').slice(0,200));
   ok('helper button: Got it', await p.evaluate(()=>!document.querySelector('#helper.on')||/Got it/i.test(document.querySelector('#helper').textContent)));
   ok('не осталось {плейсхолдеров} в репликах', !Object.keys(M).filter(k=>/^(h_|v_)/.test(k)).some(k=>/\{\w+\}/.test(typeof M[k]==='string'?M[k]:M[k].text)), Object.keys(M).filter(k=>/^(h_|v_)/.test(k)).map(k=>typeof M[k]==='string'?M[k]:M[k].text).filter(t=>/\{\w+\}/.test(t)).join(' | '));

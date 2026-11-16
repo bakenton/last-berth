@@ -528,6 +528,10 @@ function camZoom(f){ CAM.dist=Math.max(220,Math.min(12000,CAM.dist*f)); CFIT=fal
 
 /* ---------- the state of a world, as the map, the list and the advisor see it ---------- */
 function isDead(pid){ var p=planet(pid); return !!G.colonies[pid]&&!G.colonies[pid].hub&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0&&pileLeft(G,pid)<1 }
+/* v5.31 (Nikita's run 16.11, p.24: «когда планета стала хабом, но истощилась. Она должна поменять свой шарик по цвету. Сейчас она просит
+   эвакуации и говорит, что жилы нет»): a hub on a dead seam goes on working as a hub — her sphere, stem and footprint take the hub's colour,
+   the advisor and the Worlds list do not call her a dead seam, the card's dot is not red. The rule of the evacuation is not touched */
+function dryHub(pid){ var c=G.colonies[pid]; return !!c&&!!c.hub&&isDry(pid) }
 function isDry(pid){ var p=planet(pid); return !!G.colonies[pid]&&p.kind!=='works'&&G.reserves[pid]!==Infinity&&G.reserves[pid]<=0 }
 function worksHungry(pid){ var p=planet(pid), c=G.colonies[pid]; if(!c||p.kind!=='works') return null;
   var fr=feedRates(G,pid), ym=(c.store.metal||0)/Math.max(0.01,fr.metal||0), yf=(c.store.food||0)/Math.max(0.01,fr.food||0);
@@ -544,6 +548,12 @@ function lineSoon(pid){ var y=0;
     if(s.moveTo&&s.moveTo!==pid) return;   // told to move elsewhere after she was queued here: lineFit does not count her either (reviewer v5.30)
     if((s.pend&&s.pend.from===pid)||(s.lineFor===pid&&s.mode==='building')||s.moveTo===pid) y+=hullYield(G,pid,s) });
   return y }
+/* v5.31 (Nikita 16.11 on v5.30: «ограничиваем»): what a hull would ADD to the line a year, not what she can carry — on a world that gives
+   4.1 a hull of 8.8 said «+8.8». No more than what the line still lacks (lineFit: what the world gives, or what a works burns, less the
+   hulls flying it and the ones coming); on a dead seam the pile on the surface is what is left to carry. 0 = the line carries it all */
+function lineGain(pid,s){ var y=hullYield(G,pid,s), f=lineFit(G,pid), lr=lineRate(G,pid); if(!f||!lr) return y;
+  return Math.max(0,Math.min(y,lr.dry?lr.sitting-f.carries:f.gap)) }
+function gainTag(pid,s){ var g=lineGain(pid,s); return '<b class="ay'+(g<0.05?' z':'')+'">'+esc(fill(T('u_lineAdds'),{n:dec(g)}))+'</b>' }
 function soonTag(v){ return v>0.005?'<span class="soon" title="'+attr(T('u_lineSoon'))+'"><i></i>+'+dec(v)+'</span>':'' }
 function wst(pid){ var c=G.colonies[pid];
   if(G.ghost&&G.ghost[pid]) return 'ghost';
@@ -552,7 +562,7 @@ function wst(pid){ var c=G.colonies[pid];
   var ll=lastLift(G,pid); if(ll&&ll.st==='cut') return 'cut';
   var wh=worksHungry(pid); if(wh&&wh.idle>5) return 'starve';
   if(!onLine(G,pid).length) return 'noline';
-  if(isDry(pid)) return 'dry';
+  if(isDry(pid)&&!c.hub) return 'dry';
   if(lineThin(pid)) return 'half';
   return 'ok' }
 /* Nikita, 26.10 («линия возит меньше или больше на 1 единицу, а уже уведомление»): a line speaks when it matters. Short: it carries
@@ -807,7 +817,7 @@ function m3wcol(kind){ return m3rgb(KCOL[kind]) }
 /* the footprints and the lines on the floor: again when the camera or the chart changes (who is settled, settling, abandoned, a hub, whose line goes where) */
 function m3obEmit(x,vis){ var hubc=m3rgb(HUBC), k, p, a; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   // footprints: settled — two rings in the trade's colour; free — dashed grey; settling — dashed yellow; abandoned — ×
-  vis.forEach(function(q){ var st=wst(q.id), on=!!G.colonies[q.id], col=on?m3wcol(q.kind):(st==='settling'?m3rgb(C.people):'156,155,149'); a=p3(q);
+  vis.forEach(function(q){ var st=wst(q.id), on=!!G.colonies[q.id], col=on?(dryHub(q.id)?hubc:m3wcol(q.kind)):(st==='settling'?m3rgb(C.people):'156,155,149'); a=p3(q);
     if(st==='ghost') return;   // its × is in the SVG
     if(!on) x.setLineDash([3,3]); if(on) m3glow(x,col,6); m3pathRing(x,a.x,0,a.z,13,32); x.strokeStyle='rgba('+col+','+(on||st==='settling'?.85:.45)+')'; x.lineWidth=1.3; x.stroke();
     if(on){ m3pathRing(x,a.x,0,a.z,19,32); x.strokeStyle='rgba('+col+',.25)'; x.lineWidth=1; x.stroke() } x.setLineDash([]); x.shadowBlur=0;
@@ -845,7 +855,7 @@ function m3dynEmit(x,t,vis){ var i, k; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
   var es=prj([0,22,0]); if(es) list.push({earth:1,s:es}); list.sort(function(u,v){ return v.s.w-u.s.w });
   list.forEach(function(o){
     if(o.earth){ m3sphere(x,0,22,0,22,m3rgb(C.earth),t*0.3,.8,10); m3pathRing(x,0,0,0,26,40); m3glow(x,'255,210,63',8,true); x.strokeStyle='rgba(255,210,63,.7)'; x.lineWidth=1.4; x.stroke(); x.shadowBlur=0; return }
-    var q=o.q, b=p3(q), on=!!G.colonies[q.id], h=wH(q.id), col=on?m3wcol(q.kind):'156,155,149', body=on&&q.kind==='works'?m3rgb(PARTS_BODY):col, rad=on?RS:RF, works=on&&q.kind==='works';
+    var q=o.q, b=p3(q), on=!!G.colonies[q.id], h=wH(q.id), col=on?(dryHub(q.id)?m3rgb(HUBC):m3wcol(q.kind)):'156,155,149', body=on&&q.kind==='works'?m3rgb(PARTS_BODY):col, rad=on?RS:RF, works=on&&q.kind==='works';
     if(on){ m3glow(x,col,6); m3path(x,[[b.x,0,b.z],[b.x,h-rad,b.z]]); x.strokeStyle='rgba('+col+',.75)'; x.lineWidth=1.6; x.stroke(); x.shadowBlur=0;
       var kt=kitTier(G.colonies[q.id]), top=h-rad-4, sp=kt?Math.min(6,Math.max(2,top-2)/kt):0;   // v5.17 (Nikita 12.11): the ticks are the upgrade packages, not people
       for(var tk=0;tk<kt;tk++){ var tp=prj([b.x,top-tk*sp,b.z]); if(!tp) continue; var tl=5*pxPer(tp.w)+3; x.beginPath(); x.moveTo(tp.x-tl,tp.y); x.lineTo(tp.x+tl,tp.y); x.strokeStyle='rgba(255,210,63,.95)'; x.lineWidth=2.2; x.stroke() } }
@@ -862,7 +872,7 @@ function draw3d(now){ if(!G||!el('map3d')) return; m3prep(); var R=GLR===null?m3
   var Q=M3RS; if(!Q.fa){ Q.fa=new M3R(); Q.fb=new M3R(); Q.ob=new M3R(); Q.wv=new M3R(); Q.dy=new M3R() }
   var key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM.dist].map(function(v){ return v.toFixed(2) }).join()+'|'+W+'|'+H+'|'+visRings()+'|'+(can('sectors')?1:0);
   var bgNew=key!==M3D.fk; if(bgNew){ M3D.fk=key; Q.fa.reset(); Q.fb.reset(); m3floorEmit(Q.fa,Q.fb) }
-  var sig=key+'#'+vis.map(function(q){ var id=q.id, c=G.colonies[id]; return id+(G.ghost&&G.ghost[id]?'g':c?'c'+(c.hub?'h':'')+lineTo(G,id):enRoute(G,id)?'s':'f') }).join();
+  var sig=key+'#'+vis.map(function(q){ var id=q.id, c=G.colonies[id]; return id+(G.ghost&&G.ghost[id]?'g':c?'c'+(c.hub?(dryHub(id)?'H':'h'):'')+lineTo(G,id):enRoute(G,id)?'s':'f') }).join();
   var obNew=sig!==M3D.ok; if(obNew){ M3D.ok=sig; Q.ob.reset(); m3obEmit(Q.ob,vis) }
   Q.wv.reset(); m3waveEmit(Q.wv,t,OUT); Q.dy.reset(); m3dynEmit(Q.dy,t,vis);
   // space and the floor change only with the camera, the footprints and the floor's lines with the camera or the chart: while they move
@@ -1352,6 +1362,32 @@ function freeHullAtPier(){ return freeAtPier().some(function(s){ return !s.mutin
 /* a hull that is on no line: free at the pier, or flying home after it set settlers down */
 function offLine(){ return G.ships.some(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!(s.from&&s.to)&&!s.pend&&!s.lineFor&&!s.mutiny&&!s.crewWait }) }
 function closeAll(){ U.win=null; U.tab=null; U.pop=null; return {} }
+/* v5.31 (Nikita's run 16.11, p.10: «когда можно строить upgrade package хочу чтобы игра дала такое задание и показала, что это круто и надо
+   делать»): the first package is a task of the helper, the way the first line and the first hull are — once the packages are open (kitOpen),
+   none was ever ordered, and a world can take one now with a hull on its line that lifts it. A mine, farm or well before a works (a works'
+   package eats more metal and rations); the biggest gain first. The card she lights carries the number */
+function kitFirst(){ if(!kitOpen(G)) return null; var k, best=null, bv=-1;
+  for(k in G.colonies){ var c=G.colonies[k]; if(kitTier(c)||c.kit||c.kitShip) return null }
+  for(k in G.colonies){ if(canKit(G,k)!=='ok'||lineHold(G,k)<kitCost(G.colonies[k]).w) continue;
+    var g=kitGain(G,k), v=(g?g.with-g.now:0)+(planet(k).kind==='works'?0:1e6); if(v>bv){ bv=v; best=k } }
+  return best }
+/* v5.31 (p.27: «я попробовал обменник. Классно перекидал ненужное в нужное… Но игра нигде не учит нас его использовать. Я кликнул на землю
+   и только тогда игра показал, что он вообще есть»): she leads to Earth's exchange once, at the moment it helps — a press on a button refused
+   for want of a resource (exHint), or a stock of Earth's that is falling and holds under RUNOUT_YEARS of her own burn (exLow, tutJit;
+   not the trend alone — one big purchase bends it, and she said «short of metal» over 2 400 of it: reviewer v5.31) — and only when two other resources can
+   pay for it `spare` times over (a pile, not the last of them), neither of them running out itself, rations never while a famine is forecast.
+   Not after the first exchange made. The numbers EX_SPARE / EX_SPARE_Q are Claude's — awaiting review */
+var EX_SPARE=3, EX_SPARE_Q=6;
+function exLow(r){ var nd=G.need||earthNeed(G), t=trend(r); return (nd[r]||0)>0&&t!==null&&t<-0.05&&G.earth[r]<nd[r]*RUNOUT_YEARS }
+function exPair(get,n,spare){ var rs=exOpen(); if(rs.length<3||rs.indexOf(get)<0||!(n>=1)) return null;
+  var pay=rs.filter(function(k){ return k!==get }), best=null, bv=0;
+  for(var i=0;i<pay.length;i++) for(var j=i+1;j<pay.length;j++){ var a=pay[i], b=pay[j];
+    if(earthRunout(a)||earthRunout(b)||((a==='food'||b==='food')&&(G.hungry||G.foodFc))) continue;
+    var c=exchangeCost(G,get,a,b,n), v=Math.min(G.earth[a]/c[a],G.earth[b]/c[b]); if(v>=spare&&v>bv){ bv=v; best=a+'+'+b } }
+  return best }
+function exWant(get,n,spare){ var t=U.tut; if(!t.help||t.seen.mX||!can('earth')||(G.stats.ex||0)>0) return false;
+  var pr=exPair(get,n,spare); if(!pr) return false; t.ex={get:get,pay:pr,n:n}; tutPush('mX'); return true }
+function exHint(code,p){ var m=/^short_(metal|food|fuel|parts)$/.exec(code||''); if(m&&p&&p.n>0&&exWant(m[1],Math.ceil(p.n),EX_SPARE)) setTimeout(draw,0) }   // a refused press draws nothing by itself — her word would wait for the next frame of the game
 /* the rules: where she points, how, and what the press must be */
 var TMSG={
  m0:{at:'#res [data-r="food"]',mode:'see',k:'tut_m0',pre:function(){ closeAll(); return {y:fcYear()} }},
@@ -1388,6 +1424,13 @@ var TMSG={
  m22:{at:'#ovl [data-act="evac"]',mode:'see',k:'tut_m22',pre:function(){ var d=U.tut.dead; if(d&&G.colonies[d]) openWorld(d); return {} }},
  m25:{at:'#hubblk',mode:'see',k:'tut_m25'},   // v5.01: the hub, the first time a world card shows it
  m26:{at:'#exblk',mode:'see',k:'tut_m26'},   // v5.01: Earth's exchange, the first time the Earth tab shows it
+ mX:{at:'#exblk',mode:'see',k:'tut_mX',   // v5.31: the exchange, led to — Earth's window with what is short already chosen
+   pre:function(){ var x=U.tut.ex; if(!x||!can('earth')||exOpen().indexOf(x.get)<0) return null; var ab=x.pay.split('+');
+     closeAll(); U.help=null; U.win='earth'; U.exGet=x.get; U.exPay=x.pay; U.exN=EX_N[x.get].filter(function(v){ return v>=x.n&&exchangeCheck(G,x.get,ab[0],ab[1],v)==='ok' })[0]||EX_N[x.get][0];
+     U.tut.seen.m26=1; return {r:T(x.get).toLowerCase(),a:T(ab[0]).toLowerCase(),b:T(ab[1]).toLowerCase()} }},
+ mK:{at:'#pkg',mode:'do',k:'tut_mK',   // v5.31: the first upgrade package, as a task
+   pre:function(){ var w=kitFirst(); if(!w) return null; var g=kitGain(G,w); openWorld(w,'mach'); return {p:pname(w),x:String(K.KIT_OUT),a:dec(g.now),b:dec(g.with),r:T(g.res).toLowerCase()} },
+   done:function(a,v,res){ return a==='kit'&&res==='ok' }},
  m24:{at:function(){ return '#hr-'+U.tut.late },mode:'see',k:'tut_m24',pre:function(){ hullWorld(U.tut.late); return {} }},
  m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }}
 };
@@ -1452,6 +1495,8 @@ function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
   if(quiet&&t.step>=3&&!t.seen.N03&&G.delivered.food>0) tutPush('N03');   // the step opened by its year: the first cargo is told when it comes
   if(quiet&&t.help&&t.step>=7&&!t.seen.m12&&partsHome()) tutPush('m12');
   if(quiet&&t.step>=9&&!t.seen.N07&&evOn()){ tutPush('N07'); tutPush('m17') }   // v4.40: the events step told when the first event comes
+  if(quiet&&t.help&&!t.seen.mK&&can('machines')&&kitFirst()) tutPush('mK');   // v5.31: the first package is a task
+  if(quiet&&t.help&&!t.seen.mX&&can('earth')&&!(G.stats.ex>0)){ var xr=exOpen().filter(exLow)[0]; if(xr) exWant(xr,EX_N[xr][1],EX_SPARE_Q) }   // v5.31: a stock running out, two piles beside it
   if(!t.help||!quiet||!w) return;   // the window ones speak only while that window is up
   var c=planet(w)&&G.colonies[w], ll=c&&lastLift(G,w);
   if(w==='earth'||w==='yard'||w==='ark'){ tutPush('m7'); tutPush('mH') }
@@ -1685,6 +1730,10 @@ function hubBlock(p,c,deadW){ if(p.kind==='works') return '';
   if(w==='metal'||w==='parts') w=shortWhy(k2,G.earth); else if(w==='hubCap') w=['hubCap',hubCapP()]; else if(w==='hubChain') w=['hubFeeder',{p:pname(pid),h:pname(c.via)}];
   h+=head2+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(k2,G.earth)+'</div>'+(c.via?'<div class="why" id="hubwhy">'+esc(fill(T('u_hubFeeder'),{h:pname(c.via)}))+'</div>':'')+btn(esc(T('u_hubBuild')),'hubbuild',{p:pid},'full','build',offW(w));
   return h }
+/* v5.31 (Nikita's run 16.11, p.22: «хочу в меню планеты видеть ёмкость хаба, сколько хаб сейчас имеет ресурсов на складах»): the hub's store
+   on the first tab of her card, where «On the surface» stands for any other world — every resource she holds, in numbers. The store has
+   no limit (storeCap is Infinity), so no capacity is drawn */
+function hubStock(c){ return '<div class="rw" id="hubstock"><span>'+esc(T('u_hubStore'))+'</span><b class="hstk">'+HUB_RES.filter(function(k){ return can(k)&&(k!=='fuel'||(c.store.fuel||0)>=1) }).map(function(k){ return '<span style="color:'+C[k]+'">'+resIc(k,13)+num(Math.floor(c.store[k]||0))+'</span>' }).join('')+'</b></div>' }
 /* v5.17 (Nikita 12.11: «доставка куда земля или хаб была во вкладке линии, а то не ясно куда и как перевести судно»): where the line runs — Earth or a hub — sits over the hulls of the line, not in the hub block */
 function viaSeg(p,c){ if(p.kind==='works'||c.hub||!can('parts')) return '';
   var pid=p.id, hubs=Object.keys(G.colonies).filter(function(k){ return k!==pid&&isHub(G,k)&&!isDead(k) }); if(!hubs.length) return '';
@@ -1779,7 +1828,7 @@ function winWorld(pid){
     L0+='<div id="rw-carries">'+row(resIc(dep,13)+esc(T('u_worldGives')),dec(lr.makes)+esc(T('u_perYr')))+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr'))+soonTag(soonC),shortC?C.people:null)+
       '<div class="bar flow"><u style="width:'+Math.round(shareC*100)+'%;background:'+(shortC?C.people:KCOL[p.kind])+'"></u>'+
       (soonC>0.005&&shareS-shareC>0.005?'<u class="soon" style="left:'+Math.round(shareC*100)+'%;width:'+(Math.round(shareS*100)-Math.round(shareC*100))+'%;--c:'+(shortS?C.people:KCOL[p.kind])+'"></u>':'')+'</div></div>'+
-      row(esc(T('u_deposit')),dry?esc(T('u_dryShort')):esc(seamLeft(pid)),dry?C.red:null)+row(esc(T('u_onSurface')),num(c.store[dep]||0))+
+      row(esc(T('u_deposit')),dry?esc(T('u_dryShort')):esc(seamLeft(pid)),dry?(c.hub?C.mid:C.red):null)+(c.hub?hubStock(c):row(esc(T('u_onSurface')),num(c.store[dep]||0)))+
       row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
     if(dry&&!c.hub) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
   }
@@ -1795,7 +1844,7 @@ function winWorld(pid){
   R+='<div id="addblk"><div class="sec"><span>'+esc(T('u_addHull'))+'</span><span class="seg"><button type="button" data-act="addtab" data-v="free" class="'+(tab==='free'?'on':'')+'">'+esc(fill(T('u_segFree'),{n:free.length}))+'</button>'+(can('fleet')?'<button type="button" data-act="addtab" data-v="other" class="'+(tab==='other'?'on':'')+'">'+esc(fill(T('u_segOther'),{n:other.length}))+'</button>':'')+'</span></div><div class="lst">';
   R+=pool.length?pool.sort(function(a,b){ return hullGen(b)-hullGen(a)||b.cap-a.cap }).map(function(s){ var lw=lineRefuse(G,s,pid), ok=lw==='ok', wl=s.from||(s.pend&&s.pend.from);
     return '<div class="hr'+(ok?'':' dis')+'" id="ah-'+s.id+'">'+shipIc(shipClass(s),30)+genB(hullGen(s),hullGen(s)<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+
-      (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+'<b class="ay">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,s))}))+'</b></span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
+      (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+gainTag(pid,s)+'</span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
          :'<span class="hst" style="color:'+C.red+'">'+ic('range',15,C.red)+esc(lw==='range'?fill(T('u_tooShort'),{n:shipRange(s)+1}):lineWhyShort(lw))+'</span>')+
       '</span><span class="ha">'+(ok?btn(esc(T(tab==='free'?'u_assign':'u_moveHere')),tab==='free'?'assign':'move',{s:s.id,p:pid},'pri','assign'):'')+'</span></div>' }).join('')
     :'<div class="why dim">'+esc(T(tab==='free'?'u_noFreePier':'u_noOther'))+'</div>';
@@ -1807,14 +1856,14 @@ function winWorld(pid){
       var w=orderCheck(G,pid,cls,hi); if(w==='cost'||w==='crew') w=shortWhy(hullCost(h),G.earth); if(w==='range') w=lineRefuse(G,{hull:hi},pid); var lwo=(w==='courierLine'||w==='hubCourier'||w==='hubHop');
       var okb=(typeof w==='string'?w:w[0])==='ok';
       R+='<div class="oc'+(okb?'':' dis')+'" id="oc-'+cls+'">'+shipIc(cls,40)+'<b>'+esc(T(cls)+' '+roman(h.gen))+'</b>'+genSeg(cls,gp)+
-        '<div class="oh">'+ic('hold',14,C.mid)+num(h.cap)+'</div>'+(w==='range'||lwo?'':'<div class="oy">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,{hull:hi}))}))+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
+        '<div class="oh">'+ic('hold',14,C.mid)+num(h.cap)+'</div>'+(w==='range'||lwo?'':'<div class="oy">'+gainTag(pid,{hull:hi})+'</div>')+'<div class="prow">'+price(hullCost(h),G.earth,12)+'</div>'+
         (w==='range'?'<div class="why">'+esc(fill(T('u_tooShort'),{n:hullRange(h)+1}))+'</div>':lwo?'<div class="why">'+esc(lineWhyShort(w))+'</div>':btn(esc(fill(T('u_buildYrs'),{n:h.days})),'order',{p:pid,c:cls,h:hi},'pri','build',offW(w)))+olderWhy(cls,hi)+'</div>' });
     R+='</div></div>' }
   /* v5.13 (Nikita 11.11, variant C of design/world-card/tabs.html): the card is a rail of tabs — WORLD · LINE · UPGRADE · HUB.
      All panels stay in the page (the tutorial and the advisor find their blocks), the ones not chosen are hidden; a dot on a tab
      says where to look: red — the world or its line is short, yellow — a package can be ordered now. */
-  var lineBad=!on.length||(p.kind==='works'?!!(lineFit(G,pid)&&lineFit(G,pid).carries<lineFit(G,pid).need*0.95):lr.carries<lr.makes*0.8&&!isDry(pid));
-  var worldBad=p.kind==='works'?(worksHungry(pid).idle>5||worksHungry(pid).low<10):isDry(pid);
+  var lineBad=!on.length||(p.kind==='works'?!!(lineFit(G,pid)&&lineFit(G,pid).carries<lineFit(G,pid).need*0.95):lr.carries<lr.makes*0.8&&(!isDry(pid)||!!c.hub));   // a hub on a dead seam still has a line to keep up (reviewer v5.31)
+  var worldBad=p.kind==='works'?(worksHungry(pid).idle>5||worksHungry(pid).low<10):isDry(pid)&&!c.hub;
   /* v5.17 (Nikita 12.11: «я не понимаю сколько на миру производится и сколько линия возит … просто их объединить»): WORLD and LINE are one tab — the world's numbers, then the hulls that carry them */
   /* v5.28 (Nikita 14.11: «меню мира надо разделить пополам, потому что вниз прокручивать меню неудобно. Эта информация занимает мало места,
      поэтому про линию влезет»): the first tab stands in two halves — the world's numbers on the left, its line on the right (the hulls on it,
@@ -2003,6 +2052,13 @@ function winArk(){
   if(typeof sel==='number'&&sel<=paid) sel=U.arkSel=null;
   var hkA=hackNext(G), hk=(hkA&&hkA.k==='ark'&&!hackOn())?'<div id="hkneed">'+alertBox('ark',esc(fill(T('u_hackNeed'),{w:hackWho(hkA)})),true)+btn(esc(T('u_hackStart')),'hack',null,'pri full','ark')+'</div>':'';   // v5.09
   var big='<div class="ah-big"><div class="wk" id="arkwake"><small>'+esc(T('u_wake'))+'</small><b>'+num(wk)+'</b><i>'+esc(T('u_ifToday'))+'</i></div><div class="sl" id="arksleep"><small>'+esc(T('u_sleepOn'))+'</small><b>'+num(Math.max(0,ab-wk))+'</b><i>&nbsp;</i></div></div>';
+  /* v5.31 (Nikita's run 16.11, p.31: «не понимаю в меню ковчега сколько у меня мест есть в капсулах. Хотелось бы знать и сколько людей в сумме
+     везде»): pods filled of pods bought (if the Night came today), and everyone alive — on Earth, on hulls, on the worlds. Numbers only */
+  var wpop=0, onh=crewOut(G), eh=Math.floor(G.earth.people); for(var wk1 in G.colonies) wpop+=Math.floor(G.colonies[wk1].pop); G.ships.forEach(function(s1){ if(s1.mode!=='dead') onh+=(s1.cargo&&s1.cargo.people)||0 }); onh=Math.floor(onh);
+  var cell=function(k,n,id){ return '<div id="'+id+'"><small>'+esc(T(k))+'</small><b>'+num(n)+'</b></div>' };
+  var ppl='<div class="ah-ppl" id="arkppl"><div class="ah-line" id="arkpods"><span>'+esc(T('u_podsFilled'))+'</span><b>'+num(arkCapsuled(G))+' / '+num(arkCaps(rg))+'</b></div>'+
+    '<div class="ah-line" id="arkall"><span>'+resIc('people',13)+esc(T('u_peopleAll'))+'</span><b style="color:'+C.people+'">'+num(eh+onh+wpop)+'</b></div>'+
+    '<div class="ah-3">'+cell('earthNode',eh,'arkhome')+cell('u_tabFleet',onh,'arkhulls')+cell('u_tabWorlds',wpop,'arkworlds')+'</div></div>';
   if(sel==='c'){ var po=can('reserve')?pierOut():[], hl=can('reserve')?homeList():[];
     card='<div class="ah-pick cvp" id="arkcard"><h4>'+esc(T('statConvoy'))+'</h4><div class="ah-line"><span>'+esc(T('u_cvIn'))+'</span><b>'+esc(fill(T('u_cvOf'),{a:cv.have,b:cv.all}))+'</b></div>'+
       '<div class="ah-alt"><span>'+esc(T('u_cvPier'))+'</span><b>'+po.length+'</b>'+(po.length?btn(esc(T('u_cvAdd')),'allpier',null,'sm'):'<span class="nob"></span>')+'</div>'+
@@ -2021,7 +2077,7 @@ function winArk(){
   var fate='<div class="ah-fate'+(stays?'':(mute?' warn':' ok'))+'" id="arkfate"><div><b>'+esc(T(stays?'u_arkStays':'u_arkSails'))+'</b><i>'+(mute?'':ic('drive',13,C.ark)+' ')+esc(stays||mute||(T('u_arkDrive')+' · '+ad[0]))+'</i></div><span class="lab2">'+esc(T('u_ifToday'))+'</span></div>';
   var lg='<div class="ah-lg">'+hiveLg('on','u_lgPod')+hiveLg('','u_lgNoPod')+hiveLg('cv on','u_lgConvoy')+hiveLg('cv way','u_lgWay')+'</div>';
   return '<div class="win wide">'+head(esc(T('u_tabArk').toUpperCase()),esc(T('u_timePaused')),ic('ark',18,C.ark),null,'ark')+'<div class="bd"><div class="ah"><div class="ah-two"><div class="ah-l">'+
-    sec(esc(T('u_hiveHead')),esc(T('u_hiveConvoy')))+hiveSvg(sel)+lg+'</div><div class="ah-r">'+hk+big+card+'</div></div>'+fate+'</div></div></div>' }
+    sec(esc(T('u_hiveHead')),esc(T('u_hiveConvoy')))+hiveSvg(sel)+lg+'</div><div class="ah-r">'+hk+big+ppl+card+'</div></div>'+fate+'</div></div></div>' }
 
 /* ---------- the advisor: worlds only, worst first (Nikita 15.10: «не понимаю, что делать») ----------
    A row says the problem in numbers, what follows, and a button that names the fix; the button opens the world with the
@@ -2222,7 +2278,7 @@ document.addEventListener('click',function(ev){
   var hitb=t.closest('button,[data-act],#map .wd');
   if(hitb&&hitb.getAttribute('aria-disabled')==='true'){
     var wp=null; try{ wp=hitb.dataset.whyp?JSON.parse(hitb.dataset.whyp):null }catch(e){}
-    pressFx(ev.clientX,ev.clientY,'bad'); say(hitb.dataset.why||'off',wp); hitb.classList.remove('shake'); void hitb.offsetWidth; hitb.classList.add('shake'); return }
+    pressFx(ev.clientX,ev.clientY,'bad'); say(hitb.dataset.why||'off',wp); if(!hitb.closest('#exblk')) exHint(hitb.dataset.why,wp); hitb.classList.remove('shake'); void hitb.offsetWidth; hitb.classList.add('shake'); return }
   if(hitb&&hitb.tagName==='BUTTON'){ if(!hitb.classList.contains('tab')) SFX.play('click'); pressFx(ev.clientX,ev.clientY) }
   var lb=t.closest('[data-lang]');
   if(lb){ U.lang='en'; U.langPicked=true; draw(); return }   // v5.05: English only — the start window has one button

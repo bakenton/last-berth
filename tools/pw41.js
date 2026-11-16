@@ -37,11 +37,13 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('a miss in a "do" step shakes the ring, the step stays', M.miss&&M.miss.shake&&M.miss.still, JSON.stringify(M.miss));
   ok('FUEL shows in the settlers\' price with m2', M.fuelInPrice===2, M.fuelInPrice);
   ok('her voice: the first landing report (N-02)', /Report from [A-Z]+: \d+ people landed/.test(M.v_N02||''), M.v_N02);
-  ok('the first shift window speaks for the Institute (N-04)', /Shift 1 hands over the desk/.test(M.n04||'')&&/I stay/.test(M.n04||''), (M.n04||'').slice(0,160));
+  ok('the first shift window speaks for the Institute (N-04)', /Shift 1 hands over the Helm/.test(M.n04||'')&&/I stay/.test(M.n04||''), (M.n04||'').slice(0,160));
   ok('the Night window is N-09', /in \d+ our galaxy collapses/.test(M.n09||''), (M.n09||'').slice(0,160));
   ok('v5.26: m18 speaks of a Night that was up there already and now has its year', /The Night has its year now/.test((M.h_m18||{}).text||''), (M.h_m18||{}).text);
   ok('a new tab shows a yellow dot until opened', M.earthDot===true&&M.earthDotAfter===false, M.earthDot+' '+M.earthDotAfter);
   ok('by occasion: the first look into Earth tells time stops (m7)', S.includes('m7'), S.join(' '));
+  // v5.31: the first upgrade package is a task of the helper (mK) — when the run reaches the packages with a world that can take one
+  ok('v5.31: if she gave the first-package task, the card was lit on UPGRADE with its number, and the guide ordered it', !S.includes('mK')||(!!M.mKpkg&&M.mKpkg.tab==='up'&&M.mKpkg.lit&&/Upgrade packages are open\. With one, \S+ gives ×1\.6: [\d.]+ → [\d.]+ \S+ a year\. Order the first\./.test((M.h_mK||{}).text||'')&&await p.evaluate(()=>Object.keys(LN.colonies).some(k=>LN.colonies[k].tier||LN.colonies[k].kit||LN.colonies[k].kitShip))), S.includes('mK')?JSON.stringify(M.mKpkg)+' '+((M.h_mK||{}).text||''):'not reached in this run (kitOpen '+await p.evaluate(()=>kitOpen(LN))+')');
   ok('ring II hidden until its step, then shown', M.ring2Before>0&&M.ring2After>M.ring2Before, M.ring2Before+' → '+M.ring2After);
   ok('at the end every resource, tab and the Night counter are seen', await p.evaluate(()=>document.querySelectorAll('#res .rc[data-r]').length===5&&document.querySelectorAll('#tabs [data-act="tab"]').length===6&&!!document.querySelector('#top .night')));
   ok('the core opened every resource the run met', await p.evaluate(()=>['metal','fuel','parts'].every(k=>LN.opened[k]!==undefined)), await p.evaluate(()=>JSON.stringify(LN.opened)));

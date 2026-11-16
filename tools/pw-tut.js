@@ -30,6 +30,7 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
         else if(s.msg==='m3') await click('#top [data-act="spd"][data-v="4"]');
         else if(s.msg==='m4') await click('#ovl [data-act="assign"]');
         else if(s.msg==='m8') await click('#ordblk [data-act="order"]:not([aria-disabled="true"])');
+        else if(s.msg==='mK'){ if(!marks.mKpkg) marks.mKpkg=await p.evaluate(()=>{ const e=document.getElementById('pkg'); return e?{tab:LNU.wtab,gain:(e.querySelector('.pk-g')||{}).innerText||'',lit:getComputedStyle(document.getElementById('tutRing')).display!=='none'}:null }); await click('#pkg [data-act="kit"]') }   // v5.31: the first upgrade package is a task
         else await click('#helper [data-act="tutok"]');
         continue }
       await click('#helper [data-act="tutok"]'); continue }

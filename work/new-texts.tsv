@@ -1024,3 +1024,8 @@ UI	u_lineSoon	Hulls in the yards or on their way to this line	Суда на ве
 MSG	hubFeeder	{p} ships its goods to the hub at {h}. A world that feeds a hub cannot be one — send its goods to Earth first.	{p} возит груз на хаб {h}. Мир, который возит на хаб, сам хабом не станет — сначала переведите его груз на Землю.
 MSG	nofreeYard	No free hull at Earth. Build one in the Yard.	У Земли нет свободного судна. Постройте его на верфи.
 UI	u_hubFeeder	Ships to the hub at {h} — a feeder cannot be a hub.	Возит на хаб {h} — питатель хабом не станет.
+UI	u_podsFilled	Pods filled	Капсул занято
+UI	u_peopleAll	People in total	Людей всего
+UI	u_hubStore	In the hub's store	На складе хаба
+UI	tut_mX	Short of {r}, with {a} and {b} to spare. The exchange here turns two resources into a third — at a loss, to close a gap.	Не хватает: {r}. В избытке: {a} и {b}. Обменник здесь даёт третий ресурс за два — в убыток, чтобы закрыть нехватку.
+UI	tut_mK	Upgrade packages are open. With one, {p} gives ×{x}: {a} → {b} {r} a year. Order the first.	Пакеты улучшения открыты. С одним {p} даёт ×{x}: {a} → {b} в год ({r}). Закажите первый.
