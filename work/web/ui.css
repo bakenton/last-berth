@@ -422,7 +422,8 @@ svg.gi{fill:currentColor}
 #ringbtn[hidden]{display:none}
 #ringbtn small{font:500 10px var(--h);letter-spacing:.14em;color:#78D68C;white-space:nowrap}
 #ringbtn .b{padding:5px 12px;font-size:12px}
-#ringbtn .prow{margin:1px 0;gap:8px;justify-content:center}
+#ringbtn .prow{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);margin-top:3px;gap:8px;justify-content:center;flex-wrap:nowrap;white-space:nowrap;width:max-content;background:rgba(7,7,8,.92);border:1px solid rgba(120,214,140,.35);padding:3px 8px}
+#ringbtn:hover .prow,#ringbtn:focus-within .prow{display:flex}   /* v5.39 (Nikita 17.11: «Цену всё время показывать не надо. Пусть висит кнопка»): the price on hover only */
 #ringbtn .b.go{animation:rbgo 1.6s ease-in-out infinite}
 @keyframes rbgo{50%{box-shadow:0 0 0 3px rgba(120,214,140,.45)}}
 @media (prefers-reduced-motion:reduce){#ringbtn .b.go{animation:none}}

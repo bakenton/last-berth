@@ -29,6 +29,11 @@ const out=[]; const ok=(n,c,x)=>{ if(!BEFORE) out.push((c?'PASS ':'FAIL ')+n+(x!
     if(BEFORE){ await p.close(); continue }
     ok('1'+tag+': a new game shows the next ring\'s order on the chart, inside its box, with the ring\'s name', !!r1&&r1.inMap&&r1.txt.indexOf(r1.next)>=0, JSON.stringify(r1));
     ok('1'+tag+': too few worlds — the button is refused, and says why («settle N more»)', !!r1&&r1.dis&&/settle \d+ more/i.test(r1.txt)&&r1.why==='needsettled', r1&&r1.txt);
+    if(!tag){ // v5.39 (Nikita 17.11): the price only on hover
+      const pv0=await p.evaluate(()=>{ const e=document.querySelector('#ringbtn .prow'); return e?getComputedStyle(e).display:'none' });
+      const bb=await p.$('#ringbtn'); const bx=await bb.boundingBox(); await p.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2); await p.waitForTimeout(200);
+      const pv1=await p.evaluate(()=>{ const e=document.querySelector('#ringbtn .prow'); return e?getComputedStyle(e).display:'none' }); await shot(p,'r1b-ring-hover');
+      ok('1: the price stays hidden until the pointer is on the button', pv0==='none'&&pv1!=='none', JSON.stringify({pv0,pv1})); await p.mouse.move(5,5) }
     await U.tap('#ringbtn .b'); const t1=await p.evaluate(()=>[...document.querySelectorAll('#toasts .toast,#toast *')].map(e=>e.textContent).join(' | '));
     ok('1'+tag+': a press on the refused button tells the reason', /settled|worlds/i.test(t1), t1);
     await p.evaluate(()=>{ K.SURVEY_REACH=0; GOD.maxAll(); LNU.notes=[]; LNdraw() }); await p.waitForTimeout(300); await p.evaluate(()=>LNdraw());
