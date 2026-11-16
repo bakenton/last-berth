@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>LAST BERTH — banner</title>
+<link rel="stylesheet" href="../../work/web/fonts.css">
+<style>
+html,body{margin:0;background:#0B0B0C;overflow:hidden}
+#b{position:relative;overflow:hidden;background:#0B0B0C}
+#b svg.sky{position:absolute;inset:0;width:100%;height:100%}
+#g{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;gap:calc(44px*var(--u))}
+#g svg{width:calc(190px*var(--u));height:calc(190px*var(--u));flex:none}
+.w{font:500 calc(96px*var(--u))/1 'Jost',sans-serif;letter-spacing:.16em;color:#F2F1EC;white-space:nowrap}
+.t{font:400 calc(21px*var(--u))/1 'Geist Mono',monospace;letter-spacing:.22em;color:#9C9B95;margin-top:calc(22px*var(--u));white-space:nowrap}
+.t b{color:#FFD23F;font-weight:400}
+</style></head><body>
+<div id="b"><svg class="sky" id="sky" xmlns="http://www.w3.org/2000/svg"></svg>
+<div id="g"><span id="mk"></span><div><div class="w">LAST BERTH</div><div class="t">A LOGISTICS STRATEGY GAME <b>·</b> IN DEVELOPMENT</div></div></div></div>
+<script>
+var INK='#F2F1EC', Y='#FFD23F', SHIP='0,-16 14,14 0,6 -14,14';
+function hp(cx,cy,R){ var a=[]; for(var i=0;i<6;i++){ var t=(-90+60*i)*Math.PI/180; a.push([cx+R*Math.cos(t), cy+R*Math.sin(t)]) } return a }
+function pts(a){ return a.map(function(p){ return p[0].toFixed(2)+','+p[1].toFixed(2) }).join(' ') }
+function openHex(ringCol,shipCol,sw,sc){ var cx=55,cy=65,v=hp(cx,cy,34), m=[(v[0][0]+v[1][0])/2,(v[0][1]+v[1][1])/2];
+ return '<polyline points="'+pts([v[1],v[2],v[3],v[4],v[5],v[0]])+'" fill="none" stroke="'+ringCol+'" stroke-width="'+sw+'" stroke-linejoin="miter"/>'+
+  '<g transform="translate('+m[0].toFixed(2)+' '+m[1].toFixed(2)+') rotate(30) scale('+sc+')"><polygon points="'+SHIP+'" fill="'+shipCol+'"/></g>' }
+function rng(s){ return function(){ s|=0; s=s+0x6D2B79F5|0; var t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296 } }
+var k=new URLSearchParams(location.search).get('k')||'x', yt=k==='yt', it=k==='itch', W=yt?2560:it?630:1500, H=yt?1440:500, u=yt?1.3:it?0.62:1;
+var b=document.getElementById('b'); b.style.width=W+'px'; b.style.height=H+'px'; b.style.setProperty('--u',u);
+if(it){ var g=document.getElementById('g'); g.style.flexDirection='column'; g.style.gap='calc(26px*var(--u))'; g.style.textAlign='center'; g.querySelector('.t').innerHTML='LOGISTICS STRATEGY <b>·</b> IN DEVELOPMENT' }
+var R=rng(23), s='', n=Math.round(W*H/2300);
+for(var i=0;i<n;i++){ var r=(0.45+R()*R()*1.25)*u, o=0.25+R()*0.6; s+='<circle cx="'+(R()*W).toFixed(1)+'" cy="'+(R()*H).toFixed(1)+'" r="'+r.toFixed(2)+'" fill="'+(R()<0.04?Y:INK)+'" opacity="'+o.toFixed(2)+'"/>' }
+var sky=document.getElementById('sky'); sky.setAttribute('viewBox','0 0 '+W+' '+H); sky.innerHTML=s;
+document.getElementById('mk').innerHTML='<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">'+openHex(INK,Y,10,1.45)+'</svg>';
+</script>
+</body></html>

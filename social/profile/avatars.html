@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LAST BERTH — аватар, черновики</title>
+<link rel="stylesheet" href="../../work/web/fonts.css">
+<style>
+:root{--bg:#0B0B0C;--pan:#141417;--ln:#2E2E33;--ink:#F2F1EC;--mid:#9C9B95;--y:#FFD23F}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:'Jost',system-ui,sans-serif}
+body.one{width:1024px;height:1024px;overflow:hidden}
+body.one svg{display:block;width:1024px;height:1024px}
+.wrap{max-width:560px;margin:0 auto;padding:18px 16px 40px}
+h1{font-size:19px;letter-spacing:.14em;font-weight:500;margin:0 0 4px}
+.sub{font:12px/1.45 'Geist Mono',monospace;color:var(--mid);margin:0 0 18px}
+.card{border:1px solid var(--ln);background:var(--pan);margin:0 0 14px}
+.card h2{font-size:15px;letter-spacing:.1em;font-weight:500;margin:0;padding:10px 12px 2px}
+.card h2 b{color:var(--y);font-weight:500;margin-right:8px}
+.card p{font:12px/1.45 'Geist Mono',monospace;color:var(--mid);margin:0;padding:0 12px 10px}
+.strip{display:flex;align-items:center;gap:14px;padding:12px}
+.strip.d{background:#000}.strip.l{background:#fff}
+.av{border-radius:50%;overflow:hidden;flex:none;display:block}
+.av svg{display:block;width:100%;height:100%}
+.s110{width:110px;height:110px}.s48{width:48px;height:48px}.s40{width:40px;height:40px}.s24{width:24px;height:24px}
+.who{font:600 13px/1.2 system-ui,sans-serif;color:#0f1419;white-space:nowrap}.who i{font-style:normal;font-weight:400;color:#536471}
+.strip.d .who{color:#e7e9ea}.strip.d .who i{color:#71767b}
+</style></head><body>
+<div id="app"></div>
+<script>
+var BG='#0B0B0C', INK='#F2F1EC', Y='#FFD23F', RED='#FF2A1A';
+function hp(cx,cy,R){ var a=[]; for(var i=0;i<6;i++){ var t=(-90+60*i)*Math.PI/180; a.push([cx+R*Math.cos(t), cy+R*Math.sin(t)]) } return a }
+function pts(a){ return a.map(function(p){ return p[0].toFixed(2)+','+p[1].toFixed(2) }).join(' ') }
+function hex(cx,cy,R,attr){ return '<polygon points="'+pts(hp(cx,cy,R))+'" '+attr+'/>' }
+var SHIP='0,-16 14,14 0,6 -14,14';
+var C=[60,60];
+var MARKS=[
+ {id:'A', name:'Открытый гекс', note:'Знак из меню игры (кольцо с разрывом и уходящее судно), переведённый в шестиугольник. Судно жёлтое.',
+  svg:function(){ var v=hp(57,64,33);
+   return '<polyline points="'+pts([v[1],v[2],v[3],v[4],v[5],v[0]])+'" fill="none" stroke="'+INK+'" stroke-width="8" stroke-linejoin="miter"/>'+
+    '<g transform="translate(76.5 31.5) rotate(30) scale(1.15)"><polygon points="'+SHIP+'" fill="'+Y+'"/></g>' }},
+ {id:'B', name:'Последняя сота', note:'Семь сот улья ковчега: шесть заняты, одна жёлтая — последнее место. Название игры без букв.',
+  svg:function(){ var s='', d=27, r=14.2; s+=hex(60,60,r,'fill="'+INK+'"');
+   for(var i=0;i<6;i++){ var t=(60*i-60)*Math.PI/180; s+=hex(60+d*Math.cos(t),60+d*Math.sin(t),r,'fill="'+(i===0?Y:INK)+'"') } return s }},
+ {id:'C', name:'Ядро', note:'Те же семь сот, жёлтая в центре: Пульт и то, что вокруг него построено. Симметричный, спокойнее B.',
+  svg:function(){ var s='', d=27, r=14.2; s+=hex(60,60,r,'fill="'+Y+'"');
+   for(var i=0;i<6;i++){ var t=(60*i)*Math.PI/180; s+=hex(60+d*Math.cos(t),60+d*Math.sin(t),r,'fill="'+INK+'"') } return s }},
+ {id:'D', name:'Знак Пульта', note:'Технический знак в духе гекс-письма меню: причал снизу, судно уходит вверх. Прямые острые линии.',
+  svg:function(){ var v=hp(60,60,40);
+   return hex(60,60,40,'fill="none" stroke="'+INK+'" stroke-width="3" opacity=".55"')+
+    '<polyline points="'+pts([v[0],[60,66]])+'" fill="none" stroke="'+Y+'" stroke-width="8"/>'+
+    '<polyline points="'+pts([v[2],v[3],v[4]])+'" fill="none" stroke="'+Y+'" stroke-width="8" stroke-linejoin="miter"/>' }},
+ {id:'E', name:'Жёлтый гекс', note:'Сплошной жёлтый шестиугольник, судно вырезано. Самый заметный в ленте; жёлтого больше, чем в игре.',
+  svg:function(){ return hex(60,60,44,'fill="'+Y+'"')+
+    '<g transform="translate(60 63) rotate(30) scale(1.6)"><polygon points="'+SHIP+'" fill="'+BG+'"/></g>' }},
+ {id:'F', name:'Кольца карты', note:'Три кольца карты и база в центре. Читается, но похож на многие «гекс-логотипы».',
+  svg:function(){ return hex(60,60,43,'fill="none" stroke="'+INK+'" stroke-width="5" opacity=".45"')+
+    hex(60,60,29,'fill="none" stroke="'+INK+'" stroke-width="5"')+hex(60,60,13,'fill="'+Y+'"') }},
+ {id:'G', name:'Как в меню сейчас (для сравнения)', note:'Нынешний знак игры без изменений, только ужат на 18%: в кружке нос судна иначе обрезается. Не гекс.',
+  svg:function(){ return '<g transform="translate(60 60) scale(.82) translate(-60 -60)"><circle cx="60" cy="60" r="40" fill="none" stroke="'+INK+'" stroke-width="10" stroke-dasharray="214 38" stroke-dashoffset="-32" transform="rotate(-70 60 60)"/>'+
+    '<g transform="translate(86 34) rotate(45) scale(1.75)"><polygon points="'+SHIP+'" fill="'+RED+'"/></g></g>' }}
+];
+/* round 2 (Nikita 16.11: «такой, только жёлтым и с гексами») — the menu mark G on a hexagon: the ring is a hex, the ship is yellow */
+function openHex(ringCol,shipCol,sw,sc){ var cx=55,cy=65,v=hp(cx,cy,34), m=[(v[0][0]+v[1][0])/2,(v[0][1]+v[1][1])/2];
+ return '<polyline points="'+pts([v[1],v[2],v[3],v[4],v[5],v[0]])+'" fill="none" stroke="'+ringCol+'" stroke-width="'+sw+'" stroke-linejoin="miter"/>'+
+  '<g transform="translate('+m[0].toFixed(2)+' '+m[1].toFixed(2)+') rotate(30) scale('+sc+')"><polygon points="'+SHIP+'" fill="'+shipCol+'"/></g>' }
+function cellRing(cellCol,shipCol){ var cx=56,cy=64,d=17.5,r=9.2,s='';
+ for(var q=-2;q<=2;q++) for(var rr=-2;rr<=2;rr++){ if(Math.max(Math.abs(q),Math.abs(rr),Math.abs(q+rr))!==2) continue; if(q===2&&rr===-2) continue;
+  s+=hex(cx+d*(q+rr/2),cy+d*0.8660254*rr,r,'fill="'+cellCol+'"') }
+ return s+'<g transform="translate('+(cx+d*1.08).toFixed(2)+' '+(cy-d*1.732*1.08).toFixed(2)+') rotate(30) scale(1.2)"><polygon points="'+SHIP+'" fill="'+shipCol+'"/></g>' }
+var MARKS2=[
+ {id:'H1', name:'Гекс-кольцо, судно жёлтое', note:'Знак из меню один в один, только кольцо — шестиугольник, судно жёлтое вместо красного.', svg:function(){ return openHex(INK,Y,10,1.45) }},
+ {id:'H2', name:'Всё жёлтое', note:'То же, кольцо и судно одним жёлтым. Самый «фирменный», но судно сливается с кольцом.', svg:function(){ return openHex(Y,Y,10,1.45) }},
+ {id:'H3', name:'Жёлтое кольцо, белое судно', note:'Цвета наоборот: жёлтого много, судно читается отдельно.', svg:function(){ return openHex(Y,INK,10,1.45) }},
+ {id:'H4', name:'Кольцо из сот', note:'Кольцо собрано из сот улья, одной нет — на её месте уходит судно.', svg:function(){ return cellRing(INK,Y) }},
+ {id:'H5', name:'Кольцо из жёлтых сот', note:'То же, соты жёлтые, судно белое.', svg:function(){ return cellRing(Y,INK) }}
+];
+/* round 3 (Nikita 16.11: H1 chosen; «звёзды на задний фон, россыпь мелкую?») — H1 bare against two densities of stars */
+function rng(s){ return function(){ s|=0; s=s+0x6D2B79F5|0; var t=Math.imul(s^s>>>15,1|s); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296 } }
+function stars(n,seed,W,H,k){ var R=rng(seed),s=''; W=W||120; H=H||120; k=k||1;
+ for(var i=0;i<n;i++){ var x=R()*W,y=R()*H,r=(0.25+R()*R()*0.75)*k,o=0.35+R()*0.6; s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="'+r.toFixed(2)+'" fill="'+INK+'" opacity="'+o.toFixed(2)+'"/>' } return s }
+var MARKS3=[
+ {id:'H1', name:'Без звёзд', note:'Выбранный знак на чистом чёрном.', svg:function(){ return openHex(INK,Y,10,1.45) }},
+ {id:'H1a', name:'Редкие звёзды', note:'45 точек. Видны в профиле (110 px), в ленте пропадают.', svg:function(){ return stars(45,7)+openHex(INK,Y,10,1.45) }},
+ {id:'H1b', name:'Россыпь', note:'140 точек. В профиле заметно, в ленте — сероватая рябь вокруг знака.', svg:function(){ return stars(140,11)+openHex(INK,Y,10,1.45) }}
+];
+var ALL=MARKS.concat(MARKS2.slice(1),MARKS3);
+function svg(m){ return '<svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="120" fill="'+BG+'"/>'+m.svg()+'</svg>' }
+function av(m,c){ return '<span class="av '+c+'">'+svg(m)+'</span>' }
+var q=new URLSearchParams(location.search), one=q.get('one');
+if(one){ document.body.className='one'; document.getElementById('app').innerHTML=svg(ALL.filter(function(m){ return m.id===one })[0]) }
+else{
+ var set=q.get('set'), r2=set==='2', r3=set==='3';
+ var h='<div class="wrap"><h1>LAST BERTH · АВАТАР'+(r2?' · РАУНД 2':r3?' · ЗВЁЗДЫ':'')+'</h1><p class="sub">'+(r2?'Знак из меню на гексах и в жёлтом. ':r3?'H1 без звёзд и с двумя плотностями. ':'Черновики. ')+'Кружки в настоящем размере: 110 px — профиль, 48 и 40 — лента, 24 — ответы. Сверху тёмная тема, снизу светлая.</p>';
+ (r3?MARKS3:r2?MARKS2.concat(MARKS.slice(-1)):MARKS).forEach(function(m){
+  h+='<div class="card"><h2><b>'+m.id+'</b>'+m.name+'</h2><p>'+m.note+'</p>'+
+   ['d','l'].map(function(k){ return '<div class="strip '+k+'">'+av(m,'s110')+av(m,'s48')+av(m,'s40')+av(m,'s24')+'<span class="who">LAST BERTH <i>· 2h</i></span></div>' }).join('')+'</div>' });
+ document.getElementById('app').innerHTML=h+'</div>';
+}
+</script>
+</body></html>
