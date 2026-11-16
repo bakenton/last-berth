@@ -127,6 +127,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('archive: its button closes it', !(await p.isVisible('#pop .ltrs')));
   ok('saved with the run', await p.evaluate(()=>JSON.parse(JSON.stringify(LN)).letters.length===LN.letters.length));
   await p.evaluate(()=>{ LN.letters=[]; LN.night=LN.day+500; LN.nightSeen=true; LNU.voiceLast=-1000; log(LN,'ark_drive',{g:3,w:60,y:LN.night}); LNdraw() });
+  // v5.34: a one-time note (the ark ring within reach, sig.ark) is queued in front of the forced word and takes the screen first — closed here, the word then takes it
+  for(let i=0;i<4;i++){ await p.evaluate(()=>LNdraw()); if(await p.evaluate(()=>LNI.big()!=='note')) break; await U.tap('[data-act="noteok"]') }
   const full=await p.evaluate(()=>({pf:!!LNU.pf,cls:document.getElementById('pfL').className}));
   if(full.pf){ ok('a forced word still takes the screen and stops the clock', full.cls==='full'&&await p.isVisible('#pfL.full [data-act="pfok"]')); await U.tap('#pfL [data-act="pfok"]');
     ok('and stays in the archive, read', await p.evaluate(()=>LN.letters.length===1&&LN.letters[0].read)) }

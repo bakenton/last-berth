@@ -1032,3 +1032,34 @@ UI	tut_mK	Upgrade packages are open. With one, {p} gives ×{x}: {a} → {b} {r} 
 UI	o_kit	Order the first upgrade package	Закажите первый пакет улучшения
 UI	os_kit	{w} ×{x}: {a} → {b} {r} a year	{w} ×{x}: {a} → {b} {r} в год
 UI	ow_kit	With one, {w} gives ×{x}: {a} → {b} {r} a year.	С одним {w} даёт ×{x}: {a} → {b} {r} в год.
+UI	u_evacQHint	The courier sails on her own once the seam and the surface are empty.	Курьер вылетит сам, когда жила и склад опустеют.
+UI	u_evacNow	Evacuate now	Эвакуировать сейчас
+UI	u_evacUnq	Cancel the queue	Отменить очередь
+UI	u_evacQSeam	In the queue: the courier sails when the seam is dead and the surface hauled.	В очереди: курьер вылетит, когда жила кончится и склад вывезут.
+UI	u_evacQPile	In the queue: the courier sails once the last {n} is hauled.	В очереди: курьер вылетит, когда вывезут последние {n}.
+UI	u_evacQWait	The world is bare. Waiting for a free courier at Earth.	Мир пуст. Ждёт свободного курьера у Земли.
+UI	u_driveAhead	Ahead of the chart: chart ring {s} first — nothing new to fly to yet.	Впереди карты: сначала нанесите кольцо {s} — лететь пока некуда.
+UI	u_flArkRing	Ark ring {n} can be paid	Хватает на кольцо ковчега {n}
+UI	u_flHub	A hub can be built	Хватает на хаб
+UI	noteSig	Enough	Хватает
+UI	sigHubTitle	A HUB IS WITHIN REACH	ХВАТАЕТ НА ХАБ
+UI	u_sigHubBody	Earth has the metal and the parts for a hub. It is built in the window of a world that ships to Earth.	У Земли хватает металла и деталей на хаб. Его строят в окне мира, который возит на Землю.
+UI	sigArkTitle	ARK RING {n} IS WITHIN REACH	ХВАТАЕТ НА КОЛЬЦО КОВЧЕГА {n}
+UI	u_sigArkBody	Earth can pay for the next ring of capsules. The order is on the Ark tab.	Земля может оплатить следующее кольцо капсул. Приказ — во вкладке «Ковчег».
+UI	sigDriveTitle	GENERATION {g} CAN START	МОЖНО НАЧАТЬ ПОКОЛЕНИЕ {g}
+UI	u_sigDriveBody	The worlds and the works are there for the next drive mark. The order is in the Tech tab.	Миров и завода хватает на следующий уровень двигателя. Приказ — во вкладке «Техника».
+UI	u_toArk	To the Ark	К ковчегу
+UI	u_toWorlds	To Worlds	К мирам
+MSG	evacQWorks	A works never empties — evacuate it now.	Завод не пустеет — эвакуируйте сразу.
+MSG	evacQueued	Already in the queue.	Уже в очереди.
+MSG	evacQBare	Nothing left to haul — evacuate it now.	Вывозить нечего — эвакуируйте сразу.
+MSG	evacNotQueued	Not in the queue.	Не в очереди.
+MSG	ok_evacQ	{p} is in the queue: a courier lifts them once it is bare.	{p} в очереди: курьер заберёт людей, когда мир опустеет.
+MSG	ok_evacUnq	{p} is off the queue.	{p} снят с очереди.
+LOG	evac_queued	{p}: evacuation queued.	{p}: эвакуация в очереди.
+LOG	evac_unqueued	{p}: evacuation taken off the queue.	{p}: эвакуация снята с очереди.
+LOG	evac_auto	{p} is bare: courier {n} sails to lift them.	{p} опустел: курьер {n} вылетел за людьми.
+LOG	evac_wait	{p} is bare: {k} people wait for a free courier.	{p} опустел: {k} человек ждут свободного курьера.
+LOG	lift_back	{p}: {m} metal and {k} parts come back from its machines.	{p}: от машин вернулось {m} металла и {k} деталей.
+UI	u_evacQFuel	The world is bare. Not fuel enough at Earth for the courier.	Мир пуст. На Земле не хватает топлива для курьера.
+UI	u_evacQLate	The world is bare. No courier would be home before the Night.	Мир пуст. Ни один курьер не вернётся до Ночи.

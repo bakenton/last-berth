@@ -3,6 +3,9 @@
 // 80% цены разведки следующего кольца; топливо только в кольцах I–II; только ресурсы, которые игрок уже видит. Число видно до посадки
 // (раздел FOUND HERE в окне мира и плашки под именем выбранного мира), при посадке плашки улетают в верхнюю панель, игра не встаёт.
 // v5.29: миры сценария — без дока (док проверяет pw64).
+// v5.34 (Никита 16.11, п. 8: «Пусть награда выводится при наведении. А когда открыл меню мира награда только в меню»): фишек под именем
+// мира больше нет (#gchips не рисуется). Награда — в окне (#gift, FOUND HERE) и в подсказке #tip у мира при наведении мышью (em.tg).
+// Проверки фишек переписаны на: при открытом окне #gchips нет; при наведении — #tip.on с двумя .tg (48 и 249 / 108).
 // v5.28 (Никита 14.11): после посадки раздела в карточке мира нет; карточка заселённого мира — в две половины, без прокрутки вниз.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js'); const path=require('path');
@@ -36,12 +39,16 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const W=await lowest(p,0), g0=await p.evaluate(w=>giftFor(LN,w),W);
   ok('core, ring I: 48 parts and 249 fuel — 80% of what charting ring II costs', !!g0&&g0.parts===48&&g0.fuel===249&&g0.parts===Math.round(0.8*k.c1.parts)&&g0.fuel===Math.round(0.8*k.c1.fuel), JSON.stringify(g0));
   ok('nothing by a world that is not chosen: no chips on the chart', (await seen(p)).nchips===0);
+  // v5.34: hover — the gift is in the tip by the world, not on the chart
+  const pt0=await U.point(W); if(pt0){ await p.mouse.move(pt0.x,pt0.y); await p.waitForTimeout(250) }
+  const tipH=await p.evaluate(()=>{ const t=document.getElementById('tip'); return {on:t.className==='on', tg:[...t.querySelectorAll('.tg')].map(e=>e.textContent.replace(/\s+/g,' ').trim())} });
+  ok('hover (v5.34): the tip by a free world carries its gift — the parts and the fuel', tipH.on&&tipH.tg.length===2&&/48/.test(tipH.tg[0])&&/249/.test(tipH.tg[1]), JSON.stringify(tipH));
   ok('the world opens by the mouse', await U.openWorld(W));
   let s=await seen(p);
   ok('window of a free world: FOUND HERE with the sign, the name and the number', /^found here$/i.test(s.sec||'')&&!s.got&&s.rows.length===2&&/^parts:PARTS \+48$/i.test(s.rows[0])&&/^fuel:FUEL \+249$/i.test(s.rows[1]), JSON.stringify(s.rows));
   ok('the signs are the ones of the top strip', s.sameSign===true);
-  ok('chart: chips «sign +number» under the name of the chosen world, and only there', s.chips.join(' ')==='parts:+48 fuel:+249'&&s.nchips===2&&!!s.name&&!!s.chipBox&&s.chipBox.y>=s.name.b-3&&s.chipBox.y<=s.name.b+30&&Math.abs(s.chipBox.x-s.name.x)<=60, JSON.stringify({c:s.chipBox,n:s.name}));
-  ok('the chips lie over the dark of the backdrop, not on the window, and take no press', s.under==='ovl'&&(!s.win||s.chipBox.y>s.win.b||s.chipBox.r<s.win.x||s.chipBox.x>s.win.r), JSON.stringify({under:s.under,c:s.chipBox,w:s.win}));
+  ok('v5.34: with the window open no chips on the chart — the gift stays in the window', s.nchips===0&&!(await p.evaluate(()=>!!document.getElementById('gchips'))), JSON.stringify({n:s.nchips}));
+  ok('the gift block (#gift) is inside the window', await p.evaluate(()=>{ const g=document.getElementById('gift'), w=document.querySelector('#ovl .win'); return !!g&&!!w&&w.contains(g) }));
   await shot(p,'A1-free-world');
   await U.tap('#ovl .qb'); const hs=await p.evaluate(()=>[...document.querySelectorAll('#hsheet li')].map(e=>e.innerText.replace(/\s+/g,' ').trim()));
   ok('help of the window names it: «Found here — …»', hs.length===5&&/^\+ ?Found here — Earth gets it when settlers land.$/i.test(hs[4]), hs[4]);
@@ -50,7 +57,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.tap('#ovl [data-act="send"]');
   ok('settlers sent by the button', await p.evaluate(w=>!!enRoute(LN,w),W));
   s=await seen(p);
-  ok('on the way: the window and the chips still say what waits there', s.rows.length===2&&/\+48$/.test(s.rows[0])&&/\+249$/.test(s.rows[1])&&s.chips.join(' ')==='parts:+48 fuel:+249', JSON.stringify(s.rows)+' '+s.chips.join(' '));
+  ok('on the way: the window still says what waits there, no chips on the chart', s.rows.length===2&&/\+48$/.test(s.rows[0])&&/\+249$/.test(s.rows[1])&&s.nchips===0, JSON.stringify(s.rows)+' chips '+s.nchips);
   await shot(p,'A3-on-the-way');
   await p.keyboard.press('Escape');
   ok('window shut: no chips left on the chart', (await seen(p)).nchips===0);
@@ -115,7 +122,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('core, ring III: 108 parts and no fuel', !!g3&&g3.parts===108&&g3.fuel===undefined&&g3.parts===Math.round(0.8*k.c3.parts), JSON.stringify(g3));
   ok('a world of ring III opens by the mouse', !!W3&&await U.openWorld(W3), W3);
   s=await seen(p);
-  ok('ring III, window and chart: parts +108 alone, no fuel', s.rows.length===1&&/^parts:PARTS \+108$/i.test(s.rows[0])&&s.chips.join(' ')==='parts:+108', JSON.stringify(s.rows)+' '+s.chips.join(' '));
+  ok('ring III, window: parts +108 alone, no fuel, no chips on the chart', s.rows.length===1&&/^parts:PARTS \+108$/i.test(s.rows[0])&&s.nchips===0, JSON.stringify(s.rows)+' chips '+s.nchips);
   await shot(p,'C1-ring3');
   await U.tap('#ovl [data-act="send"]');
   ok('settlers sent to ring III', await p.evaluate(w=>!!enRoute(LN,w),W3)); await p.keyboard.press('Escape');
@@ -133,7 +140,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   for(let i=0;i<20&&(await tst()).msg!=='m2';i++) await q.waitForTimeout(100);
   s=await seen(q);
   const stripD=await q.evaluate(()=>({parts:!!document.querySelector('#res .rc[data-r="parts"]'),fuel:!!document.querySelector('#res .rc[data-r="fuel"]'),open:isOpen(LN,'parts')}));
-  ok('helper, first world: parts are not in the strip yet — FOUND HERE names fuel alone', (await tst()).msg==='m2'&&!stripD.parts&&stripD.fuel&&!stripD.open&&s.rows.length===1&&/^fuel:FUEL \+249$/i.test(s.rows[0])&&s.chips.join(' ')==='fuel:+249', JSON.stringify({strip:stripD,rows:s.rows,chips:s.chips}));
+  ok('helper, first world: parts are not in the strip yet — FOUND HERE names fuel alone', (await tst()).msg==='m2'&&!stripD.parts&&stripD.fuel&&!stripD.open&&s.rows.length===1&&/^fuel:FUEL \+249$/i.test(s.rows[0])&&s.nchips===0, JSON.stringify({strip:stripD,rows:s.rows,chips:s.nchips}));
   await shot(q,'D1-helper-first-world');
   const hb=await q.evaluate(()=>{ const R=e=>{ const r=e.getBoundingClientRect(); return {y:r.top,b:r.bottom} }; const a=document.querySelector('#ovl [data-act="send"]'), t=document.getElementById('tutRing'); return {send:R(a),ring:t?R(t):null} });
   ok('the helper still points at SEND SETTLERS under the new section', !!hb.ring&&hb.ring.y<=hb.send.y+2&&hb.ring.b>=hb.send.b-2, JSON.stringify(hb));
@@ -151,7 +158,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const fit=await m.evaluate(()=>({sw:document.documentElement.scrollWidth,iw:innerWidth,sh:document.documentElement.scrollHeight,ih:innerHeight}));
   const inScr=bx=>!!bx&&bx.x>=0&&bx.r<=390&&bx.y>=0&&bx.b<=844;
   const gm=await m.evaluate(()=>{ const r=document.getElementById('gift').getBoundingClientRect(), sd=document.querySelector('#ovl [data-act="send"]').getBoundingClientRect(); return {x:r.left,y:r.top,r:r.right,b:r.bottom,send:{x:sd.left,y:sd.top,r:sd.right,b:sd.bottom}} });
-  ok('390 px: FOUND HERE, the button and the chips are inside the screen', s.rows.length===2&&inScr(gm)&&inScr(gm.send)&&inScr(s.chipBox)&&inScr(s.win), JSON.stringify({gift:gm,chips:s.chipBox,win:s.win}));
+  ok('390 px: FOUND HERE and its button are inside the screen, the window too', s.rows.length===2&&inScr(gm)&&inScr(gm.send)&&inScr(s.win), JSON.stringify({gift:gm,win:s.win}));
   ok('390 px: the page does not scroll sideways or down', fit.sw<=fit.iw&&fit.sh<=fit.ih, JSON.stringify(fit));
   await shot(m,'E1-phone-free-world');
   await M.tap('#ovl [data-act="send"]'); await m.keyboard.press('Escape');

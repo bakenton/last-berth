@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.33'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.34'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -265,7 +265,8 @@ var K={
   HUB_HOP:1,           // nodes-1.00: a courier feeds a hub from this many rings out at most
   HUB_BASE:0,          // nodes-1.01 (Nikita 05.11: «кол-во хабов зависит от поколения двигателя»): hubs allowed = HUB_BASE + drive generation (Gen I: none)
   HUB_METAL:2500, HUB_PARTS:750, HUB_GROW:1.5,   // nodes-1.03 (Nikita 05.11: «хабы слишком дешёвые», первый 5 тыс. металла, детали ×5; was 800/150); v5.32 (Nikita 16.11, his own run: «Первый хаб за 5000 металла чот нереально дорого… Может раза в два по металлу»): metal 5000 → 2500, parts and growth as they were; the n-th costs BASE x GROW^(n-1) (grow: Claude, awaits Nikita)
-  HUB_REFUND:0.25,     // v5.12 (Nikita 11.11): a hub pulled down gives back a quarter of what was paid for it
+  HUB_REFUND:0.5,      // v5.12 (Nikita 11.11): a hub pulled down gives back a quarter of what was paid for it; v5.34 (Nikita 16.11, p.9: «половину от того что вложено было»): half — one rule with the machines of a world lifted (KIT_BACK)
+  KIT_BACK:0.5,        // v5.34: a world lifted gives back half of what its installed packages cost (a hub's half too, HUB_REFUND)
   HUB_NO_COURIER:1,    // 1: no courier on a hub's line to Earth (nodes-1.00); 0: only the per-line limit below
   COURIER_FREE:2,      // nodes-1.01 (Nikita 05.11: «первые два кольца сколько влезет, дальше лимит»): rings I..COURIER_FREE take any number of couriers
   COURIER_FEED_FREE:1, // 1: the limit holds only on lines to Earth — a courier feeding a hub is free (her job)
@@ -453,6 +454,14 @@ function kitGain(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return
 function kitCost(c){ var t=kitTier(c)+1, m=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)), p=Math.round(K.KIT_PARTS*Math.pow(K.KIT_GROW,t-1));
   return {tier:t, metal:m, parts:p, w:m+p} }
 function kitOpen(G){ return (G.driveLvl||0)>=K.KIT_GATE_DRIVE }
+/* v5.34 (Nikita's run 16.11, p.9: «когда эвакуирешь планету, то upgrade package тоже с собой забирали в ресурсах. Половину от того что
+   вложено было»): what the installed packages of this world cost, tier by tier — and what comes back when it is lifted: half of that,
+   and half of the hub if it is one (the same share a hub pulled down gives, HUB_REFUND) */
+function kitPaid(c){ var m=0, p=0, t; for(t=1;t<=kitTier(c);t++){ m+=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)); p+=Math.round(K.KIT_PARTS*Math.pow(K.KIT_GROW,t-1)) } return {metal:m,parts:p} }
+function liftBack(G,pid){ var c=G.colonies[pid]; if(!c) return null;
+  var k=kitPaid(c), o={metal:Math.floor(k.metal*K.KIT_BACK), parts:Math.floor(k.parts*K.KIT_BACK)}, h=c.hub?hubRefund(G,pid):null;
+  if(h){ o.metal+=h.metal; o.parts+=h.parts }
+  return o }
 /* the biggest hold on this world's line; 0 if nothing runs there */
 function lineHold(G,pid){ var best=0; for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead'||s.mode==='missing') continue;
   if(s.from===pid&&s.to) best=Math.max(best,s.cap) } return best }
@@ -588,6 +597,14 @@ function directorStep(G){
 function driveSpeed(G){ return 1+ (G.driveLvl||0)*(K.DRIVE_STEP-1) }
 function driveWorkFor(G){ return Math.round(K.DRIVE_WORK*Math.pow(K.DRIVE_WORK_GROW,G.driveLvl||0)) }
 function driveReachFor(G){ return K.DRIVE_REACH+K.DRIVE_REACH_GROW*(G.driveLvl||0) }
+/* v5.34 (Nikita's run 16.11, p.12: «программа двигателя должна иди в ровень с кольцами… Чтобы игрок случайно не слил все детали в неё
+   и не сидел с носом, когда лететь некуда»; on the answer «предупреждение, а не запрет» — «Пойдет»): the next mark runs ahead of the
+   chart when its number is above the rings charted less two (ring III — mark I, ring VIII — mark VI: what the bots of v5.33 hold at
+   their peak). Not the marks the packages open with (KIT_GATE_DRIVE) nor those the ark wants (arkMark). 0 — not ahead; else the ring
+   (counted from 1) to chart first. A warning only: nothing is refused */
+function driveAhead(G){ var nx=(G.driveLvl||0)+1;
+  if(nx<=K.KIT_GATE_DRIVE||nx<=(G.arkMark||0)||nx<=SECTORS.length-2) return 0;
+  return nx+2 }
 
 function newGame(seed){
   seed = seed||((Math.random()*1e9)|0);
@@ -1210,9 +1227,45 @@ function abandon(G,shipId,pid){
   if(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) return 'evacLate';   // v4.33: she would not be home before the Night
   if(c.kit){ G.earth.metal+=c.kit.metal; G.earth.parts+=c.kit.parts; c.kit=null }   // v4.4: a kit not yet shipped goes back to the yards
   launch(G,s,pid,'evac',{});
+  if(c.evacQ){ delete c.evacQ; delete c.evacWait }
   log(G,'launch_evac',{n:s.id,p:pid});
   return 'ok';
 }
+/* v5.34 (Nikita's run 16.11, p.9: «хочу, чтобы можно было поставить эвакуацию на очередь… Нажал эвакуация и как только всё вывезутся
+   сразу же вылетит курьер забирать людей»; on the answer, 16.11: «Я хочу нажать эвакуация и курьер заберёт людей когда надо. Когда
+   планета совсем опустеет»): an evacuation put in the queue. The line keeps hauling; on the day the seam is dead and the surface bare,
+   the free courier that lifts the most of them, soonest, sails on her own. A works never empties and a world already bare needs no
+   queue — those are lifted at once, as before.
+   evacPick: the free courier at Earth that can lift everyone and gets there first, else the biggest; none that would miss the Night
+   (the window's choice, moved here from ui.js so the queue picks the same hull) */
+function evacPick(G,pid){ var c=G.colonies[pid], p=planet(pid), pop=c?Math.floor(c.pop):0; if(!p) return null;
+  var list=G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!s.mutiny&&!s.crewWait&&!(s.from&&s.to)&&!s.pend&&!s.job&&canReachSector(s,p.sec)&&
+    shipClass(s)==='courier'&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });
+  if(!list.length) return null;
+  var rs=function(s){ return s.reserve?1:0 };   // v4.50 (Claude's playtest 04.11): a hull kept for the ark goes last (Claude — awaiting review)
+  var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return rs(a)-rs(b)||legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
+  if(fit.length) return fit[0];
+  return list.sort(function(a,b){ return rs(a)-rs(b)||b.cap-a.cap })[0] }
+function evacBare(G,pid){ var p=planet(pid), c=G.colonies[pid]; if(!p||!c||p.kind==='works'||G.reserves[pid]===Infinity||G.reserves[pid]>0) return false;
+  var pile=c.hub?depotKinds(G,pid).reduce(function(a,q){ return a+Math.floor(c.store[q]||0) },0):pileLeft(G,pid);   // a hub: its whole depot (the reviewer of v5.34: the queue lost a hub's store)
+  return pile<1 }
+function canQueueEvac(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return 'nocolony';
+  if(p.kind==='works'||G.reserves[pid]===Infinity) return 'evacQWorks';
+  if(c.evacQ) return 'evacQueued';
+  for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.job==='evac'&&o.dest===pid&&o.mode==='transit') return 'evacuating' }
+  if(evacBare(G,pid)) return 'evacQBare';
+  return 'ok' }
+function queueEvac(G,pid){ var r=canQueueEvac(G,pid); if(r!=='ok') return r;
+  G.colonies[pid].evacQ=G.day; log(G,'evac_queued',{p:pid}); return 'ok' }
+function unqueueEvac(G,pid){ var c=G.colonies[pid]; if(!c||!c.evacQ) return 'evacNotQueued';
+  delete c.evacQ; delete c.evacWait; log(G,'evac_unqueued',{p:pid}); return 'ok' }
+/* every day: a queued world that is bare sends for its courier; none free (or not fuel enough) — it waits, said once */
+function evacQueueTick(G){ for(var k in G.colonies){ var c=G.colonies[k]; if(!c.evacQ||!evacBare(G,k)) continue;
+  var s=evacPick(G,k), r=s?abandon(G,s.id,k):'evacNoHull';
+  if(!s&&G.night&&G.ships.some(function(o){ return o.mode==='idle'&&o.at==='earth'&&!o.job&&shipClass(o)==='courier'&&!(o.from&&o.to) })) r='evacLate';   // couriers at home, none back before the Night
+  if(r==='ok'){ log(G,'evac_auto',{p:k,n:s.id}); continue }
+  if(r==='evacuating'){ delete c.evacQ; delete c.evacWait; continue }
+  if(c.evacWait!==r){ c.evacWait=r; log(G,'evac_wait',{p:k,k:Math.floor(c.pop)}) } } }
 
 
 function search(G,shipId,missId){
@@ -1579,6 +1632,8 @@ function tick(G){
         // whatever was on the surface goes with them, as far as the hold allows
         var roomE=Math.max(0,s.cap-lift);
         ['metal','food','fuel','parts'].forEach(function(kk){ var g=Math.min(roomE,Math.floor(ce.store[kk]||0)); if(g>0){ s.cargo[kk]=g; roomE-=g } });
+        var lb=liftBack(G,node);   // v5.34: half of the machines (and of the hub) comes back to the yards
+        if(lb&&(lb.metal>0||lb.parts>0)){ G.earth.metal+=lb.metal; G.earth.parts+=lb.parts; log(G,'lift_back',{p:node,m:lb.metal,k:lb.parts}) }
         delete G.colonies[node];
         var fdr=feedersHome(G,node);   // v5.02: a hull already flying into the hub brings her hold home (below, on arrival)
         if(ce.hub) log(G,'hub_lost',{p:node,n:fdr.length});
@@ -1741,6 +1796,7 @@ function tick(G){
   if(settled>G.stats.peak) G.stats.peak=settled;
   if(G.day%K.SHIFT_YEARS===0) chronShift(G,settled);
 
+  evacQueueTick(G);   // v5.34: the evacuations put in the queue
   // ---- the larder forecast (v4.28, F-11) ----
   if(G.day>=200){ var ff=foodForecast(G); G.foodFc=ff;
     if(foodShort(G)){ if(!G.foodWarned&&G.day>=K.FOOD_PAUSE_FROM){ G.foodWarned=true; G.pauseNow=true; log(G,'food_horizon',{y:ff.y,n:ff.n,h:Math.round(E.food),k:ff.farms}) } }
@@ -1947,7 +2003,7 @@ function objectives(G){
     if(p.kind==='works'){ works.push(k); if(!big||c.pop>G.colonies[big].pop) big=k;
       if(c.pop>=K.DRIVE_POP&&(!host||c.pop>G.colonies[host].pop)) host=k;
       var lf=lineFit(G,k); if(!idle&&(!lf||(lf.need>0.001&&lf.carries<lf.need*FEED_THIN))) idle=k }   // a works never quite stands (local scrap) — «unfed» is a thin line, as the advisor has it
-    else if(G.reserves[k]>0&&!onLine(G,k).length){ if(!bare) bare=k; if(p.kind==='farm'&&!bareFarm) bareFarm=k } }
+    else if(G.reserves[k]>0&&!onLine(G,k).length&&!c.evacQ){ if(!bare) bare=k; if(p.kind==='farm'&&!bareFarm) bareFarm=k } }
   var farm=freeWorld(G,'farm'), any=freeWorld(G), flying=false, ring=SECTORS.length+1;
   for(i=0;i<G.ships.length;i++) if(G.ships[i].mode==='transit'&&G.ships[i].job==='colonize') flying=true;
   /* first the larder and what stands still */
@@ -1965,6 +2021,7 @@ function objectives(G){
   else if(s<need) d=any?{code:'o_settle',p:any,n:need-s}:{code:'o_survey',n:ring};
   else if(!works.length){ var fw=freeWorld(G,'works'); d=fw?{code:'o_works',p:fw}:{code:'o_survey',n:ring} }
   else if(!host) d={code:'o_grow',p:big,n:K.DRIVE_POP};
+  else if(driveAhead(G)) d={code:'o_survey',n:ring};   // v5.34: the drive does not run ahead of the chart on the card's say-so
   else d={code:'o_drive',p:host};
   if(!nc&&d&&d.code==='o_settle') d=null;   // the first world is that objective already
   if(d) d.g=lvl+2;

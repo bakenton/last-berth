@@ -38,6 +38,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await shot('top-bar');
   const ov=await p.evaluate(()=>{ const t=document.getElementById('top'); return t.scrollWidth-t.clientWidth });
   ok('top: fits at 1440', ov<=0,ov);
+  // v5.34: the first ring the Earth can pay for (ARK RING I IS WITHIN REACH, sig.ark) is a one-time note that stands on the screen and takes the click — closed first
+  for(let i=0;i<4;i++){ await p.evaluate(()=>LNdraw()); if(await p.evaluate(()=>LNI.big()!=='note')) break; await U.tap('[data-act="noteok"]') }
   await U.tap('#tabs [data-act="tab"][data-v="ark"]'); ok('the ark tab opens the ark', await p.evaluate(()=>LNU.win==='ark'));
   tx=await p.innerText('#arkwake'); ok('the ark window gives who wakes (min(aboard, pods) x share)', tx.replace(/\s/g,'').includes(String(want.w)), tx);
   await U.tap('#tabs [data-act="tab"][data-v="ark"]');

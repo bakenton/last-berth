@@ -1,4 +1,6 @@
-// pw57 — v5.12 (фидбек Никиты 11.11): снос хаба за четверть его цены (мышью), хаб на выработанном мире (мышью),
+// pw57 — v5.12 (фидбек Никиты 11.11): снос хаба за долю его вложенного (мышью), хаб на выработанном мире (мышью),
+// v5.34 (Никита 16.11, п. 9: «половину от того что вложено было»): доля — K.HUB_REFUND (0,5), от хранимой цены хаба (c.hubPaid),
+// а не хардкод 0,25;
 // машины на мёртвой жиле: ярус не продаётся, стоящие машины не жгут топлива. Клики — мышью по видимым кнопкам; состояние — хуками.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js');
@@ -25,8 +27,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // 1. the hub's card shows what comes back and the button; the mouse pulls it down
   await U.openWorld(W.hub); await p.waitForTimeout(300);
   const back=await p.evaluate(()=>{ const e=document.querySelector('#ovl #hubraze'); return e?e.innerText.replace(/\s+/g,' '):'' });
-  const want={m:Math.floor(H.k.metal*0.25), t:Math.floor(H.k.parts*0.25)};
-  ok('the hub card says what comes back: a quarter of its price', new RegExp('Gives back\\s*'+want.m.toLocaleString('en').replace(/,/g,'[ ,\\u202f\\u00a0]?')+'\\s*'+want.t,'i').test(back), back+' / want '+JSON.stringify(want));
+  const RF=await p.evaluate(()=>K.HUB_REFUND);   // v5.34: the share is K's (page-side), the base is the price paid for this hub
+  const want={m:Math.floor(H.paid.metal*RF), t:Math.floor(H.paid.parts*RF)};
+  ok('the hub card says what comes back: HUB_REFUND (half) of its price', new RegExp('Gives back\\s*'+want.m.toLocaleString('en').replace(/,/g,'[ ,\\u202f\\u00a0]?')+'\\s*'+want.t,'i').test(back), back+' / want '+JSON.stringify(want));
   await p.screenshot({path:(process.env.SHOT_DIR?process.env.SHOT_DIR+'/':'')+'pw57-hub.png'}).catch(()=>{});
   const e0=await p.evaluate(()=>({m:LN.earth.metal,t:LN.earth.parts}));
   const pop0=await p.evaluate(W=>LN.colonies[W.hub].pop,W);
@@ -34,7 +37,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const R=await p.evaluate(([W,e0])=>{ const c=LN.colonies[W.hub], L=LN.log.filter(e=>e.code==='hub_razed');
     return {hub:!!c.hub, ex:!!c.exHub, dm:LN.earth.metal-e0.m, dt:LN.earth.parts-e0.t, via:LN.colonies[W.fd].via||null, wait:c.wait, pop:c.pop, n:L.length, d:L[0]&&L[0].d,
       hubBtn:!!document.querySelector('#ovl [data-act="hubbuild"]'), toast:(document.getElementById('toast')||{}).innerText||'' } },[W,e0]);
-  ok('pulled down with the mouse: no hub, a quarter back on Earth', !R.hub&&R.ex&&R.dm===want.m&&R.dt===want.t, JSON.stringify(R));
+  ok('pulled down with the mouse: no hub, half of the paid price back on Earth', !R.hub&&R.ex&&R.dm===want.m&&R.dt===want.t, JSON.stringify(R));
   ok('the feeder goes back to Earth; the waiting hands stay on the world', R.via===null&&R.wait===0&&R.pop===pop0+7, JSON.stringify(R));
   ok('one hub_razed log line with the sums and 1 line', R.n===1&&R.d.m===want.m&&R.d.t===want.t&&R.d.n===1, JSON.stringify(R.d));
   ok('the build-a-hub button is back on the card', R.hubBtn);

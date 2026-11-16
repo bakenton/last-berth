@@ -100,7 +100,8 @@ const nums=t=>(String(t).match(/[\d][\d\s   ]*(?:\.\d+)?/g)||[]).map(x=>+x.
   await shot(p,'b1-shift-window','#noteL');
   if(!BEFORE) ok('B: the shift window — «hands over the Helm» and the button TAKE THE HELM', sh.big==='shift'&&/Shift \d+ hands over the Helm\./.test(sh.t)&&/TAKE THE HELM/i.test(sh.t)&&!/desk/i.test(sh.t), sh.t.slice(0,160));
   await U.tap('#noteL [data-act="shiftok"]'); await p.waitForTimeout(250);
-  let dm=''; for(let i=0;i<8&&!/hall of the Helm|площадь|square in front/.test(dm);i++){
+  // v5.34: which of the doomsday words comes is picked by the seed of the day (voice(): keys[hash % keys.length]); doomsday.2 (the pier) came eight days running — the days are tried longer, the words are not changed
+  let dm=''; for(let i=0;i<40&&!/hall of the Helm|площадь|square in front/.test(dm);i++){
     await p.evaluate(i=>{ LNU.notes=[]; if(!LN.night) GOD.nightIn(900); LN.nightSeen=true; LN.day+=1; log(LN,'doomsday',{n:300+i,b:600,h:Math.round(LN.earth.people)}); LNdraw() },i); await p.waitForTimeout(450);
     dm=await p.evaluate(()=>(document.getElementById('pfL')||{}).innerText||''); if(!/hall of the Helm|square in front/.test(dm)){ await p.evaluate(()=>{ LNU.pf=null; LNdraw() }); await p.waitForTimeout(150) } }
   await shot(p,'c1-doomsday-voice','#pfL');
