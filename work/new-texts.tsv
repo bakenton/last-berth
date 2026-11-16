@@ -1019,3 +1019,8 @@ UI	u_dock	Dock	Док
 UI	u_dockLine	A {c}, ready. Takes this world's line.	Готовый {c}. Встанет на линию этого мира.
 UI	h_free_dock	Dock — a ready hull joins this world's line.	Док — готовое судно встанет на линию этого мира.
 LOG	dock_hull	{p}: the dock's {k} takes this line.	{p}: {k} из дока встаёт на эту линию.
+UI	u_buildInYard	Build a hull in the Yard	Построить судно на верфи
+UI	u_lineSoon	Hulls in the yards or on their way to this line	Суда на верфи или на пути к этой линии
+MSG	hubFeeder	{p} ships its goods to the hub at {h}. A world that feeds a hub cannot be one — send its goods to Earth first.	{p} возит груз на хаб {h}. Мир, который возит на хаб, сам хабом не станет — сначала переведите его груз на Землю.
+MSG	nofreeYard	No free hull at Earth. Build one in the Yard.	У Земли нет свободного судна. Постройте его на верфи.
+UI	u_hubFeeder	Ships to the hub at {h} — a feeder cannot be a hub.	Возит на хаб {h} — питатель хабом не станет.

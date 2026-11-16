@@ -325,6 +325,12 @@ svg.gi{fill:currentColor}
 .wkr i{font-style:normal;color:var(--mid);font-size:12px;display:inline-flex;align-items:center;gap:3px;margin-left:6px}
 .wkr b{font:500 13px var(--n)}
 .bar.flow{margin:4px 0 8px}
+/* v5.30: hulls still coming to a line (in the yards, told to take it) — hatched after the solid part of the bar, the same hatch as a swatch at the number; what a hull from the fleet would carry here */
+.bar u.soon{background:repeating-linear-gradient(135deg,var(--c,var(--ink)) 0 2px,transparent 2px 5px)}
+.rw b .soon{display:inline-flex;align-items:center;gap:4px;margin-left:9px;color:var(--mid);font-weight:500}
+.rw b .soon i{width:9px;height:9px;flex:none;background:repeating-linear-gradient(135deg,var(--mid) 0 2px,transparent 2px 4px)}
+.hst b.ay{font-weight:500;color:var(--ink);margin-left:7px}
+#toyard .b.full{margin-top:2px}
 .lab.pcl{display:flex;align-items:center;gap:7px;color:var(--mid);margin:12px 0 6px}
 /* v5.21: the objective — a card on the chart (draft B3 of design/orders/round2.html), its journal, and the works' «You bring → It makes» (draft W2) */
 .ocard{display:block;width:100%;padding:0;text-align:left;background:rgba(20,20,23,.94);border:1px solid var(--ink)}

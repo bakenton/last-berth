@@ -26,7 +26,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.screenshot({path:'x1-night.png'});
   await p.U.tap('[data-act="nightok"]'); await p.waitForTimeout(150);
   let f=await p.pf();
-  ok('A physicist speaks on the date, with the forecast year', !!f&&/Institute physicist/.test(f)&&/Generation (IV|V|VI)/.test(f)&&/year \d{3,4}|year —/.test(f), f);
+  ok('A physicist speaks on the date, with the forecast year', !!f&&/Helm physicist/.test(f)&&/Generation (IV|V|VI)/.test(f)&&/year \d{3,4}|year —/.test(f), f);
   await p.screenshot({path:'x2-physicist.png'});
   await p.U.clear();
   // first shift after the date -> chronicle 'dated' + a quiet chief line, no window
@@ -64,7 +64,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ const G=window.LN; const k=Object.keys(G.colonies).find(k=>planet(k).kind==='works')||Object.keys(G.colonies)[0]; G.driveLvl=G.arkMark-1; G.gen=G.driveLvl; LNU.voiceLast=-1000; driveDone(G,k); LNdraw(); });
   f=await p.pf();
   // v5.10 (ARK.md 2г): the physicist no longer names a wake %: the drive carries the sleepers, the pods and the convoy wake them
-  ok('A ark-drive mark opens the physicist: the drive carries, the convoy wakes (v5.10: no wake %)', !!f&&/Institute physicist/.test(f)&&/convoy/.test(f)&&!/%/.test(f), f);
+  ok('A ark-drive mark opens the physicist: the drive carries, the convoy wakes (v5.10: no wake %)', !!f&&/Helm physicist/.test(f)&&/convoy/.test(f)&&!/%/.test(f), f);
   await p.screenshot({path:'x5-arkdrive.png'}); await p.U.clear();
   // 900 years out: doomsday chronicle + chief window
   await p.evaluate(()=>{ const G=window.LN; G.night=G.day+K.DOOMSDAY_AT+1; G.earth.food=1e5; G.earth.metal=1e5; botRun(2); LNdraw(); });
@@ -88,7 +88,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('B modal: collapse (N-09)', /our galaxy collapses/.test(mru)&&/build an ark and take people to another galaxy/.test(mru), mru.slice(0,160));
   await p.U.tap('[data-act="nightok"]'); await p.waitForTimeout(150);
   f=await p.pf();
-  ok('B physicist', !!f&&/Institute physicist/.test(f)&&/generation IV/i.test(f), f);
+  ok('B physicist', !!f&&/Helm physicist/.test(f)&&/generation IV/i.test(f), f);
   await p.screenshot({path:'x7-physicist-b.png'}); await p.U.clear();
   await p.evaluate(()=>{ const E=window.LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; window.LN.night=window.LN.day+2; LNdraw(); });
   await p.U.until(()=>p.evaluate(()=>!!window.LN.over),200,10); await p.U.pause();

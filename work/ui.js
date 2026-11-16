@@ -536,6 +536,15 @@ function worksHungry(pid){ var p=planet(pid), c=G.colonies[pid]; if(!c||p.kind!=
 function feedSplit(pid){ var fr=feedRates(G,pid), f=lineFit(G,pid), left=f?f.carries:0, out={};
   (needsOf(G,pid)||[]).forEach(function(k){ var n=fr[k]||0, b=Math.min(n,left); left-=b; out[k]={need:n,brings:b} });
   return out }
+/* v5.30 (Nikita's run 16.11, p.2: «когда начинаю строить судно для линии я хочу, чтобы ползунок… тоже сразу заполнился. Так кажется
+   будто ничего не происходит»): what the hulls coming to this line will carry a year — the ones in the yards for it, the ones told to take
+   it or to move here. A hull that already flies the line is lineRate's; this is drawn apart from it (hatched), not added to it */
+function lineSoon(pid){ var y=0;
+  G.ships.forEach(function(s){ if(s.mode==='dead'||s.mode==='missing'||s.mutiny||(s.from===pid&&s.to)) return;
+    if(s.moveTo&&s.moveTo!==pid) return;   // told to move elsewhere after she was queued here: lineFit does not count her either (reviewer v5.30)
+    if((s.pend&&s.pend.from===pid)||(s.lineFor===pid&&s.mode==='building')||s.moveTo===pid) y+=hullYield(G,pid,s) });
+  return y }
+function soonTag(v){ return v>0.005?'<span class="soon" title="'+attr(T('u_lineSoon'))+'"><i></i>+'+dec(v)+'</span>':'' }
 function wst(pid){ var c=G.colonies[pid];
   if(G.ghost&&G.ghost[pid]) return 'ghost';
   if(!c) return enRoute(G,pid)?'settling':'free';
@@ -1670,9 +1679,11 @@ function hubBlock(p,c,deadW){ if(p.kind==='works') return '';
     var rb=hubRefund(G,pid);   // v5.12 (Nikita 11.11): pull the hub down for a quarter of its price
     h+='<div class="prow" id="hubraze"><span class="lab">'+esc(T('u_hubBack'))+'</span><span>'+resIc('metal',13)+num(rb.metal)+' '+resIc('parts',13)+num(rb.parts)+'</span></div>'+btn(esc(T('u_hubRaze')),'hubraze',{p:pid},'full','takeoff');
     return h }
-  if(!c.via){ var k2=hubCost(G), w=hubBuildCheck(G,pid);
-    if(w==='metal'||w==='parts') w=shortWhy(k2,G.earth); else if(w==='hubCap') w=['hubCap',hubCapP()];
-    h+=head2+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(k2,G.earth)+'</div>'+btn(esc(T('u_hubBuild')),'hubbuild',{p:pid},'full','build',offW(w)) }
+  /* v5.30 (Nikita's run 16.11, p.26: «не могу построить хаб… баг какой-то»): a world that ships to a hub showed no hub block at all —
+     the block stands with its button off and says why (hubFeeder: this world feeds a hub; send its goods to Earth first) */
+  var k2=hubCost(G), w=hubBuildCheck(G,pid);
+  if(w==='metal'||w==='parts') w=shortWhy(k2,G.earth); else if(w==='hubCap') w=['hubCap',hubCapP()]; else if(w==='hubChain') w=['hubFeeder',{p:pname(pid),h:pname(c.via)}];
+  h+=head2+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(k2,G.earth)+'</div>'+(c.via?'<div class="why" id="hubwhy">'+esc(fill(T('u_hubFeeder'),{h:pname(c.via)}))+'</div>':'')+btn(esc(T('u_hubBuild')),'hubbuild',{p:pid},'full','build',offW(w));
   return h }
 /* v5.17 (Nikita 12.11: «доставка куда земля или хаб была во вкладке линии, а то не ясно куда и как перевести судно»): where the line runs — Earth or a hub — sits over the hulls of the line, not in the hub block */
 function viaSeg(p,c){ if(p.kind==='works'||c.hub||!can('parts')) return '';
@@ -1730,8 +1741,11 @@ function winWorld(pid){
     L0+=giftBlock(giftFor(G,pid));   // v5.27: FOUND HERE — what Earth gets when the settlers land
     L0+=sec(esc(T('u_found')))+row(resIc('people',13)+esc(T('u_settlers')),esc(fill(T('u_peopleN'),{n:party})),C.people)+'<div class="lab">'+esc(T('u_whoGoes'))+'</div>';
     if(hs.length) L0+=hs.map(function(s){ return '<button type="button" class="radio'+(who===s?' on':'')+'" data-act="who" data-p="'+pid+'" data-s="'+s.id+'"><i></i>'+shipIc(shipClass(s),26)+genB(hullGen(s))+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b><span>'+(s.reserve?'<em style="color:'+C.ark+';font-style:normal">'+esc(T('u_stReserve'))+'</em> · ':'')+esc(fill(T('u_whoLine'),{c:num(s.cap),n:legDays(G,'earth',pid,s)}))+'</span></button>' }).join('');
-    else L0+='<div class="why">'+esc(freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait }).length?fill(T('u_noneReach'),{n:p.sec+1}):T('u_noFree'))+'</div>';
-    var w=!who?'nofree':(party<K.MIN_FOUND?['fewhands',{n:K.MIN_FOUND-party}]:shortWhy({fuel:fuel,people:party},G.earth));
+    /* v5.30 (Nikita's run 16.11, p.1: «игра не показывает, что если у тебя судна нет, то можно открыть меню yard и там построить судно. А это 73 год уже»):
+       the way to the yards stands right under the refusal — once the helper has opened the Yard */
+    else L0+='<div class="why">'+esc(freeAtPier().filter(function(s){ return !s.mutiny&&!s.crewWait }).length?fill(T('u_noneReach'),{n:p.sec+1}):T('u_noFree'))+'</div>'+
+      (can('yard')?'<div id="toyard">'+btn(esc(T('u_buildInYard')),'tab',{v:'yard'},'full','tYard')+'</div>':'');
+    var w=!who?(can('yard')?'nofreeYard':'nofree'):(party<K.MIN_FOUND?['fewhands',{n:K.MIN_FOUND-party}]:shortWhy({fuel:fuel,people:party},G.earth));
     if(enRoute(G,pid)) w='enroute';
     L0+='<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price({fuel:fuel,people:party},G.earth)+'</div>'+btn(esc(T('u_sendSettlers')),'send',{p:pid},'pri full','send',offW(w==='ok'||(w[0]==='ok')?'ok':w));
     return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_free')),wmark(p.kind,false,16),null,'free')+'<div class="bd">'+L0+'</div>'+nav+'</div>'+giftChips(pid) }
@@ -1743,22 +1757,28 @@ function winWorld(pid){
     /* v5.21 (Nikita 12.11, draft W2 of design/orders/round2.html: «я хочу понимать что на завод нужно везти ресурсы и за них он будет делать детали»):
        what you bring → what it makes, one bar for how well the line feeds it, one verdict with its button. The figures of v4.46
        (each thing it burns a year, what the line brings of it) sit behind «?» */
-    var fd=feedSplit(pid), ff=lineFit(G,pid), fed=ff&&ff.need>0.001?Math.min(1,ff.carries/ff.need):0, thin=fed<FORGE_WARN, act=wh.idle>5?0:wh.low>=10?lr.makes:lr.makes*fed, yr={metal:wh.metal,food:wh.food};
+    /* v5.30 (Nikita's run 16.11, p.25: «если линия возит больше 100% тоже надо показывать, там 120%»): the number is the real share, the bar
+       stops at its end; the part of it that hulls still coming will bring is hatched (p.2) */
+    var fd=feedSplit(pid), ff=lineFit(G,pid), fedAll=ff&&ff.need>0.001?ff.carries/ff.need:0, fed=Math.min(1,fedAll), thin=fed<FORGE_WARN,
+      soonW=lineSoon(pid), fedNow=ff&&ff.need>0.001?Math.min(1,Math.max(0,ff.carries-soonW)/ff.need):0, act=wh.idle>5?0:wh.low>=10?lr.makes:lr.makes*fed, yr={metal:wh.metal,food:wh.food};
     L0+='<div class="trade"><div class="bx"><span class="lbl">'+esc(T('u_youBring'))+'</span>'+Object.keys(fd).map(function(k){ return '<span class="res">'+resIc(k,15)+esc(T(k))+'</span>' }).join('')+'</div><div class="aw">→</div>'+
       '<div class="bx out"><span class="lbl">'+esc(T('u_itMakes'))+'</span><span class="res">'+resIc('parts',15)+esc(T('parts'))+'</span><span class="mk">'+dec(act)+'<small>'+esc(T('u_perYr'))+(act<lr.makes*0.95?' · '+esc(fill(T('u_ofCap'),{n:dec(lr.makes)})):'')+'</small></span></div></div>';
-    L0+='<div class="fed"><div class="lbl"><span>'+esc(T('u_fed'))+'<button type="button" class="qm'+(U.feedHelp?' on':'')+'" data-act="feedhelp" aria-expanded="'+!!U.feedHelp+'" title="'+attr(T('u_feedQ'))+'" aria-label="'+attr(T('u_feedQ'))+'">?</button></span><b'+(thin?'':' style="color:'+C.ink+'"')+'>'+Math.round(fed*100)+'%</b></div><div class="bar"><u style="width:'+Math.round(fed*100)+'%;background:'+(thin?C.people:C.parts)+'"></u></div></div>';
+    L0+='<div class="fed"><div class="lbl"><span>'+esc(T('u_fed'))+'<button type="button" class="qm'+(U.feedHelp?' on':'')+'" data-act="feedhelp" aria-expanded="'+!!U.feedHelp+'" title="'+attr(T('u_feedQ'))+'" aria-label="'+attr(T('u_feedQ'))+'">?</button></span><b'+(thin?'':' style="color:'+C.ink+'"')+'>'+Math.min(999,Math.round(fedAll*100))+'%</b></div><div class="bar"><u style="width:'+Math.round(fedNow*100)+'%;background:'+(thin?C.people:C.parts)+'"></u>'+
+      (fed-fedNow>0.005?'<u class="soon" style="left:'+Math.round(fedNow*100)+'%;width:'+(Math.round(fed*100)-Math.round(fedNow*100))+'%;--c:'+(thin?C.people:C.parts)+'"></u>':'')+'</div></div>';
     if(U.feedHelp){ L0+=sec(esc(T('u_eats')));
       Object.keys(fd).forEach(function(k){ var f=fd[k];
         L0+=row(resIc(k,13)+esc(T(k)),esc(fill(T('u_feedRow'),{n:dec(f.need),b:dec(f.brings)})),yr[k]<10||f.brings<f.need*0.95?C.red:null) }) }
     if(wh.idle>5) L0+=alertBox('starving',esc(T('u_worksIdle')));
     else if(thin) L0+='<div class="vd"><span>'+ic('starving',15,C.people)+esc(T('u_lineLow'))+'</span><button type="button" class="b" data-act="world" data-v="'+pid+'" data-f="add">'+esc(T('u_fixAdd'))+'</button></div>';
     else if(wh.low<10) L0+=alertBox('starving',esc(fill(T('u_worksLow'),{n:Math.floor(wh.low)})));
-    L0+='<div id="rw-carries">'+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')))+row(esc(T('u_onSurface')),num(c.store.parts||0))+'</div>'+row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
+    L0+='<div id="rw-carries">'+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr'))+soonTag(soonW))+row(esc(T('u_onSurface')),num(c.store.parts||0))+'</div>'+row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
   } else {
     var dry=isDry(pid);
     var shareC=lr.makes>0.001?Math.min(1,lr.carries/lr.makes):1, shortC=lr.carries<lr.makes*0.8&&!dry;
-    L0+='<div id="rw-carries">'+row(resIc(dep,13)+esc(T('u_worldGives')),dec(lr.makes)+esc(T('u_perYr')))+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr')),shortC?C.people:null)+
-      '<div class="bar flow"><u style="width:'+Math.round(shareC*100)+'%;background:'+(shortC?C.people:KCOL[p.kind])+'"></u></div></div>'+
+    var soonC=lineSoon(pid), shareS=lr.makes>0.001?Math.min(1,(lr.carries+soonC)/lr.makes):1, shortS=lr.carries+soonC<lr.makes*0.8&&!dry;   // v5.30: the hulls coming, hatched after the ones flying
+    L0+='<div id="rw-carries">'+row(resIc(dep,13)+esc(T('u_worldGives')),dec(lr.makes)+esc(T('u_perYr')))+row(ic('toEarth',13,C.mid)+esc(T('u_lineCarries')),dec(lr.carries)+esc(T('u_perYr'))+soonTag(soonC),shortC?C.people:null)+
+      '<div class="bar flow"><u style="width:'+Math.round(shareC*100)+'%;background:'+(shortC?C.people:KCOL[p.kind])+'"></u>'+
+      (soonC>0.005&&shareS-shareC>0.005?'<u class="soon" style="left:'+Math.round(shareC*100)+'%;width:'+(Math.round(shareS*100)-Math.round(shareC*100))+'%;--c:'+(shortS?C.people:KCOL[p.kind])+'"></u>':'')+'</div></div>'+
       row(esc(T('u_deposit')),dry?esc(T('u_dryShort')):esc(seamLeft(pid)),dry?C.red:null)+row(esc(T('u_onSurface')),num(c.store[dep]||0))+
       row(resIc('people',13)+esc(T('people')),num(c.pop),C.people)+liftRow(p);
     if(dry&&!c.hub) L0+=alertBox('workedout',esc(fill(T('u_dryLead'),{n:num(pileLeft(G,pid)),r:T(dep).toLowerCase()})),true);
@@ -1775,7 +1795,7 @@ function winWorld(pid){
   R+='<div id="addblk"><div class="sec"><span>'+esc(T('u_addHull'))+'</span><span class="seg"><button type="button" data-act="addtab" data-v="free" class="'+(tab==='free'?'on':'')+'">'+esc(fill(T('u_segFree'),{n:free.length}))+'</button>'+(can('fleet')?'<button type="button" data-act="addtab" data-v="other" class="'+(tab==='other'?'on':'')+'">'+esc(fill(T('u_segOther'),{n:other.length}))+'</button>':'')+'</span></div><div class="lst">';
   R+=pool.length?pool.sort(function(a,b){ return hullGen(b)-hullGen(a)||b.cap-a.cap }).map(function(s){ var lw=lineRefuse(G,s,pid), ok=lw==='ok', wl=s.from||(s.pend&&s.pend.from);
     return '<div class="hr'+(ok?'':' dis')+'" id="ah-'+s.id+'">'+shipIc(shipClass(s),30)+genB(hullGen(s),hullGen(s)<(G.gen||0)-1)+'<span class="hn">'+esc(T(shipClass(s))+' '+fill(T('hullNo'),{n:s.id}))+'</span><span class="hs">'+
-      (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+'</span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
+      (ok?'<span class="hst">'+ic('hold',15,C.mid)+num(s.cap)+'<b class="ay">'+esc(fill(T('u_lineAdds'),{n:dec(hullYield(G,pid,s))}))+'</b></span>'+(tab==='other'?'<span class="hst">'+esc(fill(T('u_fromLine'),{p:pname(wl)}))+'</span>':(s.reserve?'<span class="hst" style="color:'+C.ark+'">'+esc(T('u_stReserve'))+'</span>':''))
          :'<span class="hst" style="color:'+C.red+'">'+ic('range',15,C.red)+esc(lw==='range'?fill(T('u_tooShort'),{n:shipRange(s)+1}):lineWhyShort(lw))+'</span>')+
       '</span><span class="ha">'+(ok?btn(esc(T(tab==='free'?'u_assign':'u_moveHere')),tab==='free'?'assign':'move',{s:s.id,p:pid},'pri','assign'):'')+'</span></div>' }).join('')
     :'<div class="why dim">'+esc(T(tab==='free'?'u_noFreePier':'u_noOther'))+'</div>';

@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.29'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.30'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -1610,16 +1610,26 @@ function tick(G){
       continue;
     }
     /* v4.34 (reviewer): a hull from a spent world stands down at Earth — unless the player has already given her another line */
+    var home=node==='earth'||(!!s.from&&s.to===node);   // v5.30: the home end of her line — Earth, or the hub her world ships to
     if(s.homeOnly){ var hp=s.homeOnly; s.homeOnly=null; s.from=null; s.to=null;
-      if(node!=='earth'){ s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t; continue }
-      if(!s.pend&&!s.moveTo){ s.waiting=true; log(G,'nothing_left',{n:s.id,p:hp}); continue } }
+      if(!s.pend&&!s.moveTo){
+        if(node!=='earth'){ s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t; continue }
+        s.waiting=true; log(G,'nothing_left',{n:s.id,p:hp}); continue } }
     /* v4.34 (reviewer: a hull docking at the far end flew world→world past Earth, and one from a spent world was left idle at a
-       foreign pier for good): a new line is taken only at Earth — at the far end she loads and comes home on the old one first.
-       A line is always world ↔ Earth. */
-    if(node==='earth'){
+       foreign pier for good): a new line is taken only at the home end of the old one — at the far end she loads and comes home first.
+       v5.30 (Nikita's run 16.11, seed 945235311: three hulls of a world that shipped to a hub hung «moves to …» for 461 years — the
+       order was read only at Earth, and a world→hub line never touches Earth): the home end is Earth or the line's hub. At the hub
+       she takes the new line where she stands if it ends at this hub — a sister feeder, or the hub's own line to Earth. Any other
+       line she leaves the old one for at once and takes at Earth (the order rides with her in s.pend): Earth is where a crew signs
+       on, the fuel is paid in full and the Night is asked, and a hull flying hub → a foreign world would load the hub's depot for it.
+       A line taken at the hub is flown as every feeder's line is: half the fuel, no pier of Earth, the Night asked at the far end. */
+    if(home){
       if(s.moveTo){ var mt=s.moveTo, mp=planet(mt); s.moveTo=null;   // v4.32: the move ordered in flight — she is at the pier now
         if(mp&&G.colonies[mt]&&s.from!==mt&&!s.mutiny&&lineOk(G,s,mt)&&!(G.reserves[mt]<=0&&mp.kind!=='works'&&pileLeft(G,mt)<1&&!isHub(G,mt))) s.pend={from:mt,to:lineTo(G,mt)} }
-      if(s.pend){ if(G.colonies[s.pend.from]){ s.from=s.pend.from; s.to=lineTo(G,s.pend.from); s.auto=true; s.policy=null; log(G,'reassigned',{n:s.id,a:s.from,b:s.to}) } s.pend=null }
+      if(s.pend){ var pf2=s.pend.from;
+        if(!G.colonies[pf2]) s.pend=null;
+        else if(node==='earth'||pf2===node||lineTo(G,pf2)===node){ s.from=pf2; s.to=lineTo(G,pf2); s.auto=true; s.policy=null; s.pend=null; log(G,'reassigned',{n:s.id,a:s.from,b:s.to}) }
+        else { s.from=null; s.to=null } }   // at a hub, for a line that does not end here: home to Earth with the order
     }
     if(s.from&&s.to) sail(G,s);
     else if(node!=='earth'){ s.origin=node; s.dest='earth'; s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t }   // v4.14: a hull released in flight lands with no line — it heads home; the yards only see hulls at Earth
