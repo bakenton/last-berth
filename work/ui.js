@@ -236,7 +236,15 @@ var RARE_HEX='M24 3 L42.2 13.5 V34.5 L24 45 L5.8 34.5 V13.5 Z';
 function rareIc(k,px){ return '<svg class="ric" viewBox="0 0 48 48" width="'+px+'" height="'+px+'" style="color:'+C.people+'" aria-hidden="true"><path d="'+RARE_HEX+'" fill="'+C.bg+'" stroke="'+C.people+'" stroke-width="1.6" stroke-linejoin="round"/><g transform="translate(12 12)">'+I[k]+'</g></svg>' }
 function dockRow(g){ return g&&g.dock?'<div class="gfr" data-g="dock"><span class="gi">'+rareIc('dock',26)+'</span><b>'+esc(T('u_dock'))+'</b><small>'+esc(fill(T('u_dockLine'),{c:T(g.dock).toLowerCase()}))+'</small></div>':'' }
 function dockSeen(){ return !!(G.rareSeen&&G.rareSeen.dock) }
-function giftBlock(g){ var ks=giftKeys(g), dr=dockRow(g); if(!ks.length&&!dr) return '';
+/* v5.35 (p.17): the rare finds — the dock, survivors, an engine core: which one a gift holds, its sign, its word on the chart */
+var RARE_I={dock:'dock',folk:'settlers',core:'drive'}, RARE_T={dock:'u_dock',folk:'u_folk',core:'u_core'};
+function rareKind(g){ return !g?null:g.dock?'dock':g.folk?'folk':g.core?'core':null }
+function rareSeen(k){ return !!(G.rareSeen&&G.rareSeen[k]) }
+function rareRow(g){ if(!g) return '';
+  if(g.folk) return '<div class="gfr" data-g="folk"><span class="gi">'+rareIc('settlers',26)+'</span><b>'+esc(T('u_folk'))+'</b><small>'+esc(fill(T('u_folkLine'),{n:num(g.folk)}))+'</small></div>';
+  if(g.core) return '<div class="gfr" data-g="core"><span class="gi">'+rareIc('drive',26)+'</span><b>'+esc(T('u_core'))+'</b><small>'+esc(fill(T('u_coreLine'),{n:num(g.core)}))+'</small></div>';
+  return '' }
+function giftBlock(g){ var ks=giftKeys(g), dr=dockRow(g)+rareRow(g); if(!ks.length&&!dr) return '';
   return '<div id="gift" class="gift">'+sec(esc(T('u_giftSec')))+dr+ks.map(function(k){ return '<div class="rw gf" data-g="'+k+'"><span>'+resIc(k,15)+esc(T(k))+'</span><b>+'+num(g[k])+'</b></div>' }).join('')+'</div>' }
 /* v5.34 (Nikita 16.11, p.8: «Пусть награда выводится при наведении. А когда открыл меню мира награда только в меню, как сейчас»): the chips
    that hung under the name of the world whose window is open are gone — the window's FOUND HERE says it; the tip on hover shows them (drawTip) */
@@ -552,7 +560,7 @@ function lineGain(pid,s){ var y=hullYield(G,pid,s), f=lineFit(G,pid), lr=lineRat
 function gainTag(pid,s){ var g=lineGain(pid,s); return '<b class="ay'+(g<0.05?' z':'')+'">'+esc(fill(T('u_lineAdds'),{n:dec(g)}))+'</b>' }
 function soonTag(v){ return v>0.005?'<span class="soon" title="'+attr(T('u_lineSoon'))+'"><i></i>+'+dec(v)+'</span>':'' }
 function wst(pid){ var c=G.colonies[pid];
-  if(G.ghost&&G.ghost[pid]) return 'ghost';
+  if(G.ghost&&G.ghost[pid]) return enRoute(G,pid)?'settling':'ghost';   // v5.35: settlers on their way to found a hub there
   if(!c) return enRoute(G,pid)?'settling':'free';
   if(isDead(pid)) return 'dead';
   var ll=lastLift(G,pid); if(ll&&ll.st==='cut') return 'cut';
@@ -915,12 +923,11 @@ function drawMap(){
   if(es) boxes.push({x0:es.x-er,x1:es.x+er,y0:es.y-er,y1:es.y+er+6});
   /* v5.29: the dock's sign — up and away from Earth; the word DOCK beside it until the player has opened a world that holds one
      (G.rareSeen: the run remembers). Names keep clear of both. */
-  var wg0=U.win&&planet(U.win)?giftFor(G,U.win):null; if(wg0&&wg0.dock&&!dockSeen()) (G.rareSeen=G.rareSeen||{}).dock=1;
-  var dkWord=dockSeen()?'':T('u_dock').toUpperCase(), dkW=dkWord.length*7.4;
+  var wg0=U.win&&planet(U.win)?rareKind(giftFor(G,U.win)):null; if(wg0&&!rareSeen(wg0)) (G.rareSeen=G.rareSeen||{})[wg0]=1;   // v5.35: every rare kind has its word until seen
   var GH=[];
-  PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost'){ var gp=prj([b.x,0,b.z]); if(gp) GH.push(gp); return }
+  PLANETS.forEach(function(q){ if(!secVis(q.sec)) return; var b=p3(q), on=!!G.colonies[q.id], st=wst(q.id); if(st==='ghost'){ var gp=prj([b.x,0,b.z]); if(gp){ gp.id=q.id; GH.push(gp) } return }
     var sp3=prj([b.x,wH(q.id),b.z]); if(!sp3) return; var sr3=(on?RS:RF)*pxPer(sp3.w), rr=sr3*(on&&q.kind==='works'?1.8:1);
-    var o1={q:q,s:sp3,r:sr3,rr:rr,on:on,st:st,dk:!on&&!!(giftFor(G,q.id)||{}).dock};
+    var rk=on?null:rareKind(giftFor(G,q.id)), o1={q:q,s:sp3,r:sr3,rr:rr,on:on,st:st,dk:!!rk,rk:rk,wd:rk&&!rareSeen(rk)?T(RARE_T[rk]).toUpperCase():''}, dkWord=o1.wd, dkW=dkWord.length*7.4;
     boxes.push({x0:sp3.x-rr,x1:sp3.x+rr,y0:sp3.y-sr3,y1:sp3.y+sr3});
     if(o1.dk){ o1.lf=!!es&&sp3.x<es.x; o1.hx=(o1.lf?-1:1)*(sr3+13); o1.hy=-(sr3+8); var bx0=sp3.x+o1.hx, by0=sp3.y+o1.hy;
       boxes.push({x0:bx0-12,x1:bx0+12,y0:by0-12,y1:by0+12}); if(dkWord) boxes.push(o1.lf?{x0:bx0-15-dkW,x1:bx0-12,y0:by0-8,y1:by0+6}:{x0:bx0+12,x1:bx0+15+dkW,y0:by0-8,y1:by0+6}) }
@@ -940,17 +947,22 @@ function drawMap(){
     else if(st==='noline'||st==='half'){ so('circle'); sp('r',(o.rr+7).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1.6); sa('class','alarm'); sr('/>') }
     if(U.win===q.id){ so('circle'); sp('r',(o.rr+11).toFixed(1)); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',2); sr('/>') }
     if(o.dk){ so('circle'); sa('class','rping'); sp('cx',o.hx.toFixed(1)); sp('cy',o.hy.toFixed(1)); sa('r',13); sa('fill','none'); sa('stroke',C.people); sa('stroke-width',1); sr('/>');
-      so('svg'); sa('class','rsign'); sa('data-rare','dock'); sp('x',(o.hx-11).toFixed(1)); sp('y',(o.hy-11).toFixed(1)); sa('width',22); sa('height',22); sa('viewBox','0 0 48 48'); sa('style','color:'+C.people); sr('>');
+      so('svg'); sa('class','rsign'); sa('data-rare',o.rk); sp('x',(o.hx-11).toFixed(1)); sp('y',(o.hy-11).toFixed(1)); sa('width',22); sa('height',22); sa('viewBox','0 0 48 48'); sa('style','color:'+C.people); sr('>');
       so('path'); sa('d',RARE_HEX); sa('fill',C.bg); sa('stroke',C.people); sa('stroke-width',1.6); sa('stroke-linejoin','round'); sr('/>');
       so('g'); sa('transform','translate(12 12)'); sr('>');
-      so('path'); sa('d','M4 4 V20 H20 V4'); sa('fill','none'); sa('stroke','currentColor'); sa('stroke-width',1.9); sa('stroke-linejoin','round'); sa('stroke-linecap','round'); sr('/>');
-      so('path'); sa('d','M12 5 L17 16 H7 Z'); sa('fill','currentColor'); sr('/></g></svg>');
+      if(o.rk==='dock'){ so('path'); sa('d','M4 4 V20 H20 V4'); sa('fill','none'); sa('stroke','currentColor'); sa('stroke-width',1.9); sa('stroke-linejoin','round'); sa('stroke-linecap','round'); sr('/>');
+        so('path'); sa('d','M12 5 L17 16 H7 Z'); sa('fill','currentColor'); sr('/></g></svg>') }
+      else { S.n+=(I[RARE_I[o.rk]].match(/<[a-z]/g)||[]).length; sr(I[RARE_I[o.rk]]+'</g></svg>') }   // v5.35: survivors and the engine core wear their own sign (the SVG's node count kept)
+      var dkWord=o.wd;
       if(dkWord){ so('text'); sa('class','nm rword'); sp('x',(o.hx+(o.lf?-14:14)).toFixed(1)); sp('y',(o.hy+3.5).toFixed(1)); sp('text-anchor',o.lf?'end':'start'); sa('fill',C.people); sa('font-size',9.5); sa('letter-spacing',1); sr('>'+esc(dkWord)+'</text>') } }
     if(!lab.hidden){ so('text'); sp('x',(lab.x0+2-o.s.x).toFixed(1)); sp('y',(lab.y1-3-o.s.y).toFixed(1)); sa('fill',o.on?C.ink:C.mid); sa('font-size',10.5); sa('letter-spacing',1); sa('class','nm'); sr('>'+esc(q.name.toUpperCase()));
       var sq=o.on?seamPct(q):''; if(sq){ so('tspan'); sa('fill',seamCol(q)); sr('>'+esc(sq)+'</tspan>') } sr('</text>') }
     sr('</g>') });
   // v5.08: the letters the chart canvas drew before WebGL — an abandoned world's ×, a missing hull's ?
-  GH.forEach(function(gp){ so('text'); sp('x',gp.x.toFixed(1)); sp('y',(gp.y+4).toFixed(1)); sa('fill','rgba(94,93,88,.8)'); sa('font-size',13); sa('font-family','Geist Mono,monospace'); sa('text-anchor','middle'); sa('pointer-events','none'); sr('>×</text>') });
+  /* v5.35 (p.21): the grave marker takes a press — its window founds a hub there */
+  GH.forEach(function(gp){ so('g'); sa('class','wd gh'); sa('data-p',gp.id); sp('transform','translate('+gp.x.toFixed(1)+' '+gp.y.toFixed(1)+')'); sr('>');
+    so('circle'); sa('r',11); sa('fill','transparent'); sr('/>');
+    so('text'); sa('y',4); sa('fill',U.win===gp.id?C.ink:'rgba(94,93,88,.8)'); sa('font-size',13); sa('font-family','Geist Mono,monospace'); sa('text-anchor','middle'); sa('pointer-events','none'); sr('>×</text></g>') });
   G.ships.forEach(function(sh){ if(sh.mode!=='missing') return; var SA=node3(sh.origin), SB=node3(sh.dest||sh.target); if(!SA||!SB) return; var f=sh.lastT!==undefined?sh.lastT:0.55, mp=prj([SA[0]+(SB[0]-SA[0])*f,0,SA[2]+(SB[2]-SA[2])*f]); if(!mp) return;
     so('text'); sp('x',mp.x.toFixed(1)); sp('y',(mp.y+3.5).toFixed(1)); sa('fill',C.red); sa('font-size',10); sa('font-family','Geist Mono,monospace'); sa('text-anchor','middle'); sa('pointer-events','none'); sr('>?</text>') });
   // earth
@@ -988,7 +1000,7 @@ function drawTip(g){ var tip=el('tip'); if(!g||!G){ tip.className=''; return }
   h+=wmark(p.kind,!!c)+'<b>'+esc(p.name.toUpperCase())+'</b><span>'+esc(kindWord(p.kind).toUpperCase())+'</span>';
   if(p.kind!=='works'&&isFinite(G.reserves[pid])) h+='<em>'+resIc(dep,12)+num(Math.max(0,G.reserves[pid]))+'</em>';
   if(c) h+='<em>'+resIc('people',12)+num(c.pop)+'</em><em>'+shipIc('hauler',18)+onLine(G,pid).length+'</em>';
-  else { var tg=giftFor(G,pid); if(tg&&tg.dock) h+='<em class="tg">'+rareIc('dock',14)+'</em>';   // v5.34 (p.8): what the world gives, on hover
+  else { var tg=giftFor(G,pid), trk=rareKind(tg); if(trk) h+='<em class="tg">'+rareIc(RARE_I[trk],14)+(tg.folk?'+'+num(tg.folk):tg.core?'+'+num(tg.core):'')+'</em>';   // v5.34 (p.8): what the world gives, on hover
     giftKeys(tg).forEach(function(k){ h+='<em class="tg">'+giftChip(k,tg[k])+'</em>' }) }
   tip.innerHTML=h;
   var r=g.getBoundingClientRect(), mb=el('mapbox').getBoundingClientRect(), z=appZoom();
@@ -1801,11 +1813,22 @@ function pkgCard(p,c,kc,kr,hold){ var kg=kitGain(G,p.id); if(!kg) return '';
     '<div class="pk-x"><span class="l">'+esc(T('u_pkgEats'))+'</span>'+extra.filter(function(x){ return can(x[0]) }).map(function(x){ return '<span>'+resIc(x[0],12)+'+'+dec(x[1])+'</span>' }).join('')+'<span class="l">'+esc(T('u_pkgYear'))+'</span></div>'+
     '<div class="pk-f"><span>'+price(cost,G.earth)+'</span>'+btn(esc(T('u_pkgOrder')),'kit',{p:p.id},'pri','upgrade',offW(w))+'</div>'+
     (hold<kc.w?'<div class="pk-n">'+ic('hold',14,C.red)+'<span>'+esc(fill(T('u_pkgHold'),{w:num(kc.w),h:num(hold)}))+'</span></div>':'')+'</div>' }
+/* v5.35 (Nikita's run 16.11, p.21: «заселить хабом задним числом»): a worked-out world founds a hub — the settlers' hull and the hub's
+   price in one order (hubFound in the core). Shown once hubs are open (parts seen, a generation that allows one) */
+function ghostHub(p){ var pid=p.id; if(p.kind==='works'||!can('parts')||hubCap(G)<1) return '';
+  var hs=assignable(pid), who=hs.filter(function(s){ return s.id===U.who[pid] })[0];
+  if(!who&&hs.length){ who=hs.slice().sort(function(a,b){ return (a.reserve?1:0)-(b.reserve?1:0)||legDays(G,'earth',pid,a)-legDays(G,'earth',pid,b) })[0]; U.who[pid]=who.id }
+  var party=who?foundParty(G,who,pid):0, k=hubCost(G), pr={metal:k.metal,parts:k.parts,fuel:sendFuel(p),people:party};
+  var w=!who?(can('yard')?'nofreeYard':'nofree'):canHubFound(G,who.id,pid);
+  if(w==='ok'&&party<K.MIN_FOUND) w=['fewhands',{n:K.MIN_FOUND-party}];
+  var h=sec(esc(T('u_hub')),esc(fill(T('u_hubN'),{n:hubCount(G),m:hubCap(G)})))+hint(esc(T('u_ghostHubHint')),'c');
+  if(hs.length) h+='<div class="lab">'+esc(T('u_whoGoes'))+'</div>'+hs.map(function(s){ return '<button type="button" class="radio'+(who===s?' on':'')+'" data-act="who" data-p="'+pid+'" data-s="'+s.id+'"><i></i>'+shipIc(shipClass(s),26)+genB(hullGen(s))+'<b>'+esc(fill(T('hullNo'),{n:s.id}))+'</b><span>'+esc(fill(T('u_whoLine'),{c:num(s.cap),n:legDays(G,'earth',pid,s)}))+'</span></button>' }).join('');
+  return h+'<div class="prow"><span class="lab">'+esc(T('u_price'))+'</span>'+price(pr,G.earth)+'</div>'+btn(esc(T('u_ghostHub')),'hubfound',{p:pid},'pri full','hub',offW(w)) }
 function winWorld(pid){
   var p=planet(pid), c=G.colonies[pid], st=wst(pid), L0='', R='';
   var nav=stepOrder(pid).length>1?'<button class="nav l" type="button" data-act="step" data-v="-1">‹</button><button class="nav r" type="button" data-act="step" data-v="1">›</button>':'';
   var dep=p.kind==='works'?'parts':p.dep;
-  if(st==='ghost') return '<div class="win sm">'+head(esc(pname(pid)),wsub(p),wmark(p.kind,false,16))+'<div class="bd">'+hint(esc(fill(T('ghostWorld'),{d:G.ghost[pid]})))+'</div>'+nav+'</div>';
+  if(st==='ghost') return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_workedOut')),wmark(p.kind,false,16))+'<div class="bd">'+hint(esc(fill(T('ghostWorld'),{d:G.ghost[pid]})))+ghostHub(p)+'</div>'+nav+'</div>';
   if(st==='settling'){ var er=enRoute(G,pid);
     return '<div class="win sm">'+head(esc(pname(pid)),wsub(p,T('u_inTransit')),wmark(p.kind,false,16))+'<div class="bd">'+sec(esc(T('u_settlersWay')))+
       '<div class="trn">'+shipIc(shipClass(er),30)+genB(hullGen(er))+'<b>'+esc(hname(er))+' · '+esc(fill(T('u_peopleN'),{n:num(er.cargo.people||0)}))+'</b><span>'+esc(fill(T('u_landsIn'),{n:er.t}))+'</span></div>'+
@@ -2269,6 +2292,7 @@ function doAct(a,b){
     res=abandon(G,ec.id,ep); act(G,'evacuate',{p:ep,hull:ec.id},res);
     if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ okc='ok_evac_short'; okp={n:hullName(HULLS[ec.hull]),p:pname(ep),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap} } else { okc='ok_evac'; okp={p:pname(ep)} } }
   else if(a==='kit'){ var kct=kitCost(G.colonies[d.p]||{}).tier; res=orderKit(G,d.p); act(G,'kit',{p:d.p,t:kct},res); okc='ok_kit'; okp={p:pname(d.p),t:roman(kct-1)} }
+  else if(a==='hubfound'){ var hp=d.p, hs2=shipById(G,U.who[hp]); res=hs2?hubFound(G,hs2.id,hp):'nofree'; act(G,'hubFound',{p:hp,hull:hs2&&hs2.id},res); okc='ok_hubFound'; okp={p:pname(hp)} }   // v5.35 (p.21)
   else if(a==='send'){ var sp=d.p, ss=shipById(G,U.who[sp]); if(!ss){ res='nofree' } else { var np=foundParty(G,ss,sp), wasRes=ss.reserve; res=colonize(G,ss.id,sp,np,0); if(res==='ok'&&wasRes){ setReserve(G,ss.id,false); resLeft(ss.id) } act(G,'colonize',{p:sp,hull:ss.id,people:np},res); okc='ok_found'; okp={p:pname(sp),n:np} } }
   else if(a==='drive'){ var dp=d.p||driveHost(); res=startDrive(G,dp); act(G,'drive',{p:dp,mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={p:pname(dp)} }
   else if(a==='survey'){ var nsec=secName(SECTORS.length); res=survey(G); act(G,'survey',{sector:SECTORS.length},res); okc='ok_survey'; okp={s:nsec} }

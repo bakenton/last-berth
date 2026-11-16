@@ -71,7 +71,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   f=await p.pf();
   // v4.30: the journal is gone — the chronicle line is checked in LN.log, the window text here
   const dd=await p.evaluate(()=>({chron:window.LN.log.some(e=>e.code==='doomsday')}));
-  ok('A 900 years out: doomsday chronicle (LN.log) + shift chief window', dd.chron&&!!f&&/Shift chief/.test(f)&&/(square|congregation)/.test(f), f);
+  ok('A 900 years out: doomsday chronicle (LN.log) + shift chief window', dd.chron&&!!f&&/Shift chief/.test(f)&&/(square|congregation|hall of the Helm)/.test(f), f);
   await p.screenshot({path:'x6-doomsday.png'}); await p.U.clear();
   // dusk shifts
   await p.evaluate(()=>{ botRun(K.SHIFT_YEARS*4); LNdraw(); });

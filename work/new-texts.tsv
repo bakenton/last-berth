@@ -1063,3 +1063,14 @@ LOG	evac_wait	{p} is bare: {k} people wait for a free courier.	{p} опусте�
 LOG	lift_back	{p}: {m} metal and {k} parts come back from its machines.	{p}: от машин вернулось {m} металла и {k} деталей.
 UI	u_evacQFuel	The world is bare. Not fuel enough at Earth for the courier.	Мир пуст. На Земле не хватает топлива для курьера.
 UI	u_evacQLate	The world is bare. No courier would be home before the Night.	Мир пуст. Ни один курьер не вернётся до Ночи.
+UI	u_folk	Survivors	Выжившие
+UI	u_folkLine	{n} people wait here — they go to Earth when settlers land	Здесь ждут {n} человек — они уйдут на Землю, когда сядут поселенцы
+UI	u_core	Engine core	Ядро двигателя
+UI	u_coreLine	{n} parts of work for the drive programme — kept if none is running	{n} деталей работы в программу двигателя — ждут, если она не запущена
+UI	u_ghostHub	Found a hub here	Основать здесь хаб
+UI	u_ghostHubHint	The seam is gone, but a hub works on a dead world: settlers and the hub's price in one order.	Жилы нет, но хаб работает и на мёртвом мире: поселенцы и цена хаба — одним приказом.
+MSG	hubFoundGhost	Only a world worked out and lifted can be founded as a hub.	Хабом заселяют только выработанный и снятый мир.
+MSG	ok_hubFound	Settlers are on their way to found a hub on {p}.	Поселенцы летят основать хаб на {p}.
+LOG	hub_found_go	Hull {n} takes settlers to found a hub on {p}.	Корпус {n} везёт поселенцев основать хаб на {p}.
+LOG	rare_folk	{p}: {k} survivors found and brought home.	{p}: найдено и доставлено домой {k} выживших.
+LOG	rare_core	{p}: an engine core — {k} parts of work for the drive.	{p}: ядро двигателя — {k} деталей работы для программы.

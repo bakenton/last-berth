@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.34'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.35'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -164,7 +164,9 @@ function canReachSector(s,sec){ return sec<=shipRange(s) }
 function lineTo(G,pid){ var c=G.colonies[pid]; return (c&&c.via&&G.colonies[c.via])?c.via:'earth' }
 function feedersOf(G,pid){ var out=[]; for(var k in G.colonies){ if(G.colonies[k].via===pid) out.push(k) } return out }
 function isHub(G,pid){ var c=G.colonies[pid]; return !!(c&&c.hub) }
-function hubCount(G){ var n=0; for(var k in G.colonies) if(G.colonies[k].hub) n++; return n }
+function hubCount(G){ var n=0; for(var k in G.colonies) if(G.colonies[k].hub) n++;
+  for(var i=0;i<G.ships.length;i++) if(G.ships[i].hubFound&&G.ships[i].mode!=='dead') n++;   // v5.35: a hub on its way to a worked-out world is one already
+  return n }
 function hubCap(G){ return K.HUB_BASE+(G.gen||0) }
 function hubCost(G){ var g=Math.pow(K.HUB_GROW,hubCount(G)); return {metal:Math.round(K.HUB_METAL*g), parts:Math.round(K.HUB_PARTS*g)} }
 /* why this world cannot become a hub now; 'ok' when it can */
@@ -179,6 +181,24 @@ function buildHub(G,pid){ var r=hubBuildCheck(G,pid); if(r!=='ok') return r;
   for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead') continue;   // couriers come off the hub's line to Earth
     if(s.from===pid&&!lineOk(G,s,pid)){ s.from=null; s.to=null } if(s.pend&&s.pend.from===pid&&!lineOk(G,s,pid)) s.pend=null }
   log(G,'hub_built',{p:pid,m:k.metal,t:k.parts}); return 'ok' }
+/* v5.35 (Nikita's run 16.11, p.21: «Хочу мочь кликнуть на планету, которую уже эвакуировали и мочь построить там хаб. Как бы переоткрыть
+   заново»; on the answer 16.11: «Хочу чтобы можно было построить там хаб задним числом. То есть мир уже все, но на него можно кликнуть и
+   заселить хабом так сказать»): a worked-out world, lifted (G.ghost), is settled again as a hub — one order: the settlers' hull takes off
+   with the hub's price paid at Earth (hubCost, the cap counts it at once), and on landing the world is a hub on a dead seam (v5.31: a
+   working hub). A hull lost on the way or a landing that fails gives the price back: nothing was built */
+function canHubFound(G,shipId,pid){ var p=planet(pid); if(!p) return 'nocolony';
+  if(!(G.ghost&&G.ghost[pid])) return 'hubFoundGhost';
+  if(p.kind==='works') return 'hubKind';
+  if(enRoute(G,pid)) return 'enroute';
+  if(hubCount(G)>=hubCap(G)) return 'hubCap';
+  var k=hubCost(G); if(G.earth.metal<k.metal) return 'metal'; if(G.earth.parts<k.parts) return 'parts';
+  var sh=shipById(G,shipId); if(!sh) return 'noship';
+  return canDepart(G,sh,pid,true,true) }
+function hubFound(G,shipId,pid){ var r=canHubFound(G,shipId,pid); if(r!=='ok') return r;
+  var k=hubCost(G); r=colonize(G,shipId,pid,0,0,true); if(r!=='ok') return r;
+  var sh=shipById(G,shipId); G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts});
+  sh.hubFound={metal:k.metal,parts:k.parts}; log(G,'hub_found_go',{p:pid,n:sh.id}); return 'ok' }
+function hubFoundBack(G,s){ if(!s.hubFound) return; G.earth.metal+=s.hubFound.metal; G.earth.parts+=s.hubFound.parts; s.hubFound=null }
 /* v5.02: a hub's feeders go back to Earth with their hulls, as setVia does; a hull that cannot fly to Earth stands down */
 function feedersHome(G,hub){ var fdr=feedersOf(G,hub);
   for(var fi=0;fi<fdr.length;fi++){ var fk=fdr[fi]; G.colonies[fk].via=null;
@@ -353,6 +373,7 @@ var K={
   MIN_FOUND:10,
   RESERVE_BASE:2100, RESERVE_GROW:2.15,   // a seam in sector n holds BASE * GROW^n * richness
   SURVEY_REACH:3,      // reach needed per sector already open before the next can be charted
+  RARE_CHANCE:0.6, RARE_FOLK:0.6, RARE_CORE:0.25,   // v5.35 (p.17): a ring holds a second rare find with this chance; survivors — this share of the next ring's survey party; an engine core — this share of the next drive mark's work
   GIFT_SHARE:0.8,      // v5.27 (Nikita 13.11: «Да, 80%»): a world settled for the first time gives Earth this share of what charting the NEXT ring costs, in parts and in fuel (giftFor)
   GIFT_FUEL_RINGS:2,   // ...fuel only from the worlds of the first rings (I–II): further out Earth's stock outgrows it, parts stay short the whole run (bots 13.11, design/START.md)
   DEAD_DAYS:260,       // days of famine before the home world is finished
@@ -655,10 +676,22 @@ function dockHull(G,pid,cls){ var hi=currentHull(G,cls), h=hi===null?null:HULLS[
   G.ships.push(s); G.stats.docks=(G.stats.docks||0)+1; log(G,'dock_hull',{n:s.id,p:pid,k:cls,g:h.gen});
   var r=setLine(G,s.id,pid,'earth'); if(r!=='ok'){ s.waiting=true; log(G,'awaiting',{n:s.id}) }   // as a hull out of the yards that could not sail: she waits at the pier
   return s }
+/* v5.35 (Nikita's run 16.11, p.17: «Редкие плюшки надо добавлять тоже дальше»; on the answer 16.11: «Нужно что-то материальное, а не
+   ресурсы. Да»): two more rare finds beside the dock. On every ring, with the chance RARE_CHANCE, one world that is not the dock holds
+   one: survivors (folk) — people who join Earth on the landing, RARE_FOLK of the party charting the next ring takes; or an engine core
+   (core) — RARE_CORE of the work of the next drive mark, put into the programme (kept in G.driveBank while none runs, taken at its
+   start). The seed chooses, on its own stream, as for the dock (Claude — awaiting review: the chance and the shares) */
+function rareWorld(G,sec){ var d=G.rares||(G.rares={});
+  if(d[sec]===undefined){ var dk=dockWorld(G,sec), ws=PLANETS.filter(function(q){ return q.sec===sec&&q.id!==dk }); if(!ws.length) return null;
+    var rnd=mulberry32((G.seed^0x5A3E1177)+sec*7919);
+    d[sec]=rnd()<K.RARE_CHANCE?{p:ws[Math.floor(rnd()*ws.length)].id,k:rnd()<0.5?'folk':'core'}:null }
+  return d[sec] }
 function giftFor(G,pid){
   var p=planet(pid); if(!p||(G.settled&&G.settled[pid]!==undefined)||G.colonies[pid]||(G.ghost&&G.ghost[pid])) return null;
   var c=surveyCost(p.sec+1), g={}, n=0, dk;
   if(dockWorld(G,p.sec)===pid&&(dk=classFor(p.sec,G.gen||0))){ g.dock=dk; n++ }   // v5.29: the ring's dock — the class of the hull that stands in it
+  var rw=rareWorld(G,p.sec);   // v5.35: survivors or an engine core
+  if(rw&&rw.p===pid){ if(rw.k==='folk'){ g.folk=Math.max(1,Math.round(K.RARE_FOLK*c.people)); n++ } else if(isOpen(G,'parts')){ g.core=Math.max(1,Math.round(K.RARE_CORE*driveWorkFor(G))); n++ } }
   if(isOpen(G,'parts')){ g.parts=Math.round(K.GIFT_SHARE*c.parts); n++ }
   if(p.sec<K.GIFT_FUEL_RINGS&&isOpen(G,'fuel')){ g.fuel=Math.round(K.GIFT_SHARE*c.fuel); n++ }
   return n?g:null }
@@ -994,11 +1027,11 @@ function scrap(G,shipId){
 }
 function shipById(G,id){for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
 
-function canDepart(G,s,pid,found){   // found — she carries settlers (v5.32: their departure costs K.FOUND_FUEL times the fuel)
+function canDepart(G,s,pid,found,hubTo){   // hubTo (v5.35) — settlers founding a hub on a worked-out world   // found — she carries settlers (v5.32: their departure costs K.FOUND_FUEL times the fuel)
   var p=planet(pid);
   if(!p) return 'noplanet';
   if(!sectorOpen(G,p.sec)) return 'sector';
-  if(G.ghost&&G.ghost[pid]) return 'ghost';
+  if(G.ghost&&G.ghost[pid]&&!hubTo) return 'ghost';
   if(!canReachSector(s,p.sec)) return 'range';
   if(s.mutiny) return 'mutiny';
   if(s.mode!=='idle'||s.at!=='earth') return 'busy';
@@ -1031,9 +1064,9 @@ function nextHome(G,pid,cls){ var p=planet(pid), best=null; if(!p) return null;
   return best }
 function enRoute(G,pid){ for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.mode==='transit'&&o.job==='colonize'&&o.dest===pid) return o } return null }
 function foundParty(G,s,pid){ return Math.max(0,Math.floor(Math.min(popCap(planet(pid)), s.cap, G.earth.people-K.EARTH_KEEP-K.FOUND_KEEP))) }
-function colonize(G,shipId,pid,people,food){
+function colonize(G,shipId,pid,people,food,hubTo){
   var s=shipById(G,shipId); if(!s) return 'noship';
-  var chk=canDepart(G,s,pid,true); if(chk!=='ok') return chk;
+  var chk=canDepart(G,s,pid,true,hubTo); if(chk!=='ok') return chk;
   if(G.colonies[pid]) return 'taken';
   if(enRoute(G,pid)) return 'enroute';   // v4.8 (Nikita, 27.09: prologue soft-lock — two founding hulls to the same farm)
   /* v4.4 (Nikita, 25.09: "зачем мне выбирать, сколько посадить — ненужное действие"): the founding party
@@ -1292,10 +1325,10 @@ function startDrive(G,pid){
   if(!c) return 'nocolony';
   if(!p||p.kind!=='works') return 'notworks';
   if(c.pop<K.DRIVE_POP) return 'pop';
-  G.drive=pid; G.driveWork=0;
+  G.drive=pid; G.driveWork=G.driveBank||0; G.driveBank=0;   // v5.35: an engine core found on a world waits for the programme
   for(var wk in G.colonies){ if(planet(wk).kind==='works'){
     G.driveWork+=(G.colonies[wk].store.parts||0); G.colonies[wk].store.parts=0 } }
-  var fromHome=Math.min(G.earth.parts, driveWorkFor(G));   // the yards ship their stock to the programme
+  var fromHome=Math.min(G.earth.parts, Math.max(0,driveWorkFor(G)-G.driveWork));   // the yards ship their stock to the programme; v5.35 (the reviewer): no more than it still needs
   G.earth.parts-=fromHome; G.driveWork+=fromHome; if(fromHome>0) openRes(G,'parts');
   log(G,'drive_started',{p:pid,n:G.driveLvl+1});
   if(G.driveWork>=driveWorkFor(G)) driveDone(G,pid);
@@ -1578,7 +1611,7 @@ function tick(G){
       var p1=R();
       if(p1<0.025){ s.bearing=Math.round(R()*100); log(G,'fragment',{n:s.id,b:s.bearing}); }
       else if(p1<0.050){ s.mode='transit'; s.dir='in'; s.t=Math.max(3,Math.round(s.total*0.7)); s.total=s.t; G.pauseNow=true; log(G,'ship_returns',{n:s.id,d:s.missDays}); }
-      else if(p1<0.054||s.missDays>300){ var cl=s.crew||0; s.mode='dead'; s.crew=0; G.stats.lost++;
+      else if(p1<0.054||s.missDays>300){ var cl=s.crew||0; s.mode='dead'; s.crew=0; G.stats.lost++; hubFoundBack(G,s);
         G.earth.lostCrew=(G.earth.lostCrew||0)+cl; log(G,'ship_written_off',{n:s.id,c:cl});
         if(s.cargo&&s.cargo.kit){ for(var kc in G.colonies) if(G.colonies[kc].kitShip===s.id){ G.colonies[kc].kitShip=null; log(G,'kit_lost',{p:kc,t:s.cargo.kit.tier}) } } }
       continue;
@@ -1606,11 +1639,11 @@ function tick(G){
     // arrived
     var node=s.dest;
     s.at=node; s.mode='idle'; s.dir=null;
-    if(s.job==='colonize'&&node==='earth') s.job=null;   // v4.49 (playtest bot 04.11, seed 309573272): a settler hull found by a search came home still on its founding job — 'haz' of null, clock held
+    if(s.job==='colonize'&&node==='earth'){ s.job=null; hubFoundBack(G,s) }   // v5.35: a hub's price comes home with a hull that never landed   // v4.49 (playtest bot 04.11, seed 309573272): a settler hull found by a search came home still on its founding job — 'haz' of null, clock held
     if(s.job==='colonize'){
       var p=planet(node);
       if(!G.safe&&R()<p.haz*0.5){ var cf=s.crew||0; s.mode='dead'; s.crew=0; G.stats.lost++;
-        G.earth.lostCrew=(G.earth.lostCrew||0)+cf; log(G,'colony_failed',{n:s.id,p:node}); continue }
+        G.earth.lostCrew=(G.earth.lostCrew||0)+cf; hubFoundBack(G,s); log(G,'colony_failed',{n:s.id,p:node}); continue }
       var gf=giftFor(G,node);   // v5.27: asked before the world is written down as settled
       G.colonies[node]={pid:node,pop:s.cargo.people,
         store:{metal:0,food:0,fuel:0,parts:0},founded:G.day};
@@ -1619,6 +1652,9 @@ function tick(G){
       log(G,'colony_founded',gf?{p:node,pop:Math.round(s.cargo.people),gift:gf}:{p:node,pop:Math.round(s.cargo.people)});
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
       if(gf&&gf.dock) dockHull(G,node,gf.dock);   // v5.29: the hull that stood in the dock takes this world's line
+      if(gf&&gf.folk){ G.earth.people+=gf.folk; G.stats.folk=(G.stats.folk||0)+gf.folk; log(G,'rare_folk',{p:node,k:gf.folk}) }   // v5.35
+      if(gf&&gf.core){ if(G.drive){ G.driveWork=(G.driveWork||0)+gf.core; if(G.driveWork>=driveWorkFor(G)) driveDone(G,G.drive) } else G.driveBank=(G.driveBank||0)+gf.core; log(G,'rare_core',{p:node,k:gf.core}) }
+      if(s.hubFound){ var nc=G.colonies[node]; nc.hub=true; nc.hubPaid=s.hubFound; nc.exHub=false; s.hubFound=null; if(G.ghost) delete G.ghost[node]; log(G,'hub_built',{p:node,m:nc.hubPaid.metal,t:nc.hubPaid.parts}) }   // v5.35
       s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
       s.job=null; s.from=null; s.to=null; s.origin=node; s.dest='earth';
       s.mode='transit'; s.dir='in'; s.t=legDays(G,node,'earth',s); s.total=s.t;

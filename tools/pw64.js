@@ -23,7 +23,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // ---------- A. no helper: the sign on the chart, the line in the window, the hull at the landing ----------
   const p=await UI.newPage(b,{vp:{width:1440,height:900}}); const U=UI.ui(p);
-  await U.start('en',11); await U.pause(); await p.waitForTimeout(300);
+  await U.start('en',11); await U.pause(); await p.waitForTimeout(300); await p.evaluate(()=>{ LN.rares={}; for(let i=0;i<30;i++) LN.rares[i]=null; LNdraw() });   // v5.35: the other rare finds (survivors, an engine core) are pw70's — here the dock alone
   const core=await p.evaluate(()=>({rings:SECTORS.length,docks:SECTORS.map((_,s)=>dockWorld(LN,s)),per:SECTORS.map((_,s)=>PLANETS.filter(q=>q.sec===s&&(giftFor(LN,q.id)||{}).dock).length),
     cls:SECTORS.map((_,s)=>(giftFor(LN,dockWorld(LN,s))||{}).dock),again:SECTORS.map((_,s)=>dockWorld(LN,s)),gen:LN.gen||0,want:SECTORS.map((_,s)=>classFor(s,LN.gen||0))}));
   ok('core: every charted ring has exactly one world with a dock, and it stays the same world', core.rings===2&&core.per.every(v=>v===1)&&core.docks.join()===core.again.join()&&core.docks.every(Boolean), JSON.stringify(core));
@@ -100,7 +100,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // ---------- D. with the helper: one ring is seen — one sign; a new run starts with the word again ----------
   const q=await UI.newPage(b,{vp:{width:1440,height:900}}); const Q=UI.ui(q);
-  await Q.start(null,undefined,{tut:true}); await Q.menuNew('en'); await q.waitForTimeout(300);
+  await Q.start(null,undefined,{tut:true}); await Q.menuNew('en'); await q.waitForTimeout(300); await q.evaluate(()=>{ LN.rares={}; for(let i=0;i<30;i++) LN.rares[i]=null; LNdraw() });   // v5.35: the dock alone here
   c=await chart(q);
   const dq=await q.evaluate(()=>dockWorld(LN,0));
   ok('helper, year 0: only the first ring is on the chart — one sign, with its word', c.signs.length===1&&c.signs[0].p===dq&&c.words.length===1, JSON.stringify(c.signs.map(s=>s.p))+' words '+c.words.length);
@@ -114,7 +114,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // ---------- E. 390 px ----------
   const m=await UI.newPage(b,{vp:{width:390,height:844}}); const M=UI.ui(m);
-  await M.start('en',11); await M.pause(); await m.waitForTimeout(300);
+  await M.start('en',11); await M.pause(); await m.waitForTimeout(300); await m.evaluate(()=>{ LN.rares={}; for(let i=0;i<30;i++) LN.rares[i]=null; LNdraw() });   // v5.35: the other rare finds (survivors, an engine core) are pw70's — here the dock alone
   c=await chart(m);
   const inScr=bx=>!!bx&&bx.x>=0&&bx.r<=390&&bx.y>=0&&bx.b<=844;
   ok('390 px: the signs and the words are on the screen', c.signs.length===2&&c.signs.every(s=>inScr(s.box))&&c.words.length===2&&c.words.every(w=>inScr(w.box)), JSON.stringify(c.signs.map(s=>[Math.round(s.box.x),Math.round(s.box.y)])));

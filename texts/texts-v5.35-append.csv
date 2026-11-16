@@ -1,0 +1,11 @@
+UI,u_folk,Survivors,Выжившие,v5.35 feedback,live,new
+UI,u_folkLine,{n} people wait here — they go to Earth when settlers land,"Здесь ждут {n} человек — они уйдут на Землю, когда сядут поселенцы",v5.35 feedback,live,new
+UI,u_core,Engine core,Ядро двигателя,v5.35 feedback,live,new
+UI,u_coreLine,{n} parts of work for the drive programme — kept if none is running,"{n} деталей работы в программу двигателя — ждут, если она не запущена",v5.35 feedback,live,new
+UI,u_ghostHub,Found a hub here,Основать здесь хаб,v5.35 feedback,live,new
+UI,u_ghostHubHint,"The seam is gone, but a hub works on a dead world: settlers and the hub's price in one order.","Жилы нет, но хаб работает и на мёртвом мире: поселенцы и цена хаба — одним приказом.",v5.35 feedback,live,new
+MSG,hubFoundGhost,Only a world worked out and lifted can be founded as a hub.,Хабом заселяют только выработанный и снятый мир.,v5.35 feedback,live,new
+MSG,ok_hubFound,Settlers are on their way to found a hub on {p}.,Поселенцы летят основать хаб на {p}.,v5.35 feedback,live,new
+LOG,hub_found_go,Hull {n} takes settlers to found a hub on {p}.,Корпус {n} везёт поселенцев основать хаб на {p}.,v5.35 feedback,live,new
+LOG,rare_folk,{p}: {k} survivors found and brought home.,{p}: найдено и доставлено домой {k} выживших.,v5.35 feedback,live,new
+LOG,rare_core,{p}: an engine core — {k} parts of work for the drive.,{p}: ядро двигателя — {k} деталей работы для программы.,v5.35 feedback,live,new
