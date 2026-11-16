@@ -134,7 +134,7 @@ function step(G,P,dt){ var h=G.head, m=G.me, sp=P.sp+(P.n-G.segs.length)*P.spUp,
   for(i=G.zones.length-1;i>=0;i--){ z=G.zones[i]; z.t-=dt; if(z.t<=0){ G.zones.splice(i,1); hatch(z,P.sp2,P.bs) } } }
 /* THE HIVE (v5.09, Nikita 10.11: «Нужно разделить взломы. Сделать либо врага, либо ещё что-то под каждый тип, где тип двигателя и соты» →
    «Давай твоё решение»): the ark's hack. A core behind rings of hex cells — as many rings as the level (four fit the field; past that the
-   cells and the core grow thicker, so the ladder has no top). Every cell takes damage; the rings turn, opposite ways, so a gap moves;
+   cells and the core grow thicker, so the ladder has no top). Every cell takes damage; the rings turn (as one piece since v5.33; opposite ways before), so a gap moves;
    the outer cells release small ones; the core fires through its own cells. Kill the core. A siege, where the serpent is a chase. */
 /* v5.09 ladder (tools/hack-bot.js, 30 seeds a level): the first block is short, not empty — two rings; four rings from
    level 3; from level 2 a lost cell grows back (the hive heals what is left alone: keep the fire on one side). The gun, the red fans
@@ -165,8 +165,10 @@ function initHive(G,P){ var R=16, cx0=AW/2, cy0=58+P.rings*R*S3+R, D=[[1,0],[0,1
       G.cells.push(enemy({kind:'cell',x:cx0+dx,y:cy0+dy,r:13,hp:P.cHp,touch:1,goal:0,ring:ring,a:Math.atan2(dy,dx),d:Math.hypot(dx,dy)})); q+=D[side][0]; rr+=D[side][1] } }
   G.goalHp=P.coreHp+G.cells.length*P.cHp; G.fT=P.every||1; G.rT=P.red||0; G.spT=P.mEvery*1.2; G.gT=P.grow||0 }
 function stepHive(G,P,dt){ var m=G.me, h=G.head, i, e, c=cellAt(m.x,m.y); if(c!==G.flowTo) flow(G,c);
-  for(i=0;i<G.cells.length;i++){ e=G.cells[i]; e.a+=P.spin*(e.ring%2?1:-1)*dt; e.x=h.x+Math.cos(e.a)*e.d; e.y=h.y+Math.sin(e.a)*e.d }
-  for(i=0;i<G.dead.length;i++){ e=G.dead[i]; e.a+=P.spin*(e.ring%2?1:-1)*dt }   // an empty place turns with its ring
+  /* v5.33 (Nikita 16.11 on the shot of level 3 — the rings turned opposite ways and their cells ran over one another, the core was hid behind
+     a thicket: «Давай по улью»): the hive turns as one piece, every ring the same way. The comb stays a comb; the gap still walks round */
+  for(i=0;i<G.cells.length;i++){ e=G.cells[i]; e.a+=P.spin*dt; e.x=h.x+Math.cos(e.a)*e.d; e.y=h.y+Math.sin(e.a)*e.d }
+  for(i=0;i<G.dead.length;i++){ e=G.dead[i]; e.a+=P.spin*dt }   // an empty place turns with the hive
   if(P.grow){ G.gT-=dt; if(G.gT<=0){ G.gT=P.grow; if(G.dead.length){ var gi=(G.rnd()*G.dead.length)|0, g=G.dead[gi], gx=h.x+Math.cos(g.a)*g.d, gy=h.y+Math.sin(g.a)*g.d;
         if(dist(gx,gy,m.x,m.y)>60){ G.dead.splice(gi,1); G.cells.push(enemy({kind:'cell',x:gx,y:gy,r:13,hp:P.cHp,touch:1,goal:0,ring:g.ring,a:g.a,d:g.d,born:.35})); beep(420,.05,.012) } } } }
   if(P.every){ G.fT-=dt; if(G.fT<=0){ G.fT=P.every*(.85+G.rnd()*.3); aimed(h.x,h.y,m.x,m.y,1,.2,P.bs,'o') } }
@@ -395,6 +397,7 @@ function cheat(){ if(!G||G.state!=='play') return false; if(G.hive){ G.P.grow=0;
   G.segs.slice().forEach(function(s){ s.hp=1; s.arm=0; hitEnemy(s) }); G.head.arm=0; G.head.hp=1; hitEnemy(G.head); return G.state==='dying' }
 window.LBhack={open:open,isOpen:function(){ return OPEN },
   state:function(){ return {open:OPEN,panel:panel,kind:MODE,lv:lv,game:G?G.state:null,hp:G?G.me.hp:null,left:G&&G.head?+part(G).toFixed(3):null,attempt:attempt,ox:OX,oy:OY,k:K,aw:AW,ah:AH,me:G?{x:G.me.x,y:G.me.y}:null,
-    spin:G&&G.hive?G.P.spin:null,ang:G&&G.hive&&G.cells.length?G.cells[G.cells.length-1].a:null} },   // v5.32, for the scenarios: how fast the rings turn and where a cell of the outer ring stands
+    spin:G&&G.hive?G.P.spin:null,ang:G&&G.hive&&G.cells.length?G.cells[G.cells.length-1].a:null,ang1:G&&G.hive&&G.cells.length?G.cells[0].a:null,
+    near:G&&G.hive&&G.cells.length>1?G.cells.reduce(function(m,c,i){ for(var j=i+1;j<G.cells.length;j++) m=Math.min(m,dist(c.x,c.y,G.cells[j].x,G.cells[j].y)); return m },1e9):null} },   // v5.32, for the scenarios: how fast the rings turn and where a cell of the outer ring stands
   sim:sim,targets:function(){ return targets() },way:function(g){ return way(g||G) },cheat:cheat,TOP:TOP};
 })();

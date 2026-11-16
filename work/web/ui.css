@@ -344,6 +344,10 @@ svg.gi{fill:currentColor}
 .ocard .hd em{font:500 9px var(--h);font-style:normal;color:var(--mid);letter-spacing:.16em}
 .ocard .tt{padding:11px 10px 10px;font:600 17px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.15}
 .ocard .tt small{display:block;font:400 12.5px var(--h);letter-spacing:0;text-transform:none;color:var(--mid);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard .sg{display:grid;grid-template-columns:8px 1fr;gap:10px;align-items:start;padding:8px 10px 9px 11px;border-top:1px solid var(--ln)}
+.ocard .sg>i{width:7px;height:7px;margin-top:3px;border:1px solid var(--mid);transform:rotate(45deg)}.ocard .sg>div{min-width:0}
+.ocard .sg b{display:block;font:600 12px var(--h);letter-spacing:.08em;text-transform:uppercase;line-height:1.2}
+.ocard .sg small{display:block;font:400 12px var(--h);color:var(--mid);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ocard .ft{display:flex;border-top:1px solid var(--ln)}
 .ocard .ft>div{flex:1;min-width:0;padding:7px 10px 9px;font:600 9px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase;white-space:nowrap}
 .ocard .ft>div+div{border-left:1px solid var(--ln)}

@@ -357,6 +357,10 @@ svg.gi{fill:currentColor}
 .ocard .hd em{font:500 9px var(--h);font-style:normal;color:var(--mid);letter-spacing:.16em}
 .ocard .tt{padding:11px 10px 10px;font:600 17px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.15}
 .ocard .tt small{display:block;font:400 12.5px var(--h);letter-spacing:0;text-transform:none;color:var(--mid);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ocard .sg{display:grid;grid-template-columns:8px 1fr;gap:10px;align-items:start;padding:8px 10px 9px 11px;border-top:1px solid var(--ln)}
+.ocard .sg>i{width:7px;height:7px;margin-top:3px;border:1px solid var(--mid);transform:rotate(45deg)}.ocard .sg>div{min-width:0}
+.ocard .sg b{display:block;font:600 12px var(--h);letter-spacing:.08em;text-transform:uppercase;line-height:1.2}
+.ocard .sg small{display:block;font:400 12px var(--h);color:var(--mid);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ocard .ft{display:flex;border-top:1px solid var(--ln)}
 .ocard .ft>div{flex:1;min-width:0;padding:7px 10px 9px;font:600 9px var(--h);letter-spacing:.16em;color:var(--mid);text-transform:uppercase;white-space:nowrap}
 .ocard .ft>div+div{border-left:1px solid var(--ln)}
@@ -579,7 +583,7 @@ svg.gi{fill:currentColor}
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.32'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.33'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -927,7 +931,7 @@ var K={
   GROW:0.0055,         // pop growth per day when calm
   STORE_CAP:400,
   FUEL_PER_DIST:0.135, // charged on every departure (a long line drinks fuel)
-  FOUND_FUEL:10,       // v5.32 (Nikita 16.11, «Да, ставим»): a departure with settlers costs this many times the fuel (ring 1 ~60, ring 2 ~110; was 6 and 11 against a gift of 249-368). FUEL_PER_DIST itself is not touched: x2 on every run is on the edge, x3 breaks the game (design/PLAYTEST-v529-nikita.md)
+  FOUND_FUEL:10,       // v5.32 (Nikita 16.11, «Да, ставим»): a departure with settlers costs this many times the fuel (by distance: a world of ring 1 costs 39-60, of ring 2 100-110; was 4-6 and 10-11 against a gift of 249-368). FUEL_PER_DIST itself is not touched: x2 on every run is on the edge, x3 breaks the game (design/PLAYTEST-v529-nikita.md)
   MIN_FOUND:10,
   RESERVE_BASE:2100, RESERVE_GROW:2.15,   // a seam in sector n holds BASE * GROW^n * richness
   SURVEY_REACH:3,      // reach needed per sector already open before the next can be charted
@@ -2511,11 +2515,11 @@ function freeWorld(G,kind){ var lim=Math.min(SECTORS.length,sectorLimit(G.gen||0
 /* v5.31 → v5.32. The first upgrade package (Nikita's run 16.11, p.10: «когда можно строить upgrade package хочу чтобы игра дала такое
    задание и показала, что это круто и надо делать»). v5.31 made it a task of the helper that held the screen until the package was ordered;
    Nikita 16.11: «В табло задач вывести» — it is an objective now (o_kit), seen with the helper and without her, and nothing is locked.
-   The world: the packages are open (kitOpen), none was ever ordered or installed, a world can take one now with a hull on its line that
-   lifts it. A mine, farm or well before a works (a works' package eats more metal and rations); the biggest gain first. */
+   The world: the packages are open (kitOpen), none was ever ordered or installed, a world can take one (its seam alive) with a hull on its
+   line that lifts it; Earth may still be short of the price. A mine, farm or well before a works (a works' package eats more metal and rations); the biggest gain first. */
 function kitFirst(G){ if(!kitOpen(G)||((G.stats&&G.stats.kits)||0)>0) return null; var k, best=null, bv=-1;
   for(k in G.colonies){ var c=G.colonies[k]; if(kitTier(c)||c.kit||c.kitShip) return null }
-  for(k in G.colonies){ if(canKit(G,k)!=='ok'||lineHold(G,k)<kitCost(G.colonies[k]).w) continue;
+  for(k in G.colonies){ var ck=canKit(G,k); if((ck!=='ok'&&ck!=='metal'&&ck!=='parts')||lineHold(G,k)<kitCost(G.colonies[k]).w) continue;   // short of metal or parts at home it still stands (reviewer v5.32: it blinked with Earth's stock) — the button on UPGRADE says what is short
     var g=kitGain(G,k), v=(g?g.with-g.now:0)+(planet(k).kind==='works'?0:1e6); if(v>bv){ bv=v; best=k } }
   return best }
 function objectives(G){
@@ -3981,9 +3985,13 @@ function objFoot(O){ var D=O.drive, A=O.ark, ft='', dl=fill(T('o_fDrive'),{g:rom
   if(can('tech')) ft+=D.running?objBar(dl,num(D.work)+' / '+num(D.workNeed),D.work/Math.max(1,D.workNeed),C.parts):objBar(dl,Math.min(D.settled,D.need)+' / '+D.need,D.settled/Math.max(1,D.need));
   if(A&&can('ark')) ft+=objBar(T('u_wake'),num(A.wake)+' / '+num(A.board),A.board?A.wake/A.board:0,A.wake>0||!A.near?C.ark:C.red);   // red is an alarm: only when the Night is near (as the ark's flag and the advisor have it)
   return ft }
-function objCard(){ if(!G||G.over) return ''; var O=objectives(G), l=objNow(O), o=l[0], ft=objFoot(O);
-  return '<button class="ocard" type="button" data-act="tab" data-v="goals"><div class="hd"><span>'+HEXI+esc(T('o_head'))+'</span>'+(l.length>1?'<em>'+esc(fill(T('o_also'),{n:l.length-1}))+'</em>':'')+'</div>'+
-    '<div class="tt">'+esc(objT('o_',o))+'<small>'+esc(objSub(o))+'</small></div>'+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
+/* v5.33 (Nikita 16.11, on «the card does not light a new objective»: «Можно сделать главную цель и ниже подцель»): the card carries two —
+   the first objective of the list large, as before, and the next one under it, smaller, with the line it would have had as the first.
+   The list and its order are core's and are not touched; «N more» counts what is left after the two (Claude's reading — awaiting review) */
+function objCard(){ if(!G||G.over) return ''; var O=objectives(G), l=objNow(O), o=l[0], s2=l[1], ft=objFoot(O);
+  return '<button class="ocard" type="button" data-act="tab" data-v="goals"><div class="hd"><span>'+HEXI+esc(T('o_head'))+'</span>'+(l.length>2?'<em>'+esc(fill(T('o_also'),{n:l.length-2}))+'</em>':'')+'</div>'+
+    '<div class="tt">'+esc(objT('o_',o))+'<small>'+esc(objSub(o))+'</small></div>'+
+    (s2?'<div class="sg"><i></i><div><b>'+esc(objT('o_',s2))+'</b><small>'+esc(objSub(s2))+'</small></div></div>':'')+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
 function objDone(e){ var d=e.d||{}, g=e.code==='ark_drive'?(d.g||0):(d.n||1)-1;
   return fill(T('od_'+e.code),{w:d.p?pname(d.p):'',s:d.s||'',g:roman(g),y:d.y||'',l:d.l||'',n:d.n===undefined?'':num(d.n)}) }
 function winGoals(){ var O=objectives(G), l=objNow(O), D=O.drive, A=O.ark, h='';
@@ -5495,7 +5503,7 @@ function step(G,P,dt){ var h=G.head, m=G.me, sp=P.sp+(P.n-G.segs.length)*P.spUp,
   for(i=G.zones.length-1;i>=0;i--){ z=G.zones[i]; z.t-=dt; if(z.t<=0){ G.zones.splice(i,1); hatch(z,P.sp2,P.bs) } } }
 /* THE HIVE (v5.09, Nikita 10.11: «Нужно разделить взломы. Сделать либо врага, либо ещё что-то под каждый тип, где тип двигателя и соты» →
    «Давай твоё решение»): the ark's hack. A core behind rings of hex cells — as many rings as the level (four fit the field; past that the
-   cells and the core grow thicker, so the ladder has no top). Every cell takes damage; the rings turn, opposite ways, so a gap moves;
+   cells and the core grow thicker, so the ladder has no top). Every cell takes damage; the rings turn (as one piece since v5.33; opposite ways before), so a gap moves;
    the outer cells release small ones; the core fires through its own cells. Kill the core. A siege, where the serpent is a chase. */
 /* v5.09 ladder (tools/hack-bot.js, 30 seeds a level): the first block is short, not empty — two rings; four rings from
    level 3; from level 2 a lost cell grows back (the hive heals what is left alone: keep the fire on one side). The gun, the red fans
@@ -5526,8 +5534,10 @@ function initHive(G,P){ var R=16, cx0=AW/2, cy0=58+P.rings*R*S3+R, D=[[1,0],[0,1
       G.cells.push(enemy({kind:'cell',x:cx0+dx,y:cy0+dy,r:13,hp:P.cHp,touch:1,goal:0,ring:ring,a:Math.atan2(dy,dx),d:Math.hypot(dx,dy)})); q+=D[side][0]; rr+=D[side][1] } }
   G.goalHp=P.coreHp+G.cells.length*P.cHp; G.fT=P.every||1; G.rT=P.red||0; G.spT=P.mEvery*1.2; G.gT=P.grow||0 }
 function stepHive(G,P,dt){ var m=G.me, h=G.head, i, e, c=cellAt(m.x,m.y); if(c!==G.flowTo) flow(G,c);
-  for(i=0;i<G.cells.length;i++){ e=G.cells[i]; e.a+=P.spin*(e.ring%2?1:-1)*dt; e.x=h.x+Math.cos(e.a)*e.d; e.y=h.y+Math.sin(e.a)*e.d }
-  for(i=0;i<G.dead.length;i++){ e=G.dead[i]; e.a+=P.spin*(e.ring%2?1:-1)*dt }   // an empty place turns with its ring
+  /* v5.33 (Nikita 16.11 on the shot of level 3 — the rings turned opposite ways and their cells ran over one another, the core was hid behind
+     a thicket: «Давай по улью»): the hive turns as one piece, every ring the same way. The comb stays a comb; the gap still walks round */
+  for(i=0;i<G.cells.length;i++){ e=G.cells[i]; e.a+=P.spin*dt; e.x=h.x+Math.cos(e.a)*e.d; e.y=h.y+Math.sin(e.a)*e.d }
+  for(i=0;i<G.dead.length;i++){ e=G.dead[i]; e.a+=P.spin*dt }   // an empty place turns with the hive
   if(P.grow){ G.gT-=dt; if(G.gT<=0){ G.gT=P.grow; if(G.dead.length){ var gi=(G.rnd()*G.dead.length)|0, g=G.dead[gi], gx=h.x+Math.cos(g.a)*g.d, gy=h.y+Math.sin(g.a)*g.d;
         if(dist(gx,gy,m.x,m.y)>60){ G.dead.splice(gi,1); G.cells.push(enemy({kind:'cell',x:gx,y:gy,r:13,hp:P.cHp,touch:1,goal:0,ring:g.ring,a:g.a,d:g.d,born:.35})); beep(420,.05,.012) } } } }
   if(P.every){ G.fT-=dt; if(G.fT<=0){ G.fT=P.every*(.85+G.rnd()*.3); aimed(h.x,h.y,m.x,m.y,1,.2,P.bs,'o') } }
@@ -5755,7 +5765,9 @@ function sim(level,seed,bot,maxT,kind){
 function cheat(){ if(!G||G.state!=='play') return false; if(G.hive){ G.P.grow=0; G.cells.slice().forEach(function(c){ c.hp=1; hitEnemy(c) }); G.head.hp=1; hitEnemy(G.head); return G.state==='dying' }
   G.segs.slice().forEach(function(s){ s.hp=1; s.arm=0; hitEnemy(s) }); G.head.arm=0; G.head.hp=1; hitEnemy(G.head); return G.state==='dying' }
 window.LBhack={open:open,isOpen:function(){ return OPEN },
-  state:function(){ return {open:OPEN,panel:panel,kind:MODE,lv:lv,game:G?G.state:null,hp:G?G.me.hp:null,left:G&&G.head?+part(G).toFixed(3):null,attempt:attempt,ox:OX,oy:OY,k:K,aw:AW,ah:AH,me:G?{x:G.me.x,y:G.me.y}:null} },
+  state:function(){ return {open:OPEN,panel:panel,kind:MODE,lv:lv,game:G?G.state:null,hp:G?G.me.hp:null,left:G&&G.head?+part(G).toFixed(3):null,attempt:attempt,ox:OX,oy:OY,k:K,aw:AW,ah:AH,me:G?{x:G.me.x,y:G.me.y}:null,
+    spin:G&&G.hive?G.P.spin:null,ang:G&&G.hive&&G.cells.length?G.cells[G.cells.length-1].a:null,ang1:G&&G.hive&&G.cells.length?G.cells[0].a:null,
+    near:G&&G.hive&&G.cells.length>1?G.cells.reduce(function(m,c,i){ for(var j=i+1;j<G.cells.length;j++) m=Math.min(m,dist(c.x,c.y,G.cells[j].x,G.cells[j].y)); return m },1e9):null} },   // v5.32, for the scenarios: how fast the rings turn and where a cell of the outer ring stands
   sim:sim,targets:function(){ return targets() },way:function(g){ return way(g||G) },cheat:cheat,TOP:TOP};
 })();
 </script><script>

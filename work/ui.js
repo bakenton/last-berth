@@ -1007,9 +1007,13 @@ function objFoot(O){ var D=O.drive, A=O.ark, ft='', dl=fill(T('o_fDrive'),{g:rom
   if(can('tech')) ft+=D.running?objBar(dl,num(D.work)+' / '+num(D.workNeed),D.work/Math.max(1,D.workNeed),C.parts):objBar(dl,Math.min(D.settled,D.need)+' / '+D.need,D.settled/Math.max(1,D.need));
   if(A&&can('ark')) ft+=objBar(T('u_wake'),num(A.wake)+' / '+num(A.board),A.board?A.wake/A.board:0,A.wake>0||!A.near?C.ark:C.red);   // red is an alarm: only when the Night is near (as the ark's flag and the advisor have it)
   return ft }
-function objCard(){ if(!G||G.over) return ''; var O=objectives(G), l=objNow(O), o=l[0], ft=objFoot(O);
-  return '<button class="ocard" type="button" data-act="tab" data-v="goals"><div class="hd"><span>'+HEXI+esc(T('o_head'))+'</span>'+(l.length>1?'<em>'+esc(fill(T('o_also'),{n:l.length-1}))+'</em>':'')+'</div>'+
-    '<div class="tt">'+esc(objT('o_',o))+'<small>'+esc(objSub(o))+'</small></div>'+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
+/* v5.33 (Nikita 16.11, on «the card does not light a new objective»: «Можно сделать главную цель и ниже подцель»): the card carries two —
+   the first objective of the list large, as before, and the next one under it, smaller, with the line it would have had as the first.
+   The list and its order are core's and are not touched; «N more» counts what is left after the two (Claude's reading — awaiting review) */
+function objCard(){ if(!G||G.over) return ''; var O=objectives(G), l=objNow(O), o=l[0], s2=l[1], ft=objFoot(O);
+  return '<button class="ocard" type="button" data-act="tab" data-v="goals"><div class="hd"><span>'+HEXI+esc(T('o_head'))+'</span>'+(l.length>2?'<em>'+esc(fill(T('o_also'),{n:l.length-2}))+'</em>':'')+'</div>'+
+    '<div class="tt">'+esc(objT('o_',o))+'<small>'+esc(objSub(o))+'</small></div>'+
+    (s2?'<div class="sg"><i></i><div><b>'+esc(objT('o_',s2))+'</b><small>'+esc(objSub(s2))+'</small></div></div>':'')+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
 function objDone(e){ var d=e.d||{}, g=e.code==='ark_drive'?(d.g||0):(d.n||1)-1;
   return fill(T('od_'+e.code),{w:d.p?pname(d.p):'',s:d.s||'',g:roman(g),y:d.y||'',l:d.l||'',n:d.n===undefined?'':num(d.n)}) }
 function winGoals(){ var O=objectives(G), l=objNow(O), D=O.drive, A=O.ark, h='';

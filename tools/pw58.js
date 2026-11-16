@@ -50,7 +50,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   let now=await p.evaluate(()=>objectives(LN).now.map(o=>o.code+(o.p?':'+o.p:'')));
   ok('objective: feed the works no line feeds', now.indexOf('o_feed:'+ids.works)>=0, now.join(' '));
   tx=await p.innerText('#cards .ocard');
-  ok('card: «N more» when there is more than one', /\d+ more/i.test(tx), tx.replace(/\n/g,' | '));
+  // v5.33: the card carries the first two objectives — «N more» counts what is left after them
+  { const n=await p.evaluate(()=>document.querySelectorAll('#cards .ocard .sg').length), all=await p.evaluate(()=>objectives(LN).now.length);
+    ok('card: the second objective stands under the first; «N more» only when there are more than two', n===1&&(all>2?new RegExp((all-2)+' more','i').test(tx):!/\d+ more/i.test(tx)), all+' objectives · '+tx.replace(/\n/g,' | ')) }
 
   // 5. the works window: You bring → It makes, one bar, the verdict
   await U.tap('#cards .ocard');
