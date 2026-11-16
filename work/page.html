@@ -607,7 +607,7 @@ svg.gi{fill:currentColor}
 <script>
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.37'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.38'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -3788,9 +3788,12 @@ var M3SH={
    'void main(){ vec4 acc=texture2D(u_t,v_t)*u_w[0]; for(int i=1;i<13;i++){ if(float(i)>u_r) break; acc+=(texture2D(u_t,v_t+u_d*float(i))+texture2D(u_t,v_t-u_d*float(i)))*u_w[i]; } gl_FragColor=min(acc*u_k,vec4(1.0)); }'],
  sky:['attribute vec2 a_p; void main(){ gl_Position=vec4(a_p*2.0-1.0,0.0,1.0); }',
    'precision mediump float; uniform sampler2D u_n; uniform sampler2D u_l0; uniform sampler2D u_l1; uniform sampler2D u_l2; uniform vec2 u_res; uniform float u_dpr; uniform vec4 u_nr; uniform vec2 u_o0; uniform vec2 u_o1; uniform vec2 u_o2;'+
+   'uniform vec2 u_rc; uniform vec2 u_cs;'+
    'vec4 ov(vec4 b,vec4 t){ return t+b*(1.0-t.a); }'+
-   'void main(){ vec2 p=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y); vec2 nu=(p-u_nr.xy)/u_nr.zw; vec4 c=vec4(5.0/255.0,5.0/255.0,6.0/255.0,1.0);'+
-   ' if(nu.x>=0.0&&nu.y>=0.0&&nu.x<=1.0&&nu.y<=1.0) c=texture2D(u_n,nu); vec2 q=p/u_dpr/1024.0;'+
+   // v5.38 (п. 19): the sky turns slowly about the middle of the chart; the nebula fades out at its own edge (it had a seam there)
+   'void main(){ vec2 p0=vec2(gl_FragCoord.x,u_res.y-gl_FragCoord.y), d=p0-u_rc; vec2 p=u_rc+vec2(d.x*u_cs.x-d.y*u_cs.y,d.x*u_cs.y+d.y*u_cs.x);'+
+   ' vec2 nu=(p-u_nr.xy)/u_nr.zw; vec4 c=vec4(5.0/255.0,5.0/255.0,6.0/255.0,1.0);'+
+   ' vec2 e=smoothstep(0.0,0.1,nu)*smoothstep(0.0,0.1,1.0-nu); c=mix(c,texture2D(u_n,clamp(nu,0.0,1.0)),e.x*e.y); vec2 q=p/u_dpr/1024.0;'+
    ' c=ov(c,texture2D(u_l0,q+u_o0)); c=ov(c,texture2D(u_l1,q+u_o1)); c=ov(c,texture2D(u_l2,q+u_o2)); gl_FragColor=c; }']};
 function m3glInit(){ var cv=el('map3d'), gl=null;
   try{ gl=cv.getContext('webgl',{alpha:false,antialias:false,depth:false,stencil:false,premultipliedAlpha:true,preserveDrawingBuffer:false}) }catch(e){}
@@ -3914,13 +3917,47 @@ function m3tex(R,key,cv,rep){ var gl=R.gl, t=R.tex[key]; if(t&&t.src===cv) retur
   gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,rep?gl.REPEAT:gl.CLAMP_TO_EDGE); gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,rep?gl.REPEAT:gl.CLAMP_TO_EDGE);
   R.tex[key]={tex:tex,src:cv}; return tex }
 /* space as before (the nebula with a little parallax, three star layers tiled 1024 desk px a tile), in one pass over the frame */
-function m3skyGL(R,W,H){ if(!M3D.NEB) m3space(); var gl=R.gl, X=R.P.sky, k=M3D.dpr, w=M3D.W, h=M3D.H, span=w*0.4, N=M3D.NEB, i;
+/* v5.38 (Nikita's v5.29 feedback p.19: «вращение космоса на бекграунде + добавить какие-то космические явления. Кометы и тд. Чтобы чуть
+   поживее было»): the sky turns once in SKY_TURN seconds of real time (the clock of the run does not matter: a paused chart is alive too),
+   and now and then a comet crosses it, a meteor flashes, a far star flares: over the floor's plates, under the worlds. «Reduce motion» — a still sky, as before */
+var SKY_TURN=1200, SKY_EV={c:[55,120],m:[12,30],f:[45,100]};
+var M3MQ=window.matchMedia?window.matchMedia('(prefers-reduced-motion: reduce)'):null;
+function skyStill(){ return !!(M3MQ&&M3MQ.matches) }
+function skyAng(t){ return skyStill()?0:(t%SKY_TURN)/SKY_TURN*Math.PI*2 }
+function skyNext(k,t){ var r=SKY_EV[k]; return t+r[0]+Math.random()*(r[1]-r[0]) }
+function skySpawn(S,k,t){ var W=M3D.W, H=M3D.H, r=Math.random, a, sp, o;
+  if(k==='c'){ a=r()*Math.PI*2; sp=22+r()*26; o={k:k,t0:t,d:10+r()*6,L:100+r()*110,cv:(r()-.5)*0.25,col:'205,222,255',w:1.6};
+    var px=W*(.15+.7*r()), py=H*(.08+.5*r()); o.vx=Math.cos(a)*sp; o.vy=Math.sin(a)*sp; o.x=px-o.vx*o.d/2; o.y=py-o.vy*o.d/2 }
+  else if(k==='m'){ a=(25+r()*40)*Math.PI/180; sp=380+r()*260; var sd=r()<.5?-1:1;
+    o={k:k,t0:t,d:.7+r()*.5,L:60+r()*70,cv:0,col:'232,238,255',w:1.1,x:W*(.1+.8*r()),y:H*(.03+.35*r()),vx:Math.cos(a)*sp*sd,vy:Math.sin(a)*sp} }
+  else o={k:k,t0:t,d:4.5,x:W*(.05+.9*r()),y:H*(.05+.6*r()),col:'225,232,255'};
+  S.list.push(o); return o }
+function m3skyEmit(x,t){ x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0); var S=M3D.SKY, k, i, j;
+  if(!S) S=M3D.SKY={list:[],at:{c:t+15+Math.random()*20,m:t+6+Math.random()*10,f:t+30+Math.random()*30}};
+  if(skyStill()){ S.list.length=0; return }
+  for(k in S.at) if(t>=S.at[k]){ skySpawn(S,k,t); S.at[k]=skyNext(k,t) }
+  S.list=S.list.filter(function(o){ return t-o.t0<o.d });   // a frame's time can be a little before a spawn's (rAF stamps the frame's start)
+  function seg(x0,y0,x1,y1,w,col,a){ x.beginPath(); x.moveTo(x0,y0); x.lineTo(x1,y1); x.lineWidth=w; x.strokeStyle='rgba('+col+','+a.toFixed(3)+')'; x.stroke() }
+  function disc(cx,cy,rd,col,a){ x.beginPath(); x.arc(cx,cy,rd,0,Math.PI*2); x.fillStyle='rgba('+col+','+a.toFixed(3)+')'; x.fill() }
+  for(i=0;i<S.list.length;i++){ var o=S.list[i], ag=Math.max(0,t-o.t0);
+    if(o.k==='f'){ var e=Math.pow(Math.sin(Math.PI*ag/o.d),2), l=2+12*e;
+      seg(o.x-l,o.y,o.x+l,o.y,1,o.col,.8*e); seg(o.x,o.y-l,o.x,o.y+l,1,o.col,.8*e); var l2=l*.4;
+      seg(o.x-l2,o.y-l2,o.x+l2,o.y+l2,1,o.col,.35*e); seg(o.x-l2,o.y+l2,o.x+l2,o.y-l2,1,o.col,.35*e); disc(o.x,o.y,3.2,o.col,.18*e); disc(o.x,o.y,1.5,o.col,.95*e); continue }
+    var f=Math.max(0,Math.min(1,ag/(o.d*.2),(o.d-ag)/(o.d*.3))), hx=o.x+o.vx*ag, hy=o.y+o.vy*ag, v=Math.hypot(o.vx,o.vy)||1, ux=-o.vx/v, uy=-o.vy/v, n=10, P=[];
+    for(j=0;j<=n;j++){ var s=j/n, b=o.cv*o.L*s*s; P.push([hx+ux*o.L*s-uy*b,hy+uy*o.L*s+ux*b]) }
+    for(j=0;j<n;j++){ var s0=j/n, fa=f*Math.pow(1-s0,1.5); seg(P[j][0],P[j][1],P[j+1][0],P[j+1][1],o.w*3.5*(1-s0*.6),o.col,.10*fa) }
+    for(j=0;j<n;j++){ var s1=j/n, fb=f*Math.pow(1-s1,1.5); seg(P[j][0],P[j][1],P[j+1][0],P[j+1][1],o.w*(1-s1*.7),o.col,.75*fb) }
+    if(o.k==='c'){ disc(hx,hy,4.5,o.col,.10*f); disc(hx,hy,2.6,o.col,.25*f) } disc(hx,hy,o.k==='c'?1.3:0.9,'250,250,255',.95*f);
+    if(o.k==='m') M3D.dirty=true }   // a meteor is fast: every frame while it lives, not 20 a second
+}
+function m3skyGL(R,W,H,t){ if(!M3D.NEB) m3space(); var gl=R.gl, X=R.P.sky, k=M3D.dpr, w=M3D.W, h=M3D.H, span=w*0.4, N=M3D.NEB, i, sa=skyAng(t||0);
   var nx=-(((CAM.yaw*1.2)%span)+span)%span-w*0.05, ny=-(h*0.2)+(CAM.pitch-50)*0.6;
   gl.useProgram(X.p); gl.disable(gl.BLEND);
   gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,m3tex(R,'neb',N,false)); gl.uniform1i(X.u.u_n,0);
   for(i=0;i<3;i++){ var L=M3D.LAY[i], ox=((-CAM.yaw*L.k*12)%L.T+L.T)%L.T, oy=((CAM.pitch*L.k*8)%L.T+L.T)%L.T;
     gl.activeTexture(gl.TEXTURE1+i); gl.bindTexture(gl.TEXTURE_2D,m3tex(R,'lay'+i,L.c,true)); gl.uniform1i(X.u['u_l'+i],1+i); gl.uniform2f(X.u['u_o'+i],ox/L.T,oy/L.T) }
   gl.uniform2f(X.u.u_res,W,H); gl.uniform1f(X.u.u_dpr,k); gl.uniform4f(X.u.u_nr,nx*k,ny*k,N.width*k,N.height*k);
+  gl.uniform2f(X.u.u_rc,W/2,H/2); gl.uniform2f(X.u.u_cs,Math.cos(sa),Math.sin(sa));
   m3quad(R,X); gl.enable(gl.BLEND); gl.activeTexture(gl.TEXTURE0) }
 /* the plates: built when the floor's reach changes (a centre, a corner, a side, a fade per vertex), drawn by the GPU from the camera */
 function m3hexGL(R,FR,W,H){ var gl=R.gl, X=R.P.hex, j;
@@ -4018,26 +4055,28 @@ function m3dynEmit(x,t,vis){ var i, k; x.setTransform(M3D.dpr,0,0,M3D.dpr,0,0);
 /* the whole scene; the SVG on top is drawn by drawMap from the same camera */
 /* the camera for this size and chart: the SVG needs it at once, the canvas draws on the next frame */
 function m3prep(){ m3size(); if(CFIT){ var fk=visRings()+'|'+M3D.W+'|'+M3D.H; if(fk!==CFITK){ CFITK=fk; camFit() } } camUpdate() }
-var M3RS={fa:null,fb:null,ob:null,wv:null,dy:null};
+var M3RS={fa:null,fb:null,ob:null,wv:null,dy:null,sk:null};
 function draw3d(now){ if(!G||!el('map3d')) return; m3prep(); var R=GLR===null?m3glInit():GLR; if(!R||R.lost) return;
   var gl=R.gl, cv=el('map3d'), W=cv.width, H=cv.height, t=(now||performance.now())/1000, OUT=outerR(), FR=OUT+420, vis=PLANETS.filter(function(q){ return secVis(q.sec) });
-  var Q=M3RS; if(!Q.fa){ Q.fa=new M3R(); Q.fb=new M3R(); Q.ob=new M3R(); Q.wv=new M3R(); Q.dy=new M3R() }
+  var Q=M3RS; if(!Q.fa){ Q.fa=new M3R(); Q.fb=new M3R(); Q.ob=new M3R(); Q.wv=new M3R(); Q.dy=new M3R(); Q.sk=new M3R() }
   var key=[CAM.tx,CAM.tz,CAM.yaw,CAM.pitch,CAM.dist].map(function(v){ return v.toFixed(2) }).join()+'|'+W+'|'+H+'|'+visRings()+'|'+(can('sectors')?1:0)+'|'+nextRing();
   var bgNew=key!==M3D.fk; if(bgNew){ M3D.fk=key; Q.fa.reset(); Q.fb.reset(); m3floorEmit(Q.fa,Q.fb) }
   var sig=key+'#'+vis.map(function(q){ var id=q.id, c=G.colonies[id]; return id+(G.ghost&&G.ghost[id]?'g':c?'c'+(c.hub?(dryHub(id)?'H':'h'):'')+lineTo(G,id):enRoute(G,id)?'s':'f') }).join();
   var obNew=sig!==M3D.ok; if(obNew){ M3D.ok=sig; Q.ob.reset(); m3obEmit(Q.ob,vis) }
   Q.wv.reset(); m3waveEmit(Q.wv,t,OUT); Q.dy.reset(); m3dynEmit(Q.dy,t,vis);
-  // space and the floor change only with the camera, the footprints and the floor's lines with the camera or the chart: while they move
-  // they are drawn straight into the frame; once still, each is baked into a full-size texture (the floor's lines with their glow) and
-  // laid down as one quad a frame
+  // the floor changes only with the camera, the footprints and the floor's lines with the camera or the chart: while they move they are
+  // drawn straight into the frame; once still, each is baked into a full-size texture and laid down as one quad a frame. v5.38: space
+  // turns, so it is no longer baked with the floor — one quad of its own each frame, the floor's texture over it
   function blit(t){ var X=R.P.tex; gl.useProgram(X.p); gl.uniform1i(X.u.u_t,0); gl.activeTexture(gl.TEXTURE0); gl.bindTexture(gl.TEXTURE_2D,t.tex); gl.uniform2f(X.u.u_res,W,H); gl.uniform4f(X.u.u_rect,0,H,W,-H); gl.uniform4f(X.u.u_uv,0,0,1,1); m3quad(R,X) }
-  function bgDraw(){ m3skyGL(R,W,H); m3draw(R,Q.fa,[W,H]); m3hexGL(R,FR,W,H); m3draw(R,Q.fb,[W,H]) }
+  function floorDraw(){ m3draw(R,Q.fa,[W,H]); m3hexGL(R,FR,W,H); m3draw(R,Q.fb,[W,H]) }
   if(R.bg&&(R.bg.w!==W||R.bg.h!==H)){ ['bg','obt'].forEach(function(k){ if(R[k]){ gl.deleteTexture(R[k].tex); gl.deleteFramebuffer(R[k].fb); R[k]=null } }); R.bgOK=false; R.obOK=false }
   if(bgNew||R.bgFR!==FR){ R.bgFR=FR; R.bgOK=false }
-  if(R.bgOK){ gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H); gl.disable(gl.BLEND); blit(R.bg); gl.enable(gl.BLEND) }
-  else if(!bgNew){ if(!R.bg) R.bg=m3target(R,W,H); gl.bindFramebuffer(gl.FRAMEBUFFER,R.bg.fb); gl.viewport(0,0,W,H); bgDraw(); R.bgOK=true;
-    gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.disable(gl.BLEND); blit(R.bg); gl.enable(gl.BLEND) }
-  else { gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H); bgDraw() }
+  gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H); m3skyGL(R,W,H,t);
+  if(R.bgOK) blit(R.bg);
+  else if(!bgNew){ if(!R.bg) R.bg=m3target(R,W,H); gl.bindFramebuffer(gl.FRAMEBUFFER,R.bg.fb); gl.viewport(0,0,W,H); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT); floorDraw(); R.bgOK=true;
+    gl.bindFramebuffer(gl.FRAMEBUFFER,null); gl.viewport(0,0,W,H); blit(R.bg) }
+  else floorDraw();
+  Q.sk.reset(); m3skyEmit(Q.sk,t); m3draw(R,Q.sk,[W,H]);   // the comets over the plates (they hide nine tenths of the sky), under the worlds and hulls
   m3draw(R,Q.wv,[W,H]);
   if(obNew) R.obOK=false;
   if(!R.obOK&&!obNew){ if(!R.obt) R.obt=m3target(R,W,H); gl.bindFramebuffer(gl.FRAMEBUFFER,R.obt.fb); gl.viewport(0,0,W,H); gl.clearColor(0,0,0,0); gl.clear(gl.COLOR_BUFFER_BIT);
@@ -5600,6 +5639,8 @@ function start(seed){
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; HTMLCACHE={};
   CFIT=true; CFITK=''; P3N=-1;
   window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
+  window.LNsky={get:function(){ return M3D.SKY||null }, ang:function(){ return skyAng(performance.now()/1000) }, still:skyStill,
+    spawn:function(k){ var t=performance.now()/1000; if(!M3D.SKY) return null; var o=skySpawn(M3D.SKY,k,t); M3D.dirty=true; return {k:o.k,d:o.d,t0:o.t0} }};
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player
   window.LNtut={off:function(){ TUTX.hook=true; if(!window.LBHACKTEST) G.hackGate=false; LBMENU.close(); tutMute() }};   // v4.36: the scenarios' hook «всё открыто»: no voices, no helper; v4.40: and no main menu — the language window stands instead
   draw();

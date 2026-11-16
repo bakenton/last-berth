@@ -12,7 +12,7 @@ const R=[
   ["dpr=Math.min(window.devicePixelRatio||1,2)*appZoom();","dpr=Math.min(window.devicePixelRatio||1,2)*appZoom()*(LBF.half?0.5:1);"],
   ["function m3glow(x,col,b,post){","function m3glow(x,col,b,post){ if(LBF.noglow){ x.shadowBlur=0; return }"],
   ["function m3sphere(x,cx,cy,cz,rad,col,spin,alpha,bl,body){","function m3sphere(x,cx,cy,cz,rad,col,spin,alpha,bl,body){ if(LBF.nosph) return null;"],
-  ["function m3skyGL(R,W,H){","function m3skyGL(R,W,H){ if(LBF.nosky) return;"],
+  ["function m3skyGL(R,W,H,t){","function m3skyGL(R,W,H,t){ if(LBF.nosky) return;"],
   ["function m3hexGL(R,FR,W,H){","function m3hexGL(R,FR,W,H){ if(LBF.nohex) return;"],
   ["function m3frame(ts){ if(!G) return; if(M3D.moved){ M3D.moved=false; drawMap(); tutPlace() } if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }",
    "function m3frame(ts){ if(!G||LBF.nodraw) return; if(LBF.spin){ camTurn(3,0); M3D.moved=true } if(M3D.moved){ M3D.moved=false; if(!LBF.nosvg){ drawMap(); tutPlace() } else { m3prep(); M3D.dirty=true } } if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; var t0=performance.now(); try{ draw3d(ts) }catch(e){ window.LBERR=String(e) } window.LBDT=(window.LBDT||0)*0.9+(performance.now()-t0)*0.1 } }"],
