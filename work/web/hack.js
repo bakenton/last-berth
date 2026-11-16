@@ -127,7 +127,7 @@ function step(G,P,dt){ var h=G.head, m=G.me, sp=P.sp+(P.n-G.segs.length)*P.spUp,
   if(!G.segs.length) h.arm=0;
   // a link inside a wall does not fire: walls are cover from the fire, not from the serpent itself
   if(P.every){ G.fT-=dt; if(G.fT<=0){ var sh=G.segs.filter(function(s){ return !wallAt(s.x,s.y)&&los(s.x,s.y,m.x,m.y) }); if(sh.length){ G.fT=P.every; var s=sh[(G.rnd()*sh.length)|0]; bullet(s.x,s.y,Math.atan2(m.y-s.y,m.x-s.x),P.bs,'o') } else G.fT=.3 } }
-  if(P.red){ G.rT-=dt; if(G.rT<=0){ if(wallAt(h.x,h.y)) G.rT=.3; else { G.rT=P.red; aimed(h.x,h.y,m.x,m.y,P.redN,.3,150,'r'); beep(180,.12,.03,'triangle') } } }
+  if(P.red){ G.rT-=dt; if(G.rT<=0){ if(wallAt(h.x,h.y)) G.rT=.3; else { G.rT=P.red; aimed(h.x,h.y,m.x,m.y,P.redN,.3,P.rs||150,'r'); beep(180,.12,.03,'triangle') } } }
   // the small ones: the shorter the serpent, the thicker they come
   if(P.mEvery){ var p=1-G.segs.length/P.n; G.spT-=dt;
     if(G.spT<=0&&G.en.length-G.segs.length-1+G.zones.length<P.mCap*(.6+.4*p)){ G.spT=P.mEvery*(1-.3*p); var at=freeCell(G,220); if(at>=0){ var r=G.rnd(); G.zones.push({k:'mark',x:cellX(at),y:cellY(at),t:.75,sp:r<P.gun?'gun':r<P.gun+P.dash?'dasher':r<P.gun+P.dash+P.split?'splitter':'chaser'}) } } }
@@ -136,11 +136,26 @@ function step(G,P,dt){ var h=G.head, m=G.me, sp=P.sp+(P.n-G.segs.length)*P.spUp,
    «Давай твоё решение»): the ark's hack. A core behind rings of hex cells — as many rings as the level (four fit the field; past that the
    cells and the core grow thicker, so the ladder has no top). Every cell takes damage; the rings turn, opposite ways, so a gap moves;
    the outer cells release small ones; the core fires through its own cells. Kill the core. A siege, where the serpent is a chase. */
-/* v5.09 ladder (tools/hack-bot.js, 30 seeds a level): the first block is short, not empty — two rings and a slow gun; four rings from
-   level 3; red fans from 3; from level 2 a lost cell grows back (the hive heals what is left alone: keep the fire on one side). */
-function hiveP(n){ var k=Math.min(n,10);   // past four rings the hive does not get thicker (a longer fight is not a harder one) — it fires faster and breeds more, to its caps at level 10
-  return {hive:1,rings:Math.min(4,n+1),cHp:3+(n>=3?1:0),coreHp:14+2*Math.min(n,8),every:Math.max(.75,2.4-.25*n),bs:150+6*k,red:n>=3?Math.max(3.5,10-n):0,redN:n>=5?3:2,
-    mEvery:Math.max(1,3-.35*n),mCap:Math.min(10,3+n),sp2:88+3*k,drop:n>=2?.35:0,grow:n>=2?Math.max(3,5-.4*n):0,spin:.1,ter:[],mud:0} }
+/* v5.09 ladder (tools/hack-bot.js, 30 seeds a level): the first block is short, not empty — two rings; four rings from
+   level 3; from level 2 a lost cell grows back (the hive heals what is left alone: keep the fire on one side). The gun, the red fans
+   and the small ones — v5.32, below. */
+/* v5.32 (Nikita's own run 16.11, p.30: «Хак для ковчега надо усложнить. Простовато», «слишком просто взорвать сердца улья»; on «числами или
+   новым правилом» — «Чтобы соты вокруг центра крутились, так попасть будет сложнее как минимум»). Numbers only, no new rule.
+   The rings did turn — at .1 rad/s, a turn in 63 s, which the eye does not see; now .5 rad/s at level 1 (a turn in 12.6 s) to .95 at level 10.
+   The turn alone does not touch the bot (60 of 60 on levels 1-6, 3 lives of 3), so the threat went up with it: the core's gun fires every
+   .6 s (was 2.15) and its shot flies 336 px/s (was 156); red fans from the first level (were from the third), three shots, four from level 3,
+   at P.rs 240 px/s (was 150, a number inside stepHive); the small ones leave every second, 7 at once (were 2.65 s and 4), at 143 px/s (was 91);
+   the core holds 29 hits at level 1 (was 16 — it burst in two seconds). A lost cell grows back every 5 s at every level from the second
+   (was 4.2 s falling to 3): the fight got more dangerous, it must not also get longer. The threat is nearly flat by level — the hive is
+   harder further on because it is bigger, not because the gun doubles.
+   tools/hack-bot.js 60 1,2,3,4,5,6 hive (won of 60 · lives left in the wins · seconds to win):
+     was          60 · 3.0 · 10    60 · 3.0 · 18    60 · 3.0 · 42    60 · 2.9 · 45    60 · 2.6 · 54    58 · 2.3 · 58
+     turn alone   60 · 3.0 · 8     60 · 3.0 · 19    60 · 3.0 · 41    60 · 2.7 · 46    60 · 2.7 · 57    60 · 2.6 · 66
+     v5.32        60 · 2.5 · 16    60 · 2.7 · 33    49 · 1.9 · 68    49 · 1.9 · 74    36 · 1.8 · 75    33 · 1.7 · 81
+   Levels 8 and 10: 41 and 24 of 60. A run to the Night sees levels 1-4 (one per ark ring). The numbers are Claude's — awaiting review. */
+function hiveP(n){ var k=Math.min(n,10);   // past four rings the hive does not get thicker (a longer fight is not a harder one) — it fires a little faster, to its caps at level 10
+  return {hive:1,rings:Math.min(4,n+1),cHp:3+(n>=3?1:0),coreHp:26+3*Math.min(n,8),every:Math.max(.45,.62-.015*n),bs:330+6*k,red:Math.max(2.2,2.9-.06*n),redN:n>=3?4:3,rs:240,
+    mEvery:Math.max(.75,1-.025*n),mCap:Math.min(9,7+(n>>2)),sp2:140+3*k,drop:n>=2?.35:0,grow:n>=2?5:0,spin:.45+.05*k,ter:[],mud:0} }
 function initHive(G,P){ var R=16, cx0=AW/2, cy0=58+P.rings*R*S3+R, D=[[1,0],[0,1],[-1,1],[-1,0],[0,-1],[1,-1]], rad=P.rings*R*S3+R+34;
   G.me.x=AW/2; G.me.y=AH-70; G.hive=true; G.cells=[]; G.dead=[]; G.segs=[]; G.trail=[];
   G.keep=[Math.floor((cx0-rad)/GS),Math.floor((cy0-rad)/GS),Math.floor((cx0+rad)/GS),Math.floor((cy0+rad)/GS)];   // no wall inside the hive
@@ -155,7 +170,7 @@ function stepHive(G,P,dt){ var m=G.me, h=G.head, i, e, c=cellAt(m.x,m.y); if(c!=
   if(P.grow){ G.gT-=dt; if(G.gT<=0){ G.gT=P.grow; if(G.dead.length){ var gi=(G.rnd()*G.dead.length)|0, g=G.dead[gi], gx=h.x+Math.cos(g.a)*g.d, gy=h.y+Math.sin(g.a)*g.d;
         if(dist(gx,gy,m.x,m.y)>60){ G.dead.splice(gi,1); G.cells.push(enemy({kind:'cell',x:gx,y:gy,r:13,hp:P.cHp,touch:1,goal:0,ring:g.ring,a:g.a,d:g.d,born:.35})); beep(420,.05,.012) } } } }
   if(P.every){ G.fT-=dt; if(G.fT<=0){ G.fT=P.every*(.85+G.rnd()*.3); aimed(h.x,h.y,m.x,m.y,1,.2,P.bs,'o') } }
-  if(P.red){ G.rT-=dt; if(G.rT<=0){ G.rT=P.red; aimed(h.x,h.y,m.x,m.y,P.redN,.3,150,'r'); beep(180,.12,.03,'triangle') } }
+  if(P.red){ G.rT-=dt; if(G.rT<=0){ G.rT=P.red; aimed(h.x,h.y,m.x,m.y,P.redN,.3,P.rs||150,'r'); beep(180,.12,.03,'triangle') } }
   G.spT-=dt; if(G.spT<=0){ var small=0; for(i=0;i<G.en.length;i++) if(G.en[i].kind==='small') small++;
     if(small>=P.mCap){ G.spT=.4; return }
     var top=0; G.cells.forEach(function(q){ if(q.ring>top) top=q.ring }); var out=G.cells.filter(function(q){ return q.ring===top }), src=out.length?out[(G.rnd()*out.length)|0]:h, a=src===h?G.rnd()*TAU:Math.atan2(src.y-h.y,src.x-h.x);
@@ -379,6 +394,7 @@ function sim(level,seed,bot,maxT,kind){
 function cheat(){ if(!G||G.state!=='play') return false; if(G.hive){ G.P.grow=0; G.cells.slice().forEach(function(c){ c.hp=1; hitEnemy(c) }); G.head.hp=1; hitEnemy(G.head); return G.state==='dying' }
   G.segs.slice().forEach(function(s){ s.hp=1; s.arm=0; hitEnemy(s) }); G.head.arm=0; G.head.hp=1; hitEnemy(G.head); return G.state==='dying' }
 window.LBhack={open:open,isOpen:function(){ return OPEN },
-  state:function(){ return {open:OPEN,panel:panel,kind:MODE,lv:lv,game:G?G.state:null,hp:G?G.me.hp:null,left:G&&G.head?+part(G).toFixed(3):null,attempt:attempt,ox:OX,oy:OY,k:K,aw:AW,ah:AH,me:G?{x:G.me.x,y:G.me.y}:null} },
+  state:function(){ return {open:OPEN,panel:panel,kind:MODE,lv:lv,game:G?G.state:null,hp:G?G.me.hp:null,left:G&&G.head?+part(G).toFixed(3):null,attempt:attempt,ox:OX,oy:OY,k:K,aw:AW,ah:AH,me:G?{x:G.me.x,y:G.me.y}:null,
+    spin:G&&G.hive?G.P.spin:null,ang:G&&G.hive&&G.cells.length?G.cells[G.cells.length-1].a:null} },   // v5.32, for the scenarios: how fast the rings turn and where a cell of the outer ring stands
   sim:sim,targets:function(){ return targets() },way:function(g){ return way(g||G) },cheat:cheat,TOP:TOP};
 })();

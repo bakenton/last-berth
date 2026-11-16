@@ -3,7 +3,7 @@
 //  B, C   desk → Helm в живых строках; doomsday и shift_long2 под нынешний лор;
 //  п. 31  окно ковчега: капсул занято / куплено, людей всего и где они;      п. 22  запас хаба на первой вкладке его окна;
 //  п. 24  хаб на мёртвой жиле — работающий хаб: цвет шара, советник и список миров не зовут эвакуировать;
-//  п. 27  помощник ведёт к обменнику (отказ «не хватает ресурса» / запас Земли кончается);   п. 10  первый пакет улучшения — задание помощника;
+//  п. 27  помощник ведёт к обменнику (отказ «не хватает ресурса» / запас Земли кончается);   п. 10  первый пакет улучшения — цель в карточке (v5.32; в v5.31 — задание помощника, запиравшее экран);
 //  п. 6   (ревизор v5.30) вердикт завода «add a hull» при судне на верфи — проверка, что он честный.
 // Клики — мышью по видимым кнопкам; состояние готовится через ядро. Снимки: PW66_SHOTS=<папка>. Сборка: PW66_FILE (по умолчанию page.html).
 // PW66_BEFORE=1 — тот же путь по старой сборке только ради снимков «до»: итог не судит.
@@ -185,29 +185,46 @@ const nums=t=>(String(t).match(/[\d][\d\s   ]*(?:\.\d+)?/g)||[]).map(x=>+x.
   await U.tab('worlds');
 
   if(!BEFORE){
-  // ---------- p.10: the first upgrade package is a task of the helper ----------
+  // ---------- p.10: the first upgrade package — an objective on the card (v5.32, Nikita 16.11: «В табло задач вывести»; in v5.31 it was a task of the helper that held the screen) ----------
   const KW=await p.evaluate(A=>{ GOD.maxAll(); const g=LN.gen||0, need=kitCost(LN.colonies[A.w1]).w, i=HULLS.findIndex(h=>h.gen===g&&h.cap>=need&&h.key!=='courier');
     LN.reserves[A.w1]=1e7; const s=GOD.hull(i), r=setLine(LN,s.id,A.w1,'earth'); for(let n=0;n<30;n++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false }
+    if(LN.night) LN.night=LN.day+3000;   // the ark window above dated the Night 800 years out: that near, what the ark lacks stands before the package (v5.22) — here the Night is far
     const kg=kitGain(LN,A.w1); LNU.notes=[]; LNU.win=null; LNU.tab=null; LNdraw();
     return {r, need, hold:lineHold(LN,A.w1), open:kitOpen(LN), can:canKit(LN,A.w1), now:kg.now, wth:kg.with, x:K.KIT_OUT, name:planet(A.w1).name, kits:Object.keys(LN.colonies).filter(k=>LN.colonies[k].tier||LN.colonies[k].kit).length} },A);
   ok('setup: packages open, a hull on the line that lifts one, none ordered yet', KW.open&&KW.can==='ok'&&KW.hold>=KW.need&&KW.kits===0, JSON.stringify(KW));
+  const card=()=>p.evaluate(()=>{ const e=document.querySelector('#cards .ocard'), t=e&&e.querySelector('.tt'), sm=t&&t.querySelector('small'); return e?{tt:(t.childNodes[0]||{}).textContent||'', sub:sm?sm.textContent:'', cut:!!sm&&sm.scrollWidth>sm.clientWidth+1}:null });
+  const KG=await p.evaluate(()=>{ const o=objectives(LN).now.filter(o=>o.code==='o_kit')[0], k=o&&o.p, c=k&&LN.colonies[k]; return c?{p:k, first:objectives(LN).now[0].code, name:planet(k).name, kind:planet(k).kind, now:o.a, wth:o.b, can:canKit(LN,k), hold:lineHold(LN,k), w:kitCost(c).w}:null });
+  const c0=await card(); await shot(p,'p10-objective-card','#cards .ocard');
+  ok('p.10: the core names the objective — a world that can take a package now, with a hull on its line that lifts it, not a works', !!KG&&KG.can==='ok'&&KG.hold>=KG.w&&KG.kind!=='works', JSON.stringify(KG));
+  const mk=/^(\S+) ×([\d.]+): ([\d.]+) → ([\d.]+) (metal|rations|fuel|parts) a year$/.exec((c0||{}).sub||'')||[];
+  ok('p.10: with the helper OFF the objective card says «Order the first upgrade package»', !!c0&&!!KG&&KG.first==='o_kit'&&/^order the first upgrade package$/i.test(c0.tt.trim()), JSON.stringify(c0));
+  ok('p.10: and carries the number — the world, ×'+KW.x+', her output now → with the package; the line is not cut', !!KG&&mk[1]&&mk[1].toUpperCase()===KG.name.toUpperCase()&&+mk[2]===KW.x&&Math.abs(+mk[3]-KG.now)<=(KG.now<10?0.051:0.51)&&Math.abs(+mk[4]-KG.wth)<=(KG.wth<10?0.051:0.51)&&Math.abs(KG.wth/KG.now-KW.x)<0.001&&!c0.cut, (c0||{}).sub+' · core: '+(KG?KG.now.toFixed(2)+' → '+KG.wth.toFixed(2):''));
+  const poor=await p.evaluate(()=>{ const E=LN.earth, m=E.metal; E.metal=0; LNdraw(); const o=objectives(LN).now[0], t=document.querySelector('#cards .ocard .tt').childNodes[0].textContent; E.metal=m; LNdraw(); return {code:o.code, t} });
+  ok('p.10: the objective does not blink with Earth\'s stock — with no metal at home it still stands (reviewer v5.32)', poor.code==='o_kit'&&/upgrade package/i.test(poor.t), JSON.stringify(poor));
   await U.tap('[data-act="pop"][data-v="menu"]'); await U.tap('[data-act="help"]'); await p.keyboard.press('Escape'); await p.waitForTimeout(500);
-  const hk=await waitMsg('mK'); await p.waitForTimeout(350); const hk2=await helper();
-  const pk=await p.evaluate(()=>{ const e=document.getElementById('pkg'), r=e&&e.getBoundingClientRect(), g=document.getElementById('tutRing').getBoundingClientRect(); return {vis:!!(r&&r.width>100), gain:e?(e.querySelector('.pk-g')||{}).innerText.replace(/\s+/g,' '):'', lit:!!r&&Math.abs(g.left-r.left)<12&&Math.abs(g.top-r.top)<12&&Math.abs(g.width-r.width)<24} });
-  await shot(p,'p10-first-package-task');
-  const KG=await p.evaluate(k=>{ const c=LN.colonies[k], g=c&&kitGain(LN,k); return c?{name:planet(k).name, kind:planet(k).kind, now:g.now, wth:g.with, can:canKit(LN,k), hold:lineHold(LN,k), w:kitCost(c).w}:null },hk2.win);
-  ok('p.10: with the helper on she gives the task — a world that can take a package now, her card on UPGRADE, the package lit', hk.help&&hk2.msg==='mK'&&hk2.mode==='do'&&!!KG&&KG.can==='ok'&&KG.hold>=KG.w&&KG.kind!=='works'&&hk2.wtab==='up'&&pk.vis&&pk.lit&&hk2.ring, JSON.stringify(Object.assign({},hk2,pk,KG)).slice(0,300));
-  const mk=/^Upgrade packages are open\. With one, (\S+) gives ×([\d.]+): ([\d.]+) → ([\d.]+) (metal|rations|fuel|parts) a year\. Order the first\.$/.exec(hk2.text)||[];
-  ok('p.10: she says it in numbers — ×'+KW.x+', the world\'s output now → with the package', !!KG&&mk[1]&&mk[1].toUpperCase()===KG.name.toUpperCase()&&+mk[2]===KW.x&&Math.abs(+mk[3]-KG.now)<=(KG.now<10?0.051:0.51)&&Math.abs(+mk[4]-KG.wth)<=(KG.wth<10?0.051:0.51)&&Math.abs(KG.wth/KG.now-KW.x)<0.001&&nums(pk.gain)[0]>0, hk2.text+' · card: '+pk.gain+' · core: '+(KG?KG.now.toFixed(2)+' → '+KG.wth.toFixed(2):''));
-  await p.mouse.click(700,450); await p.waitForTimeout(200);
-  const miss=await p.evaluate(()=>({shk:document.getElementById('tutRing').classList.contains('shk'), msg:LNI.tut().msg}));
-  ok('p.10: a press elsewhere is not let through (a task, as the first line and the first hull are)', miss.shk&&miss.msg==='mK', JSON.stringify(miss));
+  ok('the helper is on and falls quiet', (await helper()).help&&await quiet());
+  const hk2=await helper(), c1=await card();
+  ok('p.10: with the helper ON she gives no task and holds nothing — no word of hers, no ring, no window forced', hk2.help&&!hk2.msg&&!hk2.q.includes('mK')&&!hk2.ring&&!hk2.win&&!SAID.some(x=>x.id==='mK'), JSON.stringify(hk2).slice(0,200));
+  ok('p.10: the same objective stands on the card with the helper on', !!c1&&!!c0&&c1.tt===c0.tt&&c1.sub===c0.sub, JSON.stringify(c1));
+  await shot(p,'p10-objective-helper-on');
+  await U.tap('#cards .ocard'); await p.waitForTimeout(300);
+  const jr=await p.evaluate(()=>{ const g=document.getElementById('goals'), r=g&&g.querySelector('.orow'); return r?{t:r.innerText.replace(/\s+/g,' ').trim(), show:!!r.querySelector('[data-act="goal"]')}:null });
+  await shot(p,'p10-objective-journal','#goals');
+  ok('p.10: the card opens the journal by the mouse — the objective, the world, the number, SHOW', !!jr&&!!KG&&jr.show&&/Order the first upgrade package — /i.test(jr.t)&&new RegExp('With one, '+KG.name+' gives ×'+String(KW.x).replace('.','\\.')+': [\\d.]+ → [\\d.]+ \\S+ a year\\.','i').test(jr.t), JSON.stringify(jr));
+  await p.keyboard.press('Escape'); await p.waitForTimeout(250);
+  const esc1=await p.evaluate(()=>({goals:!!document.getElementById('goals'), tab:LNU.tab, win:LNU.win}));
+  await U.tab('worlds'); await p.waitForTimeout(250); const tb=await p.evaluate(()=>({tab:LNU.tab, side:!!document.querySelector('.side')})); await U.tab('worlds');
+  ok('p.10: the screen is not held — Escape closes the journal, a tab opens by the mouse', !esc1.goals&&tb.tab==='worlds'&&tb.side, JSON.stringify([esc1,tb]));
+  await U.tap('#cards .ocard'); await p.waitForTimeout(250); await U.tap('#goals .orow [data-act="goal"]'); await p.waitForTimeout(400);
+  const pk=await p.evaluate(()=>{ const e=document.getElementById('pkg'), r=e&&e.getBoundingClientRect(); return {win:LNU.win, wtab:LNU.wtab, vis:!!(r&&r.width>100), gain:e?(e.querySelector('.pk-g')||{}).innerText.replace(/\s+/g,' '):''} });
+  await shot(p,'p10-show-opens-upgrade','#ovl .win'); await quiet();   // the helper's own words about an open world card (machines, the hub) — GOT IT
+  ok('p.10: SHOW opens that world on UPGRADE, the package card with its gain in sight', !!KG&&pk.win===KG.p&&pk.wtab==='up'&&pk.vis&&nums(pk.gain)[0]>0, JSON.stringify(pk));
   await U.tap('#pkg [data-act="kit"]'); await p.waitForTimeout(350);
-  const ka=await p.evaluate(k=>({kit:!!LN.colonies[k].kit||!!LN.colonies[k].kitShip, msg:LNI.tut().msg, log:LN.log.slice(-3).map(e=>e.code).join()}),hk2.win);
-  ok('p.10: ORDER by the mouse — the package is ordered, the task is done', ka.kit&&ka.msg!=='mK'&&/kit_ordered/.test(ka.log), JSON.stringify(ka));
+  const ka=await p.evaluate(k=>({kit:!!LN.colonies[k].kit||!!LN.colonies[k].kitShip, msg:LNI.tut().msg, log:LN.log.slice(-3).map(e=>e.code).join(), obj:objectives(LN).now.map(o=>o.code).join(), first:kitFirst(LN)}),KG?KG.p:A.w1);
+  const c2=await card();
+  ok('p.10: ORDER by the mouse — the package is ordered, the objective is gone from the list and from the card', ka.kit&&/kit_ordered/.test(ka.log)&&!/o_kit/.test(ka.obj)&&ka.first===null&&!!c2&&!/upgrade package/i.test(c2.tt), JSON.stringify(ka)+' '+JSON.stringify(c2));
   ok('the helper falls quiet (the rules of the open card told, GOT IT)', await quiet());
   await p.evaluate(()=>{ LNU.win=null; LNdraw() }); await p.waitForTimeout(400);
-  ok('p.10: said once — no second task while a package is on its way', (await helper()).msg!=='mK'&&!(await helper()).q.includes('mK'));
 
   // ---------- p.27: she leads to Earth's exchange when a button is refused for want of a resource ----------
   const early=SAID.filter(x=>x.id==='mX')[0]||null;   // the scenario's own jumps of Earth's stocks may have run one out on the way: she spoke already

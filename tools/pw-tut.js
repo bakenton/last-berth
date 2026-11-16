@@ -30,7 +30,6 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
         else if(s.msg==='m3') await click('#top [data-act="spd"][data-v="4"]');
         else if(s.msg==='m4') await click('#ovl [data-act="assign"]');
         else if(s.msg==='m8') await click('#ordblk [data-act="order"]:not([aria-disabled="true"])');
-        else if(s.msg==='mK'){ if(!marks.mKpkg) marks.mKpkg=await p.evaluate(()=>{ const e=document.getElementById('pkg'); return e?{tab:LNU.wtab,gain:(e.querySelector('.pk-g')||{}).innerText||'',lit:getComputedStyle(document.getElementById('tutRing')).display!=='none'}:null }); await click('#pkg [data-act="kit"]') }   // v5.31: the first upgrade package is a task
         else await click('#helper [data-act="tutok"]');
         continue }
       await click('#helper [data-act="tutok"]'); continue }
@@ -45,6 +44,12 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
     if(s.open.includes('earth')&&!marks.earthOpened){ marks.earthOpened=true; marks.earthDot=await p.evaluate(()=>!!document.querySelector('#tabs [data-v="earth"] .new')); await click('#tabs [data-v="earth"]'); continue }
     if(s.win==='earth'){ marks.earthDotAfter=await p.evaluate(()=>!!document.querySelector('#tabs [data-v="earth"] .new')); await click('#tabs [data-v="earth"]'); continue }
     if(s.win){ await p.keyboard.press('Escape'); await p.waitForTimeout(80); continue }
+    // v5.32: the first upgrade package is an objective on the card, not a task that holds the screen — the guide reads the card and orders it the player's way: card → journal → SHOW → ORDER
+    if(!marks.oKit){ const ok=await p.evaluate(()=>{ const o=objectives(LN).now.filter(o=>o.code==='o_kit')[0], e=document.querySelector('#cards .ocard .tt'); return o&&LNU.tut.open.machines&&e?{p:o.p,card:e.innerText.replace(/\s+/g,' ').trim(),first:objectives(LN).now[0].code,msg:LNI.tut().msg||null}:null });
+      if(ok){ marks.oKit=ok; await shot('oKit');
+        if(await click('#cards .ocard')&&await click('#goals .orow [data-act="goal"]')){ for(let n=0;n<6;n++){ const h=await st(); if(h.msg) await click('#helper [data-act="tutok"]'); else break }
+          marks.oKit.tab=await p.evaluate(()=>LNU.wtab); marks.oKit.clicked=await click('#pkg [data-act="kit"]'); marks.oKit.ordered=await p.evaluate(k=>{ const c=LN.colonies[k]; return !!c&&(!!c.kit||!!c.kitShip||!!c.tier) },ok.p) }
+        continue } }
     if(s.step>=10&&marks.ring2After===undefined) marks.ring2After=await p.evaluate(()=>document.querySelectorAll('#map .wd[data-p]').length);
     await play();
     // v4.50: no Skip any more. Where it was open (from the step 'home'), the guide winds the clock through the core by FF years at a time,

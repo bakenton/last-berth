@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.31'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.32'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -264,7 +264,7 @@ function genForSector(sec){ return Math.max(0, sec-CLASS_RANGE.freighter) }
 var K={
   HUB_HOP:1,           // nodes-1.00: a courier feeds a hub from this many rings out at most
   HUB_BASE:0,          // nodes-1.01 (Nikita 05.11: «кол-во хабов зависит от поколения двигателя»): hubs allowed = HUB_BASE + drive generation (Gen I: none)
-  HUB_METAL:5000, HUB_PARTS:750, HUB_GROW:1.5,   // nodes-1.03 (Nikita 05.11: «хабы слишком дешёвые», первый 5 тыс. металла, детали ×5; was 800/150); the n-th costs BASE x GROW^(n-1) (grow: Claude, awaits Nikita)
+  HUB_METAL:2500, HUB_PARTS:750, HUB_GROW:1.5,   // nodes-1.03 (Nikita 05.11: «хабы слишком дешёвые», первый 5 тыс. металла, детали ×5; was 800/150); v5.32 (Nikita 16.11, his own run: «Первый хаб за 5000 металла чот нереально дорого… Может раза в два по металлу»): metal 5000 → 2500, parts and growth as they were; the n-th costs BASE x GROW^(n-1) (grow: Claude, awaits Nikita)
   HUB_REFUND:0.25,     // v5.12 (Nikita 11.11): a hub pulled down gives back a quarter of what was paid for it
   HUB_NO_COURIER:1,    // 1: no courier on a hub's line to Earth (nodes-1.00); 0: only the per-line limit below
   COURIER_FREE:2,      // nodes-1.01 (Nikita 05.11: «первые два кольца сколько влезет, дальше лимит»): rings I..COURIER_FREE take any number of couriers
@@ -314,14 +314,15 @@ var K={
   /* v5.10 (design/ARK.md 2g, Nikita 10.11): the ark is a hive of waking capsules, bought ring by ring. Ring k holds ARK_RING*k
      capsules (600, 1 200, 1 800...); a capsule's price is set by how many are already bought — the ladder steps every ARK_STEP
      capsules (food ARK_FOOD, metal ARK_METAL a capsule), and a ring costs the sum of the ladder over its capsules (ring 1 —
-     1 200 food / 600 metal ... ring 4 — 19 000 / 22 000). Past the end of the ladder every further thousand is xARK_FOOD_GROW /
+     1 800 food / 600 metal · 5 200 / 2 000 · 11 800 / 6 400 · ring 4 — 29 200 / 22 000 since v5.32, food x1.5; it was 1 200 · 3 200 ·
+     7 600 · 19 000 food). Past the end of the ladder every further thousand is xARK_FOOD_GROW /
      xARK_METAL_GROW of the one before (Claude — awaiting review). No ceiling. The levels I-IV, their prices (ARK_LEVELS, ARK_PRICE,
      ARK_FOOD_X, ARK_PARTS_X), the wake shares (ARK_WAKE, ARK_LVL_WAKE) and the 3-2-1 convoy (ARK_CONVOY) are gone.
      Everyone on Earth boards; woken = capsules x the share of the fleet standing in the convoy; the rest sleep on.
      ARK_HOLD — what of Earth's stock rides along, by rings held: the old level caps for rings 1-4, every further ring adds the
      last step (Claude — awaiting review). ARK_CELLS — the cells of the convoy ring on the screen. */
   ARK_RING:600, ARK_STEP:1000,
-  ARK_FOOD:[2,3,4,5,7,10,14,20], ARK_METAL:[1,2,3,5,8,12,18,27],
+  ARK_FOOD:[3,5,6,8,11,15,21,30], ARK_METAL:[1,2,3,5,8,12,18,27],   // v5.32 (Nikita 16.11: «За капсулы надо просить намного больше еды. На 1220 году у меня 12к еды»): food x1.5, was [2,3,4,5,7,10,14,20]
   ARK_FOOD_GROW:1.4, ARK_METAL_GROW:1.5,
   ARK_HOLD:[
     {metal:500,  parts:500,  food:1500, fuel:1500},
@@ -347,6 +348,7 @@ var K={
   GROW:0.0055,         // pop growth per day when calm
   STORE_CAP:400,
   FUEL_PER_DIST:0.135, // charged on every departure (a long line drinks fuel)
+  FOUND_FUEL:10,       // v5.32 (Nikita 16.11, «Да, ставим»): a departure with settlers costs this many times the fuel (by distance: a world of ring 1 costs 39-60, of ring 2 100-110; was 4-6 and 10-11 against a gift of 249-368). FUEL_PER_DIST itself is not touched: x2 on every run is on the edge, x3 breaks the game (design/PLAYTEST-v529-nikita.md)
   MIN_FOUND:10,
   RESERVE_BASE:2100, RESERVE_GROW:2.15,   // a seam in sector n holds BASE * GROW^n * richness
   SURVEY_REACH:3,      // reach needed per sector already open before the next can be charted
@@ -392,7 +394,7 @@ var K={
      from the hull's seed, so two captains on the same line break at different years. A mutinied hull
      docks at Earth, its crew stands on the pier (it boards if there is a berth), and it takes no more
      orders. Only the breakers will have it. Far lines break first. Claude — awaiting review. */
-  MUTINY_MIN:1.5, MUTINY_SPREAD:1.5,
+  MUTINY_MIN:1.0, MUTINY_SPREAD:0.5,   // v5.32 (Nikita 16.11: «мне кажется дырой за 400 лет до ночи начинают бунтовать экипажи»): 1-1.5 round trips, was 1.5-3 (MIN 1.5, SPREAD 1.5)
   LIFT_WARN:80,        // v4.33 (Nikita, 13.10): years before a world's last lift that the desk starts saying so
   MUTINY_WARN:100,     // v4.27 (Nikita, 07.10: 'за 100 лет до начала бунтов сказать игроку, что дата идёт и суда начнут саботировать'): years before the first refusal the desk is told
   /* v4.4 — extraction kits (Nikita, 25.09, run 381774366: a mine gives 15/yr, Earth burns 20/yr, the ark
@@ -975,7 +977,7 @@ function scrap(G,shipId){
 }
 function shipById(G,id){for(var i=0;i<G.ships.length;i++)if(G.ships[i].id===id)return G.ships[i];return null}
 
-function canDepart(G,s,pid){
+function canDepart(G,s,pid,found){   // found — she carries settlers (v5.32: their departure costs K.FOUND_FUEL times the fuel)
   var p=planet(pid);
   if(!p) return 'noplanet';
   if(!sectorOpen(G,p.sec)) return 'sector';
@@ -983,10 +985,14 @@ function canDepart(G,s,pid){
   if(!canReachSector(s,p.sec)) return 'range';
   if(s.mutiny) return 'mutiny';
   if(s.mode!=='idle'||s.at!=='earth') return 'busy';
-  var f=Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)));
+  var f=found?foundFuel(G,pid):Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)));
   if(G.earth.fuel<f) return 'fuel';
   return 'ok';
 }
+/* v5.32 (Nikita's run 16.11, pp. 3 and 7: «цена топливом за отправку вообще никакая. Надо больше намного… дальше летишь — больше сжигаешь»):
+   what a hull with settlers burns to leave — the departure price x K.FOUND_FUEL. The one place the price is counted: canDepart(…,true),
+   colonize, the window of a free world and the bots all ask here. The evacuation courier, a search and every run of a line pay the old price. */
+function foundFuel(G,pid){ var p=planet(pid); return p?Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST*K.FOUND_FUEL/Math.sqrt(driveSpeed(G)))):0 }
 
 function launch(G,s,pid,job,cargo){
   var p=planet(pid);
@@ -1010,14 +1016,14 @@ function enRoute(G,pid){ for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if
 function foundParty(G,s,pid){ return Math.max(0,Math.floor(Math.min(popCap(planet(pid)), s.cap, G.earth.people-K.EARTH_KEEP-K.FOUND_KEEP))) }
 function colonize(G,shipId,pid,people,food){
   var s=shipById(G,shipId); if(!s) return 'noship';
-  var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
+  var chk=canDepart(G,s,pid,true); if(chk!=='ok') return chk;
   if(G.colonies[pid]) return 'taken';
   if(enRoute(G,pid)) return 'enroute';   // v4.8 (Nikita, 27.09: prologue soft-lock — two founding hulls to the same farm)
   /* v4.4 (Nikita, 25.09: "зачем мне выбирать, сколько посадить — ненужное действие"): the founding party
      is as many as the world can use, the hold can carry and Earth can spare. The old arguments are ignored. */
   people=foundParty(G,s,pid);
   if(people<K.MIN_FOUND) return 'people';
-  var f=Math.max(1,Math.round(planet(pid).dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G))));
+  var f=foundFuel(G,pid);
   G.earth.fuel-=f; G.earth.people-=people; openRes(G,'fuel');   // v4.34: fuel opens with the first settlers' price
   s.cargo={metal:0,food:0,fuel:0,parts:0,people:people};
   s.job='colonize'; s.origin='earth'; s.dest=pid; s.at=null; s.waiting=false;
@@ -1923,6 +1929,16 @@ function freeWorld(G,kind){ var lim=Math.min(SECTORS.length,sectorLimit(G.gen||0
     if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])||enRoute(G,p.id)) continue;
     if(!best||p.sec<best.sec||(p.sec===best.sec&&p.dist<best.dist)) best=p }
   return best?best.id:null }
+/* v5.31 → v5.32. The first upgrade package (Nikita's run 16.11, p.10: «когда можно строить upgrade package хочу чтобы игра дала такое
+   задание и показала, что это круто и надо делать»). v5.31 made it a task of the helper that held the screen until the package was ordered;
+   Nikita 16.11: «В табло задач вывести» — it is an objective now (o_kit), seen with the helper and without her, and nothing is locked.
+   The world: the packages are open (kitOpen), none was ever ordered or installed, a world can take one (its seam alive) with a hull on its
+   line that lifts it; Earth may still be short of the price. A mine, farm or well before a works (a works' package eats more metal and rations); the biggest gain first. */
+function kitFirst(G){ if(!kitOpen(G)||((G.stats&&G.stats.kits)||0)>0) return null; var k, best=null, bv=-1;
+  for(k in G.colonies){ var c=G.colonies[k]; if(kitTier(c)||c.kit||c.kitShip) return null }
+  for(k in G.colonies){ var ck=canKit(G,k); if((ck!=='ok'&&ck!=='metal'&&ck!=='parts')||lineHold(G,k)<kitCost(G.colonies[k]).w) continue;   // short of metal or parts at home it still stands (reviewer v5.32: it blinked with Earth's stock) — the button on UPGRADE says what is short
+    var g=kitGain(G,k), v=(g?g.with-g.now:0)+(planet(k).kind==='works'?0:1e6); if(v>bv){ bv=v; best=k } }
+  return best }
 function objectives(G){
   var now=[], lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), nc=reach(G), k, p, c, i;
   function add(code,o){ o=o||{}; o.code=code; now.push(o) }
@@ -1939,6 +1955,7 @@ function objectives(G){
   else if(G.hungry||foodShort(G)){ if(bareFarm) add('o_line',{p:bareFarm}); else if(farm) add('o_farm',{p:farm}); else add('o_food') }
   else if(nc===1&&bare) add('o_line',{p:bare});
   var head=now.length;   // v5.22: what the ark still lacks goes in here when the Night is near
+  var kf=kitFirst(G), kg=kf&&kitGain(G,kf); if(kg) add('o_kit',{p:kf,a:kg.now,b:kg.with,r:kg.res});   // v5.32: the first package — after the larder, before the hack and the works (Claude — awaiting review)
   var hk=hackNext(G); if(hk) add('o_hack',{k:hk.k});
   if(idle) add('o_feed',{p:idle});
   /* the drive: worlds, a works, hands at it, the programme, its parts */

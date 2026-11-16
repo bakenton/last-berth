@@ -28,7 +28,7 @@ const TMP=require('os').tmpdir();
   ok('the convoy ring has 36 cells', await p.evaluate(()=>document.querySelectorAll('#cvring .hx').length)===36);
   ok('no raw placeholders in the ark window', !/\{[a-z]\}/.test(r1), (r1.match(/.{0,40}\{[a-z]\}.{0,40}/)||[''])[0]);
   const price=await p.evaluate(()=>({food:arkRingPrice(1).food, metal:arkRingPrice(1).metal}));
-  ok('ring I costs 1 200 food / 600 metal (ARK.md 2г)', price.food===1200&&price.metal===600, JSON.stringify(price));
+  ok('ring I costs 1 800 food / 600 metal (ARK.md 2г; v5.32: food ×1.5)', price.food===1800&&price.metal===600, JSON.stringify(price));
 
   // === buy ring I by clicks, at full price
   await p.evaluate(()=>{ const E=LN.earth; E.metal=9e4;E.parts=9e4;E.fuel=9e4;E.food=9e4; LNdraw() });
@@ -36,10 +36,10 @@ const TMP=require('os').tmpdir();
   await U.tap('#ovl .hold .hr[data-v="1"] .hx');
   await U.tap('#arkcard [data-act="arkbuy"]');
   const bought=await p.evaluate(()=>({rings:arkRings(LN), food:LN.earth.food, metal:LN.earth.metal, log:LN.log.filter(e=>e.code==='ark_bought').length}));
-  ok('ring I bought: paid 1 200 food and 600 metal, log line', bought.rings===1&&bought.food===9e4-1200&&bought.metal===9e4-600&&bought.log===1, JSON.stringify(bought));
+  ok('ring I bought: paid 1 800 food and 600 metal, log line', bought.rings===1&&bought.food===9e4-1800&&bought.metal===9e4-600&&bought.log===1, JSON.stringify(bought));
   await ark();
   await U.tap('#ovl .hold .hr[data-v="2"] .hx');
-  ok('ring II is the next, its owed price is ring II alone (3 200 food / 2 000 metal)', await p.evaluate(()=>{ const o=arkOwed(LN,2); return o.food===3200&&o.metal===2000 })&&await p.isVisible('#arkcard [data-act="arkbuy"][data-l="2"]'), JSON.stringify(await p.evaluate(()=>arkOwed(LN,2))));
+  ok('ring II is the next, its owed price is ring II alone (5 200 food / 2 000 metal)', await p.evaluate(()=>{ const o=arkOwed(LN,2); return o.food===5200&&o.metal===2000 })&&await p.isVisible('#arkcard [data-act="arkbuy"][data-l="2"]'), JSON.stringify(await p.evaluate(()=>arkOwed(LN,2))));
 
   // === hulls at the pier: built, docked, not yet in the convoy
   const ids=await p.evaluate(()=>{ const G=LN, g=G.arkMark, made=[]; G.driveLvl=Math.max(G.driveLvl||0,G.arkMark); G.gen=G.driveLvl; ensureGen(G.gen); G.earth.people=Math.max(G.earth.people,400);

@@ -1,6 +1,6 @@
 // pw54 — v5.10 «улей» (окно ковчега, design/ark-menu hex-F1/F2/F3), настоящей мышью: покой (WAKE, SLEEP ON, подсказка, без карточки),
 // нажатие на кольцо сот (карточка: цена, капсулы, трюм, рационы, FILL RING), покупка колец II–III, нажатие на кольцо конвоя (ADD ALL),
-// размеры окна 1440 / 1280 / 390. Состояние — как design/ark-menu/state.js (вставлено сюда: сценарии работают из плоской папки).
+// размеры окна 1440 / 1280 / 390. Состояние — как design/ark-menu/state.js (вставлено сюда: сценарии работают из плоской папки).  (v5.32: еды 21 400 вместо 14 200 — кольца II и III стоят 17 000)
 // Закрытие ковчега (взлом кольца, CALL HOME, экран конца, старое сохранение) — pw55; обучение m28 / m27 / m20 — pw41.
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const path=require('path');
@@ -12,11 +12,11 @@ const shot=async(p,n,el)=>{ if(!SHOTS) return; if(el) await el.screenshot({path:
 async function setup(p){ await p.evaluate(()=>{ LNU.shiftStop=false; LN.safe=true; const E=LN.earth;
   LN.driveLvl=2; LN.gen=2; ensureGen(2); while(SECTORS.length<6) openSector(LN); revealNight(LN); LN.nightSeen=true;
   LN.driveLvl=5; LN.gen=5; ensureGen(5); LN.day=2900; LN.night=3802;
-  E.people=5180; E.metal=31400; E.food=14200; E.fuel=9100; E.parts=2460;
+  E.people=5180; E.metal=31400; E.food=21400; E.fuel=9100; E.parts=2460;
   arkBuy(LN,1);
   const mk=(cls,gen,res)=>{ buildShip(LN,HULLS.findIndex(h=>h.gen===gen&&h.key===cls)); const s=LN.ships[LN.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.crew=HULLS[s.hull].crew; if(res) setReserve(LN,s.id,true) };
   E.metal=1e6; E.parts=1e6; E.fuel=1e6; mk('courier',5,true); mk('courier',5,true); mk('courier',4,true); mk('hauler',5,true); mk('freighter',4,false);
-  E.people=5180; E.metal=31400; E.food=14200; E.fuel=9100; E.parts=2460; LNU.notes=[]; LNU.pf=null; LNdraw() }) }
+  E.people=5180; E.metal=31400; E.food=21400; E.fuel=9100; E.parts=2460; LNU.notes=[]; LNU.pf=null; LNdraw() }) }
 (async()=>{ try{
   const b=await chromium.launch({executablePath:process.env.LB_CHROMIUM||undefined});
   const p=await UI.newPage(b,{vp:{width:1440,height:900}}); const U=UI.ui(p);
@@ -44,7 +44,7 @@ async function setup(p){ await p.evaluate(()=>{ LNU.shiftStop=false; LN.safe=tru
   const before=s;
   await U.tap('#arkcard [data-act="arkbuy"]');
   s=await st();
-  ok('FILL RING III by the mouse: rings 3, rations and metal paid (ring II + III: 10 800 food, 8 400 metal), the card closes', s.rings===3&&s.food===before.food-10800&&s.metal===before.metal-8400&&s.sel===null, JSON.stringify({rings:s.rings,food:s.food,metal:s.metal,on:s.on}));
+  ok('FILL RING III by the mouse: rings 3, rations and metal paid (ring II + III: 17 000 food — v5.32, food ×1.5 — and 8 400 metal), the card closes', s.rings===3&&s.food===before.food-17000&&s.metal===before.metal-8400&&s.sel===null, JSON.stringify({rings:s.rings,food:s.food,metal:s.metal,on:s.on}));
   ok('the hive shows 36 purple cells (or the hack is asked for)', s.on===36||/Hack needed/i.test(await txt('#hkneed')||''), 'on '+s.on+' · '+(await txt('#hkneed')));
   // 3. the convoy ring pressed
   ok('a cell of the convoy ring is under the mouse', await clickCell('#cvring .hx'));

@@ -984,7 +984,7 @@ function drawEvBar(){
 /* ---------- v5.21: THE OBJECTIVE — a card on the chart (draft B3 of design/orders/round2.html) and its journal ----------
    Nikita 12.11 (a live playtest of v5.20: «он тупо не понимает что делать… нужен какой-то журнал квестов»). The list is core's
    objectives(G); here it is cut to what the helper has opened (nothing names a tab or a resource the player does not see yet). */
-var OBJ_CAN={o_food:'tech',o_feed:'parts',o_settle:'tech',o_works:'tech',o_grow:'tech',o_drive:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark'};
+var OBJ_CAN={o_kit:'machines',o_food:'tech',o_feed:'parts',o_settle:'tech',o_works:'tech',o_grow:'tech',o_drive:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark'};
 var OBJ_GO={o_drive:'tech',o_survey:'tech',o_parts:'tech',o_ark:'ark',o_pods:'ark',o_convoy:'ark',o_food:'tech',o_hack:'hack'};
 var HEXI='<svg viewBox="0 0 12 12" width="11" height="11" aria-hidden="true"><path d="M6 .5 11 3.3v5.4L6 11.5 1 8.7V3.3z" fill="currentColor"/></svg>';
 /* v5.26: «Chart ring 3» is the way to the date of the Night — named as soon as the helper has shown the rings and the Tech tab
@@ -993,7 +993,11 @@ function objNow(O){ var l=O.now.filter(function(o){ return o.code==='o_survey'?(
   if(!l.length){ var w=freeWorld(G); l=[w?{code:'o_more',p:w}:{code:'o_time'}] }
   return l }
 function objT(pre,o){ return fill(T(pre+o.code.slice(2)),{g:roman((o.g||1)-1),n:o.n===undefined?'':num(o.n),k:o.k===undefined?'':num(o.k)}) }
+/* v5.32 (Nikita 16.11 on the helper's task of v5.31 that held the screen: «В табло задач вывести»; on the objective card: «Да»): the first
+   upgrade package is an objective — core's o_kit. The card and the journal carry the number: what the package makes of that world */
+function kitNum(o){ return {w:pname(o.p),x:String(K.KIT_OUT),a:dec(o.a),b:dec(o.b),r:T(o.r).toLowerCase()} }
 function objSub(o){ var p=o.p&&planet(o.p);
+  if(o.code==='o_kit') return fill(T('os_kit'),kitNum(o));
   if(o.code==='o_parts') return num(o.n)+' / '+num(o.k);
   if(o.code==='o_pods'||o.code==='o_convoy') return objT('os_',o);
   if(p) return fill(T('o_at'),{w:pname(o.p),n:p.sec+1});
@@ -1011,7 +1015,7 @@ function objDone(e){ var d=e.d||{}, g=e.code==='ark_drive'?(d.g||0):(d.n||1)-1;
 function winGoals(){ var O=objectives(G), l=objNow(O), D=O.drive, A=O.ark, h='';
   h+=sec(esc(T('o_jNow')));
   l.slice(0,3).forEach(function(o,i){ var go=OBJ_GO[o.code]||(o.p?'w':'');
-    h+='<div class="orow'+(i?' alt':'')+'"><i></i><div><b>'+esc(objT('o_',o))+(o.p&&planet(o.p)?' — '+esc(pname(o.p)):'')+'</b><span>'+esc(o.code==='o_survey'&&!G.night?T('ow_surveyDate'):objT('ow_',o))+'</span></div>'+
+    h+='<div class="orow'+(i?' alt':'')+'"><i></i><div><b>'+esc(objT('o_',o))+(o.p&&planet(o.p)?' — '+esc(pname(o.p)):'')+'</b><span>'+esc(o.code==='o_survey'&&!G.night?T('ow_surveyDate'):o.code==='o_kit'?fill(T('ow_kit'),kitNum(o)):objT('ow_',o))+'</span></div>'+
       (go?'<button type="button" class="b" data-act="goal" data-v="'+i+'">'+esc(T('o_show'))+'</button>':'')+'</div>' });
   if(can('tech')){ h+=sec(esc(fill(T('o_jNext'),{g:roman(D.g-1)})));
     h+='<div class="opg">'+objBar(fill(T('o_jWorlds'),{n:D.need}),Math.min(D.settled,D.need)+' / '+D.need,D.settled/Math.max(1,D.need))+objBar(T('o_jParts'),num(D.work)+' / '+num(D.workNeed),D.work/Math.max(1,D.workNeed),C.parts)+'</div>'+
@@ -1034,7 +1038,7 @@ function objGo(i){ var o=objNow(objectives(G))[i]; if(!o) return; var go=OBJ_GO[
   if(go==='hack'){ U.win=null; U.hackGo=true }
   else if(go==='tech'){ U.win=null; U.tab='tech'; U.ttab='over' }
   else if(go){ U.tab=null; U.win=go }
-  else if(o.p&&planet(o.p)) openWorld(o.p,o.code==='o_line'||o.code==='o_feed'?'add':null) }
+  else if(o.p&&planet(o.p)) openWorld(o.p,o.code==='o_line'||o.code==='o_feed'?'add':o.code==='o_kit'?'mach':null) }
 
 /* v4.35: what the yards are building, top right of the map — the three nearest, and how many more */
 function building(){ return G.ships.filter(function(s){ return s.mode==='building' }).sort(function(a,b){ return a.t-b.t }) }
@@ -1362,15 +1366,6 @@ function freeHullAtPier(){ return freeAtPier().some(function(s){ return !s.mutin
 /* a hull that is on no line: free at the pier, or flying home after it set settlers down */
 function offLine(){ return G.ships.some(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!(s.from&&s.to)&&!s.pend&&!s.lineFor&&!s.mutiny&&!s.crewWait }) }
 function closeAll(){ U.win=null; U.tab=null; U.pop=null; return {} }
-/* v5.31 (Nikita's run 16.11, p.10: «когда можно строить upgrade package хочу чтобы игра дала такое задание и показала, что это круто и надо
-   делать»): the first package is a task of the helper, the way the first line and the first hull are — once the packages are open (kitOpen),
-   none was ever ordered, and a world can take one now with a hull on its line that lifts it. A mine, farm or well before a works (a works'
-   package eats more metal and rations); the biggest gain first. The card she lights carries the number */
-function kitFirst(){ if(!kitOpen(G)) return null; var k, best=null, bv=-1;
-  for(k in G.colonies){ var c=G.colonies[k]; if(kitTier(c)||c.kit||c.kitShip) return null }
-  for(k in G.colonies){ if(canKit(G,k)!=='ok'||lineHold(G,k)<kitCost(G.colonies[k]).w) continue;
-    var g=kitGain(G,k), v=(g?g.with-g.now:0)+(planet(k).kind==='works'?0:1e6); if(v>bv){ bv=v; best=k } }
-  return best }
 /* v5.31 (p.27: «я попробовал обменник. Классно перекидал ненужное в нужное… Но игра нигде не учит нас его использовать. Я кликнул на землю
    и только тогда игра показал, что он вообще есть»): she leads to Earth's exchange once, at the moment it helps — a press on a button refused
    for want of a resource (exHint), or a stock of Earth's that is falling and holds under RUNOUT_YEARS of her own burn (exLow, tutJit;
@@ -1428,9 +1423,6 @@ var TMSG={
    pre:function(){ var x=U.tut.ex; if(!x||!can('earth')||exOpen().indexOf(x.get)<0) return null; var ab=x.pay.split('+');
      closeAll(); U.help=null; U.win='earth'; U.exGet=x.get; U.exPay=x.pay; U.exN=EX_N[x.get].filter(function(v){ return v>=x.n&&exchangeCheck(G,x.get,ab[0],ab[1],v)==='ok' })[0]||EX_N[x.get][0];
      U.tut.seen.m26=1; return {r:T(x.get).toLowerCase(),a:T(ab[0]).toLowerCase(),b:T(ab[1]).toLowerCase()} }},
- mK:{at:'#pkg',mode:'do',k:'tut_mK',   // v5.31: the first upgrade package, as a task
-   pre:function(){ var w=kitFirst(); if(!w) return null; var g=kitGain(G,w); openWorld(w,'mach'); return {p:pname(w),x:String(K.KIT_OUT),a:dec(g.now),b:dec(g.with),r:T(g.res).toLowerCase()} },
-   done:function(a,v,res){ return a==='kit'&&res==='ok' }},
  m24:{at:function(){ return '#hr-'+U.tut.late },mode:'see',k:'tut_m24',pre:function(){ hullWorld(U.tut.late); return {} }},
  m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }}
 };
@@ -1495,7 +1487,6 @@ function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
   if(quiet&&t.step>=3&&!t.seen.N03&&G.delivered.food>0) tutPush('N03');   // the step opened by its year: the first cargo is told when it comes
   if(quiet&&t.help&&t.step>=7&&!t.seen.m12&&partsHome()) tutPush('m12');
   if(quiet&&t.step>=9&&!t.seen.N07&&evOn()){ tutPush('N07'); tutPush('m17') }   // v4.40: the events step told when the first event comes
-  if(quiet&&t.help&&!t.seen.mK&&can('machines')&&kitFirst()) tutPush('mK');   // v5.31: the first package is a task
   if(quiet&&t.help&&!t.seen.mX&&can('earth')&&!(G.stats.ex>0)){ var xr=exOpen().filter(exLow)[0]; if(xr) exWant(xr,EX_N[xr][1],EX_SPARE_Q) }   // v5.31: a stock running out, two piles beside it
   if(!t.help||!quiet||!w) return;   // the window ones speak only while that window is up
   var c=planet(w)&&G.colonies[w], ll=c&&lastLift(G,w);
@@ -1686,7 +1677,7 @@ function openWorld(pid,focus){ U.pop=null; U.win=pid; U.scrapArm=null; var f=(fo
 var FOCUS={evac:'#ovl [data-act="evac"]',add:'#addblk',lift:'#rw-lift',ord:'#ordblk',mach:'#mach'};
 var KW={mine:'u_kMine',farm:'u_kFarm',well:'u_kWell',works:'u_kWorks'};
 function wsub(p,extra){ return esc((T(KW[p.kind])+' · '+fill(T('u_ringN'),{n:p.sec+1})+(extra?' · '+extra:'')).toUpperCase()) }
-function sendFuel(p){ return Math.max(1,Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)))) }
+function sendFuel(p){ return foundFuel(G,p.id) }   // v5.32: the settlers' departure price is counted in the core, in one place
 function lobeTxt(p){ var lb=lobeOf(p.ang), ev=lobeEvents(G,lb); return T('lobe'+lb).toUpperCase()+' · '+(ev.length?evName(ev[0].type):T('u_calm')) }
 function assignable(pid){ var p=planet(pid);
   return G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!s.mutiny&&!s.crewWait&&!(s.from&&s.to)&&!s.pend&&!s.job&&canReachSector(s,p.sec) }) }

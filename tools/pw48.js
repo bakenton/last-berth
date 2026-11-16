@@ -18,7 +18,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     return {f6:c('freighter',5).cap, h6:c('hauler',5).cap, c6:c('courier',5).cap, f1:c('freighter',0).cap, m:c('hauler',5).metal/c('hauler',0).metal, a1:arkRingPrice(1).metal, a1f:arkRingPrice(1).food, a2:arkRingPrice(2).metal, a2f:arkRingPrice(2).food} });
   ok('the hold grows ×1.5 a generation (Freighter VI ≈ 5771)', k.f6===Math.round(760*Math.pow(1.5,5))&&k.h6===Math.round(240*Math.pow(1.5,5))&&k.c6===Math.round(70*Math.pow(1.5,5)),JSON.stringify(k));
   ok('metal grows with the hold', Math.abs(k.m-Math.pow(1.5,5))<0.05,k.m);
-  ok('ark: ring I 1 200 food / 600 metal, ring II 3 200 / 2 000 (ARK.md 2г)', k.a1===600&&k.a1f===1200&&k.a2===2000&&k.a2f===3200,JSON.stringify(k));
+  ok('ark: ring I 1 800 food / 600 metal, ring II 5 200 / 2 000 (ARK.md 2г; v5.32: food ×1.5)', k.a1===600&&k.a1f===1800&&k.a2===2000&&k.a2f===5200,JSON.stringify(k));
 
   // === 2. a works world with machines on a thin line
   const W=await p.evaluate(()=>{ const G=LN, wk=PLANETS.filter(q=>q.sec<=1&&q.kind==='works').sort((a,b)=>a.dist-b.dist)[0].id;

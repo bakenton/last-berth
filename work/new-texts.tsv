@@ -1029,3 +1029,6 @@ UI	u_peopleAll	People in total	Людей всего
 UI	u_hubStore	In the hub's store	На складе хаба
 UI	tut_mX	Short of {r}, with {a} and {b} to spare. The exchange here turns two resources into a third — at a loss, to close a gap.	Не хватает: {r}. В избытке: {a} и {b}. Обменник здесь даёт третий ресурс за два — в убыток, чтобы закрыть нехватку.
 UI	tut_mK	Upgrade packages are open. With one, {p} gives ×{x}: {a} → {b} {r} a year. Order the first.	Пакеты улучшения открыты. С одним {p} даёт ×{x}: {a} → {b} в год ({r}). Закажите первый.
+UI	o_kit	Order the first upgrade package	Закажите первый пакет улучшения
+UI	os_kit	{w} ×{x}: {a} → {b} {r} a year	{w} ×{x}: {a} → {b} {r} в год
+UI	ow_kit	With one, {w} gives ×{x}: {a} → {b} {r} a year.	С одним {w} даёт ×{x}: {a} → {b} {r} в год.
