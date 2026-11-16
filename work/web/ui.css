@@ -426,3 +426,18 @@ svg.gi{fill:currentColor}
 #ringbtn .b.go{animation:rbgo 1.6s ease-in-out infinite}
 @keyframes rbgo{50%{box-shadow:0 0 0 3px rgba(120,214,140,.45)}}
 @media (prefers-reduced-motion:reduce){#ringbtn .b.go{animation:none}}
+/* v5.37 (p.13): the order of the shift — the two on offer (the shift's window, the journal), the one taken (the card) */
+.ordo{margin:8px 0 4px}
+.ordo .orr{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:7px 0;border-top:1px solid var(--ln)}
+.ordo .orr>div{min-width:0}
+.ordo .orr b{display:block;font:600 12px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.25}
+.ordo .orr small{display:flex;gap:5px;align-items:center;font:500 12px var(--n);color:var(--ink);margin-top:3px}
+.ordo .orr .b{flex:none}
+.ocard .sg.ord>i{border-color:#FFD23F}
+.ocard .sg.ord small{display:flex;gap:5px;align-items:center}
+.sg.ord.inwin{display:grid;grid-template-columns:8px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--ln)}
+.sg.ord.inwin>i{width:7px;height:7px;margin-top:3px;border:1px solid #FFD23F;transform:rotate(45deg)}
+.sg.ord.inwin b{display:block;font:600 12px var(--h);letter-spacing:.06em;text-transform:uppercase}
+.sg.ord.inwin small{display:flex;gap:5px;align-items:center;color:var(--mid);margin-top:3px}
+.ogv svg{vertical-align:middle}
+.rwh{font:500 10px var(--h);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin-right:2px}

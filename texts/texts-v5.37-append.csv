@@ -1,0 +1,22 @@
+UI,ord_head,Order,Приказ,v5.37 orders,live,new
+UI,ord_deliver,Deliver {n} {r} to Earth,Доставить на Землю {n}: {r},v5.37 orders,live,new
+UI,ord_hulls,Put {n} new {c} hulls on lines,Поставить на линии новые корпуса «{c}»: {n},v5.37 orders,live,new
+UI,ord_pure,Run one more line on {c} hulls only,Ещё одна линия только на корпусах «{c}»,v5.37 orders,live,new
+UI,ord_settle,Settle a world on ring {s},Заселить мир на кольце {s},v5.37 orders,live,new
+UI,ord_survey,Chart ring {s},Нанести кольцо {s},v5.37 orders,live,new
+UI,ord_kit,Install an upgrade package,Поставить пакет улучшения,v5.37 orders,live,new
+UI,ord_left,{a} of {n} · {y} years left,{a} из {n} · осталось {y} лет,v5.37 orders,live,new
+UI,ord_take,Take,Взять,v5.37 orders,live,new
+UI,ord_offerH,Orders of the shift — take one,Приказы смены — возьмите один,v5.37 orders,live,new
+UI,ord_offerSub,{y} years to do it,на выполнение {y} лет,v5.37 orders,live,new
+UI,ord_dueY,due by {y},срок — {y},v5.37 orders,live,new
+MSG,orderNone,No such order.,Такого приказа нет.,v5.37 orders,live,new
+MSG,orderOn,An order is already taken.,Приказ уже взят.,v5.37 orders,live,new
+MSG,ok_orderTake,Order taken: {t}.,Приказ взят: {t}.,v5.37 orders,live,new
+LOG,order_taken,The shift takes an order: due by {y}.,Смена взяла приказ: срок — {y}.,v5.37 orders,live,new
+LOG,order_done_people,The order of the shift is done: {h} people join Earth.,Приказ смены выполнен: на Землю пришли {h} человек.,v5.37 orders,live,new
+LOG,order_done_hull,The order of the shift is done: a {c} stands at the pier.,Приказ смены выполнен: у причала стоит корпус «{c}».,v5.37 orders,live,new
+LOG,order_failed,The order of the shift was not done in time. Nothing is lost.,Приказ смены не выполнен в срок. Ничего не потеряно.,v5.37 orders,live,new
+UI,ord_rw,Reward,Награда,v5.37 orders,live,new
+UI,ord_rwPeople,{n} people to Earth,{n} человек на Землю,v5.37 orders,live,new
+UI,ord_rwHull,"a {c} hull, Generation {g}","корпус «{c}», поколение {g}",v5.37 orders,live,new

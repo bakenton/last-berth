@@ -280,6 +280,7 @@ function logText(e){ var tpl=LOG[U.lang][logKey(e)]; if(!tpl) return '';
   ['s','b','w','h'].forEach(function(k){ if(typeof d[k]==='number'&&Math.abs(d[k])>=1000) d[k]=num(d[k]) });   // v4.42: head counts as on the end window («4 151», not «4151»); years stay as they are
   if(d.dep) d.dep=DEP[U.lang][d.dep]||d.dep; if(d.lobe!==undefined) d.lobe=T('lobe'+d.lobe); if(d.g!==undefined) d.g=roman(d.g); if(d.t!==undefined&&String(e.code).slice(0,4)==='kit_') d.t=roman(d.t-1);
   if(e.code==='dock_hull') d.k=T(d.k).toLowerCase();   // v5.29: the class by its name
+  if(e.code==='order_done_hull') d.c=T(d.c).toLowerCase();   // v5.37
   if(e.code==='exchange'){ d.r=T(d.r); d.a=T(d.a); d.b=T(d.b); d.n=num(d.n); d.x=num(d.x); d.y=num(d.y) }   // nodes-1.02
   if(e.code==='voice'){ var v=voiceLine(e); return v.who+' '+v.name+': '+v.line }
   return fill(tpl,d) }
@@ -1039,13 +1040,25 @@ function objFoot(O){ var D=O.drive, A=O.ark, ft='', dl=fill(T('o_fDrive'),{g:rom
 /* v5.33 (Nikita 16.11, on «the card does not light a new objective»: «Можно сделать главную цель и ниже подцель»): the card carries two —
    the first objective of the list large, as before, and the next one under it, smaller, with the line it would have had as the first.
    The list and its order are core's and are not touched; «N more» counts what is left after the two (Claude's reading — awaiting review) */
+/* v5.37 (Nikita's run 16.11, p.13): the order of the shift — its words, its reward, how far it is */
+function ordText(o){ var sx=o.s!==undefined?o.s:(o.k==='survey'?(o.at!==undefined?o.at:SECTORS.length):null);
+  return fill(T('ord_'+o.k),{n:num(o.n),r:o.r?T(o.r).toLowerCase():'',c:o.c?T(o.c).toLowerCase():'',s:sx!==null?secName(sx):''}) }
+function ordRw(o){ var r=o.rw||{}; return '<i class="rwh">'+esc(T('ord_rw'))+'</i>'+(r.people?resIc('people',12)+esc(fill(T('ord_rwPeople'),{n:num(r.people)})):r.hull?shipIc(r.hull,18)+esc(fill(T('ord_rwHull'),{c:T(r.hull).toLowerCase(),g:roman(G.gen||0)})):'') }
+function ordProg(o){ var done=Math.min(o.n,o.n-orderLeft(G,o)); return fill(T('ord_left'),{a:num(done),n:num(o.n),y:Math.max(0,o.due-G.day)}) }
+function ordLine(){ var o=G.orders&&G.orders.on; if(!o) return '';
+  return '<div class="sg ord"><i></i><div><b>'+esc(T('ord_head'))+' · '+esc(ordText(o))+'</b><small>'+esc(ordProg(o))+' · '+ordRw(o)+'</small></div></div>' }
+function ordOffer(){ var O=G.orders; if(!O||O.on||!O.offer||!O.offer.length) return '';
+  return '<div class="ordo">'+sec(esc(T('ord_offerH')),esc(fill(T('ord_offerSub'),{y:K.ORDER_YEARS})))+O.offer.map(function(o,j){
+    return '<div class="orr"><div><b>'+esc(ordText(o))+'</b><small>'+ordRw(o)+'</small></div>'+btn(esc(T('ord_take')),'ordtake',{i:j},'pri')+'</div>' }).join('')+'</div>' }
 function objCard(){ if(!G||G.over) return ''; var O=objectives(G), l=objNow(O), o=l[0], s2=l[1], ft=objFoot(O);
   return '<button class="ocard" type="button" data-act="tab" data-v="goals"><div class="hd"><span>'+HEXI+esc(T('o_head'))+'</span>'+(l.length>2?'<em>'+esc(fill(T('o_also'),{n:l.length-2}))+'</em>':'')+'</div>'+
     '<div class="tt">'+esc(objT('o_',o))+'<small>'+esc(objSub(o))+'</small></div>'+
-    (s2?'<div class="sg"><i></i><div><b>'+esc(objT('o_',s2))+'</b><small>'+esc(objSub(s2))+'</small></div></div>':'')+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
+    (s2?'<div class="sg"><i></i><div><b>'+esc(objT('o_',s2))+'</b><small>'+esc(objSub(s2))+'</small></div></div>':'')+ordLine()+(ft?'<div class="ft">'+ft+'</div>':'')+'</button>' }
 function objDone(e){ var d=e.d||{}, g=e.code==='ark_drive'?(d.g||0):(d.n||1)-1;
   return fill(T('od_'+e.code),{w:d.p?pname(d.p):'',s:d.s||'',g:roman(g),y:d.y||'',l:d.l||'',n:d.n===undefined?'':num(d.n)}) }
 function winGoals(){ var O=objectives(G), l=objNow(O), D=O.drive, A=O.ark, h='';
+  var on=G.orders&&G.orders.on; if(on){ h+=sec(esc(T('ord_head')),esc(fill(T('ord_dueY'),{y:on.due})))+'<div class="opg">'+objBar(ordText(on),esc(ordProg(on)),(on.n-orderLeft(G,on))/Math.max(1,on.n),C.people)+'</div><div class="ogv">'+ordRw(on)+'</div>' }
+  else h+=ordOffer();   // v5.37: the order of the shift — taken, or the two on offer
   h+=sec(esc(T('o_jNow')));
   l.slice(0,3).forEach(function(o,i){ var go=OBJ_GO[o.code]||(o.p?'w':'');
     h+='<div class="orow'+(i?' alt':'')+'"><i></i><div><b>'+esc(objT('o_',o))+(o.p&&planet(o.p)?' — '+esc(pname(o.p)):'')+'</b><span>'+esc(o.code==='o_survey'&&!G.night?T('ow_surveyDate'):o.code==='o_kit'?fill(T('ow_kit'),kitNum(o)):objT('ow_',o))+'</span></div>'+
@@ -1318,15 +1331,18 @@ function bigHtml(kind){
     if(R.left!==null&&R.left!==undefined) rows+=rw2(esc(T('shLeft')),esc(fill(T('shLeftN'),{n:R.left,b:R.berths})),R.left<=K.NIGHT_NEAR?'bad':'warn');
     var k1=Math.max(1,(R.no||2)-1);   // the report at year 80 is the hand-over of shift 1
     return '<div class="nwin" id="shiftwin">'+xb('shiftok')+icap(T('u_shiftCap')+' · '+T('u_year')+' '+G.day)+'<p>'+esc(k1===1?T('nar_N04a'):fill(T('nar_N04b'),{k:k1}))+'</p><div class="rws">'+rows+'</div>'+alx(T(k1===1?'nar_N04a_a':'nar_N04b_a'))+
+      ordOffer()+ordLine().replace('class="sg ord"','class="sg ord inwin"')+   // v5.37: the shift brings two orders to choose from
       '<div class="nbtn"><label><input type="checkbox" id="shstop" checked> '+esc(T('shiftStop'))+'</label>'+btn(esc(T('shiftGo')),'shiftok',null,'pri')+'</div></div>' }
   if(kind==='note'){ var n=U.notes[0];
     if(!n.shown){ n.shown=true; SFX.play(n.snd||'info') }
     return '<div class="nwin '+(n.cls||'')+'">'+xb('noteok')+'<div class="icap">'+esc(n.k)+'<span>'+G.day+'</span></div><h2>'+esc(n.title)+'</h2><p>'+esc(n.body)+'</p><div class="nbtn">'+
       (n.go?btn(esc(n.goL||T('u_open')),'notego',{v:n.go},'pri'):'')+btn(esc(T(n.go?'noFreeLater':'noteOk')),'noteok',null,n.go?'':'pri')+'</div></div>' }
   return '' }
-function drawBig(){ var k=bigKind(), L0=el('noteL'), key=k==='shift'?'shift'+G.day:null;
+function drawBig(){ var k=bigKind(), L0=el('noteL'), key=k==='shift'?'shift'+G.day+(G.orders&&G.orders.on?'o':''):null;   // v5.37: built again once an order is taken
   if(key&&L0.dataset.k===key){ L0.className='on'; return }   // the shift window is built once: its checkbox keeps its state
-  var h=k?bigHtml(k):''; L0.dataset.k=key||''; setHTML('noteL',h); L0.className=h?'on':'' }
+  var cb0=el('shstop'), keep=cb0?cb0.checked:null;
+  var h=k?bigHtml(k):''; L0.dataset.k=key||''; setHTML('noteL',h); L0.className=h?'on':'';
+  var cb1=el('shstop'); if(cb1&&keep!==null) cb1.checked=keep }
 
 /* ---------- personal files: a face for a crew, at the foot of the map, or the whole screen for the moments that matter ---------- */
 /* a word from a crew: only the Night, the ark drive and the last flights still take the whole screen. The rest are strips
@@ -2292,6 +2308,7 @@ function doAct(a,b){
     res=abandon(G,ec.id,ep); act(G,'evacuate',{p:ep,hull:ec.id},res);
     if(res==='ok'&&ecol&&ec.cap<Math.floor(ecol.pop)){ okc='ok_evac_short'; okp={n:hullName(HULLS[ec.hull]),p:pname(ep),c:ec.cap,l:Math.floor(ecol.pop)-ec.cap} } else { okc='ok_evac'; okp={p:pname(ep)} } }
   else if(a==='kit'){ var kct=kitCost(G.colonies[d.p]||{}).tier; res=orderKit(G,d.p); act(G,'kit',{p:d.p,t:kct},res); okc='ok_kit'; okp={p:pname(d.p),t:roman(kct-1)} }
+  else if(a==='ordtake'){ var oi=+d.i, oo=G.orders&&G.orders.offer&&G.orders.offer[oi]; res=orderTake(G,oi); act(G,'orderTake',{i:oi,k:oo&&oo.k},res); okc='ok_orderTake'; okp={t:oo?ordText(oo):''} }   // v5.37
   else if(a==='hubfound'){ var hp=d.p, hs2=shipById(G,U.who[hp]); res=hs2?hubFound(G,hs2.id,hp):'nofree'; act(G,'hubFound',{p:hp,hull:hs2&&hs2.id},res); okc='ok_hubFound'; okp={p:pname(hp)} }   // v5.35 (p.21)
   else if(a==='send'){ var sp=d.p, ss=shipById(G,U.who[sp]); if(!ss){ res='nofree' } else { var np=foundParty(G,ss,sp), wasRes=ss.reserve; res=colonize(G,ss.id,sp,np,0); if(res==='ok'&&wasRes){ setReserve(G,ss.id,false); resLeft(ss.id) } act(G,'colonize',{p:sp,hull:ss.id,people:np},res); okc='ok_found'; okp={p:pname(sp),n:np} } }
   else if(a==='drive'){ var dp=d.p||driveHost(); res=startDrive(G,dp); act(G,'drive',{p:dp,mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={p:pname(dp)} }

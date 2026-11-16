@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.36'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.37'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -332,6 +332,7 @@ var K={
      inherited. Lifted worlds get an epitaph, the ark and the famine get a last entry.
      No characters, no dialogue — the log is the story. */
   SHIFT_YEARS:80,
+  ORDER_YEARS:60, ORDER_DELIVER:1.25, ORDER_PEOPLE:0.5,   // v5.37 (p.13): an order of the shift is done in this many years; a delivery asks this much over what came the shift before; people as a reward — this share of the next ring's survey party
   /* v5.10 (design/ARK.md 2g, Nikita 10.11): the ark is a hive of waking capsules, bought ring by ring. Ring k holds ARK_RING*k
      capsules (600, 1 200, 1 800...); a capsule's price is set by how many are already bought — the ladder steps every ARK_STEP
      capsules (food ARK_FOOD, metal ARK_METAL a capsule), and a ring costs the sum of the ladder over its capsules (ring 1 —
@@ -633,7 +634,7 @@ function newGame(seed){
     seed:seed, rnd:mulberry32(seed), day:0, over:null,
     earth:{metal:430, food:230, fuel:240, parts:0, people:128, lost:0, lostCrew:0,
            pMetal:K.EARTH_METAL, pFood:K.EARTH_FOOD, pFuel:K.EARTH_FUEL},
-    colonies:{}, ships:[], orders:[], log:[], nextShip:1, nextMissing:1, opened:{food:0},   // v4.34: the day each resource was first met (openRes)
+    colonies:{}, ships:[], orders:{offer:[],on:null}, log:[], nextShip:1, nextMissing:1, opened:{food:0},   // v4.34: the day each resource was first met (openRes)
     driveLvl:0, gen:0, drive:null, driveWork:0, sectors:0, dismissed:{}, actions:[], ghost:{}, settled:{},
     night:null, nightSeen:false, ark:{rings:0,woke:0}, souls:0, arkMark:null, partsRate:0, boarded:0, grounded:false,
     pauseNow:false, ledger:{metalOut:0,metalYards:0,metalIn:0,metalSurvey:0}, reserves:{}, delivered:{metal:0,food:0,fuel:0,parts:0,people:0},
@@ -1501,8 +1502,57 @@ function chronShift(G,cols){
     attrition:(G.stats.attrition||0)-(m.attrition||0), handsRate:+handsRate(G).toFixed(2)};
   G.shiftMark={delivered:{metal:G.delivered.metal,food:G.delivered.food,fuel:G.delivered.fuel,parts:G.delivered.parts,people:G.delivered.people},
     founded:G.stats.founded,lost:G.stats.lost,mutinies:G.stats.mutinies||0,kits:G.stats.kits||0,sectors:SECTORS.length,drive:G.driveLvl||0,cols:cols,berths:arkCaps(arkRings(G)),arkLv:arkRings(G),day:G.day,built:G.stats.yardBuilt||0,attrition:G.stats.attrition||0};
+  orderOffer(G,no);   // v5.37: two orders for the new shift to choose from
   G.shiftOpen=true;
 }
+
+/* v5.37 (Nikita's run 16.11, p.13: «Нужны подзадания, чтобы игроку было интересно между делом что-то делать и чего-то добиваться. Там
+   построить столько-то судов такого-то типа. Чтобы на линии ходили только суда такого типа и тд»; on the answer: приказы смены, выбор
+   из двух, награда — то, чего не хватает: люди или готовое судно — «Хорошо»; the scope — «да»): every new shift offers two orders read
+   off the run as it stands; the player takes one or none. The first pays in people (who join Earth), the second in a hull of the
+   generation the yards build (her crew comes with her, as a dock's). Done within ORDER_YEARS — the reward; not done — nothing is lost.
+   An order is { k: kind, n: how many, at: the counter when taken, r / c / s: what of, rw: the reward }.
+   Kinds: deliver — bring n of a resource home (G.delivered); hulls — n more hulls of a class on lines; pure — one more line run by that
+   class alone (Nikita's «только суда такого типа»); settle — a world on ring s; survey — chart the next ring; kit — install a package */
+function ordersOf(G){ if(!G.orders||Array.isArray(G.orders)) G.orders={offer:[],on:null}; return G.orders }   // a save of v5.36 and before held an empty array here (the reviewer of v5.37: the order was lost on a save)
+function orderCur(G,o){ var i, n=0, k;
+  if(o.k==='deliver') return G.delivered[o.r]||0;
+  if(o.k==='hulls'){ for(i=0;i<G.ships.length;i++){ var h=G.ships[i]; if(h.mode!=='dead'&&h.from&&h.to&&shipClass(h)===o.c&&h.id>=(o.sid||0)) n++ } return n }   // new hulls only: built after the order was taken
+  if(o.k==='pure'){ for(k in G.colonies){ var L=onLine(G,k); if(L.length&&L.every(function(x){ return shipClass(x)===o.c })) n++ } return n }
+  if(o.k==='settle'){ for(k in (G.settled||{})){ var p=planet(k); if(p&&p.sec===o.s) n++ } return n }
+  if(o.k==='survey') return SECTORS.length;
+  if(o.k==='kit') return G.stats.kits||0;
+  return 0 }
+function orderLeft(G,o){ return Math.max(0,Math.min(o.n,o.n-Math.max(0,orderCur(G,o)-o.at))) }
+function orderReward(G,i){ if(i===0) return {people:Math.max(10,Math.round(K.ORDER_PEOPLE*surveyCost(SECTORS.length).people))};
+  return {hull:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'} }
+function orderOffer(G,no){ var O=ordersOf(G);
+  O.offer=[]; if(O.on||(G.stats.founded||0)<2||G.over) return;
+  var c=[], d=(G.shiftReport&&G.shiftReport.d)||{}, have={}, i;
+  for(i=0;i<G.ships.length;i++){ var h=G.ships[i]; if(h.mode!=='dead') have[shipClass(h)]=1 }
+  ['metal','food','parts'].forEach(function(r){ if(isOpen(G,r)&&(d[r]||0)>50){ var n=Math.round(d[r]*K.ORDER_DELIVER/50)*50; c.push({k:'deliver',r:r,n:n}) } });
+  CLASSES.forEach(function(cl){ if(have[cl]&&currentHull(G,cl)!==null){ c.push({k:'hulls',c:cl,n:2}); if(cl!=='courier') c.push({k:'pure',c:cl,n:1}) } });
+  var fw=null; for(i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(p.sec>=SECTORS.length||p.sec>sectorLimit(G.gen||0)||G.colonies[p.id]||(G.ghost&&G.ghost[p.id])||enRoute(G,p.id)) continue; if(fw===null||p.sec>fw) fw=p.sec }
+  if(fw!==null&&fw>0) c.push({k:'settle',s:fw,n:1});
+  if(canSurvey(G)!=='settled') c.push({k:'survey',n:1});   // the worlds are there for it: only the stores stand between
+  if(kitOpen(G)&&Object.keys(G.colonies).some(function(k){ var r=canKit(G,k); return r==='ok'||r==='metal'||r==='parts' })) c.push({k:'kit',n:1});
+  if(c.length<2) return;
+  var rnd=mulberry32((G.seed^0x0DE125)+no*7919), a=Math.floor(rnd()*c.length), b=Math.floor(rnd()*(c.length-1)); if(b>=a) b++;
+  if(c[a].k===c[b].k&&c.length>2){ for(i=0;i<c.length;i++) if(c[i].k!==c[a].k){ b=i; break } }   // two different kinds when there are
+  [c[a],c[b]].forEach(function(o,j){ o.rw=orderReward(G,j); o.no=no; O.offer.push(o) }) }
+function orderTake(G,i){ var O=ordersOf(G); if(!O.offer||!O.offer[i]) return 'orderNone'; if(O.on) return 'orderOn';
+  var o=O.offer[i]; o.sid=G.nextShip; o.at=orderCur(G,o); o.from=G.day; o.due=G.day+K.ORDER_YEARS; O.on=o; O.offer=[];
+  log(G,'order_taken',{k:o.k,n:o.n,y:o.due}); return 'ok' }
+function giveHull(G,cls){ var hi=currentHull(G,cls), h=hi===null?null:HULLS[hi]; if(!h) return null;
+  var s={id:G.nextShip++, hull:hi, cap:h.cap, gen:h.gen, crew:(h.crew||0), mode:'idle', t:0, at:'earth',
+         target:null, route:null, auto:true, cargo:{metal:0,food:0,fuel:0,parts:0,people:0}, out:{metal:0,food:0,parts:0,people:0}, take:{metal:0,food:0,fuel:0,parts:0}, missDays:0, bearing:null, job:null};
+  G.ships.push(s); return s }
+function orderTick(G){ var O=G.orders, o=O&&!Array.isArray(O)&&O.on; if(!o) return;
+  if(orderLeft(G,o)<=0){ var rw=o.rw||{}, sh=null;
+    if(rw.people){ G.earth.people+=rw.people } else if(rw.hull){ sh=giveHull(G,rw.hull) }
+    G.stats.orders=(G.stats.orders||0)+1; O.on=null; O.last={k:o.k,ok:true,day:G.day};
+    log(G,rw.people?'order_done_people':'order_done_hull',{k:o.k,h:rw.people||0,c:rw.hull||'',n:sh?sh.id:0}); G.pauseNow=true; return }
+  if(G.day>=o.due){ O.on=null; O.last={k:o.k,ok:false,day:G.day}; log(G,'order_failed',{k:o.k}) } }
 
 /* ---------- tick ---------- */
 
@@ -1833,6 +1883,7 @@ function tick(G){
   if(G.day%K.SHIFT_YEARS===0) chronShift(G,settled);
 
   evacQueueTick(G);   // v5.34: the evacuations put in the queue
+  orderTick(G);       // v5.37: the order of the shift
   // ---- the larder forecast (v4.28, F-11) ----
   if(G.day>=200){ var ff=foodForecast(G); G.foodFc=ff;
     if(foodShort(G)){ if(!G.foodWarned&&G.day>=K.FOOD_PAUSE_FROM){ G.foodWarned=true; G.pauseNow=true; log(G,'food_horizon',{y:ff.y,n:ff.n,h:Math.round(E.food),k:ff.farms}) } }
