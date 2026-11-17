@@ -163,3 +163,6 @@ UI	shiftGo	Take the Helm	Принять пульт
 UI	nar_N04a	Shift 1 hands over the Helm. Shift 2 takes it.	Смена 1 сдаёт пульт. Заступает смена 2.
 UI	nar_N04b	Shift {k} hands over the Helm.	Смена {k} сдаёт пульт.
 UI	tut_m22	The seam is dead. Only evacuation is left — a courier takes everyone. Next time press Evacuate early: the courier sails on her own once the world is bare.	Жила мертва. Осталась только эвакуация — курьер забирает всех. В другой раз жмите «Эвакуировать» заранее: курьер вылетит сам, когда мир опустеет.
+UI	o_jDateV	behind the door past ring {n} · rings {a} of {k}	за дверью после кольца {n} · колец {a} из {k}
+UI	ow_surveyDate	New worlds — and word of the Night.	Новые миры — и весть о Ночи.
+UI	tut_m18	The Night is up here. Its year waits behind the door past the last ring. Big news stops time and comes one window at a time.	Ночь — здесь, наверху. Её год ждёт за дверью, после последнего кольца. Важные новости останавливают время и приходят по одному окну.

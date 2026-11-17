@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.40'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.41'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -83,6 +83,7 @@ function surveyCost(n){
    it is the pressure the drive programme is supposed to relieve. */
 function canSurvey(G){
   var n=SECTORS.length, c=surveyCost(n), E=G.earth;
+  if(n>=K.RING_LAST) return 'last';   // v5.41: past the last ring — the door
   if(settledCount(G)<K.SURVEY_REACH*n) return 'settled';
   if(E.metal<c.metal) return 'metal';
   if(E.food<c.food) return 'food';
@@ -324,6 +325,14 @@ var K={
   NIGHT_TRIGGER_SECTORS:3, NIGHT_TRIGGER_YEAR:1000,   // dated on the third sector, or by year 1000 regardless
   NIGHT_YEARS:3300,                                   // v4.4 (Nikita 25.09, run 381774366: drive IV at 1794, Night 2994 — 1200 empty years): ×1.5, filled by kits
   ARK_ABOVE:2,                                        // v4.4: the ark drive is this many marks above the one you hold on the day of the date (was 1)
+  /* v5.41 — the door (Nikita 16–17.11: «Точка невозврата и все… Если ты перешёл границу дальше только ночь»; «ночь… дата ночи будет
+     известна только после того, как мы откроем эту дверь… нужно задать какой-то отрезок времени… за это время игрок должен будет разобрать
+     всю свою империю и посадить все в ковчег»; «7-е кольцо последнее, 8-го нет»; «выше 6 поколения невозможно» — the cap is one above, VII).
+     The chart ends at RING_LAST; the drive at GEN_LAST (driveLvl 6 = Generation VII). Past the last ring there is no survey, only the
+     door: the player opens it when ready, and the Night is dated DOOR_YEARS ahead. The rings go dark from the edge in, DOOR_DARK[i]
+     years after the door for ring index i (0 = ring I): a world on a dark ring is lost with its people, a hull there or bound there
+     with her crew. A warning DARK_WARN years before each. Numbers — Claude's, to be checked with the bots. */
+  RING_LAST:7, GEN_LAST:6, DOOR_YEARS:500, DOOR_DARK:[480,450,410,360,300,230,150], DARK_WARN:25,
   NIGHT_NEAR:400,                                     // the desk pauses again this close to the end
   DUSK_YEARS:1000,                                    // v4.1: inside this the chronicle turns to the end
   DOOMSDAY_AT:900,                                    // v4.1: the desk logs what Earth has become, once
@@ -817,13 +826,14 @@ function unload(G,s,node){
 }
 function temper(G,s){ var h=((s.id*2654435761)^(G.seed|0))>>>0; return K.MUTINY_SPREAD*((h%1000)/1000) }
 /* would this crew refuse the run that starts here? (the desk can ask the same question) */
-function mutinyDue(G,s,round){ if(!G.night||s.mutiny) return false; var left=nightLeft(G); return left<(K.MUTINY_MIN+temper(G,s))*round }
+function mutinyDue(G,s,round,pid){ if(!G.night||s.mutiny) return false; var left=nightLeft(G), t=K.MUTINY_MIN+temper(G,s); if(left<t*round) return true;
+  var wl=pid&&G.door?worldLeft(G,pid):null; return wl!==null&&wl<t*round*0.5 }   // v5.41: nor a run that lands after the world's ring goes dark
 /* v4.27: the first crew that will refuse, by the same count the crews make — year, line, and the rations Earth
    needs from that day to the Night (the lines stop one by one after it; a larder is the only answer) */
 function mutinyForecast(G){ if(!G.night) return null; var best=null;
   for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead'||s.mutiny||!s.from||!s.to) continue;
     var pid=s.from==='earth'?s.to:s.from; if(!G.colonies[pid]) continue;
-    var y=Math.floor(G.night-(K.MUTINY_MIN+temper(G,s))*legDays(G,pid,'earth',s)*2);
+    var tm=K.MUTINY_MIN+temper(G,s), rt=legDays(G,pid,'earth',s)*2, y=Math.floor(Math.min(G.night-tm*rt,worldEnd(G,pid)-tm*rt*0.5));
     if(!best||y<best.y) best={y:y,pid:pid} }
   if(!best) return null; var nd=G.need||earthNeed(G);
   best.n=Math.max(0,best.y-G.day); best.f=Math.round(nd.food*Math.max(0,G.night-best.y)); return best }
@@ -836,11 +846,11 @@ function lastLift(G,pid){ var p=planet(pid), c=G.colonies[pid]; if(!G.night||!p|
   for(i=0;i<G.ships.length;i++){ s=G.ships[i]; if(s.mode==='dead'||s.mode==='missing'||s.mutiny||shipClass(s)!=='courier'||!canReachSector(s,p.sec)) continue;
     /* she has to be at the pier first: the years until she is home (or off the slip) come out of her own deadline */
     var w = s.mode==='building' ? s.t : (s.mode==='transit' ? (s.dest==='earth' ? s.t : s.t+legDays(G,s.dest,'earth',s)) : (s.at==='earth' ? 0 : legDays(G,s.at,'earth',s)));
-    var d=legDays(G,'earth',pid,s)*2, ys=Math.floor(G.night-d);
+    var d=legDays(G,'earth',pid,s)*2, ys=Math.floor(Math.min(G.night-d,worldEnd(G,pid)-d/2));
     if(G.day+w>ys) continue;
     if(y===null||ys>y){ y=ys; rt=d } }
   if(y===null){   // nobody in the fleet makes it: cut off, unless a courier laid down today still would
-    var nh=currentHull(G,'courier'), late = nh===null || G.day>Math.floor(G.night-legDays(G,'earth',pid,{hull:nh})*2-HULLS[nh].days);
+    var nh=currentHull(G,'courier'), nl=nh===null?0:legDays(G,'earth',pid,{hull:nh}), late = nh===null || G.day>Math.floor(Math.min(G.night-nl*2,worldEnd(G,pid)-nl)-HULLS[nh].days);
     return {st:late?'cut':'none', n:0, pop:pop} }
   return {st:'open', y:y, n:y-G.day, rt:rt, pop:pop} }
 /* v4.28 (F-11, Nikita 08.10: the quiet famine — farms ran dry 440 years before the end and the larder warning came 60
@@ -881,7 +891,7 @@ function sail(G,s){
   if(dest===s.from&&spentWorld(G,dest)){ var sw=s.from; s.from=null; s.to=null;
     if(here==='earth'&&!s.pend&&!s.moveTo){ s.waiting=true; log(G,'nothing_left',{n:s.id,p:sw}) }
     return 'spent' }
-  if(G.night&&here==='earth'&&mutinyDue(G,s,legDays(G,here,dest,s)*2)){
+  if(G.night&&here==='earth'&&mutinyDue(G,s,legDays(G,here,dest,s)*2,dest)){
     // the crew will not go out again: the line is dropped on the pier
     s.mutiny=true; s.from=null; s.to=null; s.pend=null; s.waiting=true; G.stats.mutinies=(G.stats.mutinies||0)+1;
     G.pauseNow=true; log(G,'mutiny',{n:s.id,p:dest,at:'earth'}); return 'mutiny';
@@ -943,7 +953,7 @@ function snap(G){
     fuel:Math.round(E.fuel), parts:Math.round(E.parts), needF:+(G.need?G.need.food:0).toFixed(1),
     needM:+(G.need?G.need.metal:0).toFixed(1), cols:cols, pop:Math.round(pop), dry:dry,
     ships:fleet.length, idle:idle, crew:crewOut(G), out:+earthOutput(G).toFixed(2), hands:+handsRate(G).toFixed(2), attrition:G.stats.attrition||0,
-    night:G.night||0, berths:arkSouls(G), arkLv:arkRings(G), arkMark:G.arkMark, pace:+(G.partsRate||0).toFixed(2),
+    night:G.night||0, door:G.door?G.door.at:0, berths:arkSouls(G), arkLv:arkRings(G), arkMark:G.arkMark, pace:+(G.partsRate||0).toFixed(2),
     arkY:(G.night&&!arkReady(G))?(function(f){return f.st==='ok'?f.y:f.st})(driveForecast(G,G.arkMark)):null,
     sectors:SECTORS.length, drive:G.driveLvl||0, reach:reach(G), settled:settledCount(G),
     hungry:!!G.hungry, famine:G.famine||0};
@@ -1032,6 +1042,7 @@ function canDepart(G,s,pid,found,hubTo){   // hubTo (v5.35) — settlers foundin
   var p=planet(pid);
   if(!p) return 'noplanet';
   if(!sectorOpen(G,p.sec)) return 'sector';
+  if(ringOut(G,p.sec)) return 'ringDark';   // v5.41
   if(G.ghost&&G.ghost[pid]&&!hubTo) return 'ghost';
   if(!canReachSector(s,p.sec)) return 'range';
   if(s.mutiny) return 'mutiny';
@@ -1258,7 +1269,7 @@ function abandon(G,shipId,pid){
   var c=G.colonies[pid]; if(!c) return 'nocolony';
   for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.job==='evac'&&o.dest===pid&&o.mode==='transit') return 'evacuating' }
   var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
-  if(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) return 'evacLate';   // v4.33: she would not be home before the Night
+  var lt=liftLate(G,pid,s); if(lt) return lt;   // v4.33: she would not be home before the Night; v5.41: nor there before her ring goes dark
   if(c.kit){ G.earth.metal+=c.kit.metal; G.earth.parts+=c.kit.parts; c.kit=null }   // v4.4: a kit not yet shipped goes back to the yards
   launch(G,s,pid,'evac',{});
   if(c.evacQ){ delete c.evacQ; delete c.evacWait }
@@ -1274,7 +1285,7 @@ function abandon(G,shipId,pid){
    (the window's choice, moved here from ui.js so the queue picks the same hull) */
 function evacPick(G,pid){ var c=G.colonies[pid], p=planet(pid), pop=c?Math.floor(c.pop):0; if(!p) return null;
   var list=G.ships.filter(function(s){ return s.mode==='idle'&&s.at==='earth'&&!s.mutiny&&!s.crewWait&&!(s.from&&s.to)&&!s.pend&&!s.job&&canReachSector(s,p.sec)&&
-    shipClass(s)==='courier'&&!(G.night&&nightLeft(G)<legDays(G,'earth',pid,s)*2) });
+    shipClass(s)==='courier'&&!liftLate(G,pid,s) });
   if(!list.length) return null;
   var rs=function(s){ return s.reserve?1:0 };   // v4.50 (Claude's playtest 04.11): a hull kept for the ark goes last (Claude — awaiting review)
   var fit=list.filter(function(s){ return s.cap>=pop }).sort(function(a,b){ return rs(a)-rs(b)||legDays(G,pid,'earth',a)-legDays(G,pid,'earth',b)||a.cap-b.cap });
@@ -1320,6 +1331,7 @@ function search(G,shipId,missId){
    final mark, which is where the endless half of the progression lives. */
 function startDrive(G,pid){
   if(G.drive) return 'running';
+  if((G.driveLvl||0)>=K.GEN_LAST) return 'genlast';   // v5.41: Generation VII is the last
   if(hackWait(G,'drive')) return 'hack';
   if(settledCount(G)<driveReachFor(G)) return 'settled';
   var c=G.colonies[pid], p=planet(pid);
@@ -1366,11 +1378,55 @@ function hackWin(G){
   else G.ark.woke=Math.max(G.ark.woke||0,h.l);
   return 'ok' }
 
-/* ---------- the Long Night and the ark ---------- */
+/* ---------- the Long Night and the ark ----------
+   v5.41: the third ring (or the year 1000) no longer dates the Night — it opens the ark (openArk: the hive can be bought, the ark's drive
+   mark is set as the date used to set it). The date comes with the door (openDoor). nightKnown — the ark chapter is open (either way);
+   G.night — the Night has a date. revealNight stays: an old save's way, and the scenarios' hook for a dated Night */
+var RING_RN=['I','II','III','IV','V','VI','VII','VIII','IX','X'];
+function ringRn(i){ return RING_RN[i]||String(i+1) }   // v5.41: «ring VII» in the door's lines
+function nightKnown(G){ return !!(G.night||G.arkOpen) }
+function openArk(G){ if(nightKnown(G)) return;
+  G.arkOpen=G.day; G.pauseNow=true;
+  G.arkMark=Math.min(K.GEN_LAST,Math.max(K.ARK_DRIVE_MIN,(G.driveLvl||0)+K.ARK_ABOVE));
+  log(G,'night_known',{r:ringRn(K.RING_LAST-1)}) }
+function canDoor(G){ if(G.over) return 'over'; if(G.night) return 'doorOpen'; if(SECTORS.length<K.RING_LAST) return 'doorRings'; return 'ok' }
+function openDoor(G){ var r=canDoor(G); if(r!=='ok') return r;
+  if(!nightKnown(G)) openArk(G);
+  G.night=G.day+K.DOOR_YEARS; G.nightSeen=true; G.pauseNow=true;
+  var D=G.door={at:G.day,dark:{},out:{}}, L=K.DOOR_DARK;
+  for(var i=0;i<SECTORS.length;i++) D.dark[i]=G.day+(i<L.length?L[i]:L[L.length-1]);
+  log(G,'door_opened',{y:G.night,n:K.DOOR_YEARS,r:ringRn(SECTORS.length-1),d:D.dark[SECTORS.length-1]-G.day});
+  return 'ok' }
+function ringOut(G,sec){ return !!(G.door&&G.door.out[sec]!==undefined) }
+function ringDarkAt(G,sec){ return G.door&&G.door.dark[sec]!==undefined ? G.door.dark[sec] : null }
+/* the day a world is lost: its ring going dark, or the Night */
+function worldEnd(G,pid){ if(!G.night) return null; var p=planet(pid), d=p?ringDarkAt(G,p.sec):null; return d===null?G.night:Math.min(d,G.night) }
+function worldLeft(G,pid){ var e=worldEnd(G,pid); return e===null?null:Math.max(0,e-G.day) }
+function ringWorlds(G,sec){ var c=0, h=0; for(var k in G.colonies){ if(planet(k).sec===sec){ c++; h+=Math.floor(G.colonies[k].pop) } } return {c:c,h:h} }
+function doorTick(G){ var D=G.door; for(var i in D.dark){ if(D.out[i]!==undefined) continue; var left=D.dark[i]-G.day;
+    if(left===K.DARK_WARN){ var w=ringWorlds(G,+i); G.pauseNow=true; log(G,'ring_dark_near',{r:ringRn(+i),n:left,c:w.c,h:w.h}) }
+    if(left<=0) ringDark(G,+i) } }
+function ringDark(G,sec){ G.door.out[sec]=G.day; var lw=0, lp=0, ls=0, lc=0, k, i, s, o;
+  for(k in G.colonies){ if(planet(k).sec!==sec) continue; var c=G.colonies[k]; lw++; lp+=Math.floor(c.pop);
+    delete G.colonies[k]; feedersHome(G,k);
+    for(i=0;i<G.ships.length;i++){ o=G.ships[i]; if(o.from===k||o.to===k){ o.from=null; o.to=null } if(o.pend&&o.pend.from===k) o.pend=null; if(o.lineFor===k) o.lineFor=null; if(o.moveTo===k) o.moveTo=null }
+    if(G.drive===k){ G.drive=null; log(G,'drive_lost',{p:k}) }
+    log(G,'world_dark',{p:k,n:Math.floor(c.pop)}) }
+  for(i=0;i<G.ships.length;i++){ s=G.ships[i]; if(s.mode==='dead'||s.mode==='building') continue;
+    var here = s.mode==='idle'&&s.at&&s.at!=='earth' ? s.at : ((s.mode==='transit'||s.mode==='missing')&&s.dest&&s.dest!=='earth' ? s.dest : null), ph=here&&planet(here);
+    if(!ph||ph.sec!==sec) continue;
+    var cr=s.crew||0; lc+=cr; ls++; lp+=Math.floor((s.cargo&&s.cargo.people)||0);
+    s.mode='dead'; s.crew=0; s.from=null; s.to=null; s.pend=null; s.job=null; G.stats.lost++; hubFoundBack(G,s); G.earth.lostCrew=(G.earth.lostCrew||0)+cr }
+  G.stats.dark=(G.stats.dark||0)+lp+lc; G.pauseNow=true;
+  log(G,'ring_dark',{r:ringRn(sec),c:lw,h:lp,s:ls,k:lc}) }
+/* a lift that comes too late: she would reach the world after its ring went dark, or be home after the Night */
+function liftLate(G,pid,s){ if(!G.night) return false; var l=legDays(G,'earth',pid,s), e=worldEnd(G,pid);
+  if(G.day+l>=e&&e<G.night) return 'evacDark';   // the reviewer: its own reason — the ring goes dark before she is there
+  return G.day+l>=e||G.day+l*2>G.night ? 'evacLate' : false }
 function revealNight(G){
   if(G.night) return;
   G.night=G.day+K.NIGHT_YEARS; G.pauseNow=true;
-  G.arkMark=Math.max(K.ARK_DRIVE_MIN,(G.driveLvl||0)+K.ARK_ABOVE);   // v4.4: two marks above, not one
+  if(G.arkMark===null||G.arkMark===undefined) G.arkMark=Math.min(K.GEN_LAST,Math.max(K.ARK_DRIVE_MIN,(G.driveLvl||0)+K.ARK_ABOVE));   // v4.4: two marks above, not one; v5.41: set once, capped
   log(G,'night_dated',{y:G.night,n:K.NIGHT_YEARS});
 }
 /* ---------- v4.0: the second date ---------- */
@@ -1416,7 +1472,7 @@ function arkHold(k){ var H=K.ARK_HOLD, n=H.length, o={}, i, r;
   return o }
 /* a purchase brings the hive up to ring k in one go. 'ok' or why */
 function arkCheck(G,k){
-  if(!G.night) return 'night';
+  if(!nightKnown(G)) return 'night';
   if(!(k>=1)||k!==Math.floor(k)||k>arkPaid(G)+20) return 'arklevel';
   if(k<=arkRings(G)) return 'arkhave';
   if(hackWait(G,'ark')) return 'hack';
@@ -1532,9 +1588,11 @@ function orderOffer(G,no){ var O=ordersOf(G);
   for(i=0;i<G.ships.length;i++){ var h=G.ships[i]; if(h.mode!=='dead') have[shipClass(h)]=1 }
   ['metal','food','parts'].forEach(function(r){ if(isOpen(G,r)&&(d[r]||0)>50){ var n=Math.round(d[r]*K.ORDER_DELIVER/50)*50; c.push({k:'deliver',r:r,n:n}) } });
   CLASSES.forEach(function(cl){ if(have[cl]&&currentHull(G,cl)!==null){ c.push({k:'hulls',c:cl,n:2}); if(cl!=='courier') c.push({k:'pure',c:cl,n:1}) } });
-  var fw=null; for(i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(p.sec>=SECTORS.length||p.sec>sectorLimit(G.gen||0)||G.colonies[p.id]||(G.ghost&&G.ghost[p.id])||enRoute(G,p.id)) continue; if(fw===null||p.sec>fw) fw=p.sec }
+  var fw=null; for(i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(p.sec>=SECTORS.length||p.sec>sectorLimit(G.gen||0)||G.colonies[p.id]||(G.ghost&&G.ghost[p.id])||enRoute(G,p.id)) continue;
+    var pdk=ringDarkAt(G,p.sec); if(pdk!==null&&pdk-G.day<K.ORDER_YEARS+30) continue;   // v5.41 (the reviewer): not a ring that is dark or goes dark inside the order's years
+    if(fw===null||p.sec>fw) fw=p.sec }
   if(fw!==null&&fw>0) c.push({k:'settle',s:fw,n:1});
-  if(canSurvey(G)!=='settled') c.push({k:'survey',n:1});   // the worlds are there for it: only the stores stand between
+  var sv0=canSurvey(G); if(sv0!=='settled'&&sv0!=='last') c.push({k:'survey',n:1});   // v5.41 (the reviewer): no ring past the last   // the worlds are there for it: only the stores stand between
   if(kitOpen(G)&&Object.keys(G.colonies).some(function(k){ var r=canKit(G,k); return r==='ok'||r==='metal'||r==='parts' })) c.push({k:'kit',n:1});
   if(c.length<2) return;
   var rnd=mulberry32((G.seed^0x0DE125)+no*7919), a=Math.floor(rnd()*c.length), b=Math.floor(rnd()*(c.length-1)); if(b>=a) b++;
@@ -1889,7 +1947,8 @@ function tick(G){
     if(foodShort(G)){ if(!G.foodWarned&&G.day>=K.FOOD_PAUSE_FROM){ G.foodWarned=true; G.pauseNow=true; log(G,'food_horizon',{y:ff.y,n:ff.n,h:Math.round(E.food),k:ff.farms}) } }
     else if(G.foodWarned&&(!ff||ff.n>K.FOOD_HORIZON*1.5)) G.foodWarned=false; }   // re-armed once the horizon clears, so a second slide is told again
   // ---- the Long Night ----
-  if(!G.night&&(SECTORS.length>=K.NIGHT_TRIGGER_SECTORS||G.day>=K.NIGHT_TRIGGER_YEAR)) revealNight(G);
+  if(!nightKnown(G)&&(SECTORS.length>=K.NIGHT_TRIGGER_SECTORS||G.day>=K.NIGHT_TRIGGER_YEAR)) openArk(G);   // v5.41: the ark, not a date
+  if(G.door) doorTick(G);
   if(G.night){
     var left=G.night-G.day;
     if(left===K.NIGHT_NEAR||left===100||left===25){ G.pauseNow=true; log(G,'night_near',{n:left,s:arkSouls(G)}) }
@@ -1980,7 +2039,7 @@ function advice(G){
 
   var free=null, fleetLim=sectorLimit(G.gen||0);
   for(i=0;i<PLANETS.length;i++){ var pp=PLANETS[i];
-    if(!G.colonies[pp.id]&&!G.ghost[pp.id]&&sectorOpen(G,pp.sec)&&pp.sec<=fleetLim){ free=pp.id; break } }
+    if(!G.colonies[pp.id]&&!G.ghost[pp.id]&&sectorOpen(G,pp.sec)&&!ringOut(G,pp.sec)&&pp.sec<=fleetLim){ free=pp.id; break } }
   if(free&&idle.length&&E.people>=K.MIN_FOUND+K.EARTH_KEEP) out.push({code:'a_settle',sev:'ok',pid:free,sid:idle[0].id});
 
   for(i=HULLS.length-1;i>=0;i--){ var h=HULLS[i];
@@ -2030,8 +2089,11 @@ function advice(G){
     var mut=0; for(i=0;i<G.ships.length;i++){ if(G.ships[i].mutiny&&G.ships[i].mode==='idle') mut++ }
     if(mut) out.push({code:'a_mutiny',sev:'warn',n:mut});
     if(arkRings(G)<1) out.push({code:'a_ark',sev:nl<=K.NIGHT_NEAR?'warn':'ok'});   // nothing paid yet
+    if(G.door){ var nd0=null; for(var dsec in G.door.dark){ if(G.door.out[dsec]!==undefined) continue; var dw=ringWorlds(G,+dsec); if(!dw.c) continue;   // v5.41: the next ring to go dark with people on it
+        if(!nd0||G.door.dark[dsec]<nd0.y) nd0={y:G.door.dark[dsec],sec:+dsec,c:dw.c,h:dw.h} }
+      if(nd0) out.push({code:'a_ringdark',sev:nd0.y-G.day<=K.DARK_WARN*2?'bad':'warn',r:ringRn(nd0.sec),n:nd0.y-G.day,c:nd0.c,h:nd0.h}) }
     var cvA=arkConvoy(G); if(!cvA.ok&&nl<=K.NIGHT_NEAR*2) out.push({code:'a_convoy',sev:nl<=K.NIGHT_NEAR?'bad':'warn',n:cvA.have,k:cvA.all});   // v5.10: the convoy is a share of the fleet — said when the end is near
-  }
+  } else if(nightKnown(G)&&arkRings(G)<1) out.push({code:'a_ark',sev:'ok'});   // v5.41: the ark before the door
 
   if(!G.drive&&settledCount(G)>=driveReachFor(G)){
     for(k in G.colonies){ if(planet(k)&&planet(k).kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP){
@@ -2045,7 +2107,7 @@ function advice(G){
      at all (chart further out). */
   var freeNear=0, freeFar=0;
   for(i=0;i<PLANETS.length;i++){ var pz=PLANETS[i];
-    if(G.colonies[pz.id]||G.ghost[pz.id]) continue;
+    if(G.colonies[pz.id]||G.ghost[pz.id]||ringOut(G,pz.sec)) continue;   // v5.41: a dark ring has no worlds to settle
     if(pz.sec<=fleetLim) freeNear++; else freeFar++; }
   if(!freeNear&&freeFar) out.push({code:'a_genwall',sev:'warn',n:(G.gen||0)+2});
   if(!freeNear&&!freeFar&&sv!=='ok') out.push({code:'a_chartfull',sev:'ok'});
@@ -2068,7 +2130,7 @@ function advice(G){
 var FEED_THIN=0.75;   // ui.js FORGE_WARN: a works' line that brings under this share of what it burns
 var DONE={first_landfall:1,surveyed:1,drive_mark:1,night_dated:1,ark_bought:1,ark_drive:1};
 function freeWorld(G,kind){ var lim=Math.min(SECTORS.length,sectorLimit(G.gen||0)), best=null;
-  for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(p.sec>=lim||(kind&&p.kind!==kind)) continue;
+  for(var i=0;i<PLANETS.length;i++){ var p=PLANETS[i]; if(p.sec>=lim||(kind&&p.kind!==kind)||ringOut(G,p.sec)) continue;
     if(G.colonies[p.id]||(G.ghost&&G.ghost[p.id])||enRoute(G,p.id)) continue;
     if(!best||p.sec<best.sec||(p.sec===best.sec&&p.dist<best.dist)) best=p }
   return best?best.id:null }
@@ -2105,16 +2167,18 @@ function objectives(G){
   var d=null;
   if(G.drive) d={code:'o_parts',p:G.drive,n:Math.floor(G.driveWork||0),k:driveWorkFor(G)};
   else if(hackWait(G,'drive')) d=null;
+  else if(lvl>=K.GEN_LAST) d=null;   // v5.41: Generation VII is the last
   else if(s<need) d=any?{code:'o_settle',p:any,n:need-s}:{code:'o_survey',n:ring};
   else if(!works.length){ var fw=freeWorld(G,'works'); d=fw?{code:'o_works',p:fw}:{code:'o_survey',n:ring} }
   else if(!host) d={code:'o_grow',p:big,n:K.DRIVE_POP};
   else if(driveAhead(G)) d={code:'o_survey',n:ring};   // v5.34: the drive does not run ahead of the chart on the card's say-so
   else d={code:'o_drive',p:host};
   if(!nc&&d&&d.code==='o_settle') d=null;   // the first world is that objective already
+  if(d&&d.code==='o_survey'&&SECTORS.length>=K.RING_LAST) d=null;   // v5.41: no ring past the last — the door is its own objective
   if(d) d.g=lvl+2;
   /* the ark: a first ring, its drive, pods for everyone, the convoy when the end is near */
   var A=null;
-  if(G.night){ var rings=arkRings(G), paid=arkPaid(G), board=arkBoard(G), caps=arkCaps(rings), cv=arkConvoy(G), left=nightLeft(G), ready=arkReady(G);
+  if(nightKnown(G)){ var rings=arkRings(G), paid=arkPaid(G), board=arkBoard(G), caps=arkCaps(rings), cv=arkConvoy(G), left=G.night?nightLeft(G):Infinity, ready=arkReady(G);   // v5.41: from the day the ark is known; no date — never near
     var pods=paid<1?{code:'o_ark'}:(caps<board&&paid<=rings?{code:'o_pods',n:caps,k:board}:null);
     var conv=(!cv.ok&&left<=K.NIGHT_NEAR*2)?{code:'o_convoy',n:cv.have,k:cv.all}:null;
     /* v5.22 (a mouse run of v5.21 to the Night: 286 years left, not a pod bought, 46 000 metal at home — and the card said
@@ -2129,9 +2193,10 @@ function objectives(G){
     for(i=0;i<seq.length;i++){ var q=seq[i];
       if(near&&(q.code==='o_ark'||q.code==='o_pods'||q.code==='o_convoy'||(q===d&&!ready))) urgent.push(q); else now.push(q) }
     for(i=urgent.length-1;i>=0;i--) now.splice(head,0,urgent[i]);
-    A={night:G.night,near:left<=K.NIGHT_NEAR*2,board:board,caps:caps,wake:arkWakeN(G),have:cv.have,all:cv.all,convoy:cv.ok,ready:ready,mark:G.arkMark,lvl:lvl};
+    A={night:G.night||0,near:left<=K.NIGHT_NEAR*2,board:board,caps:caps,wake:arkWakeN(G),have:cv.have,all:cv.all,convoy:cv.ok,ready:ready,mark:G.arkMark,lvl:lvl};
   } else if(d) now.push(d);
   if(canSurvey(G)==='ok'&&!now.some(function(o){ return o.code==='o_survey' })) add('o_survey',{n:ring});
+  if(canDoor(G)==='ok') add('o_door',{n:SECTORS.length,k:K.DOOR_YEARS});   // v5.41: the last objective — when the player is ready
   if(!now.length) add('o_time');
   return {now:now, drive:{g:lvl+2,settled:s,need:need,work:Math.floor(G.driveWork||0),workNeed:driveWorkFor(G),running:!!G.drive}, ark:A, done:G.done||[]} }
 

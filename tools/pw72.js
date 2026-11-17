@@ -23,7 +23,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     await shot(p,'s2-meteor-comet-flare');
     ok('2: a comet, a meteor and a flare are on the sky', /c/.test(live)&&/m/.test(live)&&/f/.test(live), JSON.stringify({sp,live}));
     await p.waitForTimeout(3000); await shot(p,'s3-comet-later');
-    const l2=await p.evaluate(()=>LNsky.get().list.map(o=>o.k).join(''));
+    const l2=await p.evaluate(t0s=>LNsky.get().list.filter(o=>t0s.indexOf(o.t0)>=0).map(o=>o.k).join(''), sp.map(o=>o.t0));   // only the ones this scenario called: the sky's own timer may send another
     ok('2: the meteor is gone in its second, the comet still crosses', !/m/.test(l2)&&/c/.test(l2), l2);
     await p.waitForTimeout(14000); const l3=await p.evaluate(t0s=>LNsky.get().list.filter(o=>t0s.indexOf(o.t0)>=0).length, sp.map(o=>o.t0));
     ok('2: the comet and the flare fade out in their time', l3===0, l3);

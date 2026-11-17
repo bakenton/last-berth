@@ -38,8 +38,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('FUEL shows in the settlers\' price with m2', M.fuelInPrice===2, M.fuelInPrice);
   ok('her voice: the first landing report (N-02)', /Report from [A-Z]+: \d+ people landed/.test(M.v_N02||''), M.v_N02);
   ok('the first shift window speaks for the Institute (N-04)', /Shift 1 hands over the Helm/.test(M.n04||'')&&/I stay/.test(M.n04||''), (M.n04||'').slice(0,160));
-  ok('the Night window is N-09', /in \d+ our galaxy collapses/.test(M.n09||''), (M.n09||'').slice(0,160));
-  ok('v5.26: m18 speaks of a Night that was up there already and now has its year', /The Night has its year now/.test((M.h_m18||{}).text||''), (M.h_m18||{}).text);
+  ok('the Night window is N-09 (v5.41: no date — collapsing from the edge in, «????»)', /collapsing from the edge in/.test(M.n09||'')&&/\?\?\?\?/.test(M.n09||''), (M.n09||'').slice(0,160));
+  ok('v5.41: m18 — the Night is up there, its year behind the door', /behind the door/.test((M.h_m18||{}).text||''), (M.h_m18||{}).text);
   ok('a new tab shows a yellow dot until opened', M.earthDot===true&&M.earthDotAfter===false, M.earthDot+' '+M.earthDotAfter);
   ok('by occasion: the first look into Earth tells time stops (m7)', S.includes('m7'), S.join(' '));
   // v5.32: the first upgrade package is an objective on the card (v5.31: a task of the helper, mK, that held the screen) — when the run reaches the packages with a world that can take one

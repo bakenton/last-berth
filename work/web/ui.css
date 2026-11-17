@@ -443,3 +443,14 @@ svg.gi{fill:currentColor}
 .sg.ord.inwin small{display:flex;gap:5px;align-items:center;color:var(--mid);margin-top:3px}
 .ogv svg{vertical-align:middle}
 .rwh{font:500 10px var(--h);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin-right:2px}
+
+/* v5.41: the door — on the chart where the next ring was, in the Tech tab, and its window with the held button */
+#ringbtn.isdoor{border-color:rgba(255,42,26,.6)}
+#ringbtn.isdoor small{color:var(--red)}
+.b.door{background:var(--red);border-color:var(--red);color:#0B0B0C}
+.b.door:hover{filter:brightness(1.12)}
+.win.door p{margin:6px 0 8px;line-height:1.45}
+.win.door .doorno{color:var(--red);font-weight:600;margin-top:12px}
+.b.doorhold{position:relative;overflow:hidden;background:var(--red);border-color:var(--red);color:#0B0B0C;touch-action:none;user-select:none;-webkit-user-select:none}
+.b.doorhold::after{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(11,11,12,.38);pointer-events:none}
+.b.doorhold.hold::after{width:100%;transition:width var(--hold,1800ms) linear}

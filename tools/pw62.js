@@ -26,7 +26,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.keyboard.press('Escape');
   await U.tap('#cards .ocard');
   let j=await p.evaluate(()=>({secs:[...document.querySelectorAll('#goals .sec')].map(e=>e.innerText.replace(/\s+/g,' ').trim()),ock:[...document.querySelectorAll('#goals .ock')].map(e=>e.className+' · '+e.innerText.replace(/\s+/g,' ').trim())}));
-  ok('journal: «The Night — date unknown» and the way to the date (ring 3)', j.secs.some(s=>/^the night date unknown$/i.test(s))&&j.ock.length===1&&/yet/.test(j.ock[0])&&/Date chart ring 3$/i.test(j.ock[0]), JSON.stringify(j));
+  ok('journal: «The Night — date unknown» and the way to the date (v5.41: behind the door past the last ring)', j.secs.some(s=>/^the night date unknown$/i.test(s))&&j.ock.length===1&&/yet/.test(j.ock[0])&&/Date behind the door past/i.test(j.ock[0]), JSON.stringify(j));
   await shot('A2-journal'); await p.keyboard.press('Escape');
   await U.tab('ark');
   ok('Ark window before the date: no hive, «no date yet»', /The Night has no date yet/i.test(await p.innerText('#ovl'))&&!(await p.isVisible('#ovl .hold')));
@@ -38,7 +38,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.clear();   // the whole-screen note «a ring can be charted» comes with it
   await U.tap('#cards .ocard');
   const why=await p.evaluate(()=>[...document.querySelectorAll('#goals .orow')].map(e=>e.innerText.replace(/\s+/g,' ').trim()).filter(s=>/chart ring 3/i.test(s)));
-  ok('journal, Now: «Chart ring 3» names the date as its reason', why.length===1&&/the date of the Night/i.test(why[0]), why.join(' | ')+' · '+await p.evaluate(()=>objectives(LN).now.map(o=>o.code).join(' ')+' · '+[...document.querySelectorAll('#goals .orow')].map(e=>e.innerText.replace(/\s+/g,' ').trim()).join(' | ')));
+  ok('journal, Now: «Chart ring 3» names word of the Night as its reason (v5.41)', why.length===1&&/word of the Night/i.test(why[0]), why.join(' | ')+' · '+await p.evaluate(()=>objectives(LN).now.map(o=>o.code).join(' ')+' · '+[...document.querySelectorAll('#goals .orow')].map(e=>e.innerText.replace(/\s+/g,' ').trim()).join(' | ')));
   await p.keyboard.press('Escape');
   await U.tab('tech');
   await U.tap('#side [data-act="survey"]');
@@ -46,29 +46,29 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.tab('tech').catch(()=>{});
   // one year on: the core dates the Night (revealNight), the whole-screen notice stops the clock
   await p.evaluate(()=>{ tick(LN); LNdraw() });
-  const d=await p.evaluate(()=>({night:LN.night,day:LN.day,big:LNI.big(),want:LN.day-1+K.NIGHT_YEARS}));
-  ok('the third ring dates the Night (rule as it was: NIGHT_YEARS from that day)', d.night>0&&d.big==='night'&&(d.night===d.want||d.night===d.want+1), JSON.stringify(d));
+  const d=await p.evaluate(()=>({night:LN.night,known:nightKnown(LN),day:LN.day,big:LNI.big()}));
+  ok('v5.41: the third ring opens the ark, the Night stays undated (the date is behind the door); the notice stops the clock', !d.night&&d.known&&d.big==='night', JSON.stringify(d));
   await shot('A3-night-notice');
   await U.tap('[data-act="nightok"]'); await U.clear();
   t=await top(p);
-  ok('after the date: the year of the Night and the years left, no «unknown»', !!t&&!t.nd&&t.n===1&&t.b===String(d.night)&&/^\d[\d\s,.]* (yr|years?)/i.test(t.span)&&!/unknown|\?/i.test(t.b+t.span), JSON.stringify(t));
-  ok('after the date: WAKE · SLEEP ON joins it', !!t&&t.wake);
+  ok('v5.41: after the ark is known the cell still says ???? · date unknown', !!t&&t.nd&&t.n===1&&t.b==='????'&&/^date unknown$/i.test(t.span), JSON.stringify(t));
+  ok('after the ark is known: WAKE · SLEEP ON joins it', !!t&&t.wake);
   await shot('A4-dated');
   await U.tap('#cards .ocard');
   j=await p.evaluate(()=>({secs:[...document.querySelectorAll('#goals .sec')].map(e=>e.innerText.replace(/\s+/g,' ').trim()),ock:document.querySelectorAll('#goals .ock').length,done:[...document.querySelectorAll('#goals .odn')].map(e=>e.innerText.replace(/\s+/g,' ').trim())}));
-  ok('journal after the date: the year, three checks, «The Night dated» in Done', j.secs.some(s=>new RegExp('^the night year '+d.night+'$','i').test(s))&&j.ock===3&&j.done.some(s=>/The Night dated: year/i.test(s)), JSON.stringify(j));
+  ok('v5.41 journal after the ark is known: the Night undated, the way to the door and the three checks of the ark', j.secs.some(s=>/^the night date unknown$/i.test(s))&&j.secs.some(s=>/^ark$/i.test(s))&&j.ock===4, JSON.stringify(j));
   await p.keyboard.press('Escape');
   await U.tab('earth');
   const er2=await p.evaluate(()=>[...document.querySelectorAll('#ovl .rw')].map(e=>e.innerText.replace(/\s+/g,' ').trim()).filter(s=>/^night/i.test(s)));
-  ok('Earth window after the date: the year', er2.length===1&&er2[0].indexOf(String(d.night))>0&&!/unknown/i.test(er2[0]), er2.join(' | '));
+  ok('v5.41 Earth window after the ark is known: still no date', er2.length===1&&/unknown/i.test(er2[0]), er2.join(' | '));
   await p.keyboard.press('Escape');
   // the other way to the date: the year (NIGHT_TRIGGER_YEAR) — a fresh run, nothing charted
   await U.start('en',22); await U.pause();
   await p.evaluate(()=>{ LNU.shiftStop=false; LN.earth.food=1e6; LN.day=K.NIGHT_TRIGGER_YEAR-2; LNdraw() });
   t=await top(p); const before=!!t&&t.nd;
-  await p.evaluate(()=>{ for(let i=0;i<3&&!LN.night;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } LNdraw() });
+  await p.evaluate(()=>{ for(let i=0;i<3&&!nightKnown(LN);i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } LNdraw() });
   await U.clear(); t=await top(p);
-  ok('year '+(await p.evaluate(()=>K.NIGHT_TRIGGER_YEAR))+' with two rings: unknown until then, dated after', before&&!!t&&!t.nd&&t.b===String(await p.evaluate(()=>LN.night)), JSON.stringify(t));
+  ok('year '+(await p.evaluate(()=>K.NIGHT_TRIGGER_YEAR))+' with two rings: v5.41 — the ark known, the Night still undated', before&&!!t&&t.nd&&await p.evaluate(()=>nightKnown(LN)&&!LN.night), JSON.stringify(t));
   ok('no page errors (no helper)', p.errs.length===0, p.errs.join(' | '));
 
   // ---------- B. with the helper: the same cell at year 0, the ark a shut outline ----------
@@ -96,7 +96,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     if(s.msg&&seenB[seenB.length-1]!==s.msg) seenB.push(s.msg);
     if(s.msg==='m18'){ m18=s.tx; break }
     if(s.big||await q.evaluate(()=>!!LNU.pf)) await Q.clear(); else if(s.msg){ await q.waitForTimeout(330); await Q.tap('#helper [data-act="tutok"]').catch(()=>{}) } else if(s.nar) await Q.tap('#voice').catch(()=>{}); else await q.waitForTimeout(150) }
-  ok('helper: m18 points at the cell and says the Night has its year now', /The Night has its year now/i.test(m18||''), (m18||'')+' · '+seenB.join(' ')+' · '+JSON.stringify(await q.evaluate(()=>Object.assign({day:LN.day,big:LNI.big(),pf:!!LNU.pf},LNI.tut()))).slice(0,220));
+  ok('helper: m18 points at the cell — v5.41: its year waits behind the door', /behind the door/i.test(m18||''), (m18||'')+' · '+seenB.join(' ')+' · '+JSON.stringify(await q.evaluate(()=>Object.assign({day:LN.day,big:LNI.big(),pf:!!LNU.pf},LNI.tut()))).slice(0,220));
   await shot('B2-helper-m18',q);
   ok('helper: after the Night step the ark is a real tab', await q.evaluate(()=>!!document.querySelector('#tabs [data-act="tab"][data-v="ark"]')&&!document.querySelector('#tabs .tab.sil')));
   ok('no page errors (helper)', q.errs.length===0, q.errs.join(' | '));
@@ -105,7 +105,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const r=await UI.newPage(b,{vp:{width:1440,height:900}}); const R=UI.ui(r);
   await R.start(null,undefined,{tut:true});
   await R.tap('#menu .mit[data-id="new"]');
-  let lines=[]; for(let i=0;i<260;i++){ lines=await r.evaluate(()=>[...document.querySelectorAll('#menu .mterm .bl')].map(e=>({t:e._t||e.textContent,c:e.className}))); if(lines.some(l=>/systems offline/i.test(l.t))||await r.isVisible('#menu .mterm .bq button')) break; await r.waitForTimeout(250) }
+  let lines=[]; for(let i=0;i<400;i++){ lines=await r.evaluate(()=>[...document.querySelectorAll('#menu .mterm .bl')].map(e=>({t:e._t||e.textContent,c:e.className}))); if(lines.some(l=>/systems offline/i.test(l.t))||await r.isVisible('#menu .mterm .bq button')) break; await r.waitForTimeout(250) }
   const ni=lines.findIndex(l=>/NIGHT \.+ detected/.test(l.t)), di=lines.findIndex(l=>/NIGHT · date \.+ no data/.test(l.t)), oi=lines.findIndex(l=>/systems offline/i.test(l.t));
   ok('terminal: «NIGHT … detected» and «NIGHT · date … no data», before «systems offline»', ni>=0&&di===ni+1&&oi>di, lines.slice(-6).map(l=>l.t).join(' | '));
   ok('terminal: both lines in the warning colour of the terminal', ni>=0&&di>=0&&/\bf\b/.test(lines[ni].c)&&/\bf\b/.test(lines[di].c), ni>=0&&di>=0?lines[ni].c+' · '+lines[di].c:'');

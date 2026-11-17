@@ -1098,3 +1098,33 @@ UI	ord_rwPeople	{n} people to Earth	{n} человек на Землю
 UI	ord_rwHull	a {c} hull, Generation {g}	корпус «{c}», поколение {g}
 UI	u_mMusic	Music	Музыка
 UI	u_musCredit	Music by Scott Buckley — Sleep, There Is a Place, Cobalt, Meanwhile, Fading. CC-BY 4.0, scottbuckley.com.au	Музыка — Scott Buckley: Sleep, There Is a Place, Cobalt, Meanwhile, Fading. CC-BY 4.0, scottbuckley.com.au
+LOG	night_known	THE OUTER SURVEY BRINGS BACK THE READINGS. Past the last ring space is falling in on itself, and one day it will come in, ring by ring, to the sun. When — the machine cannot say from here: the answer lies past ring {r}. Build the ark while there is no date.	ДАЛЬНЯЯ РАЗВЕДКА ПРИВОЗИТ ПОКАЗАНИЯ. За последним кольцом пространство падает само в себя, и однажды оно пойдёт внутрь — кольцо за кольцом, до солнца. Когда — отсюда машина не скажет: ответ лежит за кольцом {r}. Стройте ковчег, пока даты нет.
+LOG	door_opened	THE DOOR IS OPEN. The last survey goes past ring {r} and comes back with a date: the Night reaches the sun in year {y}. Ring {r} goes dark in {d} years; the rings follow it in, one by one. There is no way back.	ДВЕРЬ ОТКРЫТА. Последняя разведка уходит за кольцо {r} и возвращается с датой: Ночь дойдёт до солнца в {y} году. Кольцо {r} погаснет через {d} лет; за ним, одно за другим, — остальные. Пути назад нет.
+LOG	ring_dark_near	RING {r} GOES DARK IN {n} YEARS. Still out there: {c} worlds, {h} people.	КОЛЬЦО {r} ГАСНЕТ ЧЕРЕЗ {n} ЛЕТ. Там ещё {c} миров и {h} человек.
+LOG	ring_dark	RING {r} HAS GONE DARK. Lost with it: {c} worlds, {h} people, {s} hulls and their {k} crew.	КОЛЬЦО {r} ПОГАСЛО. Вместе с ним потеряны: миров — {c}, людей — {h}, судов — {s}, их экипажей — {k}.
+LOG	world_dark	{p} is gone with its ring: {n} people.	{p} ушёл вместе со своим кольцом: {n} человек.
+VOICE	night_known.1	The readings are real, and I have checked them until there was nothing left to check. Past the last ring space is falling in on itself. One day it will come in — ring by ring, to the sun. I cannot give you a year. The answer is past ring {r}, and whoever goes for it starts the clock. Until then: an ark, and a Generation {g} drive to carry it.	Показания настоящие, и я проверял их, пока проверять стало нечего. За последним кольцом пространство падает само в себя. Однажды оно пойдёт внутрь — кольцо за кольцом, до солнца. Года я вам не назову. Ответ — за кольцом {r}, и кто пойдёт за ним, тот и пустит часы. А до тех пор — ковчег и двигатель поколения {g}, чтобы его нести.
+VOICE	door_opened.1	Year {y}. We have the number now, and it has us. Ring {r} goes first, in {d} years; then the next, and the next. Bring them home — people, hulls, whatever the ark can carry. Nothing out there will wait.	Год {y}. Теперь у нас есть число — и оно держит нас. Первым погаснет кольцо {r}, через {d} лет; потом следующее, и следующее. Везите всех домой — людей, суда, всё, что возьмёт ковчег. Там никто ждать не будет.
+UI	nar_N09n_1	The physicists have read the spectra: our galaxy is collapsing from the edge in. When it reaches us, they cannot say yet.	Физики прочли спектры: наша галактика схлопывается с краёв. Когда это дойдёт до нас, они пока сказать не могут.
+UI	u_doorRing	The door	Дверь
+UI	u_doorBtn	Only the Night	Дальше только Ночь
+UI	u_doorPast	Past ring {r} there is no chart — only the Night.	За кольцом {r} карты нет — только Ночь.
+UI	u_doorDone	The door is open	Дверь открыта
+UI	u_doorT	THE DOOR	ДВЕРЬ
+UI	u_doorB1	Ring {r} is the last. Past it there is no chart — only the Night.	Кольцо {r} — последнее. За ним карты нет — только Ночь.
+UI	u_doorB2	Open the door and the Night gets its date: year {y}, {n} years from today. The rings go dark from the edge in — ring {r} in {d} years, the inner ones after it. Whatever is out there when its ring goes dark is lost: worlds, people, hulls.	Откройте дверь — и у Ночи появится дата: {y} год, через {n} лет. Кольца гаснут с края внутрь: кольцо {r} — через {d} лет, внутренние после него. Всё, что окажется на кольце, когда оно погаснет, — потеряно: миры, люди, суда.
+UI	u_doorB3	This cannot be undone.	Это нельзя отменить.
+UI	u_doorReady	Ready today	Готово сегодня
+UI	u_doorHold	Hold to open the door	Удерживайте, чтобы открыть
+UI	u_ringDarkIn	dark in {n}	гаснет через {n}
+UI	u_ringDarkDone	dark	погасло
+UI	o_door	Open the door	Откройте дверь
+UI	os_door	Past the last ring: only the Night	За последним кольцом — только Ночь
+UI	ow_door	Dates the Night: {k} years to bring the empire home.	Даёт Ночи дату: {k} лет, чтобы свернуть империю.
+UI	a_ringdark	Ring {r} goes dark in {n} years: {c} worlds and {h} people are still there.	Кольцо {r} гаснет через {n} лет: там ещё {c} миров и {h} человек.
+MSG	last	That is the last ring. Past it there is only the door.	Это последнее кольцо. Дальше — только дверь.
+MSG	genlast	Generation VII is the last drive there is.	Поколение VII — последний двигатель.
+MSG	ringDark	That ring has gone dark.	Это кольцо погасло.
+MSG	doorOpen	The door is already open.	Дверь уже открыта.
+MSG	doorRings	The door is past the last ring: chart it first.	Дверь — за последним кольцом: сначала нанесите его.
+MSG	evacDark	Too late for {p}: its ring goes dark before a courier could get there.	Для {p} поздно: кольцо погаснет раньше, чем туда долетит курьер.

@@ -13,11 +13,15 @@
                and sizes lines by eye (`sloppy`): a third of the worlds keep one hull for good («мало»), a third get three at once
                («слишком много»). Not in the default list (the baseline is six bots): BOTS=lazy. Numbers are Claude's, set before the first run.
    Legacy bots (expand / pro / tidy / late) still run with BOTS=expand,pro,tidy,late. */
+/* v5.41 (the door): the Night has no date until the player opens the door past the last ring. Every style opens it `doorWait`
+   years after the last ring is charted once the ark's drive is there (twice as long if it is not); the ark and its drive are bought
+   from the day the ark is known (the third ring), as they were from the day of the date. After the door each world is lifted by its
+   own deadline — the year its ring goes dark — not the Night's. Numbers — Claude's, set before the first run. */
 const STYLES={
-  rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, deep:true},
-  serial: {hands:30, keep:260,  sFood:90,  sMetal:300,  serial:true, evac:true},
-  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200, deep:true},
-  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, saver:true},
+  rush:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, deep:true, doorWait:150},
+  serial: {hands:30, keep:260,  sFood:90,  sMetal:300,  serial:true, evac:true, doorWait:300},
+  ark:    {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:1200, deep:true, doorWait:200},
+  bank:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, ark:true, arkLeft:600, saver:true, doorWait:300},
   lazy:   {hands:30, keep:60,   sFood:30,  sMetal:120,  big:true, evac:true, every:+(process.env.LAZY_EVERY||25), miss:+(process.env.LAZY_MISS||1/3), sloppy:true}
 };
 const fs=require('fs');
@@ -29,7 +33,8 @@ function load(path){
     'arkBuy','arkRings','arkCaps','arkSouls','arkOwed','arkReady','arkConvoy','setReserve','nightLeft','abandon','clearLine','leftBehind',
     'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','orderHull','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort',
     'setVia','lineOk','isHub','lineTo','hubCheck','feedersOf','buildHub','hubBuildCheck','hubCount','hubCap','hubCost',   // hubs (nodes-1.00, in work/ since v5.01)
-    'exchange','exchangeCheck','exchangeCost'];   // exchange (nodes-1.02, in work/ since v5.01)
+    'exchange','exchangeCheck','exchangeCost',
+    'nightKnown','canDoor','openDoor','worldLeft','ringOut'];   // v5.41: the door   // exchange (nodes-1.02, in work/ since v5.01)
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }
@@ -333,7 +338,8 @@ function step(C,G,bot,d,st){
     //         v4.29: the wake ladder (0.3/0.6/0.85/1.0) pays for every mark past the ark mark — `deep` styles (rush, ark) keep
     //         running the programme after it while the yards owe nothing; serial and bank stop at the mark (the 'lazy' path)
     //         ...and never while the convoy is short: the programme swallows every part, and a freighter costs a thousand
-    const driveWanted=!pro || (G.night&&unfilled<=1&&((G.driveLvl||0)<G.arkMark||P.deep));
+    const known=C.nightKnown?C.nightKnown(G):!!G.night;
+    const driveWanted=!pro || (known&&unfilled<=1&&((G.driveLvl||0)<G.arkMark||P.deep));
     if(bot!=='greedy'&&bot!=='expand'&&!G.drive&&driveWanted&&!partsStarved){
       for(const k in G.colonies){ const p=C.planet(k);
         if(p.kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP&&(C.settledCount||C.reach)(G)>=C.driveReachFor(G)){
@@ -381,9 +387,12 @@ function step(C,G,bot,d,st){
       const sc=C.surveyCost(C.SECTORS.length);
       if((E.food-sc.food>nd.food*Math.max(P.sFood,60)&&E.metal>P.sMetal)||starved) C.survey(G);   // v4.27: the survey eats rations ×1.52 a ring
     }
+    // 6b. v5.41: the door — doorWait years after the last ring, once the ark's drive is there (or twice the wait)
+    if(C.canDoor&&bot!=='greedy'&&C.canDoor(G)==='ok'){ st.r7=st.r7===undefined?d:st.r7; const w=P.doorWait||300;
+      if(d-st.r7>=w&&(C.arkReady(G)||d-st.r7>=w*2)) C.openDoor(G) }
     // 7. the Long Night: expand and pro buy berths; only pro takes the empire apart in time
-    if(G.night&&C.arkBuy&&bot!=='greedy'){
-      const left=C.nightLeft(G);
+    if((C.nightKnown?C.nightKnown(G):G.night)&&C.arkBuy&&bot!=='greedy'){
+      const left=G.night?C.nightLeft(G):99999;
       if(pro){
         // v5.10 (design/ARK.md 2g): capsule rings for food and metal. The buyer takes the next ring while the rings held do not
         // cover those who would board (arkWant), once the screen says the rations last to the Night after the purchase (2g p. 6:
@@ -414,11 +423,11 @@ function step(C,G,bot,d,st){
       if(pro&&left<=1500){
         // v4.27: the lines run until their crews refuse (the larder carries Earth after that); a world is lifted in the
         // window where a courier still signs for the round trip; hulls idle on the pier give their crews back
-        for(const k in G.colonies){ const p=C.planet(k);
+        for(const k in G.colonies){ const p=C.planet(k), wl=C.worldLeft?C.worldLeft(G,k):left;   // v5.41: the world's own deadline — its ring going dark
           const cands=HULLS.map((h,i)=>({h,i})).filter(x=>x.h.key==='courier'&&x.h.gen<=(G.gen||0)&&x.h.gen>=(G.gen||0)-K.GEN_OVERLAP&&C.canReachSector({hull:x.i},p.sec)).sort((a,b)=>(a.h.parts||0)-(b.h.parts||0));
           if(!cands.length) continue;
           const rt=C.legDays(G,k,'earth',{hull:cands[0].i})*2;
-          if(left<=3.2*rt+60){ const s=freeHulls(G).find(s=>reachOK(s,p)&&HULLS[s.hull].key==='courier'&&left>=(K.MUTINY_MIN+K.MUTINY_SPREAD)*C.legDays(G,k,'earth',s)*2+2);
+          if(wl<=3.2*rt+60){ const s=freeHulls(G).find(s=>reachOK(s,p)&&HULLS[s.hull].key==='courier'&&left>=(K.MUTINY_MIN+K.MUTINY_SPREAD)*C.legDays(G,k,'earth',s)*2+2&&wl>C.legDays(G,'earth',k,s)+2);
             if(s){ if(C.abandon(G,s.id,k)!=='ok') continue }
             else if(per(5)&&E.metal-cands[0].h.metal>=300&&E.parts>=(cands[0].h.parts||0)) C.buildShip(G,cands[0].i) } }
         if(left<=100) freeHulls(G).forEach(s=>C.scrap(G,s.id));
@@ -446,7 +455,7 @@ function play(C,seed,days,bot,hook){
   let crew=0; G.ships.forEach(s=>{ if(s.mode!=='dead') crew+=(s.crew||0) });
   const souls = G.over==='night' ? (G.souls||0) : 0;
   return {seed, bot, day:G.day, over:G.over||'alive', worlds, sectors:C.SECTORS.length, gen:G.gen||0,
-    souls, berths:G.ark?C.arkRings(G):0, night:G.night||0, aboard:G.boarded||0, caps:G.ark?C.arkCaps(C.arkRings(G)):0, convoy:G.convoy?G.convoy.have+'/'+G.convoy.all:'-', food:Math.round(G.earth.food),
+    souls, berths:G.ark?C.arkRings(G):0, night:G.night||0, door:G.door?G.door.at:0, dark:(G.stats&&G.stats.dark)||0, aboard:G.boarded||0, caps:G.ark?C.arkCaps(C.arkRings(G)):0, convoy:G.convoy?G.convoy.have+'/'+G.convoy.all:'-', food:Math.round(G.earth.food),
     idlePeople:Math.round(G.earth.people), crew, out:+(1+0).toFixed(2),
     score:+(depth+ (G.gen||0)*3 + C.SECTORS.length*2 + tiers*0.5).toFixed(1), couriers, big, tiers,
     deepest:Math.max(0,...Object.keys(G.colonies).map(k=>C.planet(k).sec))};
