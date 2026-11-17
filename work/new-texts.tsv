@@ -1096,3 +1096,5 @@ LOG	order_failed	The order of the shift was not done in time. Nothing is lost.	�
 UI	ord_rw	Reward	Награда
 UI	ord_rwPeople	{n} people to Earth	{n} человек на Землю
 UI	ord_rwHull	a {c} hull, Generation {g}	корпус «{c}», поколение {g}
+UI	u_mMusic	Music	Музыка
+UI	u_musCredit	Music by Scott Buckley — Sleep, There Is a Place, Cobalt, Meanwhile, Fading. CC-BY 4.0, scottbuckley.com.au	Музыка — Scott Buckley: Sleep, There Is a Place, Cobalt, Meanwhile, Fading. CC-BY 4.0, scottbuckley.com.au

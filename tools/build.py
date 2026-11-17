@@ -262,7 +262,19 @@ if os.path.exists('web/shell.html'):
     s=('<!doctype html>\n<html lang="en">\n<head>\n<meta charset="utf-8">\n<meta name="viewport" content="width=device-width,initial-scale=1">\n'
        '<title>Last Berth</title>\n<style>\n'+rd('web/fonts.css')+rd('web/ui.css')+art()+mcss+hcss+'</style>\n</head>\n<body>\n'+rd('web/shell.html')+tm+'\n'
        '<script>\n'+core+'</script>'+menu+'<script>\n'+ui+'</script>'+hack+('<script>\n'+rd('web/debug.js')+'</script>' if os.path.exists('web/debug.js') else '')+(tools.group(0) if tools else '')+'\n</body></html>')
+# v5.40 (Nikita 17.11, feedback p.20: «вшиваем всё в файл»): web/music/<id>.mp3 — the music (Scott Buckley, CC-BY 4.0), base64 in
+# <script type="application/octet-stream" id="mus-<id>"> blocks at the end of the body: never run, read by ui.js (MUS) when a track is due.
+# Not in artifact.html (unused since 05.10).
+def music():
+    d='web/music'
+    if not os.path.isdir(d): return ''
+    import base64
+    fs=sorted(f for f in os.listdir(d) if f.endswith('.mp3'))
+    return ''.join('<script type="application/octet-stream" id="mus-'+f[:-4]+'" data-mime="audio/mpeg">'+base64.b64encode(open(os.path.join(d,f),'rb').read()).decode('ascii')+'</script>\n' for f in fs)
+art_s=s
+if '</body></html>' in s: s=s[:s.rindex('</body></html>')]+music()+'</body></html>'
 wr('page.html',s); wr('long-night.html',s)
+s=art_s
 # A new chat's live.html is that fragment, so accept both shapes.
 b=(s.index('<body>')+len('<body>')) if '<body>' in s else 0; e=s.rindex('</body></html>') if '</body></html>' in s else len(s)
 wr('artifact.html',s[b:e])

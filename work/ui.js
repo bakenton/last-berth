@@ -328,7 +328,48 @@ var SFX=(function(){
     var now=performance.now(); if(lastAt[k]&&now-lastAt[k]<45) return; lastAt[k]=now; var f=P[k]; if(f) f(c.currentTime) }
   function set(v){ on=!!v; try{ localStorage.setItem('lb.sfx',on?'1':'0') }catch(e){} }
   document.addEventListener('pointerdown',unlock,true); document.addEventListener('keydown',unlock,true);
-  return {play:play,set:set,isOn:function(){return on}};
+  return {play:play,set:set,isOn:function(){return on},ctx:ac};
+})();
+/* v5.40 (Nikita's v5.29 feedback p.20: «Ещё надо в игру добавить какую-то музыку на бекграунд. Поищи чот без лицензии в стоках… чтобы по
+   стилю зашло. А то скучно»; 17.11: «вшиваем всё в файл»): Scott Buckley, CC-BY 4.0 (the credit under ≡ Music). Four calm tracks — piano
+   and strings — in a shuffled round with a crossfade; from the Night on, Fading, looped. Its own switch (≡ Music, lb.mus), quiet under the
+   interface's sounds, the same through every speed and a pause; silent in the main menu and on a hidden page. The files are base64 blocks
+   at the end of the page (build.py, web/music/*.mp3), turned into a Blob only when the track is due. Through the sound's AudioContext
+   (a gain per player: iOS ignores an element's volume); without one — the element's volume */
+var MUS=(function(){
+  var CALM=['sleep','place','cobalt','meanwhile'], NIGHT='fading', VOL=0.3, FADE=6;
+  var on=true, url={}, P=[null,null], cur=-1, order=[], oi=0, last=null, lastT=0, held=false;
+  try{ on=localStorage.getItem('lb.mus')!=='0' }catch(e){}
+  function has(){ return !!document.getElementById('mus-'+CALM[0]) }
+  function src(id){ if(url[id]) return url[id]; var e=document.getElementById('mus-'+id); if(!e) return null;
+    var b=atob(e.textContent.trim()), n=b.length, u=new Uint8Array(n), i; for(i=0;i<n;i++) u[i]=b.charCodeAt(i);
+    return (url[id]=URL.createObjectURL(new Blob([u],{type:e.dataset.mime||'audio/mpeg'}))) }
+  function player(i){ if(P[i]) return P[i]; var a=new Audio(), p={a:a,g:null,id:null,vol:0,to:0}, c=SFX.ctx(); a.preload='auto';
+    if(c&&c.createMediaElementSource){ try{ var sn=c.createMediaElementSource(a); p.g=c.createGain(); p.g.gain.value=0; sn.connect(p.g); p.g.connect(c.destination) }catch(e){ p.g=null } }
+    if(!p.g) a.volume=0; return (P[i]=p) }
+  function setv(p,v){ p.vol=v; if(p.g) p.g.gain.value=v*VOL; else p.a.volume=Math.max(0,Math.min(1,v*VOL)) }
+  function night(){ return !!(G&&(G.night||G.over)) }
+  function pick(){ if(night()) return NIGHT; if(oi>=order.length){ order=CALM.slice(); for(var i=order.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)), t=order[i]; order[i]=order[j]; order[j]=t }
+      if(order[0]===last) order.push(order.shift()); oi=0 } return order[oi++] }
+  function play(p){ var r; try{ r=p.a.play() }catch(e){} if(r&&r.catch) r.catch(function(){}) }
+  function start(id){ var i=cur<0?0:1-cur, p=player(i), s=src(id); if(!s) return; if(cur>=0) P[cur].to=0;
+    if(p.id!==id){ p.a.src=s; p.id=id } try{ p.a.currentTime=0 }catch(e){} p.a.loop=id===NIGHT; p.to=1; cur=i; last=id; play(p) }
+  function should(){ return on&&has()&&!!G&&!U.menu&&!document.hidden }
+  function tick(now){ if(now-lastT<250) return; var dt=lastT?Math.min(0.5,(now-lastT)/1000):0.25; lastT=now; var p=cur>=0?P[cur]:null, i;
+    if(!should()){ if(p&&p.to>0){ p.to=0; held=true } }
+    else if(held&&p){ held=false; p.to=1; play(p) }
+    else if(!p||p.to===0) start(pick());
+    else if(night()!==(p.id===NIGHT)) start(pick());
+    else if(p.id!==NIGHT&&p.a.duration&&(p.a.ended||p.a.currentTime>p.a.duration-FADE)) start(pick());
+    else if(p.a.paused&&!p.a.ended) play(p);
+    for(i=0;i<2;i++){ var q=P[i]; if(!q) continue; var v=q.vol+(q.to>q.vol?1:-1)*dt/FADE; v=q.to>q.vol?Math.min(q.to,v):Math.max(q.to,v); setv(q,v);
+      if(q.vol<=0&&q.to<=0&&!q.a.paused) q.a.pause() } }
+  function kick(){ var p=cur>=0?P[cur]:null; if(p&&p.to>0&&p.a.paused&&should()) play(p) }   // iOS: a play() inside a gesture
+  function set(v){ on=!!v; try{ localStorage.setItem('lb.mus',on?'1':'0') }catch(e){} }
+  document.addEventListener('pointerdown',kick,true);
+  return {tick:tick,set:set,isOn:function(){ return on },has:has,
+    state:function(){ return P.map(function(q,i){ return q&&{i:i,id:q.id,vol:+q.vol.toFixed(3),to:q.to,paused:q.a.paused,t:+(q.a.currentTime||0).toFixed(2),dur:+(q.a.duration||0).toFixed(1),gain:!!q.g} }).filter(Boolean).concat([{cur:cur,on:on,should:should()}]) },
+    seek:function(t){ var p=cur>=0?P[cur]:null; if(p&&p.a.duration) p.a.currentTime=Math.max(0,p.a.duration-t) }};
 })();
 /* v4.12: the press mark — a square that blooms where the pointer hit, so a click is seen even when the
    panel under it is redrawn in the same frame */
@@ -2234,6 +2275,7 @@ function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]==
     return '<div class="advh" style="color:'+g.c+'">'+ic(g.t.i,15,g.c)+'<span>'+esc(T(g.t.l))+'</span><b>'+g.n+'</b></div>'+g.rows.map(function(r){ return '<button type="button" data-t="'+g.t.k+'" data-act="world" data-v="'+r[3]+'" data-f="'+r[5]+'"><i style="background:'+(r[0]===C.mid?C.mid:g.t.c)+'"></i><b'+(r[0]===C.red?' style="color:'+C.red+'"':(r[0]===C.mid?' style="color:'+C.mid+'"':''))+'>'+esc(r[1])+'</b><span>'+esc(r[2])+'</span><em>'+esc(r[4])+' →</em></button>' }).join('') }).join('')+'</div>' }
 function popMenu(){
   return '<div class="menu"><button type="button" data-act="sfx">'+ic('speed',15)+esc(T('u_mSound'))+' <b>'+esc(T(SFX.isOn()?'u_on':'u_off'))+'</b></button>'+
+    (MUS.has()?'<button type="button" data-act="mus">'+ic('speed',15)+esc(T('u_mMusic'))+' <b>'+esc(T(MUS.isOn()?'u_on':'u_off'))+'</b></button><div class="mcred">'+esc(T('u_musCredit'))+'</div>':'')+
     '<button type="button" data-act="uisize">'+ic('tWorlds',15)+esc(T('u_mSize'))+' <b>'+Math.round(uiScale()*100)+'%</b></button>'+
     '<button type="button" data-act="help">'+ic('peopleA',15)+esc(T('u_mHelp'))+' <b>'+esc(T(U.tut.help?'u_on':'u_off'))+'</b></button><hr>'+
     '<button type="button" data-act="save">'+ic('unloading',15)+esc(T('u_mSave'))+'</button><button type="button" data-act="load">'+ic('loading',15)+esc(T('u_mLoad'))+'</button>'+
@@ -2371,6 +2413,7 @@ function doAct(a,b){
   else if(a==='copylog'){ copyLog(); return }
   else if(a==='closelog'){ el('logbox').hidden=true }
   else if(a==='sfx'){ SFX.set(!SFX.isOn()); if(SFX.isOn()) SFX.play('ok') }
+  else if(a==='mus'){ MUS.set(!MUS.isOn()) }
   else if(a==='uisize'){ uiScaleNext() }   // v5.03: the desk's size; the ≡ list stays open, its number follows
   else if(a==='help'){ if(U.tut.help) tutOff(); else tutOn() }
   else if(a==='save'){ U.pop=null; autosave(); saveFile() }
@@ -2461,7 +2504,7 @@ function clockTick(dt){ var c=G&&G.clock; if(!c||G.over||document.hidden) return
 function m3frame(ts){ if(!G) return; if(M3D.moved){ M3D.moved=false; drawMap(); tutPlace() } if(M3D.dirty||ts-M3D.last>50){ M3D.last=ts; M3D.dirty=false; try{ draw3d(ts) }catch(e){} } }
 function frame(ts){
   if(!U.last) U.last=ts;
-  var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck();
+  var dt=ts-U.last; U.last=ts; clockTick(dt); hackCheck(); try{ MUS.tick(ts) }catch(e){}
   m3frame(ts);
   if(G&&!halted()&&!G.over){
     U.acc+=dt; var step=MS[U.speed]||600, did=false;
@@ -2492,7 +2535,7 @@ function start(seed){
   G.hackGate=!TUTX.hook||!!window.LBHACKTEST; U.hackGo=false;   // the hack (Nikita 04.11): a player's run; the scenarios' hook «всё открыто» skips it unless a scenario asks
   U.win=null; U.tab=null; U.pop=null; U.paused=true; U.acc=0; U.hist=[]; U.pf=null; U.voiceSeq=0; U.voiceLast=0; U.voy={}; U.capt={}; U.founded=0; U.notes=[]; U.who={}; U.scrapArm=null; U.gk=null; U.foodWarnAt=null; U.worksSeen=false; U.focusK=null; U.strips=[]; U.ltOpen=null; U.ordSel={}; lineWhy={}; HTMLCACHE={};
   CFIT=true; CFITK=''; P3N=-1;
-  window.LN=G; window.LNU=U; window.LNdraw=draw;   // dev hooks for the Playwright scenarios
+  window.LN=G; window.LNU=U; window.LNdraw=draw; window.LNmus=MUS;   // dev hooks for the Playwright scenarios
   window.LNsky={get:function(){ return M3D.SKY||null }, ang:function(){ return skyAng(performance.now()/1000) }, still:skyStill,
     spawn:function(k){ var t=performance.now()/1000; if(!M3D.SKY) return null; var o=skySpawn(M3D.SKY,k,t); M3D.dirty=true; return {k:o.k,d:o.d,t0:o.t0} }};
   window.LNsave=dump; window.LNload=undump; window.LNI={halted:halted,big:bigKind,adv:advRows,wst:wst,flags:flags,tut:tutState,hname:hname};   // v4.35: what the interface derives, for the scenarios and the bot player

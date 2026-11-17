@@ -9,3 +9,6 @@ work/debug-*.png
 design/fusions/test/shots/
 design/map3d/shots/
 play/DIAG-map.html
+
+# v5.40: the original MP3s of the music (68 MB); the game carries work/web/music/*.mp3
+design/music/src/
