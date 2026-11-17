@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.41'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.42'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -333,6 +333,11 @@ var K={
      years after the door for ring index i (0 = ring I): a world on a dark ring is lost with its people, a hull there or bound there
      with her crew. A warning DARK_WARN years before each. Numbers — Claude's, to be checked with the bots. */
   RING_LAST:7, GEN_LAST:6, DOOR_YEARS:500, DOOR_DARK:[480,450,410,360,300,230,150], DARK_WARN:25,
+  /* v5.42 (Nikita 17.11, scope «Да»): the ring shakes for TREMOR_YEARS before it goes dark — its worlds give TREMOR_OUT of their
+     output, a hull bound there goes missing TREMOR_HAZ times as often; said, never sudden (no ring goes dark before its date).
+     p.15 «За каждой блок капсул нужно давать бонусы» («по твоему решению»): every ark ring paid brings a ready courier of the yards'
+     generation to the pier, with her own crew — for the last lifts. Numbers — Claude's */
+  TREMOR_YEARS:50, TREMOR_OUT:0.5, TREMOR_HAZ:3,
   NIGHT_NEAR:400,                                     // the desk pauses again this close to the end
   DUSK_YEARS:1000,                                    // v4.1: inside this the chronicle turns to the end
   DOOMSDAY_AT:900,                                    // v4.1: the desk logs what Earth has become, once
@@ -481,7 +486,8 @@ function kitFloor(G){ return Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_
 /* v4.31 (Nikita, 13.10, F-37): what the next kit does to this world in numbers — output a year now and with it, fuel a year more */
 function kitGain(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) return null;
   var base=(p.kind==='works' ? c.pop*p.rich*K.REFINE : (G.reserves[pid]>0 ? c.pop*p.rich*K.PROD : 0));
-  return {now:base*rateMult(c), with:base*Math.pow(K.KIT_OUT,kitTier(c)+1), fuel:K.KIT_FUEL, res:p.kind==='works'?'parts':p.dep} }
+  var tq=tremorMult(G,p.sec);   // v5.42 (the reviewer)
+  return {now:base*rateMult(c)*tq, with:base*Math.pow(K.KIT_OUT,kitTier(c)+1)*tq, fuel:K.KIT_FUEL, res:p.kind==='works'?'parts':p.dep} }
 function kitCost(c){ var t=kitTier(c)+1, m=Math.round(K.KIT_METAL*Math.pow(K.KIT_GROW,t-1)), p=Math.round(K.KIT_PARTS*Math.pow(K.KIT_GROW,t-1));
   return {tier:t, metal:m, parts:p, w:m+p} }
 function kitOpen(G){ return (G.driveLvl||0)>=K.KIT_GATE_DRIVE }
@@ -518,7 +524,7 @@ function orderKit(G,pid){
 /* what a world burns per year that Earth has to send it: works eat metal and rations (v5.23: the machines' fuel is not sent — see kitFloor) */
 function feedRates(G,node){
   var c=G.colonies[node], p=planet(node), r={}; if(!c||!p) return r;
-  if(p.kind==='works'){ var want=c.pop*p.rich*K.REFINE*rateMult(c); r.metal=want*K.REFINE_METAL; r.food=want*K.REFINE_FOOD }
+  if(p.kind==='works'){ var want=c.pop*p.rich*K.REFINE*rateMult(c)*tremorMult(G,p.sec); r.metal=want*K.REFINE_METAL; r.food=want*K.REFINE_FOOD }   // v5.42 (the reviewer): a shaking works wants half
   return r;
 }
 /* Earth's own output rides on the people left at home — but only so far.
@@ -931,7 +937,7 @@ function forgeTally(G,k,c,p,want,made){
   if(c.fuelOut>0&&c.fuelOut<K.KIT_GRACE) f.dregs++;
   if(kitTier(c)>0&&c.fuelOut>=K.KIT_GRACE){ f.down++; w='earth'; f.downWhy[w]=(f.downWhy[w]||0)+1 }   // v5.23: the only reason left — Earth has none to spare
   if(p.kind!=='works') return;
-  var top=c.pop*p.rich*K.REFINE*Math.pow(K.KIT_OUT,kitTier(c));
+  var top=c.pop*p.rich*K.REFINE*Math.pow(K.KIT_OUT,kitTier(c))*tremorMult(G,p.sec);
   f.made+=made; f.lostFeed+=Math.max(0,want-made); f.lostKit+=Math.max(0,top-want);
   if(made<want*0.99){ f.short++; w=feedWhy(G,k,c); f.why[w]=(f.why[w]||0)+1 }
   f.store={m:Math.round(c.store.metal||0),f:Math.round(c.store.food||0),u:Math.round(c.store.fuel||0)};
@@ -1397,6 +1403,8 @@ function openDoor(G){ var r=canDoor(G); if(r!=='ok') return r;
   for(var i=0;i<SECTORS.length;i++) D.dark[i]=G.day+(i<L.length?L[i]:L[L.length-1]);
   log(G,'door_opened',{y:G.night,n:K.DOOR_YEARS,r:ringRn(SECTORS.length-1),d:D.dark[SECTORS.length-1]-G.day});
   return 'ok' }
+function ringShakes(G,sec){ var d=ringDarkAt(G,sec); return d!==null&&!ringOut(G,sec)&&d-G.day<=K.TREMOR_YEARS }
+function tremorMult(G,sec){ return ringShakes(G,sec)?K.TREMOR_OUT:1 }
 function ringOut(G,sec){ return !!(G.door&&G.door.out[sec]!==undefined) }
 function ringDarkAt(G,sec){ return G.door&&G.door.dark[sec]!==undefined ? G.door.dark[sec] : null }
 /* the day a world is lost: its ring going dark, or the Night */
@@ -1404,6 +1412,7 @@ function worldEnd(G,pid){ if(!G.night) return null; var p=planet(pid), d=p?ringD
 function worldLeft(G,pid){ var e=worldEnd(G,pid); return e===null?null:Math.max(0,e-G.day) }
 function ringWorlds(G,sec){ var c=0, h=0; for(var k in G.colonies){ if(planet(k).sec===sec){ c++; h+=Math.floor(G.colonies[k].pop) } } return {c:c,h:h} }
 function doorTick(G){ var D=G.door; for(var i in D.dark){ if(D.out[i]!==undefined) continue; var left=D.dark[i]-G.day;
+    if(left===K.TREMOR_YEARS){ var tw=ringWorlds(G,+i); log(G,'ring_tremor',{r:ringRn(+i),n:left,c:tw.c,h:tw.h}) }   // v5.42
     if(left===K.DARK_WARN){ var w=ringWorlds(G,+i); G.pauseNow=true; log(G,'ring_dark_near',{r:ringRn(+i),n:left,c:w.c,h:w.h}) }
     if(left<=0) ringDark(G,+i) } }
 function ringDark(G,sec){ G.door.out[sec]=G.day; var lw=0, lp=0, ls=0, lc=0, k, i, s, o;
@@ -1482,7 +1491,10 @@ function arkBuy(G,k){
   var o=arkOwed(G,k), E=G.earth, i, r;
   for(i=0;i<ARK_PAY.length;i++){ r=ARK_PAY[i]; if(E[r]<o[r]) return r }
   for(i=0;i<ARK_PAY.length;i++){ r=ARK_PAY[i]; E[r]-=o[r]; if(o[r]>0) openRes(G,r) }
+  var from=arkPaid(G);
   G.ark.rings=k;
+  var gc=0, gg=0; for(var j=from+1;j<=k;j++){ var gs=giveHull(G,'courier'); if(gs){ gc++; gg=gs.gen||0 } }   // v5.42 (p.15): a courier for each ring paid
+  if(gc) log(G,'ark_gift',{l:k,c:gc,g:gg});   // one line for the purchase (the reviewer: three toasts for three rings)
   if(G.hackGate) hackPush(G,{k:'ark',l:k}); else G.ark.woke=k;   // every purchase is a hack; its hive is as hard as the ring reached
   log(G,'ark_bought',{l:k,n:arkCaps(k)}); return 'ok' }
 /* a save from before v5.10 held levels I-IV: a level becomes a ring (Claude — awaiting review) */
@@ -1617,7 +1629,7 @@ function orderTick(G){ var O=G.orders, o=O&&!Array.isArray(O)&&O.on; if(!o) retu
 function lineRate(G,pid){
   var p=planet(pid), c=G.colonies[pid]; if(!c) return null;
   var makes = (p.kind==='works' ? c.pop*p.rich*K.REFINE
-            : (G.reserves[pid]>0 ? c.pop*p.rich*K.PROD : 0))*rateMult(c);   // v4.4: kits
+            : (G.reserves[pid]>0 ? c.pop*p.rich*K.PROD : 0))*rateMult(c)*tremorMult(G,p.sec);   // v4.4: kits; v5.42: a shaking ring
   var own=makes, feed=0; for(var fk in G.colonies){ if(fk!==pid&&G.colonies[fk].via===pid){ var fr0=lineRate(G,fk); if(fr0) feed+=fr0.own } } makes+=feed;   // nodes-1.00
   // count the hulls actually standing on a line that touches this world.
   // (this used to test s.route, which lines have not set since v0.9 — every
@@ -1735,7 +1747,7 @@ function tick(G){
     if(s.t===s.total){
       var pd = s.dest==='earth' ? null : planet(s.dest);
       if(s.dest!=='earth'&&!pd){ s.dest='earth'; s.dir='in'; pd=null }   // lost its destination: limp home
-      var hz = (pd ? pd.haz : 0.02) * Math.pow(0.7, hullGen(s));
+      var hz = (pd ? pd.haz : 0.02) * Math.pow(0.7, hullGen(s)) * (pd&&ringShakes(G,pd.sec)?K.TREMOR_HAZ:1);   // v5.42
       if(!G.safe&&R()<hz*0.085){ s.mode='missing'; s.missDays=0; G.pauseNow=true; log(G,'ship_missing',{n:s.id,p:s.dest==='earth'?s.origin:s.dest}); continue; }
     }
     var sp=shipSpeed(G,s);                                    // v4.21: folded or thickened space
@@ -1854,7 +1866,7 @@ function tick(G){
       if(E.fuel-kitFloor(G)>=burn){ E.fuel-=burn; openRes(G,'fuel'); G.ledger.fuelOut=(G.ledger.fuelOut||0)+burn; G.kitFuel=(G.kitFuel||0)+burn;
         if(c.fuelOut>=K.KIT_GRACE){ log(G,'kit_running',{p:k,t:c.tier}); forgeEv(G,k,'kit_running') } c.fuelOut=0 }
       else { c.fuelOut=(c.fuelOut||0)+1; if(c.fuelOut===K.KIT_GRACE){ log(G,'kit_starved',{p:k,t:c.tier}); forgeEv(G,k,'kit_starved') } } }
-    var mult=rateMult(c);
+    var mult=rateMult(c)*tremorMult(G,p.sec);   // v5.42: a shaking ring gives half
     if(p.kind==='works'){
       c.store.metal=(c.store.metal||0)+c.pop*K.WORKS_LOCAL;
       c.store.food=(c.store.food||0)+c.pop*K.WORKS_LOCAL*0.6;

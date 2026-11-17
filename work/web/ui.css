@@ -454,3 +454,4 @@ svg.gi{fill:currentColor}
 .b.doorhold{position:relative;overflow:hidden;background:var(--red);border-color:var(--red);color:#0B0B0C;touch-action:none;user-select:none;-webkit-user-select:none}
 .b.doorhold::after{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(11,11,12,.38);pointer-events:none}
 .b.doorhold.hold::after{width:100%;transition:width var(--hold,1800ms) linear}
+#tip .tq{color:var(--red);font-style:normal}   /* v5.42: the ring is failing */

@@ -1128,3 +1128,11 @@ MSG	ringDark	That ring has gone dark.	Это кольцо погасло.
 MSG	doorOpen	The door is already open.	Дверь уже открыта.
 MSG	doorRings	The door is past the last ring: chart it first.	Дверь — за последним кольцом: сначала нанесите его.
 MSG	evacDark	Too late for {p}: its ring goes dark before a courier could get there.	Для {p} поздно: кольцо погаснет раньше, чем туда долетит курьер.
+UI	tut_mDoor	Past the last ring there is no chart — only the door. Open it when the ark is ready: the Night gets its date, and from then on the rings go dark from the edge in.	За последним кольцом карты нет — только дверь. Открой её, когда ковчег готов: у Ночи появится дата, и кольца начнут гаснуть с края внутрь.
+UI	tut_mOrd	Orders of the shift: take one of the two. Done inside its years, it pays — people or a hull. Missed, it costs nothing.	Приказы смены: возьми один из двух. Выполнен в срок — награда: люди или судно. Не успел — ничего не теряешь.
+UI	tut_mGhost	A worked-out world. Press it to found a hub there — a hub needs no seam of its own.	Выработанный мир. Нажми на него, чтобы поставить там хаб, — хабу своя жила не нужна.
+UI	tut_mRare	A sign on a world: something rare is there — a dock, survivors, an engine core. Settle the world to take it; hover to see which.	Знак на мире: там что-то редкое — док, выжившие, ядро двигателя. Засели мир, чтобы забрать; наведи, чтобы узнать, что именно.
+UI	tut_mDark	The Night has its year. The ring names on the chart say when each goes dark: bring its people home before — a courier must get there in time.	У Ночи есть год. Имена колец на карте говорят, когда каждое погаснет: вывези людей раньше — курьер должен успеть долететь.
+LOG	ring_tremor	RING {r} IS FAILING. {n} years until it goes dark: its worlds give half, and hulls bound there go missing more often. Still out there: {c} worlds, {h} people.	КОЛЬЦО {r} РУШИТСЯ. До того как оно погаснет — {n} лет: его миры дают вдвое меньше, а суда, идущие туда, пропадают чаще. Там ещё {c} миров и {h} человек.
+LOG	ark_gift	Ark paid up to ring {l}. Couriers at the pier, with their crews — for the last lifts: {c}, Generation {g}.	Ковчег оплачен до кольца {l}. У причала курьеры со своими экипажами — для последних рейсов: {c}, поколение {g}.
+UI	u_tremor	ring failing: ½ output	кольцо рушится: ½ добычи

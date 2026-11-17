@@ -87,7 +87,7 @@ function reloadTexts(){
 function textsVisible(){ return !!TXT_URL || /[?&]dev\b/.test(location.search) }
 
 
-var TONE={night_known:'bd',door_opened:'bd',ring_dark:'bd',ring_dark_near:'bd',world_dark:'bd',voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_noconvoy:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',world_cut:'bd',food_horizon:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
+var TONE={ring_tremor:'bd',ark_gift:'gd',night_known:'bd',door_opened:'bd',ring_dark:'bd',ring_dark_near:'bd',world_dark:'bd',voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_noconvoy:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',world_cut:'bd',food_horizon:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
  quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',hub_lost:'bd',fragment:'hi',order_sent:'hi'};
 
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
@@ -425,7 +425,7 @@ function voiceWatch(){
        speak on losses and on the seams. Windows only for the date, the ark drive, the square and a lost
        hull; everything else is a journal line. */
     if(e.code==='colony_founded'&&d.gift) giftFly(d.p,d.gift);   // v5.27: what the world gave flies to the strip
-    if(e.code==='hub_lost'||e.code==='dock_hull') toastOne(e);   // v5.29: the hull from the dock — a line, no window   // v5.02: the feeders' lines went back to Earth — the player has to see it
+    if(e.code==='hub_lost'||e.code==='dock_hull'||e.code==='ark_gift'||e.code==='ring_tremor') toastOne(e);   // v5.29: the hull from the dock — a line, no window   // v5.02: the feeders' lines went back to Earth — the player has to see it
     if(e.code==='night_dated'){ var f0=driveForecast(G,G.arkMark);
       /* v4.14: {fy} is a whole sentence — a year at this pace, or why there is no year yet */
       var fy0= f0.st==='ok' ? fill(T('fyOk'),{y:f0.y}) : fill(T('fyNone'),{w: f0.st==='settled'?fill(T('arkdReach'),{n:f0.n,r:f0.r}):(f0.st==='host'?fill(T('arkdHost'),{n:K.DRIVE_POP}):T('arkdStall'))});
@@ -1089,6 +1089,7 @@ function drawTip(g){ var tip=el('tip'); if(!g||!G){ tip.className=''; return }
   if(c) h+='<em>'+resIc('people',12)+num(c.pop)+'</em><em>'+shipIc('hauler',18)+onLine(G,pid).length+'</em>';
   else { var tg=giftFor(G,pid), trk=rareKind(tg); if(trk) h+='<em class="tg">'+rareIc(RARE_I[trk],14)+(tg.folk?'+'+num(tg.folk):tg.core?'+'+num(tg.core):'')+'</em>';   // v5.34 (p.8): what the world gives, on hover
     giftKeys(tg).forEach(function(k){ h+='<em class="tg">'+giftChip(k,tg[k])+'</em>' }) }
+  if(ringShakes(G,p.sec)) h+='<em class="tq">'+esc(T('u_tremor'))+'</em>';   // v5.42: the ring is failing
   tip.innerHTML=h;
   var r=g.getBoundingClientRect(), mb=el('mapbox').getBoundingClientRect(), z=appZoom();
   tip.style.left=((r.right-mb.left)/z+8)+'px'; tip.style.top=((r.top-mb.top)/z-6)+'px'; tip.className='on' }
@@ -1575,7 +1576,13 @@ var TMSG={
      closeAll(); U.help=null; U.win='earth'; U.exGet=x.get; U.exPay=x.pay; U.exN=EX_N[x.get].filter(function(v){ return v>=x.n&&exchangeCheck(G,x.get,ab[0],ab[1],v)==='ok' })[0]||EX_N[x.get][0];
      U.tut.seen.m26=1; return {r:T(x.get).toLowerCase(),a:T(ab[0]).toLowerCase(),b:T(ab[1]).toLowerCase()} }},
  m24:{at:function(){ return '#hr-'+U.tut.late },mode:'see',k:'tut_m24',pre:function(){ hullWorld(U.tut.late); return {} }},
- m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }}
+ m23:{at:function(){ return '#hr-'+U.tut.mut },mode:'see',k:'tut_m23',pre:function(){ hullWorld(U.tut.mut); return {} }},
+ /* v5.42 (Nikita 17.11: «игра учит всему что мы добавили?» — «Да, делай одним куском»): what came after v5.33 and had no word of the helper */
+ mDoor:{at:'#ringbtn',mode:'see',k:'tut_mDoor',pre:function(){ closeAll(); return canDoor(G)==='ok'?{}:null }},   // v5.41: the door, the first time it stands on the chart
+ mDark:{at:'#top .night',mode:'see',k:'tut_mDark',pre:function(){ closeAll(); return G.door?{}:null }},   // v5.41: the rings go dark
+ mOrd:{at:'#goals .ordo',mode:'see',k:'tut_mOrd',pre:function(){ var O=G.orders; if(!O||O.on||!O.offer||!O.offer.length) return null; closeAll(); U.win='goals'; return {} }},   // v5.37: the orders of the shift
+ mGhost:{at:function(){ return '#map .wd.gh[data-p="'+U.tut.gh+'"]' },mode:'see',k:'tut_mGhost',pre:function(){ closeAll(); return U.tut.gh&&G.ghost&&G.ghost[U.tut.gh]?{}:null }},   // v5.35: a hub on a worked-out world
+ mRare:{at:'#map .rsign',mode:'see',k:'tut_mRare',pre:function(){ closeAll(); return document.querySelector('#map .rsign')?{}:null }}   // v5.35: a rare find on the chart
 };
 function hullWorld(sid){ var s=shipById(G,sid); if(!s) return; var w=s.from||(s.pend&&s.pend.from)||forWorld(s)||(s.dest&&s.dest!=='earth'?s.dest:s.origin); if(w&&G.colonies[w]) openWorld(w); else closeAll() }
 /* the story: Claude's clean copy 15.10 (awaits Nikita), texts in the sheet; V — her voice (the launch, N-01, gave way to the terminal in v4.40) */
@@ -1624,6 +1631,8 @@ function tutQuiet(){ var t=U.tut, i;
   for(var k=0;k<=t.step;k++) STEPS[k].q.forEach(function(id){ t.seen[id]=1 });
   if(Object.keys(G.colonies).some(isDead)){ t.seen.N06=1; t.seen.m22=1 }
   if(G.ships.some(function(s){ return s.mode==='missing' })){ t.seen.m24=1 }
+  if(canDoor(G)==='ok') t.seen.mDoor=1; if(G.door) t.seen.mDark=1; if(G.orders&&(G.orders.on||(G.orders.offer&&G.orders.offer.length))) t.seen.mOrd=1;   // v5.42 (the reviewer): a run under way is not told the things it already has
+  if(Object.keys(G.ghost||{}).length) t.seen.mGhost=1; if(Object.keys(G.colonies).length>3) t.seen.mRare=1;
   t.seq=G.log.length?G.log[G.log.length-1].seq||0:0 }
 function tutLog(){ var t=U.tut, mx=t.seq;
   for(var i=0;i<G.log.length;i++){ var e=G.log[i], d=e.d||{}; if((e.seq||0)<=t.seq) continue; if(e.seq>mx) mx=e.seq;
@@ -1639,6 +1648,12 @@ function tutJit(){ var t=U.tut, w=U.win, quiet=!t.msg&&!t.nar&&!t.q.length;
   if(quiet&&t.help&&t.step>=7&&!t.seen.m12&&partsHome()) tutPush('m12');
   if(quiet&&t.step>=9&&!t.seen.N07&&evOn()){ tutPush('N07'); tutPush('m17') }   // v4.40: the events step told when the first event comes
   if(quiet&&t.help&&!t.seen.mX&&can('earth')&&!(G.stats.ex>0)){ var xr=exOpen().filter(exLow)[0]; if(xr) exWant(xr,EX_N[xr][1],EX_SPARE_Q) }   // v5.31: a stock running out, two piles beside it
+  if(quiet&&t.help&&!U.win&&!U.tab&&t.step>=4){   // v5.42 (after the yard step — the opening stays as it was): the things after v5.33, each told once, the first time it is there
+    if(!t.seen.mDoor&&canDoor(G)==='ok'&&el('ringbtn')&&!el('ringbtn').hidden) tutPush('mDoor');
+    else if(!t.seen.mDark&&G.door) tutPush('mDark');
+    else if(!t.seen.mOrd&&G.orders&&!G.orders.on&&G.orders.offer&&G.orders.offer.length&&!G.shiftOpen) tutPush('mOrd');
+    else if(!t.seen.mGhost&&can('parts')&&hubCap(G)>=1){ var gk=Object.keys(G.ghost||{}).filter(function(k){ var q=planet(k); return q&&q.kind!=='works'&&secVis(q.sec) })[0]; if(gk&&document.querySelector('#map .wd.gh[data-p="'+gk+'"]')){ t.gh=gk; tutPush('mGhost') } }
+    else if(!t.seen.mRare&&document.querySelector('#map .rsign')) tutPush('mRare') }
   if(!t.help||!quiet||!w) return;   // the window ones speak only while that window is up
   var c=planet(w)&&G.colonies[w], ll=c&&lastLift(G,w);
   if(w==='earth'||w==='yard'||w==='ark'){ tutPush('m7'); tutPush('mH') }
