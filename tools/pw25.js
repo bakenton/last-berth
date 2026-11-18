@@ -40,40 +40,19 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.closeWin();
   await U.tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin','309573272'); await U.tap('[data-act="new"]');
   ok('new game starts paused, no intro (v4.35: no prologue to stop for)', await p.evaluate(()=>LNU.paused===true&&LN.day===0&&LNI.big()===null));
-  await p.evaluate(()=>{ LNU.shiftStop=true; LNU.paused=false });
+  // v5.43 (Nikita 18.11: «Смена смены пульта пока фигня полная»): no report window — the shift passes, the clock runs on
   await p.evaluate(()=>{ for(let i=0;i<79;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
   ok('no report before year 80', (await p.evaluate(()=>LNI.big()))!=='shift', await p.evaluate(()=>LN.day));
-  // let the real clock do the 80th tick so the frame loop stops on the report
-  await p.evaluate(()=>{ LNU.paused=false; LNU.speed=10; LNU.acc=1000 }); await p.waitForTimeout(700);
-  ok('report at year 80', (await p.evaluate(()=>LNI.big()))==='shift', await p.evaluate(()=>LN.day+' open='+LN.shiftOpen+' paused='+LNU.paused));
-  ok('clock stopped (LNI.halted while the report is open)', await p.evaluate(()=>LNI.halted()===true));
-  const rep=await noteTxt();
-  ok('v4.36 N-04: Shift 1 hands over the Helm', /Shift 1 hands over the Helm/.test(rep), rep.slice(0,80));
-  ok('report rows', /Brought home these eighty years/.test(rep)&&/Live worlds/.test(rep)&&/Hands at home/.test(rep), rep.slice(0,400));
-  ok('chronicle line inside', /(shift|Shift) 2/.test(rep));
-  await p.screenshot({path:'shift-1.png'});
-  await U.tap('#noteL [data-act="shiftok"]');
-  ok('take the desk → clock runs', await p.evaluate(()=>LNU.paused===false&&LN.shiftOpen===false));
+  await p.evaluate(()=>{ LNU.paused=false; LNU.speed=10; LNU.acc=1000 }); await p.waitForTimeout(900);
+  const sh=await p.evaluate(()=>({day:LN.day,big:LNI.big(),open:LN.shiftOpen,halted:LNI.halted(),win:!!document.querySelector('#shiftwin'),log:LN.log.some(e=>e.code==='shift')}));
+  ok('v5.43: year 80 passes without a window; the shift is in the log; the clock does not stop', sh.day>80&&sh.big!=='shift'&&!sh.open&&!sh.halted&&!sh.win&&sh.log, JSON.stringify(sh));
   await p.evaluate(()=>{ LNU.paused=true });
-  // 7. switch stops off: year 160 passes without a report
-  // как кадр: при снятом флажке смена не открывается (кадр сбрасывает shiftOpen)
-  await p.evaluate(()=>{ LNU.shiftStop=false; for(let i=0;i<80;i++){ tick(LN); LN.pauseNow=false; if(LN.shiftOpen&&!LNU.shiftStop) LN.shiftOpen=false } LNdraw() });
-  ok('no report with stops off', (await p.evaluate(()=>LNI.big()))!=='shift'&&await p.evaluate(()=>LN.day>=160), await p.evaluate(()=>LN.day));
-  // вакуумная проверка из прежней версии (всегда true): оставлена, предложено к удалению
-  ok('shiftOpen cleared by the loop or ignored', true);
   // 8. last-build warning near the Night
   await p.evaluate(id=>{ LN.colonies[id]={pid:id,pop:60,unrest:0,relay:false,dark:false,pending:null,store:{metal:0,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; LN.night=LN.day+10; LN.arkMark=3; LN.nightSeen=true; LNdraw() },mine);
   // v4.35: советник без кодов — проверяем, что строка о поздней постройке есть (текст строки — в выводе)
   ok('advisor speaks when the last build is near (a_lastbuild → advisor row)', await p.evaluate(()=>LNI.adv().length>0), await p.evaluate(()=>JSON.stringify(LNI.adv().map(r=>r[1]))));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  // 9. the shift report in a second run (v5.05: English only; the Russian report row is the English one)
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);
-  await q.evaluate(()=>{ LNU.shiftStop=true; for(let i=0;i<80;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
-  const ru=await q.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' '));
-  ok('shift report: Shift 1 hands over the Helm, the button is there', /Shift 1 hands over the Helm/.test(ru)&&await q.evaluate(()=>!!document.querySelector('#noteL [data-act="shiftok"]')), ru.slice(0,120));
-  await q.screenshot({path:'shift-en-2.png'});
-  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

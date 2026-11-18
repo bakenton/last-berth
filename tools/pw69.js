@@ -61,7 +61,7 @@ const out=[]; const ok=(n,c,x)=>{ if(!BEFORE) out.push((c?'PASS ':'FAIL ')+n+(x!
     const wt=await p.evaluate(()=>LNU.tab||LNU.win);
     ok('2: its button opens the Worlds tab', wt==='worlds', wt);
     await p.keyboard.press('Escape'); await p.waitForTimeout(200); await U.clear(); await p.evaluate(()=>{ LNU.tab=null; LNU.win=null; LNdraw() }); await p.waitForTimeout(200);
-    const fl=await p.evaluate(()=>{ const e=document.querySelector('#tabs [data-v="worlds"] .flag'); return e?e.textContent:'' }); await shot(p,'s2-flag-hub','#tabs');
+    const fl=await p.evaluate(()=>{ const t=document.querySelector('#tabs [data-v="worlds"]'); return t&&t.querySelector('.bdg')?(t.getAttribute('title')||''):'' });   // v5.43: the flag is a badge, its words the title await shot(p,'s2-flag-hub','#tabs');
     ok('2: after the note the Worlds tab carries the flag while it lasts', /hub can be built/i.test(fl), fl);
     const again=await p.evaluate(()=>{ LNU.notes=[]; LNdraw(); LNdraw(); return (LNU.notes||[]).filter(n=>/HUB/.test(n.title)).length });
     ok('2: the hub note is not said twice', again===0, again);
@@ -70,7 +70,7 @@ const out=[]; const ok=(n,c,x)=>{ if(!BEFORE) out.push((c?'PASS ':'FAIL ')+n+(x!
     await p.evaluate(()=>{ GOD.maxAll(); LNdraw() });
     const got2=await waitFor(p,()=>p.evaluate(()=>(LNU.notes||[]).some(n=>/ARK RING/.test(n.title))||/ARK RING/.test((document.querySelector('.nwin')||{}).textContent||'')));
     await shot(p,'s3-note-ark'); await U.clear(); await p.evaluate(()=>LNdraw()); await p.waitForTimeout(200);
-    const fa=await p.evaluate(()=>{ const e=document.querySelector('#tabs [data-v="ark"] .flag'); return e?e.textContent:'' });
+    const fa=await p.evaluate(()=>{ const t=document.querySelector('#tabs [data-v="ark"]'); return t&&t.querySelector('.bdg')?(t.getAttribute('title')||''):'' });
     ok('2: with the Night dated and Earth able to pay — a note for the ark ring, and the Ark tab\'s flag', got2&&/ark ring I can be paid/i.test(fa), fa);
     ok('2: no page errors', !p.errs.length, p.errs.join(' | '));
     await p.close() }

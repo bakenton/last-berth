@@ -30,8 +30,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // mOrd: the orders on offer
   await p.evaluate(()=>{ LN.orders={offer:[{k:'kit',n:1,rw:{people:40}},{k:'hulls',c:'courier',n:2,rw:{hull:'courier'}}],on:null}; LNdraw() });
   m=await wait('mOrd'); await shot('t3-mOrd');
-  const qw=await p.evaluate(()=>LNU.win);
-  ok('mOrd: the orders of the shift — the journal opens on them', m.msg==='mOrd'&&/take one of the two/i.test(m.tx||'')&&qw==='goals'&&await ring(), JSON.stringify({m,qw}));
+  const qw=await p.evaluate(()=>({win:LNU.win,card:!!document.querySelector('#cards .ordc')}));
+  ok('mOrd: the orders of the shift — v5.43: on the objective card, no window opens', m.msg==='mOrd'&&/take one of the two/i.test(m.tx||'')&&!qw.win&&qw.card&&await ring(), JSON.stringify({m,qw}));
   await gotIt(); await p.evaluate(()=>{ LNU.win=null; LN.orders={offer:[],on:null}; LNdraw() });
   // mDoor: the door on the chart
   await p.evaluate(()=>{ GOD.maxAll(); LN.driveLvl=5; LN.gen=5; ensureGen(5); while(SECTORS.length<K.RING_LAST) openSector(LN); for(let i=0;i<2;i++){ tick(LN); LN.pauseNow=false } LN.nightSeen=true; LNU.notes=[]; LNdraw() });

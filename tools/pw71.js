@@ -20,19 +20,19 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   for(const [tag,vp] of [['',{width:1440,height:900}],['-390',{width:390,height:844}]]){
     const p=await UI.newPage(b,{vp,file:FILE}); const U=UI.ui(p);
-    await U.start('en',11); await U.pause(); await p.waitForTimeout(300); await p.evaluate(()=>{ LNU.shiftStop=true });
+    await U.start('en',11); await U.pause(); await p.waitForTimeout(300); 
     const s=await toShift(p); await p.waitForTimeout(400); await p.evaluate(()=>LNdraw());
-    const w=await p.evaluate(()=>{ const e=document.getElementById('shiftwin'); if(!e) return null; const r=e.getBoundingClientRect();
-      return {rows:[...e.querySelectorAll('.ordo .orr')].map(x=>x.textContent), takes:e.querySelectorAll('.ordo [data-act="ordtake"]').length, inScr:r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1} });
+    const w=await p.evaluate(()=>{ const e=document.querySelector('#cards .ordc'); if(!e) return null; const r=e.getBoundingClientRect();
+      return {rows:[...e.querySelectorAll('.orc')].map(x=>x.textContent), takes:e.querySelectorAll('[data-act="ordtake"]').length, inScr:r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1} });
     await shot(p,'o1-shift-offer'+tag);
-    ok('1'+tag+': the new shift\'s window carries two orders, each with its reward and a «Take»', !!w&&s.open&&s.offer.length===2&&w.takes===2&&w.rows.length===2, JSON.stringify({s,w}));
+    ok('1'+tag+': the new shift\'s card carries two orders (v5.43: no window), each with its reward and a «Take»', !!w&&s.open&&s.offer.length===2&&w.takes===2&&w.rows.length===2, JSON.stringify({s,w}));
     ok('1'+tag+': the first pays in people, the second in a hull', s.offer.length===2&&s.offer[0].rw.people>0&&!!s.offer[1].rw.hull, JSON.stringify(s.offer));
-    ok('1'+tag+': the window is inside the screen', !!w&&w.inScr, JSON.stringify(w));
-    await U.tap('#shiftwin .ordo [data-act="ordtake"][data-i="0"]'); await p.waitForTimeout(300);
-    const t=await p.evaluate(()=>({on:LN.orders.on&&LN.orders.on.k, offer:LN.orders.offer.length, line:!!document.querySelector('#shiftwin .sg.ord')}));
+    ok('1'+tag+': the orders are inside the screen', !!w&&w.inScr, JSON.stringify(w));
+    await U.tap('#cards .ordc [data-act="ordtake"][data-i="0"]'); await p.waitForTimeout(300);
+    const t=await p.evaluate(()=>({on:LN.orders.on&&LN.orders.on.k, offer:LN.orders.offer.length, line:!!document.querySelector('#cards .ocard .sg.ord')&&!document.querySelector('#cards .ordc')}));
     await shot(p,'o2-shift-taken'+tag);
-    ok('1'+tag+': «Take» with the mouse takes the first; the other is gone; the window now names the order taken', !!t.on&&t.offer===0&&t.line, JSON.stringify(t));
-    await U.tap('[data-act="shiftok"]'); await p.waitForTimeout(300); await U.clear(); await p.evaluate(()=>LNdraw()); await p.waitForTimeout(200);
+    ok('1'+tag+': «Take» with the mouse takes the first; the other is gone; the card now names the order taken', !!t.on&&t.offer===0&&t.line, JSON.stringify(t));
+    await U.clear(); await p.evaluate(()=>LNdraw()); await p.waitForTimeout(200);
     const c=await p.evaluate(()=>{ const e=document.querySelector('#cards .ocard .sg.ord'); return e?e.textContent:null });
     await shot(p,'o3-card-order'+tag, tag?null:'#cards .ocard');
     ok('2'+tag+': the card carries the order: what, how far, the years left, the reward', !!c&&/order/i.test(c)&&/years left/i.test(c), c);

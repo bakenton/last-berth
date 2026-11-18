@@ -49,12 +49,11 @@ const terminalDone=async p=>{ for(let i=0;i<200&&await p.evaluate(()=>LNU.menu);
   // 4. the big windows, 1440 and 1280: the shift (N-04), the Night (N-09, the Institute only), the end (N-13)
   for(const vp of [{width:1440,height:900},{width:1280,height:800}]){ const W=vp.width;
     const p=await UI.newPage(b,{vp}); const U=UI.ui(p); const shot=async nm=>{ if(process.env.LB_SHOTS) await p.screenshot({path:require('path').join(process.env.PWALX_SHOTS||'.','pwalx-'+W+'-'+nm+'.png')}) };
-    await U.start('en',11); await p.evaluate(()=>{ LNU.shiftStop=true });
+    await U.start('en',11); 
     await p.evaluate(()=>{ LNU.speed=10; LNU.paused=false; LNdraw() });
-    for(let i=0;i<400&&await p.evaluate(()=>LNI.big())!=='shift';i++){ await p.evaluate(()=>{ LN.earth.food=Math.max(LN.earth.food,400); if(LNU.paused&&!LNI.big()){ LNU.paused=false } }); await p.waitForTimeout(150) }
-    const sh=await pic(p,'#noteL .alx .hav'), st=await p.evaluate(()=>(document.querySelector('#noteL .alx p')||{}).textContent||'');
-    ok(W+': shift 1 (N-04) — smile 72×90 by her line', sh&&sh.img&&sh.cls.includes('fc-smile')&&sh.w>=72&&sh.h>=90&&/I stay/.test(st), JSON.stringify(sh)+' '+st);
-    await shot('N04'); await U.tap('#noteL [data-act="shiftok"]');
+    // v5.43: no shift window — her shift line (N-04) went with it; the Night and the end keep theirs
+    await p.evaluate(()=>{ for(let i=0;i<120;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } LNdraw() });
+    ok(W+': v5.43 — the shift passes without a window', await p.evaluate(()=>LNI.big()!=='shift'&&!document.querySelector('#shiftwin')));
     await p.evaluate(()=>{ LNU.paused=true; LN.night=LN.day+400; LN.nightSeen=false; LN.arkMark=1; LNdraw() });
     ok(W+': the Night window (N-09) stands, no line of hers', await p.evaluate(()=>LNI.big()==='night'&&!document.querySelector('#noteL .alx')));
     await shot('N09'); await U.tap('#noteL [data-act="nightok"]');

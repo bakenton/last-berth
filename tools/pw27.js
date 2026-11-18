@@ -35,16 +35,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ const s=shipById(LN,window.T1); s.mode='idle'; s.at='earth'; s.t=0; s.crew=5; LN.earth.people=0 });
   await run(2);
   ok('sails short-handed at 5 of 8', await p.evaluate(()=>shipById(LN,window.T1).mode==='transit'&&shipById(LN,window.T1).crew===5));
-  // 6. shift report rows
-  await p.evaluate(()=>{ LN.stats.attrition=(LN.stats.attrition||0)+3; LN.day=79; LNU.shiftStop=true; LNU.paused=false }); await p.evaluate(()=>{ tick(LN); LNdraw() });
-  ok('report shows attrition and the hands rate', await p.evaluate(()=>{ const t=document.getElementById('noteL').textContent; return /Hands lost on the crossings/.test(t)&&/Earth still raises/.test(t) }), await p.evaluate(()=>document.getElementById('noteL').textContent.replace(/\s+/g,' ').slice(0,300)));
+  // 6. v5.43: no report window — core still keeps the shift's counters (attrition, the hands rate) in G.shiftReport
+  await p.evaluate(()=>{ LN.stats.attrition=(LN.stats.attrition||0)+3; LN.day=79 }); await p.evaluate(()=>{ tick(LN); LN.shiftOpen=false; LNdraw() });
+  ok('v5.43: the shift counts attrition and the hands rate (core), no window', await p.evaluate(()=>{ const R=LN.shiftReport||{}; return R.attrition>=3&&typeof R.handsRate==='number'&&LNI.big()!=='shift' }), await p.evaluate(()=>JSON.stringify(LN.shiftReport||{}).slice(0,200)));
   ok('no page errors (EN)', p.errs.length===0, p.errs.join(' | '));
   await p.close();
-  // v5.05: English only — the second run checks the same report row in English
-  const q=await UI.newPage(b); const V=UI.ui(q); await V.start('en',309573272);
-  await q.evaluate(()=>{ LNU.shiftStop=true; for(let i=0;i<80;i++){ tick(LN); LN.pauseNow=false } LNdraw() });
-  ok('report row: Earth still raises', await q.evaluate(()=>/Earth still raises/.test(document.getElementById('noteL').textContent)));
-  ok('no page errors (second run)', q.errs.length===0, q.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL scenario ran to the end — '+e.message.split('\n')[0]) }
   console.log(out.join('\n')); console.log(out.filter(x=>x.startsWith('PASS')).length+'/'+out.filter(x=>/^(PASS|FAIL)/.test(x)).length);

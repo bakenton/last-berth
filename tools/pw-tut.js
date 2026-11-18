@@ -54,7 +54,7 @@ async function drive(p,U,{cap=150,deadline=Date.now()+110000,shots=null}={}){
     await play();
     // v4.50: no Skip any more. Where it was open (from the step 'home'), the guide winds the clock through the core by FF years at a time,
     // stopping as Skip did on a shift, the Night or the end; the helper's next word comes on the next frame and stops the loop above
-    if(s.open.includes('earth')){ await p.evaluate(n=>{ LNU.paused=true; for(let i=0;i<n&&!LN.over;i++){ tick(LN); LN.pauseNow=false; if(LN.shiftOpen){ if(LNU.shiftStop) break; LN.shiftOpen=false } if(LN.night&&!LN.nightSeen) break } LNdraw() },FF); await p.waitForTimeout(150) }
+    if(s.open.includes('earth')){ await p.evaluate(n=>{ LNU.paused=true; for(let i=0;i<n&&!LN.over;i++){ tick(LN); LN.pauseNow=false; if(LN.shiftOpen) LN.shiftOpen=false; /* v5.43: the shift does not stop the clock (no window) */ if(LN.night&&!LN.nightSeen) break } LNdraw() },FF); await p.waitForTimeout(150) }
     else { if(await p.evaluate(()=>LNU.paused||LNU.speed!==10)) await p.evaluate(()=>{ LNU.speed=10; LNU.paused=false }); await p.waitForTimeout(400) }   // v4.42: the scenario's 10× is a hook (no button)
   }
   marks.final=await st();

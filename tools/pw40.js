@@ -54,11 +54,11 @@ const TMP=require('os').tmpdir();
   ok('the rule itself refuses (abandon → evacLate)', await p.evaluate(id=>{ var s=LN.ships.filter(s=>HULLS[s.hull].key==='courier'&&s.mode==='idle'&&s.at==='earth'&&!s.mutiny)[0]; return s?abandon(LN,s.id,id):'no free courier' },mine)==='evacLate');
   await p.keyboard.press('Escape');   // v4.49: a world window stops the clock — closed before time runs
   await p.evaluate(()=>{ LNU.paused=false; LNdraw() }); let seen='';
-  for(let i=0;i<30&&!/CUT OFF|cut off/i.test(seen);i++){ await p.waitForTimeout(150); seen=await toasts()+' '+await p.evaluate(()=>document.getElementById('noteL').textContent) }
+  for(let i=0;i<8&&!/CUT OFF|cut off/i.test(seen);i++){ await p.waitForTimeout(150); seen=await toasts()+' '+await p.evaluate(()=>document.getElementById('noteL').textContent) }
   await p.evaluate(()=>{ LNU.paused=true; LNdraw() }); await U.clear();
   const lg=await p.evaluate(id=>({n:LN.log.filter(e=>e.code==='world_cut'&&e.d.p===id).length, still:!!LN.colonies[id], cut:!!(LN.colonies[id]&&LN.colonies[id].cut)}),mine);
   ok('the log says it once and the world stays settled', lg.n===1&&lg.still&&lg.cut, JSON.stringify(lg));
-  ok('the cut-off line is on screen (toast or note)', /IS CUT OFF|cut off/i.test(seen), seen.slice(0,200));
+  ok('v5.43: the cut-off world is in the advisor (NEEDS A DECISION), not a toast', await p.evaluate(id=>LNI.adv().some(r=>r[3]===id),mine), await p.evaluate(()=>JSON.stringify(LNI.adv().map(r=>r[1])).slice(0,200)));
   await show(mine); await p.screenshot({path:TMP+'/v433-lift-cut.png'});
 
   // === RU

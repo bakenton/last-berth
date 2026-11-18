@@ -67,7 +67,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('log of the run: dock_hull with the world, the hull and the class', !!r.ev&&r.ev.p===D&&r.ev.k==='courier'&&r.ev.n===r.hull.id, JSON.stringify(r.ev));
   await p.waitForTimeout(250); await p.evaluate(()=>LNdraw());
   const toast=await p.evaluate(()=>[...document.querySelectorAll('#toasts .toast')].map(e=>e.innerText.trim()));
-  ok('a line at the foot of the chart tells it; no window, nothing to press', toast.some(t=>/the dock.s courier takes this line\.$/i.test(t))&&await p.evaluate(()=>!LNI.big()), toast.join(' | '));
+  ok('v5.43: no window, nothing to press, no toast of the dock (the answer to the founding press may stand) — the log keeps dock_hull', !toast.some(t=>/dock/i.test(t))&&await p.evaluate(()=>!LNI.big()), toast.join(' | '));
   c=await chart(p);
   ok('after the landing the sign is gone from that world; the other ring keeps its own', !c.signs.some(s=>s.p===D)&&c.signs.length===1&&c.signs[0].p===core.docks[1]&&c.words.length===0, JSON.stringify(c.signs.map(s=>s.p)));
   await shot(p,'A3-landed');

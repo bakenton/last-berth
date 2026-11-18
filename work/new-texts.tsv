@@ -1136,3 +1136,5 @@ UI	tut_mDark	The Night has its year. The ring names on the chart say when each g
 LOG	ring_tremor	RING {r} IS FAILING. {n} years until it goes dark: its worlds give half, and hulls bound there go missing more often. Still out there: {c} worlds, {h} people.	КОЛЬЦО {r} РУШИТСЯ. До того как оно погаснет — {n} лет: его миры дают вдвое меньше, а суда, идущие туда, пропадают чаще. Там ещё {c} миров и {h} человек.
 LOG	ark_gift	Ark paid up to ring {l}. Couriers at the pier, with their crews — for the last lifts: {c}, Generation {g}.	Ковчег оплачен до кольца {l}. У причала курьеры со своими экипажами — для последних рейсов: {c}, поколение {g}.
 UI	u_tremor	ring failing: ½ output	кольцо рушится: ½ добычи
+UI	u_losses	Losses	Потери
+UI	ord_cardH	Shift {n} · pick one	Смена {n} · выбери одно

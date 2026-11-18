@@ -50,7 +50,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ const G=LN; G.night=G.day+290; G.foodFc={y:G.day+150,n:450,farms:0}; G.ark={rings:0,woke:0}; G.arkMark=0; LNdraw() });
   const top=await p.evaluate(()=>document.querySelector('#top').innerText.replace(/\s+/g,' '));
   ok('the top bar has WAKE · SLEEP ON in the Night (v5.10, Nikita 10.11)', /WAKE/i.test(top)&&/SLEEP ON/i.test(top),top);
-  const flag=await p.evaluate(()=>{ const e=document.querySelector('#tabs [data-v="earth"] .flag'); return e?e.innerText:'' });
+  const flag=await p.evaluate(()=>{ const e=document.querySelector('#tabs [data-v="earth"]'); return e?e.getAttribute('title')||'':'' });   // v5.43: the flag's words are the tab's title
   ok('no «rations end before the Night» flag on Earth', !/before the Night/i.test(flag),flag);
   const fx=await p.evaluate(()=>document.querySelector('#mapbox').classList.contains('nfon'));
   ok('static is on 290 years out', fx);

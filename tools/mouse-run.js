@@ -151,6 +151,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
       C.buildHub=(G,k)=>R('buildHub',{k,r:C0.buildHub(G,k)});
       C.setVia=(G,k,h)=>{ const was=(G.colonies[k]||{}).via||null; const r=C0.setVia(G,k,h); if(was!==h) R('setVia',{k,h,r}); return r };
       C.exchange=(G,r0,a,b,n)=>R('exchange',{res:r0,a,b,n,r:C0.exchange(G,r0,a,b,n)});
+      C.openDoor=(G)=>R('openDoor',{r:C0.openDoor(G)});   // v5.41: the door past the last ring — held, not pressed
       let err=null; try{ SIM.step(C,Gc,style,d,__mr.st) }catch(e){ err=String(e&&e.stack||e).slice(0,400) }
       for(const a of acts){ if(a.f==='buildShip'&&a.newId!==null){ const s=Gc.ships.find(x=>x.id===a.newId); a.reserve=!!(s&&s.reserve) } }
       return {acts,err} };
@@ -231,6 +232,14 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
         if(at.line){ const r=await HANDS.clearLine({sid:a.sid}); if(!r.ok&&!r.skip) return r }
         await p.evaluate(id=>{ __mr.pend.push(id) },a.sid); note('convoy: судно не у пирса — снято с линии в окне мира, «в конвой» нажато у пирса','судно '+a.sid); return {ok:true,skip:'снято с линии, ждёт пирса'} }
       if(!(await openTab('yard'))) return {ok:false,why:'yard-not-open'}; return press('#ovl [data-act="reserve"][data-s="'+a.sid+'"][data-on="'+(a.on?1:0)+'"]','reserve') },
+    async openDoor(){ await home();   // v5.41: the ring button says DOOR; its window has a button held for DOOR_HOLD ms
+      if(!(await okTap('#ringbtn [data-act="doorwin"]'))){ if(!(await openTab('tech'))||!(await okTap('#side [data-act="doorwin"]'))) return {ok:false,why:'door-button-missing'} }
+      await wait(150); const L=p.locator('#doorhold').first(); if(!(await L.count())) return {ok:false,why:'doorhold-missing'};
+      const bb=await L.boundingBox(); if(!bb) return {ok:false,why:'doorhold-hidden'};
+      const n0=await actLen(); await p.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2); await p.mouse.down(); clicks.n++;
+      const hold=await p.evaluate(()=>typeof DOOR_HOLD!=='undefined'?DOOR_HOLD:1800).catch(()=>1800); await wait(hold+500); await p.mouse.up();
+      const got=await p.evaluate(n0=>{ const a=LN.actions.slice(n0).filter(x=>x.k==='door'); return a.length?a[a.length-1]:null },n0);
+      await shot('door-opened-y'+curDay); if(!got) return {ok:false,why:'door-not-logged'}; return {ok:got.r==='ok',why:got.r} },
     async buildHub(a){ if(!(await openWorld(a.k))) return {ok:false,why:'world-not-open'}; const r=await press('#ovl [data-act="hubbuild"][data-p="'+a.k+'"]','hub'); if(r.ok) await shot('hub-built-y'+curDay); return r },
     async setVia(a){ const cur=await p.evaluate(k=>(LN.colonies[k]||{}).via||null,a.k); if(cur===a.h) return {ok:true,skip:'уже так'};
       if(!(await openWorld(a.k))) return {ok:false,why:'world-not-open'}; return press('#ovl [data-act="via"][data-p="'+a.k+'"][data-v="'+a.h+'"]','via') },

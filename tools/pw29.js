@@ -1,4 +1,4 @@
-// v4.9 — clock stops only for shift and Night; toasts; SKIP passes shifts when they are not stopped; dead seam: hulls stand down, no order; evac button greys; big buttons; building hull in the Fleet panel
+// v4.9 — clock stops only for the Night (v5.43: and no longer for the shift); toasts; SKIP passes shifts when they are not stopped; dead seam: hulls stand down, no order; evac button greys; big buttons; building hull in the Fleet panel
 // v4.35: тост — #toasts .toast; смена и Ночь — #noteL; мир — окно мира #ovl; советник — LNI.adv(); Флот — #side (вкладка fleet); SKIP — [data-act="skip"]
 const {chromium}=require(process.env.LB_PLAYWRIGHT||'playwright');
 const UI=require('./pw-ui.js');
@@ -13,12 +13,12 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ LNU.shiftStop=false; LNU.paused=false; LNU.speed=10; LN.pauseNow=true; log(LN,'ship_ready',{n:1}) });
   await p.waitForTimeout(500);
   ok('clock kept running through pauseNow', await p.evaluate(()=>LNU.paused===false&&LN.day>=2), await p.evaluate(()=>LN.day));
-  ok('toast shown', await p.evaluate(()=>!!document.querySelector('#toasts .toast')));
+  ok('v5.43: no toast from the log (only the answer to a press is a toast)', await p.evaluate(()=>!document.querySelector('#toasts .toast')));
   // 2. shift stops the clock (with the stop on); the window closes with its button
   await U.clear();
   await p.evaluate(()=>{ LNU.paused=true; LNU.shiftStop=true; LN.day=79; LNU.paused=false }); await p.waitForTimeout(400);
-  ok('shift stops the clock', await p.evaluate(()=>LNU.paused===false&&LN.shiftOpen===true&&LNI.halted()===true));
-  await U.tap('#noteL [data-act="shiftok"]');
+  ok('v5.43: the shift does not stop the clock, no window', await p.evaluate(()=>LNU.paused===false&&LN.day>80&&LN.shiftOpen===false&&LNI.halted()===false&&LNI.big()!=='shift'), await p.evaluate(()=>LN.day));
+  await U.pause();
   // 3. v4.50 (Nikita 05.11): no Skip — the clock has only its speeds
   ok('no Skip button on the top bar', !(await p.$('[data-act="skip"]')) && await p.isVisible('#top [data-act="spd"]'));
   // 4. the Night still stops the clock

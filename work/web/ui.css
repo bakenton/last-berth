@@ -34,8 +34,9 @@ svg.gi{fill:currentColor}
 .tab.tlk{cursor:default}
 .tab.sil .ic{opacity:.6}   /* v5.26: the ark's shut outline before its step */
 .tab .new{position:absolute;right:8px;top:8px;width:8px;height:8px;background:var(--ppl)}
-.flag{position:absolute;left:88px;top:28px;white-space:nowrap;font-style:normal;letter-spacing:.02em;font-size:12px;font-weight:500;background:var(--pan);border:1px solid;padding:3px 9px;pointer-events:none}
-.flag:before{content:'';position:absolute;left:-7px;top:50%;margin-top:-6px;border:6px solid transparent;border-right-color:currentColor;border-left:0}
+/* v5.43: the tab's badge (after Clash of Clans) — a number in a circle; red is an alarm, yellow is something to do */
+.bdg{position:absolute;right:7px;top:7px;min-width:20px;height:20px;border-radius:10px;padding:0 6px;display:flex;align-items:center;justify-content:center;font:700 12px var(--n);font-style:normal;letter-spacing:0;background:var(--ppl);color:#000;box-shadow:0 0 0 2px var(--bg);pointer-events:none}
+.bdg.red{background:var(--red);color:#fff}
 /* map */
 #mapbox{position:absolute;left:82px;top:100px;right:0;bottom:0;overflow:hidden}
 #map3d{position:absolute;inset:0;width:100%;height:100%;display:block}#map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}#map.drag{cursor:grabbing}
@@ -62,7 +63,7 @@ svg.gi{fill:currentColor}
 @keyframes nfj{0%,86%,100%{transform:none}87%{transform:translate(2px,-1px)}90%{transform:translate(-2px,1px)}93%{transform:none}95%{transform:translate(1px,1px)}}
 .qm{margin-left:8px;width:18px;height:18px;padding:0;border:1px solid var(--mid);background:none;color:var(--mid);font:600 11px var(--n);line-height:16px;cursor:pointer}.qm:hover,.qm.on{background:var(--mid);color:#000}
 .dhelp{border:1px solid var(--ln);padding:8px 10px;margin:0 0 10px;font-size:12.5px;line-height:1.45;color:var(--mid)}.dhelp p{margin:0 0 6px}.dhelp p:last-child{margin:0}
-#evbar{position:absolute;left:50%;transform:translateX(-50%);top:10px;display:flex;flex-direction:column;gap:6px;z-index:2;pointer-events:none}
+#evbar{position:absolute;left:50%;transform:translateX(-50%);top:46px;display:flex;flex-direction:column;gap:6px;z-index:2;pointer-events:none}
 .evc{display:flex;align-items:center;gap:10px;border:1px dashed;background:var(--pan);padding:6px 14px;font-size:12.5px;white-space:nowrap}
 .evc.on{border-style:solid}.evc b{letter-spacing:.14em;font-size:11px}.evc span{color:var(--mid)}
 #evbar.blink .evc.on{animation:blk 1.1s infinite}
@@ -239,8 +240,9 @@ svg.gi{fill:currentColor}
 .menu .seedrow{display:flex;gap:8px;align-items:center;padding:6px 10px;font-size:12px;color:var(--mid)}.menu input{width:110px;background:var(--bg);border:1px solid var(--ln);color:var(--ink);font:12px var(--n);padding:4px 6px}
 .pick{border-color:var(--ink);width:520px;padding:10px 14px}.pick button i{font-style:normal;color:var(--mid);font-size:12px;white-space:nowrap}.pick button span.short{color:var(--ppl)}.pick button{display:flex;gap:10px;align-items:center;width:100%;padding:7px 4px;border-bottom:1px solid var(--pan2);font-size:13px}.pick button span{margin-left:auto;color:var(--mid);font-size:12px}.pick button.dis{opacity:.4;cursor:default}.pick .cancel{justify-content:center;color:var(--ink);letter-spacing:.14em;font-size:11px;border:1px solid var(--mid);margin-top:10px;padding:8px;text-transform:uppercase}
 .pick .lst{max-height:calc(var(--ah,100vh) * .5)}
-#toasts{position:absolute;right:12px;bottom:52px;display:flex;flex-direction:column;gap:6px;z-index:23;width:330px;pointer-events:none}
-.toast{background:var(--pan);border:1px solid var(--mid);padding:8px 12px;font-size:12.5px;display:block;animation:tin .25s;transition:opacity .4s}
+/* v5.43: the answer to a press — one line at the top of the chart, it fades (the director's events moved one lane down: #evbar) */
+#toasts{position:absolute;left:calc(50% + 41px);transform:translateX(-50%);top:110px;display:flex;flex-direction:column;align-items:center;z-index:23;max-width:560px;pointer-events:none}
+.toast{background:rgba(20,20,23,.94);border:1px solid var(--mid);padding:6px 14px;font-size:12.5px;display:block;text-align:center;animation:tin .25s;transition:opacity .4s}
 .toast.good{border-color:var(--food)}.toast.bad{border-color:var(--red);color:#FFB1A8}.toast.warn{border-color:var(--ppl)}.toast.gone{opacity:0}
 @keyframes tin{from{transform:translateY(8px);opacity:0}}
 /* big windows: a note, the Night, the shift, the end — time stops */
@@ -268,6 +270,12 @@ svg.gi{fill:currentColor}
 .ltarch{display:flex;gap:7px;align-items:center;background:rgba(20,20,23,.96);border:1px solid var(--ln);padding:3px 8px;font-size:10.5px;letter-spacing:.14em;color:var(--mid);text-transform:uppercase}.ltarch b{font:600 11px var(--n);color:var(--ink)}.ltarch em{font-style:normal;color:#000;background:var(--ppl);padding:0 5px;font-weight:600;letter-spacing:.06em}.ltarch.on{border-color:var(--ink);color:var(--ink)}
 #pop.p-letters{left:96px;bottom:44px;width:460px}#app.sideon #pop.p-letters{left:564px}
 .ltrs{background:var(--pan);border:1px solid var(--ppl);padding:6px;max-height:calc(var(--ah,100vh) - 170px);overflow:auto}.ltrs .ltr{margin-bottom:3px;background:var(--bg)}
+/* v5.43: LOSSES — beside the personal files; a red badge counts what has not been seen; the list is the log's lines of losses */
+.ltrow{display:flex;gap:8px;align-items:center}
+.ltarch.loss{position:relative;color:var(--red);border-color:rgba(255,42,26,.55)}.ltarch.loss i{font-style:normal;font-weight:700}.ltarch.loss.new{border-color:var(--red)}
+.ltarch.loss .bdg{position:absolute;right:-10px;top:-10px;left:auto}
+.ltrs.lss{border-color:var(--red)}.lsr{display:grid;grid-template-columns:42px 1fr;gap:8px;padding:6px 6px;border-top:1px solid var(--ln);font-size:12.5px;line-height:1.35}
+.lsr b{font:600 11px var(--n);color:var(--red)}
 #pfL.full{display:flex;inset:0;z-index:29;background:rgba(5,5,6,.85);align-items:center;justify-content:center}
 .pfbox{display:grid;grid-template-columns:72px 1fr;gap:14px;width:560px;background:rgba(20,20,23,.96);border:1px solid var(--ln);border-left:3px solid var(--ppl);padding:12px 16px 12px 12px;animation:tin .3s}
 .pfbox canvas{width:72px;height:72px;image-rendering:pixelated;border:1px solid var(--ln)}
@@ -435,12 +443,16 @@ svg.gi{fill:currentColor}
 .ordo .orr b{display:block;font:600 12px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.25}
 .ordo .orr small{display:flex;gap:5px;align-items:center;font:500 12px var(--n);color:var(--ink);margin-top:3px}
 .ordo .orr .b{flex:none}
+/* v5.43: the shift's orders under the objective card — one block with it, a row each: what · reward · TAKE */
+.ordc{margin-top:-7px;background:rgba(20,20,23,.94);border:1px solid var(--ink);border-top:1px solid var(--ln)}
+.ordc .hd{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font:600 10px var(--h);letter-spacing:.18em;text-transform:uppercase;color:var(--ppl)}
+.ordc .hd span{display:flex;gap:7px;align-items:center}.ordc .hd em{font:500 9px var(--h);font-style:normal;color:var(--mid);letter-spacing:.16em}
+.ordc .orc{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:6px 10px;border-top:1px solid var(--ln)}
+.ordc .orc b{font:600 11.5px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.2;min-width:0}
+.ordc .rw{display:flex;align-items:center;gap:3px;font:600 12px var(--n);color:var(--food);border:1px solid var(--food);padding:2px 6px;white-space:nowrap}
+.ordc .orc .b{padding:4px 9px;font-size:10px}
 .ocard .sg.ord>i{border-color:#FFD23F}
 .ocard .sg.ord small{display:flex;gap:5px;align-items:center}
-.sg.ord.inwin{display:grid;grid-template-columns:8px 1fr;gap:10px;padding:8px 0;border-top:1px solid var(--ln)}
-.sg.ord.inwin>i{width:7px;height:7px;margin-top:3px;border:1px solid #FFD23F;transform:rotate(45deg)}
-.sg.ord.inwin b{display:block;font:600 12px var(--h);letter-spacing:.06em;text-transform:uppercase}
-.sg.ord.inwin small{display:flex;gap:5px;align-items:center;color:var(--mid);margin-top:3px}
 .ogv svg{vertical-align:middle}
 .rwh{font:500 10px var(--h);font-style:normal;letter-spacing:.12em;text-transform:uppercase;color:var(--mid);margin-right:2px}
 

@@ -26,7 +26,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // v5.09 (Никита 10.11: «игрок должен сам решить, когда взламывать»): взлом сам не открывается — карточка, флажок вкладки и кнопка в Tech
   await U.play(4); const dA=await U.day(); await p.waitForTimeout(1600);
   ok('v5.09: the hack does not open by itself and the clock runs', !(await H()).open&&(await U.day())>dA);
-  ok('the card HACK WAITING stands and the Tech tab is flagged «Hack needed»', await vis('#cards .bcard.hk')&&/Hack needed/.test(await txt('#tabs')), (await txt('#tabs')).replace(/\s+/g,' ').slice(0,160));
+  const tt=await p.evaluate(()=>{ const t=document.querySelector('#tabs [data-v="tech"]'); return {b:!!(t&&t.querySelector('.bdg')),title:t?t.getAttribute('title')||'':''} });   // v5.43: a badge, its words the title
+  ok('the card HACK WAITING stands and the Tech tab is flagged «Hack needed»', await vis('#cards .bcard.hk')&&tt.b&&/Hack needed/.test(tt.title), JSON.stringify(tt));
   await U.pause(); await U.tab('tech');
   ok('Tech: «Hack needed: HULL.GEN.II» with the button «Start the hack»', /Hack needed: HULL\.GEN\.II/.test(await txt('#side'))&&/Start the hack/i.test(await txt('#side [data-act="hack"]')), (await txt('#hkneed')).replace(/\s+/g,' '));
   await U.tap('#side [data-act="hack"]');

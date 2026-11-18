@@ -1,6 +1,6 @@
 /* LONG NIGHT — core simulation. No DOM. Pure state + pure-ish mutators. */
 
-var VERSION={v:'5.42'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
+var VERSION={v:'5.43'};   // v4.40: the build's version — the run log and the main menu show it; tools/close-iter.js bump writes it here
 function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;var t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 
 /* ---------- the chart builds itself ----------
@@ -1411,9 +1411,13 @@ function ringDarkAt(G,sec){ return G.door&&G.door.dark[sec]!==undefined ? G.door
 function worldEnd(G,pid){ if(!G.night) return null; var p=planet(pid), d=p?ringDarkAt(G,p.sec):null; return d===null?G.night:Math.min(d,G.night) }
 function worldLeft(G,pid){ var e=worldEnd(G,pid); return e===null?null:Math.max(0,e-G.day) }
 function ringWorlds(G,sec){ var c=0, h=0; for(var k in G.colonies){ if(planet(k).sec===sec){ c++; h+=Math.floor(G.colonies[k].pop) } } return {c:c,h:h} }
+/* hulls a dark ring would take: idle at one of its worlds, or flying to one (as ringDark counts them) */
+function ringHulls(G,sec){ var n=0; for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead'||s.mode==='building') continue;
+    var here = s.mode==='idle'&&s.at&&s.at!=='earth' ? s.at : ((s.mode==='transit'||s.mode==='missing')&&s.dest&&s.dest!=='earth' ? s.dest : null), ph=here&&planet(here);
+    if(ph&&ph.sec===sec) n++ } return n }
 function doorTick(G){ var D=G.door; for(var i in D.dark){ if(D.out[i]!==undefined) continue; var left=D.dark[i]-G.day;
-    if(left===K.TREMOR_YEARS){ var tw=ringWorlds(G,+i); log(G,'ring_tremor',{r:ringRn(+i),n:left,c:tw.c,h:tw.h}) }   // v5.42
-    if(left===K.DARK_WARN){ var w=ringWorlds(G,+i); G.pauseNow=true; log(G,'ring_dark_near',{r:ringRn(+i),n:left,c:w.c,h:w.h}) }
+    if(left===K.TREMOR_YEARS){ var tw=ringWorlds(G,+i); log(G,'ring_tremor',{r:ringRn(+i),n:left,c:tw.c,h:tw.h,s:ringHulls(G,+i)}) }   // v5.42; s — the UI toasts it only when something is there
+    if(left===K.DARK_WARN){ var w=ringWorlds(G,+i); if(w.c||ringHulls(G,+i)) G.pauseNow=true; log(G,'ring_dark_near',{r:ringRn(+i),n:left,c:w.c,h:w.h}) }   // an empty ring: in the log, no toast
     if(left<=0) ringDark(G,+i) } }
 function ringDark(G,sec){ G.door.out[sec]=G.day; var lw=0, lp=0, ls=0, lc=0, k, i, s, o;
   for(k in G.colonies){ if(planet(k).sec!==sec) continue; var c=G.colonies[k]; lw++; lp+=Math.floor(c.pop);
@@ -1426,7 +1430,7 @@ function ringDark(G,sec){ G.door.out[sec]=G.day; var lw=0, lp=0, ls=0, lc=0, k, 
     if(!ph||ph.sec!==sec) continue;
     var cr=s.crew||0; lc+=cr; ls++; lp+=Math.floor((s.cargo&&s.cargo.people)||0);
     s.mode='dead'; s.crew=0; s.from=null; s.to=null; s.pend=null; s.job=null; G.stats.lost++; hubFoundBack(G,s); G.earth.lostCrew=(G.earth.lostCrew||0)+cr }
-  G.stats.dark=(G.stats.dark||0)+lp+lc; G.pauseNow=true;
+  G.stats.dark=(G.stats.dark||0)+lp+lc; if(lw||ls) G.pauseNow=true;   // an empty ring goes dark in the log only
   log(G,'ring_dark',{r:ringRn(sec),c:lw,h:lp,s:ls,k:lc}) }
 /* a lift that comes too late: she would reach the world after its ring went dark, or be home after the Night */
 function liftLate(G,pid,s){ if(!G.night) return false; var l=legDays(G,'earth',pid,s), e=worldEnd(G,pid);

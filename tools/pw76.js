@@ -23,7 +23,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(()=>{ LNU.notes=[]; LNdraw() }); await p.waitForTimeout(300);
   const t1=await p.evaluate(()=>[...document.querySelectorAll('#toasts .toast, #toast')].map(e=>e.textContent).join(' | '));
   await shot('g1-ark-gift');
-  ok('1: the toast says couriers stand at the pier', /couriers at the pier/i.test(t1), t1.slice(0,200));
+  const fb=await p.evaluate(()=>{ const t=document.querySelector('#tabs [data-v="fleet"]'), e=t&&t.querySelector('.bdg'); return {b:e?e.textContent:'',title:t?t.getAttribute('title')||'':''} });
+  ok('1: v5.43 — no toast; the Fleet tab badge counts the couriers at the pier', !t1&&+fb.b>=3&&/pier/i.test(fb.title), JSON.stringify(fb)+' '+t1.slice(0,100));
   // 2: the ring shakes before it goes dark
   const g2=await p.evaluate(()=>{ while(SECTORS.length<K.RING_LAST) openSector(LN); LN.driveLvl=5; LN.gen=5; ensureGen(5);
     const last=K.RING_LAST-1, w=PLANETS.filter(q=>q.sec===last&&q.kind!=='works')[0], w2=PLANETS.filter(q=>q.sec===last-1&&q.kind!=='works')[0];

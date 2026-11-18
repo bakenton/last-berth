@@ -47,14 +47,15 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(a=>{ onLine(LN,a.id).forEach((s,i)=>{ s.cap=a.w[i] }); LNdraw() },{id:mine,w:capsWere});
   // 8. food warning once when rations are low and no farm is lined
   await p.evaluate(()=>{ LN.earth.food=1; LNU.foodWarnAt=null; for(const k in LN.colonies){ if(planet(k).kind==='farm') LN.colonies[k].dark=true } LNdraw() });
-  await U.until(()=>p.evaluate(()=>LNU.foodWarnAt!=null),60,10); await U.pause();
-  ok('food warning shown (toast)', /Rations/i.test(await toasts()), (await toasts()).slice(0,200));
-  ok('food warning shown (toast or advisor)', /Rations are running out/.test(await toasts())||await p.evaluate(()=>LNI.adv().some(r=>/RATIONS|rations|food/i.test(r[1]))), (await toasts()).slice(0,200));
+  await U.years(2); await U.pause();
+  // v5.43: no toast — the Earth tab wears a red badge, its words in the title
+  const fb=await p.evaluate(()=>{ const t=document.querySelector('#tabs [data-v="earth"]'), e=t&&t.querySelector('.bdg'); return {red:!!(e&&e.classList.contains('red')),title:t?t.getAttribute('title')||'':'',flag:LNI.flags().earth} });
+  ok('v5.43: food warning — a red badge on the Earth tab, its words on hover; no toast', fb.red&&fb.title.length>0&&!(await toasts()), JSON.stringify(fb));
   // 9. first works founded → note about the drive programme
   const works=await p.evaluate(()=>PLANETS.filter(q=>q.kind==='works'&&q.sec<=1)[0].id);
   await p.evaluate(id=>{ delete LN.colonies[id]; LNU.worksSeen=false; LN.earth.food=1e5; LN.earth.people=300; LN.earth.metal=1e4; buildShip(LN,HULLS.findIndex(h=>h.gen===LN.gen&&h.key==='courier')); const s=LN.ships[LN.ships.length-1]; s.mode='idle'; s.at='earth'; s.t=0; s.crew=HULLS[s.hull].crew; colonize(LN,s.id,id,26,0); LNdraw() },works);
   await U.until(()=>p.evaluate(id=>!!LN.colonies[id],works),150,10); await U.pause();
-  ok('works note shown (toast)', await p.evaluate(()=>LNU.worksSeen===true)&&/First industrial world/.test(await toasts()), (await toasts()).slice(0,200));
+  ok('v5.43: the first works is founded without a toast', !/First industrial world/.test(await toasts()), (await toasts()).slice(0,200));
   await showWorld(works);
   await U.tab('tech');
   ok('drive programme explained in the Tech tab (v4.35: not in the works window)', /programme/i.test(await p.evaluate(()=>document.getElementById('side').textContent)), (await p.evaluate(()=>document.getElementById('side').textContent.replace(/\s+/g,' '))).slice(0,240));

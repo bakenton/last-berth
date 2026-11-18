@@ -70,7 +70,7 @@ function ui(p){
     if(hack) await p.evaluate(()=>{ window.LBHACKTEST=true });
     if(lang) await tap('[data-lang]');   // v5.05: English only — the start window has one button; lang is kept for the callers
     if(seed!==undefined){ await tap('[data-act="pop"][data-v="menu"]'); await p.fill('#seedin',String(seed)); await tap('[data-act="new"]') }
-    await p.evaluate(()=>{ LNU.shiftStop=false }) };
+    /* v5.43: no shift window — nothing to switch off */ };
   return {tap,at,closeBig,clear,speed,pause,play,until,years,point,openWorld,closeWin,tab,tabOn,day,start,menuNew,wtab} }
 
 module.exports={newPage,ui,WORK,URL};

@@ -10,7 +10,6 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const p=await UI.newPage(b,{vp:{width:1440,height:900}}); const U=UI.ui(p);
   await U.start(null,undefined,{tut:true});
   ok('helper on for a first game', await p.evaluate(()=>LNI.tut().lock&&LNI.tut().help&&LNI.tut().q[0]==='m0'));
-  await p.evaluate(()=>{ LNU.shiftStop=true });
   // v4.40: the main menu first, then the start-up terminal (the launch screen N-01 is gone)
   ok('main menu first, the clock stands', await p.isVisible('#menu .mit[data-id="new"]')&&await p.evaluate(()=>LNU.menu&&LNI.halted()&&!LNI.tut().msg));
   const mn=await U.menuNew('en');
@@ -37,7 +36,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('a miss in a "do" step shakes the ring, the step stays', M.miss&&M.miss.shake&&M.miss.still, JSON.stringify(M.miss));
   ok('FUEL shows in the settlers\' price with m2', M.fuelInPrice===2, M.fuelInPrice);
   ok('her voice: the first landing report (N-02)', /Report from [A-Z]+: \d+ people landed/.test(M.v_N02||''), M.v_N02);
-  ok('the first shift window speaks for the Institute (N-04)', /Shift 1 hands over the Helm/.test(M.n04||'')&&/I stay/.test(M.n04||''), (M.n04||'').slice(0,160));
+  ok('v5.43: no shift window on the way — the shift passes without a stop', !S.includes('N04'), S.join(' '));
   ok('the Night window is N-09 (v5.41: no date — collapsing from the edge in, «????»)', /collapsing from the edge in/.test(M.n09||'')&&/\?\?\?\?/.test(M.n09||''), (M.n09||'').slice(0,160));
   ok('v5.41: m18 — the Night is up there, its year behind the door', /behind the door/.test((M.h_m18||{}).text||''), (M.h_m18||{}).text);
   ok('a new tab shows a yellow dot until opened', M.earthDot===true&&M.earthDotAfter===false, M.earthDot+' '+M.earthDotAfter);

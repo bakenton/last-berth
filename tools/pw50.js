@@ -102,7 +102,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   const A=await p.evaluate(([W,H])=>{ const s=shipById(LN,H.sid), L=LN.log.filter(e=>e.code==='hub_lost');
     return {n:L.length, d:L[0]&&L[0].d, via:LN.colonies[W.fd]&&LN.colonies[W.fd].via, from:s.from, to:s.to, hold:s.cargo[H.dep], mode:s.mode, dest:s.dest} },[W,H]);
   ok('hub evacuated: one hub_lost entry, 1 line', gone&&A.n===1&&A.d.p===W.hub&&A.d.n===1, JSON.stringify(A));
-  ok('the hub_lost toast is on screen', /The hub at .+ is gone\. Lines back to Earth: 1\./.test(toastT), toastT.replace(/\n/g,' | '));
+  await U.clear(); await p.evaluate(()=>{ LNU.win=null; LNU.tab=null; LNU.notes=[]; LNU.pf=null; LNdraw() }); const lossB=await p.evaluate(()=>{ const b=document.querySelector('#pfL .ltarch.loss'); return b?b.textContent:'' });
+  await U.tap('#pfL .ltarch.loss'); const lossL=await p.evaluate(()=>{ const e=document.querySelector('#pop .lss'); return e?e.innerText:'' }); await U.clear();
+  ok('v5.43: hub_lost waits behind LOSSES (not a toast)', /The hub at .+ is gone\. Lines back to Earth: 1\./.test(lossL)&&!/The hub at/.test(toastT), lossB+' | '+lossL.replace(/\n/g,' | ').slice(0,200));
   ok('the feeder ships to Earth, the hauler keeps her line and her hold', A.via===null&&A.from===W.fd&&A.to==='earth'&&A.hold===123, JSON.stringify(A));
   const home=await p.evaluate(H=>{ const i0=LN.log.length; for(let i=0;i<1500;i++){ tick(LN); const e=LN.log.slice(i0).find(e=>e.code==='delivered'&&e.d.n===H.sid); if(e) return e.d } return null },H);
   const dk={metal:'m',food:'f',fuel:'u',parts:'t'}[H.dep];
