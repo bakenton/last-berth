@@ -492,3 +492,4 @@ svg.gi{fill:currentColor}
 .flw .fr{border-top:1px solid var(--ln)}.flw .fr span{color:var(--ink)}.flw .fr b{font:600 13px var(--n)}.flw .fr.none{color:var(--dim)}
 .flw .fh{margin-top:4px;font:600 10px var(--h);letter-spacing:.18em;text-transform:uppercase;color:var(--mid);background:var(--bg)}.flw .fh b{font:600 13px var(--n);letter-spacing:0}
 .flw .fh.net{margin-top:6px;border-top:1px solid var(--ppl)}.flw .fh.net b small{font-size:10px;margin-left:3px;color:var(--mid)}
+#pop.on.p-flow~#toasts{visibility:hidden}   /* a toast does not cover the breakdown */

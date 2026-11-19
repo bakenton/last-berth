@@ -1297,6 +1297,8 @@ function trendTick(){ var E=G.earth, h=U.hist;
   if(h.length&&h[h.length-1].day>G.day) U.hist=h=[];
   h.push({day:G.day,metal:E.metal,food:E.food,fuel:E.fuel,parts:E.parts,people:E.people});
   if(h.length>TREND_YEARS+5) h.splice(0,h.length-(TREND_YEARS+5)) }
+/* v5.44: the breakdown under a tile averages the very years the tile's trend does, so the two numbers are one (the span of U.hist, up to TREND_YEARS) */
+function trendYears(){ var h=U.hist; if(h.length<6) return TREND_YEARS; var y=h[h.length-1].day-h[Math.max(0,h.length-1-TREND_YEARS)].day; return y>=5?y:TREND_YEARS }
 function trend(k){ var h=U.hist; if(h.length<6) return null; var a=h[Math.max(0,h.length-1-TREND_YEARS)], b=h[h.length-1]; var y=b.day-a.day; if(y<5) return null; return (b[k]-a[k])/y }
 /* v4.42: people are not a stockpile — the settlers and crews you send are a choice, not a trend (year 14 showed «▼ −2.3» while
    Earth grew). The strip and the Earth window show what Earth raises a year, as the shift report does. */
@@ -2363,19 +2365,19 @@ function lineFix(pid,used){ var h=lineHelp(G,pid,{noMove:!can('fleet'),cls:clsSe
 /* Nikita, 02.11 («всё сливается и глазу тяжело»): five kinds, each with its own mark and colour; the worst kind first, a count for each. Red still means urgent, grey means it can wait */
 var ADV_T=[{k:'evac',i:'send',c:'#FF2A1A',l:'u_atEvac'},{k:'forge',i:'kit',c:'#FF8A1F',l:'u_atForge'},{k:'noline',i:'takeoff',c:'#FFD23F',l:'u_atNoLine'},{k:'seam',i:'survey',c:'#4FA3FF',l:'u_atSeam'},{k:'line',i:'hold',c:'#B48CFF',l:'u_atLine'}];
 /* v5.44 (Nikita 19.11, p.12 and p.15: «игра говорила о том, что происходит у тебя с ресурсами… кредит с дебетом не сходятся»): the press on a tile of the strip —
-   where the stock comes from and where it goes, a year, on the average of the last FLOW_YEARS of the ledger. Numbers and one-word labels, the largest first;
+   where the stock comes from and where it goes, a year, on the average of the years the tile's own trend takes (trendYears, up to 60) — so its NET is the tile's number. Numbers and one-word labels, the largest first;
    what is below the top FLOW_TOP of a side is one row «Other», so the rows add up to the net */
-var FLOW_YEARS=10, FLOW_TOP=4;
+var FLOW_TOP=4;
 function flowRows(l,sg,col){ var top=l.slice(0,FLOW_TOP), rest=l.slice(FLOW_TOP).reduce(function(a,r){ return a+r[1] },0);
   return top.map(function(r){ return [r[0],r[1]] }).concat(rest>=0.05?[['other',rest]]:[]).map(function(r){ return '<div class="fr"><span>'+esc(flowLbl(r[0]))+'</span><b style="color:'+col+'">'+sg+dec(r[1])+'</b></div>' }).join('') }
 var flowRes='';
 function flowLbl(a){ var k='fl_'+a+(a==='own'&&flowRes==='people'?'_people':''); return T(k) }
-function popFlow(k){ var f=flowRecent(G,k,FLOW_YEARS); flowRes=k;
+function popFlow(k){ var f=flowRecent(G,k,trendYears()); flowRes=k;
   var h='<div class="ltrs flw">'+sec(resIc(k,14)+esc(T(k)),(f.n?esc(fill(T('fl_avg'),{n:f.n})):'')+xb('x','pop'));
   if(!f.n) return h+'<div class="fr none">—</div></div>';
   h+=(f.inn.length?'<div class="fh">'+esc(T('fl_in'))+'<b style="color:'+C.food+'">+'+dec(f.sin)+'</b></div>'+flowRows(f.inn,'+',C.food):'')+
      (f.out.length?'<div class="fh">'+esc(T('fl_out'))+'<b style="color:'+C.red+'">−'+dec(f.sout)+'</b></div>'+flowRows(f.out,'−',C.red):'')+
-     '<div class="fh net">'+esc(T('fl_net'))+'<b style="color:'+(f.net>=0.05?C.food:(f.net<=-0.05?C.red:C.mid))+'">'+(f.net>=0.05?'+':(f.net<=-0.05?'−':''))+dec(Math.abs(f.net))+'<small>'+esc(T('u_perYr'))+'</small></b></div></div>';
+     '<div class="fh net">'+esc(T('fl_net'))+'<b style="color:'+(f.net>=0.05?C.food:(f.net<=-0.05?C.red:C.mid))+'">'+(f.net>=0.05?'+':(f.net<=-0.05?'−':''))+Math.abs(f.net).toFixed(1)+'<small>'+esc(T('u_perYr'))+'</small></b></div></div>';
   return h }
 function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
   if(!a.length) return '<div class="advl"><div class="advc">'+xb('x','pop')+'</div><div class="none">'+esc(T('u_advNone'))+'</div></div>';

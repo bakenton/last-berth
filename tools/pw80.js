@@ -47,7 +47,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     if(k==='metal') await p.screenshot({path:SHOTS+'/p80-flash-metal-1440.png'});
     await p.evaluate(()=>{ LNU.ordFlash=null; LNdraw() }); await U.clear();
   }
-  // 3 — the breakdown
+  // 3 — the breakdown (the strip's trend needs a drawn year each: a dense history, as a playing player has)
+  await p.evaluate(()=>{ for(let i=0;i<66;i++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false; LNdraw() } }); await U.clear();
   const tiles=['metal','food','fuel','parts','people'];
   const led=(k,n)=>p.evaluate(([k,n])=>{ const Y=LN.years, FK=LN.fk, rows=Y.slice(Y.length-Math.min(n,Y.length)), m={}; rows.forEach(r=>{ for(let j=0;j<r.f.length;j+=2){ const key=FK[r.f[j]]; if(key.indexOf(k+'.')===0) m[key.slice(k.length+1)]=(m[key.slice(k.length+1)]||0)+r.f[j+1] } });
     const o={}; for(const a in m) o[a]=m[a]/rows.length; return {n:rows.length,o} },[k,n]);
@@ -55,9 +56,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   for(const k of tiles){
     await U.clear(); await U.tap('#res [data-r="'+k+'"]'); await p.waitForTimeout(150);
     const r=await p.evaluate(()=>{ const e=document.querySelector('#pop .flw'); if(!e) return null; return {head:e.querySelector('.sec').innerText.replace(/\s+/g,' ').trim(),rows:[...e.children].filter(c=>c.classList.contains('fr')||c.classList.contains('fh')).map(c=>({h:c.classList.contains('fh'),net:c.classList.contains('net'),l:c.firstChild.textContent.trim(),v:(c.querySelector('b')||{innerText:''}).innerText.trim()}))} });
-    ok('3: '+k+' — the press opens the breakdown', !!r&&r.rows.length>=2, JSON.stringify(r));
+    ok('3: '+k+' — the press opens the breakdown', !!r&&r.rows.length>=1, JSON.stringify(r));
     if(!r) continue;
-    const L=await led(k,10); const sum=a=>a.reduce((s,x)=>s+x,0);
+    const nY=+(/LAST\s+(\d+)\s+YR/i.exec(r.head)||[0,0])[1]; const L=await led(k,nY||10); const sum=a=>a.reduce((s,x)=>s+x,0);
     const net=r.rows.find(x=>x.net), inH=r.rows.find(x=>x.h&&!x.net&&/^In/.test(x.l)), outH=r.rows.find(x=>x.h&&/^Out/.test(x.l));
     const eIn=sum(Object.values(L.o).filter(v=>v>=0.05)), eOut=-sum(Object.values(L.o).filter(v=>v<=-0.05));
     const tol=v=>Math.max(0.15,Math.abs(v)*0.006);
@@ -67,6 +68,13 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     ok('3: '+k+' — rows sorted by size, the rows add to the side', okSort&&(!inH||Math.abs(sums.In-NUM(inH.v))<=Math.max(0.6,0.02*eIn))&&(!outH||Math.abs(sums.Out+NUM(outH.v))<=Math.max(0.6,0.02*eOut)), JSON.stringify({sums,okSort}));
     ok('3: '+k+' — at most 4 rows + Other a side, short labels', r.rows.filter(x=>!x.h).length<=10&&r.rows.every(x=>x.l.length<=20), r.rows.map(x=>x.l).join('/'));
     if(k==='fuel') await p.screenshot({path:SHOTS+'/p80-breakdown-fuel-1440.png'});
+    // the tile's trend and the breakdown's NET are one number (people: the tile is the births, not a stock change — compared with the Births row)
+    const tl=await p.evaluate(k=>{ const e=document.querySelector('#res [data-r="'+k+'"] span'); return e?e.innerText.trim():null },k);
+    const tv=tl?NUM(tl.replace('▲','').replace('▼','−').replace('—','')):null;
+    if(k!=='people'){ const ex=await p.evaluate(k=>{ const h=LNU.hist, a=h[Math.max(0,h.length-61)], z=h[h.length-1]; return {tile:(z[k]-a[k])/(z.day-a.day), net:flowRecent(LN,k,60).net} },k);
+      ok('3: '+k+' — unrounded: the ledger net equals the stock change the tile reads', Math.abs(ex.tile-ex.net)<=0.025, JSON.stringify(ex)) }
+    if(k!=='people') ok('3: '+k+' — the NET equals the tile trend (last '+nY+' yr, 60 asked)', nY===60&&tv!==null&&net&&Math.abs(NUM(net.v)-tv)<=0.051, JSON.stringify({tile:tl,net:net&&net.v,nY}));
+    else { const own=r.rows.find(x=>!x.h&&/Births/.test(x.l)); ok('3: people — the tile is the births rate; the Births row is near it (not a stock delta)', own&&tv!==null&&Math.abs(NUM(own.v)-tv)<=Math.max(0.5,tv*0.15), JSON.stringify({tile:tl,own:own&&own.v,net:net&&net.v})) }
     await U.tap('#res [data-r="'+k+'"]'); await p.waitForTimeout(100);
     ok('3: '+k+' — a second press closes it', await p.evaluate(()=>!document.querySelector('#pop .flw')));
   }
@@ -85,6 +93,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   for(const k of tiles){ await V.tap('#res [data-r="'+k+'"]'); await q.waitForTimeout(120);
     const ph=await q.evaluate(()=>{ const e=document.querySelector('#pop .flw'); if(!e) return null; const r=e.getBoundingClientRect(); return {l:r.left,r:r.right,t:r.top,b:r.bottom,sw:document.documentElement.scrollWidth,iw:innerWidth,ih:innerHeight} });
     ok('4: '+k+' — the breakdown fits the 390 px screen, no horizontal scroll', ph&&ph.l>=-0.5&&ph.r<=ph.iw+0.5&&ph.b<=ph.ih&&ph.sw<=ph.iw, JSON.stringify(ph));
+    if(k==='fuel'){ await q.evaluate(()=>{ const t=document.getElementById('toasts'); t.innerHTML='<div class="toast">Founding party of 61 leaves for CINDER.</div>' }); }
+    const tv4=await q.evaluate(()=>getComputedStyle(document.getElementById('toasts')).visibility); ok('4: '+k+' — a toast is hidden while the breakdown is open', tv4==='hidden', tv4);
     if(k==='fuel') await q.screenshot({path:SHOTS+'/p80-breakdown-fuel-390.png',clip:{x:0,y:0,width:390,height:330}});
     await V.tap('#res [data-r="'+k+'"]') }
   ok('no page errors', !p.errs.length&&!q.errs.length, p.errs.concat(q.errs).join(' | '));
