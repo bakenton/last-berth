@@ -982,18 +982,25 @@ var K={
   SHIFT_YEARS:80,
   ORDER_YEARS:60, ORDER_DELIVER:1.25, ORDER_PEOPLE:0.5, ORDER_RW_MIN:{metal:100,fuel:50,parts:30},   // v5.44 (Nikita 19.11, p.8): a pile of a resource as a reward — what a hauler of the yards' generation costs in it, but not less than this; v5.37 (p.13): an order of the shift is done in this many years; a delivery asks this much over what came the shift before; people as a reward — this share of the next ring's survey party
   /* v5.10 (design/ARK.md 2g, Nikita 10.11): the ark is a hive of waking capsules, bought ring by ring. Ring k holds ARK_RING*k
-     capsules (600, 1 200, 1 800...); a capsule's price is set by how many are already bought — the ladder steps every ARK_STEP
-     capsules (food ARK_FOOD, metal ARK_METAL a capsule), and a ring costs the sum of the ladder over its capsules (ring 1 —
-     1 800 food / 600 metal · 5 200 / 2 000 · 11 800 / 6 400 · ring 4 — 29 200 / 22 000 since v5.32, food x1.5; it was 1 200 · 3 200 ·
-     7 600 · 19 000 food). Past the end of the ladder every further thousand is xARK_FOOD_GROW /
-     xARK_METAL_GROW of the one before (Claude — awaiting review). No ceiling. The levels I-IV, their prices (ARK_LEVELS, ARK_PRICE,
-     ARK_FOOD_X, ARK_PARTS_X), the wake shares (ARK_WAKE, ARK_LVL_WAKE) and the 3-2-1 convoy (ARK_CONVOY) are gone.
+     capsules (600, 1 200, 1 800...). v5.44 (Nikita 19.11: «5 кольцо ковчега чот гига супер мега дорого», then «Цены понизить. Потолок 50 тысяч
+     любого ресурса, считай», «Сделай прогрессию плавнее»): the price is set per RING, not per capsule — ARK_PRICE.food / .metal, ring I first;
+     past the end of the table every ring costs ARK_CAP, and no ring costs more than that of any resource.
+       ring   food: was → now           metal: was → now          (was: the capsule ladder ARK_FOOD / ARK_METAL / ARK_STEP / *_GROW)
+       I        1 800 → 1 800              600 → 600
+       II       5 200 → 5 200            2 000 → 2 000
+       III     11 800 → 11 800           6 400 → 6 000
+       IV      29 200 → 22 000          22 000 → 13 000
+       V       93 000 → 34 000          85 000 → 24 000
+       VI     351 600 → 43 000         410 000 → 36 000
+       VII  1 542 600 → 48 000       2 370 600 → 45 000
+       VIII+  x3.8-5.4 → 50 000       x4.8-7.4 → 50 000   (the growth ring on ring: food x2.9 2.3 1.9 1.55 1.26 1.12 1.04, metal x3.3 3.0 2.2 1.85 1.5 1.25 1.11)
+     The levels I-IV, their prices (ARK_LEVELS, ARK_FOOD_X, ARK_PARTS_X), the wake shares (ARK_WAKE, ARK_LVL_WAKE) and the 3-2-1 convoy (ARK_CONVOY)
+     are gone.
      Everyone on Earth boards; woken = capsules x the share of the fleet standing in the convoy; the rest sleep on.
      ARK_HOLD — what of Earth's stock rides along, by rings held: the old level caps for rings 1-4, every further ring adds the
      last step (Claude — awaiting review). ARK_CELLS — the cells of the convoy ring on the screen. */
-  ARK_RING:600, ARK_STEP:1000,
-  ARK_FOOD:[3,5,6,8,11,15,19,24], ARK_METAL:[1,2,3,5,8,12,15,18],   // v5.44 (Nikita 19.11: «5 кольцо ковчега чот гига супер мега дорого»): tiers 0-5 (rings I-IV) untouched; tiers 6-7 were food 21,30 / metal 18,27, now 19,24 / 15,18 — ring V cost 93 000 food / 85 000 metal (x3.2 / x3.9 of ring IV), now 71 000 / 54 000 (x2.4 / x2.5); v5.32 (Nikita 16.11: «За капсулы надо просить намного больше еды. На 1220 году у меня 12к еды»): food x1.5, was [2,3,4,5,7,10,14,20]
-  ARK_FOOD_GROW:1.2, ARK_METAL_GROW:1.2,   // v5.44: was 1.4 / 1.5 — every ring past IV costs about x2.2-2.6 of the one before (VI 159 400 / 119 400, VII 381 000 / 285 200); was x3.8-4.8, x4.4-5.8
+  ARK_RING:600, ARK_CAP:50000,
+  ARK_PRICE:{food:[1800,5200,11800,22000,34000,43000,48000], metal:[600,2000,6000,13000,24000,36000,45000]},
   ARK_HOLD:[
     {metal:500,  parts:500,  food:1500, fuel:1500},
     {metal:1500, parts:1200, food:3000, fuel:3500},
@@ -2149,11 +2156,10 @@ function nightLeft(G){ return G.night? Math.max(0,G.night-G.day) : null }
 var ARK_RES=['metal','parts','food','fuel'], ARK_PAY=['food','metal'];
 /* v5.10: the hive. G.ark.rings — rings paid for; G.ark.woke — rings whose hack is won (a run the interface started) */
 function arkCaps(k){ return K.ARK_RING*k*(k+1)/2 }   // capsules in k rings
-function arkUnit(r,i){ var L=r==='food'?K.ARK_FOOD:K.ARK_METAL, g=r==='food'?K.ARK_FOOD_GROW:K.ARK_METAL_GROW, t=Math.floor(i/K.ARK_STEP);   // the price of capsule No. i (from 0)
-  return t<L.length ? L[t] : Math.floor(L[L.length-1]*Math.pow(g,t-L.length+1)+1e-9) }
-function arkRingPrice(k){ var a=arkCaps(k-1), b=arkCaps(k), o={food:0,metal:0};
-  while(a<b){ var e=Math.min(b,(Math.floor(a/K.ARK_STEP)+1)*K.ARK_STEP); o.food+=(e-a)*arkUnit('food',a); o.metal+=(e-a)*arkUnit('metal',a); a=e }
-  return o }
+function ringOf(i){ var k=1; while(arkCaps(k)<=i) k++; return k }   // the ring that holds capsule No. i (from 0)
+function arkPrice1(r,k){ var T=K.ARK_PRICE[r]; return Math.min(K.ARK_CAP, k<=T.length?T[k-1]:K.ARK_CAP) }   // what ring k costs in this resource
+function arkUnit(r,i){ var k=ringOf(i); return arkPrice1(r,k)/(K.ARK_RING*k) }   // v5.44: a capsule of ring k is the ring's price over its capsules (the capsule ladder is gone; nothing in the UI reads it)
+function arkRingPrice(k){ return {food:arkPrice1('food',k), metal:arkPrice1('metal',k)} }
 function arkPaid(G){ return (G.ark&&G.ark.rings)||0 }
 /* the rings that hold: paid, and (the hack) their crew woken */
 function arkRings(G){ return G.hackGate? Math.min(arkPaid(G),G.ark.woke||0) : arkPaid(G) }

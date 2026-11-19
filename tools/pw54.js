@@ -44,7 +44,7 @@ async function setup(p){ await p.evaluate(()=>{ LNU.shiftStop=false; LN.safe=tru
   const before=s;
   await U.tap('#arkcard [data-act="arkbuy"]');
   s=await st();
-  ok('FILL RING III by the mouse: rings 3, rations and metal paid (ring II + III: 17 000 food — v5.32, food ×1.5 — and 8 400 metal), the card closes', s.rings===3&&s.food===before.food-17000&&s.metal===before.metal-8400&&s.sel===null, JSON.stringify({rings:s.rings,food:s.food,metal:s.metal,on:s.on}));
+  ok('FILL RING III by the mouse: rings 3, rations and metal paid (ring II + III: 17 000 food — v5.32, food ×1.5 — and 8 000 metal — v5.44, ring III metal 6 000), the card closes', s.rings===3&&s.food===before.food-17000&&s.metal===before.metal-8000&&s.sel===null, JSON.stringify({rings:s.rings,food:s.food,metal:s.metal,on:s.on}));
   ok('the hive shows 36 purple cells (or the hack is asked for)', s.on===36||/Hack needed/i.test(await txt('#hkneed')||''), 'on '+s.on+' · '+(await txt('#hkneed')));
   // 3. the convoy ring pressed
   ok('a cell of the convoy ring is under the mouse', await clickCell('#cvring .hx'));
