@@ -45,7 +45,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.colonies[id].store.metal=1234; LN.earth.metal=900; LN.earth.parts=500; LN.earth.fuel=800; const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)&&!o.reserve&&!o.mutiny); if(s) setLine(LN,s.id,id,'earth'); LNdraw() },mine);
   await run(2); await showWorld(mine);
   const r=await win();
-  ok('surface stock shown (big status)', /On the surface\s*\d[\d ]{2,6}/.test(r), r.match(/On the surface[^A-Z]{0,30}/)?.[0]);
+  ok('surface stock shown (big status)', /Awaiting pickup\s*\d[\d ]{2,6}/.test(r), r.match(/Awaiting pickup[^A-Z]{0,30}/)?.[0]);
   ok('hull row shown', /On this line/.test(r)&&/Courier/.test(r), r.slice(r.indexOf('On this line'),r.indexOf('On this line')+200));
   // 6. HTML cache: a second draw with nothing changed rewrites nothing (setHTML compares the last string)
   const same=await p.evaluate(()=>{ LNdraw(); const el=document.getElementById('top'); el.dataset.mark='x'; LNdraw(); return el.dataset.mark==='x' });

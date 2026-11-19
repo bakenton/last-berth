@@ -15,11 +15,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await showWorld(mine);
   let r=await win();
   ok('no ×richness, hazard or signal delay', !/×0\.\d|Hazard|Signal delay/.test(r), r.slice(0,200));
-  ok('seam shown before settlement', /Deposit/.test(r)&&/\d/.test(r.match(/Deposit[^A-Z]{0,20}/)?.[0]||''), r.match(/Deposit[^A-Z]{0,30}/)?.[0]);
+  ok('seam shown before settlement', /Seam lasts/.test(r)&&/\d/.test(r.match(/Seam lasts[^A-Z]{0,20}/)?.[0]||''), r.match(/Seam lasts[^A-Z]{0,30}/)?.[0]);
   // 2. settled: big status block, hull rows, only opened classes, no renewal switch before Gen III
   await p.evaluate(id=>{ LN.earth.people=300; LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:840,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; const s=LN.ships.find(s=>s.mode==='idle'&&s.at==='earth'); setLine(LN,s.id,id,'earth'); LN.reserves[id]=1e6; LNdraw() },mine);
   await showWorld(mine); r=await win();
-  ok('big status: stock on the surface, people, output', /On the surface\s*840/.test(r)&&/People\s*40/.test(r)&&/World gives/.test(r), r.slice(0,400));
+  ok('big status: stock on the surface, people, output', /Awaiting pickup\s*840/.test(r)&&/People\s*40/.test(r)&&/Produces/.test(r), r.slice(0,400));
   ok('hull row on the line', /On this line/.test(r)&&/Courier/.test(r), r.match(/On this line[^]{0,80}/)?.[0]);
   ok('only the courier class offered before hauler opens', await p.evaluate(()=>document.querySelectorAll('#ovl #ordblk .oc').length===1||document.querySelectorAll('#ovl #ordblk .oc').length===3), await p.evaluate(()=>document.querySelectorAll('#ovl #ordblk .oc').length));
   ok('v4.34: no renewal switch on a line (setRenew removed; hulls are put on by hand, nothing renews)', await p.evaluate(()=>!document.querySelector('#ovl [data-act="renew"]')));

@@ -15,7 +15,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
     const p=await UI.newPage(b,{vp:{width:1440,height:900},file:FILE}); const U=UI.ui(p);
     await U.start('en',11); await U.pause(); await p.waitForTimeout(600);
     const a0=await p.evaluate(()=>LNsky.ang()); await p.waitForTimeout(2500); const a1=await p.evaluate(()=>LNsky.ang());
-    ok('1: the sky turns on its own while the run is paused', a1>a0&&a1-a0<0.05, JSON.stringify({a0,a1}));
+    ok("1: the sky turns on its own while the run is paused (v5.44: 240 s a turn)", a1>a0&&a1-a0<0.3, JSON.stringify({a0,a1}));
     const st=await p.evaluate(()=>!!LNsky.get()&&!LNsky.still()); ok('1: the sky state is there, motion allowed', st);
     await shot(p,'s1-sky');
     const sp=await p.evaluate(()=>['c','m','f'].map(k=>LNsky.spawn(k)));

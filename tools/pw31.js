@@ -31,7 +31,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await p.evaluate(id=>{ LN.colonies[id]={pid:id,pop:40,unrest:0,relay:false,dark:false,pending:null,store:{metal:700,food:0,fuel:0,parts:0},hist:[],demand:null,neglect:0,founded:0,tier:0,fuelOut:0}; LN.earth.metal=2000; LNdraw() },mine2);
   await showWorld(mine2);
   let w=await win();
-  ok('on the surface shows the pile (700)', /On the surface\s*700/.test(w), w.slice(0,200));
+  ok('on the surface shows the pile (700)', /Awaiting pickup\s*700/.test(w), w.slice(0,200));
   ok('no pile bar elements (v4.22)', await p.evaluate(()=>!document.querySelector('.pile-fill')&&!document.querySelector('.pile-take')&&!document.querySelector('.pile-bar')));
   await p.evaluate(id=>{ const s=LN.ships.find(o=>o.mode==='idle'&&o.at==='earth'&&!(o.from&&o.to)); LNU.pickShip=s.id; LNdraw() },mine2);
   await showWorld(mine2);

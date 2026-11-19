@@ -154,7 +154,7 @@ const nums=t=>(String(t).match(/[\d][\d\s   ]*(?:\.\d+)?/g)||[]).map(x=>+x.
   await shot(p,'p22-hub-store-world-tab','#ovl .win');
   if(!BEFORE){
     ok('p.22: on the WORLD tab of a hub — «In the hub\'s store» with every resource she holds', hs.vis&&hs.tab==='wtab:world'&&/^In the hub's store/.test(hs.t)&&hs.n.join()==='1234,567,89', JSON.stringify(hs));
-    ok('p.22: it stands where «On the surface» stood (no second row for the same pile)', !/On the surface/.test(hs.surf), hs.surf);
+    ok('p.22: it stands where «Awaiting pickup» stood (no second row for the same pile)', !/Awaiting pickup/.test(hs.surf), hs.surf);
     ok('p.22: the core keeps no limit for a store — nothing to draw as a capacity', await p.evaluate(k=>storeCap(LN.colonies[k])===Infinity,H.hub)) }
 
   // ---------- p.24: a hub on a dead seam is a working hub ----------
@@ -172,10 +172,10 @@ const nums=t=>(String(t).match(/[\d][\d\s   ]*(?:\.\d+)?/g)||[]).map(x=>+x.
     ok('p.24: the advisor does not call the hub a dead seam nor tell to evacuate her', dh.wst!=='dry'&&dh.wst!=='dead'&&!dh.advHub.some(t=>/seam|evacuate/i.test(t)), JSON.stringify(dh));
     ok('p.24: a worked-out world that is no hub is told as before — «seam dead … Haul it home, then evacuate»', dh.wstDry==='dry'&&dh.advDry.some(t=>/seam dead, .* on the surface \/ Haul it home, then evacuate/.test(t)), JSON.stringify(dh.advDry)) }
   ok('the dry hub opens by the mouse', await reopen(H.hub));
-  const dw=await p.evaluate(()=>{ const rows=[...document.querySelectorAll('#ovl .wcol.wl .rw')], d=rows.filter(r=>/^Deposit/.test(r.innerText))[0], b=d&&d.querySelector('b'), dot=document.querySelector('#ovl .wrail [data-v="world"] .wdot');
+  const dw=await p.evaluate(()=>{ const rows=[...document.querySelectorAll('#ovl .wcol.wl .rw')], d=rows.filter(r=>/^Seam lasts/.test(r.innerText))[0], b=d&&d.querySelector('b'), dot=document.querySelector('#ovl .wrail [data-v="world"] .wdot');
     return {dep:d?d.innerText.replace(/\s+/g,' '):'', col:b?getComputedStyle(b).color:'', dot:dot?dot.className:'', alert:[...document.querySelectorAll('#ovl .wcol.wl .alert')].map(e=>e.innerText).join('|'), stock:(document.getElementById('hubstock')||{}).innerText||'', evac:!!document.querySelector('#ovl [data-act="evac"]'), short:(l=>l.carries<l.makes*0.8)(lineRate(LN,LNU.win))} });
   await shot(p,'p24-dry-hub-card','#ovl .win');
-  if(!BEFORE){ ok('p.24: her card — «Deposit worked out» in grey, no «seam is dead… evacuate», the store in numbers; EVACUATE is still there (the rule is not touched)', /worked out/.test(dw.dep)&&dw.col==='rgb(156, 155, 149)'&&!/seam is dead/i.test(dw.alert)&&/1\s?234/.test(dw.stock)&&dw.evac, JSON.stringify(dw));
+  if(!BEFORE){ ok('p.24: her card — «Seam lasts worked out» in grey, no «seam is dead… evacuate», the store in numbers; EVACUATE is still there (the rule is not touched)', /worked out/.test(dw.dep)&&dw.col==='rgb(156, 155, 149)'&&!/seam is dead/i.test(dw.alert)&&/1\s?234/.test(dw.stock)&&dw.evac, JSON.stringify(dw));
     ok('p.24: the red dot of her WORLD tab speaks for her line only — here it carries under 80% of what the feeders bring, so it is lit (reviewer v5.31: a dry hub\'s thin line was mute)', dw.short&&/red/.test(dw.dot), JSON.stringify({short:dw.short,dot:dw.dot}));
     const s2=await p.evaluate(H=>{ const g=LN.gen||0, i=HULLS.findIndex(h=>h.key==='freighter'&&h.gen===g); for(let n=0;n<3;n++){ const s=GOD.hull(i>=0?i:HULLS.findIndex(h=>h.key==='hauler'&&h.gen===g)); setLine(LN,s.id,H.hub,'earth') } for(let n=0;n<12;n++){ tick(LN); LN.pauseNow=false; LN.shiftOpen=false } LN.reserves[H.hub]=0; LNU.notes=[]; LNdraw(); const l=lineRate(LN,H.hub), dot=document.querySelector('#ovl .wrail [data-v="world"] .wdot'); return {short:l.carries<l.makes*0.8, carries:+l.carries.toFixed(1), makes:+l.makes.toFixed(1), dot:dot?dot.className:''} },H);
     ok('p.24: more hulls on her line — it keeps up, and the dot is gone though the seam is dead', !s2.short&&!/red/.test(s2.dot), JSON.stringify(s2)) }

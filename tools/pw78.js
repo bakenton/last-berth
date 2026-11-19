@@ -53,8 +53,9 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   // 4 (the reviewer): the order taken answers with its result — the one line at the top; a save from before LOSSES has seen its old losses
   await U.clear(); await p.waitForTimeout(300);
   await p.evaluate(()=>{ const o=LN.orders.on; log(LN,'order_done_people',{k:o?o.k:'hulls',n:37,t:o?o.k:''}); LNdraw() }); await U.play(2); await p.waitForTimeout(500); await U.pause();
-  const od=await p.evaluate(()=>[...document.querySelectorAll('#toasts .toast')].map(t=>t.className+'|'+t.textContent));
-  ok('4: an order done — one green line at the top says it', od.length===1&&/good/.test(od[0]), JSON.stringify(od));
+  // v5.44 (Nikita 19.11): the result is a flash on the card (a green strip with the reward chip), not a toast
+  const od=await p.evaluate(()=>({toasts:document.querySelectorAll('#toasts .toast').length,flash:(document.querySelector('#cards .ordf.ok')||{}).textContent||null,chip:!!document.querySelector('#cards .ordf.ok .rw svg')}));
+  ok('4: an order done — a green flash on the card with the reward chip, no toast', od.toasts===0&&/Order done/.test(od.flash||'')&&od.chip, JSON.stringify(od));
   const sv=await p.evaluate(()=>{ log(LN,'ship_written_off',{n:78,c:2}); const s=JSON.parse(LNsave()); delete s.G.lossSeen; LNload(JSON.stringify(s)); LNU.pop=null; LNdraw();
     const bt=document.querySelector('#pfL .ltarch.loss'); return {btn:!!bt,badge:!!(bt&&bt.querySelector('.bdg'))} });
   ok('4: a save from before LOSSES loads with its old losses seen (no red badge)', sv.btn&&!sv.badge, JSON.stringify(sv));

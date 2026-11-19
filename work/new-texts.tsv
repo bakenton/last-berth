@@ -1138,3 +1138,11 @@ LOG	ark_gift	Ark paid up to ring {l}. Couriers at the pier, with their crews —
 UI	u_tremor	ring failing: ½ output	кольцо рушится: ½ добычи
 UI	u_losses	Losses	Потери
 UI	ord_cardH	Shift {n} · pick one	Смена {n} · выбери одно
+UI	u_lineLeave	Hulls told to move elsewhere — they leave this line when they dock.	Суда, которым велено идти на другой мир, уйдут с этой линии, когда причалят.
+UI	u_paidWait	Paid, awaiting the hack	Оплачено, ждёт взлома
+UI	u_paidWaitV	+{n} pods	+{n} капсул
+UI	u_vWaitHack	Ring {l} is paid — the hack fills its pods.	Кольцо {l} оплачено — взлом заполнит его капсулы.
+UI	u_building	Building	Стройка
+UI	ord_doneS	Order done	Приказ выполнен
+UI	ord_missS	Order missed	Приказ не выполнен
+MSG	ok_arkbuyH	Ring {n} paid — the hack fills it.	Кольцо {n} оплачено — взлом заполнит его.

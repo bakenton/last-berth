@@ -23,13 +23,13 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await show(mine);
   let w=await win();
   ok('no pile bar elements (v4.22: removed)', await p.evaluate(()=>!document.querySelector('.pile-take')&&!document.querySelector('.pile-fill')&&!document.querySelector('.pile-bar')));
-  ok('the window carries the rates: "World gives X/yr" and "Line carries Y/yr"', /World gives\s*[\d.]+\/yr/.test(w)&&/Line carries\s*[\d.]+\/yr/.test(w), w.match(/World gives[^A-Z]{0,30}/)?.[0]);
-  ok('the pile is shown on the surface (42)', /On the surface\s*42/.test(w), w.match(/On the surface[^A-Z]{0,20}/)?.[0]);
+  ok('the window carries the rates: "Produces X/yr" and "Line carries Y/yr"', /Produces\s*[\d.]+\/yr/.test(w)&&/Line carries\s*[\d.]+\/yr/.test(w), w.match(/Produces[^A-Z]{0,30}/)?.[0]);
+  ok('the pile is shown on the surface (42)', /Awaiting pickup\s*42/.test(w), w.match(/Awaiting pickup[^A-Z]{0,20}/)?.[0]);
 
   // === seam spent, pile still there: hulls can still be sent; the + is open
   await p.evaluate(id=>{ LN.reserves[id]=0; LN.colonies[id].store.metal=300; LNdraw() },mine); await show(mine);
   w=await win();
-  ok('seam spent + pile: the window says the seam is dead and the pile is still there', /WORKED OUT|dead|exhausted/i.test(w)&&/On the surface\s*300/.test(w), w.slice(0,200));
+  ok('seam spent + pile: the window says the seam is dead and the pile is still there', /WORKED OUT|dead|exhausted/i.test(w)&&/Awaiting pickup\s*300/.test(w), w.slice(0,200));
   ok('…and the order block is still there', await p.evaluate(()=>!!document.querySelector('#ovl [data-act="order"][data-c="courier"]')));
   const plus=await p.evaluate(()=>{ var bt=document.querySelector('#ovl [data-act="order"][data-c="courier"]'); return bt?{d:bt.getAttribute('aria-disabled'),w:bt.getAttribute('data-why')}:null });
   ok('v4.34: the order + is open on a spent seam with a pile', plus&&plus.d!=='true', JSON.stringify(plus));
