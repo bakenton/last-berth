@@ -37,7 +37,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('intro: wakes HULL.GEN.II, fault level 1 of 6, rules', /THE HELM WAKES A COMMAND: HULL\.GEN\.II/.test(intro)&&/Fault level 1 of 6/.test(intro)&&/New: walls/.test(intro)&&/WASD/.test(intro), intro.replace(/\n/g,' | '));
   const d0=await U.day(); await p.waitForTimeout(1500);
   ok('the clock stands while the hack is open', (await U.day())===d0&&await p.evaluate(()=>LNI.halted()));
-  ok('startDrive refuses while the hack waits', await p.evaluate(()=>{ const w=PLANETS.find(x=>x.kind==='works'); return startDrive(LN,w?w.id:'x')==='hack' }));
+  ok('startDrive refuses while the hack waits', await p.evaluate(()=>{ const w=PLANETS.find(x=>x.kind==='works'); return startDrive(LN)==='hack' }));
 
   // 2. ENTER with the mouse → the fight; keys move the ship, the mouse aims and the tail takes damage
   await U.tap('#hkGo');

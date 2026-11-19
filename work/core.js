@@ -1397,32 +1397,32 @@ function search(G,shipId,missId){
 /* the drive programme is repeatable: every mark cuts crossings and signal lag
    again, costs more parts than the last, and demands more reach. There is no
    final mark, which is where the endless half of the progression lives. */
-function startDrive(G,pid){
+function startDrive(G){   // v5.44 (Nikita 19.11, p.17): the programme is the empire's, not a world's — no works world is named; G.drive is a flag (an old save holds a world's id: truthy all the same)
   if(G.drive) return 'running';
   if((G.driveLvl||0)>=K.GEN_LAST) return 'genlast';   // v5.41: Generation VII is the last
   if(hackWait(G,'drive')) return 'hack';
   if(settledCount(G)<driveReachFor(G)) return 'settled';
-  var c=G.colonies[pid], p=planet(pid);
-  if(!c) return 'nocolony';
-  if(!p||p.kind!=='works') return 'notworks';
-  if(c.pop<K.DRIVE_POP) return 'pop';
-  G.drive=pid; G.driveWork=G.driveBank||0; G.driveBank=0;   // v5.35: an engine core found on a world waits for the programme
+  var hasW=false, hasPop=false;   // the rule stays: some works world stands with hands enough — which one is nobody's choice
+  for(var wk0 in G.colonies){ if(planet(wk0).kind==='works'){ hasW=true; if(G.colonies[wk0].pop>=K.DRIVE_POP) hasPop=true } }
+  if(!hasW) return 'notworks';
+  if(!hasPop) return 'pop';
+  G.drive=1; G.driveWork=G.driveBank||0; G.driveBank=0;   // v5.35: an engine core found on a world waits for the programme
   for(var wk in G.colonies){ if(planet(wk).kind==='works'){
     fl(G,'s.parts.drive',-(G.colonies[wk].store.parts||0)); G.driveWork+=(G.colonies[wk].store.parts||0); G.colonies[wk].store.parts=0 } }
   var fromHome=Math.min(G.earth.parts, Math.max(0,driveWorkFor(G)-G.driveWork));   // the yards ship their stock to the programme; v5.35 (the reviewer): no more than it still needs
   G.earth.parts-=fromHome; fl(G,'parts.drive',-fromHome); G.driveWork+=fromHome; if(fromHome>0) openRes(G,'parts');
-  log(G,'drive_started',{p:pid,n:G.driveLvl+1});
-  if(G.driveWork>=driveWorkFor(G)) driveDone(G,pid);
+  log(G,'drive_started',{n:G.driveLvl+1});
+  if(G.driveWork>=driveWorkFor(G)) driveDone(G);
   return 'ok';
 }
-function driveDone(G,pid){
+function driveDone(G){
   G.driveWork=0; G.drive=null;
-  if(G.hackGate){ hackPush(G,{k:'drive',p:pid,g:(G.driveLvl||0)+1}); return }
-  driveMark(G,pid) }
-function driveMark(G,pid){
+  if(G.hackGate){ hackPush(G,{k:'drive',g:(G.driveLvl||0)+1}); return }
+  driveMark(G) }
+function driveMark(G){
   G.driveLvl=(G.driveLvl||0)+1;
   G.gen=G.driveLvl; ensureGen(G.gen);
-  G.pauseNow=true; log(G,'drive_mark',{p:pid,n:G.driveLvl+1,s:sectorLimit(G.gen)});
+  G.pauseNow=true; log(G,'drive_mark',{n:G.driveLvl+1,s:sectorLimit(G.gen)});
   if(G.arkMark!==null&&G.arkMark!==undefined&&G.driveLvl>=G.arkMark)
     log(G,'ark_drive',{g:G.driveLvl,w:Math.round(arkWake(G)*100),y:G.night});
 }
@@ -1433,7 +1433,7 @@ function researchHyper(G){ return 'notworks' }
    тоже». A finished drive mark and a paid ark level do not take hold until the hack is won (web/hack.js, the serpent). Losing
    costs nothing and has no way around it (Nikita, 04.11: «обязателен, без обхода»); the clock stands while it is open.
    The gate is on only in a run the interface started (G.hackGate) — the bots, fuzz and the core scenarios never meet it.
-   G.hackQ — the hacks waiting, oldest first: {k:'drive',p,g} (g — the generation index it opens) | {k:'ark',l} (l — the ring the purchase reaches);
+   G.hackQ — the hacks waiting, oldest first: {k:'drive',g} (g — the generation index it opens) | {k:'ark',l} (l — the ring the purchase reaches);
    G.hacks — hacks won this run; the next one is at level hacks+1, up to K.HACK_TOP */
 function hackPush(G,h){ (G.hackQ=G.hackQ||[]).push(h); G.pauseNow=true }
 function hackNext(G){ return (G.hackQ&&G.hackQ[0])||null }
@@ -1442,7 +1442,7 @@ function hackLevel(G){ return Math.min(K.HACK_TOP,(G.hacks||0)+1) }
 function hackWin(G){
   var h=hackNext(G); if(!h) return 'nohack';
   G.hackQ.shift(); G.hacks=(G.hacks||0)+1;
-  if(h.k==='drive') driveMark(G,h.p);
+  if(h.k==='drive') driveMark(G);
   else G.ark.woke=Math.max(G.ark.woke||0,h.l);
   return 'ok' }
 
@@ -1485,7 +1485,6 @@ function ringDark(G,sec){ G.door.out[sec]=G.day; var lw=0, lp=0, ls=0, lc=0, k, 
   for(k in G.colonies){ if(planet(k).sec!==sec) continue; var c=G.colonies[k]; lw++; lp+=Math.floor(c.pop);
     flowClose(G,c); delete G.colonies[k]; feedersHome(G,k);
     for(i=0;i<G.ships.length;i++){ o=G.ships[i]; if(o.from===k||o.to===k){ o.from=null; o.to=null } if(o.pend&&o.pend.from===k) o.pend=null; if(o.lineFor===k) o.lineFor=null; if(o.moveTo===k) o.moveTo=null }
-    if(G.drive===k){ G.drive=null; log(G,'drive_lost',{p:k}) }
     log(G,'world_dark',{p:k,n:Math.floor(c.pop)}) }
   for(i=0;i<G.ships.length;i++){ s=G.ships[i]; if(s.mode==='dead'||s.mode==='building') continue;
     var here = s.mode==='idle'&&s.at&&s.at!=='earth' ? s.at : ((s.mode==='transit'||s.mode==='missing')&&s.dest&&s.dest!=='earth' ? s.dest : null), ph=here&&planet(here);
@@ -1862,7 +1861,7 @@ function tickCore(G){
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
       if(gf&&gf.dock) dockHull(G,node,gf.dock);   // v5.29: the hull that stood in the dock takes this world's line
       if(gf&&gf.folk){ G.earth.people+=gf.folk; fl(G,'people.gift',gf.folk); G.stats.folk=(G.stats.folk||0)+gf.folk; log(G,'rare_folk',{p:node,k:gf.folk}) }   // v5.35
-      if(gf&&gf.core){ if(G.drive){ G.driveWork=(G.driveWork||0)+gf.core; if(G.driveWork>=driveWorkFor(G)) driveDone(G,G.drive) } else G.driveBank=(G.driveBank||0)+gf.core; log(G,'rare_core',{p:node,k:gf.core}) }
+      if(gf&&gf.core){ if(G.drive){ G.driveWork=(G.driveWork||0)+gf.core; if(G.driveWork>=driveWorkFor(G)) driveDone(G) } else G.driveBank=(G.driveBank||0)+gf.core; log(G,'rare_core',{p:node,k:gf.core}) }
       if(s.hubFound){ var nc=G.colonies[node]; nc.hub=true; nc.hubPaid=s.hubFound; nc.exHub=false; s.hubFound=null; if(G.ghost) delete G.ghost[node]; log(G,'hub_built',{p:node,m:nc.hubPaid.metal,t:nc.hubPaid.parts}) }   // v5.35
       s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
       s.job=null; s.from=null; s.to=null; s.origin=node; s.dest='earth';
@@ -1884,7 +1883,6 @@ function tickCore(G){
         if(ce.hub) log(G,'hub_lost',{p:node,n:fdr.length});
         if(G.reserves[node]!==Infinity&&G.reserves[node]<=0){ G.ghost[node]=G.day }
         for(var q=0;q<G.ships.length;q++){ var o=G.ships[q]; if(o.from===node||o.to===node){ o.from=null; o.to=null } if(o.pend&&o.pend.from===node) o.pend=null; if(o.lineFor===node) o.lineFor=null; if(o.moveTo===node) o.moveTo=null }
-        if(G.drive===node){ G.drive=null; log(G,'drive_lost',{p:node}) }
         log(G,lift<ce.pop-0.5?'evac_partial':'evacuated',{p:node,pop:lift});
         var ho=ce.hauledOut||{}, pe=planet(node), qd=pe.kind==='works'?'parts':pe.dep;
         log(G,'epitaph',{p:node,f:ce.founded||0,y:G.day,n:G.day-(ce.founded||0),q:Math.round(ho[qd]||0),dep:qd,pop:lift});
@@ -1966,7 +1964,7 @@ function tickCore(G){
         c.store.metal-=made*K.REFINE_METAL; c.store.food-=made*K.REFINE_FOOD; fl(G,'s.metal.refine',-made*K.REFINE_METAL); fl(G,'s.food.refine',-made*K.REFINE_FOOD); if((c.idleWorks||0)>90) forgeEv(G,k,'feed_back'); c.idleWorks=0; partsMade+=made;
         if(G.drive){
           G.driveWork+=made; fl(G,'s.parts.refine',made); fl(G,'s.parts.drive',-made);
-          if(G.driveWork>=driveWorkFor(G)) driveDone(G,G.drive);
+          if(G.driveWork>=driveWorkFor(G)) driveDone(G);
         } else { c.store.parts=(c.store.parts||0)+made; fl(G,'s.parts.refine',made) }
       } else { c.idleWorks=(c.idleWorks||0)+1; if(c.idleWorks===91) forgeEv(G,k,'feed_slow'); if(c.idleWorks===120){ log(G,'works_idle',{p:k}) } }
       forgeTally(G,k,c,p,want,made);
@@ -2198,7 +2196,7 @@ function advice(G){
 
   if(!G.drive&&settledCount(G)>=driveReachFor(G)){
     for(k in G.colonies){ if(planet(k)&&planet(k).kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP){
-      out.push({code:'a_drive',sev:'ok',pid:k,n:(G.driveLvl||0)+1}); break } }
+      out.push({code:'a_drive',sev:'ok',n:(G.driveLvl||0)+1}); break } }
   }
   var sv=canSurvey(G);
   if(sv==='ok') out.push({code:'a_survey',sev:'ok',n:SECTORS.length+1});
@@ -2266,14 +2264,14 @@ function objectives(G){
   if(idle) add('o_feed',{p:idle});
   /* the drive: worlds, a works, hands at it, the programme, its parts */
   var d=null;
-  if(G.drive) d={code:'o_parts',p:G.drive,n:Math.floor(G.driveWork||0),k:driveWorkFor(G)};
+  if(G.drive) d={code:'o_parts',n:Math.floor(G.driveWork||0),k:driveWorkFor(G)};
   else if(hackWait(G,'drive')) d=null;
   else if(lvl>=K.GEN_LAST) d=null;   // v5.41: Generation VII is the last
   else if(s<need) d=any?{code:'o_settle',p:any,n:need-s}:{code:'o_survey',n:ring};
   else if(!works.length){ var fw=freeWorld(G,'works'); d=fw?{code:'o_works',p:fw}:{code:'o_survey',n:ring} }
   else if(!host) d={code:'o_grow',p:big,n:K.DRIVE_POP};
   else if(driveAhead(G)) d={code:'o_survey',n:ring};   // v5.34: the drive does not run ahead of the chart on the card's say-so
-  else d={code:'o_drive',p:host};
+  else d={code:'o_drive'};
   if(!nc&&d&&d.code==='o_settle') d=null;   // the first world is that objective already
   if(d&&d.code==='o_survey'&&SECTORS.length>=K.RING_LAST) d=null;   // v5.41: no ring past the last — the door is its own objective
   if(d) d.g=lvl+2;

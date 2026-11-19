@@ -343,7 +343,7 @@ function step(C,G,bot,d,st){
     if(bot!=='greedy'&&bot!=='expand'&&!G.drive&&driveWanted&&!partsStarved){
       for(const k in G.colonies){ const p=C.planet(k);
         if(p.kind==='works'&&G.colonies[k].pop>=K.DRIVE_POP&&(C.settledCount||C.reach)(G)>=C.driveReachFor(G)){
-          if(C.startDrive(G,k)==='ok') break; } }
+          if(C.startDrive(G)==='ok') break; } }   // v5.44: the programme has no host world — the loop only asks whether one works stands with hands enough
     }
     // 4b. v4.4 kits: pro invests in the richest lined world whose seam will outlast the kit; if no hull on
     //     that line can carry it, buy the cheapest current-generation hull that can and put it there

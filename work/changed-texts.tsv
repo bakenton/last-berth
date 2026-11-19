@@ -172,3 +172,12 @@ UI	u_deposit	Seam lasts	Залежи хватит
 UI	u_onSurface	Awaiting pickup	Ждёт вывоза
 UI	h_world_1	Produces — what it digs or grows in a year.	Добывает — сколько мир копает или растит за год.
 UI	h_world_3	Seam lasts — how many years the seam holds at this rate. Then the world is worked out.	Залежи хватит — на сколько лет при нынешней добыче. Потом мир выработан.
+LOG	drive_started	DRIVE PROGRAMME OPENED. Every works world now builds toward it.	ПРОГРАММА ДВИГАТЕЛЯ ОТКРЫТА. Теперь на неё работает каждый завод.
+LOG	drive_mark	GENERATION {n} DRIVE COMMISSIONED. New hulls in the yards; rings up to {s} within reach.	ДВИГАТЕЛЬ ПОКОЛЕНИЯ {n} ВВЕДЁН. Новые корпуса на верфях; кольца до {s} в досягаемости.
+MSG	ok_drive	Drive programme started.	Программа двигателя запущена.
+UI	u_driveAt	programme running	программа идёт
+UI	a_drive	Drive mark {n} can start.	Можно запускать двигатель {n}.
+MSG	nohost	Needs a works world with {n} people.	Нужен завод, где {n} человек.
+MSG	notworks	Needs a works world.	Нужен завод.
+UI	u_arkNoHost	Gen {g} · needs a works with {n} people	пок. {g} · нужен завод на {n} человек
+UI	arkdHost	no works world with {n} hands	нет завода на {n} человек

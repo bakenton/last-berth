@@ -61,7 +61,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
       ok('3: DARK_WARN years before — ring_dark_near; on the day — ring_dark: the world gone with its people, the hull there lost', s3.near&&s3.lg.includes('ring_dark')&&s3.lg.includes('world_dark')&&s3.gone&&s3.ship==='dead'&&s3.out, JSON.stringify(s3));
       ok('3: the dark ring\'s worlds leave the chart, and nothing flies there', !s3.onMap&&(s3.dep==='ringDark'||s3.dep==='noship'), JSON.stringify(s3));
       // 4: the caps
-      const c4=await p.evaluate(()=>{ LN.drive=null; LN.driveLvl=K.GEN_LAST; LN.gen=K.GEN_LAST; ensureGen(LN.gen); return {sv:canSurvey(LN), sd:startDrive(LN,Object.keys(LN.colonies)[0]||'w0'), cd:canDoor(LN)} });
+      const c4=await p.evaluate(()=>{ LN.drive=null; LN.driveLvl=K.GEN_LAST; LN.gen=K.GEN_LAST; ensureGen(LN.gen); return {sv:canSurvey(LN), sd:startDrive(LN), cd:canDoor(LN)} });
       ok('4: the caps — no ring past VII («last»), no drive past Generation VII («genlast»), the door only once', c4.sv==='last'&&c4.sd==='genlast'&&c4.cd==='doorOpen', JSON.stringify(c4));
       ok('no page errors', !p.errs.length, p.errs.join(' | ')) }
     await p.close() }

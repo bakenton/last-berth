@@ -54,7 +54,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   ok('pressing the closed button says why, in settled worlds (not reach)', /settled worlds/.test(msg)&&/need/i.test(msg)&&!/Reach grows/.test(msg), msg);
 
   // drive gate: level 0 -> 1 needs 4 settled; with 6 settled and 3 alive the forecast must not say "settled" blocked
-  const drv=await p.evaluate(()=>{ var G=LN; G.driveLvl=2; var f=driveForecast(G,3); return {need:driveReachFor(G), have:settledCount(G), live:reach(G), st:f.st, n:f.n, r:f.r, start:startDrive(G,Object.keys(G.colonies)[0])} });
+  const drv=await p.evaluate(()=>{ var G=LN; G.driveLvl=2; var f=driveForecast(G,3); return {need:driveReachFor(G), have:settledCount(G), live:reach(G), st:f.st, n:f.n, r:f.r, start:startDrive(G)} });
   ok('drive step 2->3 needs 12 settled and reports it as settled (not reach)', drv.need===12&&(drv.st==='settled')&&drv.start==='settled', JSON.stringify(drv));
 
   // hull classes still gate on LIVE reach (decision: hulls untouched)

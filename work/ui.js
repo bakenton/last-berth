@@ -88,7 +88,7 @@ function textsVisible(){ return !!TXT_URL || /[?&]dev\b/.test(location.search) }
 
 
 var TONE={ring_tremor:'bd',ark_gift:'gd',night_known:'bd',door_opened:'bd',ring_dark:'bd',ring_dark_near:'bd',world_dark:'bd',voice:'vo',shift:'ch',first_landfall:'ch',epitaph:'ch',old_night:'ch',ark_sailed:'ch',ark_woke:'ch',ark_grounded:'ch',ark_noconvoy:'ch',ark_drive:'gd',desk_silent:'ch',night_dated:'bd',night_near:'bd',mutiny_warn:'bd',world_cut:'bd',food_horizon:'bd',ark_block:'gd',crash:'bd',reassigned:'hi',surveyed:'gd',drive_mark:'gd',earth_dead:'bd',colony_founded:'gd',delivered:'gd',awaiting:'hi',quota_ok:'gd',relay_up:'gd',ship_returns:'gd',search_found:'gd',punitive_ok:'gd',hyper:'gd',relief_done:'gd',evacuated:'hi',
- quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',drive_lost:'bd',hub_lost:'bd',fragment:'hi',order_sent:'hi'};
+ quota_miss:'bd',ship_missing:'bd',colony_failed:'bd',ship_written_off:'bd',depleted:'hi',works_idle:'hi',starved:'bd',earth_short:'bd',ev_rich:'gd',ev_seam:'gd',ev_short:'bd',mutiny:'bd',ev_wreck:'bd',ev_disaster:'bd',doomsday:'ch',dropped:'dim',drive_started:'gd',hub_lost:'bd',fragment:'hi',order_sent:'hi'};
 
 var KIND={mine:'kMine',farm:'kFarm',well:'kWell',works:'kWorks'};
 var RES=['metal','food','fuel','parts','people'];
@@ -1533,7 +1533,7 @@ function hubAfford(){ if(hubCount(G)>=hubCap(G)) return false; var k=hubCost(G);
   for(var pid in G.colonies) if(!G.colonies[pid].evacQ&&hubBuildCheck(G,pid)==='ok') return true; return false }
 function arkAfford(){ if(!nightKnown(G)) return false; var k=arkPaid(G)+1; if(arkCheck(G,k)!=='ok') return false;
   var o=arkOwed(G,k); return ARK_PAY.every(function(r){ return G.earth[r]>=(o[r]||0) }) }
-function driveAfford(){ return can('tech')&&!G.drive&&!driveAhead(G)&&startDriveWhy(driveHost())==='ok' }
+function driveAfford(){ return can('tech')&&!G.drive&&!driveAhead(G)&&startDriveWhy()==='ok' }
 /* ---------- the tutorial and the story (v4.36; design/ui-v7.html, BRIEF «Обучение» and «Нарратив в макете») ----------
    A step opens by the state of the run, never by a timer, and a later step that is ready pulls the earlier ones with it —
    nobody gets stuck. While Alexandra speaks a rule, time stops, the screen dims and only the lit thing is bright: 'do' — only
@@ -2176,10 +2176,10 @@ function worksList(){ return Object.keys(G.colonies).filter(function(k){ return 
 /* v5.17 (Nikita 12.11: «зачем выбирать, если автоматически это происходит») — no «Run the programme at»: the works with the most people */
 function driveHost(){ var ws=worksList();
   var best=null; ws.forEach(function(k){ if(G.colonies[k].pop>=K.DRIVE_POP&&(!best||G.colonies[k].pop>G.colonies[best].pop)) best=k }); return best }
-function startDriveWhy(pid){ if(G.drive) return 'running';
+function startDriveWhy(){ if(G.drive) return 'running';
   if((G.driveLvl||0)>=K.GEN_LAST) return 'genlast';   // v5.41
   if(settledCount(G)<driveReachFor(G)) return ['needsettled',{n:driveReachFor(G),r:settledCount(G)}];
-  if(!pid) return worksList().length?['nohost',{n:K.DRIVE_POP}]:['nohost',{n:K.DRIVE_POP}];
+  if(!driveHost()) return ['nohost',{n:K.DRIVE_POP}];
   return 'ok' }
 /* Nikita, 26.10: «непонятно что за программа двигателя» — a note that opens and closes any time; the choice stays between runs */
 function driveHelpOn(){ if(U.driveHelp===undefined){ U.driveHelp=false; try{ U.driveHelp=localStorage.getItem('lb.driveHelp')==='1' }catch(e){} } return U.driveHelp }
@@ -2195,7 +2195,7 @@ function techGains(g,lvl){ var d0=driveSpeed(G), d1=driveSpeed({driveLvl:lvl+1})
   if(can('ark')&&G.arkMark===g+1) h+=row('ark',C.ark,T('u_gArk'),fill(T('u_gArkSub'),{g:roman(g+1)}),'✓','ark');
   return '<div class="gains"><div class="gt">'+esc(fill(T('u_genGives'),{g:roman(g+1)}))+'</div>'+h+'</div>' }
 function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=driveReachFor(G), work=driveWorkFor(G);
-  var ws=worksList(), have=G.drive?G.driveWork:G.earth.parts+ws.reduce(function(a,k){ return a+(G.colonies[k].store.parts||0) },0), host=G.drive?null:driveHost();
+  var ws=worksList(), have=G.drive?G.driveWork:G.earth.parts+ws.reduce(function(a,k){ return a+(G.colonies[k].store.parts||0) },0);
   var sn=K.SURVEY_REACH*SECTORS.length, sc=surveyCost(SECTORS.length), sv=canSurvey(G);
   var ringRow=function(){ if(sv==='last') return G.night?'<div class="gnow"><span class="rnum">'+ic('night',22,C.red)+esc(T('u_doorDone'))+'</span><span class="gtx">'+esc(fill(T('o_jYear'),{y:G.night}))+'</span></div>':
       '<div class="gnow"><span class="rnum">'+ic('night',22,C.red)+esc(T('u_doorRing'))+'</span><span class="gtx">'+esc(fill(T('u_doorPast'),{r:roman(SECTORS.length-1)}))+'</span></div>'+btn(esc(T('u_doorBtn')),'doorwin',null,'pri full door','night');   // v5.41
@@ -2205,14 +2205,14 @@ function sideTech(){ var g=G.gen||0, lvl=G.driveLvl||0, s=settledCount(G), need=
   // OVERVIEW
   var o=sec(esc(T('u_hullGen'))+'<button type="button" class="qm'+(driveHelpOn()?' on':'')+'" data-act="drivehelp" aria-expanded="'+driveHelpOn()+'" title="'+attr(T('u_dhQ'))+'" aria-label="'+attr(T('u_dhQ'))+'">?</button>',roman(g)+' → '+roman(g+1));
   if(driveHelpOn()) o+=driveHelp(work);
-  o+='<div class="gnow"><span class="gen big">'+roman(g)+'</span>'+ic('tTech',18,C.mid)+'<span class="gen big nx">'+roman(g+1)+'</span>'+(G.drive?'<span class="gtx">'+esc(fill(T('u_driveAt'),{p:pname(G.drive)}))+'</span>':'')+'</div>';
+  o+='<div class="gnow"><span class="gen big">'+roman(g)+'</span>'+ic('tTech',18,C.mid)+'<span class="gen big nx">'+roman(g+1)+'</span>'+(G.drive?'<span class="gtx">'+esc(T('u_driveAt'))+'</span>':'')+'</div>';
   var hkT=hackNext(G); if(hkT&&hkT.k==='drive'&&!hackOn()) o+='<div id="hkneed">'+alertBox('tTech',esc(fill(T('u_hackNeed'),{w:hackWho(hkT)})),true)+btn(esc(T('u_hackStart')),'hack',null,'pri full','tTech')+'</div>';   // v5.09: the player starts the hack
   o+='<div class="lab">'+esc(fill(T('u_step1'),{n:Math.min(s,need),m:need}))+'</div>'+steps(s,need,C.food);
   o+='<div class="lab">'+esc(fill(T('u_step2'),{n:num(Math.min(have,work)),m:num(work)}))+'</div><div class="bar"><u style="width:'+Math.min(100,Math.round(have/work*100))+'%;background:'+C.parts+'"></u></div>';
   if(!ws.length) o+=hint(esc(T('u_noWorks')));
   var dA=G.drive?0:driveAhead(G); if(dA) o+=alertBox('ring',esc(fill(T('u_driveAhead'),{s:secName(dA-1)})),true);   // v5.34 (p.12): a warning, nothing refused
-  if(!G.drive){ var w=startDriveWhy(host), lbl=(typeof w!=='string'&&w[0]==='needsettled')?fill(T('u_startMore'),{n:need-s}):T('u_start');
-    o+=btn(esc(lbl),'drive',{p:host||''},'pri full','tTech',offW(w)) }
+  if(!G.drive){ var w=startDriveWhy(), lbl=(typeof w!=='string'&&w[0]==='needsettled')?fill(T('u_startMore'),{n:need-s}):T('u_start');
+    o+=btn(esc(lbl),'drive',null,'pri full','tTech',offW(w)) }
   o+=techGains(g,lvl);
   o+=sec(esc(T('u_ringNextH')),esc(fill(T('u_charted'),{n:SECTORS.length})).toUpperCase())+ringRow();
   var lim=sectorLimit(g), beyond=freeWorlds().filter(function(p){ return p.sec>lim }).length;
@@ -2240,7 +2240,7 @@ function arkDriveTxt(){ if(arkReady(G)) return [fill(T('u_arkReady'),{g:roman(G.
   var f=driveForecast(G,G.arkMark);
   if(f.st==='ok') return [fill(T('u_arkBy'),{g:roman(G.arkMark),y:f.y}),!G.night?C.people:(f.y>G.night?C.red:(f.y>G.night-K.NIGHT_NEAR/2?C.people:C.food))];   // v5.41: no date yet — not late
   if(f.st==='settled') return [fill(T('u_arkNeedW'),{g:roman(G.arkMark),n:f.n,r:f.r}),C.red];
-  if(f.st==='host') return [fill(T('u_arkNoHost'),{g:roman(G.arkMark)}),C.red];
+  if(f.st==='host') return [fill(T('u_arkNoHost'),{g:roman(G.arkMark),n:K.DRIVE_POP}),C.red];
   return [fill(T('u_arkStall'),{g:roman(G.arkMark)}),C.red] }
 /* Nikita, 02.11 (35 presses at the end of run 221175121): every hull on a line, in one press — the same two orders the hull rows give. A hull on an evacuation or a landing finishes first */
 function homeList(){ return G.ships.filter(function(s){ return s.mode!=='dead'&&s.mode!=='missing'&&s.mode!=='building'&&!s.reserve&&!s.job&&(s.from||s.pend) }) }
@@ -2417,7 +2417,8 @@ function dump(){ return JSON.stringify({v:1,G:G,SECTORS:SECTORS,PLANETS:PLANETS,
 function undump(t){ var o=JSON.parse(t,function(k,v){ return v==='__inf'?Infinity:(v==='__-inf'?-Infinity:v) });
   if(!o||!o.G||!o.SECTORS) throw new Error('not a save');
   SECTORS.length=0; o.SECTORS.forEach(function(x){ SECTORS.push(x) }); PLANETS.length=0; o.PLANETS.forEach(function(x){ PLANETS.push(x) }); HULLS.length=0; o.HULLS.forEach(function(x){ HULLS.push(x) });
-  G=o.G; arkFix(G); G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
+  G=o.G; arkFix(G); if(G.drive) G.drive=1;   // v5.44: an older save holds the works world's id here — the programme goes on, it just belongs to nobody now
+  G.rnd=mulberry32((G.seed^0x51ED27)+G.day*131);   // the dice after a load are not the original ones
   if(!G.clock){ clockOn('save'); G.clock.year=G.day }   // a save from before v4.46: the clock counts from the load
   if(G.lossSeen===undefined) G.lossSeen=G.log.reduce(function(m,e){ return Math.max(m,e.seq||0) },0);   // v5.43 (reviewer): a save from before LOSSES has seen its old losses
   var u=o.U||{}; ['hist','voiceSeq','voiceLast','voy','capt','founded','speed'].forEach(function(k){ if(u[k]!==undefined) U[k]=u[k] }); if(SPEEDS.indexOf(U.speed)<0) U.speed=4;   // a save from before v4.42 may hold 10×
@@ -2504,7 +2505,7 @@ function doAct(a,b){
   else if(a==='ordtake'){ var oi=+d.i, oo=G.orders&&G.orders.offer&&G.orders.offer[oi]; res=orderTake(G,oi); act(G,'orderTake',{i:oi,k:oo&&oo.k},res); okc='ok_orderTake'; okp={t:oo?ordText(oo):''} }   // v5.37
   else if(a==='hubfound'){ var hp=d.p, hs2=shipById(G,U.who[hp]); res=hs2?hubFound(G,hs2.id,hp):'nofree'; act(G,'hubFound',{p:hp,hull:hs2&&hs2.id},res); okc='ok_hubFound'; okp={p:pname(hp)} }   // v5.35 (p.21)
   else if(a==='send'){ var sp=d.p, ss=shipById(G,U.who[sp]); if(!ss){ res='nofree' } else { var np=foundParty(G,ss,sp), wasRes=ss.reserve; res=colonize(G,ss.id,sp,np,0); if(res==='ok'&&wasRes){ setReserve(G,ss.id,false); resLeft(ss.id) } act(G,'colonize',{p:sp,hull:ss.id,people:np},res); okc='ok_found'; okp={p:pname(sp),n:np} } }
-  else if(a==='drive'){ var dp=d.p||driveHost(); res=startDrive(G,dp); act(G,'drive',{p:dp,mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={p:pname(dp)} }
+  else if(a==='drive'){ res=startDrive(G); act(G,'drive',{mark:(G.driveLvl||0)+1},res); okc='ok_drive'; okp={} }
   else if(a==='survey'){ goalPress('ring'); var nsec=secName(SECTORS.length); res=survey(G); act(G,'survey',{sector:SECTORS.length},res); okc='ok_survey'; okp={s:nsec} }
   else if(a==='exget') U.exGet=v;
   else if(a==='expay') U.exPay=v;
