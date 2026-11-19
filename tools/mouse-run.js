@@ -142,7 +142,7 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
       C.clearLine=(G,sid)=>{ const s=shipById(G,sid), had=!!(s&&(s.from||s.pend)), k=s&&(s.from||(s.pend&&s.pend.from)); const r=C0.clearLine(G,sid); if(had) R('clearLine',{sid,k,r}); return r };
       C.scrap=(G,sid)=>R('scrap',{sid,r:C0.scrap(G,sid)});
       C.buildShip=(G,hi)=>{ const r=C0.buildShip(G,hi); return R('buildShip',{hi,cls:HULLS[hi].key,newId:r==='ok'?G.nextShip-1:null,r}) };
-      C.startDrive=(G,k)=>R('startDrive',{k,r:C0.startDrive(G,k)});
+      C.startDrive=(G)=>R('startDrive',{r:C0.startDrive(G)});
       C.orderKit=(G,k)=>R('orderKit',{k,r:C0.orderKit(G,k)});
       C.abandon=(G,sid,k)=>R('abandon',{sid,k,r:C0.abandon(G,sid,k)});
       C.survey=(G)=>{ const chk=canSurvey(G); if(chk==='ok'){ const c=surveyCost(SECTORS.length); for(const r of ['metal','food','fuel','parts','people']) G.earth[r]-=(c[r]||0) } return R('survey',{r:chk}) };   // кольцо открывает общие таблицы ядра — на копии только цена
@@ -212,7 +212,6 @@ const KIND={colonize:'colonize',setLine:'line',orderFor:'order',clearLine:'relea
       if(r.ok&&a.reserve){ const id=await p.evaluate(()=>{ const id=LN.nextShip-1; __mr.pend.push(id); return id }); note('convoy: корпус заложен под конвой — «в резерв» только с пирса','судно '+id) }
       return r },
     async startDrive(a){ if(!(await openTab('tech'))) return {ok:false,why:'tech-not-open'};
-      const chip='#side [data-act="driveat"][data-v="'+a.k+'"]'; if(await has(chip)&&!(await on(chip))) await tap(chip);
       return press('#side [data-act="drive"]','drive') },
     async orderKit(a){ if(!(await openWorld(a.k))) return {ok:false,why:'world-not-open'}; return press('#ovl [data-act="kit"][data-p="'+a.k+'"]','kit') },
     async abandon(a){ if(!(await openWorld(a.k))) return {ok:false,why:'world-not-open'};

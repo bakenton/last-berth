@@ -1150,3 +1150,38 @@ LOG	order_done_metal	The order of the shift is done: {h} metal reach Earth.	Пр
 LOG	order_done_fuel	The order of the shift is done: {h} fuel reach Earth.	Приказ смены выполнен: на Землю пришло {h} топлива.
 LOG	order_done_parts	The order of the shift is done: {h} parts reach Earth.	Приказ смены выполнен: на Землю пришло {h} деталей.
 LOG	order_done_yard	The order of the shift is done: the yards finish everything on the slips.	Приказ смены выполнен: верфь заканчивает всё, что стоит на стапелях.
+UI	ord_rwMetal	{n} metal to Earth	{n} металла на Землю
+UI	ord_rwFuel	{n} fuel to Earth	{n} топлива на Землю
+UI	ord_rwParts	{n} parts to Earth	{n} деталей на Землю
+UI	ord_rwYard	The yards finish every hull on the slips next year (none there — a {c} hull instead)	Верфь заканчивает всё на стапелях в следующем году (пусто — корпус «{c}»)
+UI	ord_rwYardS	Slips done	Стапели
+UI	fl_in	In	Приход
+UI	fl_out	Out	Расход
+UI	fl_net	Net	Итого
+UI	fl_avg	last {n} yr	{n} лет
+UI	fl_other	Other	Прочее
+UI	fl_own	Own output	Своё
+UI	fl_own_people	Births	Рождаемость
+UI	fl_deliver	Deliveries	Доставка
+UI	fl_reward	Orders	Приказы
+UI	fl_exch	Exchange	Обмен
+UI	fl_scrap	Scrapped	Разборка
+UI	fl_refund	Refunds	Возврат
+UI	fl_gift	World gifts	Дары миров
+UI	fl_yard	Hulls built	Верфь
+UI	fl_hub	Hubs	Узлы
+UI	fl_kit	Kits	Комплекты
+UI	fl_survey	Surveys	Разведка
+UI	fl_drive	Ark drive	Привод ковчега
+UI	fl_ark	Rings	Кольца
+UI	fl_feed	Works lines	Линии заводов
+UI	fl_hands	Settlers	Поселенцы
+UI	fl_send	Cargo out	Отправка
+UI	fl_found	Settling	Основание
+UI	fl_run	Departures	Вылеты
+UI	fl_kitburn	Machines	Машины
+UI	fl_crew	Crews	Экипажи
+UI	fl_eat	Eaten	Еда
+UI	fl_burn	Upkeep	Содержание
+UI	fl_pulse	Crises	Кризисы
+UI	fl_famine	Famine	Голод

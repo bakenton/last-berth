@@ -42,7 +42,7 @@ function run(seed){
       ['orderFor',()=>{ if(!keys.length) return; return C.orderFor(G,pick(keys),pick(['courier','hauler','freighter'])) }],   // v4.34: lines by hand
       ['moveLine',()=>{ if(!live.length||!keys.length) return; return C.moveLine(G,pick(live).id,pick(keys)) }],
       ['survey',()=>C.survey(G)],
-      ['startDrive',()=>{ if(!keys.length) return; return C.startDrive(G,pick(keys)) }],
+      ['startDrive',()=>C.startDrive(G)],
       ['abandon',()=>{ if(!live.length||!keys.length) return; return C.abandon(G,pick(live).id,pick(keys)) }],
       ['scrap',()=>{ if(!live.length) return; return C.scrap(G,pick(live).id) }],
       ['orderKit',()=>{ if(!keys.length) return; return C.orderKit(G,pick(keys)) }],
