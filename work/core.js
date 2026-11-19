@@ -346,7 +346,7 @@ var K={
      inherited. Lifted worlds get an epitaph, the ark and the famine get a last entry.
      No characters, no dialogue — the log is the story. */
   SHIFT_YEARS:80,
-  ORDER_YEARS:60, ORDER_DELIVER:1.25, ORDER_PEOPLE:0.5,   // v5.37 (p.13): an order of the shift is done in this many years; a delivery asks this much over what came the shift before; people as a reward — this share of the next ring's survey party
+  ORDER_YEARS:60, ORDER_DELIVER:1.25, ORDER_PEOPLE:0.5, ORDER_RW_MIN:{metal:100,fuel:50,parts:30},   // v5.44 (Nikita 19.11, p.8): a pile of a resource as a reward — what a hauler of the yards' generation costs in it, but not less than this; v5.37 (p.13): an order of the shift is done in this many years; a delivery asks this much over what came the shift before; people as a reward — this share of the next ring's survey party
   /* v5.10 (design/ARK.md 2g, Nikita 10.11): the ark is a hive of waking capsules, bought ring by ring. Ring k holds ARK_RING*k
      capsules (600, 1 200, 1 800...); a capsule's price is set by how many are already bought — the ladder steps every ARK_STEP
      capsules (food ARK_FOOD, metal ARK_METAL a capsule), and a ring costs the sum of the ladder over its capsules (ring 1 —
@@ -358,8 +358,8 @@ var K={
      ARK_HOLD — what of Earth's stock rides along, by rings held: the old level caps for rings 1-4, every further ring adds the
      last step (Claude — awaiting review). ARK_CELLS — the cells of the convoy ring on the screen. */
   ARK_RING:600, ARK_STEP:1000,
-  ARK_FOOD:[3,5,6,8,11,15,21,30], ARK_METAL:[1,2,3,5,8,12,18,27],   // v5.32 (Nikita 16.11: «За капсулы надо просить намного больше еды. На 1220 году у меня 12к еды»): food x1.5, was [2,3,4,5,7,10,14,20]
-  ARK_FOOD_GROW:1.4, ARK_METAL_GROW:1.5,
+  ARK_FOOD:[3,5,6,8,11,15,19,24], ARK_METAL:[1,2,3,5,8,12,15,18],   // v5.44 (Nikita 19.11: «5 кольцо ковчега чот гига супер мега дорого»): tiers 0-5 (rings I-IV) untouched; tiers 6-7 were food 21,30 / metal 18,27, now 19,24 / 15,18 — ring V cost 93 000 food / 85 000 metal (x3.2 / x3.9 of ring IV), now 71 000 / 54 000 (x2.4 / x2.5); v5.32 (Nikita 16.11: «За капсулы надо просить намного больше еды. На 1220 году у меня 12к еды»): food x1.5, was [2,3,4,5,7,10,14,20]
+  ARK_FOOD_GROW:1.2, ARK_METAL_GROW:1.2,   // v5.44: was 1.4 / 1.5 — every ring past IV costs about x2.2-2.6 of the one before (VI 159 400 / 119 400, VII 381 000 / 285 200); was x3.8-4.8, x4.4-5.8
   ARK_HOLD:[
     {metal:500,  parts:500,  food:1500, fuel:1500},
     {metal:1500, parts:1200, food:3000, fuel:3500},
@@ -1596,8 +1596,26 @@ function orderCur(G,o){ var i, n=0, k;
   if(o.k==='kit') return G.stats.kits||0;
   return 0 }
 function orderLeft(G,o){ return Math.max(0,Math.min(o.n,o.n-Math.max(0,orderCur(G,o)-o.at))) }
-function orderReward(G,i){ if(i===0) return {people:Math.max(10,Math.round(K.ORDER_PEOPLE*surveyCost(SECTORS.length).people))};
-  return {hull:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'} }
+/* v5.44 (Nikita 19.11, p.8: «Награды за каждые 60 лет надо разнообразить. Сейчас это люди и курьеры. Надо что-то другое тоже»; he agreed:
+   «хватит существующих ресурсов — топливо, металл, детали, ускорение стройки на верфи»): the reward of an order is one of
+     people {people:n}   — as before: half of the next ring's survey party
+     hull   {hull:cls}   — as before: a hull of the generation the yards build, her crew with her
+     metal | fuel | parts {metal:n}  — a pile of that resource lands on Earth: what one hauler of the generation the yards build costs
+                           in it (ORDER_RW_MIN at the least — a hauler of generation 0 has no parts in her), so a pile is worth a hull. Only a
+                           resource the player has met (isOpen) and only while the store is not already 20 piles deep
+     yard   {yard:1, fb:cls} — every hull still in the yards is done next year; with none in the yards when the order is done —
+                           the hull fb instead (nothing is lost). Offered only while a hull is building
+   Two offered orders pay in two different things (orderRewards picks two of the pool). */
+function rwPile(G,r){ var hi=currentHull(G,'hauler'), h=hi===null?null:HULLS[hi], n=h?(h[r]||0):0, f=K.ORDER_RW_MIN[r];
+  return Math.max(f,Math.round(n/(r==='parts'?5:10))*(r==='parts'?5:10)) }
+function orderRewards(G,rnd){ var pool=[], i, build=false;
+  pool.push({people:Math.max(10,Math.round(K.ORDER_PEOPLE*surveyCost(SECTORS.length).people))});
+  pool.push({hull:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'});
+  ['metal','fuel','parts'].forEach(function(r){ if(!isOpen(G,r)) return; var n=rwPile(G,r); if(G.earth[r]<20*n){ var o={}; o[r]=n; pool.push(o) } });
+  for(i=0;i<G.ships.length;i++) if(G.ships[i].mode==='building'){ build=true; break }
+  if(build) pool.push({yard:1,fb:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'});
+  var a=Math.floor(rnd()*pool.length), b=Math.floor(rnd()*(pool.length-1)); if(b>=a) b++;
+  return [pool[a],pool[b]] }
 function orderOffer(G,no){ var O=ordersOf(G);
   O.offer=[]; if(O.on||(G.stats.founded||0)<2||G.over) return;
   var c=[], d=(G.shiftReport&&G.shiftReport.d)||{}, have={}, i;
@@ -1613,7 +1631,8 @@ function orderOffer(G,no){ var O=ordersOf(G);
   if(c.length<2) return;
   var rnd=mulberry32((G.seed^0x0DE125)+no*7919), a=Math.floor(rnd()*c.length), b=Math.floor(rnd()*(c.length-1)); if(b>=a) b++;
   if(c[a].k===c[b].k&&c.length>2){ for(i=0;i<c.length;i++) if(c[i].k!==c[a].k){ b=i; break } }   // two different kinds when there are
-  [c[a],c[b]].forEach(function(o,j){ o.rw=orderReward(G,j); o.no=no; O.offer.push(o) }) }
+  var rws=orderRewards(G,rnd);   // v5.44: drawn after the two orders, so the choice of orders is as it was
+  [c[a],c[b]].forEach(function(o,j){ o.rw=rws[j]; o.no=no; O.offer.push(o) }) }
 function orderTake(G,i){ var O=ordersOf(G); if(!O.offer||!O.offer[i]) return 'orderNone'; if(O.on) return 'orderOn';
   var o=O.offer[i]; o.sid=G.nextShip; o.at=orderCur(G,o); o.from=G.day; o.due=G.day+K.ORDER_YEARS; O.on=o; O.offer=[];
   log(G,'order_taken',{k:o.k,n:o.n,y:o.due}); return 'ok' }
@@ -1622,10 +1641,15 @@ function giveHull(G,cls){ var hi=currentHull(G,cls), h=hi===null?null:HULLS[hi];
          target:null, route:null, auto:true, cargo:{metal:0,food:0,fuel:0,parts:0,people:0}, out:{metal:0,food:0,parts:0,people:0}, take:{metal:0,food:0,fuel:0,parts:0}, missDays:0, bearing:null, job:null};
   G.ships.push(s); return s }
 function orderTick(G){ var O=G.orders, o=O&&!Array.isArray(O)&&O.on; if(!o) return;
-  if(orderLeft(G,o)<=0){ var rw=o.rw||{}, sh=null;
-    if(rw.people){ G.earth.people+=rw.people } else if(rw.hull){ sh=giveHull(G,rw.hull) }
+  if(orderLeft(G,o)<=0){ var rw=o.rw||{}, sh=null, code='order_done_hull', i, n=0, res=null;
+    ['metal','fuel','parts'].forEach(function(k){ if(rw[k]) res=k });
+    if(rw.people){ G.earth.people+=rw.people; code='order_done_people' }
+    else if(res){ G.earth[res]+=rw[res]; code='order_done_'+res }   // v5.44: log order_done_metal / _fuel / _parts {k,h: the pile}
+    else if(rw.yard){ for(i=0;i<G.ships.length;i++) if(G.ships[i].mode==='building'){ G.ships[i].t=1; n++ }
+      if(n){ code='order_done_yard' } else { sh=giveHull(G,rw.fb||'courier') } }   // v5.44: log order_done_yard {k,n: hulls done} — none in the yards: a hull, order_done_hull
+    else sh=giveHull(G,rw.hull);
     G.stats.orders=(G.stats.orders||0)+1; O.on=null; O.last={k:o.k,ok:true,day:G.day};
-    log(G,rw.people?'order_done_people':'order_done_hull',{k:o.k,h:rw.people||0,c:rw.hull||'',n:sh?sh.id:0}); G.pauseNow=true; return }
+    log(G,code,{k:o.k,h:rw.people||(res?rw[res]:0),c:rw.hull||rw.fb||'',n:code==='order_done_yard'?n:(sh?sh.id:0)}); G.pauseNow=true; return }
   if(G.day>=o.due){ O.on=null; O.last={k:o.k,ok:false,day:G.day}; log(G,'order_failed',{k:o.k}) } }
 
 /* ---------- tick ---------- */

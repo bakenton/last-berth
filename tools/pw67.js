@@ -77,7 +77,7 @@ const digits=t=>(String(t).match(/\d[\d\s   ]*/g)||[]).map(x=>+x.replace(/\
   const ak=await p.evaluate(()=>{ const e=document.getElementById('arkcard'); return {t:e?e.innerText.replace(/\s+/g,' ').trim():'', pr:e?[...e.querySelectorAll('.pr')].map(x=>x.innerText.replace(/\s+/g,' ').trim()):[], rings:[1,2,3,4].map(k=>arkRingPrice(k)), ladder:K.ARK_FOOD.join()} });
   await shot(p,'b3-ark-ring1-price','#ovl .win');
   const an=ak.pr.map(x=>digits(x)[0]);
-  ok('2.3: K.ARK_FOOD is [3,5,6,8,11,15,21,30]; rings I–IV cost 1 800 / 5 200 / 11 800 / 29 200 rations, the metal as it was (600 / 2 000 / 6 400 / 22 000)', ak.ladder==='3,5,6,8,11,15,21,30'&&ak.rings.map(r=>r.food).join()==='1800,5200,11800,29200'&&ak.rings.map(r=>r.metal).join()==='600,2000,6400,22000', ak.ladder+' '+JSON.stringify(ak.rings));
+  ok('2.3: K.ARK_FOOD is [3,5,6,8,11,15,19,24] (v5.44: tiers 6-7 were 21,30); rings I–IV cost 1 800 / 5 200 / 11 800 / 29 200 rations, the metal as it was (600 / 2 000 / 6 400 / 22 000)', ak.ladder==='3,5,6,8,11,15,19,24'&&ak.rings.map(r=>r.food).join()==='1800,5200,11800,29200'&&ak.rings.map(r=>r.metal).join()==='600,2000,6400,22000', ak.ladder+' '+JSON.stringify(ak.rings));
   ok('2.3: the card of ring I in the Ark window names 1 800 rations and 600 metal', an.includes(1800)&&an.includes(600)&&!an.includes(1200), JSON.stringify(ak.pr)+' · '+ak.t.slice(0,160));
   if(!BEFORE){ await p.evaluate(()=>{ LN.earth.food=1800+500; LN.earth.metal=600; LNdraw() }); await p.waitForTimeout(150); await U.tap('#arkcard [data-act="arkbuy"]'); await p.waitForTimeout(300) }
   const ab=await p.evaluate(()=>({paid:arkPaid(LN), food:Math.round(LN.earth.food), metal:Math.round(LN.earth.metal)}));
