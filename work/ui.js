@@ -426,8 +426,8 @@ function voiceWatch(){
        hull; everything else is a journal line. */
     if(e.code==='colony_founded'&&d.gift) giftFly(d.p,d.gift);   // v5.27: what the world gave flies to the strip
     if(isLoss(e)) SFX.play('warn');   // v5.43: a loss sounds once; its line waits behind LOSSES (was a toast for hub_lost, dock_hull, ark_gift, ring_tremor)
-    if(e.code==='order_done_people'||e.code==='order_done_hull'||e.code==='order_failed'){ var okO=e.code!=='order_failed';   // v5.44 (Nikita 19.11: «когда выполняется задание смены, игра об этом говорит как-то. Надо подизайнить»): not a toast any more — a flash on the card, with the reward as the chip
-      U.ordFlash={ok:okO,rw:e.code==='order_done_people'?resIc('people',12)+'+'+num(d.h||0):e.code==='order_done_hull'?shipIc(d.c,18)+'+1':'',until:Date.now()+ORDF_MS}; SFX.play(okO?'ok':'info'); setTimeout(function(){ if(G) draw() },ORDF_MS+60) }
+    if(e.code.indexOf('order_done_')===0||e.code==='order_failed'){ var okO=e.code!=='order_failed';   // v5.44 (Nikita 19.11: «когда выполняется задание смены, игра об этом говорит как-то. Надо подизайнить»): not a toast any more — a flash on the card, with the reward as the chip
+      U.ordFlash={ok:okO,rw:okO?ordFlashRw(e.code,d):'',until:Date.now()+ORDF_MS}; SFX.play(okO?'ok':'info'); setTimeout(function(){ if(G) draw() },ORDF_MS+60) }
    // v5.43 (reviewer): the order the player took answers with its result — the one line at the top
     if(e.code==='night_dated'){ var f0=driveForecast(G,G.arkMark);
       /* v4.14: {fy} is a whole sentence — a year at this pace, or why there is no year yet */
@@ -1153,7 +1153,7 @@ function objFoot(O){ var D=O.drive, A=O.ark, ft='', dl=fill(T('o_fDrive'),{g:rom
 /* v5.37 (Nikita's run 16.11, p.13): the order of the shift — its words, its reward, how far it is */
 function ordText(o){ var sx=o.s!==undefined?o.s:(o.k==='survey'?(o.at!==undefined?o.at:SECTORS.length):null);
   return fill(T('ord_'+o.k),{n:num(o.n),r:o.r?T(o.r).toLowerCase():'',c:o.c?T(o.c).toLowerCase():'',s:sx!==null?secName(sx):''}) }
-function ordRw(o){ var r=o.rw||{}; return '<i class="rwh">'+esc(T('ord_rw'))+'</i>'+(r.people?resIc('people',12)+esc(fill(T('ord_rwPeople'),{n:num(r.people)})):r.hull?shipIc(r.hull,18)+esc(fill(T('ord_rwHull'),{c:T(r.hull).toLowerCase(),g:roman(G.gen||0)})):'') }
+function ordRw(o){ return '<i class="rwh">'+esc(T('ord_rw'))+'</i>'+rwIc(o.rw)+esc(ordRwT(o)) }
 function ordProg(o){ var done=Math.min(o.n,o.n-orderLeft(G,o)); return fill(T('ord_left'),{a:num(done),n:num(o.n),y:Math.max(0,o.due-G.day)}) }
 function ordLine(){ var o=G.orders&&G.orders.on; if(!o) return '';
   return '<div class="sg ord"><i></i><div><b>'+esc(T('ord_head'))+' · '+esc(ordText(o))+'</b><small>'+esc(ordProg(o))+' · '+ordRw(o)+'</small></div></div>' }
@@ -1162,8 +1162,16 @@ function ordOffer(){ var O=G.orders; if(!O||O.on||!O.offer||!O.offer.length) ret
     return '<div class="orr"><div><b>'+esc(ordText(o))+'</b><small>'+ordRw(o)+'</small></div>'+btn(esc(T('ord_take')),'ordtake',{i:j},'pri')+'</div>' }).join('')+'</div>' }
 /* v5.43 (Nikita 18.11, the notices after Clash of Clans: «задания смены — как задания сезона»): the shift's two orders under the
    objective card — what, the reward as an icon and a number (its words on hover), TAKE. Not taken, they go with the next shift (core) */
-function ordRwS(o){ var r=o.rw||{}; return r.people?resIc('people',12)+'+'+num(r.people):r.hull?shipIc(r.hull,18)+'+1':'' }
-function ordRwT(o){ var r=o.rw||{}; return r.people?fill(T('ord_rwPeople'),{n:num(r.people)}):r.hull?fill(T('ord_rwHull'),{c:T(r.hull).toLowerCase(),g:roman(G.gen||0)}):'' }
+/* v5.44 (Nikita 19.11, p.8: «Награды за каждые 60 лет надо разнообразить»): six kinds of reward — people, a hull, a pile of metal / fuel / parts, the yards' slips.
+   The chip is the icon and a number (the slips: the hull icon and a short word); the full words are the hover and the card line */
+function rwKind(r){ r=r||{}; return r.people?'people':r.metal?'metal':r.fuel?'fuel':r.parts?'parts':r.yard?'yard':r.hull?'hull':'' }
+function rwIc(r){ var k=rwKind(r); return k==='hull'?shipIc(r.hull,18):k==='yard'?shipIc(r.fb||'courier',18):k?resIc(k,12):'' }
+function ordRwS(o){ var r=o.rw||{}, k=rwKind(r); return k==='hull'?shipIc(r.hull,18)+'+1':k==='yard'?shipIc(r.fb||'courier',18)+esc(T('ord_rwYardS')):k?resIc(k,12)+'+'+num(r[k]):'' }
+var RW_TXT={people:'ord_rwPeople',metal:'ord_rwMetal',fuel:'ord_rwFuel',parts:'ord_rwParts'};
+function ordRwT(o){ var r=o.rw||{}, k=rwKind(r); return k==='hull'?fill(T('ord_rwHull'),{c:T(r.hull).toLowerCase(),g:roman(G.gen||0)}):k==='yard'?fill(T('ord_rwYard'),{c:T(r.fb||'courier').toLowerCase()}):k?fill(T(RW_TXT[k]),{n:num(r[k])}):'' }
+/* what came, from the log line of the order's end: the chip of the flash (the slips with none building end as a hull — the log says order_done_hull) */
+function ordFlashRw(code,d){ var k=code.slice(11);
+  return k==='people'||k==='metal'||k==='fuel'||k==='parts'?resIc(k,12)+'+'+num(d.h||0):k==='yard'?shipIc(d.c||'courier',18)+'+'+num(d.n||0):k==='hull'?shipIc(d.c||'courier',18)+'+1':'' }
 var ORDF_MS=6500;
 function ordFlash(){ var f=U.ordFlash; if(!f||Date.now()>f.until) return '';
   return '<div class="ordf '+(f.ok?'ok':'no')+'"><i>'+(f.ok?'✓':'✗')+'</i><b>'+esc(T(f.ok?'ord_doneS':'ord_missS'))+'</b>'+(f.rw?'<span class="rw">'+f.rw+'</span>':'')+'</div>' }
@@ -1307,7 +1315,7 @@ function drawRes(){ var E=G.earth, nd=G.need||earthNeed(G), h='';
     var bad=(k==='food'&&(G.hungry||E.food/Math.max(0.1,nd.food)<25))||(k==='metal'&&(G.cold||E.metal/Math.max(0.1,nd.metal)<25))||(k==='fuel'&&E.fuel<30);
     var fc=k==='food'?(G.foodFc||(G.day<200?foodForecast(G):null)):null, ends=fc?'<em>'+esc(fill(T('u_ends'),{y:fc.y}))+'</em>':'';   // v4.36: the core forecasts from year 200; the strip shows the end from year 0
     if(k==='people'){ var bx=birthX(); ends='<em style="color:'+birthCol(bx)+'" title="'+attr(fill(T('u_birthsHint'),{lo:birthTxt(K.FED_MIN),hi:birthTxt(K.FED_MAX),n:K.FED_YEARS,y:Math.floor(E.food/Math.max(0.1,nd.food||1))}))+'">'+esc(fill(T('u_birthTop'),{x:birthTxt(bx)}))+'</em>' }
-    h+='<div class="rc'+(bad?' bad':'')+(U.gtick&&U.gtick[k]>Date.now()?' tk':'')+'" data-r="'+k+'"><small>'+resIc(k,13)+esc(T(k).toUpperCase())+ends+'</small><b style="color:'+C[k]+'">'+num(E[k])+'</b>'+tt+'</div>' });
+    h+='<div class="rc'+(bad?' bad':'')+(U.gtick&&U.gtick[k]>Date.now()?' tk':'')+(U.pop==='flow:'+k?' on':'')+'" data-r="'+k+'" data-act="pop" data-v="flow:'+k+'"><small>'+resIc(k,13)+esc(T(k).toUpperCase())+ends+'</small><b style="color:'+C[k]+'">'+num(E[k])+'</b>'+tt+'</div>' });
   setHTML('res',h) }
 
 /* ---------- tabs and their flags ---------- */
@@ -1814,7 +1822,7 @@ function drawWin(){ var w=U.win, h='';
   if(w==='earth') h=winEarth(); else if(w==='yard') h=winYard(); else if(w==='ark') h=winArk(); else if(w==='door') h=winDoor(); else if(w==='goals') h=winGoals(); else if(w&&planet(w)) h=winWorld(w);
   setHTML('ovl',h,w); el('ovl').className=h?'on':'' }
 function drawPop(){ var p=U.pop, h='', cls='';
-  if(p==='adv'){ h=popAdv(); cls='p-adv' } else if(p==='menu'){ h=popMenu(); cls='p-menu' } else if(p&&p.indexOf('pick:')===0){ h=picker(); cls='p-center' } else if(p==='letters'&&G.letters&&G.letters.length){ h=popLetters(); cls='p-letters' } else if(p==='loss'&&losses().length){ h=popLoss(); cls='p-letters' }
+  if(p==='adv'){ h=popAdv(); cls='p-adv' } else if(p==='menu'){ h=popMenu(); cls='p-menu' } else if(p&&p.indexOf('pick:')===0){ h=picker(); cls='p-center' } else if(p==='letters'&&G.letters&&G.letters.length){ h=popLetters(); cls='p-letters' } else if(p==='loss'&&losses().length){ h=popLoss(); cls='p-letters' } else if(p&&p.indexOf('flow:')===0&&can(p.slice(5))&&RES.indexOf(p.slice(5))>=0){ h=popFlow(p.slice(5)); cls='p-flow f'+RES.indexOf(p.slice(5)) }
   if(!h) U.pop=null;
   if(setHTML('pop',h,p)&&p==='letters') paintLetters(el('pop')); el('pop').className=h?'on '+cls:'' }
 function focusFix(){ var now=Date.now();
@@ -2354,6 +2362,21 @@ function lineFix(pid,used){ var h=lineHelp(G,pid,{noMove:!can('fleet'),cls:clsSe
   d.h=T(h.cls)+' '+roman(HULLS[h.hull].gen); return [fill(T('u_aFixBuild'),d),T('u_fixOrder'),can('order')?'oc:'+h.cls:'add'] }
 /* Nikita, 02.11 («всё сливается и глазу тяжело»): five kinds, each with its own mark and colour; the worst kind first, a count for each. Red still means urgent, grey means it can wait */
 var ADV_T=[{k:'evac',i:'send',c:'#FF2A1A',l:'u_atEvac'},{k:'forge',i:'kit',c:'#FF8A1F',l:'u_atForge'},{k:'noline',i:'takeoff',c:'#FFD23F',l:'u_atNoLine'},{k:'seam',i:'survey',c:'#4FA3FF',l:'u_atSeam'},{k:'line',i:'hold',c:'#B48CFF',l:'u_atLine'}];
+/* v5.44 (Nikita 19.11, p.12 and p.15: «игра говорила о том, что происходит у тебя с ресурсами… кредит с дебетом не сходятся»): the press on a tile of the strip —
+   where the stock comes from and where it goes, a year, on the average of the last FLOW_YEARS of the ledger. Numbers and one-word labels, the largest first;
+   what is below the top FLOW_TOP of a side is one row «Other», so the rows add up to the net */
+var FLOW_YEARS=10, FLOW_TOP=4;
+function flowRows(l,sg,col){ var top=l.slice(0,FLOW_TOP), rest=l.slice(FLOW_TOP).reduce(function(a,r){ return a+r[1] },0);
+  return top.map(function(r){ return [r[0],r[1]] }).concat(rest>=0.05?[['other',rest]]:[]).map(function(r){ return '<div class="fr"><span>'+esc(flowLbl(r[0]))+'</span><b style="color:'+col+'">'+sg+dec(r[1])+'</b></div>' }).join('') }
+var flowRes='';
+function flowLbl(a){ var k='fl_'+a+(a==='own'&&flowRes==='people'?'_people':''); return T(k) }
+function popFlow(k){ var f=flowRecent(G,k,FLOW_YEARS); flowRes=k;
+  var h='<div class="ltrs flw">'+sec(resIc(k,14)+esc(T(k)),(f.n?esc(fill(T('fl_avg'),{n:f.n})):'')+xb('x','pop'));
+  if(!f.n) return h+'<div class="fr none">—</div></div>';
+  h+=(f.inn.length?'<div class="fh">'+esc(T('fl_in'))+'<b style="color:'+C.food+'">+'+dec(f.sin)+'</b></div>'+flowRows(f.inn,'+',C.food):'')+
+     (f.out.length?'<div class="fh">'+esc(T('fl_out'))+'<b style="color:'+C.red+'">−'+dec(f.sout)+'</b></div>'+flowRows(f.out,'−',C.red):'')+
+     '<div class="fh net">'+esc(T('fl_net'))+'<b style="color:'+(f.net>=0.05?C.food:(f.net<=-0.05?C.red:C.mid))+'">'+(f.net>=0.05?'+':(f.net<=-0.05?'−':''))+dec(Math.abs(f.net))+'<small>'+esc(T('u_perYr'))+'</small></b></div></div>';
+  return h }
 function popAdv(){ var a=advRows(), rk=function(r){ return r[0]===C.red?0:r[0]===C.mid?2:1 };
   if(!a.length) return '<div class="advl"><div class="advc">'+xb('x','pop')+'</div><div class="none">'+esc(T('u_advNone'))+'</div></div>';
   var gs=ADV_T.map(function(t,i){ var rows=a.filter(function(r){ return r[6]===t.k }); var w=rows.reduce(function(m,r){ return Math.min(m,rk(r)) },9), live=rows.filter(function(r){ return r[0]!==C.mid }).length; return {t:t,i:i,rows:rows,w:w,c:w===2?C.mid:t.c,n:live||rows.length} })   // v4.50: a group of grey rows is grey, its count is the top bar's.filter(function(g){ return g.rows.length }).sort(function(x,y){ return x.w-y.w||x.i-y.i });
@@ -2529,7 +2552,7 @@ document.addEventListener('click',function(ev){
   var b=t.closest('[data-act]');
   if(b&&b.dataset.act!=='pop'&&U.pop&&!b.closest('#pop')&&b.dataset.act!=='tab'&&b.dataset.act!=='world'){ U.pop=null }
   if(!b){
-    if(U.pop&&!t.closest('#pop .advl,#pop .menu,#pop .pick,#pop .ltrs')){ U.pop=null; U.scrapArm=null; draw(); return }
+    if(U.pop&&!t.closest('#pop .advl,#pop .menu,#pop .pick,#pop .ltrs,#pop .flw')){ U.pop=null; U.scrapArm=null; draw(); return }
     if(t.id==='ovl'&&winLight()){ U.win=null; U.scrapArm=null; draw(); return }
     if(U.scrapArm&&!t.closest('.pc')){ U.scrapArm=null; draw() }
     return }

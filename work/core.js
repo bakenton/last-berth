@@ -996,6 +996,14 @@ function flowEnd(G){
   G.years.push({d:G.day, e:e.map(Math.round), s:st.map(Math.round), f:f, r:r, rs:rs, g:[g,gi,gt], b:bld, c:[col,Math.round(pop),Math.round(crew)]});
   G.fp=e; G.fsp=st; G.fy={} }
 function tick(G){ if(G.over) return; tickCore(G); flowEnd(G) }
+/* v5.44 interface (Nikita 19.11, p.12: «чтобы игра говорила, что происходит у тебя с ресурсами»): what moved in Earth's stock of res, a year on the average
+   of the last `years` closed rows of the ledger (the colonies' stores, 's.…', are not Earth's and are left out). Reads only; the rules do not use it.
+   inn / out — [article, a year] sorted by size, both positive; net = inn - out; n — the rows really averaged (fewer than asked in a young run) */
+function flowRecent(G,res,years){ var Y=G.years||[], FK=G.fk||[], n=Math.min(years||10,Y.length), pre=res+'.', m={}, inn=[], out=[], si=0, so=0, i, j, f, k, v;
+  for(i=Y.length-n;i<Y.length;i++){ f=Y[i].f||[]; for(j=0;j<f.length;j+=2){ k=FK[f[j]]; if(k&&k.indexOf(pre)===0){ k=k.slice(pre.length); m[k]=(m[k]||0)+f[j+1] } } }
+  for(k in m){ v=m[k]/Math.max(1,n); if(v>=0.05){ inn.push([k,v]); si+=v } else if(v<=-0.05){ out.push([k,-v]); so-=v } }
+  inn.sort(function(a,b){ return b[1]-a[1] }); out.sort(function(a,b){ return b[1]-a[1] });
+  return {n:n,inn:inn,out:out,sin:si,sout:so,net:si-so} }
 function snap(G){
   var E=G.earth, cols=0, pop=0, dry=0;
   for(var k in G.colonies){ var c=G.colonies[k]; cols++; pop+=c.pop; if(G.reserves[k]<=0) dry++ }

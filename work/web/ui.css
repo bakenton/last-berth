@@ -485,3 +485,10 @@ svg.gi{fill:currentColor}
 .b.doorhold::after{content:'';position:absolute;left:0;top:0;bottom:0;width:0;background:rgba(11,11,12,.38);pointer-events:none}
 .b.doorhold.hold::after{width:100%;transition:width var(--hold,1800ms) linear}
 #tip .tq{color:var(--red);font-style:normal}   /* v5.42: the ring is failing */
+/* v5.44 (p.12): the press on a tile of the strip — where the stock comes from and goes, a year; under the tile, numbers and one-word labels */
+.rc[data-act]{cursor:pointer}.rc[data-act]:hover,.rc.on{background:rgba(255,255,255,.04)}
+#pop.p-flow{top:100px;width:268px}#pop.p-flow.f0{left:0}#pop.p-flow.f1{left:20%}#pop.p-flow.f2{left:40%}#pop.p-flow.f3{left:60%}#pop.p-flow.f4{left:auto;right:0}
+.flw .fr,.flw .fh{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:4px 8px;font:12.5px var(--n)}
+.flw .fr{border-top:1px solid var(--ln)}.flw .fr span{color:var(--ink)}.flw .fr b{font:600 13px var(--n)}.flw .fr.none{color:var(--dim)}
+.flw .fh{margin-top:4px;font:600 10px var(--h);letter-spacing:.18em;text-transform:uppercase;color:var(--mid);background:var(--bg)}.flw .fh b{font:600 13px var(--n);letter-spacing:0}
+.flw .fh.net{margin-top:6px;border-top:1px solid var(--ppl)}.flw .fh.net b small{font-size:10px;margin-left:3px;color:var(--mid)}
