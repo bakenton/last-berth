@@ -167,3 +167,8 @@ UI	o_jDateV	behind the door past ring {n} · rings {a} of {k}	за дверью 
 UI	ow_surveyDate	New worlds — and word of the Night.	Новые миры — и весть о Ночи.
 UI	tut_m18	The Night is up here. Its year waits behind the door past the last ring. Big news stops time and comes one window at a time.	Ночь — здесь, наверху. Её год ждёт за дверью, после последнего кольца. Важные новости останавливают время и приходят по одному окну.
 UI	tut_m27	A hex is 100 people. Press the hive to fill a ring with pods — the card says if the rations hold after it.	Гекс — 100 человек. Нажми на соты, чтобы заполнить кольцо капсулами: карточка скажет, хватит ли пайков после покупки.
+UI	u_worldGives	Produces	Добывает
+UI	u_deposit	Seam lasts	Залежи хватит
+UI	u_onSurface	Awaiting pickup	Ждёт вывоза
+UI	h_world_1	Produces — what it digs or grows in a year.	Добывает — сколько мир копает или растит за год.
+UI	h_world_3	Seam lasts — how many years the seam holds at this rate. Then the world is worked out.	Залежи хватит — на сколько лет при нынешней добыче. Потом мир выработан.

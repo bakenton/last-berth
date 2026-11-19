@@ -42,6 +42,8 @@ svg.gi{fill:currentColor}
 #map3d{position:absolute;inset:0;width:100%;height:100%;display:block}#map{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab;touch-action:none}#map.drag{cursor:grabbing}
 #map .wd{cursor:pointer}#map .nm{font-family:var(--h);font-weight:600}
 @keyframes al{50%{stroke-opacity:.15}}.alarm{animation:al 1.4s infinite}
+@keyframes gps{0%,100%{stroke-opacity:.1}50%{stroke-opacity:.75}}.gpulse{animation:gps 2.6s ease-in-out infinite}
+@keyframes gpt{0%,100%{box-shadow:inset 0 0 0 0 rgba(61,220,132,0)}50%{box-shadow:inset 0 0 0 2px rgba(61,220,132,.55)}}.tab.gp{animation:gpt 2.6s ease-in-out infinite}
 @keyframes blk{0%,100%{opacity:1}50%{opacity:.25}}.evwarn{animation:blk 1.6s infinite}.evearth{animation:blk .9s infinite}
 #mapbox{--nf:0;--nl:0}
 #nightfx{position:absolute;inset:0;z-index:1;pointer-events:none;display:none;overflow:hidden}
@@ -71,6 +73,13 @@ svg.gi{fill:currentColor}
 .bcard{position:relative;display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:8px;background:rgba(20,20,23,.92);border:1px solid var(--ln);padding:7px 10px 11px;text-align:left;font-size:12px;width:100%}
 .bcard span{color:var(--mid);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.bcard i{font:12px var(--n);font-style:normal}
 .bcard u{position:absolute;left:10px;bottom:5px;height:3px;background:var(--ink)}
+/* v5.44: BUILDING — the yards' timers in a block of their own (the head as the objective's and the order's) */
+.bblk{background:rgba(20,20,23,.92);border:1px solid var(--ln)}
+.bblk .hd{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;font:600 10px var(--h);letter-spacing:.18em;text-transform:uppercase;color:var(--mid)}
+.bblk .hd span{display:flex;gap:7px;align-items:center}.bblk .hd em{font:500 10px var(--n);font-style:normal;color:var(--mid);letter-spacing:0}
+.bblk .bcard{background:none;border:0;border-top:1px solid var(--ln)}
+.bblk .bcard u{height:2px;background:var(--earth)}
+.bblk .more{padding:5px 10px;border-top:1px solid var(--ln)}
 .more{text-transform:uppercase;text-align:right;font-size:10px;letter-spacing:.16em;color:var(--mid);font-weight:600}
 #zoom{position:absolute;right:12px;bottom:12px;display:flex;gap:3px;z-index:2}
 #zoom button{text-transform:uppercase;border:1px solid var(--ln);background:var(--pan);height:30px;min-width:32px;font:600 12px var(--n);padding:0 8px}
@@ -184,7 +193,8 @@ svg.gi{fill:currentColor}
 .ah{display:flex;flex-direction:column;gap:14px}.ah small,.ah .lab2{font:500 11px var(--h);letter-spacing:.14em;color:var(--mid);text-transform:uppercase}
 .ah-two{display:flex;gap:22px}.ah-two>div{min-width:0;display:flex;flex-direction:column;gap:10px}.ah-l{flex:1.62}.ah-r{flex:1}
 .ah svg.hold{display:block;width:82%;height:auto;overflow:visible;margin:0 auto}
-.hx{fill:none;stroke:var(--dim);stroke-width:1}.hx.on{fill:var(--ark);stroke:var(--ark)}.hx.on.spare{fill-opacity:.42}.hx.sel{fill:rgba(180,140,255,.26);stroke:var(--ark)}.hx.wait{stroke:var(--ark);stroke-dasharray:4 3;fill:rgba(180,140,255,.1)}
+.hx{fill:none;stroke:var(--dim);stroke-width:1}.hx.on{fill:var(--ark);stroke:var(--ark)}.hx.on.spare{fill-opacity:.42}.hx.sel{fill:rgba(180,140,255,.26);stroke:var(--ark)}.hx.wait{stroke:var(--ark);stroke-dasharray:4 3;fill:rgba(180,140,255,.24)}
+.ah-line.wt b{color:var(--ppl)}
 .hx.rsel{stroke:var(--ink);stroke-width:1.7}.hx.none{stroke:#34343a;stroke-dasharray:2 3}.hx.core{fill:var(--ink);stroke:var(--ink)}
 .hx.cv{stroke:rgba(69,212,232,.38)}.hx.cv.on{fill:#45D4E8;stroke:#45D4E8}.hx.cv.way{fill:rgba(69,212,232,.28);stroke:#45D4E8}.csel .hx.cv{stroke-width:1.8;stroke:#45D4E8}
 .hold .hr{cursor:pointer}.hold .hr .hx{pointer-events:all}.hold .hr:hover .hx{stroke-width:1.6}
@@ -451,6 +461,14 @@ svg.gi{fill:currentColor}
 .ordc .orc b{font:600 11.5px var(--h);letter-spacing:.06em;text-transform:uppercase;line-height:1.2;min-width:0}
 .ordc .rw{display:flex;align-items:center;gap:3px;font:600 12px var(--n);color:var(--food);border:1px solid var(--food);padding:2px 6px;white-space:nowrap}
 .ordc .orc .b{padding:4px 9px;font-size:10px}
+/* v5.44: the result of the order on the card — a flash, the reward as the chip (done: green; missed: red, no reward) */
+.ordf{display:flex;align-items:center;gap:9px;margin-top:-7px;padding:8px 10px;background:rgba(20,20,23,.94);border:1px solid var(--food);animation:ordf 6.4s ease-out forwards}
+.ordf i{font:700 15px var(--n);font-style:normal;color:var(--food)}.ordf b{flex:1;font:600 11.5px var(--h);letter-spacing:.14em;text-transform:uppercase}
+.ordf .rw{display:flex;align-items:center;gap:3px;font:600 13px var(--n);color:var(--food);border:1px solid var(--food);padding:2px 7px}
+.ordf.no{border-color:var(--red)}.ordf.no i{color:var(--red)}
+@keyframes ordf{0%{background:rgba(61,220,132,.6);transform:scale(1.03)}12%{transform:scale(1)}30%{background:rgba(61,220,132,.2)}85%{opacity:1}100%{background:rgba(20,20,23,.94);opacity:0}}
+.ordf.no{animation-name:ordfno}@keyframes ordfno{0%{background:rgba(255,42,26,.45)}30%{background:rgba(255,42,26,.14)}85%{opacity:1}100%{background:rgba(20,20,23,.94);opacity:0}}
+@media (prefers-reduced-motion:reduce){.ordf{animation:none}}
 .ocard .sg.ord>i{border-color:#FFD23F}
 .ocard .sg.ord small{display:flex;gap:5px;align-items:center}
 .ogv svg{vertical-align:middle}
