@@ -97,6 +97,7 @@ function survey(G){
   var c=surveyCost(SECTORS.length);
   G.earth.metal-=c.metal; G.earth.food-=c.food; G.earth.fuel-=c.fuel; G.earth.parts-=c.parts; openPaid(G,c);
   G.earth.people-=c.people;                       // the survey party stays out there
+  fl(G,'metal.survey',-c.metal); fl(G,'food.survey',-c.food); fl(G,'fuel.survey',-c.fuel); fl(G,'parts.survey',-c.parts); fl(G,'people.survey',-c.people);   // v5.44: the flow ledger
   G.ledger.metalSurvey=(G.ledger.metalSurvey||0)+c.metal;
   G.ledger.peopleSurvey=(G.ledger.peopleSurvey||0)+c.people;
   var i=openSector(G);
@@ -177,7 +178,7 @@ function hubBuildCheck(G,pid){ var c=G.colonies[pid], p=planet(pid); if(!c||!p) 
   var k=hubCost(G); if(G.earth.metal<k.metal) return 'metal'; if(G.earth.parts<k.parts) return 'parts';
   return 'ok' }
 function buildHub(G,pid){ var r=hubBuildCheck(G,pid); if(r!=='ok') return r;
-  var k=hubCost(G), c=G.colonies[pid]; G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts});
+  var k=hubCost(G), c=G.colonies[pid]; G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts}); fl(G,'metal.hub',-k.metal); fl(G,'parts.hub',-k.parts);
   c.hub=true; c.hubPaid={metal:k.metal,parts:k.parts}; c.exHub=false;
   for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead') continue;   // couriers come off the hub's line to Earth
     if(s.from===pid&&!lineOk(G,s,pid)){ s.from=null; s.to=null } if(s.pend&&s.pend.from===pid&&!lineOk(G,s,pid)) s.pend=null }
@@ -197,9 +198,9 @@ function canHubFound(G,shipId,pid){ var p=planet(pid); if(!p) return 'nocolony';
   return canDepart(G,sh,pid,true,true) }
 function hubFound(G,shipId,pid){ var r=canHubFound(G,shipId,pid); if(r!=='ok') return r;
   var k=hubCost(G); r=colonize(G,shipId,pid,0,0,true); if(r!=='ok') return r;
-  var sh=shipById(G,shipId); G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts});
+  var sh=shipById(G,shipId); G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts}); fl(G,'metal.hub',-k.metal); fl(G,'parts.hub',-k.parts);
   sh.hubFound={metal:k.metal,parts:k.parts}; log(G,'hub_found_go',{p:pid,n:sh.id}); return 'ok' }
-function hubFoundBack(G,s){ if(!s.hubFound) return; G.earth.metal+=s.hubFound.metal; G.earth.parts+=s.hubFound.parts; s.hubFound=null }
+function hubFoundBack(G,s){ if(!s.hubFound) return; G.earth.metal+=s.hubFound.metal; G.earth.parts+=s.hubFound.parts; fl(G,'metal.refund',s.hubFound.metal); fl(G,'parts.refund',s.hubFound.parts); s.hubFound=null }
 /* v5.02: a hub's feeders go back to Earth with their hulls, as setVia does; a hull that cannot fly to Earth stands down */
 function feedersHome(G,hub){ var fdr=feedersOf(G,hub);
   for(var fi=0;fi<fdr.length;fi++){ var fk=fdr[fi]; G.colonies[fk].via=null;
@@ -215,7 +216,7 @@ function hubRefund(G,pid){ var c=G.colonies[pid]; if(!c||!c.hub) return null;
   return {metal:Math.floor(k.metal*K.HUB_REFUND), parts:Math.floor(k.parts*K.HUB_REFUND)} }
 function razeHub(G,pid){ var c=G.colonies[pid]; if(!c||!c.hub) return 'nohub';
   var r=hubRefund(G,pid), fdr=feedersHome(G,pid);
-  G.earth.metal+=r.metal; G.earth.parts+=r.parts;
+  G.earth.metal+=r.metal; G.earth.parts+=r.parts; fl(G,'metal.refund',r.metal); fl(G,'parts.refund',r.parts);
   c.pop+=Math.floor(c.wait||0); c.wait=0; c.hub=false; delete c.hubPaid; c.exHub=true;
   for(var i=0;i<G.ships.length;i++){ var s=G.ships[i]; if(s.mode==='dead') continue;   // couriers may fly the line to Earth again; one a hub line refused before is not put back
     if(s.from===pid&&!lineOk(G,s,pid)){ s.from=null; s.to=null } }
@@ -346,20 +347,27 @@ var K={
      inherited. Lifted worlds get an epitaph, the ark and the famine get a last entry.
      No characters, no dialogue — the log is the story. */
   SHIFT_YEARS:80,
-  ORDER_YEARS:60, ORDER_DELIVER:1.25, ORDER_PEOPLE:0.5,   // v5.37 (p.13): an order of the shift is done in this many years; a delivery asks this much over what came the shift before; people as a reward — this share of the next ring's survey party
+  ORDER_YEARS:60, ORDER_DELIVER:1.25, ORDER_PEOPLE:0.5, ORDER_RW_MIN:{metal:100,fuel:50,parts:30},   // v5.44 (Nikita 19.11, p.8): a pile of a resource as a reward — what a hauler of the yards' generation costs in it, but not less than this; v5.37 (p.13): an order of the shift is done in this many years; a delivery asks this much over what came the shift before; people as a reward — this share of the next ring's survey party
   /* v5.10 (design/ARK.md 2g, Nikita 10.11): the ark is a hive of waking capsules, bought ring by ring. Ring k holds ARK_RING*k
-     capsules (600, 1 200, 1 800...); a capsule's price is set by how many are already bought — the ladder steps every ARK_STEP
-     capsules (food ARK_FOOD, metal ARK_METAL a capsule), and a ring costs the sum of the ladder over its capsules (ring 1 —
-     1 800 food / 600 metal · 5 200 / 2 000 · 11 800 / 6 400 · ring 4 — 29 200 / 22 000 since v5.32, food x1.5; it was 1 200 · 3 200 ·
-     7 600 · 19 000 food). Past the end of the ladder every further thousand is xARK_FOOD_GROW /
-     xARK_METAL_GROW of the one before (Claude — awaiting review). No ceiling. The levels I-IV, their prices (ARK_LEVELS, ARK_PRICE,
-     ARK_FOOD_X, ARK_PARTS_X), the wake shares (ARK_WAKE, ARK_LVL_WAKE) and the 3-2-1 convoy (ARK_CONVOY) are gone.
+     capsules (600, 1 200, 1 800...). v5.44 (Nikita 19.11: «5 кольцо ковчега чот гига супер мега дорого», then «Цены понизить. Потолок 50 тысяч
+     любого ресурса, считай», «Сделай прогрессию плавнее»): the price is set per RING, not per capsule — ARK_PRICE.food / .metal, ring I first;
+     past the end of the table every ring costs ARK_CAP, and no ring costs more than that of any resource.
+       ring   food: was → now           metal: was → now          (was: the capsule ladder ARK_FOOD / ARK_METAL / ARK_STEP / *_GROW)
+       I        1 800 → 1 800              600 → 600
+       II       5 200 → 5 200            2 000 → 2 000
+       III     11 800 → 11 800           6 400 → 6 000
+       IV      29 200 → 22 000          22 000 → 13 000
+       V       93 000 → 34 000          85 000 → 24 000
+       VI     351 600 → 43 000         410 000 → 36 000
+       VII  1 542 600 → 48 000       2 370 600 → 45 000
+       VIII+  x3.8-5.4 → 50 000       x4.8-7.4 → 50 000   (the growth ring on ring: food x2.9 2.3 1.9 1.55 1.26 1.12 1.04, metal x3.3 3.0 2.2 1.85 1.5 1.25 1.11)
+     The levels I-IV, their prices (ARK_LEVELS, ARK_FOOD_X, ARK_PARTS_X), the wake shares (ARK_WAKE, ARK_LVL_WAKE) and the 3-2-1 convoy (ARK_CONVOY)
+     are gone.
      Everyone on Earth boards; woken = capsules x the share of the fleet standing in the convoy; the rest sleep on.
      ARK_HOLD — what of Earth's stock rides along, by rings held: the old level caps for rings 1-4, every further ring adds the
      last step (Claude — awaiting review). ARK_CELLS — the cells of the convoy ring on the screen. */
-  ARK_RING:600, ARK_STEP:1000,
-  ARK_FOOD:[3,5,6,8,11,15,21,30], ARK_METAL:[1,2,3,5,8,12,18,27],   // v5.32 (Nikita 16.11: «За капсулы надо просить намного больше еды. На 1220 году у меня 12к еды»): food x1.5, was [2,3,4,5,7,10,14,20]
-  ARK_FOOD_GROW:1.4, ARK_METAL_GROW:1.5,
+  ARK_RING:600, ARK_CAP:50000,
+  ARK_PRICE:{food:[1800,5200,11800,22000,34000,43000,48000], metal:[600,2000,6000,13000,24000,36000,45000]},
   ARK_HOLD:[
     {metal:500,  parts:500,  food:1500, fuel:1500},
     {metal:1500, parts:1200, food:3000, fuel:3500},
@@ -516,7 +524,7 @@ function canKit(G,pid){
 function orderKit(G,pid){
   var r=canKit(G,pid); if(r!=='ok') return r;
   var c=G.colonies[pid], k=kitCost(c);
-  G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts});
+  G.earth.metal-=k.metal; G.earth.parts-=k.parts; G.ledger.metalYards+=k.metal; openPaid(G,{metal:k.metal,parts:k.parts}); fl(G,'metal.kit',-k.metal); fl(G,'parts.kit',-k.parts);
   c.kit={tier:k.tier,metal:k.metal,parts:k.parts,w:k.w,day:G.day};
   log(G,'kit_ordered',{p:pid,t:k.tier,w:k.w});
   return 'ok';
@@ -762,7 +770,7 @@ function loadAt(G,s,node){
         var floor= kk==='fuel' ? Math.max(K.FEED_FUEL_FLOOR,(G.fuelRate||0)*K.EARTH_METAL_KEEP) : Math.max(0,(nd[kk]||0)*K.EARTH_METAL_KEEP);     // Earth keeps this many years of its own burn — fuel included, or the machines ground the fleet
         var got=Math.min(need,room,Math.floor(G.earth[kk]-floor));
         if(got<need) cuts[kk]=room<need?'room':'earth';
-        if(got>0){ G.earth[kk]-=got; openRes(G,kk); s.cargo[kk]=got; room-=got; var lk='metal'===kk?'metalOut':(kk+'Out'); G.ledger[lk]=(G.ledger[lk]||0)+got }
+        if(got>0){ G.earth[kk]-=got; fl(G,kk+'.feed',-got); openRes(G,kk); s.cargo[kk]=got; room-=got; var lk='metal'===kk?'metalOut':(kk+'Out'); G.ledger[lk]=(G.ledger[lk]||0)+got }
       }
       forgeLoad(G,other,cc0,cuts);
     }
@@ -771,7 +779,7 @@ function loadAt(G,s,node){
     if(cc&&room>0){
       var short=Math.floor(popWant(planet(other))-cc.pop+hubHands(G,other));   // nodes-1.00: and the hub's feeders
       var send=Math.min(short,room,Math.floor(G.earth.people-K.EARTH_KEEP));
-      if(send>0){ G.earth.people-=send; s.cargo.people=send; G.ledger.peopleOut=(G.ledger.peopleOut||0)+send }
+      if(send>0){ G.earth.people-=send; fl(G,'people.hands',-send); s.cargo.people=send; G.ledger.peopleOut=(G.ledger.peopleOut||0)+send }
     }
     return;
   }
@@ -791,7 +799,7 @@ function loadAt(G,s,node){
   for(var j=0;j<list.length;j++){ var k2=list[j];
     var have=Math.floor(c.store[k2]||0);
     var g=Math.min(list.length>1?(isHub(G,node)&&tot2>0?Math.floor(room*have/Math.max(tot2,1)):each2):room, have);
-    if(g>0){ c.store[k2]-=g; s.cargo[k2]=g; room-=g; took+=g; s.lastHaul[k2]=g }
+    if(g>0){ c.store[k2]-=g; fl(G,'s.'+k2+'.haul',-g); s.cargo[k2]=g; room-=g; took+=g; s.lastHaul[k2]=g }
   }
   /* v4.11: dead seam and nothing left on the surface — this hull goes home for good */
   if(G.reserves[node]<=0&&planet(node).kind!=='works'&&!isHub(G,node)){ var left=0; for(var j2=0;j2<list.length;j2++) left+=Math.floor(c.store[list[j2]]||0); if(left<1){ s.homeOnly=node } }
@@ -811,6 +819,7 @@ function unload(G,s,node){
     openPaid(G,s.cargo);   // v4.34: the first load home opens what it carries
     G.earth.metal+=s.cargo.metal; G.earth.food+=s.cargo.food; G.earth.fuel+=s.cargo.fuel;
     G.earth.parts+=s.cargo.parts; G.earth.people+=s.cargo.people;
+    fl(G,'metal.deliver',s.cargo.metal); fl(G,'food.deliver',s.cargo.food); fl(G,'fuel.deliver',s.cargo.fuel); fl(G,'parts.deliver',s.cargo.parts); fl(G,'people.deliver',s.cargo.people);
     /* v4.7: the crossing took its share of the crew */
     if(s.crew>0){ s.crewDebt=(s.crewDebt||0)+s.crew*K.CREW_LOSS; var lost=Math.min(Math.floor(s.crewDebt),Math.max(0,s.crew-1)); if(lost>0){ s.crewDebt-=lost; s.crew-=lost; G.earth.lostCrew=(G.earth.lostCrew||0)+lost; G.stats.attrition=(G.stats.attrition||0)+lost; log(G,'crew_lost',{n:s.id,c:lost}) } }
     G.ledger.metalIn+=s.cargo.metal;
@@ -819,7 +828,8 @@ function unload(G,s,node){
     if(any>0) log(G,'delivered',{n:s.id,m:Math.round(s.cargo.metal),f:Math.round(s.cargo.food),u:Math.round(s.cargo.fuel),t:Math.round(s.cargo.parts),p:Math.round(s.cargo.people)});
   } else {
     var c=G.colonies[node];
-    if(c){ c.store.metal=(c.store.metal||0)+s.cargo.metal; c.store.food=(c.store.food||0)+s.cargo.food;
+    if(c){ fl(G,'s.metal.feed',s.cargo.metal); fl(G,'s.food.feed',s.cargo.food); fl(G,'s.fuel.feed',s.cargo.fuel); fl(G,'s.parts.feed',s.cargo.parts);
+      c.store.metal=(c.store.metal||0)+s.cargo.metal; c.store.food=(c.store.food||0)+s.cargo.food;
            c.store.fuel=(c.store.fuel||0)+s.cargo.fuel;
            c.store.parts=(c.store.parts||0)+s.cargo.parts; c.pop+=s.cargo.people;
            if(s.from===node&&isHub(G,node)){ var hcap=popWant(planet(node)); if(c.pop>hcap){ c.wait=(c.wait||0)+c.pop-hcap; c.pop=hcap } }   // nodes-1.00: hands for the feeders wait at the hub
@@ -904,7 +914,7 @@ function sail(G,s){
   }
   if(here==='earth'){                            // v4.7: sign on replacements for the ones the last crossing took
     var full=(HULLS[s.hull]&&HULLS[s.hull].crew)||0, need=full-(s.crew||0);
-    if(need>0){ var can=Math.max(0,Math.min(need,Math.floor(G.earth.people-K.EARTH_KEEP))); if(can>0){ G.earth.people-=can; s.crew+=can; need-=can }
+    if(need>0){ var can=Math.max(0,Math.min(need,Math.floor(G.earth.people-K.EARTH_KEEP))); if(can>0){ G.earth.people-=can; fl(G,'people.crew',-can); s.crew+=can; need-=can }
       /* short-handed she still sails, down to CREW_MIN of a full crew; below that she waits on the pier */
       if(need>0&&(s.crew||0)<full*K.CREW_MIN){ if(!s.crewWait){ s.crewWait=true; log(G,'crew_wait',{n:s.id,c:need}) } return 'crew' }
       if(s.crewWait){ s.crewWait=false; log(G,'crew_signed',{n:s.id}) } }
@@ -912,7 +922,7 @@ function sail(G,s){
   var d=legDist(here,dest);
   var f=Math.max(1,Math.round(d*K.FUEL_PER_DIST*((HULLS[s.hull]&&HULLS[s.hull].burn)||1)/Math.sqrt(driveSpeed(G))));   // v4.5: by class
   if(G.earth.fuel<f&&here==='earth') return 'fuel';
-  if(here==='earth') G.earth.fuel-=f; else G.earth.fuel=Math.max(0,G.earth.fuel-f*0.5);
+  if(here==='earth'){ G.earth.fuel-=f; fl(G,'fuel.run',-f) } else { fl(G,'fuel.run',-Math.min(G.earth.fuel,f*0.5)); G.earth.fuel=Math.max(0,G.earth.fuel-f*0.5) }
   if(f>0) openRes(G,'fuel');
   G.fuelSpent=(G.fuelSpent||0)+(here==='earth'?f:f*0.5);   // v4.4: the year's departures, for the fuel floor
   loadAt(G,s,here);
@@ -950,6 +960,42 @@ function act(G,kind,d,res){ var a={day:G.day,k:kind,d:d||{},r:res||'ok'}; if(G.c
    Actions and snapshots carry s — seconds since the press. None in the bots: they have no clock */
 function clockOut(G){ var c=G.clock; if(!c) return null; var sp={}, k; for(k in c.sp) sp[k+'x']=Math.round(c.sp[k]/1000);
   return {from:c.from, at:c.at, fromYear:c.year||0, total:Math.round(c.ms/1000), running:Math.round(c.run/1000), stopped:Math.round((c.ms-c.run)/1000), bySpeed:sp} }
+/* ---------- v5.44 (Nikita 19.11: «Да, нужен лог вообще всего. Как я понимаю многое щас не учитывается + сдерац лог на каждый лог»): the flow ledger ----------
+   Every change of Earth's four stocks and its people is booked under an article: fl(G,'<res>.<article>',±n) — + into Earth, - out of it.
+   The stores of the colonies (the four resources, summed over all worlds) are booked the same way under 's.<res>.<article>'.
+   Articles, Earth:   own (Earth's own output; people: hands) · deliver (a hull unloads at Earth) · reward (order) · exch (exchange, both sides) ·
+     scrap (hull taken apart; people: her crew) · refund (hub, kit and machines coming back to the yards) · gift (a world's gift on the founding)
+     yard (a hull laid down, her crew with her) · hub · kit · survey · drive (parts to the ark drive) · ark (rings) · feed (the works line takes metal
+     and rations) · hands (people sent to a world) · send (cargo of a launched hull: evac, kit) · found (fuel and people of a settling party) ·
+     run (fuel of a departure) · kitburn (the machines drink fuel) · crew (replacements sign on) · eat · burn (Earth's own appetite: rations, metal) ·
+     pulse (a crisis) · famine (people lost to hunger).
+   Articles, colonies: close (a world is closed: what stayed on its surface) · mine (the seam digs) · local (a works world's own metal and rations) · refine (works: metal, rations -> parts) · feed (arrives
+     from Earth or a feeder) · haul (a hull loads at the world) · event (a rich pocket / a wreck) · drive (parts of a works world into the ark drive).
+   G.fy — what came since the last row of the year ledger, G.ft — all the run. flowEnd(G) closes a year: a row in G.years (format at exportLog). */
+function fl(G,k,n){ if(!(n>0||n<0)) return; var Y=G.fy||(G.fy={}), T=G.ft||(G.ft={}); Y[k]=(Y[k]||0)+n; T[k]=(T[k]||0)+n }
+var FLOW_RES=['people','metal','food','fuel','parts'];
+/* a world closes (evacuated, or its ring went dark): what lay on its surface leaves the stores — the part a hull took into her hold is a haul, the rest is closed */
+function flowClose(G,c,cargo){ ['metal','food','fuel','parts'].forEach(function(r){ var have=c.store[r]||0, took=Math.min(have,(cargo&&cargo[r])||0); fl(G,'s.'+r+'.haul',-took); fl(G,'s.'+r+'.close',-(have-took)) }) }
+function flowEarth(G){ var E=G.earth; return [E.people,E.metal,E.food,E.fuel,E.parts] }
+function flowStores(G){ var o=[0,0,0,0], k, c; for(k in G.colonies){ c=G.colonies[k].store; o[0]+=c.metal||0; o[1]+=c.food||0; o[2]+=c.fuel||0; o[3]+=c.parts||0 } return o }
+function flowEnd(G){
+  var e=flowEarth(G), st=flowStores(G), Y=G.fy||{}, i, k, ix, f=[], r=[0,0,0,0,0], rs=[0,0,0,0], rl;
+  if(!G.fp){ G.fp=e; G.fsp=st; G.fy={}; return }   // the first year (or a save from before v5.44): the books open here
+  G.fk=G.fk||[]; G.years=G.years||[];
+  for(k in Y){ ix=G.fk.indexOf(k); if(ix<0){ ix=G.fk.length; G.fk.push(k) }
+    f.push(ix,Math.round(Y[k]*10)/10);
+    if(k.charAt(0)==='s'&&k.charAt(1)==='.'){ rl=['metal','food','fuel','parts'].indexOf(k.split('.')[1]); if(rl>=0) rs[rl]+=Y[k] }
+    else { rl=FLOW_RES.indexOf(k.split('.')[0]); if(rl>=0) r[rl]+=Y[k] } }
+  for(i=0;i<5;i++) r[i]=Math.round((e[i]-G.fp[i]-r[i])*10)/10;      // what moved without an article: should be 0
+  for(i=0;i<4;i++) rs[i]=Math.round((st[i]-G.fsp[i]-rs[i])*10)/10;
+  var g=[], gi=[], gt=[], col=0, pop=0, crew=0, bld=0, sh, h;
+  for(i=0;i<G.ships.length;i++){ sh=G.ships[i]; if(sh.mode==='dead') continue; h=hullGen(sh); while(g.length<=h){ g.push(0); gi.push(0); gt.push(0) }
+    g[h]++; if(sh.mode==='idle'&&sh.at==='earth'&&!(sh.from&&sh.to)) gi[h]++; else if(sh.mode==='transit') gt[h]++; else if(sh.mode==='building') bld++;
+    crew+=sh.crew||0 }
+  for(k in G.colonies){ col++; pop+=G.colonies[k].pop }
+  G.years.push({d:G.day, e:e.map(Math.round), s:st.map(Math.round), f:f, r:r, rs:rs, g:[g,gi,gt], b:bld, c:[col,Math.round(pop),Math.round(crew)]});
+  G.fp=e; G.fsp=st; G.fy={} }
+function tick(G){ if(G.over) return; tickCore(G); flowEnd(G) }
 function snap(G){
   var E=G.earth, cols=0, pop=0, dry=0;
   for(var k in G.colonies){ var c=G.colonies[k]; cols++; pop+=c.pop; if(G.reserves[k]<=0) dry++ }
@@ -964,7 +1010,14 @@ function snap(G){
     sectors:SECTORS.length, drive:G.driveLvl||0, reach:reach(G), settled:settledCount(G),
     hungry:!!G.hungry, famine:G.famine||0};
 }
-/* v4.4 (Nikita, 25.09): the run log is JSON — the designer reads it with a script, not with his eyes */
+/* v4.4 (Nikita, 25.09): the run log is JSON — the designer reads it with a script, not with his eyes
+   v5.44: + flowKeys, flowTotal, years (the book of every year). snaps (every 50 years) are as they were.
+     flowKeys   — the articles: 'metal.deliver' (Earth) / 's.metal.mine' (the colonies' stores summed); the signs: + into the pool, - out of it
+     flowTotal  — {article: the sum over the whole run}
+     years[]    — one row a year: {d: year, e: [people,metal,food,fuel,parts] Earth at the end of the year, s: [metal,food,fuel,parts] the stores of the
+                  colonies, f: [i,v,i,v…] the articles of the year (i — an index into flowKeys, v — the amount; what the player did between two
+                  ticks is in the next row), r: [5] — Earth's change minus the sum of its articles (0 = every ton booked), rs: [4] — the same for
+                  the stores, g: [by generation: [hulls], [idle at Earth], [in transit]], b: hulls on the slips, c: [worlds, people in them, crews aboard]} */
 function exportLog(G){
   var chart=PLANETS.map(function(p){ var c=G.colonies[p.id];
     return {id:p.id,desig:p.desig,name:p.name,sec:p.sec,kind:p.kind,dist:p.dist,rich:p.rich,hab:p.hab,haz:p.haz,
@@ -974,7 +1027,7 @@ function exportLog(G){
   var fleet=G.ships.filter(function(s){return s.mode!=='dead'}).map(function(s){ return {id:s.id,hull:HULLS[s.hull].key,gen:hullGen(s),cap:s.cap,mode:s.mode,line:s.from||null,pend:!!s.pend,mutiny:!!s.mutiny,kit:!!(s.cargo&&s.cargo.kit)} });
   var J={game:'LAST BERTH', v:VERSION.v, constants:K, seed:G.seed, year:G.day, over:G.over||null, clock:clockOut(G),
     night:G.night?{year:G.night,berths:arkSouls(G),arkRings:arkRings(G),capsules:arkCaps(arkRings(G)),convoy:arkConvoy(G),arkPaid:arkPaid(G),cargo:G.cargo||null,souls:G.over==='night'?G.souls:arkWakeN(G),arkDriveGen:G.arkMark+1,ready:arkReady(G),wake:Math.round(arkWake(G)*100),grounded:!!G.grounded,boarded:G.boarded}:null,
-    earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], fleet:fleet, log:G.log.map(function(l){return {day:l.day,code:l.code,d:l.d}}),
+    earth:snap(G), stats:G.stats, chart:chart, actions:G.actions, snaps:G.snaps||[], flowKeys:G.fk||[], flowTotal:(function(T){ var o={}, k; for(k in T) o[k]=Math.round(T[k]*10)/10; return o })(G.ft||{}), years:G.years||[], fleet:fleet, log:G.log.map(function(l){return {day:l.day,code:l.code,d:l.d}}),
     forges:Object.keys(G.forge||{}).map(function(k){ var p=planet(k), f=G.forge[k], o={id:k,name:p.name,kind:p.kind,dist:p.dist,rich:p.rich}, a; for(a in f) o[a]=(a==='made'||a==='lostFeed'||a==='lostKit')?Math.round(f[a]):f[a]; return o }), forgeEv:G.forgeEv||[] };
   return JSON.stringify(J);
 }
@@ -1016,7 +1069,7 @@ function buildShip(G,hullId){
   if(G.earth.metal<h.metal||G.earth.fuel<h.fuel||G.earth.parts<(h.parts||0)) return 'cost';
   if(G.earth.people-K.EARTH_KEEP<(h.crew||0)) return 'crew';
   G.earth.metal-=h.metal; G.earth.fuel-=h.fuel; G.earth.parts-=(h.parts||0); openPaid(G,{metal:h.metal,fuel:h.fuel,parts:h.parts||0});
-  G.earth.people-=(h.crew||0);                     // she signs on for the life of the hull
+  G.earth.people-=(h.crew||0); fl(G,'metal.yard',-h.metal); fl(G,'fuel.yard',-h.fuel); fl(G,'parts.yard',-(h.parts||0)); fl(G,'people.yard',-(h.crew||0));                     // she signs on for the life of the hull
   G.ledger.metalYards+=h.metal;
   var s={id:G.nextShip++, hull:hullId, cap:h.cap, gen:h.gen, crew:(h.crew||0), mode:'building', t:h.days, at:'earth',
          target:null, route:null, auto:true, cargo:{metal:0,food:0,fuel:0,parts:0,people:0}, out:{metal:0,food:0,parts:0,people:0}, take:{metal:0,food:0,fuel:0,parts:0}, missDays:0, bearing:null, job:null};
@@ -1035,7 +1088,7 @@ function scrap(G,shipId){
   if(!(s.mode==='idle'&&s.at==='earth')) return 'busy';
   var v=scrapValue(HULLS[s.hull]);
   G.earth.metal+=v.metal; G.earth.parts+=v.parts; openPaid(G,v);
-  G.earth.people+=(s.crew||0);                     // the crew walks off and goes home
+  G.earth.people+=(s.crew||0); fl(G,'metal.scrap',v.metal); fl(G,'parts.scrap',v.parts); fl(G,'people.scrap',s.crew||0);                     // the crew walks off and goes home
   G.ledger.metalScrap=(G.ledger.metalScrap||0)+v.metal;
   var cw=s.crew||0;
   s.mode='dead'; s.crew=0; s.from=null; s.to=null; s.pend=null; s.scrapped=G.day;
@@ -1065,9 +1118,9 @@ function foundFuel(G,pid){ var p=planet(pid); return p?Math.max(1,Math.round(p.d
 function launch(G,s,pid,job,cargo){
   var p=planet(pid);
   var f=Math.round(p.dist*K.FUEL_PER_DIST/Math.sqrt(driveSpeed(G)));
-  G.earth.fuel-=f; if(f>0) openRes(G,'fuel');
+  G.earth.fuel-=f; fl(G,'fuel.run',-f); if(f>0) openRes(G,'fuel');
   s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
-  for(var k in cargo){s.cargo[k]=cargo[k]; G.earth[k==='people'?'people':k]-=cargo[k];}
+  for(var k in cargo){s.cargo[k]=cargo[k]; G.earth[k==='people'?'people':k]-=cargo[k]; fl(G,k+'.send',-cargo[k]);}
   G.ledger.metalOut+=(cargo.metal||0);
   s.waiting=false; s.from=null; s.to=null; s.pend=null;
   s.origin='earth'; s.dest=pid; s.target=pid;
@@ -1092,7 +1145,7 @@ function colonize(G,shipId,pid,people,food,hubTo){
   people=foundParty(G,s,pid);
   if(people<K.MIN_FOUND) return 'people';
   var f=foundFuel(G,pid);
-  G.earth.fuel-=f; G.earth.people-=people; openRes(G,'fuel');   // v4.34: fuel opens with the first settlers' price
+  G.earth.fuel-=f; G.earth.people-=people; fl(G,'fuel.found',-f); fl(G,'people.found',-people); openRes(G,'fuel');   // v4.34: fuel opens with the first settlers' price
   s.cargo={metal:0,food:0,fuel:0,parts:0,people:people};
   s.job='colonize'; s.origin='earth'; s.dest=pid; s.at=null; s.waiting=false;
   s.mode='transit'; s.dir='out'; s.t=legDays(G,'earth',pid,s); s.total=s.t;
@@ -1204,7 +1257,7 @@ function exchangeCheck(G,get,a,b,n){
   if(G.earth[a]<c[a]) return a; if(G.earth[b]<c[b]) return b;
   return 'ok' }
 function exchange(G,get,a,b,n){ n=Math.floor(n); var r=exchangeCheck(G,get,a,b,n); if(r!=='ok') return r;
-  var c=exchangeCost(G,get,a,b,n), E=G.earth; E[a]-=c[a]; E[b]-=c[b]; E[get]+=n;
+  var c=exchangeCost(G,get,a,b,n), E=G.earth; E[a]-=c[a]; E[b]-=c[b]; E[get]+=n; fl(G,a+'.exch',-c[a]); fl(G,b+'.exch',-c[b]); fl(G,get+'.exch',n);
   G.stats.ex=(G.stats.ex||0)+1;
   log(G,'exchange',{r:get,n:n,a:a,x:c[a],b:b,y:c[b]});
   return 'ok' }
@@ -1276,7 +1329,7 @@ function abandon(G,shipId,pid){
   for(var i=0;i<G.ships.length;i++){ var o=G.ships[i]; if(o.job==='evac'&&o.dest===pid&&o.mode==='transit') return 'evacuating' }
   var chk=canDepart(G,s,pid); if(chk!=='ok') return chk;
   var lt=liftLate(G,pid,s); if(lt) return lt;   // v4.33: she would not be home before the Night; v5.41: nor there before her ring goes dark
-  if(c.kit){ G.earth.metal+=c.kit.metal; G.earth.parts+=c.kit.parts; c.kit=null }   // v4.4: a kit not yet shipped goes back to the yards
+  if(c.kit){ G.earth.metal+=c.kit.metal; G.earth.parts+=c.kit.parts; fl(G,'metal.refund',c.kit.metal); fl(G,'parts.refund',c.kit.parts); c.kit=null }   // v4.4: a kit not yet shipped goes back to the yards
   launch(G,s,pid,'evac',{});
   if(c.evacQ){ delete c.evacQ; delete c.evacWait }
   log(G,'launch_evac',{n:s.id,p:pid});
@@ -1346,9 +1399,9 @@ function startDrive(G,pid){
   if(c.pop<K.DRIVE_POP) return 'pop';
   G.drive=pid; G.driveWork=G.driveBank||0; G.driveBank=0;   // v5.35: an engine core found on a world waits for the programme
   for(var wk in G.colonies){ if(planet(wk).kind==='works'){
-    G.driveWork+=(G.colonies[wk].store.parts||0); G.colonies[wk].store.parts=0 } }
+    fl(G,'s.parts.drive',-(G.colonies[wk].store.parts||0)); G.driveWork+=(G.colonies[wk].store.parts||0); G.colonies[wk].store.parts=0 } }
   var fromHome=Math.min(G.earth.parts, Math.max(0,driveWorkFor(G)-G.driveWork));   // the yards ship their stock to the programme; v5.35 (the reviewer): no more than it still needs
-  G.earth.parts-=fromHome; G.driveWork+=fromHome; if(fromHome>0) openRes(G,'parts');
+  G.earth.parts-=fromHome; fl(G,'parts.drive',-fromHome); G.driveWork+=fromHome; if(fromHome>0) openRes(G,'parts');
   log(G,'drive_started',{p:pid,n:G.driveLvl+1});
   if(G.driveWork>=driveWorkFor(G)) driveDone(G,pid);
   return 'ok';
@@ -1421,7 +1474,7 @@ function doorTick(G){ var D=G.door; for(var i in D.dark){ if(D.out[i]!==undefine
     if(left<=0) ringDark(G,+i) } }
 function ringDark(G,sec){ G.door.out[sec]=G.day; var lw=0, lp=0, ls=0, lc=0, k, i, s, o;
   for(k in G.colonies){ if(planet(k).sec!==sec) continue; var c=G.colonies[k]; lw++; lp+=Math.floor(c.pop);
-    delete G.colonies[k]; feedersHome(G,k);
+    flowClose(G,c); delete G.colonies[k]; feedersHome(G,k);
     for(i=0;i<G.ships.length;i++){ o=G.ships[i]; if(o.from===k||o.to===k){ o.from=null; o.to=null } if(o.pend&&o.pend.from===k) o.pend=null; if(o.lineFor===k) o.lineFor=null; if(o.moveTo===k) o.moveTo=null }
     if(G.drive===k){ G.drive=null; log(G,'drive_lost',{p:k}) }
     log(G,'world_dark',{p:k,n:Math.floor(c.pop)}) }
@@ -1470,11 +1523,10 @@ function nightLeft(G){ return G.night? Math.max(0,G.night-G.day) : null }
 var ARK_RES=['metal','parts','food','fuel'], ARK_PAY=['food','metal'];
 /* v5.10: the hive. G.ark.rings — rings paid for; G.ark.woke — rings whose hack is won (a run the interface started) */
 function arkCaps(k){ return K.ARK_RING*k*(k+1)/2 }   // capsules in k rings
-function arkUnit(r,i){ var L=r==='food'?K.ARK_FOOD:K.ARK_METAL, g=r==='food'?K.ARK_FOOD_GROW:K.ARK_METAL_GROW, t=Math.floor(i/K.ARK_STEP);   // the price of capsule No. i (from 0)
-  return t<L.length ? L[t] : Math.floor(L[L.length-1]*Math.pow(g,t-L.length+1)+1e-9) }
-function arkRingPrice(k){ var a=arkCaps(k-1), b=arkCaps(k), o={food:0,metal:0};
-  while(a<b){ var e=Math.min(b,(Math.floor(a/K.ARK_STEP)+1)*K.ARK_STEP); o.food+=(e-a)*arkUnit('food',a); o.metal+=(e-a)*arkUnit('metal',a); a=e }
-  return o }
+function ringOf(i){ var k=1; while(arkCaps(k)<=i) k++; return k }   // the ring that holds capsule No. i (from 0)
+function arkPrice1(r,k){ var T=K.ARK_PRICE[r]; return Math.min(K.ARK_CAP, k<=T.length?T[k-1]:K.ARK_CAP) }   // what ring k costs in this resource
+function arkUnit(r,i){ var k=ringOf(i); return arkPrice1(r,k)/(K.ARK_RING*k) }   // v5.44: a capsule of ring k is the ring's price over its capsules (the capsule ladder is gone; nothing in the UI reads it)
+function arkRingPrice(k){ return {food:arkPrice1('food',k), metal:arkPrice1('metal',k)} }
 function arkPaid(G){ return (G.ark&&G.ark.rings)||0 }
 /* the rings that hold: paid, and (the hack) their crew woken */
 function arkRings(G){ return G.hackGate? Math.min(arkPaid(G),G.ark.woke||0) : arkPaid(G) }
@@ -1494,7 +1546,7 @@ function arkBuy(G,k){
   var w=arkCheck(G,k); if(w!=='ok') return w;
   var o=arkOwed(G,k), E=G.earth, i, r;
   for(i=0;i<ARK_PAY.length;i++){ r=ARK_PAY[i]; if(E[r]<o[r]) return r }
-  for(i=0;i<ARK_PAY.length;i++){ r=ARK_PAY[i]; E[r]-=o[r]; if(o[r]>0) openRes(G,r) }
+  for(i=0;i<ARK_PAY.length;i++){ r=ARK_PAY[i]; E[r]-=o[r]; fl(G,r+'.ark',-o[r]); if(o[r]>0) openRes(G,r) }
   var from=arkPaid(G);
   G.ark.rings=k;
   var gc=0, gg=0; for(var j=from+1;j<=k;j++){ var gs=giveHull(G,'courier'); if(gs){ gc++; gg=gs.gen||0 } }   // v5.42 (p.15): a courier for each ring paid
@@ -1596,8 +1648,26 @@ function orderCur(G,o){ var i, n=0, k;
   if(o.k==='kit') return G.stats.kits||0;
   return 0 }
 function orderLeft(G,o){ return Math.max(0,Math.min(o.n,o.n-Math.max(0,orderCur(G,o)-o.at))) }
-function orderReward(G,i){ if(i===0) return {people:Math.max(10,Math.round(K.ORDER_PEOPLE*surveyCost(SECTORS.length).people))};
-  return {hull:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'} }
+/* v5.44 (Nikita 19.11, p.8: «Награды за каждые 60 лет надо разнообразить. Сейчас это люди и курьеры. Надо что-то другое тоже»; he agreed:
+   «хватит существующих ресурсов — топливо, металл, детали, ускорение стройки на верфи»): the reward of an order is one of
+     people {people:n}   — as before: half of the next ring's survey party
+     hull   {hull:cls}   — as before: a hull of the generation the yards build, her crew with her
+     metal | fuel | parts {metal:n}  — a pile of that resource lands on Earth: what one hauler of the generation the yards build costs
+                           in it (ORDER_RW_MIN at the least — a hauler of generation 0 has no parts in her), so a pile is worth a hull. Only a
+                           resource the player has met (isOpen) and only while the store is not already 20 piles deep
+     yard   {yard:1, fb:cls} — every hull still in the yards is done next year; with none in the yards when the order is done —
+                           the hull fb instead (nothing is lost). Offered only while a hull is building
+   Two offered orders pay in two different things (orderRewards picks two of the pool). */
+function rwPile(G,r){ var hi=currentHull(G,'hauler'), h=hi===null?null:HULLS[hi], n=h?(h[r]||0):0, f=K.ORDER_RW_MIN[r];
+  return Math.max(f,Math.round(n/(r==='parts'?5:10))*(r==='parts'?5:10)) }
+function orderRewards(G,rnd){ var pool=[], i, build=false;
+  pool.push({people:Math.max(10,Math.round(K.ORDER_PEOPLE*surveyCost(SECTORS.length).people))});
+  pool.push({hull:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'});
+  ['metal','fuel','parts'].forEach(function(r){ if(!isOpen(G,r)) return; var n=rwPile(G,r); if(G.earth[r]<20*n){ var o={}; o[r]=n; pool.push(o) } });
+  for(i=0;i<G.ships.length;i++) if(G.ships[i].mode==='building'){ build=true; break }
+  if(build) pool.push({yard:1,fb:classFor(Math.max(0,SECTORS.length-1),G.gen||0)||'freighter'});
+  var a=Math.floor(rnd()*pool.length), b=Math.floor(rnd()*(pool.length-1)); if(b>=a) b++;
+  return [pool[a],pool[b]] }
 function orderOffer(G,no){ var O=ordersOf(G);
   O.offer=[]; if(O.on||(G.stats.founded||0)<2||G.over) return;
   var c=[], d=(G.shiftReport&&G.shiftReport.d)||{}, have={}, i;
@@ -1613,7 +1683,8 @@ function orderOffer(G,no){ var O=ordersOf(G);
   if(c.length<2) return;
   var rnd=mulberry32((G.seed^0x0DE125)+no*7919), a=Math.floor(rnd()*c.length), b=Math.floor(rnd()*(c.length-1)); if(b>=a) b++;
   if(c[a].k===c[b].k&&c.length>2){ for(i=0;i<c.length;i++) if(c[i].k!==c[a].k){ b=i; break } }   // two different kinds when there are
-  [c[a],c[b]].forEach(function(o,j){ o.rw=orderReward(G,j); o.no=no; O.offer.push(o) }) }
+  var rws=orderRewards(G,rnd);   // v5.44: drawn after the two orders, so the choice of orders is as it was
+  [c[a],c[b]].forEach(function(o,j){ o.rw=rws[j]; o.no=no; O.offer.push(o) }) }
 function orderTake(G,i){ var O=ordersOf(G); if(!O.offer||!O.offer[i]) return 'orderNone'; if(O.on) return 'orderOn';
   var o=O.offer[i]; o.sid=G.nextShip; o.at=orderCur(G,o); o.from=G.day; o.due=G.day+K.ORDER_YEARS; O.on=o; O.offer=[];
   log(G,'order_taken',{k:o.k,n:o.n,y:o.due}); return 'ok' }
@@ -1622,10 +1693,15 @@ function giveHull(G,cls){ var hi=currentHull(G,cls), h=hi===null?null:HULLS[hi];
          target:null, route:null, auto:true, cargo:{metal:0,food:0,fuel:0,parts:0,people:0}, out:{metal:0,food:0,parts:0,people:0}, take:{metal:0,food:0,fuel:0,parts:0}, missDays:0, bearing:null, job:null};
   G.ships.push(s); return s }
 function orderTick(G){ var O=G.orders, o=O&&!Array.isArray(O)&&O.on; if(!o) return;
-  if(orderLeft(G,o)<=0){ var rw=o.rw||{}, sh=null;
-    if(rw.people){ G.earth.people+=rw.people } else if(rw.hull){ sh=giveHull(G,rw.hull) }
+  if(orderLeft(G,o)<=0){ var rw=o.rw||{}, sh=null, code='order_done_hull', i, n=0, res=null;
+    ['metal','fuel','parts'].forEach(function(k){ if(rw[k]) res=k });
+    if(rw.people){ G.earth.people+=rw.people; fl(G,'people.reward',rw.people); code='order_done_people' }
+    else if(res){ G.earth[res]+=rw[res]; fl(G,res+'.reward',rw[res]); code='order_done_'+res }   // v5.44: log order_done_metal / _fuel / _parts {k,h: the pile}
+    else if(rw.yard){ for(i=0;i<G.ships.length;i++) if(G.ships[i].mode==='building'){ G.ships[i].t=1; n++ }
+      if(n){ code='order_done_yard' } else { sh=giveHull(G,rw.fb||'courier') } }   // v5.44: log order_done_yard {k,n: hulls done} — none in the yards: a hull, order_done_hull
+    else sh=giveHull(G,rw.hull);
     G.stats.orders=(G.stats.orders||0)+1; O.on=null; O.last={k:o.k,ok:true,day:G.day};
-    log(G,rw.people?'order_done_people':'order_done_hull',{k:o.k,h:rw.people||0,c:rw.hull||'',n:sh?sh.id:0}); G.pauseNow=true; return }
+    log(G,code,{k:o.k,h:rw.people||(res?rw[res]:0),c:rw.hull||rw.fb||'',n:code==='order_done_yard'?n:(sh?sh.id:0)}); G.pauseNow=true; return }
   if(G.day>=o.due){ O.on=null; O.last={k:o.k,ok:false,day:G.day}; log(G,'order_failed',{k:o.k}) } }
 
 /* ---------- tick ---------- */
@@ -1708,7 +1784,7 @@ function lineHelp(G,pid,opt){
   return null;
 }
 
-function tick(G){
+function tickCore(G){
   if(G.over) return;
   G.day++;
   if(G.day%50===0){ G.snaps=G.snaps||[]; var sn=snap(G), adv=advice(G); sn.warn={}; for(var ai=0;ai<adv.length;ai++) if(adv[ai].sev!=='ok') sn.warn[adv[ai].code]=(sn.warn[adv[ai].code]||0)+1; if(G.clock) sn.s=Math.round(G.clock.ms/1000); G.snaps.push(sn) }
@@ -1720,8 +1796,8 @@ function tick(G){
   var ef=earthOutput(G)*(G.cold?0.7:1);        // no metal at home, the yards run slow
   E.crewF=ef;
   E.pMetal=K.EARTH_METAL*ef; E.pFood=K.EARTH_FOOD*ef; E.pFuel=K.EARTH_FUEL*ef;
-  E.metal+=E.pMetal; E.food+=E.pFood; E.fuel+=E.pFuel;
-  if(!G.hungry) E.people+=handsRate(G);        // v4.7: a fed home world keeps turning out colonists, fewer every century
+  E.metal+=E.pMetal; E.food+=E.pFood; E.fuel+=E.pFuel; fl(G,'metal.own',E.pMetal); fl(G,'food.own',E.pFood); fl(G,'fuel.own',E.pFuel);
+  if(!G.hungry){ var hr=handsRate(G); E.people+=hr; fl(G,'people.own',hr) }        // v4.7: a fed home world keeps turning out colonists, fewer every century
 
   upgradeSave(G);   // v4.34: a pre-manual-lines save loses its standing orders on the first tick
   // ---- ships ----
@@ -1771,12 +1847,12 @@ function tick(G){
       var gf=giftFor(G,node);   // v5.27: asked before the world is written down as settled
       G.colonies[node]={pid:node,pop:s.cargo.people,
         store:{metal:0,food:0,fuel:0,parts:0},founded:G.day};
-      if(gf){ G.earth.parts+=gf.parts||0; G.earth.fuel+=gf.fuel||0; G.colonies[node].gift=gf }   // straight into Earth's stores; the colony remembers what it gave
+      if(gf){ G.earth.parts+=gf.parts||0; G.earth.fuel+=gf.fuel||0; fl(G,'parts.gift',gf.parts||0); fl(G,'fuel.gift',gf.fuel||0); G.colonies[node].gift=gf }   // straight into Earth's stores; the colony remembers what it gave
       G.stats.founded++; (G.settled=G.settled||{})[node]=G.day;
       log(G,'colony_founded',gf?{p:node,pop:Math.round(s.cargo.people),gift:gf}:{p:node,pop:Math.round(s.cargo.people)});
       if(G.stats.founded===1) log(G,'first_landfall',{p:node});
       if(gf&&gf.dock) dockHull(G,node,gf.dock);   // v5.29: the hull that stood in the dock takes this world's line
-      if(gf&&gf.folk){ G.earth.people+=gf.folk; G.stats.folk=(G.stats.folk||0)+gf.folk; log(G,'rare_folk',{p:node,k:gf.folk}) }   // v5.35
+      if(gf&&gf.folk){ G.earth.people+=gf.folk; fl(G,'people.gift',gf.folk); G.stats.folk=(G.stats.folk||0)+gf.folk; log(G,'rare_folk',{p:node,k:gf.folk}) }   // v5.35
       if(gf&&gf.core){ if(G.drive){ G.driveWork=(G.driveWork||0)+gf.core; if(G.driveWork>=driveWorkFor(G)) driveDone(G,G.drive) } else G.driveBank=(G.driveBank||0)+gf.core; log(G,'rare_core',{p:node,k:gf.core}) }
       if(s.hubFound){ var nc=G.colonies[node]; nc.hub=true; nc.hubPaid=s.hubFound; nc.exHub=false; s.hubFound=null; if(G.ghost) delete G.ghost[node]; log(G,'hub_built',{p:node,m:nc.hubPaid.metal,t:nc.hubPaid.parts}) }   // v5.35
       s.cargo={metal:0,food:0,fuel:0,parts:0,people:0};
@@ -1793,8 +1869,8 @@ function tick(G){
         var roomE=Math.max(0,s.cap-lift);
         ['metal','food','fuel','parts'].forEach(function(kk){ var g=Math.min(roomE,Math.floor(ce.store[kk]||0)); if(g>0){ s.cargo[kk]=g; roomE-=g } });
         var lb=liftBack(G,node);   // v5.34: half of the machines (and of the hub) comes back to the yards
-        if(lb&&(lb.metal>0||lb.parts>0)){ G.earth.metal+=lb.metal; G.earth.parts+=lb.parts; log(G,'lift_back',{p:node,m:lb.metal,k:lb.parts}) }
-        delete G.colonies[node];
+        if(lb&&(lb.metal>0||lb.parts>0)){ G.earth.metal+=lb.metal; G.earth.parts+=lb.parts; fl(G,'metal.refund',lb.metal); fl(G,'parts.refund',lb.parts); log(G,'lift_back',{p:node,m:lb.metal,k:lb.parts}) }
+        flowClose(G,ce,s.cargo); delete G.colonies[node];
         var fdr=feedersHome(G,node);   // v5.02: a hull already flying into the hub brings her hold home (below, on arrival)
         if(ce.hub) log(G,'hub_lost',{p:node,n:fdr.length});
         if(G.reserves[node]!==Infinity&&G.reserves[node]<=0){ G.ghost[node]=G.day }
@@ -1867,29 +1943,29 @@ function tick(G){
     if(c.pop>K.MIN_FOUND){ c.lossDebt=(c.lossDebt||0)+c.pop*p.haz*K.COLONY_LOSS; var cl=Math.floor(c.lossDebt); if(cl>0){ c.lossDebt-=cl; c.pop=Math.max(K.MIN_FOUND,c.pop-cl); G.stats.colonyLoss=(G.stats.colonyLoss||0)+cl } }
     // v4.4: the machines drink first; dry for KIT_GRACE years and they stand. v5.23: they drink from Earth's stock, above kitFloor
     if(kitDrinks(G,k)){ var burn=kitBurn(c);
-      if(E.fuel-kitFloor(G)>=burn){ E.fuel-=burn; openRes(G,'fuel'); G.ledger.fuelOut=(G.ledger.fuelOut||0)+burn; G.kitFuel=(G.kitFuel||0)+burn;
+      if(E.fuel-kitFloor(G)>=burn){ E.fuel-=burn; fl(G,'fuel.kitburn',-burn); openRes(G,'fuel'); G.ledger.fuelOut=(G.ledger.fuelOut||0)+burn; G.kitFuel=(G.kitFuel||0)+burn;
         if(c.fuelOut>=K.KIT_GRACE){ log(G,'kit_running',{p:k,t:c.tier}); forgeEv(G,k,'kit_running') } c.fuelOut=0 }
       else { c.fuelOut=(c.fuelOut||0)+1; if(c.fuelOut===K.KIT_GRACE){ log(G,'kit_starved',{p:k,t:c.tier}); forgeEv(G,k,'kit_starved') } } }
     var mult=rateMult(c)*tremorMult(G,p.sec);   // v5.42: a shaking ring gives half
     if(p.kind==='works'){
-      c.store.metal=(c.store.metal||0)+c.pop*K.WORKS_LOCAL;
-      c.store.food=(c.store.food||0)+c.pop*K.WORKS_LOCAL*0.6;
+      c.store.metal=(c.store.metal||0)+c.pop*K.WORKS_LOCAL; fl(G,'s.metal.local',c.pop*K.WORKS_LOCAL);
+      c.store.food=(c.store.food||0)+c.pop*K.WORKS_LOCAL*0.6; fl(G,'s.food.local',c.pop*K.WORKS_LOCAL*0.6);
       var want=c.pop*p.rich*K.REFINE*mult;
       var canM=(c.store.metal||0)/K.REFINE_METAL, canF=(c.store.food||0)/K.REFINE_FOOD;
       var made=Math.min(want,canM,canF);
       if(made>0.0001){
-        c.store.metal-=made*K.REFINE_METAL; c.store.food-=made*K.REFINE_FOOD; if((c.idleWorks||0)>90) forgeEv(G,k,'feed_back'); c.idleWorks=0; partsMade+=made;
+        c.store.metal-=made*K.REFINE_METAL; c.store.food-=made*K.REFINE_FOOD; fl(G,'s.metal.refine',-made*K.REFINE_METAL); fl(G,'s.food.refine',-made*K.REFINE_FOOD); if((c.idleWorks||0)>90) forgeEv(G,k,'feed_back'); c.idleWorks=0; partsMade+=made;
         if(G.drive){
-          G.driveWork+=made;
+          G.driveWork+=made; fl(G,'s.parts.refine',made); fl(G,'s.parts.drive',-made);
           if(G.driveWork>=driveWorkFor(G)) driveDone(G,G.drive);
-        } else c.store.parts=(c.store.parts||0)+made;
+        } else { c.store.parts=(c.store.parts||0)+made; fl(G,'s.parts.refine',made) }
       } else { c.idleWorks=(c.idleWorks||0)+1; if(c.idleWorks===91) forgeEv(G,k,'feed_slow'); if(c.idleWorks===120){ log(G,'works_idle',{p:k}) } }
       forgeTally(G,k,c,p,want,made);
     } else {
       if(kitTier(c)>0) forgeTally(G,k,c,p,0,0);
       var out=Math.min(c.pop*p.rich*K.PROD*mult, G.reserves[k]);
       G.reserves[k]-=out;
-      c.store[p.dep]=(c.store[p.dep]||0)+out;
+      c.store[p.dep]=(c.store[p.dep]||0)+out; fl(G,'s.'+p.dep+'.mine',out); c.mined=(c.mined||0)+out;
       if(G.reserves[k]<=0&&!c.dry){c.dry=true;G.pauseNow=true;log(G,'depleted',{p:k})}
       /* v4.11 (Nikita, 28.09: 'судно снимается с линии, хотя на складе ещё что-то лежит'): the seam is dead but the
          pile is carried out to the last ton; a hull stands down only when it lands and finds nothing (loadAt) */
@@ -1906,17 +1982,17 @@ function tick(G){
   var pa=activeCrisis(G);
   if(pa){                                                      // v4.20: the crisis drain, any of the four
     var dr=pulseDrain(G,pa.res);
-    if(E[pa.res]>=dr){ E[pa.res]-=dr; G.pulseShort=false }
-    else { E[pa.res]=0; var d2=Math.max(0.2,E.people*K.STARVE_KILL*0.5); E.people=Math.max(0,E.people-d2); E.lost=(E.lost||0)+d2;
+    if(E[pa.res]>=dr){ E[pa.res]-=dr; fl(G,pa.res+'.pulse',-dr); G.pulseShort=false }
+    else { fl(G,pa.res+'.pulse',-E[pa.res]); E[pa.res]=0; var d2=Math.max(0.2,E.people*K.STARVE_KILL*0.5); fl(G,'people.famine',-Math.min(d2,E.people)); E.people=Math.max(0,E.people-d2); E.lost=(E.lost||0)+d2;
       if(!G.pulseShort){ G.pulseShort=true; G.pauseNow=true; log(G,'pulse_short',{dep:pa.res}) } }
   }
   var hungry=false, cold=false;
-  if(E.food>=nd.food) E.food-=nd.food; else { E.food=0; hungry=true }
-  if(E.metal>=nd.metal) E.metal-=nd.metal; else { E.metal=0; cold=true }
+  if(E.food>=nd.food){ E.food-=nd.food; fl(G,'food.eat',-nd.food) } else { fl(G,'food.eat',-E.food); E.food=0; hungry=true }
+  if(E.metal>=nd.metal){ E.metal-=nd.metal; fl(G,'metal.burn',-nd.metal) } else { fl(G,'metal.burn',-E.metal); E.metal=0; cold=true }
   G.hungry=hungry; G.cold=cold;
   if(hungry){                                   // no rations: the home world buries people
     var died=Math.max(0.4,E.people*K.STARVE_KILL);
-    E.people=Math.max(0,E.people-died); E.lost=(E.lost||0)+died;
+    fl(G,'people.famine',-Math.min(died,E.people)); E.people=Math.max(0,E.people-died); E.lost=(E.lost||0)+died;
     if(!G.lacking){G.lacking=true;G.pauseNow=true;log(G,'earth_short',{})}
   } else {
     G.lacking=false;
@@ -1930,7 +2006,7 @@ function tick(G){
       var k=keys[Math.floor(R()*keys.length)], c=G.colonies[k], p=planet(k), roll=R();
       if(roll<0.42){
         var b=Math.round(c.pop*p.rich*K.PROD*40*(0.6+R()));
-        c.store[p.dep]=(c.store[p.dep]||0)+b;
+        c.store[p.dep]=(c.store[p.dep]||0)+b; fl(G,'s.'+p.dep+'.event',b);
         log(G,'ev_rich',{p:k,q:b,dep:p.dep}); G.pauseNow=true;
       } else if(roll<0.58&&G.reserves[k]!==Infinity&&G.reserves[k]>0){
         /* v4.1 (Nikita, 24.09: "жила оказалась больше или меньше, чем планировали"): the mirror of ev_seam */
@@ -1939,7 +2015,7 @@ function tick(G){
         log(G,'ev_short',{p:k,q:cut,dep:p.dep}); G.pauseNow=true;
       } else if(roll<0.74){
         var lost=Math.round((c.store[p.dep]||0)*(0.25+R()*0.4));
-        c.store[p.dep]=Math.max(0,(c.store[p.dep]||0)-lost);
+        fl(G,'s.'+p.dep+'.event',-Math.min(lost,c.store[p.dep]||0)); c.store[p.dep]=Math.max(0,(c.store[p.dep]||0)-lost);
         log(G,'ev_wreck',{p:k,q:lost,dep:p.dep}); G.pauseNow=true;
       } else if(roll<0.88){
         var died=Math.round(c.pop*(0.10+R()*0.15));

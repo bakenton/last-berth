@@ -48,7 +48,10 @@ function run(seed){
       ['orderKit',()=>{ if(!keys.length) return; return C.orderKit(G,pick(keys)) }],
       ['arkBuy',()=>C.arkBuy&&C.arkBuy(G,1+Math.floor(R()*4))],
       ['setReserve',()=>{ if(!live.length||!C.setReserve) return; return C.setReserve(G,pick(live).id,R()<.5) }],   // v4.29: the ark reserve instead of the deposits
-      ['gift',()=>{ const k=pick(['metal','food','fuel','parts']); G.earth[k]+=Math.floor(R()*2000) }]   // богатый хаос: иначе почти все действия отказывают
+      ['exchange',()=>{ const R4=['metal','food','fuel','parts']; return C.exchange(G,pick(R4),pick(R4),pick(R4),1+Math.floor(R()*300)) }],   // v5.44: the books see the exchange
+      ['hub',()=>{ if(!keys.length||!C.buildHub) return; return C.buildHub(G,pick(keys)) }],
+      ['order',()=>{ const O=C.ordersOf(G); if(O.on){ if(R()<.5) O.on.n=0; return 'on' } if(O.offer&&O.offer.length) return C.orderTake(G,Math.floor(R()*O.offer.length)) }],   // v5.44: an order, now and then done at once — the reward lands
+      ['gift',()=>{ const k=pick(['metal','food','fuel','parts']), n=Math.floor(R()*2000); G.earth[k]+=n; G.fy=G.fy||{}; G.fy[k+'.cheat']=(G.fy[k+'.cheat']||0)+n }]   // v5.44: the cheat is booked, so the books of the run still close   // богатый хаос: иначе почти все действия отказывают
     ];
     const [name,fn]=pick(acts); tail.push(G.day+':'+name); if(tail.length>12) tail.shift();
     return fn();
@@ -61,6 +64,9 @@ function run(seed){
       if(d%5===0){ const v=inv(G,C); if(v.length) return {seed,fail:v.slice(0,4),day:G.day,tail} }
     }
   }catch(e){ return {seed,fail:['EXCEPTION '+String(e&&e.stack||e).split('\n').slice(0,3).join(' | ')],day:G.day,tail} }
+  // v5.44: the flow books close — every change of Earth's stocks and of the colonies' stores has an article (rows of G.years: r, rs)
+  const off=(G.years||[]).filter(y=>y.r.some(v=>Math.abs(v)>0.6)||y.rs.some(v=>Math.abs(v)>0.6)).slice(0,3);
+  if(off.length) return {seed,fail:off.map(y=>'books open at yr '+y.d+' r='+JSON.stringify(y.r)+' rs='+JSON.stringify(y.rs)),day:G.day,tail};
   return {seed,ok:true,day:G.day,over:G.over||'alive',acts:stats.acts,worlds:Object.keys(G.colonies).length};
 }
 let failed=0;

@@ -34,7 +34,7 @@ function load(path){
     'orderKit','canKit','kitCost','lineHold','kitOpen','kitTier','exportLog','orderFor','orderCheck','orderHull','moveLine','onLine','pileLeft','currentHull','lineCount','legDays','mutinyForecast','foodForecast','foodShort',
     'setVia','lineOk','isHub','lineTo','hubCheck','feedersOf','buildHub','hubBuildCheck','hubCount','hubCap','hubCost',   // hubs (nodes-1.00, in work/ since v5.01)
     'exchange','exchangeCheck','exchangeCost',
-    'nightKnown','canDoor','openDoor','worldLeft','ringOut'];   // v5.41: the door   // exchange (nodes-1.02, in work/ since v5.01)
+    'nightKnown','canDoor','openDoor','worldLeft','ringOut','orderTake','ordersOf'];   // v5.41: the door   // exchange (nodes-1.02, in work/ since v5.01)
   const f=new Function(src+'\n;return {'+names.map(n=>n+':(typeof '+n+'!=="undefined"?'+n+':undefined)').join(',')+'};');
   return f();
 }

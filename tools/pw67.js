@@ -74,10 +74,10 @@ const digits=t=>(String(t).match(/\d[\d\s   ]*/g)||[]).map(x=>+x.replace(/\
   await p.evaluate(()=>{ GOD.maxAll(); GOD.nightIn(2400); LN.nightSeen=true; LNU.win=null; LNU.notes=[]; LNdraw() }); await U.clear(); await U.tab('ark'); await p.waitForTimeout(300);
   const cellPt=await p.evaluate(()=>{ const e=document.querySelector('#ovl .hold .hr[data-v="1"] .hx'); if(!e) return null; const r=e.getBoundingClientRect(); return {x:r.left+r.width/2,y:r.top+r.height/2} });
   if(cellPt){ await p.mouse.click(cellPt.x,cellPt.y); await p.waitForTimeout(300) }
-  const ak=await p.evaluate(()=>{ const e=document.getElementById('arkcard'); return {t:e?e.innerText.replace(/\s+/g,' ').trim():'', pr:e?[...e.querySelectorAll('.pr')].map(x=>x.innerText.replace(/\s+/g,' ').trim()):[], rings:[1,2,3,4].map(k=>arkRingPrice(k)), ladder:K.ARK_FOOD.join()} });
+  const ak=await p.evaluate(()=>{ const e=document.getElementById('arkcard'); return {t:e?e.innerText.replace(/\s+/g,' ').trim():'', pr:e?[...e.querySelectorAll('.pr')].map(x=>x.innerText.replace(/\s+/g,' ').trim()):[], rings:[1,2,3,4,5,6,7,8,9].map(k=>arkRingPrice(k)), ladder:K.ARK_PRICE.food.join()} });
   await shot(p,'b3-ark-ring1-price','#ovl .win');
   const an=ak.pr.map(x=>digits(x)[0]);
-  ok('2.3: K.ARK_FOOD is [3,5,6,8,11,15,21,30]; rings I–IV cost 1 800 / 5 200 / 11 800 / 29 200 rations, the metal as it was (600 / 2 000 / 6 400 / 22 000)', ak.ladder==='3,5,6,8,11,15,21,30'&&ak.rings.map(r=>r.food).join()==='1800,5200,11800,29200'&&ak.rings.map(r=>r.metal).join()==='600,2000,6400,22000', ak.ladder+' '+JSON.stringify(ak.rings));
+  ok('2.3: v5.44 — rings I–IX cost (food / metal) 1 800/600 · 5 200/2 000 · 11 800/6 000 · 22 000/13 000 · 34 000/24 000 · 43 000/36 000 · 48 000/45 000 · 50 000/50 000 · 50 000/50 000, none above the ceiling', ak.rings.map(r=>r.food).join()==='1800,5200,11800,22000,34000,43000,48000,50000,50000'&&ak.rings.map(r=>r.metal).join()==='600,2000,6000,13000,24000,36000,45000,50000,50000', ak.ladder+' '+JSON.stringify(ak.rings));
   ok('2.3: the card of ring I in the Ark window names 1 800 rations and 600 metal', an.includes(1800)&&an.includes(600)&&!an.includes(1200), JSON.stringify(ak.pr)+' · '+ak.t.slice(0,160));
   if(!BEFORE){ await p.evaluate(()=>{ LN.earth.food=1800+500; LN.earth.metal=600; LNdraw() }); await p.waitForTimeout(150); await U.tap('#arkcard [data-act="arkbuy"]'); await p.waitForTimeout(300) }
   const ab=await p.evaluate(()=>({paid:arkPaid(LN), food:Math.round(LN.earth.food), metal:Math.round(LN.earth.metal)}));

@@ -1146,3 +1146,7 @@ UI	u_building	Building	Стройка
 UI	ord_doneS	Order done	Приказ выполнен
 UI	ord_missS	Order missed	Приказ не выполнен
 MSG	ok_arkbuyH	Ring {n} paid — the hack fills it.	Кольцо {n} оплачено — взлом заполнит его.
+LOG	order_done_metal	The order of the shift is done: {h} metal reach Earth.	Приказ смены выполнен: на Землю пришло {h} металла.
+LOG	order_done_fuel	The order of the shift is done: {h} fuel reach Earth.	Приказ смены выполнен: на Землю пришло {h} топлива.
+LOG	order_done_parts	The order of the shift is done: {h} parts reach Earth.	Приказ смены выполнен: на Землю пришло {h} деталей.
+LOG	order_done_yard	The order of the shift is done: the yards finish everything on the slips.	Приказ смены выполнен: верфь заканчивает всё, что стоит на стапелях.

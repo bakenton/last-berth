@@ -70,7 +70,7 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
 
   // 7. v5.10 (ARK.md 2г): the rings of pods cost the ladder's sum over their capsules; nobody wakes without a convoy at the pier
   const a=await p.evaluate(()=>{ LN.arkMark=2; LN.driveLvl=3; const r=[1,2,3,4].map(k=>arkRingPrice(k)); const was=LN.ark; LN.ark={rings:1,woke:1}; const cv=arkConvoy(LN).have, w=arkWakeN(LN); LN.ark=was; return {r,cv,w} });
-  ok('ark rings: 1 800/600, 5 200/2 000, 11 800/6 400, 29 200/22 000 (v5.32: food ×1.5)', a.r[0].food===1800&&a.r[0].metal===600&&a.r[1].food===5200&&a.r[1].metal===2000&&a.r[2].food===11800&&a.r[2].metal===6400&&a.r[3].food===29200&&a.r[3].metal===22000, JSON.stringify(a.r));
+  ok('ark rings: 1 800/600, 5 200/2 000, 11 800/6 000, 22 000/13 000 (v5.44: the table of rings, ceiling 50 000)', a.r[0].food===1800&&a.r[0].metal===600&&a.r[1].food===5200&&a.r[1].metal===2000&&a.r[2].food===11800&&a.r[2].metal===6000&&a.r[3].food===22000&&a.r[3].metal===13000, JSON.stringify(a.r));
   ok('ark: no convoy at the pier = nobody wakes', a.cv===0&&a.w===0, JSON.stringify({cv:a.cv,w:a.w}));
 
   // 8. v5.02: the hub is evacuated while a feeder hull flies into it with a hold — the hold comes home, the line goes to Earth, one log line

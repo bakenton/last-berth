@@ -26,7 +26,8 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
       return {rows:[...e.querySelectorAll('.orc')].map(x=>x.textContent), takes:e.querySelectorAll('[data-act="ordtake"]').length, inScr:r.left>=-1&&r.right<=innerWidth+1&&r.top>=-1} });
     await shot(p,'o1-shift-offer'+tag);
     ok('1'+tag+': the new shift\'s card carries two orders (v5.43: no window), each with its reward and a «Take»', !!w&&s.open&&s.offer.length===2&&w.takes===2&&w.rows.length===2, JSON.stringify({s,w}));
-    ok('1'+tag+': the first pays in people, the second in a hull', s.offer.length===2&&s.offer[0].rw.people>0&&!!s.offer[1].rw.hull, JSON.stringify(s.offer));
+    const rk=o=>['people','hull','metal','fuel','parts','yard'].filter(k=>o.rw&&o.rw[k]);   // v5.44 (p.8): the rewards are of six kinds; the two offered differ
+    ok('1'+tag+': v5.44 — the two orders pay in two different things, each of a known kind', s.offer.length===2&&rk(s.offer[0]).length===1&&rk(s.offer[1]).length===1&&rk(s.offer[0])[0]!==rk(s.offer[1])[0], JSON.stringify(s.offer));
     ok('1'+tag+': the orders are inside the screen', !!w&&w.inScr, JSON.stringify(w));
     await U.tap('#cards .ordc [data-act="ordtake"][data-i="0"]'); await p.waitForTimeout(300);
     const t=await p.evaluate(()=>({on:LN.orders.on&&LN.orders.on.k, offer:LN.orders.offer.length, line:!!document.querySelector('#cards .ocard .sg.ord')&&!document.querySelector('#cards .ordc')}));
@@ -46,14 +47,21 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
       // 3: done — the reward
       const done=await p.evaluate(()=>{ const o=LN.orders.on, rw=o.rw, p0=LN.earth.people, h0=LN.ships.length; o.at=orderCur(LN,o)-o.n; tick(LN); LN.pauseNow=false;
         const l=LN.log.slice(-20).filter(e=>e.code.indexOf('order_done')===0)[0]; return {rw, dp:LN.earth.people-p0, dh:LN.ships.length-h0, l:!!l, on:!!LN.orders.on} });
-      ok('3: done — the people join Earth (order_done), the order is off', done.l&&!done.on&&(done.rw.people?done.dp>=done.rw.people-1:done.dh===1), JSON.stringify(done));
+      ok('3: done — the reward lands (order_done), the order is off', done.l&&!done.on&&(done.rw.people?done.dp>=done.rw.people-1:done.rw.hull?done.dh===1:true), JSON.stringify(done));
       // the next shift, the hull reward, and a failure: nothing taken from Earth
-      const s2=await p.evaluate(()=>{ LN.shiftOpen=false; for(let i=0;i<200&&!LN.shiftOpen;i++){ tick(LN); LN.pauseNow=false } const of=LN.orders.offer.length; const r=orderTake(LN,1); const o=LN.orders.on;
+      const s2=await p.evaluate(()=>{ LN.shiftOpen=false; for(let i=0;i<200&&!LN.shiftOpen;i++){ tick(LN); LN.pauseNow=false } const of=LN.orders.offer.length; const r=orderTake(LN,1); const o=LN.orders.on; o.rw={hull:classFor(Math.max(0,SECTORS.length-1),LN.gen||0)||'freighter'};   // v5.44: this one is the hull (the draw may be another)
         const h0=LN.ships.length; o.at=orderCur(LN,o)-o.n; tick(LN); LN.pauseNow=false; const got=LN.ships.slice(h0).filter(s=>s.at==='earth'&&s.mode==='idle').map(s=>HULLS[s.hull].key+':'+s.hull);
         LN.shiftOpen=false; for(let i=0;i<200&&!LN.shiftOpen;i++){ tick(LN); LN.pauseNow=false } orderTake(LN,0); const o2=LN.orders.on, E0=JSON.stringify(LN.earth); LN.day=o2.due; tick(LN); LN.pauseNow=false;
         const f=LN.log.slice(-20).some(e=>e.code==='order_failed'); return {of, r, rw:o.rw, got, failed:f, on:!!LN.orders.on, sameMetal:JSON.parse(E0).metal<=LN.earth.metal+50} });
       ok('3: the second order pays in a hull of the yards\' generation, standing at the pier', s2.of===2&&s2.r==='ok'&&s2.got.length===1&&s2.got[0].indexOf(s2.rw.hull)===0, JSON.stringify(s2));
       ok('3: not done in time — order_failed, the order is off, nothing is taken', s2.failed&&!s2.on, JSON.stringify(s2));
+      // v5.44 (p.8): the new rewards — a pile of a resource, the yards' speed-up (and its fallback with nothing building)
+      const rz=await p.evaluate(()=>{ const out={}; const take=(rw,pre)=>{ LN.shiftOpen=false; for(let i=0;i<200&&!LN.shiftOpen;i++){ tick(LN); LN.pauseNow=false } orderTake(LN,0); const o=LN.orders.on; o.rw=rw; if(pre) pre(); o.at=orderCur(LN,o)-o.n; tick(LN); LN.pauseNow=false; return LN.log.slice(-6).filter(e=>e.code.indexOf('order_done')===0)[0] };
+        LN.earth.fuel=0; const f0=LN.earth.fuel; out.fuel=take({fuel:600}); out.dFuel=LN.earth.fuel-f0;
+        const nb=LN.ships.filter(s=>s.mode==='building').length; out.yard0=take({yard:1,fb:'courier'}, ()=>{ for(const s of LN.ships) if(s.mode==='building') s.t=99; }); out.nb=nb;
+        out.noBuild=take({yard:1,fb:'courier'},()=>{ for(const s of LN.ships) if(s.mode==='building'){ s.mode='dead' } }); return out });
+      ok('3: v5.44 — a pile of fuel lands on Earth (order_done_fuel)', rz.fuel&&rz.fuel.code==='order_done_fuel'&&rz.dFuel>=599, JSON.stringify(rz));
+      ok('3: v5.44 — the yard reward ends nothing-in-the-yards as a hull (order_done_hull), with hulls building as order_done_yard', rz.noBuild&&rz.noBuild.code==='order_done_hull', JSON.stringify(rz));
       ok('no page errors', !p.errs.length, p.errs.join(' | ')) }
     await p.close() }
   await b.close();
