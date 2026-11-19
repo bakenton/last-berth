@@ -76,9 +76,11 @@ const out=[]; const ok=(n,c,x)=>out.push((c?'PASS ':'FAIL ')+n+(x!==undefined?' 
   await U.clear(); await U.tab('ark'); await p.waitForTimeout(200);
   const before=await p.evaluate(()=>({f:Math.round(LN.earth.food),m:Math.round(LN.earth.metal)}));
   await U.tap('#ovl .hold .hr[data-v="1"] .hx'); await U.tap('#arkcard [data-act="arkbuy"]'); await p.waitForTimeout(200);
+  const tst=await p.evaluate(()=>[...document.querySelectorAll('#toasts .toast')].map(t=>t.textContent).join('|'));
   const a=await p.evaluate(()=>({f:Math.round(LN.earth.food),m:Math.round(LN.earth.metal),paid:arkPaid(LN),rings:arkRings(LN),line:(document.getElementById('arkpaid')||{}).innerText||null,fate:(document.getElementById('arkfate')||{}).innerText||''}));
   ok('7: resources are taken at the press, the ring is paid and not yet counted', a.f<before.f&&a.m<before.m&&a.paid===1&&a.rings===0, JSON.stringify({before,a}));
   ok('7: the window says «Paid, awaiting the hack» and the verdict names the ring', /Paid, awaiting the hack/.test(a.line||'')&&/\+600/.test(a.line||'')&&/Ring I is paid/.test(a.fate), JSON.stringify(a));
+  ok('7: the toast says paid / the hack, not «filled», with the same ring number as the hack card', /Ring I paid/.test(tst)&&!/filled/.test(tst), tst);
   ok('no page errors', !p.errs.length, p.errs.join(' | '));
   await b.close();
 }catch(e){ out.push('FAIL crash — '+(e&&e.stack||e)) }

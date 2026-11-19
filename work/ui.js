@@ -2486,7 +2486,7 @@ function doAct(a,b){
   else if(a==='exn') U.exN=+v;
   else if(a==='exgo'){ var xn=+d.n; res=exchange(G,d.r,d.a,d.b,xn); act(G,'exchange',{r:d.r,n:xn,a:d.a,b:d.b},res); okc='ok_ex'; okp={n:num(xn),r:T(d.r)};
     if(res===d.a||res===d.b){ var xw=shortWhy(exchangeCost(G,d.r,d.a,d.b,xn),G.earth); say(xw[0],xw[1]); draw(); return } }
-  else if(a==='arkbuy'){ res=arkBuy(G,+d.l); act(G,'arkbuy',{l:+d.l},res); okc='ok_arkbuy'; okp={n:roman(+d.l-1)}; if(res==='ok') U.arkSel=null; if(res==='metal'||res==='parts'||res==='food'||res==='fuel'){ var sw=shortWhy(arkOwed(G,+d.l),G.earth); say(sw[0],sw[1]); draw(); return } }
+  else if(a==='arkbuy'){ res=arkBuy(G,+d.l); act(G,'arkbuy',{l:+d.l},res); okc=(res==='ok'&&hackWait(G,'ark'))?'ok_arkbuyH':'ok_arkbuy'; okp={n:roman(+d.l-1)}; if(res==='ok') U.arkSel=null; if(res==='metal'||res==='parts'||res==='food'||res==='fuel'){ var sw=shortWhy(arkOwed(G,+d.l),G.earth); say(sw[0],sw[1]); draw(); return } }
   else if(a==='search'){ var m=shipById(G,+d.m), hs=m?bestSearch(m):null; res=hs?search(G,hs.id,+d.m):'nofree'; act(G,'search',{m:+d.m},res); okc='ok_search'; okp={n:+d.m} }
   else if(a==='nightok'){ G.nightSeen=true }
   else if(a==='noteok') U.notes.shift();

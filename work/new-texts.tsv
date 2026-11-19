@@ -1145,3 +1145,4 @@ UI	u_vWaitHack	Ring {l} is paid — the hack fills its pods.	Кольцо {l} о
 UI	u_building	Building	Стройка
 UI	ord_doneS	Order done	Приказ выполнен
 UI	ord_missS	Order missed	Приказ не выполнен
+MSG	ok_arkbuyH	Ring {n} paid — the hack fills it.	Кольцо {n} оплачено — взлом заполнит его.
